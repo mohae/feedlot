@@ -1,0 +1,4 @@
+rancher
+=======
+
+Generate Packer Templates
