@@ -1,0 +1,9 @@
+# This is the build list test file for Rancher.
+# A list consists of one or more Rancher Build names. This is a comma separated list.
+[list]
+
+	[list.testlist-1]
+	builds = ["test1", "test2"]
+
+	[list.testlist-2]
+	builds = ["test1", "test2", "test3", "test4"]

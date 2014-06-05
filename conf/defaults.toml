@@ -1,0 +1,62 @@
+# default builder variable settings for Rancher
+# 
+# Some of the values in here are not intended to be used as is. These are
+# overridden at the distro level, at minimum, e.g. supported.toml. Anything
+# set in subsequent configuration files, along with what may be passed on the
+# command-line, will override anything set here.
+#
+# Type corresponds with a Packer Builder's `type` variable. This is typically
+# the distro name.
+out_dir = "out/:type"
+src_dir = "src/:type"
+scripts_dir = ":src_dir/scripts"
+commands_dir = ":src_dir/commands"
+min_packer_version = ""
+description = "Default Rancher template"
+builder_type = [
+    "virtualbox-iso",
+    "vmware-iso"
+]
+[builders]
+	[builders.common]
+		settings = [	
+			"boot_command = :commands_dir/boot.command",
+			"boot_wait = 5s",
+			"disk_size = 20000",
+			"http_directory = http",
+			"iso_checksum_type = sha256",
+			"shutdown_command = :commands_dir/shutdown.command",
+			"ssh_password = vagrant",
+			"ssh_port = 22",
+			"ssh_username = vagrant",
+			"ssh_wait_timeout = 240m"
+		]
+	[builders.virtualbox-iso]
+		vm_settings = [
+			"cpus=1",
+			"memory=1024"	
+		]
+	[builders.vmware-iso]
+		vm_settings = [
+			"cpuid.coresPerSocket=1",
+			"memsize=1024",
+			"numvcpus=1"
+		]
+[post_processors]
+	[post_processors.vagrant]
+		settings = [
+			"keep_input_artifact = false",
+			"output = :out_dir/someComposedBoxName.box"
+		]
+[provisioners]
+	[provisioners.shell]
+		settings = [
+			"execute_command = :commands_dir/execute.command"
+		]
+		scripts = [ 
+			":scripts_dir/setup.sh",
+			":scripts_dir/base.sh",
+			":scripts_dir/vagrant.sh",
+			":scripts_dir/cleanup.sh",
+			":scripts_dir/zerodisk.sh"
+		]
