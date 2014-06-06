@@ -156,8 +156,8 @@ type defaults struct {
 }
 
 type BuildInf struct {
-	Name string
-	BuildName string
+	Name string	`toml:"name"`
+	BuildName string	`toml:"build_name"`
 }
 
 type IODirInf struct {
@@ -201,7 +201,7 @@ type distro struct {
 	// its respective distribution.
 	IODirInf
 	PackerInf
-	Name string
+	NameInf
 	BuildName string
 	BaseURL string `toml:"base_url"`
 

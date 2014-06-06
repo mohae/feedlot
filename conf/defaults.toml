@@ -7,8 +7,8 @@
 #
 # Type corresponds with a Packer Builder's `type` variable. This is typically
 # the distro name.
-name = ":type-:version-:image"
-out_dir = "out/:type/:date/:build_name"
+name = ":type-:release-:image"
+out_dir = "out/:type/:date/:name"
 src_dir = "src/:type"
 scripts_dir = ":src_dir/scripts"
 commands_dir = ":src_dir/commands"
