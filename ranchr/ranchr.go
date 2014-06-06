@@ -328,6 +328,8 @@ func setDistrosDefaults(d defaults, s Supported) (map[string]RawTemplate, error)
 		tmp.ScriptsDir = d.ScriptsDir
 		tmp.OutDir = d.OutDir
 		tmp.SrcDir = d.SrcDir
+		tmp.Name = d.Name
+		tmp.BuildName = d.BuildName
 		tmp.build = d.build
 		tmp.mergeDistroSettings(v)
 		dd[k] = tmp

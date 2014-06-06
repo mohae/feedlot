@@ -12,11 +12,11 @@ import (
 type RawTemplate struct {
 	PackerInf
 	IODirInf
+	BuildInf
 	date    string // ISO 8601 Date format
 	BaseURL string
 	delim   string
 	Type    string
-	name    string
 	Arch    string
 	Image   string
 	Release string
@@ -52,6 +52,8 @@ func (r *RawTemplate) createDistroTemplate(d RawTemplate) {
 	r.Arch = d.Arch
 	r.BaseURL = d.BaseURL
 	r.Type = d.Type
+	r.Name = d.Name
+	r.BuildName = d.BuildName
 	r.Image = d.Image
 	r.Release = d.Release
 	r.BuilderType = d.BuilderType
@@ -89,7 +91,7 @@ func (r *RawTemplate) CreatePackerTemplate() (PackerTemplate, error) {
 
 	// Create a full variable replacement map, know that the SrcDir and OutDir stuff are resolved.
 	// Rest of the replacements are done by the packerers.
-	r.varVals = map[string]string{r.delim + "out_dir": r.OutDir, r.delim + "src_dir": r.SrcDir, r.delim + "commands_dir": r.CommandsDir, r.delim + "scripts_dir": r.ScriptsDir, r.delim + "type": r.Type, r.delim + "Release": r.Release, r.delim + "Arch": r.Arch, r.delim + "Image": r.Image, r.delim + "date": r.date}
+	r.varVals = map[string]string{r.delim + "out_dir": r.OutDir, r.delim + "src_dir": r.SrcDir, r.delim + "commands_dir": r.CommandsDir, r.delim + "scripts_dir": r.ScriptsDir, r.delim + "type": r.Type, r.delim + "Release": r.Release, r.delim + "Arch": r.Arch, r.delim + "Image": r.Image, r.delim + "date": r.date, r.delim + "name": r.Name, r.delim + "build_name": r.BuildName}
 
 	// General Packer Stuff
 	p := PackerTemplate{}
@@ -349,6 +351,13 @@ func (r *RawTemplate) mergeBuildSettings(bld RawTemplate) {
 	// default template or from a defined build template.
 	r.updateIODirInf(bld.IODirInf)
 	r.updatePackerInf(bld.PackerInf)
+	if bld.Name != "" {
+		r.Name = bld.Name
+	}
+
+	if bld.FullName != "" {
+		r.FullName = bld.FullName
+	}
 
 	// If defined, Builders override any prior builder Settings.
 	if bld.BuilderType != nil && len(bld.BuilderType) > 0 {
@@ -371,6 +380,7 @@ func (r *RawTemplate) mergeDistroSettings(d distro) {
 	r.IODirInf.updateIODirInf(d.IODirInf)
 	r.PackerInf.updatePackerInf(d.PackerInf)
 
+	r.Name
 	// If defined, Builders override any prior builder Settings
 	if d.BuilderType != nil && len(d.BuilderType) > 0 {
 		r.BuilderType = d.BuilderType

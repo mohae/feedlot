@@ -120,5 +120,5 @@
 	],
 	"variables": null
 }
-t=2014-06-05T23:40:57-0500 lvl=eror msg="Unable to create template for the requested build, 12.04-amd64-server. Requested Build definition was not found."
+t=2014-06-05T23:43:42-0500 lvl=eror msg="Unable to create template for the requested build, 12.04-amd64-server. Requested Build definition was not found."
 Rancher Build complete.

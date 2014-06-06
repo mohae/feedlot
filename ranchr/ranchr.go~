@@ -252,7 +252,7 @@ func BuildPackerTemplateFromNamedBuild(s Supported, dd map[string]RawTemplate, b
 				return err
 			}
 
-			if err = tpl.TemplateToFileJSON("", ""); err != nil {
+			if err = pTpl.TemplateToFileJSON("", ""); err != nil {
 				Log.Error(err.Error())
 				return err
 			}
@@ -328,6 +328,8 @@ func setDistrosDefaults(d defaults, s Supported) (map[string]RawTemplate, error)
 		tmp.ScriptsDir = d.ScriptsDir
 		tmp.OutDir = d.OutDir
 		tmp.SrcDir = d.SrcDir
+		tmp.Name = d.Name
+		tmp.BuildName = d.BuildName
 		tmp.build = d.build
 		tmp.mergeDistroSettings(v)
 		dd[k] = tmp
