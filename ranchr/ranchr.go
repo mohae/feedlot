@@ -251,13 +251,11 @@ func BuildPackerTemplateFromNamedBuild(s Supported, dd map[string]RawTemplate, b
 				log.Error(err.Error())
 				return err
 			}
-			// Write it out as JSON
-			tplJSON, err := json.MarshalIndent(pTpl, "", "\t")
-			if err != nil {
-				log.Error("Marshalling of the Packer Template failed: " + err.Error())
+
+			if err = pTpl.TemplateToFileJSON("", ""); err != nil {
+				Log.Error(err.Error())
 				return err
 			}
-			fmt.Print(string(tplJSON[:]), "\n")
 		}
 	}
 
