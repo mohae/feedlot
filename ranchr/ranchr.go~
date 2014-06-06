@@ -182,7 +182,7 @@ func BuildPackerTemplateFromDistro(s Supported, dd map[string]RawTemplate, a Arg
 		return err
 	}
 
-	if err = pTpl.TemplateToFileJSON(rTpl.IODirInf, rTPL.BuildInf); err != nil {
+	if err = pTpl.TemplateToFileJSON(rTpl.IODirInf, rTpl.BuildInf); err != nil {
 		Log.Error(err.Error())
 		return err
 	}
@@ -320,12 +320,12 @@ func setDistrosDefaults(d defaults, s Supported) (map[string]RawTemplate, error)
 
 		}
 
-		tmp.SetBaseURL(v.BaseURL)
+		tmp.BaseURL = AppendSlash(v.BaseURL)
 		tmp.Arch, tmp.Image, tmp.Release = getDefaultISOInfo(v)
-		tmp.CommandsDir = d.CommandsDir
-		tmp.ScriptsDir = d.ScriptsDir
-		tmp.OutDir = d.OutDir
-		tmp.SrcDir = d.SrcDir
+		tmp.CommandsDir = AppendSlash(d.CommandsDir)
+		tmp.ScriptsDir = AppendSlash(d.ScriptsDir)
+		tmp.OutDir = AppendSlash(d.OutDir)
+		tmp.SrcDir = AppendSlash(d.SrcDir)
 		tmp.Name = d.Name
 		tmp.BuildName = d.BuildName
 		tmp.build = d.build
@@ -647,4 +647,11 @@ func getMergedProvisioners(old map[string]provisioners, new map[string]provision
 	}
 
 	return tmp
+}
+
+func appendSlash(s string) string {
+	if !strings.HasSuffix(s, "/") {
+		s += "/"
+	}
+	return s
 }
