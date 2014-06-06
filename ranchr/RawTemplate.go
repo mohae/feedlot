@@ -36,16 +36,6 @@ func newRawTemplate() RawTemplate {
 	return R
 }
 
-func (r *RawTemplate) SetBaseURL(s string) {
-	if strings.HasSuffix(s, "/") {
-		r.BaseURL = s
-	} else {
-		r.BaseURL = s + "/"
-	}
-	
-	return
-}
-
 //
 func (r *RawTemplate) createDistroTemplate(d RawTemplate) {
 	r.IODirInf = d.IODirInf
@@ -98,9 +88,6 @@ func (r *RawTemplate) CreatePackerTemplate() (PackerTemplate, error) {
 	// Create a full variable replacement map, know that the SrcDir and OutDir stuff are resolved.
 	// Rest of the replacements are done by the packerers.
 	r.varVals = map[string]string{r.delim + "out_dir": r.OutDir, r.delim + "src_dir": r.SrcDir, r.delim + "commands_dir": r.CommandsDir, r.delim + "scripts_dir": r.ScriptsDir, r.delim + "type": r.Type, r.delim + "release": r.Release, r.delim + "arch": r.Arch, r.delim + "image": r.Image, r.delim + "date": r.date, r.delim + "name": r.Name, r.delim + "build_name": r.BuildName}
-
-
-	r.BuildName = r.replaceVariables(r.BuildName)
 
 	r.SrcDir = r.replaceVariables(r.SrcDir)
 	r.OutDir = r.replaceVariables(r.OutDir)
@@ -451,7 +438,7 @@ func  (i *BuildInf) update(new BuildInf) {
 	return
 }
 
-func (b *build) updateBuild(new build) {
+func (b *build) update(new build) {
 	fmt.Println("updateBuild...why did you call me?")
 	return
 }
