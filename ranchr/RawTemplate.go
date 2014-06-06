@@ -45,15 +45,15 @@ func (r *RawTemplate) SetBaseURL(s string) {
 	
 	return
 }
+
 //
 func (r *RawTemplate) createDistroTemplate(d RawTemplate) {
 	r.IODirInf = d.IODirInf
 	r.PackerInf = d.PackerInf
+	r.BuildInf = d.BuildInf
 	r.Arch = d.Arch
 	r.BaseURL = d.BaseURL
 	r.Type = d.Type
-	r.Name = d.Name
-	r.BuildName = d.BuildName
 	r.Image = d.Image
 	r.Release = d.Release
 	r.BuilderType = d.BuilderType
@@ -77,21 +77,35 @@ func (r *RawTemplate) CreatePackerTemplate() (PackerTemplate, error) {
 	// in these two Settings.
 	// check src_dir and out_dir first:
 
-	// Get the delim and set the replacement map
-	r.varVals = map[string]string{r.delim + "type": r.Type, r.delim + "Release": r.Release, r.delim + "Arch": r.Arch, r.delim + "Image": r.Image, r.delim + "date": r.date}
+	// Get the delim and set the replacement map, resolve name information
+	r.varVals = map[string]string{r.delim + "type": r.Type, r.delim + "release": r.Release, r.delim + "arch": r.Arch, r.delim + "image": r.Image, r.delim + "date": r.date}
+
+	r.Name = r.replaceVariables(r.Name)
+	r.BuildName = r.replaceVariables(r.BuildName)
+
+	// Src and Outdir are next, since they can be embedded too
+	r.varVals = map[string]string{r.delim + "type": r.Type, r.delim + "release": r.Release, r.delim + "arch": r.Arch, r.delim + "image": r.Image, r.delim + "date": r.date, r.delim + "name": r.Name, r.delim + "build_name": r.BuildName}
 
 	r.SrcDir = r.replaceVariables(r.SrcDir)
 	r.OutDir = r.replaceVariables(r.OutDir)
 
 	// Commands and scripts dir need to be resolved next
-	r.varVals = map[string]string{r.delim + "out_dir": r.OutDir, r.delim + "src_dir": r.SrcDir, r.delim + "type": r.Type, r.delim + "Release": r.Release, r.delim + "Arch": r.Arch, r.delim + "Image": r.Image, r.delim + "date": r.date}
+	r.varVals = map[string]string{r.delim + "out_dir": r.OutDir, r.delim + "src_dir": r.SrcDir, r.delim + "type": r.Type, r.delim + "release": r.Release, r.delim + "arch": r.Arch, r.delim + "image": r.Image, r.delim + "date": r.date, r.delim + "build_name": r.BuildName}
 
 	r.CommandsDir = r.replaceVariables(r.CommandsDir)
 	r.ScriptsDir = r.replaceVariables(r.ScriptsDir)
 
 	// Create a full variable replacement map, know that the SrcDir and OutDir stuff are resolved.
 	// Rest of the replacements are done by the packerers.
-	r.varVals = map[string]string{r.delim + "out_dir": r.OutDir, r.delim + "src_dir": r.SrcDir, r.delim + "commands_dir": r.CommandsDir, r.delim + "scripts_dir": r.ScriptsDir, r.delim + "type": r.Type, r.delim + "Release": r.Release, r.delim + "Arch": r.Arch, r.delim + "Image": r.Image, r.delim + "date": r.date, r.delim + "name": r.Name, r.delim + "build_name": r.BuildName}
+	r.varVals = map[string]string{r.delim + "out_dir": r.OutDir, r.delim + "src_dir": r.SrcDir, r.delim + "commands_dir": r.CommandsDir, r.delim + "scripts_dir": r.ScriptsDir, r.delim + "type": r.Type, r.delim + "release": r.Release, r.delim + "arch": r.Arch, r.delim + "image": r.Image, r.delim + "date": r.date, r.delim + "name": r.Name, r.delim + "build_name": r.BuildName}
+
+
+	r.BuildName = r.replaceVariables(r.BuildName)
+
+	r.SrcDir = r.replaceVariables(r.SrcDir)
+	r.OutDir = r.replaceVariables(r.OutDir)
+	r.CommandsDir = r.replaceVariables(r.CommandsDir)
+	r.ScriptsDir = r.replaceVariables(r.ScriptsDir)
 
 	// General Packer Stuff
 	p := PackerTemplate{}
@@ -160,6 +174,8 @@ func (r *RawTemplate) CreatePackerTemplate() (PackerTemplate, error) {
 
 	// Return the generated Packer Template
 	Log.Info("PackerTemplate created from a RawTemplate.")
+
+	fmt.Printf("\n%T\t%+v\n", r, r)
 	return p, nil
 }
 
@@ -349,15 +365,9 @@ func (r *RawTemplate) mergeBuildSettings(bld RawTemplate) {
 	// Note: Arch, Image, and Release are not updated here as how these fields
 	// are updated depends on whether this is a build from a distribution's
 	// default template or from a defined build template.
-	r.updateIODirInf(bld.IODirInf)
-	r.updatePackerInf(bld.PackerInf)
-	if bld.Name != "" {
-		r.Name = bld.Name
-	}
-
-	if bld.FullName != "" {
-		r.FullName = bld.FullName
-	}
+	r.IODirInf.update(bld.IODirInf)
+	r.PackerInf.update(bld.PackerInf)
+	r.BuildInf.update(bld.BuildInf)
 
 	// If defined, Builders override any prior builder Settings.
 	if bld.BuilderType != nil && len(bld.BuilderType) > 0 {
@@ -377,10 +387,10 @@ func (r *RawTemplate) mergeDistroSettings(d distro) {
 	// Note: Arch, Image, and Release are not updated here as how these fields
 	// are updated depends on whether this is a build from a distribution's
 	// default template or from a defined build template.
-	r.IODirInf.updateIODirInf(d.IODirInf)
-	r.PackerInf.updatePackerInf(d.PackerInf)
+	r.IODirInf.update(d.IODirInf)
+	r.PackerInf.update(d.PackerInf)
 
-	r.Name
+	r.BuildInf.update(d.BuildInf)
 	// If defined, Builders override any prior builder Settings
 	if d.BuilderType != nil && len(d.BuilderType) > 0 {
 		r.BuilderType = d.BuilderType
@@ -394,34 +404,50 @@ func (r *RawTemplate) mergeDistroSettings(d distro) {
 	return
 }
 
-func (io *IODirInf) updateIODirInf(new IODirInf) {
+func (i *IODirInf) update(new IODirInf) {
+
 	if new.CommandsDir != "" {
-		io.CommandsDir = new.CommandsDir
+		i.CommandsDir = new.CommandsDir
 	}
 
 	if new.OutDir != "" {
-		io.OutDir = new.OutDir
+		i.OutDir = new.OutDir
 	}
 
 	if new.ScriptsDir != "" {
-		io.ScriptsDir = new.ScriptsDir
+		i.ScriptsDir = new.ScriptsDir
 	}
 
 	if new.SrcDir != "" {
-		io.SrcDir = new.SrcDir
+		i.SrcDir = new.SrcDir
 	}
 
 	return
 }
 
-func (pi PackerInf) updatePackerInf(new PackerInf) {
+func (i PackerInf) update(new PackerInf) {
+
 	if new.MinPackerVersion != "" {
-		pi.MinPackerVersion = new.MinPackerVersion
+		i.MinPackerVersion = new.MinPackerVersion
 	}
 
 	if new.Description != "" {
-		pi.Description = new.Description
+		i.Description = new.Description
 	}
+
+	return
+}
+
+func  (i *BuildInf) update(new BuildInf) {
+
+	if new.Name != "" {
+		i.Name = new.Name
+	}
+
+	if new.BuildName != "" {
+		i.BuildName = new.BuildName
+	}
+
 	return
 }
 

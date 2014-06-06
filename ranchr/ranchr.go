@@ -172,7 +172,7 @@ func BuildPackerTemplateFromDistro(s Supported, dd map[string]RawTemplate, a Arg
 	if a.Release != "" {
 		d.Release = a.Release
 	}
-
+	d.BuildName = ":type-:release-:arch-:image-rancher.json"
 	// Now everything can get put in a template
 	rTpl := newRawTemplate()
 	pTpl := PackerTemplate{}
@@ -238,6 +238,8 @@ func BuildPackerTemplateFromNamedBuild(s Supported, dd map[string]RawTemplate, b
 			if bld.Release != "" {
 				tpl.Release = bld.Release
 			}
+
+			bld.BuildName = bldName
 
 		// create build template() then call create packertemplate
 

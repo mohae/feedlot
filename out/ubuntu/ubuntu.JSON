@@ -58,7 +58,7 @@
 	"post-processors": [
 		{
 			"keep_input_artifact": "false",
-			"output": "out/ubuntu/2014-06-05/someComposedBoxName.box",
+			"output": "out/ubuntu/2014-06-06/ubuntu-12.04-server/rancher-default.json",
 			"type": "vagrant"
 		}
 	],
@@ -66,11 +66,11 @@
 		{
 			"execute_command": "echo 'vagrant'|sudo -S sh '{{.Path}}'",
 			"scripts": [
-				"src/ubuntu/scripts/setup.sh",
-				"src/ubuntu/scripts/base.sh",
-				"src/ubuntu/scripts/vagrant.sh",
-				"src/ubuntu/scripts/cleanup.sh",
-				"src/ubuntu/scripts/zerodisk.sh"
+				"out/ubuntu/2014-06-06/ubuntu-12.04-server/setup.sh",
+				"out/ubuntu/2014-06-06/ubuntu-12.04-server/base.sh",
+				"out/ubuntu/2014-06-06/ubuntu-12.04-server/vagrant.sh",
+				"out/ubuntu/2014-06-06/ubuntu-12.04-server/cleanup.sh",
+				"out/ubuntu/2014-06-06/ubuntu-12.04-server/zerodisk.sh"
 			],
 			"type": "shell"
 		}
