@@ -11,8 +11,6 @@
 	[distro.ubuntu]
 		base_url = "http://releases.ubuntu.com"
 		description = "Default template config and Rancher options for Ubuntu"
-		out_dir = "out/ubuntu/:date"
-		src_dir = "src/ubuntu"
         	arch = [
         		"i386",
         		"amd64"
@@ -25,24 +23,14 @@
         	release = [
         		"10.04",
         		"12.04",
-        		"12.10",
-        		"13.04",
-        		"13.10"
+        		"13.10",
+			"14.04"
         	]
         	default_image = [
         		"release = 12.04",
         		"image = server",
         		"arch = amd64",
         	]
-		[distro.ubuntu.builders]
-			[distro.ubuntu.builders.virtualbox-iso]
-			vm_settings = [
-				"memory=2048"
-			]
-			[distro.ubuntu.builders.vmware-iso]
-			vm_settings = [
-				"memory=2048"
-			]
 	
 	[distro.centos]
 		base_url = "http://www.centos.org/pub/centos"
