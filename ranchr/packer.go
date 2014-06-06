@@ -5,7 +5,7 @@ import (
 	_"bufio"
 	"encoding/json"
 	"errors"
-	"fmt"
+	_"fmt"
 	"io"
 	"os"
 	_"reflect"
@@ -30,17 +30,34 @@ type PackerTemplate struct {
 	Variables        map[string]interface{} `json:"variables"`
 }
 
-func (p *PackerTemplate) TemplateToFileJSON(fName string, outDir string) error {
-	fName = "ubuntu.JSON"
-	outDir = "out/ubuntu/"
+func (p *PackerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf) error {
 
-	if fName == "" {
-		err := errors.New("ranchr.TemplateToFileJSON: target Packer template filename not set")
+	if i.OutDir == "" {
+		err := errors.New("ranchr.TemplateToFileJSON: output directory for " + b.BuildName + " not set")
+		Log.Error(err.Error())
 		return err
 	}
 
-	if outDir == "" {
-		err := errors.New("ranchr.TemplateToFileJSON: target directory information for not set")
+	if i.SrcDir == "" {
+		err := errors.New("ranchr.TemplateToFileJSON: SrcDir directory for " + b.BuildName + " not set")
+		Log.Error(err.Error())
+		return err
+	}
+
+	if i.ScriptsDir == "" {
+		err := errors.New("ranchr.TemplateToFileJSON: ScriptsDir directory for " + b.BuildName + " not set")
+		Log.Error(err.Error())
+		return err
+	}
+
+	// Create the output directory stuff
+	if err := os.MkdirAll(i.OutDir + "/scripts", os.FileMode(0744)); err != nil {
+		Log.Error(err.Error())
+		return err
+	}
+
+	if err := os.MkdirAll(i.OutDir + "/http", os.FileMode(0744)); err != nil {
+		Log.Error(err.Error())
 		return err
 	}
 
@@ -51,21 +68,18 @@ func (p *PackerTemplate) TemplateToFileJSON(fName string, outDir string) error {
 		return err
 	}
 	
-	fmt.Print(string(tplJSON[:]), "\n")
-
-	f, err := os.Create(outDir + fName)
+	f, err := os.Create(i.OutDir + b.Name)
 	if err != nil {
-		fmt.Println(err)
+		Log.Error(err.Error())
+		return err
 	}
+	defer f.Close()
 	
 	_, err = io.WriteString(f,  string(tplJSON[:]))
 	if err != nil {
-		fmt.Println(err)
+		Log.Error(err.Error())
+		return err
 	}
-
-	f.Close()
-
-	
 
 	return nil
 }
