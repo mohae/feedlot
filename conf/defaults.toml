@@ -55,9 +55,9 @@ builder_type = [
 			"execute_command = :commands_dir/execute.command"
 		]
 		scripts = [ 
-			":out_dir/setup.sh",
-			":out_dir/base.sh",
-			":out_dir/vagrant.sh",
-			":out_dir/cleanup.sh",
-			":out_dir/zerodisk.sh"
+			"scripts/setup.sh",
+			"scripts/base.sh",
+			"scripts/vagrant.sh",
+			"scripts/cleanup.sh",
+			"scripts/zerodisk.sh"
 		]

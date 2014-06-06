@@ -4,7 +4,6 @@ package ranchr
 
 import (
 	"bufio"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -183,14 +182,11 @@ func BuildPackerTemplateFromDistro(s Supported, dd map[string]RawTemplate, a Arg
 		return err
 	}
 
-	// Write it out as JSON
-	tplJSON, err := json.MarshalIndent(pTpl, "", "\t")
-	if err != nil {
-		e := "Marshalling of the Packer Template failed: " + err.Error()
-		log.Error(e)
+	if err = pTpl.TemplateToFileJSON(rTpl.IODirInf, rTpl.BuildInf); err != nil {
+		Log.Error(err.Error())
 		return err
 	}
-	fmt.Print(string(tplJSON[:]), "\n")
+
 	return nil
 }
 
@@ -254,7 +250,7 @@ func BuildPackerTemplateFromNamedBuild(s Supported, dd map[string]RawTemplate, b
 				return err
 			}
 
-			if err = pTpl.TemplateToFileJSON("", ""); err != nil {
+			if err = pTpl.TemplateToFileJSON(tpl.IODirInf, tpl.BuildInf); err != nil {
 				Log.Error(err.Error())
 				return err
 			}
