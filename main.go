@@ -1,4 +1,3 @@
-
 // Main entry point for Rancher.
 //
 //
@@ -10,7 +9,7 @@ package main
 
 import (
 	"fmt"
-	//	"flag"
+	//flag"
 	//"io/ioutil"
 	"os"
 	"strings"
@@ -18,7 +17,8 @@ import (
 
 	"github.com/mitchellh/cli"
 	"github.com/mohae/rancher/ranchr"
-	log "gopkg.in/inconshreveable/log15.v2"
+	//	log "gopkg.in/inconshreveable/log15.v2"
+	log "github.com/inconshreveable/log15"
 )
 
 func init() {
@@ -74,16 +74,15 @@ func runMain() int {
 	}
 
 	ranchr.Log.Info("Rancher exiting", "exitCode", exitCode)
-	
+
 	return exitCode
 }
-
 
 func SetLogging() {
 	// if Logging, set the Logfile information
 	logging := os.Getenv(ranchr.EnvLogging)
 	if strings.ToLower(logging) != "true" {
-		return 
+		return
 	}
 
 	// Figure out logging level
@@ -114,8 +113,8 @@ func SetLogging() {
 		log.LvlFilterHandler(log.LvlError, log.StreamHandler(os.Stdout, log.LogfmtFormat())),
 	)
 
-	ranchr.Log.SetHandler(handler)	
-	return 
+	ranchr.Log.SetHandler(handler)
+	return
 }
 
 func getFormattedLogFilename() string {
@@ -130,23 +129,23 @@ func getFormattedLogFilename() string {
 	if n < 0 {
 		// If there is no extension found, the suffix is .Log by default.
 		suffix = ".Log"
-		tmpName = logFile		
+		tmpName = logFile
 	} else {
 		// The last index is assumed to be the suffix of the filename.
 		suffix = SubString(logFile, n, len(logFile))
 		tmpName = SubString(logFile, 0, n)
 
-	} 
+	}
 
 	// Create the formatted name and see if the file already exists. Act accordingly.
-	logFile = fmt.Sprintf( "%s-%04d-%02d-%02d%s", tmpName, time.Now().Year(), time.Now().Month(), time.Now().Day(), suffix)
-	
+	logFile = fmt.Sprintf("%s-%04d-%02d-%02d%s", tmpName, time.Now().Year(), time.Now().Month(), time.Now().Day(), suffix)
+
 	return logFile
-	
+
 }
 
 func SubString(s string, i, x int) string {
-	r:= []rune(s)
+	r := []rune(s)
 	l := i + x
 
 	if l > len(r) {

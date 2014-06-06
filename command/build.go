@@ -7,7 +7,9 @@ import (
 
 	"github.com/mitchellh/cli"
 	"github.com/mohae/rancher/ranchr"
-	log "gopkg.in/inconshreveable/log15.v1"
+
+//	log "gopkg.in/inconshreveable/log15.v1"
+	log "github.com/inconshreveable/log15"
 )
 
 // BuildCommand is a Command implementation that generates Packer templates

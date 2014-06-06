@@ -7,29 +7,27 @@ import (
 	_ "reflect"
 	"strings"
 	"time"
-
-//	log "gopkg.in/inconshreveable/log15.v2"
 )
 
 type RawTemplate struct {
 	PackerInf
 	IODirInf
-	date		string	// ISO 8601 Date format
-	BaseURL	string
-	delim 	string
+	date    string // ISO 8601 Date format
+	BaseURL string
+	delim   string
 	Type    string
 	name    string
 	Arch    string
 	Image   string
 	Release string
-	varVals		map[string]string
-	vars		map[string]string
+	varVals map[string]string
+	vars    map[string]string
 	build
 }
 
 // Returns a RawTemplate with current date in ISO 8601 format. This should be
 // called when a RawTemplate with the current date is desired.
-func newRawTemplate() RawTemplate	{
+func newRawTemplate() RawTemplate {
 	// Set the date, formatted to ISO 8601
 	date := time.Now()
 	splitDate := strings.Split(date.String(), " ")
@@ -38,7 +36,16 @@ func newRawTemplate() RawTemplate	{
 	return R
 }
 
-// 
+func (r *RawTemplate) SetBaseURL(s string) {
+	if strings.HasSuffix(s, "/") {
+		r.BaseURL = s
+	} else {
+		r.BaseURL = s + "/"
+	}
+	
+	return
+}
+//
 func (r *RawTemplate) createDistroTemplate(d RawTemplate) {
 	r.IODirInf = d.IODirInf
 	r.PackerInf = d.PackerInf
@@ -52,7 +59,7 @@ func (r *RawTemplate) createDistroTemplate(d RawTemplate) {
 	r.Provisioners = d.Provisioners
 	r.PostProcessors = d.PostProcessors
 
- 	return
+	return
 }
 
 // Create a Packer template from the RawTemplate that can be marshalled to JSON.
@@ -69,21 +76,21 @@ func (r *RawTemplate) CreatePackerTemplate() (PackerTemplate, error) {
 	// check src_dir and out_dir first:
 
 	// Get the delim and set the replacement map
-	r.varVals = map[string]string{r.delim + "type": r.Type, r.delim + "Release": r.Release, r.delim + "Arch": r.Arch, r.delim + "Image": r.Image, r.delim + "date": r.date }
+	r.varVals = map[string]string{r.delim + "type": r.Type, r.delim + "Release": r.Release, r.delim + "Arch": r.Arch, r.delim + "Image": r.Image, r.delim + "date": r.date}
 
 	r.SrcDir = r.replaceVariables(r.SrcDir)
 	r.OutDir = r.replaceVariables(r.OutDir)
 
 	// Commands and scripts dir need to be resolved next
-	r.varVals = map[string]string{r.delim + "out_dir": r.OutDir, r.delim + "src_dir": r.SrcDir, r.delim + "type": r.Type, r.delim + "Release": r.Release, r.delim + "Arch": r.Arch, r.delim + "Image": r.Image, r.delim + "date": r.date }
+	r.varVals = map[string]string{r.delim + "out_dir": r.OutDir, r.delim + "src_dir": r.SrcDir, r.delim + "type": r.Type, r.delim + "Release": r.Release, r.delim + "Arch": r.Arch, r.delim + "Image": r.Image, r.delim + "date": r.date}
 
 	r.CommandsDir = r.replaceVariables(r.CommandsDir)
 	r.ScriptsDir = r.replaceVariables(r.ScriptsDir)
 
 	// Create a full variable replacement map, know that the SrcDir and OutDir stuff are resolved.
 	// Rest of the replacements are done by the packerers.
-	r.varVals = map[string]string{r.delim + "out_dir": r.OutDir, r.delim + "src_dir": r.SrcDir, r.delim + "commands_dir": r.CommandsDir, r.delim + "scripts_dir": r.ScriptsDir, r.delim + "type": r.Type, r.delim + "Release": r.Release, r.delim + "Arch": r.Arch, r.delim + "Image": r.Image, r.delim + "date": r.date }
-	
+	r.varVals = map[string]string{r.delim + "out_dir": r.OutDir, r.delim + "src_dir": r.SrcDir, r.delim + "commands_dir": r.CommandsDir, r.delim + "scripts_dir": r.ScriptsDir, r.delim + "type": r.Type, r.delim + "Release": r.Release, r.delim + "Arch": r.Arch, r.delim + "Image": r.Image, r.delim + "date": r.date}
+
 	// General Packer Stuff
 	p := PackerTemplate{}
 	p.MinPackerVersion = r.MinPackerVersion
@@ -93,10 +100,10 @@ func (r *RawTemplate) CreatePackerTemplate() (PackerTemplate, error) {
 	iSl := make([]interface{}, len(r.Builders))
 
 	if p.Builders, vars, err = r.createBuilders(); err != nil {
-		Log.Crit(err.Error())
+		Log.Error(err.Error())
 		fmt.Println(err.Error())
+		err = nil
 	}
-
 	// Post-Processors
 	var i int
 	var sM map[string]interface{}
@@ -107,7 +114,7 @@ func (r *RawTemplate) CreatePackerTemplate() (PackerTemplate, error) {
 
 		if sM == nil {
 			err = errors.New("an error occured while trying to create the Packer post-processor template for " + k)
-			Log.Error(err.Error())
+			Log.Crit(err.Error())
 			return p, err
 		}
 
@@ -120,18 +127,24 @@ func (r *RawTemplate) CreatePackerTemplate() (PackerTemplate, error) {
 	// Provisioners
 	i = 0
 	iM := make(map[string]interface{})
-	iSl = make([]interface{}, len(r.PostProcessors))
+	iSl = make([]interface{}, len(r.Provisioners))
 	for k, pr := range r.Provisioners {
 		iM = pr.settingsToMap(k, r)
 		if iM == nil {
-			err = fmt.Errorf("CreatePackerTemplate error: the Settings map is nil")
+			err = errors.New("CreatePackerTemplate error: the Settings map is nil")
 			Log.Crit(err.Error())
 			return p, err
 		}
-	
+
 		// If there are any scripts add them. Scripts are already in an array. Scripts use
 		// a map[string]interface{} structure for JSON
 		if len(pr.Scripts) > 0 {
+
+			// The variables in each script element need to be replaced.
+			for i, script := range pr.Scripts {
+				pr.Scripts[i] = r.replaceVariables(script)
+			}
+
 			iM["scripts"] = pr.Scripts
 		}
 		iSl[i] = iM
@@ -153,12 +166,11 @@ func (r *RawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 	// slice of variables for that section builder type. Some Settings are in-lined
 	// instead of adding them to the variable section.
 
-	if r.BuilderType == nil {
+	if r.BuilderType == nil || len(r.BuilderType) <= 0 {
 		err = fmt.Errorf("RawTemplate.createBuilders() error: no builder types were passed")
 		Log.Error(err.Error())
 		return
 	}
-	fmt.Printf("createBuilders\n%+v", r.BuilderType)
 
 	var vrbls, tmpVar []string
 	var tmpS map[string]interface{}
@@ -167,7 +179,6 @@ func (r *RawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 	bldrs = make([]interface{}, len(r.BuilderType))
 	for _, bType := range r.BuilderType {
 		Log.Info("Creating builder from RawTemplate: " + bType)
-		fmt.Printf("Creating builder for %+v\n", bType)
 		// TODO calculate the length of the two longest Settings and VMSettings sections and make it
 		// that length. That will prevent a panic should there be more than 50 options. Besides its
 		// stupid, on so many levels, to hard code this...which makes me...d'oh!
@@ -178,9 +189,10 @@ func (r *RawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 		case BuilderVMWare:
 			// Generate the common Settings and their vars
 			if tmpS, tmpVar, err = r.commonVMSettings(r.Builders[BuilderCommon].Settings, r.Builders[bType].Settings); err != nil {
-				fmt.Println(err.Error())				
-				Log.Error(err.Error())
-			}				
+				fmt.Println(err.Error())
+				Log.Warn(err.Error())
+				err = nil
+			}
 			tmpS["type"] = BuilderVMWare
 
 			// Generate builder specific section
@@ -188,22 +200,26 @@ func (r *RawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 
 			for i, v = range r.Builders[bType].VMSettings {
 				k, val = parseVar(v)
-				val = r.replaceVariables(val)
-				tmpvm[k] = val
+				switch k {
+				case "memory":
+					//do nothing
+				default:
+					val = r.replaceVariables(val)
+					tmpvm[k] = val
+					tmpS["vmx_data"] = tmpvm
+				}
 			}
-			tmpS["vmx_data"] = tmpvm
 
 		case BuilderVBox:
 			// Generate the common Settings and their vars
 			if tmpS, tmpVar, err = r.commonVMSettings(r.Builders[BuilderCommon].Settings, r.Builders[bType].Settings); err != nil {
-				Log.Error(err.Error())
+				Log.Warn(err.Error())
 				fmt.Println(err.Error())
-				return
+				err = nil
+				//				return
 			}
 
 			tmpS["type"] = BuilderVBox
-
-
 			// Generate Packer Variables
 			// Generate builder specific section
 			tmpVB := make([][]string, len(r.Builders[bType].VMSettings))
@@ -211,6 +227,7 @@ func (r *RawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 
 			for i, v = range r.Builders[bType].VMSettings {
 				k, val = parseVar(v)
+
 				val = r.replaceVariables(val)
 				tmpVB[i] = make([]string, 4)
 				tmpVB[i][0] = "modifyvm"
@@ -225,7 +242,6 @@ func (r *RawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 			Log.Error(err.Error())
 			return
 		}
-		fmt.Printf("ZZZZZZ%v:\n%+v\n%+v\n\n", bType, tmpS)
 		bldrs[ndx] = tmpS
 		ndx++
 		vrbls = append(vrbls, tmpVar...)
@@ -236,30 +252,9 @@ func (r *RawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 
 func (r *RawTemplate) replaceVariables(s string) string {
 	// Checks incoMing string for variables and replaces them with their values.
-	// Some of these are known and static to each build. For Rancher, this type
-	// of variable is called a static variable. The other variables are dynamic-
-	// ally resolved at build time via this methon. They may have their values 
-	// change, during final resolution of the value for that variable, which can
-	// be problematic when a variable references another, as this can leads to a
-	// mutating variable issue issue. 
-	//
-	// This should only be an issue with `out_dir` and `src_dir` as it doesn't make
-	// sense to embed any of the other non-static values within those directories. As
-	// such, one of the restrictions on the `out_dir` and `src_dir` variables is that
-	// they can only contain valid output information and static variables. 
-	// 
-	// All other variables can reference any of the static variables along with any
-	// of the *_dir variables.
-	//
-	// Currently supported variable replacements:
-	// 	STATIC				DYNAMIC
-	//	Arch				commands_dir
-	//	date (in ISO-8601 date format)	out_dir
-	//	Image				scripts_dir
-	//	type				src_dir
 
 	//see if the delim is in the string
-	if strings.Index(s, r.delim)  < 0 {
+	if strings.Index(s, r.delim) < 0 {
 		return s
 	}
 
@@ -286,12 +281,12 @@ func (r *RawTemplate) commonVMSettings(old []string, new []string) (Settings map
 	var tmpSl []string
 	maxLen := len(old) + len(new) + 4
 	tmpSl = make([]string, maxLen)
-//	vars = make([]string, maxLen)
+	//	vars = make([]string, maxLen)
 	Settings = make(map[string]interface{}, maxLen)
 	tmpSl = mergeSettingsSlices(old, new)
-			
+
 	for _, s := range tmpSl {
-//		var tmp interface{}
+		//		var tmp interface{}
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 
@@ -299,46 +294,33 @@ func (r *RawTemplate) commonVMSettings(old []string, new []string) (Settings map
 		case "iso_checksum_type":
 			// look up the release information and
 			// add all the iso entries to the map
-		
-			var ret, notSupported string
+
+			var notSupported string
 			Settings[k] = v
 			switch r.Type {
 			case "ubuntu":
-				rel := &ubuntu{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: strings.ToUpper(v)}, Arch: r.Arch, Distro: r.Type, Image: r.Image, Release: r.Release}}	
-				ret = rel.SetISOFilename()
-
-				// TODO wtf...not supported handling...
-				if ret == "" {
-					Log.Error("Error: retrieval of the checksum information for the requested " + rel.Distro + " ISO failed. No checksum values were retrieved")
-					Settings["iso_checksum"] = notSupported
-				} else {
-					Settings["iso_checksum"] = ret
-				}
-
-				ret = rel.SetURL()
-				if ret == "" {
-					Log.Error("Error: retrieval of the URL information for the requested " + rel.Distro + " ISO failed. The ISO URL was not created.")
-					Settings["iso_url"] = notSupported
-				} else {
-					Settings["iso_url"] = ret
-				}	
+				rel := &ubuntu{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: strings.ToUpper(v)}, Arch: r.Arch, Distro: r.Type, Image: r.Image, Release: r.Release}}
+				rel.SetISOInfo()
+				Settings["iso_url"] = rel.URL
+				Settings["iso_checksum"] = rel.Checksum
 			case "centos":
-				notSupported = "Retrieval of CentOS ISO information has not been implemented."				
+				notSupported = "Retrieval of CentOS ISO information has not been implemented."
 			default:
 				notSupported = r.Type + " is not supported."
 			}
-	
+
 			if notSupported != "" {
 				Settings["iso_url"] = notSupported
-				Settings["iso_checksum"] = ""
-			} 
+				Settings["iso_checksum"] = notSupported
+			}
 
 		case "boot_command", "shutdown_command":
 			//If it ends in .command, replace it with the command from the filepath
-			var commands []string	
+			var commands []string
 			if commands, err = commandsFromFile(v); err != nil {
-				Log.Error("error", err.Error())
+				Log.Warn("error", err.Error())
 				Settings[k] = "Error: " + err.Error()
+				err = nil
 			} else {
 				// Boot commands are slices, the others are just a string.
 				if k == "boot_command" {
@@ -348,7 +330,7 @@ func (r *RawTemplate) commonVMSettings(old []string, new []string) (Settings map
 					Settings[k] = commands[0]
 				}
 			}
-			
+
 		default:
 			// just use the value
 			Settings[k] = v
@@ -357,13 +339,13 @@ func (r *RawTemplate) commonVMSettings(old []string, new []string) (Settings map
 
 	}
 
-	return
+	return Settings, vars, nil
 }
 
 func (r *RawTemplate) mergeBuildSettings(bld RawTemplate) {
-	// merges Settings between an old and new template. 
+	// merges Settings between an old and new template.
 	// Note: Arch, Image, and Release are not updated here as how these fields
-	// are updated depends on whether this is a build from a distribution's 
+	// are updated depends on whether this is a build from a distribution's
 	// default template or from a defined build template.
 	r.updateIODirInf(bld.IODirInf)
 	r.updatePackerInf(bld.PackerInf)
@@ -371,8 +353,8 @@ func (r *RawTemplate) mergeBuildSettings(bld RawTemplate) {
 	// If defined, Builders override any prior builder Settings.
 	if bld.BuilderType != nil && len(bld.BuilderType) > 0 {
 		r.BuilderType = bld.BuilderType
-	} 
-	
+	}
+
 	// merge the build portions.
 	r.Builders = getMergedBuilders(r.Builders, bld.Builders)
 	r.PostProcessors = getMergedPostProcessors(r.PostProcessors, bld.PostProcessors)
@@ -382,9 +364,9 @@ func (r *RawTemplate) mergeBuildSettings(bld RawTemplate) {
 }
 
 func (r *RawTemplate) mergeDistroSettings(d distro) {
-	// merges Settings between an old and new template. 
+	// merges Settings between an old and new template.
 	// Note: Arch, Image, and Release are not updated here as how these fields
-	// are updated depends on whether this is a build from a distribution's 
+	// are updated depends on whether this is a build from a distribution's
 	// default template or from a defined build template.
 	r.IODirInf.updateIODirInf(d.IODirInf)
 	r.PackerInf.updatePackerInf(d.PackerInf)
@@ -392,8 +374,8 @@ func (r *RawTemplate) mergeDistroSettings(d distro) {
 	// If defined, Builders override any prior builder Settings
 	if d.BuilderType != nil && len(d.BuilderType) > 0 {
 		r.BuilderType = d.BuilderType
-	} 
-	
+	}
+
 	// merge the build portions.
 	r.Builders = getMergedBuilders(r.Builders, d.Builders)
 	r.PostProcessors = getMergedPostProcessors(r.PostProcessors, d.PostProcessors)
@@ -410,7 +392,7 @@ func (io *IODirInf) updateIODirInf(new IODirInf) {
 	if new.OutDir != "" {
 		io.OutDir = new.OutDir
 	}
-	
+
 	if new.ScriptsDir != "" {
 		io.ScriptsDir = new.ScriptsDir
 	}
@@ -434,5 +416,6 @@ func (pi PackerInf) updatePackerInf(new PackerInf) {
 }
 
 func (b *build) updateBuild(new build) {
-	return	
+	fmt.Println("updateBuild...why did you call me?")
+	return
 }

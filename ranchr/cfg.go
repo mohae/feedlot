@@ -2,9 +2,9 @@ package ranchr
 
 import (
 	"errors"
-	_"fmt"
+	_ "fmt"
 	"os"
-	_"reflect"
+	_ "reflect"
 
 	"github.com/BurntSushi/toml"
 )
@@ -57,7 +57,7 @@ func (b *builder) settingsToMap(r *RawTemplate) map[string]interface{} {
 		v = r.replaceVariables(v)
 		switch k {
 		case "http_Directory":
-//			v = resolvePathTemplate(io, v)
+			//			v = resolvePathTemplate(io, v)
 		}
 
 		m[k] = v
@@ -89,7 +89,7 @@ func (p *postProcessors) settingsToMap(Type string, r *RawTemplate) map[string]i
 		v = r.replaceVariables(v)
 		switch k {
 		case "output", "vagrantfile_template":
-//			v = resolvePathTemplate(io, v)
+			//			v = resolvePathTemplate(io, v)
 		}
 
 		m[k] = v
@@ -120,17 +120,18 @@ func (p *provisioners) settingsToMap(Type string, r *RawTemplate) map[string]int
 	for _, s := range p.Settings {
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
+
 		switch k {
 		case "execute_command":
 			if c, err := commandFromFile(v); err != nil {
 				v = "Error: " + err.Error()
+				err = nil
 			} else {
 				v = c[0]
 			}
 		case "environment_vars":
 			// TODO--figure out what I was thinking with the above case and comment below--or delete this case
-			// do same as scripts except no resolve template path
-
+			// do same as scripts except no resolve template path		
 		}
 
 		m[k] = v
@@ -155,10 +156,10 @@ type defaults struct {
 
 type IODirInf struct {
 	// IODirInf is used to store information about where Rancher can find and put things.
-	OutDir         	string `toml:"out_dir"`
-	SrcDir         	string `toml:"src_dir"`
-	CommandsDir 	string `toml:"commands_dir"`
-	ScriptsDir	string `toml:"scripts_dir"`
+	OutDir      string `toml:"out_dir"`
+	SrcDir      string `toml:"src_dir"`
+	CommandsDir string `toml:"commands_dir"`
+	ScriptsDir  string `toml:"scripts_dir"`
 }
 
 type PackerInf struct {
@@ -260,6 +261,4 @@ func (b *buildLists) Load() error {
 	_, err := toml.DecodeFile(name, &b)
 
 	return err
-} 
-
-
+}

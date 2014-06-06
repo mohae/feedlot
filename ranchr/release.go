@@ -59,33 +59,38 @@ type ubuntu struct {
 	release
 }
 
-func (u *ubuntu) SetChecksum() string {
-	// Don't check for ReleaseFull existence since Release will also resolve for Ubuntu dl directories.
-		// if the last character of the base url isn't a /, add it
-	if !strings.HasSuffix(u.BaseURL, "/") {
-		u.BaseURL = u.BaseURL + "/"
-	}
-
-	page := getStringFromURL(u.BaseURL + "/" + u.Release + "/" + strings.ToUpper(u.ChecksumType) + "SUMS")
-
-	// Now that we have a page...we need to find the checksum and set it
-	checksum := u.findChecksum(page)
-
-	return checksum
+// Sets the ISO information for a Packer template. If any error occurs, the
+// error is saved to the setting variable. This will be reflected in the 
+// resulting Packer template, which will render it unusable until it is fixed.
+func (u *ubuntu) SetISOInfo() {
+	u.SetFilename()
+	u.SetChecksum()
+	u.SetURL()
 }
 
-func (u *ubuntu) SetURL() string {
+func (u *ubuntu) SetChecksum() {
+	// Don't check for ReleaseFull existence since Release will also resolve for Ubuntu dl directories.
+	// if the last character of the base url isn't a /, add it
+	page := getStringFromURL(u.BaseURL + u.Release + "/" + strings.ToUpper(u.ChecksumType) + "SUMS")
+
+	// Now that we have a page...we need to find the checksum and set it
+	u.Checksum = u.findChecksum(page)
+
+	return 
+}
+
+func (u *ubuntu) SetURL() {
 	// Check for ReleaseFull existence because it matters for the filename when it is a LTS version, e.g. 12.04.4 vs 12.04
-	if u.ReleaseFull != "" {
-		u.Filename = "ubuntu-" + u.ReleaseFull + "-" + u.Image + "-" + u.Arch + ".iso"
-	} else {
+	if u.ReleaseFull == "" {
 		u.Filename = "ubuntu-" + u.Release + "-" + u.Image + "-" + u.Arch + ".iso"
+	} else {
+		u.Filename = "ubuntu-" + u.ReleaseFull + "-" + u.Image + "-" + u.Arch + ".iso"
 	}
 
 	// Its ok to use Release in the directory path because Release will resolve correctly, at the directory level, for Ubuntu.
-	u.URL = u.BaseURL + "/" + u.Release + "/" + u.Filename
+	u.URL = u.BaseURL + u.Release + "/" + u.Filename
 
-	return u.URL
+	return 
 }
 
 // findChecksum(s string, isoName string) finds the line in the incoming string with the isoName requested, strips out the checksum and returns it
@@ -95,7 +100,7 @@ func (u *ubuntu) SetURL() string {
 //      since this is plain text processing we don't worry about runes
 func (u *ubuntu) findChecksum (s string) string {
 	pos := strings.Index(s, u.Filename)
-	if pos <= 0 {
+	if pos < 0 {
 		// if it wasn't found, there's a chance that there's an extension on the release number
 		// e.g. 12.04.4 instead of 12.04. This usually affects the LTS versions, I think.
 		// For this look for a line  that contains .iso.
@@ -106,16 +111,15 @@ func (u *ubuntu) findChecksum (s string) string {
 			return ""
 		}
 		tmpRel := s[:pos]
-		
 		tmpSl := strings.Split(tmpRel, "-")
 		if len(tmpSl) < 3 {
 			Log.Error("Unable to parse release information on the Ubuntu checksum page.")
 			return ""
 		}
 
-		u.Release = tmpSl[1]
+		u.ReleaseFull = tmpSl[1]
+		u.SetFilename()
 		
-		_ = u.SetISOFilename()
 		pos = strings.Index(s, u.Filename)
 		if pos < 0 {
 			Log.Error("Unable to retrieve checksum while looking for the release string on the Ubuntu checksums page.")
@@ -123,15 +127,20 @@ func (u *ubuntu) findChecksum (s string) string {
 		}
 	}
 
-	return s[pos-66 : pos-2]
+	u.Checksum = s[pos-66 : pos-2]
+	return u.Checksum
 }
 
-func (u *ubuntu) SetISOFilename() string {
+func (u *ubuntu) SetFilename() {
 //	fmt.Println("\n\nUBUNTU\t%+v\n\n", ubuntu)
-	u.Filename = "ubuntu-" + u.Release + "-" + u.Image + "-" + u.Arch + ".iso"
-	return u.Filename
-}
+	if u.ReleaseFull == "" {
+		u.Filename = "ubuntu-" + u.Release + "-" + u.Image + "-" + u.Arch + ".iso"
+	} else {
+		u.Filename = "ubuntu-" + u.ReleaseFull + "-" + u.Image + "-" + u.Arch + ".iso"
+	}
 
+	return
+}
 
 type CentOS struct {
 	release
