@@ -2,7 +2,7 @@ package ranchr
 
 import (
 	"errors"
-	 "fmt"
+	_ "fmt"
 	"os"
 	_ "reflect"
 
@@ -151,7 +151,13 @@ type defaults struct {
 	// Defaults is used to store Rancher application level defaults for Packer templates.
 	IODirInf
 	PackerInf
+	BuildInf
 	build
+}
+
+type BuildInf struct {
+	Name string
+	BuildName string
 }
 
 type IODirInf struct {
@@ -195,6 +201,8 @@ type distro struct {
 	// its respective distribution.
 	IODirInf
 	PackerInf
+	Name string
+	BuildName string
 	BaseURL string `toml:"base_url"`
 
 	// The supported Architectures, which can differ per distro. The labels can also differ, e.g. amd64 and x86_64.

@@ -896,3 +896,12 @@ t=2014-06-05T23:40:57-0500 lvl=info msg="Processing builds: 12.04-amd64-server "
 t=2014-06-05T23:40:57-0500 lvl=eror msg="Unable to create template for the requested build, 12.04-amd64-server. Requested Build definition was not found."
 t=2014-06-05T23:40:57-0500 lvl=info msg="Rancher Build complete."
 t=2014-06-05T23:40:57-0500 lvl=info msg="Rancher exiting" exitCode=0
+t=2014-06-05T23:43:42-0500 lvl=info msg="Rancher starting" args="[./rancher build -distro=ubuntu 12.04-amd64-server]"
+t=2014-06-05T23:43:42-0500 lvl=info msg="Creating PackerTemplate from a RawTemplate."
+t=2014-06-05T23:43:42-0500 lvl=info msg="Creating builder from RawTemplate: virtualbox-iso"
+t=2014-06-05T23:43:42-0500 lvl=info msg="Creating builder from RawTemplate: vmware-iso"
+t=2014-06-05T23:43:42-0500 lvl=info msg="PackerTemplate created from a RawTemplate."
+t=2014-06-05T23:43:42-0500 lvl=info msg="Processing builds: 12.04-amd64-server "
+t=2014-06-05T23:43:42-0500 lvl=eror msg="Unable to create template for the requested build, 12.04-amd64-server. Requested Build definition was not found."
+t=2014-06-05T23:43:42-0500 lvl=info msg="Rancher Build complete."
+t=2014-06-05T23:43:42-0500 lvl=info msg="Rancher exiting" exitCode=0
