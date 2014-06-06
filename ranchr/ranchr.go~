@@ -239,23 +239,24 @@ func BuildPackerTemplateFromNamedBuild(s Supported, dd map[string]RawTemplate, b
 				tpl.Release = bld.Release
 			}
 
+		// create build template() then call create packertemplate
+
 			tpl.build = dd[bld.Type].build
 
 			tpl.mergeBuildSettings(bld)
-		}
-		pTpl := PackerTemplate{}
+		
+			pTpl := PackerTemplate{}
 
-		if pTpl, err = tpl.CreatePackerTemplate(); err != nil {
-			log.Error(err.Error())
-			return err
+			if pTpl, err = tpl.CreatePackerTemplate(); err != nil {
+				log.Error(err.Error())
+				return err
+			}
+
+			if err = tpl.TemplateToFileJSON("", ""); err != nil {
+				Log.Error(err.Error())
+				return err
+			}
 		}
-		// Write it out as JSON
-		tplJSON, err := json.MarshalIndent(pTpl, "", "\t")
-		if err != nil {
-			log.Error("Marshalling of the Packer Template failed: " + err.Error())
-			return err
-		}
-		fmt.Print(string(tplJSON[:]), "\n")
 	}
 
 	/*

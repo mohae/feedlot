@@ -1,0 +1,79 @@
+{
+	"description": "",
+	"min_packer_version": "",
+	"builders": [
+		{
+			"boot_command": [
+				"\u003cesc\u003e\u003cwait\u003e",
+				"\u003cesc\u003e\u003cwait\u003e",
+				"\u003center\u003e\u003cwait\u003e",
+				"/install/vmlinuz\u003cwait\u003e",
+				" auto\u003cwait\u003e",
+				" console-setup/ask_detect=false\u003cwait\u003e",
+				" console-setup/layoutcode=us\u003cwait\u003e",
+				" console-setup/modelcode=pc105\u003cwait\u003e",
+				" debconf/frontend=noninteractive\u003cwait\u003e",
+				" debian-installer=en_US\u003cwait\u003e",
+				" fb=false\u003cwait\u003e",
+				" initrd=/install/initrd.gz\u003cwait\u003e",
+				" kbd-chooser/method=us\u003cwait\u003e",
+				" keyboard-configuration/layout=USA\u003cwait\u003e",
+				" keyboard-configuration/variant=USA\u003cwait\u003e",
+				" locale=en_US\u003cwait\u003e",
+				" netcfg/get_hostname=ubuntu-1204\u003cwait\u003e",
+				" netcfg/get_domain=vagrantup.com\u003cwait\u003e",
+				" noapic\u003cwait\u003e",
+				" preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg\u003cwait\u003e",
+				" -- \u003cwait\u003e",
+				"\u003center\u003e\u003cwait\u003e"
+			],
+			"boot_wait": "5s",
+			"disk_size": "20000",
+			"http_directory": "http",
+			"iso_checksum": "3aeb42816253355394897ae80d99a9ba56217c0e98e05294b51f0f5b13bceb54",
+			"iso_checksum_type": "sha256",
+			"iso_url": "http://releases.ubuntu.com/12.04/ubuntu-12.04.4-server-amd64.iso",
+			"shutdown_command": "echo 'shutdown -P now' \u003e /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
+			"ssh_password": "vagrant",
+			"ssh_port": "22",
+			"ssh_username": "vagrant",
+			"ssh_wait_timeout": "300m",
+			"type": "virtualbox-iso",
+			"vboxmanage": [
+				[
+					"modifyvm",
+					"{{.Name}}",
+					"--cpus",
+					"1"
+				],
+				[
+					"modifyvm",
+					"{{.Name}}",
+					"--memory",
+					"4096"
+				]
+			]
+		}
+	],
+	"post-processors": [
+		{
+			"keep_input_artifact": "false",
+			"output": "out/ubuntu/2014-06-05/someComposedBoxName.box",
+			"type": "vagrant"
+		}
+	],
+	"provisioners": [
+		{
+			"execute_command": "echo 'vagrant'|sudo -S sh '{{.Path}}'",
+			"scripts": [
+				"src/ubuntu/scripts/setup.sh",
+				"src/ubuntu/scripts/base.sh",
+				"src/ubuntu/scripts/vagrant.sh",
+				"src/ubuntu/scripts/cleanup.sh",
+				"src/ubuntu/scripts/zerodisk.sh"
+			],
+			"type": "shell"
+		}
+	],
+	"variables": null
+}
