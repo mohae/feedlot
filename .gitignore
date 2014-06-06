@@ -25,6 +25,7 @@ _testmain.go
 # additional tmp stuff that may exist that shouldn't be tracked
 *~
 *.out
+out/*
 
 # don't archive the json output...this may expand as 
 # output handling gets expanded, or it may be deleted
