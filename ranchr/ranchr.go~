@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	_ "reflect"
 	"strings"
@@ -171,7 +172,9 @@ func BuildPackerTemplateFromDistro(s Supported, dd map[string]RawTemplate, a Arg
 	if a.Release != "" {
 		d.Release = a.Release
 	}
+
 	d.BuildName = ":type-:release-:arch-:image-rancher.json"
+
 	// Now everything can get put in a template
 	rTpl := newRawTemplate()
 	pTpl := PackerTemplate{}
@@ -182,7 +185,10 @@ func BuildPackerTemplateFromDistro(s Supported, dd map[string]RawTemplate, a Arg
 		return err
 	}
 
-	if err = pTpl.TemplateToFileJSON(rTpl.IODirInf, rTpl.BuildInf); err != nil {
+	var scripts []string
+	scripts = rTpl.ScriptNames()
+	
+	if err = pTpl.TemplateToFileJSON(rTpl.IODirInf, rTpl.BuildInf, scripts ); err != nil {
 		Log.Error(err.Error())
 		return err
 	}
@@ -250,7 +256,10 @@ func BuildPackerTemplateFromNamedBuild(s Supported, dd map[string]RawTemplate, b
 				return err
 			}
 
-			if err = pTpl.TemplateToFileJSON(tpl.IODirInf, tpl.BuildInf); err != nil {
+			var scripts []string
+			scripts = tpl.ScriptNames()
+	
+			if err = pTpl.TemplateToFileJSON(tpl.IODirInf, tpl.BuildInf, scripts ); err != nil {
 				Log.Error(err.Error())
 				return err
 			}
@@ -320,12 +329,12 @@ func setDistrosDefaults(d defaults, s Supported) (map[string]RawTemplate, error)
 
 		}
 
-		tmp.BaseURL = AppendSlash(v.BaseURL)
+		tmp.BaseURL = appendSlash(v.BaseURL)
 		tmp.Arch, tmp.Image, tmp.Release = getDefaultISOInfo(v)
-		tmp.CommandsDir = AppendSlash(d.CommandsDir)
-		tmp.ScriptsDir = AppendSlash(d.ScriptsDir)
-		tmp.OutDir = AppendSlash(d.OutDir)
-		tmp.SrcDir = AppendSlash(d.SrcDir)
+		tmp.CommandsDir = appendSlash(d.CommandsDir)
+		tmp.ScriptsDir = appendSlash(d.ScriptsDir)
+		tmp.OutDir = appendSlash(d.OutDir)
+		tmp.SrcDir = appendSlash(d.SrcDir)
 		tmp.Name = d.Name
 		tmp.BuildName = d.BuildName
 		tmp.build = d.build
@@ -654,4 +663,37 @@ func appendSlash(s string) string {
 		s += "/"
 	}
 	return s
+}
+
+func copyFile(srcDir string, destDir string, script string) (written int64, err error) {
+	src := srcDir + script
+	dest := destDir + script
+
+	// Create the scripts dir and copy each script from sript_src to out_dir/scripts/
+	// while keeping track of success/failures.
+	if err = os.MkdirAll(destDir, os.FileMode(0766)); err != nil {
+		Log.Error(err.Error())
+		return 0, err
+	}
+	
+	var fs, fd *os.File
+
+	// Open the source script
+	if fs, err = os.Open(src); err != nil {
+		Log.Error(err.Error())
+		return 0, err
+	}
+	defer fs.Close()
+		
+	// Open the destination, create or truncate as needed.
+	var buffer []byte
+
+	fd, err = os.OpenFile(dest, os.O_CREATE|os.O_TRUNC, 0744)
+	if err != nil {
+		Log.Error(err.Error())
+		return 0, err
+	}
+	defer fd.Close()
+			
+	return io.Copy(fd, fs)
 }

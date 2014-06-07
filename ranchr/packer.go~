@@ -5,10 +5,11 @@ import (
 	_"bufio"
 	"encoding/json"
 	"errors"
-	_"fmt"
+	"fmt"
 	"io"
 	"os"
 	_"reflect"
+	"strconv"
 	_"strings"
 	_"time"
 )
@@ -30,7 +31,7 @@ type PackerTemplate struct {
 	Variables        map[string]interface{} `json:"variables"`
 }
 
-func (p *PackerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf) error {
+func (p *PackerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []string) error {
 
 	if i.OutDir == "" {
 		err := errors.New("ranchr.TemplateToFileJSON: output directory for " + b.BuildName + " not set")
@@ -50,13 +51,27 @@ func (p *PackerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf) error {
 		return err
 	}
 
-	// Create the output directory stuff
-	if err := os.MkdirAll(i.OutDir + "/scripts", os.FileMode(0755)); err != nil {
-		Log.Error(err.Error())
-		return err
+	destDir := i.OutDir + "scripts/"
+	var errCnt, okCnt int
+	for _, script := range scripts {
+
+		if wB, err := copyFile(i.ScriptsDir, destDir, script); err != nil {
+			Log.Error(err.Error())
+			errCnt++
+		} else {
+			Log.Info(strconv.Itoa64(wB) + " Bytes were copied from " + i.ScriptsDir + script + " to " + destDir + script)
+			okCnt++
+		}
 	}
 
-	if err := os.MkdirAll(i.OutDir + "/http", os.FileMode(0755)); err != nil {
+	if errCnt > 0 {
+		fmt.Printf("Copy of scripts for build, %s, had %s errors. There were %s scripts that were copied without error.", b.BuildName, string(errCnt), string(okCnt))
+		Log.Error("Copy of scripts for build, " + b.BuildName + ", had " + strconv.Itoa(errCnt) + " errors. There were " + strconv.Itoa(okCnt) + " scripts that were copied without error.")
+	} else {
+		Log.Info(strconv.Itoa(okCnt) + " scripts were successfully copied.")
+	}
+	
+	if err := os.MkdirAll(i.OutDir + "http", os.FileMode(0766)); err != nil {
 		Log.Error(err.Error())
 		return err
 	}
