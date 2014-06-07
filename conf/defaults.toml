@@ -47,7 +47,7 @@ builder_type = [
 	[post_processors.vagrant]
 		settings = [
 			"keep_input_artifact = false",
-			"output = :out_dir/rancher-default.json"
+			"output = out/vagrant/"
 		]
 [provisioners]
 	[provisioners.shell]
