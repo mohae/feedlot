@@ -113,6 +113,7 @@ func (c *BuildCommand) Run(args []string) int {
 
 	if distroFilter != "" {
 		args := ranchr.ArgsFilter{Arch: archFilter, Distro: distroFilter, Image: imageFilter, Release: releaseFilter}
+		fmt.Println("ARGS\t",  args)
 		// TODO go it
 		if err := ranchr.BuildPackerTemplateFromDistro(s, dd, args); err != nil {
 			log.Error(err.Error())

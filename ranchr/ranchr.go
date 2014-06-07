@@ -173,8 +173,8 @@ func BuildPackerTemplateFromDistro(s Supported, dd map[string]RawTemplate, a Arg
 		d.Release = a.Release
 	}
 
-	d.BuildName = ":type-:release-:arch-:image-rancher.json"
-
+	d.BuildName = ":type-:release-:arch-:image-rancher"
+	fmt.Println(d)
 	// Now everything can get put in a template
 	rTpl := newRawTemplate()
 	pTpl := PackerTemplate{}
@@ -192,7 +192,7 @@ func BuildPackerTemplateFromDistro(s Supported, dd map[string]RawTemplate, a Arg
 		Log.Error(err.Error())
 		return err
 	}
-
+	fmt.Printf("%T\t%+v\n%T\t%+v\n%T\t%+v\n", rTpl, pTpl, scripts)
 	return nil
 }
 
@@ -200,6 +200,7 @@ func BuildPackerTemplateFromDistro(s Supported, dd map[string]RawTemplate, a Arg
 func BuildPackerTemplateFromNamedBuild(s Supported, dd map[string]RawTemplate, bldNames ...string) error {
 	// Load the build templates
 	var blds Builds
+	fmt.Println("BuildPackerTemplateFromNamedBuild\n")
 
 	err := blds.Load()
 	if err != nil {
