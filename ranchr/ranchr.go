@@ -174,7 +174,7 @@ func BuildPackerTemplateFromDistro(s Supported, dd map[string]RawTemplate, a Arg
 	}
 
 	d.BuildName = ":type-:release-:arch-:image-rancher"
-	fmt.Println(d)
+
 	// Now everything can get put in a template
 	rTpl := newRawTemplate()
 	pTpl := PackerTemplate{}
@@ -192,7 +192,7 @@ func BuildPackerTemplateFromDistro(s Supported, dd map[string]RawTemplate, a Arg
 		Log.Error(err.Error())
 		return err
 	}
-	fmt.Printf("%T\t%+v\n%T\t%+v\n%T\t%+v\n", rTpl, pTpl, scripts)
+
 	return nil
 }
 

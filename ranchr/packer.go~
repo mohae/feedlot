@@ -59,7 +59,7 @@ func (p *PackerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []st
 			Log.Error(err.Error())
 			errCnt++
 		} else {
-			Log.Info(strconv.Itoa64(wB) + " Bytes were copied from " + i.ScriptsDir + script + " to " + destDir + script)
+			Log.Info(strconv.FormatInt(wB, 10) + " Bytes were copied from " + i.ScriptsDir + script + " to " + destDir + script)
 			okCnt++
 		}
 	}

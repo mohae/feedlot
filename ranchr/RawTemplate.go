@@ -162,7 +162,6 @@ func (r *RawTemplate) CreatePackerTemplate() (PackerTemplate, error) {
 	// Return the generated Packer Template
 	Log.Info("PackerTemplate created from a RawTemplate.")
 
-	fmt.Printf("\n%T\t%+v\n", r, r)
 	return p, nil
 }
 

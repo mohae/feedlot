@@ -162,7 +162,6 @@ func (r *RawTemplate) CreatePackerTemplate() (PackerTemplate, error) {
 	// Return the generated Packer Template
 	Log.Info("PackerTemplate created from a RawTemplate.")
 
-	fmt.Printf("\n%T\t%+v\n", r, r)
 	return p, nil
 }
 
@@ -396,6 +395,8 @@ func (r *RawTemplate) ScriptNames() []string {
 	var s []string
 
 	if len(r.Provisioners["shell"].Scripts) > 0 {
+		s = make([]string, len(r.Provisioners["shell"].Scripts))
+
 		for i, script := range r.Provisioners["shell"].Scripts {
 			//explode on "/"
 			parts := strings.Split(script, "/")
@@ -403,6 +404,7 @@ func (r *RawTemplate) ScriptNames() []string {
 			// the last element is the script name
 			s[i] = parts[len(parts) - 1]
 		}
+
 	}
 
 	return s
