@@ -391,6 +391,28 @@ func (r *RawTemplate) mergeDistroSettings(d distro) {
 	return
 }
 
+// Get a slice of script names from the shell provisioner, if any.
+func (r *RawTemplate) ScriptNames() []string {
+	var s []string
+
+	if len(r.Provisioners["shell"].Scripts) > 0 {
+		s = make([]string, len(r.Provisioners["shell"].Scripts))
+
+		for i, script := range r.Provisioners["shell"].Scripts {
+			//explode on "/"
+			parts := strings.Split(script, "/")
+			
+			// the last element is the script name
+			s[i] = parts[len(parts) - 1]
+		}
+
+	}
+
+	return s
+
+
+}
+
 func (i *IODirInf) update(new IODirInf) {
 
 	if new.CommandsDir != "" {

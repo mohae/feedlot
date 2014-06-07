@@ -201,8 +201,7 @@ type distro struct {
 	// its respective distribution.
 	IODirInf
 	PackerInf
-	NameInf
-	BuildName string
+	BuildInf
 	BaseURL string `toml:"base_url"`
 
 	// The supported Architectures, which can differ per distro. The labels can also differ, e.g. amd64 and x86_64.

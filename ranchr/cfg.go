@@ -100,7 +100,7 @@ func (p *postProcessors) settingsToMap(Type string, r *RawTemplate) map[string]i
 
 // Type for handling the provisioners sections of the configs.
 type provisioners struct {
-	Settings []string `toml:"Settings"`
+	Settings []string `toml:"settings"`
 	Scripts  []string `toml:"scripts"`
 }
 

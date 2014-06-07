@@ -36,13 +36,6 @@ func newRawTemplate() RawTemplate {
 	return R
 }
 
-func (r *RawTemplate) AppendSlash(s string) string {
-	if !strings.HasSuffix(s, "/") {
-		s += "/"
-	}
-	return s
-}
-
 //
 func (r *RawTemplate) createDistroTemplate(d RawTemplate) {
 	r.IODirInf = d.IODirInf
@@ -396,6 +389,25 @@ func (r *RawTemplate) mergeDistroSettings(d distro) {
 	r.Provisioners = getMergedProvisioners(r.Provisioners, d.Provisioners)
 
 	return
+}
+
+// Get a slice of script names from the shell provisioner, if any.
+func (r *RawTemplate) ScriptNames() []string {
+	var s []string
+
+	if len(r.Provisioners["shell"].Scripts) > 0 {
+		for i, script := range r.Provisioners["shell"].Scripts {
+			//explode on "/"
+			parts := strings.Split(script, "/")
+			
+			// the last element is the script name
+			s[i] = parts[len(parts) - 1]
+		}
+	}
+
+	return s
+
+
 }
 
 func (i *IODirInf) update(new IODirInf) {
