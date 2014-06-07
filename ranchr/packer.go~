@@ -83,7 +83,7 @@ func (p *PackerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []st
 		return err
 	}
 	
-	f, err := os.Create(i.OutDir + b.Name)
+	f, err := os.Create(i.OutDir + b.Name + ".json")
 	if err != nil {
 		Log.Error(err.Error())
 		return err

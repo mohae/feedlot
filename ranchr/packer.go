@@ -51,6 +51,9 @@ func (p *PackerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []st
 		return err
 	}
 
+	// if the OutDir exists, archive it before processing
+	archiveDir(i.OutDir)
+
 	destDir := i.OutDir + "scripts/"
 	var errCnt, okCnt int
 	for _, script := range scripts {
