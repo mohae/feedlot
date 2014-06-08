@@ -1,0 +1,6 @@
+t=2014-06-08T13:05:35-0500 lvl=info msg="Rancher starting" args="[./rancher build -distro=ubuntu -arch=i386 1204-amd64-server]"
+t=2014-06-08T13:05:35-0500 lvl=info msg="Creating PackerTemplate from a RawTemplate."
+t=2014-06-08T13:05:35-0500 lvl=info msg="Creating builder from RawTemplate: virtualbox-iso"
+t=2014-06-08T13:06:16-0500 lvl=info msg="Rancher starting" args="[./rancher build -distro=ubuntu -arch=i386 1204-amd64-server]"
+t=2014-06-08T13:06:16-0500 lvl=info msg="Creating PackerTemplate from a RawTemplate."
+t=2014-06-08T13:06:16-0500 lvl=info msg="Creating builder from RawTemplate: virtualbox-iso"
