@@ -51,18 +51,20 @@ func (p *PackerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []st
 		return err
 	}
 
-	// if the OutDir exists, archive it before processing
-	archiveDir(i.OutDir)
+	// If the output directory exists, create a tarball.
+	a := Archive{}
+	if err := a.priorBuild(i.SrcDir, "gzip" ); err != nil {
+		return err
+	}
 
-	destDir := i.OutDir + "scripts/"
 	var errCnt, okCnt int
 	for _, script := range scripts {
 
-		if wB, err := copyFile(i.ScriptsDir, destDir, script); err != nil {
+		if wB, err := copyFile(i.ScriptsDir, i.OutDir, script); err != nil {
 			Log.Error(err.Error())
 			errCnt++
 		} else {
-			Log.Info(strconv.FormatInt(wB, 10) + " Bytes were copied from " + i.ScriptsDir + script + " to " + destDir + script)
+			Log.Info(strconv.FormatInt(wB, 10) + " Bytes were copied from " + i.ScriptsDir + script + " to " + i.OutDir + script)
 			okCnt++
 		}
 	}

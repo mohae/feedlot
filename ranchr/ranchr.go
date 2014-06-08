@@ -5,11 +5,10 @@ package ranchr
 import (
 	"bufio"
 	"errors"
-
 	"fmt"
 	"io"
+	_"io/ioutil"
 	"os"
-	"path/filepath"
 	_ "reflect"
 	"strings"
 
@@ -699,34 +698,3 @@ func copyFile(srcDir string, destDir string, script string) (written int64, err 
 	return io.Copy(fd, fs)
 }
 
-func archiveDir(dir string) error {
-	// If the directory exists, create a tarball out of it.
-	_, err := os.Stat(dir)
-
-	if err != nil {
-		if os.IsNotExist(err) { 
-			return nil 
-		} else {
-			return err
-		}
-	}
-
-	err = filepath.Walk(dir, visit)
-	fmt.Printf("arhiveDir: filepath.Walk returned %v\n", err)
-/*
-	// The archive is stored at same level as `dir` so we need the parent dir.
-	pDir := path.Dir(dir)
-
-	// Buffer for archive.			
-	buf := new(bytes.Buffer)
-
-	// Create the archive.
-	tarW := tar.NewWriter(buf)
-*/
-	return nil		
-}
-
-func visit(path string, f os.FileInfo, err error) error {
-	fmt.Printf("Visited: %s\n", path)
-	return nil
-}
