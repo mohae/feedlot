@@ -1,17 +1,16 @@
 package ranchr
 
-
 import (
-	_"bufio"
+	_ "bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"os"
-	_"reflect"
+	_ "reflect"
 	"strconv"
-	_"strings"
-	_"time"
+	_ "strings"
+	_ "time"
 )
 
 type packerer interface {
@@ -53,7 +52,7 @@ func (p *PackerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []st
 
 	// If the output directory exists, create a tarball.
 	a := Archive{}
-	if err := a.priorBuild(i.SrcDir, "gzip" ); err != nil {
+	if err := a.priorBuild(i.SrcDir, "gzip"); err != nil {
 		return err
 	}
 
@@ -75,8 +74,8 @@ func (p *PackerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []st
 	} else {
 		Log.Info(strconv.Itoa(okCnt) + " scripts were successfully copied.")
 	}
-	
-	if err := os.MkdirAll(i.OutDir + "http", os.FileMode(0766)); err != nil {
+
+	if err := os.MkdirAll(i.OutDir+"http", os.FileMode(0766)); err != nil {
 		Log.Error(err.Error())
 		return err
 	}
@@ -87,15 +86,15 @@ func (p *PackerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []st
 		Log.Error("Marshalling of the Packer Template failed: " + err.Error())
 		return err
 	}
-	
+
 	f, err := os.Create(i.OutDir + b.Name + ".json")
 	if err != nil {
 		Log.Error(err.Error())
 		return err
 	}
 	defer f.Close()
-	
-	_, err = io.WriteString(f,  string(tplJSON[:]))
+
+	_, err = io.WriteString(f, string(tplJSON[:]))
 	if err != nil {
 		Log.Error(err.Error())
 		return err

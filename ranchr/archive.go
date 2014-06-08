@@ -2,23 +2,23 @@ package ranchr
 
 import (
 	"archive/tar"
+	_ "bytes"
 	"compress/gzip"
-	_"bytes"
 	"errors"
-	_"fmt"
+	_ "fmt"
 	"io"
+	"os"
 	"path"
 	"path/filepath"
-	"os"
 	"time"
 )
 
 type Archive struct {
 	OutDir string
-	Name	string
-	Type	string
-	Files	[]string
-}	
+	Name   string
+	Type   string
+	Files  []string
+}
 
 func (a *Archive) SrcWalk(src string) error {
 	// If the directory exists, create a tarball out of it.
@@ -33,7 +33,7 @@ func (a *Archive) addFilename(path string, f os.FileInfo, err error) error {
 
 func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 	// Add the passed file, if it exists, to the archive, otherwise error.
-	// This preserves mode and modification. 
+	// This preserves mode and modification.
 	// TODO prserve ownership
 	file, err := os.Open(filename)
 	if err != nil {
@@ -45,7 +45,7 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 	if stat, err = file.Stat(); err != nil {
 		return err
 	}
-	
+
 	tHdr := new(tar.Header)
 	tHdr.Name = filename
 	tHdr.Size = stat.Size()
@@ -72,7 +72,7 @@ func (a *Archive) priorBuild(src string, t string) error {
 	}
 
 	if len(a.Files) < 0 {
-		// This isn't a real error, just log it and return a non-error state.	
+		// This isn't a real error, just log it and return a non-error state.
 		err := errors.New("No prior builds to archive.")
 		Log.Info(err.Error())
 		return nil
@@ -83,7 +83,7 @@ func (a *Archive) priorBuild(src string, t string) error {
 	// TODO make it 8601 compliant (RFC3339 + Z)
 	fName := path.Base(a.Files[0]) + time.Now().Local().Format(time.RFC3339) + ".tar.gz"
 
-	// Create the new archive file.	
+	// Create the new archive file.
 	tBall, err := os.Create(fName)
 	if err != nil {
 		Log.Crit(err.Error())
@@ -102,31 +102,31 @@ func (a *Archive) priorBuild(src string, t string) error {
 
 	// Go through each file in the path and add it to the archive
 	for _, file := range a.Files {
-		if  err := a.addFile(tW, file); err != nil {
+		if err := a.addFile(tW, file); err != nil {
 			Log.Crit(err.Error())
 			return err
 		}
 	}
 
-/*
-	switch t {
-	case "gzip", "z", "gunzip":
-		if err := a.gzipToFile(fName); err != nil {
+	/*
+		switch t {
+		case "gzip", "z", "gunzip":
+			if err := a.gzipToFile(fName); err != nil {
+				Log.Error(err.Error())
+				return err
+			}
+		default:
+			err := errors.New(t + " not a supported compression algorithm.")
 			Log.Error(err.Error())
 			return err
 		}
-	default:
-		err := errors.New(t + " not a supported compression algorithm.")
-		Log.Error(err.Error())
-		return err
-	}
-*/
+	*/
 	return nil
 }
 
-	//lzip lzma lzop
+//lzip lzma lzop
 
-/*	
+/*
 func (a *Archive) gzipToFile(fName string) error {
 	// Archives all the files as a gzip archive using the passed name.
 	fName += ".tar.gz"
@@ -135,14 +135,14 @@ func (a *Archive) gzipToFile(fName string) error {
 
 
 	var wB bytes.Buffer
-	
+
 	w := gzip.NewWriter(&wB)
 	wr, err := file.Create(fName)
 	if err != nil {
 		Log.Error(err.Error())
 		return err
 	}
-	
+
 	// Add each file
 	var rB []byte
 
@@ -161,7 +161,7 @@ func (a *Archive) gzipToFile(fName string) error {
 		return err
 	}
 
-	
+
 /*
 	if err := a.SrcWalk(i.OutDir); err != nil {
 		Log.Warn("Archive of " + i.OutDir + " encountered an error. " + err.Error())

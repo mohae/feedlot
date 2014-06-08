@@ -1,20 +1,19 @@
 package ranchr
 
 import (
-	_"errors"
-	_"fmt"
+	_ "errors"
+	_ "fmt"
 	"io/ioutil"
-	_"os"
 	"log"
 	"net/http"
+	_ "os"
 	"strings"
 )
 
-
 type isoer interface {
 	SetChecksum() string
-	SetURL() string	
-	SetFilename() string	
+	SetURL() string
+	SetFilename() string
 }
 
 // Iso information. The Baseurl and ChecksumType are set during creation
@@ -25,7 +24,6 @@ type iso struct {
 	Filename     string
 	URL          string
 }
-
 
 // Release information. Values are set during creation
 type release struct {
@@ -38,7 +36,7 @@ type release struct {
 }
 
 // This is a generic implementation of isoer. Makes things easier for me, though
-// there is probably a better 
+// there is probably a better
 type genericISOer struct {
 	release
 }
@@ -60,7 +58,7 @@ type ubuntu struct {
 }
 
 // Sets the ISO information for a Packer template. If any error occurs, the
-// error is saved to the setting variable. This will be reflected in the 
+// error is saved to the setting variable. This will be reflected in the
 // resulting Packer template, which will render it unusable until it is fixed.
 func (u *ubuntu) SetISOInfo() {
 	u.SetFilename()
@@ -76,7 +74,7 @@ func (u *ubuntu) SetChecksum() {
 	// Now that we have a page...we need to find the checksum and set it
 	u.Checksum = u.findChecksum(page)
 
-	return 
+	return
 }
 
 func (u *ubuntu) SetURL() {
@@ -90,7 +88,7 @@ func (u *ubuntu) SetURL() {
 	// Its ok to use Release in the directory path because Release will resolve correctly, at the directory level, for Ubuntu.
 	u.URL = u.BaseURL + u.Release + "/" + u.Filename
 
-	return 
+	return
 }
 
 // findChecksum(s string, isoName string) finds the line in the incoming string with the isoName requested, strips out the checksum and returns it
@@ -98,7 +96,7 @@ func (u *ubuntu) SetURL() {
 //      checksumText image.isoname
 // Notes: \n separate lines
 //      since this is plain text processing we don't worry about runes
-func (u *ubuntu) findChecksum (s string) string {
+func (u *ubuntu) findChecksum(s string) string {
 	pos := strings.Index(s, u.Filename)
 	if pos < 0 {
 		// if it wasn't found, there's a chance that there's an extension on the release number
@@ -119,7 +117,7 @@ func (u *ubuntu) findChecksum (s string) string {
 
 		u.ReleaseFull = tmpSl[1]
 		u.SetFilename()
-		
+
 		pos = strings.Index(s, u.Filename)
 		if pos < 0 {
 			Log.Error("Unable to retrieve checksum while looking for the release string on the Ubuntu checksums page.")
@@ -132,7 +130,7 @@ func (u *ubuntu) findChecksum (s string) string {
 }
 
 func (u *ubuntu) SetFilename() {
-//	fmt.Println("\n\nUBUNTU\t%+v\n\n", ubuntu)
+	//	fmt.Println("\n\nUBUNTU\t%+v\n\n", ubuntu)
 	if u.ReleaseFull == "" {
 		u.Filename = "ubuntu-" + u.Release + "-" + u.Image + "-" + u.Arch + ".iso"
 	} else {

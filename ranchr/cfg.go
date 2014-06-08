@@ -131,7 +131,7 @@ func (p *provisioners) settingsToMap(Type string, r *RawTemplate) map[string]int
 			}
 		case "environment_vars":
 			// TODO--figure out what I was thinking with the above case and comment below--or delete this case
-			// do same as scripts except no resolve template path		
+			// do same as scripts except no resolve template path
 		}
 
 		m[k] = v
@@ -156,8 +156,8 @@ type defaults struct {
 }
 
 type BuildInf struct {
-	Name string	`toml:"name"`
-	BuildName string	`toml:"build_name"`
+	Name      string `toml:"name"`
+	BuildName string `toml:"build_name"`
 }
 
 type IODirInf struct {

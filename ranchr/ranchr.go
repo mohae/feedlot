@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	_"io/ioutil"
+	_ "io/ioutil"
 	"os"
 	_ "reflect"
 	"strings"
@@ -188,8 +188,8 @@ func BuildPackerTemplateFromDistro(s Supported, dd map[string]RawTemplate, a Arg
 
 	var scripts []string
 	scripts = rTpl.ScriptNames()
-	
-	if err = pTpl.TemplateToFileJSON(rTpl.IODirInf, rTpl.BuildInf, scripts ); err != nil {
+
+	if err = pTpl.TemplateToFileJSON(rTpl.IODirInf, rTpl.BuildInf, scripts); err != nil {
 		Log.Error(err.Error())
 		return err
 	}
@@ -245,12 +245,12 @@ func BuildPackerTemplateFromNamedBuild(s Supported, dd map[string]RawTemplate, b
 
 			bld.BuildName = bldName
 
-		// create build template() then call create packertemplate
+			// create build template() then call create packertemplate
 
 			tpl.build = dd[bld.Type].build
 
 			tpl.mergeBuildSettings(bld)
-		
+
 			pTpl := PackerTemplate{}
 
 			if pTpl, err = tpl.CreatePackerTemplate(); err != nil {
@@ -260,8 +260,8 @@ func BuildPackerTemplateFromNamedBuild(s Supported, dd map[string]RawTemplate, b
 
 			var scripts []string
 			scripts = tpl.ScriptNames()
-	
-			if err = pTpl.TemplateToFileJSON(tpl.IODirInf, tpl.BuildInf, scripts ); err != nil {
+
+			if err = pTpl.TemplateToFileJSON(tpl.IODirInf, tpl.BuildInf, scripts); err != nil {
 				Log.Error(err.Error())
 				return err
 			}
@@ -677,7 +677,7 @@ func copyFile(srcDir string, destDir string, script string) (written int64, err 
 		Log.Error(err.Error())
 		return 0, err
 	}
-	
+
 	var fs, fd *os.File
 
 	// Open the source script
@@ -686,7 +686,7 @@ func copyFile(srcDir string, destDir string, script string) (written int64, err 
 		return 0, err
 	}
 	defer fs.Close()
-		
+
 	// Open the destination, create or truncate as needed.
 	fd, err = os.OpenFile(dest, os.O_CREATE|os.O_TRUNC, 0744)
 	if err != nil {
@@ -694,7 +694,6 @@ func copyFile(srcDir string, destDir string, script string) (written int64, err 
 		return 0, err
 	}
 	defer fd.Close()
-			
+
 	return io.Copy(fd, fs)
 }
-
