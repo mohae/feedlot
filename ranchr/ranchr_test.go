@@ -2,7 +2,7 @@ package ranchr
 
 import (
 	_ "errors"
-	_"fmt"
+	_ "fmt"
 	"reflect"
 	"testing"
 )
@@ -69,7 +69,6 @@ var TestsParseVarCases = []parseVarTest{
 	{"Test parsing ' key with spaces =value with spaces '", " key with spaces =value with spaces ", "key with spaces", "value with spaces"},
 	{"Test parsing ' key with spaces = value with spaces '", " key with spaces = value with spaces ", "key with spaces", "value with spaces"},
 }
-
 
 // test slice merging
 type mergeSlicesTest struct {
@@ -178,9 +177,9 @@ var TestsGetVariableNameCases = []getVariableNameTest{
 }
 
 type getMergedBuildersTest struct {
-	name string
-	old map[string]builder
-	new map[string]builder
+	name     string
+	old      map[string]builder
+	new      map[string]builder
 	expected map[string]builder
 }
 
@@ -255,87 +254,87 @@ var TestGetMergedBuildersCases = []getMergedBuildersTest{
 			},
 		},
 	},
-/*	{
-		name: "Test merge builders: update common, virtualbox, and vmware",
-		old: map[string]builder{
-			"common": {
-				Settings: []string{
-					"boot_command = :src_dir/:type/:commands_dir/boot.command",
-					"boot_wait = 5s",
-					"disk_size = 20000",
-					"http_directory = http",
-					"iso_checksum_type = sha256",
-					"shutdown_command = :src_dir/:type/:commands_dir/shutdown.command",
-					"ssh_password = vagrant",
-					"ssh_port = 22",
-					"ssh_username = vagrant",
-					"ssh_wait_timeout = 240m",
+	/*	{
+			name: "Test merge builders: update common, virtualbox, and vmware",
+			old: map[string]builder{
+				"common": {
+					Settings: []string{
+						"boot_command = :src_dir/:type/:commands_dir/boot.command",
+						"boot_wait = 5s",
+						"disk_size = 20000",
+						"http_directory = http",
+						"iso_checksum_type = sha256",
+						"shutdown_command = :src_dir/:type/:commands_dir/shutdown.command",
+						"ssh_password = vagrant",
+						"ssh_port = 22",
+						"ssh_username = vagrant",
+						"ssh_wait_timeout = 240m",
+					},
+				},
+				"virtualbox": {
+					VMSettings: []string{
+						"cpus=1",
+						"memory=1024",
+					},
+				},
+				"vmware": {
+					VMSettings: []string{
+						"cpuid.coresPerSocket=1",
+						"memsize=1024",
+						"numvcpus=1",
+					},
 				},
 			},
-			"virtualbox": {
-				VMSettings: []string{
-					"cpus=1",
-					"memory=1024",
+			new: map[string]builder{
+				"common": {
+					Settings: []string{
+						"disk_size = 40000",
+						"shutdown_command = src/commnds/shutdown.command",
+						"ssh_wait_timeout = 300m",
+					},
+				},
+				"virtualbox": {
+					VMSettings: []string{
+						"memory=2048",
+					},
+				},
+				"vmware": {
+					VMSettings: []string{
+						"memsize=2048",
+					},
 				},
 			},
-			"vmware": {
-				VMSettings: []string{
-					"cpuid.coresPerSocket=1",
-					"memsize=1024",
-					"numvcpus=1",
+			expected: map[string]builder{
+				"common": {
+					Settings: []string{
+						"boot_command = :src_dir/:type/:commands_dir/boot.command",
+						"boot_wait = 5s",
+						"disk_size = 40000",
+						"http_directory = http",
+						"iso_checksum_type = sha256",
+						"shutdown_command = src/commands/shutdown.command",
+						"ssh_password = vagrant",
+						"ssh_port = 22",
+						"ssh_username = vagrant",
+						"ssh_wait_timeout = 300m",
+					},
+				},
+				"virtualbox": {
+					VMSettings: []string{
+						"cpus=1",
+						"memory=2048",
+					},
+				},
+				"vmware": {
+					VMSettings: []string{
+						"cpuid.coresPerSocket=1",
+						"memsize=2048",
+						"numvcpus=1",
+					},
 				},
 			},
 		},
-		new: map[string]builder{
-			"common": {
-				Settings: []string{
-					"disk_size = 40000",
-					"shutdown_command = src/commnds/shutdown.command",
-					"ssh_wait_timeout = 300m",
-				},
-			},
-			"virtualbox": {
-				VMSettings: []string{
-					"memory=2048",
-				},
-			},
-			"vmware": {
-				VMSettings: []string{
-					"memsize=2048",
-				},
-			},
-		},
-		expected: map[string]builder{
-			"common": {
-				Settings: []string{
-					"boot_command = :src_dir/:type/:commands_dir/boot.command",
-					"boot_wait = 5s",
-					"disk_size = 40000",
-					"http_directory = http",
-					"iso_checksum_type = sha256",
-					"shutdown_command = src/commands/shutdown.command",
-					"ssh_password = vagrant",
-					"ssh_port = 22",
-					"ssh_username = vagrant",
-					"ssh_wait_timeout = 300m",
-				},
-			},
-			"virtualbox": {
-				VMSettings: []string{
-					"cpus=1",
-					"memory=2048",
-				},
-			},
-			"vmware": {
-				VMSettings: []string{
-					"cpuid.coresPerSocket=1",
-					"memsize=2048",
-					"numvcpus=1",
-				},
-			},
-		},
-	},
-*/	{
+	*/{
 		name: "Test merge builders: old has common only, new has vm stuff only",
 		old: map[string]builder{
 			"common": {
@@ -401,9 +400,9 @@ var TestGetMergedBuildersCases = []getMergedBuildersTest{
 }
 
 type getMergedPostProcessorsTest struct {
-	name string
-	old map[string]postProcessors
-	new map[string]postProcessors
+	name     string
+	old      map[string]postProcessors
+	new      map[string]postProcessors
 	expected map[string]postProcessors
 }
 
@@ -418,8 +417,7 @@ var TestGetMergedPostProcessorsCases = []getMergedPostProcessorsTest{
 				},
 			},
 		},
-		new: map[string]postProcessors{
-		},
+		new: map[string]postProcessors{},
 		expected: map[string]postProcessors{
 			"vagrant": {
 				Settings: []string{
@@ -459,9 +457,9 @@ var TestGetMergedPostProcessorsCases = []getMergedPostProcessorsTest{
 }
 
 type getMergedProvisionersTest struct {
-	name string
-	old map[string]provisioners
-	new map[string]provisioners
+	name     string
+	old      map[string]provisioners
+	new      map[string]provisioners
 	expected map[string]provisioners
 }
 
@@ -536,14 +534,14 @@ var TestGetMergedProvisionersCases = []getMergedProvisionersTest{
 
 type getMergedValueStringTest struct {
 	name     string
-	old	 string
-	new	 string
+	old      string
+	new      string
 	expected string
 }
 
 var TestsGetMergedValueStringCases = []getMergedValueStringTest{
-	{ "test Merge Value Strings, empty new value", "old", "", "old" },
-	{ "test Merge Value Strings", "old", "new", "new" },
+	{"test Merge Value Strings, empty new value", "old", "", "old"},
+	{"test Merge Value Strings", "old", "new", "new"},
 }
 
 func TestRanchr(t *testing.T) {
@@ -623,14 +621,13 @@ func TestRanchr(t *testing.T) {
 
 	// test retrieval of key from a variable slice (keys are embedded in the string on variable slices)
 	for _, test := range TestsKeyIndexInVarSliceCases {
-		i := keyIndexInVarSlice	(test.key, test.sl)
+		i := keyIndexInVarSlice(test.key, test.sl)
 		if i != test.expected {
 			t.Errorf(test.name, "Expected:", test.expected, "Got:", i)
 		} else {
 			t.Logf(test.name, "OK")
 		}
 	}
-
 
 	// test merging of value strings
 	for _, test := range TestsGetMergedValueStringCases {
@@ -654,7 +651,6 @@ func TestRanchr(t *testing.T) {
 			t.Logf(test.name, "OK")
 		}
 	}
-
 
 	// Test merging of two builders
 	for _, test := range TestGetMergedBuildersCases {
@@ -683,7 +679,7 @@ func TestRanchr(t *testing.T) {
 			} else {
 				t.Logf(test.name, "OK")
 			}
-		}	
+		}
 	}
 
 	mergedP := map[string]provisioners{}

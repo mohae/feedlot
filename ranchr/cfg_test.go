@@ -35,9 +35,9 @@ var testDefaultsCases = []defaultsTest{
 		},
 		Expected: defaults{
 			IODirInf: IODirInf{
-				OutDir:         "out/:type",
+				OutDir:      "out/:type",
 				ScriptsDir:  ":src_dir/scripts",
-				SrcDir:         "src/:type",
+				SrcDir:      "src/:type",
 				CommandsDir: ":src_dir/commands",
 			},
 			PackerInf: PackerInf{
@@ -343,22 +343,22 @@ var testBuildListsCases = []buildListsTest{
 type commandsFromFileTest struct {
 	test
 	commandFile string
-	Expected []string
+	Expected    []string
 }
 
 var testCommandsFromFileCases = []commandsFromFileTest{
 	{
 		test: test{
-			Name: "CommandFromFile test: no file",
-			VarValue: "",
+			Name:         "CommandFromFile test: no file",
+			VarValue:     "",
 			ExpectedErrS: "the passed Command filename was empty",
 		},
 		Expected: []string{},
 	},
 	{
 		test: test{
-			Name: "boot command from file test",
-			VarValue: "../test_files/commands/boot.command",
+			Name:         "boot command from file test",
+			VarValue:     "../test_files/commands/boot.command",
 			ExpectedErrS: "",
 		},
 		Expected: []string{
@@ -388,16 +388,16 @@ var testCommandsFromFileCases = []commandsFromFileTest{
 	},
 	{
 		test: test{
-			Name: "execute command from file test",
-			VarValue: "../test_files/commands/execute.command",
+			Name:         "execute command from file test",
+			VarValue:     "../test_files/commands/execute.command",
 			ExpectedErrS: "",
 		},
 		Expected: []string{`"echo 'vagrant'|sudo -S sh '{{.Path}}'"`},
 	},
 	{
 		test: test{
-			Name: "shutdown command from file test",
-			VarValue: "../test_files/commands/shutdown.command",
+			Name:         "shutdown command from file test",
+			VarValue:     "../test_files/commands/shutdown.command",
 			ExpectedErrS: "",
 		},
 		Expected: []string{`"echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'"`},
@@ -492,8 +492,7 @@ func TestMain(t *testing.T) {
 	}
 	_ = os.Setenv(EnvBuildListsFile, tmpEnv)
 
-
-	for _, test := range testCommandsFromFileCases{
+	for _, test := range testCommandsFromFileCases {
 		if commands, err := commandsFromFile(test.VarValue); err != nil {
 			if err.Error() != test.ExpectedErrS {
 				t.Errorf(test.Name, err.Error())

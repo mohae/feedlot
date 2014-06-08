@@ -8,7 +8,7 @@ import (
 	"github.com/mitchellh/cli"
 	"github.com/mohae/rancher/ranchr"
 
-//	log "gopkg.in/inconshreveable/log15.v1"
+	//	log "gopkg.in/inconshreveable/log15.v1"
 	log "github.com/inconshreveable/log15"
 )
 
@@ -125,11 +125,11 @@ func (c *BuildCommand) Run(args []string) int {
 	//If there were any builds, generate their templates.
 	if len(bldArgs) > 0 {
 		var bS string
-		
+
 		for _, bld := range bldArgs {
-			bS += bld + " " 
+			bS += bld + " "
 		}
-			
+
 		log.Info("Processing builds: " + bS)
 		if err := ranchr.BuildPackerTemplateFromNamedBuild(s, dd, bldArgs...); err != nil {
 			log.Error(err.Error())
@@ -137,7 +137,6 @@ func (c *BuildCommand) Run(args []string) int {
 		}
 	}
 	_ = s
-
 
 	log.Info("Rancher Build complete.")
 	c.Ui.Output("Rancher Build complete.")

@@ -400,15 +400,14 @@ func (r *RawTemplate) ScriptNames() []string {
 		for i, script := range r.Provisioners["shell"].Scripts {
 			//explode on "/"
 			parts := strings.Split(script, "/")
-			
+
 			// the last element is the script name
-			s[i] = parts[len(parts) - 1]
+			s[i] = parts[len(parts)-1]
 		}
 
 	}
 
 	return s
-
 
 }
 
@@ -446,7 +445,7 @@ func (i PackerInf) update(new PackerInf) {
 	return
 }
 
-func  (i *BuildInf) update(new BuildInf) {
+func (i *BuildInf) update(new BuildInf) {
 
 	if new.Name != "" {
 		i.Name = new.Name
