@@ -13,12 +13,13 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
-	log "github.com/inconshreveable/log15"
+	seelog "github.com/cihub/seelog"
+	//log "github.com/inconshreveable/log15"
 	//	not using gopkg because of 1.2 vs 1.2.2 issue
 	//	log "gopkg.in/inconshreveable/log15.v2"
 )
 
-var Log = log.New()
+var logger seelog.LoggerInterface
 
 var (
 	appName = "RANCHER"
@@ -55,8 +56,25 @@ type ArgsFilter struct {
 	Release string
 }
 
+// Logger setup stuff from:
+//	github.com/cihub/seelog/wiki/Writing-libraries-with-Seelog
 func init() {
-	Log.SetHandler(log.DiscardHandler())
+	DisableLog()
+}
+
+func DisableLog() {
+	logger = seelog.Disabled
+}
+
+// UseLogger uses a specified seelog.LoggerInterface to output library log.
+// This func is used when Seelog logging system is being used in app.
+func UseLogger(newLogger seelog.LoggerInterface) {
+	logger = newLogger
+}
+
+// Call this before app shutdown.
+func FlushLog() {
+	logger.Flush()
 }
 
 // Set the environment variables, if they are not already set.
@@ -158,7 +176,7 @@ func BuildPackerTemplateFromDistro(s Supported, dd map[string]RawTemplate, a Arg
 
 	if d, found = dd[a.Distro]; !found {
 		err = errors.New("%v, is not Supported. Please pass a Supported distribution." + a.Distro)
-		log.Error(err.Error())
+		logger.Error(err.Error())
 		return err
 	}
 	// If any overrides were passed, set them.
@@ -182,7 +200,7 @@ func BuildPackerTemplateFromDistro(s Supported, dd map[string]RawTemplate, a Arg
 	rTpl.createDistroTemplate(d)
 
 	if pTpl, err = rTpl.CreatePackerTemplate(); err != nil {
-		log.Error(err.Error())
+		logger.Error(err.Error())
 		return err
 	}
 
@@ -190,7 +208,7 @@ func BuildPackerTemplateFromDistro(s Supported, dd map[string]RawTemplate, a Arg
 	scripts = rTpl.ScriptNames()
 
 	if err = pTpl.TemplateToFileJSON(rTpl.IODirInf, rTpl.BuildInf, scripts); err != nil {
-		Log.Error(err.Error())
+		logger.Error(err.Error())
 		return err
 	}
 
@@ -205,7 +223,7 @@ func BuildPackerTemplateFromNamedBuild(s Supported, dd map[string]RawTemplate, b
 
 	err := blds.Load()
 	if err != nil {
-		log.Crit(err.Error())
+		logger.Critical(err.Error())
 	}
 
 	var ok, errd bool
@@ -217,12 +235,12 @@ func BuildPackerTemplateFromNamedBuild(s Supported, dd map[string]RawTemplate, b
 
 		bld, ok = blds.Build[bldName]
 		if !ok {
-			log.Error("Unable to create template for the requested build, " + bldName + ". Requested Build definition was not found.")
+			logger.Error("Unable to create template for the requested build, " + bldName + ". Requested Build definition was not found.")
 			errd = true
 		} else {
 			// See if the distro default exists.
 			if tpl, ok = dd[bld.Type]; !ok {
-				log.Error("Requested distribution, " + bld.Type + ", is not Supported. The Packer template for the requested build could not be created.")
+				logger.Error("Requested distribution, " + bld.Type + ", is not Supported. The Packer template for the requested build could not be created.")
 				errd = true
 			}
 		}
@@ -254,7 +272,7 @@ func BuildPackerTemplateFromNamedBuild(s Supported, dd map[string]RawTemplate, b
 			pTpl := PackerTemplate{}
 
 			if pTpl, err = tpl.CreatePackerTemplate(); err != nil {
-				log.Error(err.Error())
+				logger.Error(err.Error())
 				return err
 			}
 
@@ -262,7 +280,7 @@ func BuildPackerTemplateFromNamedBuild(s Supported, dd map[string]RawTemplate, b
 			scripts = tpl.ScriptNames()
 
 			if err = pTpl.TemplateToFileJSON(tpl.IODirInf, tpl.BuildInf, scripts); err != nil {
-				Log.Error(err.Error())
+				logger.Error(err.Error())
 				return err
 			}
 		}
@@ -294,13 +312,13 @@ func commandsFromFile(name string) (commands []string, err error) {
 	f, errf := os.Open(name)
 	if errf != nil {
 		fmt.Println(errf.Error())
-		Log.Error(errf.Error())
+		logger.Error(errf.Error())
 	}
 
 	// always close what's been opened and check returned error
 	defer func() {
 		if err := f.Close(); err != nil {
-			Log.Warn(err.Error())
+			logger.Warn(err.Error())
 		}
 	}()
 
@@ -311,7 +329,7 @@ func commandsFromFile(name string) (commands []string, err error) {
 	}
 	if err := scanner.Err(); err != nil {
 		fmt.Fprintln(os.Stderr, "Reading command file:", err)
-		Log.Warn(err.Error())
+		logger.Warn(err.Error())
 	}
 
 	return commands, nil
@@ -326,7 +344,7 @@ func setDistrosDefaults(d defaults, s Supported) (map[string]RawTemplate, error)
 
 		if v.BaseURL == "" {
 			err := errors.New(k + " does not have its BaseURL configured.")
-			Log.Crit(err.Error())
+			logger.Critical(err.Error())
 			return nil, err
 
 		}
@@ -413,7 +431,7 @@ func mergeSettingsSlices(s1 []string, s2 []string) []string {
 
 	ms1 = varMapFromSlice(s1)
 	if ms1 == nil {
-		Log.Crit("Unable to create a variable map from the passed slice.")
+		logger.Critical("Unable to create a variable map from the passed slice.")
 	}
 
 	// Make a slice with a length equal to the sum of the two input slices.
@@ -432,7 +450,7 @@ func mergeSettingsSlices(s1 []string, s2 []string) []string {
 			indx = keyIndexInVarSlice(k, tempSl)
 
 			if indx < 0 {
-				Log.Warn("The key, " + k + ", was not updated to '" + v + "' because it was not found in the target slice.")
+				logger.Warn("The key, " + k + ", was not updated to '" + v + "' because it was not found in the target slice.")
 			} else {
 				tempSl[indx] = v
 			}
@@ -456,7 +474,7 @@ func varMapFromSlice(vars []string) map[string]interface{} {
 	// Converts a slice to a map[string]interface{} from a Rancher var string.
 	// A Rancher var string contains a key=value string.
 	if vars == nil {
-		Log.Warn("Unable to create a Packer Settings map because no variables were received")
+		logger.Warn("Unable to create a Packer Settings map because no variables were received")
 		return nil
 	}
 
@@ -516,7 +534,7 @@ func commandFromFile(name string) ([]string, error) {
 	}
 	defer func() {
 		if err := f.Close(); err != nil {
-			Log.Error(err.Error())
+			logger.Error(err.Error())
 		}
 	}()
 
@@ -528,7 +546,7 @@ func commandFromFile(name string) ([]string, error) {
 		commands = append(commands, scanner.Text())
 	}
 	if err := scanner.Err(); err != nil {
-		Log.Error(fmt.Errorf("%s Reading command file: %s", os.Stderr, err).Error())
+		logger.Error(fmt.Errorf("%s Reading command file: %s", os.Stderr, err).Error())
 		return nil, err
 	}
 
@@ -554,7 +572,7 @@ func getDefaultISOInfo(d distro) (Arch string, Image string, Release string) {
 		case "release":
 			Release = v
 		default:
-			Log.Warn("Unknown default key: " + k)
+			logger.Warn("Unknown default key: " + k)
 		}
 
 	}
@@ -674,7 +692,7 @@ func copyFile(srcDir string, destDir string, script string) (written int64, err 
 	// Create the scripts dir and copy each script from sript_src to out_dir/scripts/
 	// while keeping track of success/failures.
 	if err = os.MkdirAll(destDir, os.FileMode(0766)); err != nil {
-		Log.Error(err.Error())
+		logger.Error(err.Error())
 		return 0, err
 	}
 
@@ -682,7 +700,7 @@ func copyFile(srcDir string, destDir string, script string) (written int64, err 
 
 	// Open the source script
 	if fs, err = os.Open(src); err != nil {
-		Log.Error(err.Error())
+		logger.Error(err.Error())
 		return 0, err
 	}
 	defer fs.Close()
@@ -690,7 +708,7 @@ func copyFile(srcDir string, destDir string, script string) (written int64, err 
 	// Open the destination, create or truncate as needed.
 	fd, err = os.OpenFile(dest, os.O_CREATE|os.O_TRUNC, 0744)
 	if err != nil {
-		Log.Error(err.Error())
+		logger.Error(err.Error())
 		return 0, err
 	}
 	defer fd.Close()

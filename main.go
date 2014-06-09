@@ -13,16 +13,19 @@ import (
 	//"io/ioutil"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/mitchellh/cli"
 	"github.com/mohae/rancher/ranchr"
 	//	log "gopkg.in/inconshreveable/log15.v2"
-	log "github.com/inconshreveable/log15"
+//	log "github.com/inconshreveable/log15"
+	log "github.com/cihub/seelog"
 )
+
+var Logger log.LoggerInterface
 
 func init() {
 	// Set by default
+	
 }
 
 // main wraps runMain() and ensures that the log gets flushed prior to exit.
@@ -34,6 +37,7 @@ func main() {
 // runMain parses the Flag for glog, sets up CLI stuff for the supported sub-
 // commands and runs Rancher.
 func runMain() int {
+
 	var err error
 
 	if err = ranchr.SetEnv(); err != nil {
@@ -43,7 +47,7 @@ func runMain() int {
 
 	SetLogging()
 
-	ranchr.Log.Info("Rancher starting", "args", os.Args[:])
+	Logger.Info("Rancher starting with args: %v", os.Args[:])
 	args := os.Args[1:]
 
 	// Get the command line args. We shortcut "--version" and "-v" to
@@ -69,54 +73,35 @@ func runMain() int {
 	exitCode, err := cli.Run()
 
 	if err != nil {
-		ranchr.Log.Error("Rancher encountered an error: %s\n", err.Error())
+		log.Error("Rancher encountered an error: %s\n", err.Error())
 		fmt.Println("Rancher encountered an error: %s\n", err.Error())
 	}
 
-	ranchr.Log.Info("Rancher exiting", "exitCode", exitCode)
+	Logger.Info("Rancher exiting with an exit code of %v", exitCode)
 
 	return exitCode
 }
 
-func SetLogging() {
+func SetLogging() error {
 	// if Logging, set the Logfile information
 	logging := os.Getenv(ranchr.EnvLogging)
 	if strings.ToLower(logging) != "true" {
-		return
+		return nil
 	}
 
-	// Figure out logging level
-	var level log.Lvl
-	lvl := strings.ToLower(os.Getenv(ranchr.EnvLogLevel))
-	if lvl == "" {
-		level = log.LvlWarn
-	} else {
-		switch lvl {
-		case "debug", "dbg", "dbug":
-			level = log.LvlDebug
-		case "info", "inf":
-			level = log.LvlInfo
-		case "warn", "warning":
-			level = log.LvlWarn
-		case "error", "err", "eror":
-			level = log.LvlError
-		case "crit", "critical":
-			level = log.LvlCrit
-		default:
-			level = log.LvlWarn
-		}
+	Logger, err := log.LoggerFromConfigAsFile("rancher_log.xml")
+	if err != nil {
+		return err
 	}
 
-	// Set the Logfile. A multihandler is used because 'critical' and 'error' errors are always written to stdout, for now.
-	handler := log.MultiHandler(
-		log.LvlFilterHandler(level, log.Must.FileHandler(getFormattedLogFilename(), log.LogfmtFormat())),
-		log.LvlFilterHandler(log.LvlError, log.StreamHandler(os.Stdout, log.LogfmtFormat())),
-	)
+	defer ranchr.FlushLog()
+	defer log.Flush()
+	ranchr.UseLogger(Logger)
 
-	ranchr.Log.SetHandler(handler)
-	return
+
+	return nil
 }
-
+/*
 func getFormattedLogFilename() string {
 	var suffix, tmpName, logFile string
 
@@ -143,7 +128,7 @@ func getFormattedLogFilename() string {
 	return logFile
 
 }
-
+*/
 func SubString(s string, i, x int) string {
 	r := []rune(s)
 	l := i + x
