@@ -20,7 +20,7 @@
        		"server",
        		"alternate"
        	]
-       	version = [
+       	release = [
        		"10.04",
        		"12.04",
        		"12.10",
@@ -77,7 +77,7 @@
 	        "minimal",
 	        "netinstall"
 	]
-	version = [
+	release = [
 	        "5.10",
         	"6.5"
 	]

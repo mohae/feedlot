@@ -7,12 +7,13 @@
 #
 # Type corresponds with a Packer Builder's `type` variable. This is typically
 # the distro name.
-out_dir = "out/:type"
+name = ":type-:release-:image-:arch"
+out_dir = "out/:type/:build_name"
 src_dir = "src/:type"
 scripts_dir = ":src_dir/scripts"
 commands_dir = ":src_dir/commands"
 min_packer_version = ""
-description = "Default Rancher template"
+description = "Test Default Rancher template"
 builder_type = [
     "virtualbox-iso",
     "vmware-iso"
