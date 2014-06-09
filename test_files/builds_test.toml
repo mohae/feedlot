@@ -8,7 +8,7 @@
 		description = "Test build template"
 		arch = "amd64"
 		image = "server"
-		version = "1204"
+		release = "1204"
 		builder_type = [
 			"virtualbox-iso"
 		]

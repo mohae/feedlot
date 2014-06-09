@@ -35,14 +35,18 @@ var testDefaultsCases = []defaultsTest{
 		},
 		Expected: defaults{
 			IODirInf: IODirInf{
-				OutDir:      "out/:type",
+				OutDir:      "out/:type/:build_name",
 				ScriptsDir:  ":src_dir/scripts",
 				SrcDir:      "src/:type",
 				CommandsDir: ":src_dir/commands",
 			},
 			PackerInf: PackerInf{
 				MinPackerVersion: "",
-				Description:      "Default Rancher template",
+				Description:      "Test Default Rancher template",
+			},
+			BuildInf: BuildInf{
+				Name:	":type-:release-:image-:arch",
+				BuildName: "",
 			},
 			build: build{
 				BuilderType: []string{
@@ -128,6 +132,7 @@ var testSupportedCases = []SupportedTest{
 		Expected: Supported{
 			Distro: map[string]distro{
 				"ubuntu": {
+					BuildInf: BuildInf{},
 					IODirInf: IODirInf{},
 					PackerInf: PackerInf{
 						MinPackerVersion: "",
@@ -194,6 +199,7 @@ var testSupportedCases = []SupportedTest{
 					},
 				},
 				"centos": {
+					BuildInf: BuildInf{},
 					IODirInf: IODirInf{
 						OutDir: "out/centos",
 						SrcDir: "src/centos",
@@ -404,6 +410,7 @@ var testCommandsFromFileCases = []commandsFromFileTest{
 	},
 }
 
+
 func TestMain(t *testing.T) {
 
 	var tmpEnv string
@@ -429,6 +436,7 @@ func TestMain(t *testing.T) {
 	}
 
 	_ = os.Setenv(EnvDefaultsFile, tmpEnv)
+
 
 	tmpEnv = os.Getenv(EnvSupportedFile)
 	sd := Supported{}
