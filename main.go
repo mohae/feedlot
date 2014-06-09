@@ -16,7 +16,7 @@ import (
 	"github.com/mitchellh/cli"
 	"github.com/mohae/rancher/ranchr"
 	//	log "gopkg.in/inconshreveable/log15.v2"
-//	log "github.com/inconshreveable/log15"
+	//	log "github.com/inconshreveable/log15"
 	log "github.com/cihub/seelog"
 )
 
@@ -24,7 +24,7 @@ var Logger log.LoggerInterface
 
 func init() {
 	// Set by default
-	
+
 }
 
 // main wraps runMain() and ensures that the log gets flushed prior to exit.
@@ -95,6 +95,7 @@ func SetLogging() error {
 	log.ReplaceLogger(logger)
 	return nil
 }
+
 /*
 func getFormattedLogFilename() string {
 	var suffix, tmpName, logFile string

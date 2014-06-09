@@ -118,11 +118,11 @@ var TestsVarMapFromSliceCases = []varMapFromSliceTest{
 		[]string{
 			"type=virtualbox-iso", "boot_wait=5s", "disk_size=20000",
 			"guest_os_type=Ubuntu_64", "iso_checksum=sha256", "memory=4096",
-		}, 
+		},
 		map[string]interface{}{
 			"type": "virtualbox-iso", "boot_wait": "5s", "disk_size": "20000",
 			"guest_os_type": "Ubuntu_64", "iso_checksum": "sha256", "memory": "4096",
-		}, 
+		},
 	},
 	{
 		"Create []variable From slice T2",
@@ -131,12 +131,12 @@ var TestsVarMapFromSliceCases = []varMapFromSliceTest{
 			"memory": "2048", "ssh_port": "222", "ssh_username": "vagrant",
 		},
 	},
-/*	{
-		"Create []varible: pass nil",
-		nil,
-		nil,
-	},
-*/
+	/*	{
+			"Create []varible: pass nil",
+			nil,
+			nil,
+		},
+	*/
 }
 
 type keyIndexInVarSliceTest struct {
@@ -183,9 +183,7 @@ var TestsGetVariableNameCases = []getVariableNameTest{
 	{"getVariableName test1", "variable1", "{{user `variable1` }}"},
 	{"getVariableName test2", "variable2", "{{user `variable2` }}"},
 	{"getVariableName test3: empty", "", "no variable name was passed"},
-
 }
-
 
 type commandsFromFileTest struct {
 	test
@@ -251,21 +249,20 @@ var testCommandsFromFileCases = []commandsFromFileTest{
 	},
 }
 
-
 type getDefaultISOInfoTest struct {
-	name string
+	name     string
 	defImage []string
-	eArch string
-	eImage string
+	eArch    string
+	eImage   string
 	eRelease string
 }
 
-var TestsGetDefaultISOInfoCases = []getDefaultISOInfoTest {
+var TestsGetDefaultISOInfoCases = []getDefaultISOInfoTest{
 	{
-		name: "get default iso", 
+		name:     "get default iso",
 		defImage: []string{"arch = amd64", "release = 12.04", "image = server"},
-		eArch: "amd64",
-		eImage: "server",
+		eArch:    "amd64",
+		eImage:   "server",
 		eRelease: "12.04",
 	},
 }
@@ -349,85 +346,85 @@ var TestGetMergedBuildersCases = []getMergedBuildersTest{
 		},
 	},
 	{
-			name: "Test merge builders: update common, virtualbox, and vmware",
-			old: map[string]builder{
-				"common": {
-					Settings: []string{
-						"boot_command = :src_dir/:type/:commands_dir/boot.command",
-						"boot_wait = 5s",
-						"disk_size = 20000",
-						"http_directory = http",
-						"iso_checksum_type = sha256",
-						"shutdown_command = :src_dir/:type/:commands_dir/shutdown.command",
-						"ssh_password = vagrant",
-						"ssh_port = 22",
-						"ssh_username = vagrant",
-						"ssh_wait_timeout = 240m",
-					},
-				},
-				"virtualbox": {
-					VMSettings: []string{
-						"cpus=1",
-						"memory=1024",
-					},
-				},
-				"vmware": {
-					VMSettings: []string{
-						"cpuid.coresPerSocket=1",
-						"memsize=1024",
-						"numvcpus=1",
-					},
+		name: "Test merge builders: update common, virtualbox, and vmware",
+		old: map[string]builder{
+			"common": {
+				Settings: []string{
+					"boot_command = :src_dir/:type/:commands_dir/boot.command",
+					"boot_wait = 5s",
+					"disk_size = 20000",
+					"http_directory = http",
+					"iso_checksum_type = sha256",
+					"shutdown_command = :src_dir/:type/:commands_dir/shutdown.command",
+					"ssh_password = vagrant",
+					"ssh_port = 22",
+					"ssh_username = vagrant",
+					"ssh_wait_timeout = 240m",
 				},
 			},
-			new: map[string]builder{
-				"common": {
-					Settings: []string{
-						"disk_size = 40000",
-						"shutdown_command = src/commnds/shutdown.command",
-						"ssh_wait_timeout = 300m",
-					},
-				},
-				"virtualbox": {
-					VMSettings: []string{
-						"memory=2048",
-					},
-				},
-				"vmware": {
-					VMSettings: []string{
-						"memsize=2048",
-					},
+			"virtualbox": {
+				VMSettings: []string{
+					"cpus=1",
+					"memory=1024",
 				},
 			},
-			expected: map[string]builder{
-				"common": {
-					Settings: []string{
-						"boot_command = :src_dir/:type/:commands_dir/boot.command",
-						"boot_wait = 5s",
-						"disk_size = 40000",
-						"http_directory = http",
-						"iso_checksum_type = sha256",
-						"shutdown_command = src/commands/shutdown.command",
-						"ssh_password = vagrant",
-						"ssh_port = 22",
-						"ssh_username = vagrant",
-						"ssh_wait_timeout = 300m",
-					},
-				},
-				"virtualbox": {
-					VMSettings: []string{
-						"cpus=1",
-						"memory=2048",
-					},
-				},
-				"vmware": {
-					VMSettings: []string{
-						"cpuid.coresPerSocket=1",
-						"memsize=2048",
-						"numvcpus=1",
-					},
+			"vmware": {
+				VMSettings: []string{
+					"cpuid.coresPerSocket=1",
+					"memsize=1024",
+					"numvcpus=1",
 				},
 			},
 		},
+		new: map[string]builder{
+			"common": {
+				Settings: []string{
+					"disk_size = 40000",
+					"shutdown_command = src/commnds/shutdown.command",
+					"ssh_wait_timeout = 300m",
+				},
+			},
+			"virtualbox": {
+				VMSettings: []string{
+					"memory=2048",
+				},
+			},
+			"vmware": {
+				VMSettings: []string{
+					"memsize=2048",
+				},
+			},
+		},
+		expected: map[string]builder{
+			"common": {
+				Settings: []string{
+					"boot_command = :src_dir/:type/:commands_dir/boot.command",
+					"boot_wait = 5s",
+					"disk_size = 40000",
+					"http_directory = http",
+					"iso_checksum_type = sha256",
+					"shutdown_command = src/commands/shutdown.command",
+					"ssh_password = vagrant",
+					"ssh_port = 22",
+					"ssh_username = vagrant",
+					"ssh_wait_timeout = 300m",
+				},
+			},
+			"virtualbox": {
+				VMSettings: []string{
+					"cpus=1",
+					"memory=2048",
+				},
+			},
+			"vmware": {
+				VMSettings: []string{
+					"cpuid.coresPerSocket=1",
+					"memsize=2048",
+					"numvcpus=1",
+				},
+			},
+		},
+	},
 	{
 		name: "Test merge builders: old has common only, new has vm stuff only",
 		old: map[string]builder{
@@ -491,44 +488,44 @@ var TestGetMergedBuildersCases = []getMergedBuildersTest{
 			},
 		},
 	},
-// disabled because DeepEqual comes back with != even though they are
-/*	{
-		name: "Test merge builders: no new builders",
-		old: map[string]builder{
-			"common": {
-				Settings: []string{
-					"boot_command = :src_dir/:type/:commands_dir/boot.command",
-					"boot_wait = 5s",
-					"disk_size = 20000",
-					"http_directory = http",
-					"iso_checksum_type = sha256",
-					"shutdown_command = :src_dir/:type/:commands_dir/shutdown.command",
-					"ssh_password = vagrant",
-					"ssh_port = 22",
-					"ssh_username = vagrant",
-					"ssh_wait_timeout = 240m",
+	// disabled because DeepEqual comes back with != even though they are
+	/*	{
+			name: "Test merge builders: no new builders",
+			old: map[string]builder{
+				"common": {
+					Settings: []string{
+						"boot_command = :src_dir/:type/:commands_dir/boot.command",
+						"boot_wait = 5s",
+						"disk_size = 20000",
+						"http_directory = http",
+						"iso_checksum_type = sha256",
+						"shutdown_command = :src_dir/:type/:commands_dir/shutdown.command",
+						"ssh_password = vagrant",
+						"ssh_port = 22",
+						"ssh_username = vagrant",
+						"ssh_wait_timeout = 240m",
+					},
+				},
+			},
+			new: nil,
+			expected: map[string]builder{
+				"common": {
+					Settings: []string{
+						"boot_command = :src_dir/:type/:commands_dir/boot.command",
+						"boot_wait = 5s",
+						"disk_size = 20000",
+						"http_directory = http",
+						"iso_checksum_type = sha256",
+						"shutdown_command = :src_dir/:type/:commands_dir/shutdown.command",
+						"ssh_password = vagrant",
+						"ssh_port = 22",
+						"ssh_username = vagrant",
+						"ssh_wait_timeout = 240m",
+					},
 				},
 			},
 		},
-		new: nil,
-		expected: map[string]builder{
-			"common": {
-				Settings: []string{
-					"boot_command = :src_dir/:type/:commands_dir/boot.command",
-					"boot_wait = 5s",
-					"disk_size = 20000",
-					"http_directory = http",
-					"iso_checksum_type = sha256",
-					"shutdown_command = :src_dir/:type/:commands_dir/shutdown.command",
-					"ssh_password = vagrant",
-					"ssh_port = 22",
-					"ssh_username = vagrant",
-					"ssh_wait_timeout = 240m",
-				},
-			},
-		},
-	},
-*/
+	*/
 }
 
 type getMergedPostProcessorsTest struct {
@@ -606,7 +603,6 @@ var TestGetMergedPostProcessorsCases = []getMergedPostProcessorsTest{
 			},
 		},
 	},
-
 }
 
 type getMergedProvisionersTest struct {
@@ -682,7 +678,7 @@ var TestGetMergedProvisionersCases = []getMergedProvisionersTest{
 				},
 			},
 		},
-	},	{
+	}, {
 		name: "Test merging provisioners,no new provisioner",
 		old: map[string]provisioners{
 			"vagrant": {
@@ -696,8 +692,7 @@ var TestGetMergedProvisionersCases = []getMergedProvisionersTest{
 				},
 			},
 		},
-		new: map[string]provisioners{
-		},
+		new: map[string]provisioners{},
 		expected: map[string]provisioners{
 			"vagrant": {
 				Settings: []string{"execute_command = :commands_dir/execute.command"},
@@ -742,8 +737,8 @@ var TestGetMergedProvisionersCases = []getMergedProvisionersTest{
 }
 
 type appendSlashTest struct {
-	name string
-	value string
+	name     string
+	value    string
 	expected string
 }
 
@@ -751,6 +746,7 @@ var TestAppendSlashCases = []appendSlashTest{
 	{"appendSlashCases test 1", "this/is/a/test", "this/is/a/test/"},
 	{"appendSlashCases test 2", "this/is/another/test/", "this/is/another/test/"},
 }
+
 /*
 type getMergedValueStringTest struct {
 	name     string
@@ -766,12 +762,12 @@ var TestsGetMergedValueStringCases = []getMergedValueStringTest{
 */
 
 type copyFileTest struct {
-	name string
-	srcDir string
-	destDir string
-	script string
+	name          string
+	srcDir        string
+	destDir       string
+	script        string
 	expectedInt64 int64
-	expectedErr string
+	expectedErr   string
 }
 
 var TestCopyFileCases = []copyFileTest{
@@ -863,17 +859,17 @@ func TestRanchr(t *testing.T) {
 			t.Logf(test.name, "OK")
 		}
 	}
-/*
-	// test merging of value strings
-	for _, test := range TestsGetMergedValueStringCases {
-		i := getMergedValueString(test.old, test.new)
-		if i != test.expected {
-			t.Errorf(test.name, "Expected:", test.expected, "Got:", i)
-		} else {
-			t.Logf(test.name, "OK")
+	/*
+		// test merging of value strings
+		for _, test := range TestsGetMergedValueStringCases {
+			i := getMergedValueString(test.old, test.new)
+			if i != test.expected {
+				t.Errorf(test.name, "Expected:", test.expected, "Got:", i)
+			} else {
+				t.Logf(test.name, "OK")
+			}
 		}
-	}
-*/
+	*/
 
 	for _, test := range testCommandsFromFileCases {
 		if commands, err := commandsFromFile(test.VarValue); err != nil {
@@ -916,7 +912,7 @@ func TestRanchr(t *testing.T) {
 		}
 	}
 
-/* DeepEqual returns false when true?
+	/* DeepEqual returns false when true?
 	// Test merging of two builders
 	for _, test := range TestGetMergedBuildersCases {
 		mergedB := map[string]builder{}
@@ -931,7 +927,7 @@ func TestRanchr(t *testing.T) {
 			}
 		}
 	}
-*/
+	*/
 	mergedPP := map[string]postProcessors{}
 	// test merging of postProcessors
 	for _, test := range TestGetMergedPostProcessorsCases {
@@ -970,7 +966,7 @@ func TestRanchr(t *testing.T) {
 			t.Logf(test.name, "OK")
 		}
 	}
-		
+
 	for _, test := range TestCopyFileCases {
 		bW, err := copyFile(test.srcDir, test.destDir, test.script)
 		if err != nil {
@@ -989,5 +985,3 @@ func TestRanchr(t *testing.T) {
 	}
 
 }
-
-
