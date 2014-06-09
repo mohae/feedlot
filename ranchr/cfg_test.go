@@ -38,7 +38,8 @@ var testDefaultsCases = []defaultsTest{
 				OutDir:      "out/:type/:build_name",
 				ScriptsDir:  ":src_dir/scripts",
 				SrcDir:      "src/:type",
-				CommandsDir: ":src_dir/commands",
+				ScriptsSrcDir:      "",
+				CommandsSrcDir: "",
 			},
 			PackerInf: PackerInf{
 				MinPackerVersion: "",
