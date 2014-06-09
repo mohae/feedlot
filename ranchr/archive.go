@@ -56,6 +56,7 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 	tarHeader.Size = fileStat.Size()
 	tarHeader.Mode = int64(fileStat.Mode())
 	tarHeader.ModTime = fileStat.ModTime()
+	logger.Info(tarHeader)
 
 	// Write the file header to the tarball.
 	if err := tW.WriteHeader(tarHeader); err != nil {
