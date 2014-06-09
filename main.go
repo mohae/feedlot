@@ -12,7 +12,6 @@ import (
 	//flag"
 	//"io/ioutil"
 	"os"
-	"strings"
 
 	"github.com/mitchellh/cli"
 	"github.com/mohae/rancher/ranchr"
@@ -47,7 +46,7 @@ func runMain() int {
 
 	SetLogging()
 
-	Logger.Info("Rancher starting with args: %v", os.Args[:])
+	log.Info("Rancher starting with args: %v", os.Args[:])
 	args := os.Args[1:]
 
 	// Get the command line args. We shortcut "--version" and "-v" to
@@ -77,28 +76,23 @@ func runMain() int {
 		fmt.Println("Rancher encountered an error: %s\n", err.Error())
 	}
 
-	Logger.Info("Rancher exiting with an exit code of %v", exitCode)
+	log.Info("Rancher exiting with an exit code of %v", exitCode)
 
 	return exitCode
 }
 
 func SetLogging() error {
-	// if Logging, set the Logfile information
-	logging := os.Getenv(ranchr.EnvLogging)
-	if strings.ToLower(logging) != "true" {
-		return nil
-	}
-
-	Logger, err := log.LoggerFromConfigAsFile("rancher_log.xml")
+	logger, err := log.LoggerFromConfigAsFile("rancher_log.xml")
 	if err != nil {
 		return err
 	}
 
-	defer ranchr.FlushLog()
 	defer log.Flush()
-	ranchr.UseLogger(Logger)
 
+	ranchr.UseLogger(logger)
+	defer ranchr.FlushLog()
 
+	log.ReplaceLogger(logger)
 	return nil
 }
 /*

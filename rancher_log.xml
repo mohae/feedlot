@@ -1,0 +1,10 @@
+<seelog>
+    <outputs>
+        <file path="rancher.log"/>
+        <console formatid="colored"/>
+    </outputs>
+    <formats>
+        <format id="colored"  format="%EscM(46)%Level%EscM(49) %Msg%n%EscM(0)"/>
+    </formats>
+</seelog>
+
