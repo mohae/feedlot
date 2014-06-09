@@ -3,16 +3,21 @@
 		<exception filepattern="test*" minlevel="error"/>
 	</exceptions>
    	<outputs formatid="all">
-		<file path="rancher.log"/>
+		<file path="logs/rancher.log"/>
 		<filter levels="info">
 			<console formatid="fmtinfo"/>
 		</filter>
-		<filter levels="error,critical" formatid="fmterror">
+		<filter levels="error, critical" formatid="fmterror">
 			<console formatid="colored"/>
-			<file path="errors.log"/>
+			<file path="logs/errors.log"/>
+		</filter>
+		<filter levels="debug, trace" formatid="fmterror">
+			<console formatid="colored"/>
+			<file path="logs/debug.log"/>
 		</filter>
 	</outputs>
 	<formats>
+	        <format id="fmtdebug" format="[%LEVEL] [%Time] [%FuncShort @ %File.%Line] %Msg%n"/>
 		<format id="fmtinfo" format="[%Level] [%Time] %Msg%n"/>
 	        <format id="fmterror" format="[%LEVEL] [%Time] [%FuncShort @ %File.%Line] %Msg%n"/>
         	<format id="all" format="[%Level] [%Time] [@ %File.%Line] %Msg%n"/>
