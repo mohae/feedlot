@@ -38,6 +38,12 @@ func (p *PackerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []st
 		return err
 	}
 
+	if i.HTTPSrcDir == "" {
+		err := errors.New("ranchr.TemplateToFileJSON: HTTPSrcDir directory for " + b.BuildName + " not set")
+		logger.Error(err.Error())
+		return err
+	}
+
 	if i.OutDir == "" {
 		err := errors.New("ranchr.TemplateToFileJSON: output directory for " + b.BuildName + " not set")
 		logger.Error(err.Error())
@@ -66,6 +72,7 @@ func (p *PackerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []st
 	a := Archive{}
 
 	if err := a.priorBuild(i.OutDir, "gzip"); err != nil {
+		logger.Error(err.Error())
 		return err
 	}
 
@@ -91,6 +98,11 @@ func (p *PackerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []st
 	if err := os.MkdirAll(i.OutDir+"http", os.FileMode(0766)); err != nil {
 		logger.Error(err.Error())
 		return err
+	}
+
+	logger.Error(i.OutDir + i.HTTPDir)
+	if err := copyDirContents(i.HTTPSrcDir, i.OutDir + i.HTTPDir); err != nil {
+		logger.Error(err.Error())
 	}
 
 	// Write it out as JSON
