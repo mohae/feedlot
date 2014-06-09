@@ -454,6 +454,27 @@ var TestGetMergedPostProcessorsCases = []getMergedPostProcessorsTest{
 			},
 		},
 	},
+	{
+		name: "Test merging postProcessors: no new postProcessor",
+		old: map[string]postProcessors{
+			"vagrant": {
+				Settings: []string{
+					"keep_input_artifact = false",
+					"output = :out_dir/someComposedBoxName.box",
+				},
+			},
+		},
+		new: nil,
+		expected: map[string]postProcessors{
+			"vagrant": {
+				Settings: []string{
+					"keep_input_artifact = false",
+					"output = :out_dir/someComposedBoxName.box",
+				},
+			},
+		},
+	},
+
 }
 
 type getMergedProvisionersTest struct {
@@ -520,6 +541,34 @@ var TestGetMergedProvisionersCases = []getMergedProvisionersTest{
 		expected: map[string]provisioners{
 			"vagrant": {
 				Settings: []string{"execute_command = commands/execute.command"},
+				Scripts: []string{
+					":scripts_dir/setup.sh",
+					":scripts_dir/base.sh",
+					":scripts_dir/vagrant.sh",
+					":scripts_dir/cleanup.sh",
+					":scripts_dir/zerodisk.sh",
+				},
+			},
+		},
+	},	{
+		name: "Test merging provisioners,no new provisioner",
+		old: map[string]provisioners{
+			"vagrant": {
+				Settings: []string{"execute_command = :commands_dir/execute.command"},
+				Scripts: []string{
+					":scripts_dir/setup.sh",
+					":scripts_dir/base.sh",
+					":scripts_dir/vagrant.sh",
+					":scripts_dir/cleanup.sh",
+					":scripts_dir/zerodisk.sh",
+				},
+			},
+		},
+		new: map[string]provisioners{
+		},
+		expected: map[string]provisioners{
+			"vagrant": {
+				Settings: []string{"execute_command = :commands_dir/execute.command"},
 				Scripts: []string{
 					":scripts_dir/setup.sh",
 					":scripts_dir/base.sh",
