@@ -8,7 +8,7 @@ import (
 	_"fmt"
 	"io"
 	"os"
-	"path"
+	_"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -51,12 +51,17 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 		return err
 	}
 
+	switch fileMode := fileStat.Mode(); {
+	case fileMode.IsDir():
+		logger.Info("Is Directory: ", filename)
+		return nil
+	}
+
 	tarHeader := new(tar.Header)
 	tarHeader.Name = filename
 	tarHeader.Size = fileStat.Size()
 	tarHeader.Mode = int64(fileStat.Mode())
 	tarHeader.ModTime = fileStat.ModTime()
-	logger.Info(tarHeader)
 
 	// Write the file header to the tarball.
 	if err := tW.WriteHeader(tarHeader); err != nil {
@@ -88,11 +93,12 @@ func (a *Archive) priorBuild(src string, t string) error {
 
 	// Get the current date and time in RFC3339 format with custom formatting.
 	nowF := formattedNow()
+	logger.Info(a.Files)
 	logger.Info(nowF)
-	fName := path.Base(a.Files[0]) + "-" + nowF + ".tar.gz"
-	logger.Info(fName)
+	tarBallName := a.Files[0] + "-" + nowF + ".tar.gz"
+	logger.Info(tarBallName)
 	// Create the new archive file.
-	tBall, err := os.Create(fName)
+	tBall, err := os.Create(tarBallName)
 	if err != nil {
 		logger.Critical(err.Error())
 		return err
@@ -110,6 +116,7 @@ func (a *Archive) priorBuild(src string, t string) error {
 
 	// Go through each file in the path and add it to the archive
 	for _, file := range a.Files {
+		// 
 		if err := a.addFile(tW, file); err != nil {
 			logger.Critical(err.Error())
 			return err
