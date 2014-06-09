@@ -80,19 +80,23 @@ func (r *RawTemplate) CreatePackerTemplate() (PackerTemplate, error) {
 	r.OutDir = r.replaceVariables(r.OutDir)
 
 	// Commands and scripts dir need to be resolved next
-	r.varVals = map[string]string{r.delim + "out_dir": r.OutDir, r.delim + "src_dir": r.SrcDir, r.delim + "type": r.Type, r.delim + "release": r.Release, r.delim + "arch": r.Arch, r.delim + "image": r.Image, r.delim + "date": r.date, r.delim + "build_name": r.BuildName}
+	r.varVals = map[string]string{r.delim + "out_dir": r.OutDir, r.delim + "src_dir": r.SrcDir, r.delim + "type": r.Type, r.delim + "release": r.Release, r.delim + "arch": r.Arch, r.delim + "image": r.Image, r.delim + "date": r.date, r.delim + "build_name": r.BuildName, r.delim + "http_dir": r.HTTPDir, r.delim + "scripts_src_dir": r.ScriptsSrcDir}
 
 	r.CommandsDir = r.replaceVariables(r.CommandsDir)
+	r.HTTPDir = r.replaceVariables(r.HTTPDir)
 	r.ScriptsDir = r.replaceVariables(r.ScriptsDir)
+	r.ScriptsSrcDir = r.replaceVariables(r.ScriptsSrcDir)
 
 	// Create a full variable replacement map, know that the SrcDir and OutDir stuff are resolved.
 	// Rest of the replacements are done by the packerers.
-	r.varVals = map[string]string{r.delim + "out_dir": r.OutDir, r.delim + "src_dir": r.SrcDir, r.delim + "commands_dir": r.CommandsDir, r.delim + "scripts_dir": r.ScriptsDir, r.delim + "type": r.Type, r.delim + "release": r.Release, r.delim + "arch": r.Arch, r.delim + "image": r.Image, r.delim + "date": r.date, r.delim + "name": r.Name, r.delim + "build_name": r.BuildName}
+	r.varVals = map[string]string{r.delim + "out_dir": r.OutDir, r.delim + "src_dir": r.SrcDir, r.delim + "commands_dir": r.CommandsDir, r.delim + "scripts_dir": r.ScriptsDir, r.delim + "type": r.Type, r.delim + "release": r.Release, r.delim + "arch": r.Arch, r.delim + "image": r.Image, r.delim + "date": r.date, r.delim + "name": r.Name, r.delim + "build_name": r.BuildName, r.delim + "http_dir": r.HTTPDir, r.delim + "scripts_src_dir": r.ScriptsSrcDir}
 
-	r.SrcDir = r.replaceVariables(r.SrcDir)
-	r.OutDir = r.replaceVariables(r.OutDir)
 	r.CommandsDir = r.replaceVariables(r.CommandsDir)
+	r.HTTPDir = r.replaceVariables(r.HTTPDir)
+	r.OutDir = r.replaceVariables(r.OutDir)
 	r.ScriptsDir = r.replaceVariables(r.ScriptsDir)
+	r.ScriptsSrcDir = r.replaceVariables(r.ScriptsSrcDir)
+	r.SrcDir = r.replaceVariables(r.SrcDir)
 
 	// General Packer Stuff
 	p := PackerTemplate{}

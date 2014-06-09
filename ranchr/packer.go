@@ -32,6 +32,12 @@ type PackerTemplate struct {
 
 func (p *PackerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []string) error {
 
+	if i.HTTPDir == "" {
+		err := errors.New("ranchr.TemplateToFileJSON: HTTPDir directory for " + b.BuildName + " not set")
+		logger.Error(err.Error())
+		return err
+	}
+
 	if i.OutDir == "" {
 		err := errors.New("ranchr.TemplateToFileJSON: output directory for " + b.BuildName + " not set")
 		logger.Error(err.Error())
@@ -50,6 +56,12 @@ func (p *PackerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []st
 		return err
 	}
 
+	if i.ScriptsSrcDir == "" {
+		err := errors.New("ranchr.TemplateToFileJSON: ScriptsSrcDir directory for " + b.BuildName + " not set")
+		logger.Error(err.Error())
+		return err
+	}
+
 	// If the output directory exists, create a tarball.
 	a := Archive{}
 
@@ -60,7 +72,7 @@ func (p *PackerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []st
 	var errCnt, okCnt int
 	for _, script := range scripts {
 
-		if wB, err := copyFile(i.ScriptsDir, i.OutDir, script); err != nil {
+		if wB, err := copyFile(i.ScriptsSrcDir, i.OutDir +i.ScriptsDir, script); err != nil {
 			logger.Error(err.Error())
 			errCnt++
 		} else {

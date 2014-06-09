@@ -162,10 +162,12 @@ type BuildInf struct {
 
 type IODirInf struct {
 	// IODirInf is used to store information about where Rancher can find and put things.
-	OutDir      string `toml:"out_dir"`
-	SrcDir      string `toml:"src_dir"`
 	CommandsDir string `toml:"commands_dir"`
+	HTTPDir		string `toml:"http_dir"`
+	OutDir      string `toml:"out_dir"`
 	ScriptsDir  string `toml:"scripts_dir"`
+	ScriptsSrcDir  string `toml:"scripts_src_dir"`
+	SrcDir      string `toml:"src_dir"`
 }
 
 type PackerInf struct {

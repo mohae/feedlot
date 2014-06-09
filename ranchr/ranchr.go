@@ -352,8 +352,10 @@ func setDistrosDefaults(d defaults, s Supported) (map[string]RawTemplate, error)
 		tmp.BaseURL = appendSlash(v.BaseURL)
 		tmp.Arch, tmp.Image, tmp.Release = getDefaultISOInfo(v.DefImage)
 		tmp.CommandsDir = appendSlash(d.CommandsDir)
-		tmp.ScriptsDir = appendSlash(d.ScriptsDir)
+		tmp.HTTPDir = appendSlash(d.HTTPDir)
 		tmp.OutDir = appendSlash(d.OutDir)
+		tmp.ScriptsDir = appendSlash(d.ScriptsDir)
+		tmp.ScriptsSrcDir = appendSlash(d.ScriptsSrcDir)
 		tmp.SrcDir = appendSlash(d.SrcDir)
 		tmp.Name = d.Name
 		tmp.BuildName = d.BuildName
@@ -681,6 +683,13 @@ func getMergedProvisioners(old map[string]provisioners, new map[string]provision
 func appendSlash(s string) string {
 	if !strings.HasSuffix(s, "/") {
 		s += "/"
+	}
+	return s
+}
+
+func trimSuffix(s string) string {
+	if strings.HasSuffix(s, "/") {
+		s = s[:len(s)-len(suffix)]
 	}
 	return s
 }
