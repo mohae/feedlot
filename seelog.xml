@@ -24,12 +24,7 @@
 	        <format id="fmtdebug" format="[%LEVEL] [%Time] [%FuncShort @ %File.%Line] %Msg%n"/>
 		<format id="fmtinfo" format="[%Level] [%Time] %Msg%n"/>
 	        <format id="fmterror" format="[%LEVEL] [%Time] [%FuncShort @ %File.%Line] %Msg%n"/>
-<<<<<<< HEAD
-        	<format id="all" format="[%Level] [%Time] [@ %File.%Line] %Msg%n"/>
-=======
-	        <format id="fmtdebug" format="[%LEVEL] [%DateT%Time] [%FuncShort @ %File.%Line] %Msg%n"/>
         	<format id="all" format="[%Level] [%Time] [@ %File.%Line] %Msg%n"/>	
->>>>>>> 8de15eafa86d2f9d0fe59b6290d4c4b8b0ec5e4e
         	<format id="colored"  format="%EscM(46)%Level%EscM(49) %Msg%n%EscM(0)"/>
     	</formats>
 </seelog>

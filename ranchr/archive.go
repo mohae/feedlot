@@ -79,22 +79,33 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 }
 
 func (a *Archive) priorBuild(src string, t string) error {
+	// see if src exists, if it doesn't then don't do anything
+	if _, err := os.Stat(src); err != nil {
+		if os.IsNotExist(err) {
+			logger.Info("tarball of prior build run not needed because " + src + " does not exist")
+			return nil
+		}
+		logger.Error(err.Error())
+		return err
+	}
+
+	logger.Info("Creating tarball from " + src + " using ", t)
 	if err := a.SrcWalk(src); err != nil {
 		logger.Error("Walk of directory '" + src + "' failed: " + err.Error())
 		return err
 	}
 
-	if len(a.Files) < 0 {
+	if len(a.Files) <= 0 {
 		// This isn't a real error, just log it and return a non-error state.
 		err := errors.New("No prior builds to archive.")
-		logger.Info(err.Error())
+		logger.Error(err.Error())
 		return nil
 	}
 
+//	if len(a.Files) = 1 {
+		
 	// Get the current date and time in RFC3339 format with custom formatting.
 	nowF := formattedNow()
-	logger.Info(a.Files)
-	logger.Info(nowF)
 	tarBallName := path.Dir(a.Files[0]) + "-" + nowF + ".tar.gz"
 	logger.Info(tarBallName)
 	// Create the new archive file.
