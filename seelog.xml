@@ -1,0 +1,22 @@
+<seelog type="adaptive" mininterval="2000000" maxinterval="100000000" critmsgcount="50" minlevel="debug">
+	<exceptions>
+		<exception filepattern="test*" minlevel="error"/>
+	</exceptions>
+    	<outputs formatid="all">
+		<file path="rancher.log"/>
+		<filter levels="info">
+			<console formatid="fmtinfo"/>
+		</filter>
+		<filter levels="error,critical" formatid="fmterror">
+			<console formatid="colored"/>
+			<file path="errors.log"/>
+		</filter>
+	</outputs>
+	<formats>
+		<format id="fmtinfo" format="[%Level] [%Time] %Msg%n"/>
+	        <format id="fmterror" format="[%LEVEL] [%Time] [%FuncShort @ %File.%Line] %Msg%n"/>
+        	<format id="all" format="[%Level] [%Time] [@ %File.%Line] %Msg%n"/>	
+        	<format id="colored"  format="%EscM(46)%Level%EscM(49) %Msg%n%EscM(0)"/>
+    	</formats>
+</seelog>
+

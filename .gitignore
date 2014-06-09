@@ -28,6 +28,7 @@ _testmain.go
 out/*
 *.bak
 *.log
+*.gz
 
 # don't archive the json output...this may expand as 
 # output handling gets expanded, or it may be deleted
