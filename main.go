@@ -82,7 +82,7 @@ func runMain() int {
 }
 
 func SetLogging() error {
-	logger, err := log.LoggerFromConfigAsFile("rancher_log.xml")
+	logger, err := log.LoggerFromConfigAsFile("seelog.xml")
 	if err != nil {
 		return err
 	}
