@@ -174,6 +174,26 @@ type getVariableNameTest struct {
 var TestsGetVariableNameCases = []getVariableNameTest{
 	{"getVariableName test1", "variable1", "{{user `variable1` }}"},
 	{"getVariableName test2", "variable2", "{{user `variable2` }}"},
+	{"getVariableName test3: empty", "", "no variable name was passed"},
+
+}
+
+type getDefaultISOInfoTest struct {
+	name string
+	defImage []string
+	eArch string
+	eImage string
+	eRelease string
+}
+
+var TestsGetDefaultISOInfoCases = []getDefaultISOInfoTest {
+	{
+		name: "get default iso", 
+		defImage: []string{"arch = amd64", "release = 12.04", "image = server"},
+		eArch: "amd64",
+		eImage: "server",
+		eRelease: "12.04",
+	},
 }
 
 type getMergedBuildersTest struct {
@@ -729,6 +749,18 @@ func TestRanchr(t *testing.T) {
 	}
 */
 	// test getting variable names
+	for _, test := range TestsGetVariableNameCases {
+		if i, err := getVariableName(test.variable); err != nil {
+			if err.Error() != test.expected {
+				t.Errorf(test.name, "Expected:", test.expected, "Got:", i)
+			} else {
+				t.Logf(test.name, "OK")
+			}
+		} else {
+			t.Logf(test.name, "OK")
+		}
+	}
+
 	for _, test := range TestsGetVariableNameCases {
 		if i, err := getVariableName(test.variable); err != nil {
 			if err.Error() != test.expected {

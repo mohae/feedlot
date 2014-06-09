@@ -350,7 +350,7 @@ func setDistrosDefaults(d defaults, s Supported) (map[string]RawTemplate, error)
 		}
 
 		tmp.BaseURL = appendSlash(v.BaseURL)
-		tmp.Arch, tmp.Image, tmp.Release = getDefaultISOInfo(v)
+		tmp.Arch, tmp.Image, tmp.Release = getDefaultISOInfo(v.DefImage)
 		tmp.CommandsDir = appendSlash(d.CommandsDir)
 		tmp.ScriptsDir = appendSlash(d.ScriptsDir)
 		tmp.OutDir = appendSlash(d.OutDir)
@@ -561,8 +561,8 @@ func getVariableName(s string) (string, error) {
 	return "{{user `" + s + "` }}", nil
 }
 
-func getDefaultISOInfo(d distro) (Arch string, Image string, Release string) {
-	for _, val := range d.DefImage {
+func getDefaultISOInfo(d []string) (Arch string, Image string, Release string) {
+	for _, val := range d {
 		k, v := parseVar(val)
 		switch k {
 		case "arch":
