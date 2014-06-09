@@ -143,7 +143,7 @@ var testSupportedCases = []SupportedTest{
 						"server",
 						"alternate",
 					},
-					Version: []string{
+					Release: []string{
 						"10.04",
 						"12.04",
 						"12.10",
@@ -211,7 +211,7 @@ var testSupportedCases = []SupportedTest{
 						"minimal",
 						"netinstall",
 					},
-					Version: []string{
+					Release: []string{
 						"5.10",
 						"6.5",
 					},
@@ -247,7 +247,7 @@ var testBuildsCases = []BuildsTest{
 			ExpectedErrS: "",
 		},
 		Expected: Builds{
-			Build: map[string]template{
+			Build: map[string]RawTemplate{
 				"test1": {
 					PackerInf: PackerInf{
 						MinPackerVersion: "",
@@ -256,7 +256,7 @@ var testBuildsCases = []BuildsTest{
 					Type:    "ubuntu",
 					Arch:    "amd64",
 					Image:   "server",
-					Version: "1204",
+					Release: "1204",
 					build: build{
 						BuilderType: []string{
 							"virtualbox-iso",

@@ -67,14 +67,14 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 
 func (a *Archive) priorBuild(src string, t string) error {
 	if err := a.SrcWalk(src); err != nil {
-		Log.Error("Walk of directory '" + src + "' failed: " + err.Error())
+		logger.Error("Walk of directory '" + src + "' failed: " + err.Error())
 		return err
 	}
 
 	if len(a.Files) < 0 {
 		// This isn't a real error, just log it and return a non-error state.
 		err := errors.New("No prior builds to archive.")
-		Log.Info(err.Error())
+		logger.Info(err.Error())
 		return nil
 	}
 
@@ -86,7 +86,7 @@ func (a *Archive) priorBuild(src string, t string) error {
 	// Create the new archive file.
 	tBall, err := os.Create(fName)
 	if err != nil {
-		Log.Crit(err.Error())
+		logger.Critical(err.Error())
 		return err
 	}
 
@@ -103,7 +103,7 @@ func (a *Archive) priorBuild(src string, t string) error {
 	// Go through each file in the path and add it to the archive
 	for _, file := range a.Files {
 		if err := a.addFile(tW, file); err != nil {
-			Log.Crit(err.Error())
+			logger.Critical(err.Error())
 			return err
 		}
 	}
@@ -112,12 +112,12 @@ func (a *Archive) priorBuild(src string, t string) error {
 		switch t {
 		case "gzip", "z", "gunzip":
 			if err := a.gzipToFile(fName); err != nil {
-				Log.Error(err.Error())
+				logger.Error(err.Error())
 				return err
 			}
 		default:
 			err := errors.New(t + " not a supported compression algorithm.")
-			Log.Error(err.Error())
+			logger.Error(err.Error())
 			return err
 		}
 	*/
@@ -139,7 +139,7 @@ func (a *Archive) gzipToFile(fName string) error {
 	w := gzip.NewWriter(&wB)
 	wr, err := file.Create(fName)
 	if err != nil {
-		Log.Error(err.Error())
+		logger.Error(err.Error())
 		return err
 	}
 
@@ -148,23 +148,23 @@ func (a *Archive) gzipToFile(fName string) error {
 
 	for i, file := range a.Files {
 		if rB, err = ioutil.ReadFile(file); err != nil {
-			Log.Error(err.Error())
+			logger.Error(err.Error())
 			return err
 		}
 		w.Write(rB)
-		Log.Info(file + " was added to " + fName)
+		logger.Info(file + " was added to " + fName)
 	}
 
 	err = wr.Close()
 	if err != nil {
-		Log.Error(err.Error())
+		logger.Error(err.Error())
 		return err
 	}
 
 
 /*
 	if err := a.SrcWalk(i.OutDir); err != nil {
-		Log.Warn("Archive of " + i.OutDir + " encountered an error. " + err.Error())
+		logger.Warn("Archive of " + i.OutDir + " encountered an error. " + err.Error())
 	}
 	for i, d := range a.Files {
 		fmt.Printf("%+v:%+v\n", i, d)

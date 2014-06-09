@@ -59,7 +59,7 @@ func (r *RawTemplate) CreatePackerTemplate() (PackerTemplate, error) {
 	var err error
 	var vars map[string]interface{}
 
-	Log.Info("Creating PackerTemplate from a RawTemplate.")
+	logger.Info("Creating PackerTemplate from a RawTemplate.")
 
 	// Set the src_dir and out_dir, in case there are variables embedded in them.
 	// These can be embedded in other dynamic variables so they need to be resolved
@@ -103,7 +103,7 @@ func (r *RawTemplate) CreatePackerTemplate() (PackerTemplate, error) {
 	iSl := make([]interface{}, len(r.Builders))
 
 	if p.Builders, vars, err = r.createBuilders(); err != nil {
-		Log.Error(err.Error())
+		logger.Error(err.Error())
 		fmt.Println(err.Error())
 		err = nil
 	}
@@ -117,7 +117,7 @@ func (r *RawTemplate) CreatePackerTemplate() (PackerTemplate, error) {
 
 		if sM == nil {
 			err = errors.New("an error occured while trying to create the Packer post-processor template for " + k)
-			Log.Crit(err.Error())
+			logger.Critical(err.Error())
 			return p, err
 		}
 
@@ -135,7 +135,7 @@ func (r *RawTemplate) CreatePackerTemplate() (PackerTemplate, error) {
 		iM = pr.settingsToMap(k, r)
 		if iM == nil {
 			err = errors.New("CreatePackerTemplate error: the Settings map is nil")
-			Log.Crit(err.Error())
+			logger.Critical(err.Error())
 			return p, err
 		}
 
@@ -160,7 +160,7 @@ func (r *RawTemplate) CreatePackerTemplate() (PackerTemplate, error) {
 	// Now we can create the Variable Section
 
 	// Return the generated Packer Template
-	Log.Info("PackerTemplate created from a RawTemplate.")
+	logger.Info("PackerTemplate created from a RawTemplate.")
 
 	return p, nil
 }
@@ -172,7 +172,7 @@ func (r *RawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 
 	if r.BuilderType == nil || len(r.BuilderType) <= 0 {
 		err = fmt.Errorf("RawTemplate.createBuilders() error: no builder types were passed")
-		Log.Error(err.Error())
+		logger.Error(err.Error())
 		return
 	}
 
@@ -182,7 +182,7 @@ func (r *RawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 	var i, ndx int
 	bldrs = make([]interface{}, len(r.BuilderType))
 	for _, bType := range r.BuilderType {
-		Log.Info("Creating builder from RawTemplate: " + bType)
+		logger.Info("Creating builder from RawTemplate: " + bType)
 		// TODO calculate the length of the two longest Settings and VMSettings sections and make it
 		// that length. That will prevent a panic should there be more than 50 options. Besides its
 		// stupid, on so many levels, to hard code this...which makes me...d'oh!
@@ -194,7 +194,7 @@ func (r *RawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 			// Generate the common Settings and their vars
 			if tmpS, tmpVar, err = r.commonVMSettings(r.Builders[BuilderCommon].Settings, r.Builders[bType].Settings); err != nil {
 				fmt.Println(err.Error())
-				Log.Warn(err.Error())
+				logger.Warn(err.Error())
 				err = nil
 			}
 			tmpS["type"] = BuilderVMWare
@@ -217,7 +217,7 @@ func (r *RawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 		case BuilderVBox:
 			// Generate the common Settings and their vars
 			if tmpS, tmpVar, err = r.commonVMSettings(r.Builders[BuilderCommon].Settings, r.Builders[bType].Settings); err != nil {
-				Log.Warn(err.Error())
+				logger.Warn(err.Error())
 				fmt.Println(err.Error())
 				err = nil
 				//				return
@@ -243,7 +243,7 @@ func (r *RawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 
 		default:
 			err = errors.New("the requested builder, '" + bType + "', is not supported")
-			Log.Error(err.Error())
+			logger.Error(err.Error())
 			return
 		}
 		bldrs[ndx] = tmpS
@@ -274,7 +274,7 @@ func (r *RawTemplate) variableSection() (map[string]interface{}, error) {
 	var v map[string]interface{}
 	v = make(map[string]interface{})
 
-	Log.Info("Creating variable section from RawTemplate")
+	logger.Info("Creating variable section from RawTemplate")
 
 	return v, nil
 }
@@ -322,7 +322,7 @@ func (r *RawTemplate) commonVMSettings(old []string, new []string) (Settings map
 			//If it ends in .command, replace it with the command from the filepath
 			var commands []string
 			if commands, err = commandsFromFile(v); err != nil {
-				Log.Warn("error", err.Error())
+				logger.Warn("error", err.Error())
 				Settings[k] = "Error: " + err.Error()
 				err = nil
 			} else {

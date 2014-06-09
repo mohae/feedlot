@@ -4,7 +4,6 @@ import (
 	_ "errors"
 	_ "fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	_ "os"
 	"strings"
@@ -105,13 +104,13 @@ func (u *ubuntu) findChecksum(s string) string {
 		// Substring the release string and explode it on '-'. Update isoName
 		pos = strings.Index(s, ".iso")
 		if pos < 0 {
-			Log.Error("Unable to find ISO information while looking for the release string on the Ubuntu checksums page.")
+			logger.Error("Unable to find ISO information while looking for the release string on the Ubuntu checksums page.")
 			return ""
 		}
 		tmpRel := s[:pos]
 		tmpSl := strings.Split(tmpRel, "-")
 		if len(tmpSl) < 3 {
-			Log.Error("Unable to parse release information on the Ubuntu checksum page.")
+			logger.Error("Unable to parse release information on the Ubuntu checksum page.")
 			return ""
 		}
 
@@ -120,7 +119,7 @@ func (u *ubuntu) findChecksum(s string) string {
 
 		pos = strings.Index(s, u.Filename)
 		if pos < 0 {
-			Log.Error("Unable to retrieve checksum while looking for the release string on the Ubuntu checksums page.")
+			logger.Error("Unable to retrieve checksum while looking for the release string on the Ubuntu checksums page.")
 			return ""
 		}
 	}
@@ -148,7 +147,7 @@ func getStringFromURL(url string) string {
 	// Get the URL resource
 	res, err := http.Get(url)
 	if err != nil {
-		log.Fatal(err)
+		logger.Critical(err)
 	}
 
 	// Close the response body--its idiomatic to defer it right away
@@ -157,7 +156,7 @@ func getStringFromURL(url string) string {
 	// Read the resoponse body into page
 	page, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		log.Fatal(err)
+		logger.Critical(err)
 	}
 	//convert the page to a string and return it
 	return string(page)
