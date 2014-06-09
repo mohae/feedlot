@@ -687,8 +687,8 @@ func appendSlash(s string) string {
 	return s
 }
 
-func trimSuffix(s string) string {
-	if strings.HasSuffix(s, "/") {
+func trimSuffix(s string, suffix string) string {
+	if strings.HasSuffix(s, suffix) {
 		s = s[:len(s)-len(suffix)]
 	}
 	return s
