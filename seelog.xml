@@ -2,7 +2,7 @@
 	<exceptions>
 		<exception filepattern="test*" minlevel="error"/>
 	</exceptions>
-    	<outputs formatid="all">
+   	<outputs formatid="all">
 		<file path="rancher.log"/>
 		<filter levels="info">
 			<console formatid="fmtinfo"/>
@@ -15,7 +15,7 @@
 	<formats>
 		<format id="fmtinfo" format="[%Level] [%Time] %Msg%n"/>
 	        <format id="fmterror" format="[%LEVEL] [%Time] [%FuncShort @ %File.%Line] %Msg%n"/>
-        	<format id="all" format="[%Level] [%Time] [@ %File.%Line] %Msg%n"/>	
+        	<format id="all" format="[%Level] [%Time] [@ %File.%Line] %Msg%n"/>
         	<format id="colored"  format="%EscM(46)%Level%EscM(49) %Msg%n%EscM(0)"/>
     	</formats>
 </seelog>

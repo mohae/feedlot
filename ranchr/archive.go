@@ -1,16 +1,19 @@
 package ranchr
 
 import (
-	"archive/tar"
+	_"archive/tar"
 	_ "bytes"
 	"compress/gzip"
 	"errors"
-	_ "fmt"
+	_"fmt"
 	"io"
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"time"
+	
+	"github.com/dotcloud/tar"
 )
 
 type Archive struct {
@@ -37,28 +40,32 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 	// TODO prserve ownership
 	file, err := os.Open(filename)
 	if err != nil {
+		logger.Error(err.Error())
 		return err
 	}
 	defer file.Close()
 
-	var stat os.FileInfo
-	if stat, err = file.Stat(); err != nil {
+	var fileStat os.FileInfo
+	if fileStat, err = file.Stat(); err != nil {
+		logger.Error(err.Error())
 		return err
 	}
 
-	tHdr := new(tar.Header)
-	tHdr.Name = filename
-	tHdr.Size = stat.Size()
-	tHdr.Mode = int64(stat.Mode())
-	tHdr.ModTime = stat.ModTime()
+	tarHeader := new(tar.Header)
+	tarHeader.Name = filename
+	tarHeader.Size = fileStat.Size()
+	tarHeader.Mode = int64(fileStat.Mode())
+	tarHeader.ModTime = fileStat.ModTime()
 
 	// Write the file header to the tarball.
-	if err := tW.WriteHeader(tHdr); err != nil {
+	if err := tW.WriteHeader(tarHeader); err != nil {
+		logger.Error(err.Error())
 		return err
 	}
 
 	// Add the file to the tarball.
 	if _, err := io.Copy(tW, file); err != nil {
+		logger.Error(err.Error())
 		return err
 	}
 
@@ -78,11 +85,11 @@ func (a *Archive) priorBuild(src string, t string) error {
 		return nil
 	}
 
-	// Append the date and time in RFC3339 format. This is done with seconds resolution
-	// to minimize chance of collision, how remote that may be.
-	// TODO make it 8601 compliant (RFC3339 + Z)
-	fName := path.Base(a.Files[0]) + time.Now().Local().Format(time.RFC3339) + ".tar.gz"
-
+	// Get the current date and time in RFC3339 format with custom formatting.
+	nowF := formattedNow()
+	logger.Info(nowF)
+	fName := path.Base(a.Files[0]) + "-" + nowF + ".tar.gz"
+	logger.Info(fName)
 	// Create the new archive file.
 	tBall, err := os.Create(fName)
 	if err != nil {
@@ -174,3 +181,11 @@ func (a *Archive) gzipToFile(fName string) error {
 	return nil
 }
 */
+
+func formattedNow() string {
+	// Time in RFC3339 format with :s replaced with _s. This is done 
+	// with seconds resolution to minimize chance of collision, how 
+	// remote that may be.
+	// TODO make it 8601 compliant (RFC3339 + Z)
+	return strings.Replace(time.Now().Local().Format(time.RFC3339), ":", "_", -1)
+}
