@@ -52,7 +52,7 @@ func (p *PackerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []st
 
 	// If the output directory exists, create a tarball.
 	a := Archive{}
-	if err := a.priorBuild(i.SrcDir, "gzip"); err != nil {
+	if err := a.priorBuild(i.OutDir, "gzip"); err != nil {
 		return err
 	}
 

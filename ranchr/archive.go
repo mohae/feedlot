@@ -8,7 +8,7 @@ import (
 	_"fmt"
 	"io"
 	"os"
-	_"path"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -95,7 +95,7 @@ func (a *Archive) priorBuild(src string, t string) error {
 	nowF := formattedNow()
 	logger.Info(a.Files)
 	logger.Info(nowF)
-	tarBallName := a.Files[0] + "-" + nowF + ".tar.gz"
+	tarBallName := path.Dir(a.Files[0]) + path.Base(a.Files[0]) + "-" + nowF + ".tar.gz"
 	logger.Info(tarBallName)
 	// Create the new archive file.
 	tBall, err := os.Create(tarBallName)
