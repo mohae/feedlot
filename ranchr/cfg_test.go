@@ -346,71 +346,6 @@ var testBuildListsCases = []buildListsTest{
 	},
 }
 
-type commandsFromFileTest struct {
-	test
-	commandFile string
-	Expected    []string
-}
-
-var testCommandsFromFileCases = []commandsFromFileTest{
-	{
-		test: test{
-			Name:         "CommandFromFile test: no file",
-			VarValue:     "",
-			ExpectedErrS: "the passed Command filename was empty",
-		},
-		Expected: []string{},
-	},
-	{
-		test: test{
-			Name:         "boot command from file test",
-			VarValue:     "../test_files/commands/boot.command",
-			ExpectedErrS: "",
-		},
-		Expected: []string{
-			`"<esc><wait>",`,
-			`"<esc><wait>",`,
-			`"<enter><wait>",`,
-			`"/install/vmlinuz<wait>",`,
-			`" auto<wait>",`,
-			`" console-setup/ask_detect=false<wait>",`,
-			`" console-setup/layoutcode=us<wait>",`,
-			`" console-setup/modelcode=pc105<wait>",`,
-			`" debconf/frontend=noninteractive<wait>",`,
-			`" debian-installer=en_US<wait>",`,
-			`" fb=false<wait>",`,
-			`" initrd=/install/initrd.gz<wait>",`,
-			`" kbd-chooser/method=us<wait>",`,
-			`" keyboard-configuration/layout=USA<wait>",`,
-			`" keyboard-configuration/variant=USA<wait>",`,
-			`" locale=en_US<wait>",`,
-			`" netcfg/get_hostname=ubuntu-1204<wait>",`,
-			`" netcfg/get_domain=vagrantup.com<wait>",`,
-			`" noapic<wait>",`,
-			`" preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg<wait>",`,
-			`" -- <wait>",`,
-			`"<enter><wait>"`,
-		},
-	},
-	{
-		test: test{
-			Name:         "execute command from file test",
-			VarValue:     "../test_files/commands/execute.command",
-			ExpectedErrS: "",
-		},
-		Expected: []string{`"echo 'vagrant'|sudo -S sh '{{.Path}}'"`},
-	},
-	{
-		test: test{
-			Name:         "shutdown command from file test",
-			VarValue:     "../test_files/commands/shutdown.command",
-			ExpectedErrS: "",
-		},
-		Expected: []string{`"echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'"`},
-	},
-}
-
-
 func TestMain(t *testing.T) {
 
 	var tmpEnv string
@@ -499,20 +434,4 @@ func TestMain(t *testing.T) {
 		}
 	}
 	_ = os.Setenv(EnvBuildListsFile, tmpEnv)
-
-	for _, test := range testCommandsFromFileCases {
-		if commands, err := commandsFromFile(test.VarValue); err != nil {
-			if err.Error() != test.ExpectedErrS {
-				t.Errorf(test.Name, err.Error())
-			} else {
-				t.Logf(test.Name, "OK")
-			}
-		} else {
-			if !reflect.DeepEqual(commands, test.Expected) {
-				t.Error(test.Name, "Expected:", test.Expected, "Got:", commands)
-			} else {
-				t.Logf(test.Name, "OK")
-			}
-		}
-	}
 }
