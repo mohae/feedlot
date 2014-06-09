@@ -45,7 +45,7 @@ var testDefaultsCases = []defaultsTest{
 				Description:      "Test Default Rancher template",
 			},
 			BuildInf: BuildInf{
-				Name:	":type-:release-:image-:arch",
+				Name:      ":type-:release-:image-:arch",
 				BuildName: "",
 			},
 			build: build{
@@ -371,7 +371,6 @@ func TestMain(t *testing.T) {
 	}
 
 	_ = os.Setenv(EnvDefaultsFile, tmpEnv)
-
 
 	tmpEnv = os.Getenv(EnvSupportedFile)
 	sd := Supported{}
