@@ -351,8 +351,9 @@ func setDistrosDefaults(d defaults, s Supported) (map[string]RawTemplate, error)
 
 		tmp.BaseURL = appendSlash(v.BaseURL)
 		tmp.Arch, tmp.Image, tmp.Release = getDefaultISOInfo(v.DefImage)
-		tmp.CommandsDir = appendSlash(d.CommandsDir)
+		tmp.CommandsSrcDir = appendSlash(d.CommandsSrcDir)
 		tmp.HTTPDir = appendSlash(d.HTTPDir)
+		tmp.HTTPSrcDir = appendSlash(d.HTTPSrcDir)
 		tmp.OutDir = appendSlash(d.OutDir)
 		tmp.ScriptsDir = appendSlash(d.ScriptsDir)
 		tmp.ScriptsSrcDir = appendSlash(d.ScriptsSrcDir)
@@ -723,4 +724,25 @@ func copyFile(srcDir string, destDir string, script string) (written int64, err 
 	defer fd.Close()
 
 	return io.Copy(fd, fs)
+}
+
+func copyDirContents(srcDir string, destDir string) error {
+	logger.Info(srcDir)
+	logger.Info(destDir)
+	// takes 2 directory paths and copies the contents from src to dest
+	//get the contents of srcDir
+	
+	// The archive struct should be renamed to something more appropriate
+	dirInf := Archive{Files: []string{}}
+	
+	dirInf.SrcWalk(srcDir)
+	
+	for _, fileName := range dirInf.Files {
+		if _, err := copyFile(srcDir, destDir, fileName); err != nil {
+			logger.Error(err.Error)
+			return err
+		}
+	}
+
+	return nil
 }

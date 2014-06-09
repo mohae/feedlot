@@ -7,8 +7,9 @@
 #
 # Type corresponds with a Packer Builder's `type` variable. This is typically
 # the distro name.
-commands_dir = ":src_dir/commands"
+commands_src_dir = ":src_dir/commands"
 http_dir = "http"
+http_src_dir = ":src_dir/http"
 name = ":type-:release-:image-:arch"
 out_dir = "out/:type/:date/:build_name"
 src_dir = "src/:type"
@@ -23,12 +24,12 @@ builder_type = [
 [builders]
 	[builders.common]
 		settings = [	
-			"boot_command = :commands_dir/boot.command",
+			"boot_command = :commands_src_dir/boot.command",
 			"boot_wait = 5s",
 			"disk_size = 20000",
 			"http_directory = :http_dir",
 			"iso_checksum_type = sha256",
-			"shutdown_command = :commands_dir/shutdown.command",
+			"shutdown_command = :commands_src_dir/shutdown.command",
 			"ssh_password = vagrant",
 			"ssh_port = 22",
 			"ssh_username = vagrant",
@@ -54,7 +55,7 @@ builder_type = [
 [provisioners]
 	[provisioners.shell]
 		settings = [
-			"execute_command = :commands_dir/execute.command"
+			"execute_command = :commands_src_dir/execute.command"
 		]
 		scripts = [ 
 			":scripts_dir/setup.sh",
