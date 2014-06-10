@@ -34,24 +34,6 @@ type release struct {
 	ReleaseFull string
 }
 
-// This is a generic implementation of isoer. Makes things easier for me, though
-// there is probably a better
-type genericISOer struct {
-	release
-}
-
-func (r *genericISOer) SetChecksum() string {
-	return ""
-}
-
-func (r *genericISOer) SetURL() string {
-	return ""
-}
-
-func (r genericISOer) Interface() interface{} {
-	return nil
-}
-
 type ubuntu struct {
 	release
 }
