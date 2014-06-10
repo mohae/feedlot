@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"testing"
 
-//	. "github.com/smartystreets/goconvey/convey"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 // Test Parsing of variables
@@ -986,4 +986,33 @@ func TestRanchr(t *testing.T) {
 		}
 	}
 
+// Goconvey...
+	Convey("Given a string, get a substring", t, func() {
+
+		Convey("Given string get characters 2-6", func() {
+			str := "This is a test"
+			subStr := Substring(str, 1, 5)
+			Convey("The result should be'", func() {
+				So(subStr, ShouldEqual, "his i")
+			})
+		})
+
+		Convey("Given string get characeters 2-20", func() {
+			str := "This is a test"
+			subStr := Substring(str, 1, 18)
+			Convey("The result should be'", func() {
+				So(subStr, ShouldEqual, "his is a test")
+			})
+		})
+
+		Convey("Given a rune", func() {
+			str := "Hello 世界--erm 'Hi'"
+			subStr := Substring(str, 4, 12)
+			Convey("The result should be'", func() {
+				So(subStr, ShouldEqual, "o 世界--erm 'H")
+			})
+		})
+	})
 }
+
+
