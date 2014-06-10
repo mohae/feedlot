@@ -134,72 +134,8 @@ func (a *Archive) priorBuild(src string, t string) error {
 		}
 	}
 
-	/*
-		switch t {
-		case "gzip", "z", "gunzip":
-			if err := a.gzipToFile(fName); err != nil {
-				logger.Error(err.Error())
-				return err
-			}
-		default:
-			err := errors.New(t + " not a supported compression algorithm.")
-			logger.Error(err.Error())
-			return err
-		}
-	*/
 	return nil
 }
-
-//lzip lzma lzop
-
-/*
-func (a *Archive) gzipToFile(fName string) error {
-	// Archives all the files as a gzip archive using the passed name.
-	fName += ".tar.gz"
-
-	fmt.Println(fName)
-
-
-	var wB bytes.Buffer
-
-	w := gzip.NewWriter(&wB)
-	wr, err := file.Create(fName)
-	if err != nil {
-		logger.Error(err.Error())
-		return err
-	}
-
-	// Add each file
-	var rB []byte
-
-	for i, file := range a.Files {
-		if rB, err = ioutil.ReadFile(file); err != nil {
-			logger.Error(err.Error())
-			return err
-		}
-		w.Write(rB)
-		logger.Info(file + " was added to " + fName)
-	}
-
-	err = wr.Close()
-	if err != nil {
-		logger.Error(err.Error())
-		return err
-	}
-
-
-/*
-	if err := a.SrcWalk(i.OutDir); err != nil {
-		logger.Warn("Archive of " + i.OutDir + " encountered an error. " + err.Error())
-	}
-	for i, d := range a.Files {
-		fmt.Printf("%+v:%+v\n", i, d)
-	}
-
-
-	return nil
-}
-*/
 
 func formattedNow() string {
 	// Time in RFC3339 format with :s replaced with _s. This is done 
