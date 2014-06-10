@@ -25,7 +25,7 @@ _testmain.go
 # additional tmp stuff that may exist that shouldn't be tracked
 *~
 *.out
-out/*
+out/**
 *.bak
 *.log
 *.gz
