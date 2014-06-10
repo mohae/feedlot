@@ -746,3 +746,14 @@ func copyDirContents(srcDir string, destDir string) error {
 
 	return nil
 }
+
+func Substring(s string, i, x int) string {
+	r := []rune(s)
+	l := i + x
+
+	if l > len(r) {
+		l = len(r)
+	}
+
+	return string(r[i:l])
+}

@@ -124,13 +124,3 @@ func getFormattedLogFilename() string {
 
 }
 */
-func SubString(s string, i, x int) string {
-	r := []rune(s)
-	l := i + x
-
-	if l > len(r) {
-		l = len(r)
-	}
-
-	return string(r[i:l])
-}
