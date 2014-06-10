@@ -5,6 +5,8 @@ import (
 	"os"
 	"reflect"
 	"testing"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 type test struct {
@@ -434,4 +436,67 @@ func TestMain(t *testing.T) {
 		}
 	}
 	_ = os.Setenv(EnvBuildListsFile, tmpEnv)
+}
+
+func TestBuilderStuff(t *testing.T) {
+	Convey("Given a builder, or two", t, func() {
+		b := builder{}
+		b.Settings = []string{"key1=value1", "key2=value2", "key3=value3"}
+		b.VMSettings = []string{"VMkey1=VMvalue1"}
+		newSettings := []string{"key4=value4", "key2=value22"}
+		newVMSettings := []string{"VMkey1=VMvalue11", "VMkey2=VMvalue2"}
+		Convey("Given two settings slices", func() {
+			b.mergeSettings(newSettings)
+			Convey("They should be merged", func() {
+				So(b.Settings, ShouldContain, "key1=value1")
+				So(b.Settings, ShouldContain, "key2=value22")
+				So(b.Settings, ShouldContain, "key3=value3")
+				So(b.Settings, ShouldContain, "key4=value4")
+				So(b.Settings, ShouldNotContain, "key2=value2")
+			})
+		})
+
+		Convey("Given two vm settings slices", func() {
+			b.mergeVMSettings(newVMSettings)
+			Convey("They should be merged", func() {
+				So(b.VMSettings, ShouldContain, "VMkey1=VMvalue11")
+				So(b.VMSettings, ShouldContain, "VMkey2=VMvalue2")
+				So(b.VMSettings, ShouldNotContain, "VMkey1=VMvalue1")
+			})
+		})
+
+		Convey("Given a builder settings", func() {
+			rawTpl := &RawTemplate{}
+			res := b.settingsToMap(rawTpl)
+			Convey("They should be turned into a map[string]interface", func() {
+				So(res, ShouldResemble, map[string]interface{}{"key1":"value1", "key2":"value2", "key3":"value3"})
+			})
+		})
+	})
+
+	Convey("Given a postProcessor or two", t, func() {
+		pp := postProcessors{}
+		pp.Settings = []string{"key1=value1", "key2=value2"}
+		rawTpl := &RawTemplate{}
+
+		Convey("transform settings to map should result in", func() {
+			res := pp.settingsToMap("vagrant", rawTpl)
+			Convey("Should result in a map[string]interface{}", func() {
+				So(res, ShouldResemble, map[string]interface{}{"type":"vagrant", "key1":"value1", "key2":"value2"})
+			})
+		})
+	})
+
+	Convey("Given a provisioner or two", t, func() {
+		p := provisioners{}
+		p.Settings = []string{"key1=value1", "key2=value2"}
+		rawTpl := &RawTemplate{}
+	
+		Convey("transform settingns map should result in", func() {
+			res := p.settingsToMap("shell", rawTpl)
+			Convey("Should result in a map[string]interface{}", func() {
+				So(res, ShouldResemble, map[string]interface{}{"type":"shell", "key1":"value1", "key2":"value2"})
+			})
+		})
+	})
 }

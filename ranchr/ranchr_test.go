@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"strconv"
 	"testing"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 // Test Parsing of variables
