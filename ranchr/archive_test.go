@@ -47,6 +47,19 @@ func TestArchive(t *testing.T) {
 					So(tW, ShouldNotBeNil)
 				})
 			}
+	
+			Convey("add a file that doesn't exist", func() {
+				if err := tst.addFile(tW, "../test_files/doesntExist"); err == nil {
+					Convey(err, ShouldEqual, "z")
+				}
+			})
+
+			Convey("add a file with permission issues", func() {
+				if err := tst.addFile(tW, "../test_files/no_permissions.txt"); err == nil {
+					Convey(err, ShouldEqual, "z")
+				}
+			})
+
 			tW.Close()
 			os.Remove(filename)
 		})
@@ -70,7 +83,21 @@ func TestArchive(t *testing.T) {
 			filename := "../test_files/test.tar"
 			testFile, _ := os.Create(filename)
 			tW := tar.NewWriter(testFile)
-			if err := tst.priorBuild("../empty/", "gzip"); err != nil {
+			if err := tst.priorBuild("../test_files/empty/", "gzip"); err != nil {
+				Convey("The prior build was archived.", func() {
+					So(err, ShouldEqual, "ADFSA")
+				})
+			}
+			tW.Close()
+			os.Remove(filename)
+		})
+
+		Convey("back up a directory: directory doesn't exist", func() {
+			tst := Archive{}
+			filename := "../test_files/test.tar"
+			testFile, _ := os.Create(filename)
+			tW := tar.NewWriter(testFile)
+			if err := tst.priorBuild("../test_files/3empty2/", "gzip"); err != nil {
 				Convey("The prior build was archived.", func() {
 					So(err, ShouldEqual, "ADFSA")
 				})

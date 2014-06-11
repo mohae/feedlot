@@ -32,7 +32,7 @@ var testDefaultsCases = []defaultsTest{
 	{
 		test: test{
 			Name:         "Defaults: Load defaults_test.",
-			VarValue:     "../test_files/defaults_test.toml",
+			VarValue:     "../test_files/conf/defaults_test.toml",
 			ExpectedErrS: "",
 		},
 		Expected: defaults{
@@ -129,7 +129,7 @@ var testSupportedCases = []SupportedTest{
 	{
 		test: test{
 			Name:         "Supported: Load supported_test.toml",
-			VarValue:     "../test_files/supported_test.toml",
+			VarValue:     "../test_files/conf/supported_test.toml",
 			ExpectedErrS: "",
 		},
 		Expected: Supported{
@@ -252,7 +252,7 @@ var testBuildsCases = []BuildsTest{
 	{
 		test: test{
 			Name:         "Builds: Load builds_test.",
-			VarValue:     "../test_files/builds_test.toml",
+			VarValue:     "../test_files/conf/builds_test.toml",
 			ExpectedErrS: "",
 		},
 		Expected: Builds{
@@ -325,7 +325,7 @@ var testBuildListsCases = []buildListsTest{
 	{
 		test: test{
 			Name:         "BuildLists: Load build_lists_test.",
-			VarValue:     "../test_files/build_lists_test.toml",
+			VarValue:     "../test_files/conf/build_lists_test.toml",
 			ExpectedErrS: "",
 		},
 		Expected: buildLists{
@@ -496,6 +496,16 @@ func TestBuilderStuff(t *testing.T) {
 			res := p.settingsToMap("shell", rawTpl)
 			Convey("Should result in a map[string]interface{}", func() {
 				So(res, ShouldResemble, map[string]interface{}{"type":"shell", "key1":"value1", "key2":"value2"})
+			})
+		})
+
+		Convey("transform settings map with a command file name embedded should result in", func() {
+			p := provisioners{}
+			p.Settings = []string{"key1=value1", "execute_command=../test_files/commands/execute.command"}
+			res := p.settingsToMap("shell", rawTpl)
+			Convey("Should result in a map[string]interface{}", func() {
+				So(res, ShouldResemble, map[string]interface{}{"type":"shell", "key1":"value1",
+"execute_command":"Error: open ../test_files/commands/execute.command: no such file or directory"})
 			})
 		})
 	})
