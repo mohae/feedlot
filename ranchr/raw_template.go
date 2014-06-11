@@ -422,12 +422,24 @@ func (i *IODirInf) update(new IODirInf) {
 		i.CommandsSrcDir = new.CommandsSrcDir
 	}
 
+	if new.HTTPDir != "" {
+		i.HTTPDir = new.HTTPDir
+	}
+
+	if new.HTTPSrcDir != "" {
+		i.HTTPSrcDir = new.HTTPSrcDir
+	}
+
 	if new.OutDir != "" {
 		i.OutDir = new.OutDir
 	}
 
 	if new.ScriptsDir != "" {
 		i.ScriptsDir = new.ScriptsDir
+	}
+
+	if new.ScriptsSrcDir != "" {
+		i.ScriptsSrcDir = new.ScriptsSrcDir
 	}
 
 	if new.SrcDir != "" {
@@ -437,7 +449,7 @@ func (i *IODirInf) update(new IODirInf) {
 	return
 }
 
-func (i PackerInf) update(new PackerInf) {
+func (i *PackerInf) update(new PackerInf) {
 
 	if new.MinPackerVersion != "" {
 		i.MinPackerVersion = new.MinPackerVersion
@@ -460,10 +472,5 @@ func (i *BuildInf) update(new BuildInf) {
 		i.BuildName = new.BuildName
 	}
 
-	return
-}
-
-func (b *build) update(new build) {
-	fmt.Println("updateBuild...why did you call me?")
 	return
 }

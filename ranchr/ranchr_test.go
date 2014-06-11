@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strconv"
 	"testing"
+	"time"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -733,20 +734,6 @@ var TestAppendSlashCases = []appendSlashTest{
 	{"appendSlashCases test 2", "this/is/another/test/", "this/is/another/test/"},
 }
 
-/*
-type getMergedValueStringTest struct {
-	name     string
-	old      string
-	new      string
-	expected string
-}
-
-var TestsGetMergedValueStringCases = []getMergedValueStringTest{
-	{"test Merge Value Strings, empty new value", "old", "", "old"},
-	{"test Merge Value Strings", "old", "new", "new"},
-}
-*/
-
 type copyFileTest struct {
 	name          string
 	srcDir        string
@@ -764,7 +751,85 @@ var TestCopyFileCases = []copyFileTest{
 
 }
 
+var testDefaults = defaults{
+	IODirInf: IODirInf{
+		OutDir:      "out/:type/:build_name",
+		ScriptsDir:  ":src_dir/scripts",
+		SrcDir:      "src/:type",
+		ScriptsSrcDir:      "",
+		CommandsSrcDir: "",
+	},
+	PackerInf: PackerInf{
+		MinPackerVersion: "",
+		Description:      "Test Default Rancher template",
+	},
+	BuildInf: BuildInf{
+		Name:      ":type-:release-:image-:arch",
+		BuildName: "",
+	},
+	build: build{
+		BuilderType: []string{
+			"virtualbox-iso",
+			"vmware-iso",
+		},
+		Builders: map[string]builder{
+			"common": {
+				Settings: []string{
+					"boot_command = :commands_dir/boot.command",
+					"boot_wait = 5s",
+					"disk_size = 20000",
+					"http_directory = http",
+					"iso_checksum_type = sha256",
+					"shutdown_command = :commands_dir/shutdown.command",
+					"ssh_password = vagrant",
+					"ssh_port = 22",
+					"ssh_username = vagrant",
+					"ssh_wait_timeout = 240m",
+				},
+			},
+			"virtualbox-iso": {
+				VMSettings: []string{
+					"cpus=1",
+					"memory=1024",
+				},
+			},
+			"vmware-iso": {
+				VMSettings: []string{
+					"cpuid.coresPerSocket=1",
+					"memsize=1024",
+					"numvcpus=1",
+				},
+			},
+		},
+		PostProcessors: map[string]postProcessors{
+			"vagrant": {
+				Settings: []string{
+					"keep_input_artifact = false",
+					"output = :out_dir/someComposedBoxName.box",
+				},
+			},
+		},
+		Provisioners: map[string]provisioners{
+			"shell": {
+				Settings: []string{
+					"execute_command = :commands_dir/execute.command",
+				},
+				Scripts: []string{
+					":scripts_dir/setup.sh",
+					":scripts_dir/base.sh",
+					":scripts_dir/vagrant.sh",
+					":scripts_dir/cleanup.sh",
+					":scripts_dir/zerodisk.sh",
+				},
+			},
+		},
+	},
+}
+
 func TestRanchr(t *testing.T) {
+	setCommonTestData()
+	time.Sleep(100 * time.Millisecond)
+
 	// test parsing of a string into its key:value components
 	// test converging the default variables with distro variables
 	for _, test := range TestsParseVarCases {
@@ -941,11 +1006,11 @@ func TestRanchr(t *testing.T) {
 
 // Goconvey...
 
-	tstConfig := "test_files/rancher_test.cfg"
-	tstDefaults := "test_files/conf/defaults_test.toml"
-	tstSupported := "test_files/conf/supported_test.toml"
-	tstBuilds := "test_files/conf/builds_test.toml"
-	tstBuildLists := "test_files/conf/build_lists_test.toml"
+	tstConfig := "../test_files/rancher_test.cfg"
+	tstDefaults := "../test_files/conf/defaults_test.toml"
+	tstSupported := "../test_files/conf/supported_test.toml"
+	tstBuilds := "../test_files/conf/builds_test.toml"
+	tstBuildLists := "../test_files/conf/build_lists_test.toml"
 	tstParamDelimStart := ":"
 	tstLogging := "true"
 	tstLogFile := "rancher.log"
@@ -1011,7 +1076,7 @@ func TestRanchr(t *testing.T) {
 			Convey("Given the environment variable EnvParamDeliStart", func() {
 				tmp := os.Getenv(EnvParamDelimStart)
 				Convey("The result should be", func() {
-					So(tmp, ShouldEqual, tmpParamDelimStart)
+					So(tmp, ShouldEqual, tstParamDelimStart)
 				})
 			})
 
@@ -1036,7 +1101,9 @@ func TestRanchr(t *testing.T) {
 				})
 			})
 		}
+	})
 			
+	Convey("Given a rancher.cfg setting with blank environment variables", t, func() {
 		// set to blank values (test load of rancher.cfg.
 		os.Setenv(EnvConfig, "")
 		os.Setenv(EnvDefaultsFile, "")
@@ -1057,7 +1124,7 @@ func TestRanchr(t *testing.T) {
 		tstLogFile = "rancher.log"
 		tstLogLevel = "info"
 
-		err = SetEnv()
+		err := SetEnv()
 
 		if err == nil {
 
@@ -1120,12 +1187,16 @@ func TestRanchr(t *testing.T) {
 			})
 		}
 			
+	})
+
+
 		// Test empty config
 		// TODO this is tied to actual rancher.cfg, which shouldn't change
 		// but makes it brital...laziness has its price.
 	
+	Convey("Given a blank config Environment variable setting", t, func() {
 		os.Setenv(EnvConfig, "")
-		err = SetEnv()
+		err := SetEnv()
 		if err == nil {
 			Convey("Given the environment variable EnvDefaultsFile", func() {
 				tmp := os.Getenv(EnvDefaultsFile)
@@ -1197,6 +1268,98 @@ func TestRanchr(t *testing.T) {
 	
 	})
 
+	Convey("Given set defaults and supported ENV variables", t, func() {
+		tmpDefaults := os.Getenv(EnvDefaultsFile)
+		tmpSupported := os.Getenv(EnvSupportedFile)
+	
+		var supported Supported
+		var tpls map[string]RawTemplate
+		var err error
+		
+		Convey("Given an empty defaults file location", func() {
+			os.Setenv(EnvDefaultsFile, "")
+			Convey("The result of loading distro inf should be", func() {
+				if supported, tpls, err = DistrosInf(); err != nil {
+					So(err.Error(), ShouldEqual, "could not retrieve the default Settings file because the RANCHER_DEFAULTS_FILE ENV variable was not set. Either set it or check your rancher.cfg setting")
+				}
+			})
+		})
+
+		Convey("Given an empty supported file location", func() {
+			os.Setenv(EnvSupportedFile, "")
+			Convey("The result of loading distro inf should be", func() {
+				if supported, tpls, err = DistrosInf(); err != nil {
+					So(err.Error(), ShouldEqual, "could not retrieve the default Settings file because the RANCHER_DEFAULTS_FILE ENV variable was not set. Either set it or check your rancher.cfg setting")
+				}
+			})
+		})
+
+		Convey("Given properly set file information", func() {
+			os.Setenv(EnvDefaultsFile, "../test_files/conf/defaults_test.toml")
+			os.Setenv(EnvSupportedFile, "../test_files/conf/supported_test.toml")
+			if supported, tpls, err = DistrosInf(); err == nil {
+				So(supported, ShouldResemble, testSupported )
+//				So(tpls, ShouldResemble, testTpls)
+			}
+		})
+
+		os.Setenv(EnvSupportedFile, tmpSupported)
+		os.Setenv(EnvDefaultsFile, tmpDefaults)
+	})
+/*
+	Convey("Testing BuildPackerTemplateFromDistros", t, func() {
+		Convey("Given an empty supported distro", func() {
+			arg := ArgsFilter{Distro: "", Arch:"", Image:"", Release: ""}
+			err := BuildPackerTemplateFromDistro(testSupported, testDistroDefaults, arg)
+			So(err.Error(), ShouldEqual, "%v, is not Supported. Please pass a Supported distribution.")
+		})
+			
+		Convey("Given a nil supported DistroDefaults map", func() {
+			arg := ArgsFilter{Distro: "ubuntu", Arch:"", Image:"", Release: ""}
+			err := BuildPackerTemplateFromDistro(Supported{}, testDistroDefaults, arg)
+			So(err.Error(), ShouldEqual, "%v, is not Supported. Please pass a Supported distribution.")
+		})
+
+		Convey("Given a nil arg", func() {
+			err := BuildPackerTemplateFromDistro(testSupported, testDistroDefaults, ArgsFilter{})
+			So(err.Error(), ShouldEqual, "%v, is not Supported. Please pass a Supported distribution.")
+		})
+
+		Convey("Given a supported distro, a map of Distro defaults, and args", func() {
+			arg := ArgsFilter{Distro: "", Arch:"", Image:"", Release: ""}
+			Convey("Given empty strings in ArgsFilter", func() {
+				err := BuildPackerTemplateFromDistro(testSupported, testDistroDefaults, arg)
+				So(err.Error(), ShouldEqual, "")
+			})
+
+			arg.Arch = "i386"
+			Convey("Given a populated Arch in ArgsFilter", func() {
+				err := BuildPackerTemplateFromDistro(testSupported, testDistroDefaults, arg)
+				So(err, ShouldBeNil)
+			})
+
+			arg = ArgsFilter{Distro: "ubuntu", Arch:"", Image:"desktop", Release: ""}
+			Convey("Given a populated image in ArgsFilter", func() {
+				err := BuildPackerTemplateFromDistro(testSupported, testDistroDefaults, arg)
+				So(err, ShouldBeNil)
+			})
+
+			arg = ArgsFilter{Distro: "ubuntu", Arch:"", Image:"", Release: "14.04"}
+			Convey("Given a populated release in ArgsFilter", func() {
+				err := BuildPackerTemplateFromDistro(testSupported, testDistroDefaults, arg)
+				So(err, ShouldBeNil)
+			})
+
+			arg = ArgsFilter{Distro: "ubuntu", Arch:"i386", Image:"server", Release: "14.04"}
+			Convey("Given a populated ArgsFilter", func() {
+				err := BuildPackerTemplateFromDistro(testSupported, testDistroDefaults, arg)
+				So(err, ShouldBeNil)
+			})
+		})
+	})
+*/
+
+
 	Convey("Given a slice of default ISO information", t, func() {
 		tmp := []string{"arch=amd64", "image=server", "release=14.04", "unknown=what"}
 		arch, image, release := getDefaultISOInfo(tmp)
@@ -1208,6 +1371,40 @@ func TestRanchr(t *testing.T) {
 		})
 	})	
 
+
+	Convey("Given a directory", t, func() {
+		srcDir := "../test_files/scripts/"
+		destDir := "../test_files/tmp/"
+
+		Convey("The results of a copy operation should be", func() {
+			if err := copyDirContent(srcDir, destDir); err == nil {
+				// this is a dummied equality as a non-error should signify success
+				So(4, ShouldEqual, 4)
+			}
+		})
+
+		Convey("The results of a copy operation should be", func() {
+			if err := copyDirContent(srcDir, ""); err != nil {
+				// this is a dummied equality as a non-error should signify success
+				So(err.Error(), ShouldEqual, "copyFile: no destination directory passed")
+			}
+		})
+
+		Convey("The results of a delete operation should be", func() {
+			if err := deleteDirContent(destDir); err == nil {
+				// this is a dummied equality as a non-error should signify success
+				So(4, ShouldEqual, 4)
+			}
+		})
+
+		Convey("The results of a delete operation should be", func() {
+			if err := deleteDirContent(""); err != nil {
+				// this is a dummied equality as a non-error should signify success
+				So(err.Error(), ShouldEqual, "remove : no such file or directory")
+			}
+		})
+
+	})
 	Convey("Given some strings, their suffix should be removed", t, func() {
 		res0 := trimSuffix("This is a string!", "!")
 		Convey("Given a string with the suffix, the suffix should be removed", func() {

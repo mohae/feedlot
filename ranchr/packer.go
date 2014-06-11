@@ -101,7 +101,7 @@ func (p *PackerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []st
 	}
 
 	logger.Error(i.OutDir + i.HTTPDir)
-	if err := copyDirContents(i.HTTPSrcDir, i.OutDir + i.HTTPDir); err != nil {
+	if err := copyDirContent(i.HTTPSrcDir, i.OutDir + i.HTTPDir); err != nil {
 		logger.Error(err.Error())
 	}
 
