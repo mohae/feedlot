@@ -20,17 +20,24 @@ type Archive struct {
 	OutDir string
 	Name   string
 	Type   string
-	Files  []string
+	directory 
 }
 
-func (a *Archive) SrcWalk(src string) error {
+
+type directory struct {
+	// This is just a struct to attach SrcWalk to. Makes keeping track of the
+	// children easier
+	Files []string
+}
+
+func (d *directory) SrcWalk(src string) error {
 	// If the directory exists, create a tarball out of it.
-	return filepath.Walk(src, a.addFilename)
+	return filepath.Walk(src, d.addFilename)
 }
 
-func (a *Archive) addFilename(path string, f os.FileInfo, err error) error {
+func (d *directory) addFilename(path string, f os.FileInfo, err error) error {
 	// Add a file to the slice of files for which an archive will be created.
-	a.Files = append(a.Files, path)
+	d.Files = append(d.Files, path)
 	return nil
 }
 

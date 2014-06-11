@@ -179,10 +179,22 @@ func BuildPackerTemplateFromDistro(s Supported, dd map[string]RawTemplate, a Arg
 	var found bool
 	var err error
 
+	if s.Distro == nil {
+		err := errors.New("Cannot build requested packer template, the Supported data structure was empty.")
+		logger.Error(err.Error())
+		return err
+	}
+
+	if a.Distro == "" {
+		err = errors.New("Cannot build a packer template because no target distro information was passed.")
+		logger.Error(err.Error())
+		return err
+	}
+
 	// Get the default for this distro, if one isn't found then it isn't Supported.
 
 	if d, found = dd[a.Distro]; !found {
-		err = errors.New("%v, is not Supported. Please pass a Supported distribution." + a.Distro)
+		err = errors.New("Cannot build a packer template from passed distro: " + a.Distro + " is not Supported. Please pass a Supported distribution.")
 		logger.Error(err.Error())
 		return err
 	}
@@ -226,7 +238,6 @@ func BuildPackerTemplateFromDistro(s Supported, dd map[string]RawTemplate, a Arg
 func BuildPackerTemplateFromNamedBuild(s Supported, dd map[string]RawTemplate, bldNames ...string) error {
 	// Load the build templates
 	var blds Builds
-	fmt.Println("BuildPackerTemplateFromNamedBuild\n")
 
 	err := blds.Load()
 	if err != nil {
@@ -689,9 +700,15 @@ func getMergedProvisioners(old map[string]provisioners, new map[string]provision
 }
 
 func appendSlash(s string) string {
+	// Don't append empty strings
+	if s == "" {
+		return s
+	}
+
 	if !strings.HasSuffix(s, "/") {
 		s += "/"
 	}
+
 	return s
 }
 
@@ -699,6 +716,7 @@ func trimSuffix(s string, suffix string) string {
 	if strings.HasSuffix(s, suffix) {
 		s = s[:len(s)-len(suffix)]
 	}
+
 	return s
 }
 
@@ -746,20 +764,34 @@ func copyFile(srcDir string, destDir string, script string) (written int64, err 
 	return io.Copy(fd, fs)
 }
 
-func copyDirContents(srcDir string, destDir string) error {
-	logger.Info(srcDir)
-	logger.Info(destDir)
+func copyDirContent(srcDir string, destDir string) error {
 	// takes 2 directory paths and copies the contents from src to dest
 	//get the contents of srcDir
 	
 	// The archive struct should be renamed to something more appropriate
-	dirInf := Archive{Files: []string{}}
+	dir := Archive{}
 	
-	dirInf.SrcWalk(srcDir)
+	dir.SrcWalk(srcDir)
 	
-	for _, fileName := range dirInf.Files {
+	for _, fileName := range dir.Files {
 		if _, err := copyFile(srcDir, destDir, fileName); err != nil {
-			logger.Error(err.Error)
+			logger.Error(err.Error())
+			return err
+		}
+	}
+
+	return nil
+}
+
+func deleteDirContent(dir string) error {
+	// deletes the contents of a directory
+	dirInf := directory{}
+
+	dirInf.SrcWalk(dir)
+
+	for _, name := range dirInf.Files {
+		if err := os.Remove(name); err != nil {
+			logger.Error(err.Error())
 			return err
 		}
 	}
@@ -777,3 +809,4 @@ func Substring(s string, i, x int) string {
 
 	return string(r[i:l])
 }
+
