@@ -3,6 +3,7 @@ package ranchr
 import (
 	_ "errors"
 	_ "fmt"
+	"os"
 	"reflect"
 	"strconv"
 	"testing"
@@ -112,6 +113,7 @@ type varMapFromSliceTest struct {
 	name     string
 	sl       []string
 	expected map[string]interface{}
+	expectedErrS string
 }
 
 var TestsVarMapFromSliceCases = []varMapFromSliceTest{
@@ -124,21 +126,21 @@ var TestsVarMapFromSliceCases = []varMapFromSliceTest{
 		map[string]interface{}{
 			"type": "virtualbox-iso", "boot_wait": "5s", "disk_size": "20000",
 			"guest_os_type": "Ubuntu_64", "iso_checksum": "sha256", "memory": "4096",
-		},
+		}, "",
 	},
 	{
 		"Create []variable From slice T2",
 		[]string{"memory=2048", "ssh_port=222", "ssh_username=vagrant"},
 		map[string]interface{}{
 			"memory": "2048", "ssh_port": "222", "ssh_username": "vagrant",
-		},
+		}, "",
 	},
-	/*	{
-			"Create []varible: pass nil",
-			nil,
-			nil,
-		},
-	*/
+	{
+		"Create []varaible: pass nil",
+		nil,
+		nil, "Unable to create a Packer Settings map because no variables were received",
+	},
+
 }
 
 type keyIndexInVarSliceTest struct {
@@ -248,24 +250,6 @@ var testCommandsFromFileCases = []commandsFromFileTest{
 			ExpectedErrS: "",
 		},
 		Expected: []string{`"echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'"`},
-	},
-}
-
-type getDefaultISOInfoTest struct {
-	name     string
-	defImage []string
-	eArch    string
-	eImage   string
-	eRelease string
-}
-
-var TestsGetDefaultISOInfoCases = []getDefaultISOInfoTest{
-	{
-		name:     "get default iso",
-		defImage: []string{"arch = amd64", "release = 12.04", "image = server"},
-		eArch:    "amd64",
-		eImage:   "server",
-		eRelease: "12.04",
 	},
 }
 
@@ -773,8 +757,11 @@ type copyFileTest struct {
 }
 
 var TestCopyFileCases = []copyFileTest{
-	{"Test Copy File, No src Dir", "", "test_files/out/", "test.sh", 0, "open test.sh: no such file or directory"},
-	{"Test Copy File, No dest dir", "test_files/", "", "test.sh", 0, "mkdir : no such file or directory"},
+	{"Test Copy File, No src Dir", "", "test_files/out/", "test_file.sh", 0, "copyFile: no source directory passed"},
+	{"Test Copy File, No dest dir", "test_files/", "", "test_file.sh", 0, "copyFile: no destination directory passed"},
+	{"Test Copy File", "test_files/scripts/", "test_files/tmp", "test_file.sh", 0, "open test_files/scripts/test_file.sh: no such file or directory"},
+	{"Test Copy File", "../test_files/scripts/", "test_files/tmp", "test_file.sh", 0, "o"},
+
 }
 
 func TestRanchr(t *testing.T) {
@@ -784,11 +771,8 @@ func TestRanchr(t *testing.T) {
 		k, v := parseVar(test.variable)
 		if k != test.key || v != test.value {
 			t.Error("Expected:", test.key, "Got:", k, "Expected:", test.value, "Got:", v)
-		} else {
-			t.Logf(test.name, "OK")
-		}
+		} 
 	}
-
 	/*
 	   // test parsing of a string into its key:value components
 	   // test converging the default variables with distro variables
@@ -817,8 +801,6 @@ func TestRanchr(t *testing.T) {
 		} else {
 			if !reflect.DeepEqual(test.expected, results) {
 				t.Errorf(test.name, "Expected:", test.expected, "Got:", results)
-			} else {
-				t.Logf(test.name, "OK")
 			}
 		}
 	}
@@ -826,13 +808,9 @@ func TestRanchr(t *testing.T) {
 	// test merging of settings slices
 	for _, test := range TestsMergeSettingsSlicesCases {
 		results := mergeSettingsSlices(test.s1, test.s2)
-		if results == nil {
-			t.Logf(test.name, "OK")
-		} else {
+		if results != nil {
 			if !reflect.DeepEqual(test.expected, results) {
 				t.Errorf(test.name, "Expected:", test.expected, "Got:", results)
-			} else {
-				t.Logf(test.name, "OK")
 			}
 		}
 	}
@@ -841,13 +819,12 @@ func TestRanchr(t *testing.T) {
 	for _, test := range TestsVarMapFromSliceCases {
 		vars := varMapFromSlice(test.sl)
 		if vars == nil {
-			t.Errorf(test.name, "Expected:", test.expected, "Got: nil")
+			if test.expectedErrS == "" {
+				t.Errorf(test.name, "Expected:", test.expected, "Got: nil")
+			}
 		} else {
 			if !reflect.DeepEqual(test.expected, vars) {
 				t.Errorf(test.name, "Expected:", test.expected, "Got:", vars)
-
-			} else {
-				t.Logf(test.name, "OK")
 			}
 		}
 	}
@@ -857,9 +834,7 @@ func TestRanchr(t *testing.T) {
 		i := keyIndexInVarSlice(test.key, test.sl)
 		if i != test.expected {
 			t.Errorf(test.name, "Expected:", test.expected, "Got:", i)
-		} else {
-			t.Logf(test.name, "OK")
-		}
+		} 
 	}
 	/*
 		// test merging of value strings
@@ -877,14 +852,10 @@ func TestRanchr(t *testing.T) {
 		if commands, err := commandsFromFile(test.VarValue); err != nil {
 			if err.Error() != test.ExpectedErrS {
 				t.Errorf(test.Name, err.Error())
-			} else {
-				t.Logf(test.Name, "OK")
 			}
 		} else {
 			if !reflect.DeepEqual(commands, test.Expected) {
 				t.Error(test.Name, "Expected:", test.Expected, "Got:", commands)
-			} else {
-				t.Logf(test.Name, "OK")
 			}
 		}
 	}
@@ -894,11 +865,7 @@ func TestRanchr(t *testing.T) {
 		if i, err := getVariableName(test.variable); err != nil {
 			if err.Error() != test.expected {
 				t.Errorf(test.name, "Expected:", test.expected, "Got:", i)
-			} else {
-				t.Logf(test.name, "OK")
 			}
-		} else {
-			t.Logf(test.name, "OK")
 		}
 	}
 
@@ -906,11 +873,7 @@ func TestRanchr(t *testing.T) {
 		if i, err := getVariableName(test.variable); err != nil {
 			if err.Error() != test.expected {
 				t.Errorf(test.name, "Expected:", test.expected, "Got:", i)
-			} else {
-				t.Logf(test.name, "OK")
 			}
-		} else {
-			t.Logf(test.name, "OK")
 		}
 	}
 
@@ -939,8 +902,6 @@ func TestRanchr(t *testing.T) {
 		} else {
 			if !reflect.DeepEqual(test.expected, mergedPP) {
 				t.Errorf(test.name, "Expected:", test.expected, "Got:", mergedPP)
-			} else {
-				t.Logf(test.name, "OK")
 			}
 		}
 	}
@@ -954,8 +915,6 @@ func TestRanchr(t *testing.T) {
 		} else {
 			if !reflect.DeepEqual(test.expected, mergedP) {
 				t.Errorf(test.name, "Expected:", test.expected, "Got:", mergedP)
-			} else {
-				t.Logf(test.name, "OK")
 			}
 		}
 	}
@@ -964,31 +923,325 @@ func TestRanchr(t *testing.T) {
 		res := appendSlash(test.value)
 		if res != test.expected {
 			t.Errorf(test.name, "Expected: ", test.expected, " Got: ", res)
-		} else {
-			t.Logf(test.name, "OK")
 		}
 	}
 
 	for _, test := range TestCopyFileCases {
 		bW, err := copyFile(test.srcDir, test.destDir, test.script)
 		if err != nil {
-			if err.Error() == test.expectedErr {
-				t.Logf(test.name, "OK")
-			} else {
-				t.Errorf(test.name, "Expected: ", test.expectedErr, " Got: ", err.Error())
+			if err.Error() != test.expectedErr {
+				t.Errorf(test.name, "expected: ", test.expectedErr, " Got: ", err.Error())
 			}
 		} else {
-			if bW == test.expectedInt64 {
-				t.Logf(test.name, "OK")
-			} else {
-				t.Errorf(test.name, "Expected: ", strconv.FormatInt(bW, 10))
+			if bW != test.expectedInt64 {
+				t.Errorf(test.name, "expected: ", strconv.FormatInt(test.expectedInt64, 10), " Got: ", strconv.FormatInt(bW, 10))
 			}
 		}
 	}
 
 // Goconvey...
-	Convey("Given a string, get a substring", t, func() {
 
+	tstConfig := "test_files/rancher_test.cfg"
+	tstDefaults := "test_files/conf/defaults_test.toml"
+	tstSupported := "test_files/conf/supported_test.toml"
+	tstBuilds := "test_files/conf/builds_test.toml"
+	tstBuildLists := "test_files/conf/build_lists_test.toml"
+	tstParamDelimStart := ":"
+	tstLogging := "true"
+	tstLogFile := "rancher.log"
+	tstLogLevel := "info"
+
+	
+	// save current setttings
+	tmpConfig := os.Getenv(EnvConfig)
+	tmpDefaults := os.Getenv(EnvDefaultsFile)
+	tmpSupported := os.Getenv(EnvSupportedFile)
+	tmpBuilds := os.Getenv(EnvBuildsFile)
+	tmpBuildLists := os.Getenv(EnvBuildListsFile)
+	tmpParamDelimStart := os.Getenv(EnvParamDelimStart)
+	tmpLogging := os.Getenv(EnvLogging)
+	tmpLogFile := os.Getenv(EnvLogFile)
+	tmpLogLevel := os.Getenv(EnvLogLevel)		
+	
+	Convey("Given a rancher.cfg setting", t, func() {
+
+		// set to test values
+		os.Setenv(EnvConfig, tstConfig)
+		os.Setenv(EnvDefaultsFile, tstDefaults)
+		os.Setenv(EnvSupportedFile, tstSupported)
+		os.Setenv(EnvBuildsFile, tstBuilds)
+		os.Setenv(EnvBuildListsFile, tstBuildLists)
+		os.Setenv(EnvParamDelimStart, tstParamDelimStart)
+		os.Setenv(EnvLogging, tstLogging)
+		os.Setenv(EnvLogFile, tstLogFile)
+		os.Setenv(EnvLogLevel, tstLogLevel)
+		err := SetEnv()
+
+		if err == nil {
+
+			Convey("Given the environment variable EnvDefaultsFile", func() {
+				tmp := os.Getenv(EnvDefaultsFile)
+				Convey("The result should be", func() {
+					So(tmp, ShouldEqual, tstDefaults)
+				})
+
+			})
+
+			Convey("Given the environment variable EnvSupportedFile", func() {
+				tmp := os.Getenv(EnvSupportedFile)
+				Convey("The result should be", func() {
+					So(tmp, ShouldEqual, tstSupported)
+				})
+			})
+
+			Convey("Given the environment variable EnvBuildsFile", func() {
+				tmp := os.Getenv(EnvBuildsFile)
+				Convey("The result should be", func() {
+					So(tmp, ShouldEqual, tstBuilds)
+				})	
+			})
+
+			Convey("Given the environment variable EnvBuildListsFile", func() {
+				tmp := os.Getenv(EnvBuildListsFile)
+				Convey("The result should be", func() {
+					So(tmp, ShouldEqual, tstBuildLists)
+				})
+			})
+
+			Convey("Given the environment variable EnvParamDeliStart", func() {
+				tmp := os.Getenv(EnvParamDelimStart)
+				Convey("The result should be", func() {
+					So(tmp, ShouldEqual, tmpParamDelimStart)
+				})
+			})
+
+			Convey("Given the environment variable EnvLogging", func() {
+				tmp := os.Getenv(EnvLogging)
+				Convey("The result should be", func() {
+					So(tmp, ShouldEqual, tstLogging)
+				})
+			})
+
+			Convey("Given the environment variable EnvLogFile", func() {
+				tmp := os.Getenv(EnvLogFile)
+				Convey("The result should be", func() {
+					So(tmp, ShouldEqual, tstLogFile)
+				})
+			})
+
+			Convey("Given the environment variable EnvLogLevelFile", func() {
+				tmp := os.Getenv(EnvLogLevel)
+				Convey("The result should be", func() {
+					So(tmp, ShouldEqual, tstLogLevel)
+				})
+			})
+		}
+			
+		// set to blank values (test load of rancher.cfg.
+		os.Setenv(EnvConfig, "")
+		os.Setenv(EnvDefaultsFile, "")
+		os.Setenv(EnvSupportedFile, "")
+		os.Setenv(EnvBuildsFile, "")
+		os.Setenv(EnvBuildListsFile, "")
+		os.Setenv(EnvParamDelimStart, "")
+		os.Setenv(EnvLogging, "")
+		os.Setenv(EnvLogFile, "")
+		os.Setenv(EnvLogLevel, "")
+	
+		tstDefaults = "conf/defaults.toml"
+		tstSupported = "conf/supported.toml"
+		tstBuilds = "conf.d/builds.toml"
+		tstBuildLists = "conf.d/build_lists.toml"
+		tstParamDelimStart = ":"
+		tstLogging = "true"
+		tstLogFile = "rancher.log"
+		tstLogLevel = "info"
+
+		err = SetEnv()
+
+		if err == nil {
+
+			Convey("Given the environment variable EnvDefaultsFile", func() {
+				tmp := os.Getenv(EnvDefaultsFile)
+
+				Convey("The result should be", func() {
+					So(tmp, ShouldEqual, tstDefaults)
+				})
+
+			})
+
+			Convey("Given the environment variable EnvSupportedFile", func() {
+				tmp := os.Getenv(EnvSupportedFile)
+				Convey("The result should be", func() {
+					So(tmp, ShouldEqual, tstSupported)
+				})
+			})
+
+			Convey("Given the environment variable EnvBuildsFile", func() {
+				tmp := os.Getenv(EnvBuildsFile)
+				Convey("The result should be", func() {
+					So(tmp, ShouldEqual, tstBuilds)
+				})
+			})
+
+			Convey("Given the environment variable EnvBuildListsFile", func() {
+				tmp := os.Getenv(EnvBuildListsFile)
+				Convey("The result should be", func() {
+					So(tmp, ShouldEqual, tstBuildLists)
+				})
+			})
+
+			Convey("Given the environment variable EnvParamDeliStart", func() {
+				tmp := os.Getenv(EnvParamDelimStart)
+				Convey("The result should be", func() {
+					So(tmp, ShouldEqual, tstParamDelimStart)
+				})
+			})
+
+			Convey("Given the environment variable EnvLogging", func() {
+				tmp := os.Getenv(EnvLogging)
+				Convey("The result should be", func() {
+					So(tmp, ShouldEqual, tstLogging)
+				})
+			})
+
+			Convey("Given the environment variable EnvLogFile", func() {
+				tmp := os.Getenv(EnvLogFile)
+				Convey("The result should be", func() {
+					So(tmp, ShouldEqual, tstLogFile)
+				})
+			})
+
+			Convey("Given the environment variable EnvLogLevelFile", func() {
+				tmp := os.Getenv(EnvLogLevel)
+				Convey("The result should be", func() {
+					So(tmp, ShouldEqual, tstLogLevel)
+				})
+			})
+		}
+			
+		// Test empty config
+		// TODO this is tied to actual rancher.cfg, which shouldn't change
+		// but makes it brital...laziness has its price.
+	
+		os.Setenv(EnvConfig, "")
+		err = SetEnv()
+		if err == nil {
+			Convey("Given the environment variable EnvDefaultsFile", func() {
+				tmp := os.Getenv(EnvDefaultsFile)
+				Convey("The result should be", func() {
+					So(tmp, ShouldEqual, tstDefaults)
+				})
+			})
+
+			Convey("Given the environment variable EnvSupportedFile", func() {
+				tmp := os.Getenv(EnvSupportedFile)
+				Convey("The result should be", func() {
+					So(tmp, ShouldEqual, tstSupported)
+				})
+			})
+
+			Convey("Given the environment variable EnvBuildsFile", func() {
+				tmp := os.Getenv(EnvBuildsFile)
+				Convey("The result should be", func() {
+					So(tmp, ShouldEqual, tstBuilds)
+				})
+			})
+
+			Convey("Given the environment variable EnvBuildListsFile", func() {
+				tmp := os.Getenv(EnvBuildListsFile)
+				Convey("The result should be", func() {
+					So(tmp, ShouldEqual, tstBuildLists)
+				})
+			})
+
+			Convey("Given the environment variable EnvParamDeliStart", func() {
+				tmp := os.Getenv(EnvParamDelimStart)
+				Convey("The result should be", func() {
+					So(tmp, ShouldEqual, tstParamDelimStart)
+				})
+			})
+
+			Convey("Given the environment variable EnvLogging", func() {
+				tmp := os.Getenv(EnvLogging)
+				Convey("The result should be", func() {
+					So(tmp, ShouldEqual, tstLogging)
+				})
+			})
+
+			Convey("Given the environment variable EnvLogFile", func() {
+				tmp := os.Getenv(EnvLogFile)
+				Convey("The result should be", func() {
+					So(tmp, ShouldEqual, tstLogFile)
+				})
+			})
+	
+			Convey("Given the environment variable EnvLogLevelFile", func() {
+				tmp := os.Getenv(EnvLogLevel)
+				Convey("The result should be", func() {
+					So(tmp, ShouldEqual, tstLogLevel)
+				})
+			})
+		}
+	
+		// restore to original
+		os.Setenv(EnvConfig, tmpConfig)
+		os.Setenv(EnvDefaultsFile, tmpDefaults)
+		os.Setenv(EnvSupportedFile, tmpSupported)
+		os.Setenv(EnvBuildsFile, tmpBuilds)
+		os.Setenv(EnvBuildListsFile, tmpBuildLists)
+		os.Setenv(EnvParamDelimStart, tmpParamDelimStart)
+		os.Setenv(EnvLogging, tmpLogging)
+		os.Setenv(EnvLogFile, tmpLogFile)
+		os.Setenv(EnvLogLevel, tmpLogLevel)
+	
+	})
+
+	Convey("Given a slice of default ISO information", t, func() {
+		tmp := []string{"arch=amd64", "image=server", "release=14.04", "unknown=what"}
+		arch, image, release := getDefaultISOInfo(tmp)
+
+		Convey("The results should be", func() {
+			So(arch, ShouldEqual, "amd64")
+			So(image, ShouldEqual, "server")
+			So(release, ShouldEqual, "14.04")
+		})
+	})	
+
+	Convey("Given some strings, their suffix should be removed", t, func() {
+		res0 := trimSuffix("This is a string!", "!")
+		Convey("Given a string with the suffix, the suffix should be removed", func() {
+			So(res0, ShouldEqual, "This is a string")	
+		})
+
+		res1 := trimSuffix("This is a string", "!")
+		Convey("Given a string with the suffix, the should", func() {
+			So(res1, ShouldEqual, "This is a string")	
+		})
+
+		res2 := trimSuffix("This is a string with blanks    ", " ")
+		Convey("Given a string with the suffix, the should", func() {
+			So(res2, ShouldEqual, "This is a string with blanks   ")	
+		})
+
+		res3 := trimSuffix("Try this Њф Њ Җ", "Җ")
+		Convey("Given a string with the utf 8 and suffix", func() {
+			So(res3, ShouldEqual, "Try this Њф Њ ")	
+		})
+
+		res4 := trimSuffix("Try this Њф Њ Җ ", "Җ")
+		Convey("Given a string with utf8 and a blank at the end of the string", func() {
+			So(res4, ShouldEqual, "Try this Њф Њ Җ ")	
+		})
+
+		res5 := trimSuffix("Try this Њф Њ", "Њ")
+		Convey("Given a string with utf8 with the same character embedded in the string, the should", func() {
+			So(res5, ShouldEqual, "Try this Њф ")	
+		})
+	})
+	
+	Convey("Given a string, get a substring", t, func() {
+	
 		Convey("Given string get characters 2-6", func() {
 			str := "This is a test"
 			subStr := Substring(str, 1, 5)
@@ -996,7 +1249,7 @@ func TestRanchr(t *testing.T) {
 				So(subStr, ShouldEqual, "his i")
 			})
 		})
-
+	
 		Convey("Given string get characeters 2-20", func() {
 			str := "This is a test"
 			subStr := Substring(str, 1, 18)
@@ -1004,7 +1257,7 @@ func TestRanchr(t *testing.T) {
 				So(subStr, ShouldEqual, "his is a test")
 			})
 		})
-
+	
 		Convey("Given a rune", func() {
 			str := "Hello 世界--erm 'Hi'"
 			subStr := Substring(str, 4, 12)
@@ -1015,4 +1268,4 @@ func TestRanchr(t *testing.T) {
 	})
 }
 
-
+		

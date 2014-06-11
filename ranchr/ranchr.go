@@ -24,6 +24,7 @@ var logger seelog.LoggerInterface
 var (
 	appName = "RANCHER"
 
+	EnvConfig	= appName + "_CONFIG"
 	EnvLogging         = appName + "_LOGGING"
 	EnvLogFile         = appName + "_LOG_FILE"
 	EnvLogLevel        = appName + "_LOG_LEVEL"
@@ -83,7 +84,13 @@ func SetEnv() error {
 	var config appConfig
 	var tmp string
 
-	if _, err = toml.DecodeFile("rancher.cfg", &config); err != nil {
+	tmp = os.Getenv(EnvConfig)
+	if tmp == "" {
+		// This is the application default
+		tmp = "rancher.cfg"
+	}
+
+	if _, err = toml.DecodeFile(tmp, &config); err != nil {
 		return err
 	}
 
@@ -696,6 +703,19 @@ func trimSuffix(s string, suffix string) string {
 }
 
 func copyFile(srcDir string, destDir string, script string) (written int64, err error) {
+	if srcDir == "" {
+		err := errors.New("copyFile: no source directory passed")
+		return 0, err
+	}
+
+	if destDir == "" {
+		err := errors.New("copyFile: no destination directory passed")
+		return 0, err
+	}
+
+	srcDir = appendSlash(srcDir)
+	destDir = appendSlash(destDir)
+
 	src := srcDir + script
 	dest := destDir + script
 
