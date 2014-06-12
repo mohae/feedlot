@@ -15,8 +15,6 @@ import (
 
 	"github.com/mitchellh/cli"
 	"github.com/mohae/rancher/ranchr"
-	//	log "gopkg.in/inconshreveable/log15.v2"
-	//	log "github.com/inconshreveable/log15"
 	log "github.com/cihub/seelog"
 )
 

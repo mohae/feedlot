@@ -7,8 +7,6 @@ import (
 
 	"github.com/mitchellh/cli"
 	"github.com/mohae/rancher/ranchr"
-
-	log "github.com/inconshreveable/log15"
 )
 
 // BuildCommand is a Command implementation that generates Packer templates
@@ -91,7 +89,7 @@ func (c *BuildCommand) Run(args []string) int {
 	cmdFlags.StringVar(&releaseFilter, "release", "", "release filter")
 	cmdFlags.StringVar(&logDirFilter, "log_dir", "", "log directory")
 	if err := cmdFlags.Parse(args); err != nil {
-		log.Error("Parse of command-line arguments failed: ", err.Error)
+
 		c.Ui.Error(fmt.Sprintf("Parse of command-line arguments failed: %s", err))
 		return 1
 	}
@@ -105,7 +103,7 @@ func (c *BuildCommand) Run(args []string) int {
 	s, dd, err := ranchr.DistrosInf()
 
 	if err != nil {
-		log.Error("Loading the Supported Distro information failed: %s", err)
+//		log.Error("Loading the Supported Distro information failed: %s", err)
 		c.Ui.Error(fmt.Sprintf("Loading the Supported Distro information failed: %s", err))
 		return 1
 	}
@@ -114,7 +112,7 @@ func (c *BuildCommand) Run(args []string) int {
 		args := ranchr.ArgsFilter{Arch: archFilter, Distro: distroFilter, Image: imageFilter, Release: releaseFilter}
 		// TODO go it
 		if err := ranchr.BuildPackerTemplateFromDistro(s, dd, args); err != nil {
-			log.Error(err.Error())
+//			log.Error(err.Error())
 			return 1
 		}
 	}
@@ -129,15 +127,15 @@ func (c *BuildCommand) Run(args []string) int {
 			bS += bld + " "
 		}
 
-		log.Info("Processing builds: " + bS)
+//		log.Info("Processing builds: " + bS)
 		if err := ranchr.BuildPackerTemplateFromNamedBuild(s, dd, bldArgs...); err != nil {
-			log.Error(err.Error())
+//			log.Error(err.Error())
 			return 1
 		}
 	}
 	_ = s
 
-	log.Info("Rancher Build complete.")
+//	log.Info("Rancher Build complete.")
 	c.Ui.Output("Rancher Build complete.")
 
 	return 0

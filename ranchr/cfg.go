@@ -1,31 +1,28 @@
+// Generate Packer templates and associated files for consumption by Packer.
+// 
+// Copyright 2014 Joel Scoble. All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+//
+
+// Provides structs for storing the data from the various TOML files that 
+// Rancher uses, along with methods associated with the structs.
 package ranchr
 
 import (
 	"errors"
-	_ "fmt"
 	"os"
-	_ "reflect"
 
 	"github.com/BurntSushi/toml"
 )
 
-/*
-type sectioner interface {
-	// An interface for Packer template sections-when implemented.
-	Load() error
-	mergeSettings([]string)
-	settingsToMap(IODirInf) map[string]interface{}
-}
-*/
-
 type build struct {
 	// Contains most of the information for Packer templates within a Rancher Build.
 	BuilderType []string `toml:"builder_type"`
-
 	Builders map[string]builder `toml:"builders"`
-
 	PostProcessors map[string]postProcessors `toml:"post_processors"`
-
 	Provisioners map[string]provisioners `toml:"provisioners"`
 }
 
@@ -46,28 +43,21 @@ func (b *builder) mergeVMSettings(new []string) {
 }
 
 func (b *builder) settingsToMap(r *RawTemplate) map[string]interface{} {
-	// Go through all of the Settings and convert them to a map. If any additional
-	// processing needs to be done to a builder setting, it is done here.
+	// Go through all of the Settings and convert them to a map. Each setting
+	// is parsed into its constituent parts. The value then goes through
+	// variable replacement to ensure that the settings are properly resolved.
 	var k, v string
-
 	m := make(map[string]interface{}, len(b.Settings)+len(b.VMSettings))
-	//	m := map[string]interface{}
 	for _, s := range b.Settings {
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
-		switch k {
-		case "http_Directory":
-			//			v = resolvePathTemplate(io, v)
-		}
-
 		m[k] = v
 	}
-
 	return m
 }
 
-// Type for handling the post-processor section of the configs.
 type postProcessors struct {
+	// Type for handling the post-processor section of the configs.
 	Settings []string
 }
 
@@ -77,29 +67,22 @@ func (p *postProcessors) mergeSettings(new []string) {
 }
 
 func (p *postProcessors) settingsToMap(Type string, r *RawTemplate) map[string]interface{} {
-	// Go through all of the Settings and convert them to a map. If any additional
-	// processing needs to be done to a post-processor setting, it is done here.
+	// Go through all of the Settings and convert them to a map. Each setting
+	// is parsed into its constituent parts. The value then goes through
+	// variable replacement to ensure that the settings are properly resolved.
 	var k, v string
 	m := make(map[string]interface{}, len(p.Settings))
-
 	m["type"] = Type
-
 	for _, s := range p.Settings {
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
-		switch k {
-		case "output", "vagrantfile_template":
-			//			v = resolvePathTemplate(io, v)
-		}
-
 		m[k] = v
 	}
-
 	return m
 }
 
-// Type for handling the provisioners sections of the configs.
 type provisioners struct {
+	// Type for handling the provisioners sections of the configs.
 	Settings []string `toml:"settings"`
 	Scripts  []string `toml:"scripts"`
 }
@@ -110,33 +93,30 @@ func (p *provisioners) mergeSettings(new []string) {
 }
 
 func (p *provisioners) settingsToMap(Type string, r *RawTemplate) map[string]interface{} {
-	// Go through all of the Settings and convert them to a map. If any additional
-	// processing needs to be done to a provisioners setting, it is done here.
+	// Go through all of the Settings and convert them to a map. Each setting
+	// is parsed into its constituent parts. The value then goes through
+	// variable replacement to ensure that the settings are properly resolved.
 	var k, v string
 	m := make(map[string]interface{}, len(p.Settings))
-
 	m["type"] = Type
-
 	for _, s := range p.Settings {
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
-
 		switch k {
 		case "execute_command":
+			// Not being able to get the command file won't end the template
+			// generation. Instead, the returned error will be used as the 
+			// setting value.
+			// This is probably a bad idea and I should revisit TODO
 			if c, err := commandFromFile(v); err != nil {
 				v = "Error: " + err.Error()
 				err = nil
 			} else {
 				v = c[0]
 			}
-		case "environment_vars":
-			// TODO--figure out what I was thinking with the above case and comment below--or delete this case
-			// do same as scripts except no resolve template path
 		}
-
 		m[k] = v
 	}
-
 	return m
 }
 
@@ -156,12 +136,16 @@ type defaults struct {
 }
 
 type BuildInf struct {
+	// Information about a specific build. 
 	Name      string `toml:"name"`
 	BuildName string `toml:"build_name"`
 }
 
 type IODirInf struct {
 	// IODirInf is used to store information about where Rancher can find and put things.
+	// Source files are always in a SrcDir, e.g. HTTPSrcDir is the source directory for 
+	// the HTTP directory. The destination directory is always a Dir, e.g. HTTPDir is the
+	// destination directory for the HTTP directory. 
 	CommandsSrcDir string `toml:"commands_src_dir"`
 	HTTPDir		string `toml:"http_dir"`
 	HTTPSrcDir	string `toml:"http_src_dir"`
@@ -172,7 +156,10 @@ type IODirInf struct {
 }
 
 type PackerInf struct {
-	// PackerInf is used to store information about a Packer Template. In Packer, these fields are optional.
+	// PackerInf is used to store information about a Packer Template. In Packer, these
+	// fields are optional, put used here because they are always printed out in a 
+	// template as custom creation of template output hasn't been written--it may never
+	// be written.
 	MinPackerVersion string `toml:"min_packer_Release" json:"min_packer_version"`
 	Description      string `toml:"description" json:"description"`
 }
@@ -185,50 +172,55 @@ func (d *defaults) Load() error {
 		return err
 	}
 	_, err := toml.DecodeFile(name, &d)
-
 	return err
 }
 
-// To add support for a distribution, the information about it must be added to the supported. file, in addition to adding the code to support it to the application.
+// To add support for a distribution, the information about it must be added to
+// the supported. file, in addition to adding the code to support it to the 
+// application.
 type Supported struct {
 	Distro map[string]distro
 }
 
 type distro struct {
-	// Struct to hold the details of supported distros. From this information a user should be able to
-	// build a Packer template by only executing the following, at minimum:
-	//
+	// Struct to hold the details of supported distros. From this information a user
+	// should be able to build a Packer template by only executing the following, at
+	// minimum:
 	//	$ rancher build -distro=ubuntu
-	//
-	// All settings can be overridden. The information here represents the standard box configuration for
-	// its respective distribution.
+	// All settings can be overridden. The information here represents the standard 
+	// box configuration for its respective distribution.
 	IODirInf
 	PackerInf
 	BuildInf
 	BaseURL string `toml:"base_url"`
 
-	// The supported Architectures, which can differ per distro. The labels can also differ, e.g. amd64 and x86_64.
+	// The supported Architectures, which can differ per distro. The labels can also
+	// differ, e.g. amd64 and x86_64.
 	Arch []string `toml:"Arch"`
 
 	// Supported iso Images, e.g. server, minimal, etc.
 	Image []string `toml:"Image"`
 
-	// Supported Releases: the supported Releases are the Releases available for download from that distribution's download page. Archived and unsupported Releases are not used.
+	// Supported Releases: the supported Releases are the Releases available for 
+	// download from that distribution's download page. Archived and unsupported 
+	// Releases are not used.
 	Release []string `toml:"Release"`
 
-	// The default Image configuration for this distribution. This usually consists of things like Release, Architecture, Image type, etc.
+	// The default Image configuration for this distribution. This usually consists of
+	// things like Release, Architecture, Image type, etc.
 	DefImage []string `toml:"default_Image"`
 
-	// The configurations needed to generate the default settings for a build for this distribution.
+	// The configurations needed to generate the default settings for a build for this
+	// distribution.
 	build
 }
 
 // Load the Supported Distros file
 func (s *Supported) Load() error {
 	name := os.Getenv(EnvSupportedFile)
-
 	if name == "" {
 		err := errors.New("could not retrieve the Supported information because the " + EnvSupportedFile + " Env variable was not set. Either set it or check your rancher.cfg setting")
+		logger.Error(err.Error())
 		return err
 	}
 	_, err := toml.DecodeFile(name, &s)
@@ -244,20 +236,23 @@ func (b *Builds) Load() error {
 	name := os.Getenv(EnvBuildsFile)
 	if name == "" {
 		err := errors.New("could not retrieve the Builds configurations because the " + EnvBuildsFile + "Env variable was not set. Either set it or check your rancher.cfg setting")
+		logger.Error(err.Error())
 		return err
 	}
-	_, err := toml.DecodeFile(name, &b)
-
-	return err
+	if _, err := toml.DecodeFile(name, &b); err != nil {
+		logger.Error(err.Error())
+		return err
+	}
+	return nil
 }
 
-// Contains lists of builds.
 type buildLists struct {
+	// Contains lists of builds.
 	List map[string]list
 }
 
-// A list of builds. Each list contains one or more builds.
 type list struct {
+	// A list of builds. Each list contains one or more builds.
 	Builds []string
 }
 
@@ -266,9 +261,12 @@ func (b *buildLists) Load() error {
 	name := os.Getenv(EnvBuildListsFile)
 	if name == "" {
 		err := errors.New("could not retrieve the BuildLists file because the " + EnvBuildListsFile + " Env variable was not set. Either set it or check your rancher.cfg setting")
+		logger.Error(err.Error())
 		return err
 	}
-	_, err := toml.DecodeFile(name, &b)
-
-	return err
+	if _, err := toml.DecodeFile(name, &b); err != nil {
+		logger.Error(err.Error())
+		return err
+	}
+	return nil
 }
