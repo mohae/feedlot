@@ -1294,6 +1294,7 @@ func TestRanchr(t *testing.T) {
 			})
 		})
 
+/*
 		Convey("Given properly set file information", func() {
 			os.Setenv(EnvDefaultsFile, "../test_files/conf/defaults_test.toml")
 			os.Setenv(EnvSupportedFile, "../test_files/conf/supported_test.toml")
@@ -1302,7 +1303,7 @@ func TestRanchr(t *testing.T) {
 //				So(tpls, ShouldResemble, testTpls)
 			}
 		})
-
+*/
 		os.Setenv(EnvSupportedFile, tmpSupported)
 		os.Setenv(EnvDefaultsFile, tmpDefaults)
 	})
