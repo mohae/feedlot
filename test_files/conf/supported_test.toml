@@ -28,7 +28,7 @@
        		"13.10"
        	]
        	default_image = [
-       		"version = 12.04",
+       		"release = 12.04",
        		"image = server",
        		"arch = amd64",
        	]
@@ -44,7 +44,7 @@
 		]
 		[distro.ubuntu.builders.vmware-iso]
 		vm_settings = [
-			"memory=2048"
+			"memsize=2048"
 		]
 	[distro.ubuntu.post_processors]
 		[distro.ubuntu.post_processors.vagrant]
@@ -82,7 +82,7 @@
         	"6.5"
 	]
 	default_image = [
-	    	"version = 6.5",
+	    	"release = 6.5",
 	    	"image = minimal",
 	    	"arch = x86_64",
 	]

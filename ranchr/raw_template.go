@@ -14,7 +14,6 @@ type RawTemplate struct {
 	IODirInf
 	BuildInf
 	date    string // ISO 8601 Date format
-	BaseURL string
 	delim   string
 	Type    string
 	Arch    string
@@ -236,13 +235,17 @@ func (r *RawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 
 			for i, v = range r.Builders[bType].VMSettings {
 				k, val = parseVar(v)
-
-				val = r.replaceVariables(val)
-				tmpVB[i] = make([]string, 4)
-				tmpVB[i][0] = "modifyvm"
-				tmpVB[i][1] = "{{.Name}}"
-				tmpVB[i][2] = "--" + k
-				tmpVB[i][3] = val
+				switch k {
+				case "memory":
+					// do nothing
+				default:
+					val = r.replaceVariables(val)
+					tmpVB[i] = make([]string, 4)
+					tmpVB[i][0] = "modifyvm"
+					tmpVB[i][1] = "{{.Name}}"
+					tmpVB[i][2] = "--" + k
+					tmpVB[i][3] = val
+				}
 			}
 			tmpS["vboxmanage"] = tmpVB
 
@@ -389,6 +392,10 @@ func (r *RawTemplate) mergeDistroSettings(d distro) {
 
 	// merge the build portions.
 	r.Builders = getMergedBuilders(r.Builders, d.Builders)
+//	b, _ := json.Marshal(r.Builders)
+	logger.Debug(fmt.Sprint(r.Builders))
+//	d, _ := json.Marshall(d.Builders)
+	logger.Debug(fmt.Sprint(d.Builders))
 	r.PostProcessors = getMergedPostProcessors(r.PostProcessors, d.PostProcessors)
 	r.Provisioners = getMergedProvisioners(r.Provisioners, d.Provisioners)
 

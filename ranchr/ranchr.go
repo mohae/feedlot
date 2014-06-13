@@ -357,6 +357,7 @@ func setDistrosDefaults(d defaults, s Supported) (map[string]RawTemplate, error)
 
 		}
 		tmp.BaseURL = appendSlash(v.BaseURL)
+
 		tmp.Arch, tmp.Image, tmp.Release = getDefaultISOInfo(v.DefImage)
 		tmp.CommandsSrcDir = appendSlash(d.CommandsSrcDir)
 		tmp.HTTPDir = appendSlash(d.HTTPDir)

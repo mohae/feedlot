@@ -254,266 +254,7 @@ var testCommandsFromFileCases = []commandsFromFileTest{
 	},
 }
 
-type getMergedBuildersTest struct {
-	name     string
-	old      map[string]builder
-	new      map[string]builder
-	expected map[string]builder
-}
 
-var TestGetMergedBuildersCases = []getMergedBuildersTest{
-	{
-		name: "Test merge builders: update common only",
-		old: map[string]builder{
-			"common": {
-				Settings: []string{
-					"boot_command = :src_dir/:type/:commands_dir/boot.command",
-					"boot_wait = 5s",
-					"disk_size = 20000",
-					"http_directory = http",
-					"iso_checksum_type = sha256",
-					"shutdown_command = :src_dir/:type/:commands_dir/shutdown.command",
-					"ssh_password = vagrant",
-					"ssh_port = 22",
-					"ssh_username = vagrant",
-					"ssh_wait_timeout = 240m",
-				},
-			},
-			"virtualbox": {
-				VMSettings: []string{
-					"cpus=1",
-					"memory=1024",
-				},
-			},
-			"vmware": {
-				VMSettings: []string{
-					"cpuid.coresPerSocket=1",
-					"memsize=1024",
-					"numvcpus=1",
-				},
-			},
-		},
-		new: map[string]builder{
-			"common": {
-				Settings: []string{
-					"boot_wait = 15s",
-					"disk_size = 30000",
-					"http_directory = www",
-				},
-			},
-		},
-		expected: map[string]builder{
-			"common": {
-				Settings: []string{
-					"boot_command = :src_dir/:type/:commands_dir/boot.command",
-					"boot_wait = 15s",
-					"disk_size = 30000",
-					"http_directory = www",
-					"iso_checksum_type = sha256",
-					"shutdown_command = :src_dir/:type/:commands_dir/shutdown.command",
-					"ssh_password = vagrant",
-					"ssh_port = 22",
-					"ssh_username = vagrant",
-					"ssh_wait_timeout = 240m",
-				},
-			},
-			"virtualbox": {
-				VMSettings: []string{
-					"cpus=1",
-					"memory=1024",
-				},
-			},
-			"vmware": {
-				VMSettings: []string{
-					"cpuid.coresPerSocket=1",
-					"memsize=1024",
-					"numvcpus=1",
-				},
-			},
-		},
-	},
-	{
-		name: "Test merge builders: update common, virtualbox, and vmware",
-		old: map[string]builder{
-			"common": {
-				Settings: []string{
-					"boot_command = :src_dir/:type/:commands_dir/boot.command",
-					"boot_wait = 5s",
-					"disk_size = 20000",
-					"http_directory = http",
-					"iso_checksum_type = sha256",
-					"shutdown_command = :src_dir/:type/:commands_dir/shutdown.command",
-					"ssh_password = vagrant",
-					"ssh_port = 22",
-					"ssh_username = vagrant",
-					"ssh_wait_timeout = 240m",
-				},
-			},
-			"virtualbox": {
-				VMSettings: []string{
-					"cpus=1",
-					"memory=1024",
-				},
-			},
-			"vmware": {
-				VMSettings: []string{
-					"cpuid.coresPerSocket=1",
-					"memsize=1024",
-					"numvcpus=1",
-				},
-			},
-		},
-		new: map[string]builder{
-			"common": {
-				Settings: []string{
-					"disk_size = 40000",
-					"shutdown_command = src/commnds/shutdown.command",
-					"ssh_wait_timeout = 300m",
-				},
-			},
-			"virtualbox": {
-				VMSettings: []string{
-					"memory=2048",
-				},
-			},
-			"vmware": {
-				VMSettings: []string{
-					"memsize=2048",
-				},
-			},
-		},
-		expected: map[string]builder{
-			"common": {
-				Settings: []string{
-					"boot_command = :src_dir/:type/:commands_dir/boot.command",
-					"boot_wait = 5s",
-					"disk_size = 40000",
-					"http_directory = http",
-					"iso_checksum_type = sha256",
-					"shutdown_command = src/commands/shutdown.command",
-					"ssh_password = vagrant",
-					"ssh_port = 22",
-					"ssh_username = vagrant",
-					"ssh_wait_timeout = 300m",
-				},
-			},
-			"virtualbox": {
-				VMSettings: []string{
-					"cpus=1",
-					"memory=2048",
-				},
-			},
-			"vmware": {
-				VMSettings: []string{
-					"cpuid.coresPerSocket=1",
-					"memsize=2048",
-					"numvcpus=1",
-				},
-			},
-		},
-	},
-	{
-		name: "Test merge builders: old has common only, new has vm stuff only",
-		old: map[string]builder{
-			"common": {
-				Settings: []string{
-					"boot_command = :src_dir/:type/:commands_dir/boot.command",
-					"boot_wait = 5s",
-					"disk_size = 20000",
-					"http_directory = http",
-					"iso_checksum_type = sha256",
-					"shutdown_command = :src_dir/:type/:commands_dir/shutdown.command",
-					"ssh_password = vagrant",
-					"ssh_port = 22",
-					"ssh_username = vagrant",
-					"ssh_wait_timeout = 240m",
-				},
-			},
-		},
-		new: map[string]builder{
-			"virtualbox": {
-				VMSettings: []string{
-					"cpus=1",
-					"memory=1024",
-				},
-			},
-			"vmware": {
-				VMSettings: []string{
-					"cpuid.coresPerSocket=1",
-					"memsize=1024",
-					"numvcpus=1",
-				},
-			},
-		},
-		expected: map[string]builder{
-			"common": {
-				Settings: []string{
-					"boot_command = :src_dir/:type/:commands_dir/boot.command",
-					"boot_wait = 5s",
-					"disk_size = 20000",
-					"http_directory = http",
-					"iso_checksum_type = sha256",
-					"shutdown_command = :src_dir/:type/:commands_dir/shutdown.command",
-					"ssh_password = vagrant",
-					"ssh_port = 22",
-					"ssh_username = vagrant",
-					"ssh_wait_timeout = 240m",
-				},
-			},
-			"virtualbox": {
-				VMSettings: []string{
-					"cpus=1",
-					"memory=1024",
-				},
-			},
-			"vmware": {
-				VMSettings: []string{
-					"cpuid.coresPerSocket=1",
-					"memsize=1024",
-					"numvcpus=1",
-				},
-			},
-		},
-	},
-	// disabled because DeepEqual comes back with != even though they are
-	/*	{
-			name: "Test merge builders: no new builders",
-			old: map[string]builder{
-				"common": {
-					Settings: []string{
-						"boot_command = :src_dir/:type/:commands_dir/boot.command",
-						"boot_wait = 5s",
-						"disk_size = 20000",
-						"http_directory = http",
-						"iso_checksum_type = sha256",
-						"shutdown_command = :src_dir/:type/:commands_dir/shutdown.command",
-						"ssh_password = vagrant",
-						"ssh_port = 22",
-						"ssh_username = vagrant",
-						"ssh_wait_timeout = 240m",
-					},
-				},
-			},
-			new: nil,
-			expected: map[string]builder{
-				"common": {
-					Settings: []string{
-						"boot_command = :src_dir/:type/:commands_dir/boot.command",
-						"boot_wait = 5s",
-						"disk_size = 20000",
-						"http_directory = http",
-						"iso_checksum_type = sha256",
-						"shutdown_command = :src_dir/:type/:commands_dir/shutdown.command",
-						"ssh_password = vagrant",
-						"ssh_port = 22",
-						"ssh_username = vagrant",
-						"ssh_wait_timeout = 240m",
-					},
-				},
-			},
-		},
-	*/
-}
 
 type getMergedPostProcessorsTest struct {
 	name     string
@@ -743,87 +484,12 @@ type copyFileTest struct {
 	expectedErr   string
 }
 
-var TestCopyFileCases = []copyFileTest{
+var TestCopyFileCases = []copyFileTest{ 
 	{"Test Copy File, No src Dir", "", "test_files/out/", "test_file.sh", 0, "copyFile: no source directory passed"},
 	{"Test Copy File, No dest dir", "test_files/", "", "test_file.sh", 0, "copyFile: no destination directory passed"},
 	{"Test Copy File", "test_files/scripts/", "test_files/tmp", "test_file.sh", 0, "open test_files/scripts/test_file.sh: no such file or directory"},
 	{"Test Copy File", "../test_files/scripts/", "test_files/tmp", "test_file.sh", 0, "o"},
 
-}
-
-var testDefaults = defaults{
-	IODirInf: IODirInf{
-		OutDir:      "out/:type/:build_name",
-		ScriptsDir:  ":src_dir/scripts",
-		SrcDir:      "src/:type",
-		ScriptsSrcDir:      "",
-		CommandsSrcDir: "",
-	},
-	PackerInf: PackerInf{
-		MinPackerVersion: "",
-		Description:      "Test Default Rancher template",
-	},
-	BuildInf: BuildInf{
-		Name:      ":type-:release-:image-:arch",
-		BuildName: "",
-	},
-	build: build{
-		BuilderType: []string{
-			"virtualbox-iso",
-			"vmware-iso",
-		},
-		Builders: map[string]builder{
-			"common": {
-				Settings: []string{
-					"boot_command = :commands_dir/boot.command",
-					"boot_wait = 5s",
-					"disk_size = 20000",
-					"http_directory = http",
-					"iso_checksum_type = sha256",
-					"shutdown_command = :commands_dir/shutdown.command",
-					"ssh_password = vagrant",
-					"ssh_port = 22",
-					"ssh_username = vagrant",
-					"ssh_wait_timeout = 240m",
-				},
-			},
-			"virtualbox-iso": {
-				VMSettings: []string{
-					"cpus=1",
-					"memory=1024",
-				},
-			},
-			"vmware-iso": {
-				VMSettings: []string{
-					"cpuid.coresPerSocket=1",
-					"memsize=1024",
-					"numvcpus=1",
-				},
-			},
-		},
-		PostProcessors: map[string]postProcessors{
-			"vagrant": {
-				Settings: []string{
-					"keep_input_artifact = false",
-					"output = :out_dir/someComposedBoxName.box",
-				},
-			},
-		},
-		Provisioners: map[string]provisioners{
-			"shell": {
-				Settings: []string{
-					"execute_command = :commands_dir/execute.command",
-				},
-				Scripts: []string{
-					":scripts_dir/setup.sh",
-					":scripts_dir/base.sh",
-					":scripts_dir/vagrant.sh",
-					":scripts_dir/cleanup.sh",
-					":scripts_dir/zerodisk.sh",
-				},
-			},
-		},
-	},
 }
 
 func TestRanchr(t *testing.T) {
@@ -1005,7 +671,7 @@ func TestRanchr(t *testing.T) {
 	}
 
 // Goconvey...
-
+	// Values to use in testing instead of the configured values
 	tstConfig := "../test_files/rancher_test.cfg"
 	tstDefaults := "../test_files/conf/defaults_test.toml"
 	tstSupported := "../test_files/conf/supported_test.toml"
@@ -1016,7 +682,7 @@ func TestRanchr(t *testing.T) {
 	tstLogFile := "rancher.log"
 	tstLogLevel := "info"
 
-	
+	// Setting Env testing	
 	// save current setttings
 	tmpConfig := os.Getenv(EnvConfig)
 	tmpDefaults := os.Getenv(EnvDefaultsFile)
@@ -1105,16 +771,6 @@ func TestRanchr(t *testing.T) {
 			
 	Convey("Given a rancher.cfg setting with blank environment variables", t, func() {
 		// set to blank values (test load of rancher.cfg.
-		os.Setenv(EnvConfig, "")
-		os.Setenv(EnvDefaultsFile, "")
-		os.Setenv(EnvSupportedFile, "")
-		os.Setenv(EnvBuildsFile, "")
-		os.Setenv(EnvBuildListsFile, "")
-		os.Setenv(EnvParamDelimStart, "")
-		os.Setenv(EnvLogging, "")
-		os.Setenv(EnvLogFile, "")
-		os.Setenv(EnvLogLevel, "")
-	
 		tstDefaults = "conf/defaults.toml"
 		tstSupported = "conf/supported.toml"
 		tstBuilds = "conf.d/builds.toml"
@@ -1124,6 +780,15 @@ func TestRanchr(t *testing.T) {
 		tstLogFile = "rancher.log"
 		tstLogLevel = "info"
 
+		os.Setenv(EnvConfig, "")
+		os.Setenv(EnvDefaultsFile, "")
+		os.Setenv(EnvSupportedFile, "")
+		os.Setenv(EnvBuildsFile, "")
+		os.Setenv(EnvBuildListsFile, "")
+		os.Setenv(EnvParamDelimStart, "")
+		os.Setenv(EnvLogging, "")
+		os.Setenv(EnvLogFile, "")
+		os.Setenv(EnvLogLevel, "")
 		err := SetEnv()
 
 		if err == nil {
@@ -1466,4 +1131,114 @@ func TestRanchr(t *testing.T) {
 	})
 }
 
-		
+// Test that distro defaults are working correctly
+func TestSetDistroDefaults(t *testing.T) {
+	os.Setenv(EnvConfig, testRancherCfg)
+	Convey("Given a Default and Supported data structure", t, func() {
+		var res map[string]RawTemplate
+		var err error
+		os.Setenv(EnvDefaultsFile, "../test_files/conf/defaults_test.cfg")
+		os.Setenv(EnvSupportedFile, "../test_files/conf/supported_test.cfg")
+		res, err = setDistrosDefaults(testDefaults, testSupported)
+		So(err, ShouldBeNil)
+		So(res, ShouldResemble, testDistroDefaults)		
+	})
+}
+
+var oldBuild = map[string]builder{
+	"common": {
+		Settings: []string{
+			"boot_command = :src_dir/:type/:commands_dir/boot.command",
+			"boot_wait = 5s",
+			"disk_size = 20000",
+			"http_directory = http",
+			"iso_checksum_type = sha256",
+			"shutdown_command = :src_dir/:type/:commands_dir/shutdown.command",
+			"ssh_password = vagrant",
+			"ssh_port = 22",
+			"ssh_username = vagrant",
+			"ssh_wait_timeout = 240m",
+		},
+	},
+	"virtualbox": {
+		VMSettings: []string{
+			"cpus=1",
+			"memory=1024",
+		},
+	},
+	"vmware": {
+		VMSettings: []string{
+			"cpuid.coresPerSocket=1",
+			"memsize=1024",
+			"numvcpus=1",
+		},
+	},
+}
+
+var newBuild = map[string]builder{
+	"common": {
+		Settings: []string{
+			"boot_wait = 15s",
+			"disk_size = 30000",
+			"http_directory = www",
+		},
+	},
+	"virtualbox": {
+		VMSettings: []string{
+			"memory=2048",
+		},
+	},
+	"vmware": {
+		VMSettings: []string{
+			"memsize=2048",
+		},
+	},
+}
+
+var mergedBuild = map[string]builder{
+	"common": {
+		Settings: []string{
+			"boot_command = :src_dir/:type/:commands_dir/boot.command",
+			"boot_wait = 15s",
+			"disk_size = 30000",
+			"http_directory = www",
+			"iso_checksum_type = sha256",
+			"shutdown_command = :src_dir/:type/:commands_dir/shutdown.command",
+			"ssh_password = vagrant",
+			"ssh_port = 22",
+			"ssh_username = vagrant",
+			"ssh_wait_timeout = 240m",
+		},
+	},
+	"virtualbox": {
+		VMSettings: []string{
+			"cpus=1",
+			"memory=2048",
+		},
+	},
+	"vmware": {
+		VMSettings: []string{
+			"cpuid.coresPerSocket=1",
+			"memsize=2048",
+			"numvcpus=1",
+		},
+	},
+}
+// test merging of builders
+func TestGetMergedBuilders(t *testing.T) {
+	Convey("Given an empty new builders", t, func() {
+		var empty, merged map[string]builder
+		merged = getMergedBuilders(oldBuild, empty)
+		Convey("Merging them should result in getting the old builder", func() {
+			So(merged, ShouldResemble, oldBuild)
+		})
+	})
+
+	Convey("Given a new builder and an old builder", t, func() {
+		var merged map[string]builder
+		merged = getMergedBuilders(oldBuild, newBuild)
+		Convey("Merging them should result in", func() {
+			So(merged, ShouldResemble, mergedBuild)
+		})
+	})
+}
