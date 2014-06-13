@@ -8,231 +8,14 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 )
-
 type test struct {
-	Name         string
-	VarValue     string
+	Name string
+	VarValue string
 	ExpectedErrS string
 }
-
-type defaultsTest struct {
-	test
-	Expected defaults
-}
-
-var testDefaultsCases = []defaultsTest{
-	{
-		test: test{
-			Name:         "Defaults: Empty Filename",
-			VarValue:     "",
-			ExpectedErrS: "could not retrieve the default Settings file because the " + EnvDefaultsFile + " ENV variable was not set. Either set it or check your rancher.cfg setting",
-		},
-		Expected: defaults{},
-	},
-	{
-		test: test{
-			Name:         "Defaults: Load defaults_test.",
-			VarValue:     "../test_files/conf/defaults_test.toml",
-			ExpectedErrS: "",
-		},
-		Expected: defaults{
-			IODirInf: IODirInf{
-				OutDir:      "out/:type/:build_name",
-				ScriptsDir:  ":src_dir/scripts",
-				SrcDir:      "src/:type",
-				ScriptsSrcDir:      "",
-				CommandsSrcDir: "",
-			},
-			PackerInf: PackerInf{
-				MinPackerVersion: "",
-				Description:      "Test Default Rancher template",
-			},
-			BuildInf: BuildInf{
-				Name:      ":type-:release-:image-:arch",
-				BuildName: "",
-			},
-			build: build{
-				BuilderType: []string{
-					"virtualbox-iso",
-					"vmware-iso",
-				},
-				Builders: map[string]builder{
-					"common": {
-						Settings: []string{
-							"boot_command = :commands_dir/boot.command",
-							"boot_wait = 5s",
-							"disk_size = 20000",
-							"http_directory = http",
-							"iso_checksum_type = sha256",
-							"shutdown_command = :commands_dir/shutdown.command",
-							"ssh_password = vagrant",
-							"ssh_port = 22",
-							"ssh_username = vagrant",
-							"ssh_wait_timeout = 240m",
-						},
-					},
-					"virtualbox-iso": {
-						VMSettings: []string{
-							"cpus=1",
-							"memory=1024",
-						},
-					},
-					"vmware-iso": {
-						VMSettings: []string{
-							"cpuid.coresPerSocket=1",
-							"memsize=1024",
-							"numvcpus=1",
-						},
-					},
-				},
-				PostProcessors: map[string]postProcessors{
-					"vagrant": {
-						Settings: []string{
-							"keep_input_artifact = false",
-							"output = :out_dir/someComposedBoxName.box",
-						},
-					},
-				},
-				Provisioners: map[string]provisioners{
-					"shell": {
-						Settings: []string{
-							"execute_command = :commands_dir/execute.command",
-						},
-						Scripts: []string{
-							":scripts_dir/setup.sh",
-							":scripts_dir/base.sh",
-							":scripts_dir/vagrant.sh",
-							":scripts_dir/cleanup.sh",
-							":scripts_dir/zerodisk.sh",
-						},
-					},
-				},
-			},
-		},
-	},
-}
-
 type SupportedTest struct {
 	test
 	Expected Supported
-}
-
-var testSupportedCases = []SupportedTest{
-	{
-		test: test{
-			Name:         "Supported: Empty Filename",
-			VarValue:     "",
-			ExpectedErrS: "could not retrieve the Supported information because the " + EnvSupportedFile + " Env variable was not set. Either set it or check your rancher.cfg setting",
-		},
-		Expected: Supported{},
-	},
-	{
-		test: test{
-			Name:         "Supported: Load supported_test.toml",
-			VarValue:     "../test_files/conf/supported_test.toml",
-			ExpectedErrS: "",
-		},
-		Expected: Supported{
-			Distro: map[string]distro{
-				"ubuntu": {
-					BuildInf: BuildInf{},
-					IODirInf: IODirInf{},
-					PackerInf: PackerInf{
-						MinPackerVersion: "",
-						Description:      "Test supported distribution template",
-					},
-					BaseURL: "http://releases.ubuntu.com/",
-					Arch: []string{
-						"i386",
-						"amd64",
-					},
-					Image: []string{
-						"desktop",
-						"server",
-						"alternate",
-					},
-					Release: []string{
-						"10.04",
-						"12.04",
-						"12.10",
-						"13.04",
-						"13.10",
-					},
-					DefImage: []string{
-						"version = 12.04",
-						"image = server",
-						"arch = amd64",
-					},
-					build: build{
-						Builders: map[string]builder{
-							"common": {
-								Settings: []string{
-									"boot_command = :commands_dir/boot.command",
-									"shutdown_command = :commands_dir/shutdown.command",
-								},
-							},
-							"virtualbox-iso": {
-								VMSettings: []string{"memory=2048"},
-							},
-							"vmware-iso": {
-								VMSettings: []string{"memory=2048"},
-							},
-						},
-						PostProcessors: map[string]postProcessors{
-							"vagrant": {
-								Settings: []string{
-									"output = :out_dir/:type-:arch-:version-:image-packer.box",
-								},
-							},
-						},
-						Provisioners: map[string]provisioners{
-							"shell": {
-								Settings: []string{
-									"execute_command = :commands_dir/execute.command",
-								},
-								Scripts: []string{
-									":scripts_dir/setup.sh",
-									":scripts_dir/base.sh",
-									":scripts_dir/vagrant.sh",
-									":scripts_dir/cleanup.sh",
-									":scripts_dir/zerodisk.sh",
-								},
-							},
-						},
-					},
-				},
-				"centos": {
-					BuildInf: BuildInf{},
-					IODirInf: IODirInf{
-						OutDir: "out/centos",
-						SrcDir: "src/centos",
-					},
-					PackerInf: PackerInf{
-						MinPackerVersion: "",
-						Description:      "Test template config and Rancher options for CentOS",
-					},
-					BaseURL: "http://www.centos.org/pub/centos/",
-					Arch: []string{
-						"i386",
-						"x86_64",
-					},
-					Image: []string{
-						"minimal",
-						"netinstall",
-					},
-					Release: []string{
-						"5.10",
-						"6.5",
-					},
-					DefImage: []string{
-						"version = 6.5",
-						"image = minimal",
-						"arch = x86_64",
-					},
-				},
-			},
-		},
-	},
 }
 
 type BuildsTest struct {
@@ -350,50 +133,9 @@ var testBuildListsCases = []buildListsTest{
 }
 
 func TestMain(t *testing.T) {
-
+	// make sure the test data is set
+	setCommonTestData()
 	var tmpEnv string
-
-	tmpEnv = os.Getenv(EnvDefaultsFile)
-	dflt := defaults{}
-	for _, test := range testDefaultsCases {
-		_ = os.Setenv(EnvDefaultsFile, test.VarValue)
-		if err := dflt.Load(); err != nil {
-			if err.Error() != test.ExpectedErrS {
-				t.Errorf(test.Name, "error:", err.Error())
-			} else {
-				t.Logf(test.Name, "OK")
-			}
-
-		} else {
-			if !reflect.DeepEqual(dflt, test.Expected) {
-				t.Error(test.Name, "Expected:", test.Expected, "Got:", dflt)
-			} else {
-				t.Logf(test.Name, "OK")
-			}
-		}
-	}
-
-	_ = os.Setenv(EnvDefaultsFile, tmpEnv)
-
-	tmpEnv = os.Getenv(EnvSupportedFile)
-	sd := Supported{}
-	for _, test := range testSupportedCases {
-		_ = os.Setenv(EnvSupportedFile, test.VarValue)
-		if err := sd.Load(); err != nil {
-			if err.Error() != test.ExpectedErrS {
-				t.Errorf(test.Name, "error:", err.Error())
-			} else {
-				t.Logf(test.Name, "OK")
-			}
-		} else {
-			if !reflect.DeepEqual(sd, test.Expected) {
-				t.Error(test.Name, "Expected:", test.Expected, "Got:", sd)
-			} else {
-				t.Logf(test.Name, "OK")
-			}
-		}
-	}
-	_ = os.Setenv(EnvSupportedFile, tmpEnv)
 
 	tmpEnv = os.Getenv(EnvBuildsFile)
 
@@ -436,6 +178,55 @@ func TestMain(t *testing.T) {
 		}
 	}
 	_ = os.Setenv(EnvBuildListsFile, tmpEnv)
+}
+
+func TestDefaults(t *testing.T) {
+	tmpEnvDefaultsFile := os.Getenv(EnvDefaultsFile)
+	Convey("Given a defaults struct", t, func() {
+		Convey("Given an empty default file environment setting", func() {
+			d := defaults{}
+			os.Setenv(EnvDefaultsFile, "")
+			Convey("A load should result in an error", func() {
+				err := d.Load()
+				So(err.Error(), ShouldEqual, "could not retrieve the default Settings file because the RANCHER_DEFAULTS_FILE ENV variable was not set. Either set it or check your rancher.cfg setting")
+			})
+		})
+		Convey("Given a valid defaults configuration file", func() {
+			d := defaults{}
+			os.Setenv(EnvDefaultsFile, "../test_files/conf/defaults_test.toml")
+			Convey("A load should not error and result in data loaded", func() {
+				err := d.Load()
+				So(err, ShouldBeNil)
+				So(d, ShouldResemble, testDefaults)
+			})
+		})
+	})
+	_ = os.Setenv(EnvDefaultsFile, tmpEnvDefaultsFile)
+}
+
+func TestSupported(t *testing.T) {
+	tmpEnv := os.Getenv(EnvSupportedFile)
+	Convey("Given a Supported struct", t, func() {
+		Convey("Given an empty supported file environment setting", func() {
+			s := Supported{}
+			os.Setenv(EnvSupportedFile, "")
+			Convey("A load should result in an error", func() {
+				err := s.Load()
+				So(err.Error(), ShouldEqual, "could not retrieve the Supported information because the RANCHER_SUPPORTED_FILE Env variable was not set. Either set it or check your rancher.cfg setting")
+			})
+		})
+		Convey("Given a valid defaults configuration file", func() {
+			s := Supported{}
+			os.Setenv(EnvSupportedFile, "../test_files/conf/supported_test.toml")
+			Convey("A load should not error and result in data loaded", func() {
+				err := s.Load()
+				So(err, ShouldBeNil)
+				So(s, ShouldResemble, testSupported)
+			})
+		})
+	})
+
+	_ = os.Setenv(EnvSupportedFile, tmpEnv)
 }
 
 func TestBuilderStuff(t *testing.T) {

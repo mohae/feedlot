@@ -139,6 +139,7 @@ type BuildInf struct {
 	// Information about a specific build. 
 	Name      string `toml:"name"`
 	BuildName string `toml:"build_name"`
+	BaseURL		string `toml:"base_url"`
 }
 
 type IODirInf struct {
@@ -192,8 +193,6 @@ type distro struct {
 	IODirInf
 	PackerInf
 	BuildInf
-	BaseURL string `toml:"base_url"`
-
 	// The supported Architectures, which can differ per distro. The labels can also
 	// differ, e.g. amd64 and x86_64.
 	Arch []string `toml:"Arch"`

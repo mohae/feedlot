@@ -1,8 +1,11 @@
 package ranchr
 
 import (
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
+	"time"
 
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/dotcloud/tar"
@@ -10,11 +13,18 @@ import (
 
 func TestArchive(t *testing.T) {
 	Convey("Testing Archive", t, func() {
+
+		tmpDir := os.TempDir()
+		_ = tmpDir
+
 		Convey("return the current date time, local, in rfc3339 format", func() {
 			fmtDateTime := formattedNow()
-			
-			Convey("The string should be now in rfc3339 format w local timezone. The : are replaced with _. Only test for not empty since this value changes.", func() {
-				So(fmtDateTime, ShouldNotEqual, "")
+			// This doesn't feel right, as it just replicated the actual function
+			// but I don't know how else to generate the needed dynamic value
+			// and doing it this way will at least detect changes to the formula.
+			dateTime := time.Now().Local().Format("2006-01-02T150405Z0700")
+			Convey("The string should be now in an ISO 8601 like format format w local timezone(Z). The :s have been stripped out of the time though.", func() {
+				So(fmtDateTime, ShouldEqual, dateTime)
 			})
 		})
 
@@ -37,31 +47,34 @@ func TestArchive(t *testing.T) {
 			})
 		})
 
-		Convey("add a file to a tar.Writer", func() {
+		Convey("Given a target archive location at ../test_files/test.tar", func() {
 			tst := Archive{}
 			filename := "../test_files/test.tar"
-			testFile, _ := os.Create(filename)
-			tW := tar.NewWriter(testFile)
-			if err := tst.addFile(tW, "../test_files/scripts/test_file.sh"); err == nil {
-				Convey("The file was added", func() {
-					So(tW, ShouldNotBeNil)
+			Convey("Given a create for target archive", func() {
+				testFile, err := os.Create(filename)
+				Convey("The file should be created", func() {
+					So(err, ShouldBeNil)
+					defer testFile.Close()
 				})
-			}
-	
-			Convey("add a file that doesn't exist", func() {
-				if err := tst.addFile(tW, "../test_files/doesntExist"); err == nil {
-					Convey(err, ShouldEqual, "z")
-				}
-			})
+				Convey("Given a new tar writer for the target archive file", func() {
+					tW := tar.NewWriter(testFile)
+					defer tW.Close()
+					err := tst.addFile(tW, "../test_files/scripts/test_file.sh")
+					Convey("Adding a file to the archive", func() {
+						Convey("Should result in no error", func() {
+							So(err, ShouldBeNil)
+						})
+					})
 
-			Convey("add a file with permission issues", func() {
-				if err := tst.addFile(tW, "../test_files/no_permissions.txt"); err == nil {
-					Convey(err, ShouldEqual, "z")
-				}
+					err1 := tst.addFile(tW, "../test_files/doesntExist")					
+					Convey("Adding a file that doesn't exist to the archive", func() {
+						Convey("Should result in an error", func() {
+							So(err1.Error(), ShouldEqual, "open ../test_files/doesntExist: no such file or directory")
+						})
+					})
+				})	
+				os.Remove(filename)	
 			})
-
-			tW.Close()
-			os.Remove(filename)
 		})
 
 		Convey("back up a directory: src does not exist", func() {
@@ -69,39 +82,35 @@ func TestArchive(t *testing.T) {
 			filename := "../test_files/test.tar"
 			testFile, _ := os.Create(filename)
 			tW := tar.NewWriter(testFile)
-			if err := tst.priorBuild("../test_fils/", "gzip"); err != nil {
-				Convey("The prior build was archived.", func() {
-					So(err, ShouldEqual, "ADFSA")
-				})
-			}
+			err := tst.priorBuild("../test_fils/", "gzip")
+			Convey("A request to back up a non-existant directory should not result in an error", func() {
+				So(err, ShouldBeNil)
+			})
 			tW.Close()
 			os.Remove(filename)
 		})
+
 
 		Convey("back up a directory: empty directory", func() {
 			tst := Archive{}
 			filename := "../test_files/test.tar"
 			testFile, _ := os.Create(filename)
 			tW := tar.NewWriter(testFile)
-			if err := tst.priorBuild("../test_files/empty/", "gzip"); err != nil {
-				Convey("The prior build was archived.", func() {
-					So(err, ShouldEqual, "ADFSA")
-				})
-			}
-			tW.Close()
-			os.Remove(filename)
-		})
+			err := tst.priorBuild("../test_files/empty/", "gzip")
+			Convey("Should not result in an error", func() {
+					So(err, ShouldBeNil)
+			})
 
-		Convey("back up a directory: directory doesn't exist", func() {
-			tst := Archive{}
-			filename := "../test_files/test.tar"
-			testFile, _ := os.Create(filename)
-			tW := tar.NewWriter(testFile)
-			if err := tst.priorBuild("../test_files/3empty2/", "gzip"); err != nil {
-				Convey("The prior build was archived.", func() {
-					So(err, ShouldEqual, "ADFSA")
-				})
-			}
+			Convey("Should not result in a gzip archive", func() {
+				var tarFiles []string
+				files, _ := ioutil.ReadDir("../test_files/")
+				for _, file := range files {
+					if filepath.Ext(file.Name()) == ".gz" {
+						tarFiles = append(tarFiles, file.Name())
+					}
+				}
+				So(tarFiles, ShouldBeNil)
+			})
 			tW.Close()
 			os.Remove(filename)
 		})
@@ -111,7 +120,7 @@ func TestArchive(t *testing.T) {
 			filename := "../test_files/test.tar"
 			testFile, _ := os.Create(filename)
 			tW := tar.NewWriter(testFile)
-			if err := tst.priorBuild("../test_files/", "gzip"); err == nil {
+			if err := tst.priorBuild("../test_files/scripts", "gzip"); err == nil {
 				Convey("The prior build was archived.", func() {
 					So(tW, ShouldNotBeNil)
 				})
@@ -121,4 +130,15 @@ func TestArchive(t *testing.T) {
 		})
 					
 	})	
+
+	// Remove any tarballs that may be created
+	var tarFiles []string
+	files, _ := ioutil.ReadDir("../test_files/")
+	for _, file := range files {
+		if filepath.Ext(file.Name()) == ".gz" {
+			tarFiles = append(tarFiles, file.Name())
+			// and remove it because it shouldn't be there
+			_ = os.Remove(file.Name())
+		}
+	}
 }

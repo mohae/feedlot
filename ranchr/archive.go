@@ -2,15 +2,13 @@ package ranchr
 
 import (
 	_"archive/tar"
-	_ "bytes"
 	"compress/gzip"
 	"errors"
-	_"fmt"
 	"io"
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
+	_"strings"
 	"time"
 	
 	"github.com/dotcloud/tar"
@@ -23,7 +21,6 @@ type Archive struct {
 	directory 
 }
 
-
 type directory struct {
 	// This is just a struct to attach SrcWalk to. Makes keeping track of the
 	// children easier
@@ -31,7 +28,7 @@ type directory struct {
 }
 
 func (d *directory) SrcWalk(src string) error {
-	// If the directory exists, create a tarball out of it.
+	// If the directory exists, create a list of its contents.
 	return filepath.Walk(src, d.addFilename)
 }
 
@@ -51,37 +48,31 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 		return err
 	}
 	defer file.Close()
-
 	var fileStat os.FileInfo
 	if fileStat, err = file.Stat(); err != nil {
 		logger.Error(err.Error())
 		return err
 	}
-
 	switch fileMode := fileStat.Mode(); {
 	case fileMode.IsDir():
 		logger.Info("Is Directory: ", filename)
 		return nil
 	}
-
 	tarHeader := new(tar.Header)
 	tarHeader.Name = filename
 	tarHeader.Size = fileStat.Size()
 	tarHeader.Mode = int64(fileStat.Mode())
 	tarHeader.ModTime = fileStat.ModTime()
-
 	// Write the file header to the tarball.
 	if err := tW.WriteHeader(tarHeader); err != nil {
 		logger.Error(err.Error())
 		return err
 	}
-
 	// Add the file to the tarball.
 	if _, err := io.Copy(tW, file); err != nil {
 		logger.Error(err.Error())
 		return err
 	}
-
 	return nil
 }
 
@@ -95,22 +86,17 @@ func (a *Archive) priorBuild(src string, t string) error {
 		logger.Error(err.Error())
 		return err
 	}
-
 	logger.Info("Creating tarball from " + src + " using ", t)
-	if err := a.SrcWalk(src); err != nil {
-		logger.Error("Walk of directory '" + src + "' failed: " + err.Error())
-		return err
-	}
+	// SrcWalk, as written will always return nil
+	_ = a.SrcWalk(src);
 
-	if len(a.Files) <= 0 {
+	logger.Info(a.Files)
+	if len(a.Files) <= 1 {
 		// This isn't a real error, just log it and return a non-error state.
 		err := errors.New("No prior builds to archive.")
 		logger.Error(err.Error())
 		return nil
 	}
-
-//	if len(a.Files) = 1 {
-		
 	// Get the current date and time in RFC3339 format with custom formatting.
 	nowF := formattedNow()
 	tarBallName := path.Dir(a.Files[0]) + "-" + nowF + ".tar.gz"
@@ -121,17 +107,13 @@ func (a *Archive) priorBuild(src string, t string) error {
 		logger.Critical(err.Error())
 		return err
 	}
-
 	defer tBall.Close()
-
 	// Create the gzip writer.
 	gw := gzip.NewWriter(tBall)
 	defer gw.Close()
-
 	// Create the tar writer.
 	tW := tar.NewWriter(gw)
 	defer tW.Close()
-
 	// Go through each file in the path and add it to the archive
 	for _, file := range a.Files {
 		// 
@@ -140,14 +122,11 @@ func (a *Archive) priorBuild(src string, t string) error {
 			return err
 		}
 	}
-
 	return nil
 }
 
 func formattedNow() string {
-	// Time in RFC3339 format with :s replaced with _s. This is done 
-	// with seconds resolution to minimize chance of collision, how 
-	// remote that may be.
-	// TODO make it 8601 compliant (RFC3339 + Z)
-	return strings.Replace(time.Now().Local().Format(time.RFC3339), ":", "_", -1)
+	// Time in ISO 8601 like format. The differenze being the : have been
+	// removed from the time.
+	return time.Now().Local().Format("2006-01-02T150405Z0700")
 }
