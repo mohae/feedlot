@@ -94,16 +94,14 @@ func (p *PackerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []st
 	} else {
 		logger.Info(strconv.Itoa(okCnt) + " scripts were successfully copied.")
 	}
-
 	if err := os.MkdirAll(i.OutDir+"http", os.FileMode(0766)); err != nil {
 		logger.Error(err.Error())
 		return err
 	}
-
-	logger.Error(i.OutDir + i.HTTPDir)
 	if err := copyDirContent(i.HTTPSrcDir, i.OutDir + i.HTTPDir); err != nil {
 		logger.Error(err.Error())
 	}
+	logger.Trace("Copied contents of " + i.HTTPSrcDir + " to " + i.OutDir + i.HTTPDir)
 
 	// Write it out as JSON
 	tplJSON, err := json.MarshalIndent(p, "", "\t")
@@ -124,6 +122,7 @@ func (p *PackerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []st
 		logger.Error(err.Error())
 		return err
 	}
+	logger.Info("Packer template directory, JSON, and contents were created and copied for " + b.BuildName)
 
 	return nil
 }

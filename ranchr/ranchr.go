@@ -15,7 +15,7 @@ package ranchr
 import (
 	"bufio"
 	"errors"
-	"fmt"
+	_"fmt"
 	"io"
 	"os"
 	"strings"
@@ -38,16 +38,20 @@ var (
 	EnvDefaultsFile    = appName + "_DEFAULTS_FILE"
 	EnvSupportedFile   = appName + "_SUPPORTED_FILE"
 	EnvParamDelimStart = appName + "_PARAM_DELIM_START"
+)
 
+var (
 	BuilderCommon = "common"
 	BuilderVBox   = "virtualbox-iso"
 	BuilderVMWare = "vmware-iso"
 )
 
+var (
+	MessageEmptyValue = "Value expected but %v was empty"
+)
+
 type appConfig struct {
 	Logging         string
-	LogFile         string `toml:"log_file"`
-	LogLevel        string `toml:"log_level"`
 	DefaultsFile    string `toml:"defaults_file"`
 	SupportedFile   string `toml:"Supported_file"`
 	BuildsFile      string `toml:"builds_file"`
@@ -60,27 +64,6 @@ type ArgsFilter struct {
 	Distro  string
 	Image   string
 	Release string
-}
-
-func init() {
-	DisableLog()
-}
-
-// Logger setup stuff from:
-//	github.com/cihub/seelog/wiki/Writing-libraries-with-Seelog
-func DisableLog() {
-	logger = seelog.Disabled
-}
-
-// UseLogger uses a specified seelog.LoggerInterface to output library log.
-// This func is used when Seelog logging system is being used in app.
-func UseLogger(newLogger seelog.LoggerInterface) {
-	logger = newLogger
-}
-
-// Call this before app shutdown.
-func FlushLog() {
-	logger.Flush()
 }
 
 // Set the environment variables, if they do not already exist.
@@ -147,20 +130,7 @@ func SetEnv() error {
 			return err
 		}
 	}
-	tmp = os.Getenv(EnvLogFile)
-	if tmp == "" {
-		if err = os.Setenv(EnvLogFile, config.LogFile); err != nil {
-			logger.Error(err.Error())
-			return err
-		}
-	}
-	tmp = os.Getenv(EnvLogLevel)
-	if tmp == "" {
-		if err = os.Setenv(EnvLogLevel, config.LogLevel); err != nil {
-			logger.Error(err.Error())
-			return err
-		}
-	}
+
 	return nil
 }
 
@@ -220,10 +190,8 @@ func BuildPackerTemplateFromDistro(s Supported, dd map[string]RawTemplate, a Arg
 	if a.Release != "" {
 		d.Release = a.Release
 	}
-	// Default buildname
-	// TODO revisit this...this feels like crappy code. It should really be
-	// in a file, the defaults file!
-	d.BuildName = ":type-:release-:arch-:image-rancher"
+
+//	d.BuildName = ":type-:release-:arch-:image-rancher"
 	// Now everything can get put in a template
 	rTpl := newRawTemplate()
 	pTpl := PackerTemplate{}
@@ -259,9 +227,13 @@ func BuildPackerTemplateFromNamedBuild(s Supported, dd map[string]RawTemplate, b
 		return err
 	}
 	var ok, errd bool
-	var errCnt int
+	var errCnt, cnt int
 	var tpl, bld RawTemplate
 	for _, bldName := range bldNames {
+		if bldName == "" {
+			break
+		}
+		cnt++
 		// Check the type and create the defaults for that type, if it doesn't already exist.
 		tpl = RawTemplate{}
 		bld = RawTemplate{}
@@ -308,6 +280,16 @@ func BuildPackerTemplateFromNamedBuild(s Supported, dd map[string]RawTemplate, b
 			logger.Info("Created Packer template and associated build directory for build:" + bldName + ".")
 		}
 	}
+	if cnt == 0 {
+		err = errors.New("BuildPackerTemplateFromNamedBuild error: no build names were passed. Nothing was built.")
+		logger.Warn(err.Error())
+		return err
+	}
+
+	if errCnt > 0 {
+		logger.Warn("BuildPackerTemplateFromNamedBuild encountered an error during processing, the associated Build was not properly built.")
+	}
+
 	return nil
 }
 
@@ -504,32 +486,6 @@ func keyIndexInVarSlice(key string, sl []string) int {
 	return -1
 }
 
-func commandFromFile(name string) ([]string, error) {
-	// The name is the file's location, which is used to read the requested file
-	// and create a string slice from it.
-	f, err := os.Open(name)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if err := f.Close(); err != nil {
-			logger.Error(err.Error())
-		}
-	}()
-	//New Reader and slice for the string
-	var commands []string
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		commands = append(commands, scanner.Text())
-	}
-	if err := scanner.Err(); err != nil {
-		logger.Error(fmt.Errorf("%s Reading command file: %s", os.Stderr, err).Error())
-		return nil, err
-	}
-
-	return commands, nil
-}
-
 func getVariableName(s string) (string, error) {
 	if s == "" {
 		err := errors.New("no variable name was passed")
@@ -659,7 +615,7 @@ func trimSuffix(s string, suffix string) string {
 	return s
 }
 
-func copyFile(srcDir string, destDir string, script string) (written int64, err error) {
+func copyFile(srcDir string, destDir string, file string) (written int64, err error) {
 	if srcDir == "" {
 		err := errors.New("copyFile: no source directory passed")
 		logger.Error(err.Error())
@@ -670,10 +626,16 @@ func copyFile(srcDir string, destDir string, script string) (written int64, err 
 		logger.Error(err.Error())
 		return 0, err
 	}
+	if file == "" {
+		err := errors.New("copyFile: no filename passed")
+		logger.Error(err.Error())
+		return 0, err
+	}
+
 	srcDir = appendSlash(srcDir)
 	destDir = appendSlash(destDir)
-	src := srcDir + script
-	dest := destDir + script
+	src := srcDir + file
+	dest := destDir + file
 	// Create the scripts dir and copy each script from sript_src to out_dir/scripts/
 	// while keeping track of success/failures.
 	if err = os.MkdirAll(destDir, os.FileMode(0766)); err != nil {
@@ -688,7 +650,7 @@ func copyFile(srcDir string, destDir string, script string) (written int64, err 
 	}
 	defer fs.Close()
 	// Open the destination, create or truncate as needed.
-	fd, err = os.OpenFile(dest, os.O_CREATE|os.O_TRUNC, 0744)
+	fd, err = os.Create(dest)
 	if err != nil {
 		logger.Error(err.Error())
 		return 0, err
@@ -702,11 +664,28 @@ func copyDirContent(srcDir string, destDir string) error {
 	//get the contents of srcDir
 	// The archive struct should be renamed to something more appropriate
 	dir := Archive{}
-	dir.SrcWalk(srcDir)
-	for _, fileName := range dir.Files {
-		if _, err := copyFile(srcDir, destDir, fileName); err != nil {
+	err := dir.SrcWalk(srcDir)
+	if err != nil {
+		return err
+	}
+	for _, file := range dir.Files {
+		if file.info == nil {
+			// if the info is empty, whatever this entry represents
+			// doesn't actually exist.
+			err := errors.New(file.path + " does not exist")
 			logger.Error(err.Error())
 			return err
+		}
+		if file.info.IsDir() {
+			if err := os.MkdirAll(file.path, os.FileMode(0766)); err != nil {
+				logger.Error(err.Error())
+				return err
+			}
+		} else {
+			if _, err := copyFile(srcDir, destDir, file.info.Name()); err != nil {
+				logger.Error(err.Error())
+				return err
+			}
 		}
 	}
 	return nil
@@ -714,12 +693,23 @@ func copyDirContent(srcDir string, destDir string) error {
 
 func deleteDirContent(dir string) error {
 	// deletes the contents of a directory
-	dirInf := directory{}
-	dirInf.SrcWalk(dir)
-	for _, name := range dirInf.Files {
-		if err := os.Remove(name); err != nil {
+	// see if the directory exists first, actually any error results in the
+	// same handling so just return on any error instead of doing an
+	// os.IsNotExist(err)
+	if _, err := os.Stat(dir); err != nil {
+		if os.IsNotExist(err) {
 			logger.Error(err.Error())
 			return err
+		}
+	}
+	dirInf := directory{}
+	dirInf.SrcWalk(dir)
+	for _, file := range dirInf.Files {
+		if file.path != dir {
+			if err := os.Remove(file.path); err != nil {		
+				logger.Error(err.Error())
+				return err
+			}
 		}
 	}
 	return nil
@@ -730,6 +720,12 @@ func deleteDirContent(dir string) error {
 // of the string, the string contents from the index to the end of the string 
 // will be returned instead.
 func Substring(s string, i, l int) string {
+	if i <= 0 {
+		return ""
+	}
+	if l <= 0 {
+		return ""
+	}
 	r := []rune(s)
 	length := i + l;
 	if length > len(r) {
@@ -737,4 +733,3 @@ func Substring(s string, i, l int) string {
 	}
 	return string(r[i:length])
 }
-

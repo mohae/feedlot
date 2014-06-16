@@ -84,6 +84,11 @@ func (u *ubuntu) SetURL() {
 // Notes: \n separate lines
 //      since this is plain text processing we don't worry about runes
 func (u *ubuntu) findChecksum(s string) (string, error) {
+	if s == "" {
+		err := errors.New("the string passed to ubuntu.findChecksum(s string) was empty; unable to process request")
+		logger.Error(err.Error())
+		return "", err
+	}
 	pos := strings.Index(s, u.Filename)
 	if pos <= 0 {
 		// if it wasn't found, there's a chance that there's an extension on the release number
@@ -108,14 +113,20 @@ func (u *ubuntu) findChecksum(s string) (string, error) {
 		u.SetFilename()
 
 		pos = strings.Index(s, u.Filename)
-		if pos < 0 {
-			err := errors.New("Unable to retrieve checksum while looking for the release string on the Ubuntu checksums page.")
+		if pos <= 0 {
+			err := errors.New("Unable to retrieve checksum while looking for " + u.Filename + " on the Ubuntu checksums page.")
 			logger.Error(err.Error())
 			return "", err
 		}
 	}
 
-	if pos - 66 < 0 {
+/*	if len(s) < pos - 2 {
+		err := errors.New("Unable to retrieve checksum information for " + u.Filename)
+		logger.Error(err.Error())
+		return "", err
+	}
+*/
+	if pos - 66 < 1 {
 		u.Checksum = s[:pos-2]
 	} else {
 		u.Checksum = s[pos-66 : pos-2]

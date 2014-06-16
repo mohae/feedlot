@@ -33,6 +33,15 @@
         		"image = server",
         		"arch = amd64",
         	]
+		[distro.ubuntu.builders]		
+			[distro.ubuntu.builders.virtualbox-iso]
+			vm_settings = [
+				"memory=2048"
+			]
+			[distro.ubuntu.builders.vmware-iso]
+			vm_settings = [
+				"memsize=2048"
+			]
 	
 	[distro.centos]
 		base_url = "http://www.centos.org/pub/centos"

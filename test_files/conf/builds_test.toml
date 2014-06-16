@@ -4,8 +4,8 @@
 # build configuration with the Rancher and distro defaults.
 [build] 
 	[build.test1]
-		type = "ubuntu"		# id is the distro ID, this is used to find default settings.
-		description = "Test build template"
+		type = "ubuntu"
+		description = "Test build template #1"
 		arch = "amd64"
 		image = "server"
 		release = "1204"
@@ -24,15 +24,36 @@
 		[build.test1.post_processors]
 			[build.test1.post_processors.vagrant]
 			settings = [
-				"output = out_dir/packer.box"
+				"output = :out_dir/packer.box"
 			]
 		[build.test1.provisioners]
 			[build.test1.provisioners.shell]
 			settings = [
-				"execute_command = execute.command"
+				"execute_command = :commands_src_dir/execute_test.command"
 			]
 			scripts = [
-				":scripts_dir/ubuntu/setup.sh",
-				":scripts_dir/ubuntu/vagrant.sh",
-				":scripts_dir/ubuntu/cleanup.sh"
+				":scripts_dir/setup_test.sh",
+				":scripts_dir/vagrant_test.sh",
+				":scripts_dir/cleanup_test.sh"
 			]
+
+	[build.test2]
+		type = "ubuntuu"
+		description = "Test build template #2: causes an error"
+		arch = "amd64"
+		image = "desktop"
+		release = "1204"
+		builder_type = [
+			"virtualbox-iso",
+			"vmware-iso"
+		]
+		[build.test2.builders]
+			[build.test2.builders.common]
+			settings = [
+				"ssh_wait_timeout = 300m"
+			]
+			[build.test2.builders.virtualbox-iso]
+			vm_settings = [
+				"memory=4096"
+			]
+

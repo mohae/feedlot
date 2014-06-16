@@ -26,6 +26,7 @@ func init() {
 func main() {
 	// main wraps runMain() and ensures that the log gets flushed prior to exit.
 	// Exit with return code from runMain()
+	defer ranchr.FlushLog()
 	defer log.Flush()
 	rc := runMain()
 	os.Exit(rc)
@@ -76,9 +77,7 @@ func SetLogging() error {
 	if err != nil {
 		return err
 	}
-	defer log.Flush()
 	ranchr.UseLogger(logger)
-	defer ranchr.FlushLog()
 	log.ReplaceLogger(logger)
 	return nil
 }

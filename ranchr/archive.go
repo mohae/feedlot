@@ -24,7 +24,12 @@ type Archive struct {
 type directory struct {
 	// This is just a struct to attach SrcWalk to. Makes keeping track of the
 	// children easier
-	Files []string
+	Files []file
+}
+
+type file struct {
+	path string
+	info os.FileInfo
 }
 
 func (d *directory) SrcWalk(src string) error {
@@ -32,9 +37,9 @@ func (d *directory) SrcWalk(src string) error {
 	return filepath.Walk(src, d.addFilename)
 }
 
-func (d *directory) addFilename(path string, f os.FileInfo, err error) error {
+func (d *directory) addFilename(p string, f os.FileInfo, err error) error {
 	// Add a file to the slice of files for which an archive will be created.
-	d.Files = append(d.Files, path)
+	d.Files = append(d.Files, file{path: p, info: f})
 	return nil
 }
 
@@ -77,6 +82,7 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 }
 
 func (a *Archive) priorBuild(src string, t string) error {
+	logger.Tracef("Entering priorBuild with type: %v with %v", t, src)
 	// see if src exists, if it doesn't then don't do anything
 	if _, err := os.Stat(src); err != nil {
 		if os.IsNotExist(err) {
@@ -90,7 +96,7 @@ func (a *Archive) priorBuild(src string, t string) error {
 	// SrcWalk, as written will always return nil
 	_ = a.SrcWalk(src);
 
-	logger.Info(a.Files)
+	logger.Debugf("The archive files were: %v", a.Files)
 	if len(a.Files) <= 1 {
 		// This isn't a real error, just log it and return a non-error state.
 		err := errors.New("No prior builds to archive.")
@@ -99,8 +105,8 @@ func (a *Archive) priorBuild(src string, t string) error {
 	}
 	// Get the current date and time in RFC3339 format with custom formatting.
 	nowF := formattedNow()
-	tarBallName := path.Dir(a.Files[0]) + "-" + nowF + ".tar.gz"
-	logger.Info(tarBallName)
+	tarBallName := path.Dir(a.Files[0].path) + "-" + nowF + ".tar.gz"
+	logger.Debugf("The files within %v will be archived and saved as %v.", src, tarBallName)
 	// Create the new archive file.
 	tBall, err := os.Create(tarBallName)
 	if err != nil {
@@ -115,13 +121,16 @@ func (a *Archive) priorBuild(src string, t string) error {
 	tW := tar.NewWriter(gw)
 	defer tW.Close()
 	// Go through each file in the path and add it to the archive
+	var cnt int	
 	for _, file := range a.Files {
 		// 
-		if err := a.addFile(tW, file); err != nil {
+		if err := a.addFile(tW, file.path); err != nil {
 			logger.Critical(err.Error())
 			return err
 		}
+		cnt++
 	}
+	logger.Tracef("Exiting priorBuild. %v files were added to the archive.", cnt)
 	return nil
 }
 

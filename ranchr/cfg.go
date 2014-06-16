@@ -108,7 +108,7 @@ func (p *provisioners) settingsToMap(Type string, r *RawTemplate) map[string]int
 			// generation. Instead, the returned error will be used as the 
 			// setting value.
 			// This is probably a bad idea and I should revisit TODO
-			if c, err := commandFromFile(v); err != nil {
+			if c, err := commandsFromFile(v); err != nil {
 				v = "Error: " + err.Error()
 				err = nil
 			} else {
@@ -161,7 +161,7 @@ type PackerInf struct {
 	// fields are optional, put used here because they are always printed out in a 
 	// template as custom creation of template output hasn't been written--it may never
 	// be written.
-	MinPackerVersion string `toml:"min_packer_Release" json:"min_packer_version"`
+	MinPackerVersion string `toml:"min_packer_version" json:"min_packer_version"`
 	Description      string `toml:"description" json:"description"`
 }
 

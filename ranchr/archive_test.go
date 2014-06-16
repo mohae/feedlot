@@ -31,7 +31,7 @@ func TestArchive(t *testing.T) {
 
 		Convey("Get a slice of paths within a directory", func() {
 			tst := Archive{}
-			err := tst.SrcWalk("../test_files/scripts")
+			err := tst.SrcWalk("../test_files/src/ubuntu/scripts")
 			if err == nil {
 				Convey("The files within the walked path should be:", func() {
 					So(tst.Files, ShouldNotBeEmpty)
@@ -39,17 +39,19 @@ func TestArchive(t *testing.T) {
 			}
 		})
 
+/*
 		Convey("add a path to Files slice", func() {
 			tst := Archive{}
-			tst.addFilename("test/file", nil, nil)
-			Convey("The path slice should have 'test/file'", func() {
-				So(tst.Files, ShouldContain, "test/file")
+			tst.addFilename("../test_files/src/ubuntu/scripts/test_file.sh", nil, nil)
+			Convey("The path slice should have 'test_files/src/ubuntu/scripts/test_file.sh'", func() {
+				So(tst.Files, ShouldResemble, directory{[]file{{path:"../test_files/src/ubuntu/scripts/test_file.sh"}}})
 			})
 		})
+*/
 
-		Convey("Given a target archive location at ../test_files/test.tar", func() {
+		Convey("Given a target archive location at ../test_files/out/test.tar", func() {
 			tst := Archive{}
-			filename := "../test_files/test.tar"
+			filename := "../test_files/out/test1.tar"
 			Convey("Given a create for target archive", func() {
 				testFile, err := os.Create(filename)
 				Convey("The file should be created", func() {
@@ -59,7 +61,7 @@ func TestArchive(t *testing.T) {
 				Convey("Given a new tar writer for the target archive file", func() {
 					tW := tar.NewWriter(testFile)
 					defer tW.Close()
-					err := tst.addFile(tW, "../test_files/scripts/test_file.sh")
+					err := tst.addFile(tW, "../test_files/src/ubuntu/scripts/test_file.sh")
 					Convey("Adding a file to the archive", func() {
 						Convey("Should result in no error", func() {
 							So(err, ShouldBeNil)
@@ -73,13 +75,12 @@ func TestArchive(t *testing.T) {
 						})
 					})
 				})	
-				os.Remove(filename)	
 			})
 		})
 
 		Convey("back up a directory: src does not exist", func() {
 			tst := Archive{}
-			filename := "../test_files/test.tar"
+			filename := "../test_files/out/test2.tar"
 			testFile, _ := os.Create(filename)
 			tW := tar.NewWriter(testFile)
 			err := tst.priorBuild("../test_fils/", "gzip")
@@ -87,13 +88,12 @@ func TestArchive(t *testing.T) {
 				So(err, ShouldBeNil)
 			})
 			tW.Close()
-			os.Remove(filename)
 		})
 
 
 		Convey("back up a directory: empty directory", func() {
 			tst := Archive{}
-			filename := "../test_files/test.tar"
+			filename := "../test_files/out/test3.tar"
 			testFile, _ := os.Create(filename)
 			tW := tar.NewWriter(testFile)
 			err := tst.priorBuild("../test_files/empty/", "gzip")
@@ -103,7 +103,7 @@ func TestArchive(t *testing.T) {
 
 			Convey("Should not result in a gzip archive", func() {
 				var tarFiles []string
-				files, _ := ioutil.ReadDir("../test_files/")
+				files, _ := ioutil.ReadDir("../test_files/conf/")
 				for _, file := range files {
 					if filepath.Ext(file.Name()) == ".gz" {
 						tarFiles = append(tarFiles, file.Name())
@@ -112,33 +112,35 @@ func TestArchive(t *testing.T) {
 				So(tarFiles, ShouldBeNil)
 			})
 			tW.Close()
-			os.Remove(filename)
 		})
 
 		Convey("back up a directory", func() {
 			tst := Archive{}
-			filename := "../test_files/test.tar"
+			filename := "../test_files/test4.tar"
 			testFile, _ := os.Create(filename)
 			tW := tar.NewWriter(testFile)
-			if err := tst.priorBuild("../test_files/scripts", "gzip"); err == nil {
-				Convey("The prior build was archived.", func() {
+			if err := tst.priorBuild("../test_files/src/ubuntu/scripts", "gzip"); err == nil {
+				Convey("A directory was archived.", func() {
 					So(tW, ShouldNotBeNil)
 				})
 			}
 			tW.Close()
-			os.Remove(filename)
 		})
 					
 	})	
 
 	// Remove any tarballs that may be created
-	var tarFiles []string
-	files, _ := ioutil.ReadDir("../test_files/")
+	files, _ := ioutil.ReadDir("../test_files/out")
+	var ext string
 	for _, file := range files {
-		if filepath.Ext(file.Name()) == ".gz" {
-			tarFiles = append(tarFiles, file.Name())
-			// and remove it because it shouldn't be there
-			_ = os.Remove(file.Name())
+		if !file.IsDir() {
+			ext = filepath.Ext(file.Name())
+			switch ext {
+			case ".gz":
+				fallthrough
+			case ".tar":
+				os.Remove("../test_files/out/" + file.Name())			
+			}
 		}
 	}
 }
