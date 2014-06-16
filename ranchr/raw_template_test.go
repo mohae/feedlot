@@ -7,15 +7,296 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+func init() {
+	setCommonTestData()
+}
 
-
-func TestRawTemplate(t *testing.T) {
-	Convey("Testing RawTemplate", t, func() {
+func TestNewRawTemplate(t *testing.T) {
+	Convey("Testing NewRawTemplate", t, func() {
 		Convey("Given a request for a newRawTemplate()", func() {
 			rawTpl := newRawTemplate()
 			Convey("The raw template should equal--we don't test the date because it is always changeing", func() {
 				So(rawTpl, ShouldResemble, testRawTemplate)
 			})
+		})
+	})
+}
+
+// TODO ShouldNotResemble vs ShouldResemble DeepEqual issue
+func TestCreateDistroTemplate(t *testing.T) {
+	Convey("Given a distro default template", t, func() {
+		Convey("A distro template should be created", func() {
+			r := RawTemplate{}
+			r.createDistroTemplate(testDistroDefaults["ubuntu"]) 
+			So(r, ShouldNotResemble, testDistroDefaults["ubuntu"])
+		})
+	})
+}
+
+func TestCreatePackerTemplate(t *testing.T) {
+	Convey("Given a template", t, func() {
+		r := RawTemplate{}
+		r = testDistroDefaults["ubuntu"]
+		Convey("Calling RawTemplate.CreatePackerTemplate() should result in", func() {
+			var pTpl PackerTemplate
+			var err error
+			pTpl, err = r.CreatePackerTemplate()
+			So(err, ShouldBeNil)
+			So(pTpl, ShouldNotResemble, r)
+		})
+	})
+}
+
+func TestCreateBuilders(t *testing.T) {
+	Convey("Given a template", t, func() {
+		r :=RawTemplate{}
+		r = testDistroDefaults["ubuntu"]
+		var bldrs []interface{}
+		var vars map[string]interface{}	
+		var err error
+		Convey("Given a call to createBuilders", func() {
+			Convey("Given a valid Builder Type", func() {
+				bldrs, vars, err = r.createBuilders() 
+				So(err, ShouldBeNil)
+				So(vars, ShouldBeNil)
+				So(bldrs, ShouldNotResemble, r)
+			})
+			Convey("Given an unsupported Builder Types", func() {
+				r.BuilderType[0] = "unsupported"
+				bldrs, vars, err = r.createBuilders()
+				So(err.Error(), ShouldEqual, "the requested builder, 'unsupported', is not supported")
+				So(vars, ShouldBeNil)
+				So(bldrs, ShouldBeNil)
+			})
+			Convey("Given no Builder Types", func() {
+				r.BuilderType = nil
+				bldrs, vars, err = r.createBuilders()
+				So(err.Error(), ShouldEqual, "no builder types were configured, unable to create builders")
+				So(vars, ShouldBeNil)
+				So(bldrs, ShouldBeNil)
+			})
+
+		}) 
+	})
+}
+
+
+func TestReplaceVariables(t *testing.T) {
+	Convey("Given a new raw template", t, func() {
+		r := newRawTemplate()
+		Convey("Given a Variable:Value map", func() {
+			r.varVals = map[string]string{
+				":arch":"amd64",
+				":command_src_dir":":src_dir/commands",
+				":http_dir":"http",
+				":http_src_dir":":src_dir/http",
+				":image":"server",
+				":name":":type-:release:-:image-:arch",
+				":out_dir":"../test_files/out/:type",
+				":release":"14.04",
+				":scripts_dir":"scripts",
+				":scripts_src_dir":":src_dir/scripts",
+				":src_dir":"../test_files/src/:type",
+				":type":"ubuntu",
+			}
+			r.delim = ":"
+			Convey("Given a string to perform replacement on", func() {
+				s := r.replaceVariables(":src_dir/command")
+				So(s, ShouldEqual, "../test_files/src/ubuntu/command")
+			})
+			Convey("Given a string without any delimiters", func() {
+				s := r.replaceVariables("src_dir/command")
+				So(s, ShouldEqual, "src_dir/command")
+			})
+			Convey("Given another string", func() {
+				s := r.replaceVariables("../test_files/out/:type")
+				So(s, ShouldEqual, "../test_files/out/ubuntu")
+			})
+		})
+	})
+}
+
+// TODO check shouldnotresemble...ShouldResemble would end up with diffs which were just out 
+// of order map elements, not the result that should occur.
+func TestCommonVMSettings(t *testing.T) {
+	Convey("Given a template", t, func() {
+		r := RawTemplate{}
+		r = testDistroDefaults["ubuntu"]
+/*		Convey("Given two slices of settings", func() {
+			old :=   []string{
+					"boot_command = ../test_files/src/ubuntu/commands/boot_test.command",
+					"boot_wait = 5s",
+					"disk_size = 20000",
+					"http_directory = http",
+					"iso_checksum_type = sha256",
+					"shutdown_command = ../test_files/src/ubuntu/commands/shutdown_test.command",
+					"ssh_password = vagrant",
+					"ssh_port = 22",
+					"ssh_username = vagrant",
+					"ssh_wait_timeout = 240m",
+				}
+			new := []string{
+					"ssh_port = 222",
+					"ssh_wait_timeout = 300m",
+				}			
+			Convey("merging the setting should result in", func() {
+				var settings map[string]interface{}
+				var vars []string
+				var err error
+				expected := map[string]interface{}{
+					"disk_size":"20000", 
+					"iso_url":"http://releases.ubuntu.com/12.04/ubuntu-12.04.4-server-amd64.iso",
+					"iso_checksum":"3aeb42816253355394897ae80d99a9ba56217c0e98e05294b51f0f5b13bceb54",
+					"boot_command":`"<esc><wait>",
+"<esc><wait>",
+"<enter><wait>",
+"/install/vmlinuz<wait>",
+" auto<wait>",
+" console-setup/ask_detect=false<wait>",
+" console-setup/layoutcode=us<wait>",
+" console-setup/modelcode=pc105<wait>",
+" debconf/frontend=noninteractive<wait>",
+" debian-installer=en_US<wait>",
+" fb=false<wait>",
+" initrd=/install/initrd.gz<wait>",
+" kbd-chooser/method=us<wait>",
+" keyboard-configuration/layout=USA<wait>",
+" keyboard-configuration/variant=USA<wait>",
+" locale=en_US<wait>",
+" netcfg/get_hostname=ubuntu-1204<wait>",
+" netcfg/get_domain=vagrantup.com<wait>",
+" noapic<wait>",
+" preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg<wait>",
+" -- <wait>",
+"<enter><wait>"`,
+					"ssh_username":"vagrant",
+					"boot_wait":"5s",
+					"ssh_password":"vagrant",
+					"ssh_wait_timeout":"300m",
+					"http_directory":"http",
+					"iso_checksum_type":"sha256",
+					"shutdown_command":"\"echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'\"",
+					"ssh_port":"222",
+				}
+				settings, vars, err = r.commonVMSettings(old, new)	
+				So(err, ShouldBeNil)
+				So(settings, ShouldResemble, expected) 
+				So(vars, ShouldBeNil)
+			})
+		})
+*/
+		Convey("Given an invalid type ", func() {
+			r.Type = "unknown"
+			old :=   []string{
+					"boot_command = :commands_dir/boot.command",
+					"boot_wait = 5s",
+					"disk_size = 20000",
+					"http_directory = http",
+					"iso_checksum_type = sha256",
+					"shutdown_command = :commands_dir/shutdown.command",
+					"ssh_password = vagrant",
+					"ssh_port = 22",
+					"ssh_username = vagrant",
+					"ssh_wait_timeout = 240m",
+				}
+			new := []string{
+					"ssh_port = 222",
+					"ssh_wait_timeout = 300m",
+				}			
+			Convey("merging the setting should result in", func() {
+				var settings map[string]interface{}
+				var vars []string
+				var err error
+				expected := map[string]interface{}{
+					"boot_wait":"5s",
+					"http_directory":"http",
+					"shutdown_command":"Error: open :commands_dir/shutdown.command: no such file or directory",
+					"ssh_port":"222",
+					"boot_command":"Error: open :commands_dir/boot.command: no such file or directory",
+					"iso_checksum_type":"sha256",
+					"ssh_password":"vagrant",
+					"ssh_wait_timeout":"300m",
+					"disk_size":"20000",
+					"iso_url":"unknown is not supported",
+					"ssh_username":"vagrant",
+					"iso_checksum":"unknown is not supported",
+				}
+				settings, vars, err = r.commonVMSettings(old, new)	
+				So(err, ShouldBeNil)
+				So(settings, ShouldResemble, expected) 
+				So(vars, ShouldBeNil)
+			})
+		})
+	})
+
+}
+// TODO ShouldNotResemble vs ShouldResemble DeepEqual issue
+func TestMergeBuildSettings(t *testing.T) {
+	Convey("Testing merging 2 build settings", t, func() {
+		Convey("Given an existing Build configuration", func() {
+			r := RawTemplate{}
+			r = testDistroDefaults["ubuntu"]
+			Convey("Merging the build should result in an updated template", func() {
+				r.mergeBuildSettings(testBuilds.Build["test1"])
+				So(r, ShouldNotResemble, testMergedBuilds["test1"])
+			})
+		})	
+	})
+}
+
+func TestMergeDistroSettings(t *testing.T) {
+	Convey("Given an existing distro setting", t, func() {
+		r := testDistroDefaults["ubuntu"]
+		Convey("And some new settings", func() {
+			d := testSupported.Distro["ubuntu"]
+			Convey("Merging the two", func() {
+				r.mergeDistroSettings(d)
+				So(r, ShouldResemble, testDistroDefaults["ubuntu"])
+			})
+			Convey("Merging the two with a builderType", func() {
+				d.BuilderType = []string{"virtualbox-iso", "vmware-iso"}
+				expected := testDistroDefaults["ubuntu"]
+				expected.BuilderType = d.BuilderType
+				r.mergeDistroSettings(d)
+				So(r, ShouldResemble, expected)
+			})
+		})	
+	})
+}
+
+func TestScriptNames(t *testing.T) {
+	Convey("Testing getting a slice of script names from the shell provisioner", t, func() {
+		Convey("Given a shell provisioner", func() {
+			var scripts []string
+			r := RawTemplate{}
+			r.Provisioners = testShellProvisioners1
+			Convey("Calling RawTemplate.ScriptNames() should return a slice", func() {
+				scripts = r.ScriptNames()
+				So(scripts, ShouldNotBeNil)
+				So(scripts, ShouldContain, "base_test.sh")
+				So(scripts, ShouldContain, "setup_test.sh")
+				So(scripts, ShouldContain, "vagrant_test.sh")
+				So(scripts, ShouldContain, "cleanup_test.sh")
+				So(scripts, ShouldContain, "zerodisk_test.sh")
+				So(scripts, ShouldNotContain, "")
+				So(scripts, ShouldNotContain, "zsetup.sh")
+			})
+		})
+	})
+}
+
+func TestMergeVariables(t *testing.T) {
+	Convey("Given a raw template", t, func() {
+		r := testDistroDefaults["ubuntu"]
+		Convey("Merging the variables", func() {
+			r.mergeVariables()
+			So(r.CommandsSrcDir, ShouldEqual, "../test_files/src/ubuntu/commands")
+			So(r.HTTPDir, ShouldEqual, "http")
+			So(r.HTTPSrcDir, ShouldEqual, "../test_files/src/ubuntu/http")
+			So(r.OutDir, ShouldEqual, "../test_files/out/ubuntu")
+			So(r.ScriptsDir, ShouldEqual, "scripts")
+			So(r.ScriptsSrcDir, ShouldEqual, "../test_files/src/ubuntu/scripts")
+			So(r.SrcDir, ShouldEqual, "../test_files/src/ubuntu")
 		})
 	})
 }
@@ -236,4 +517,5 @@ func TestBuildInf(t *testing.T) {
 		})
 	})
 }
+
 

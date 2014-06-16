@@ -1,19 +1,19 @@
-<seelog type="adaptive" mininterval="2000000" maxinterval="100000000" critmsgcount="50" minlevel="debug">
+<seelog type="adaptive" mininterval="2000000" maxinterval="100000000" critmsgcount="50">
     <exceptions>
         <exception funcpattern="*test*" filepattern="tests.go"/>
-        <exception filepattern="test*" minlevel="error"/>
+        <exception filepattern="test*" minlevel="trace"/>
 	</exceptions>
     <outputs>
         <splitter formatid="all">
-            <console/>
+            <console formatid="colored"/>
             <file path="logs/rancher.log"/>
         </splitter>
 	</outputs>
 	<formats>
 		<format id="fmtinfo" format="[%Level] [%Time] %Msg%n"/>
-        <format id="fmtdetail" format="[%LEVEL] [%Time] [%FuncShort @ %File.%Line] %Msg%n"/>
-       	<format id="all" format="[%Level] [%Time] [@ %File.%Line] %Msg%n"/>
-       	<format id="colored"  format="%EscM(46)%Level%EscM(49) %Msg%n%EscM(0)"/>
+        <format id="fmtdetail" format="[%LEV] [%Time] [%FuncShort @ %File.%Line] %Msg%n"/>
+       	<format id="all" format="[%Lev] [%Time] [@ %File.%Line] %Msg%n"/>
+       	<format id="colored"  format="%EscM(31)%Level%EscM(39) %Msg%n%EscM(0)"/>
    	</formats>
 </seelog>
 

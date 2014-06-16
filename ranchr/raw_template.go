@@ -60,44 +60,7 @@ func (r *RawTemplate) CreatePackerTemplate() (PackerTemplate, error) {
 
 	logger.Info("Creating PackerTemplate from a RawTemplate.")
 
-	// Set the src_dir and out_dir, in case there are variables embedded in them.
-	// These can be embedded in other dynamic variables so they need to be resolved
-	// first to avoid a mutation issue. Only Rancher static variables can be used
-	// in these two Settings.
-	// check src_dir and out_dir first:
-
-	// Get the delim and set the replacement map, resolve name information
-	r.varVals = map[string]string{r.delim + "type": r.Type, r.delim + "release": r.Release, r.delim + "arch": r.Arch, r.delim + "image": r.Image, r.delim + "date": r.date}
-
-	r.Name = r.replaceVariables(r.Name)
-	r.BuildName = r.replaceVariables(r.BuildName)
-
-	// Src and Outdir are next, since they can be embedded too
-	r.varVals = map[string]string{r.delim + "type": r.Type, r.delim + "release": r.Release, r.delim + "arch": r.Arch, r.delim + "image": r.Image, r.delim + "date": r.date, r.delim + "name": r.Name, r.delim + "build_name": r.BuildName}
-
-	r.SrcDir = r.replaceVariables(r.SrcDir)
-	r.OutDir = r.replaceVariables(r.OutDir)
-
-	// Commands and scripts dir need to be resolved next
-	r.varVals = map[string]string{r.delim + "out_dir": r.OutDir, r.delim + "src_dir": r.SrcDir, r.delim + "type": r.Type, r.delim + "release": r.Release, r.delim + "arch": r.Arch, r.delim + "image": r.Image, r.delim + "date": r.date, r.delim + "build_name": r.BuildName}
-	r.CommandsSrcDir = r.replaceVariables(r.CommandsSrcDir)
-	r.HTTPDir = r.replaceVariables(r.HTTPDir)
-	r.HTTPSrcDir = r.replaceVariables(r.HTTPSrcDir)
-	r.ScriptsDir = r.replaceVariables(r.ScriptsDir)
-	r.ScriptsSrcDir = r.replaceVariables(r.ScriptsSrcDir)
-
-	// Create a full variable replacement map, know that the SrcDir and OutDir stuff are resolved.
-	// Rest of the replacements are done by the packerers.
-	r.varVals = map[string]string{r.delim + "out_dir": r.OutDir, r.delim + "src_dir": r.SrcDir, r.delim + "commands_src_dir": r.CommandsSrcDir, r.delim + "scripts_dir": r.ScriptsDir, r.delim + "type": r.Type, r.delim + "release": r.Release, r.delim + "arch": r.Arch, r.delim + "image": r.Image, r.delim + "date": r.date, r.delim + "name": r.Name, r.delim + "build_name": r.BuildName, r.delim + "http_dir": r.HTTPDir, r.delim + "http_src_dir": r.HTTPSrcDir, r.delim + "scripts_src_dir": r.ScriptsSrcDir}
-
-//	r.CommandsSrcDir = r.replaceVariables(r.CommandsSrcDir)
-//	r.HTTPDir = r.replaceVariables(r.HTTPDir)
-//	r.HTTPSrcDir = r.replaceVariables(r.HTTPSrcDir)
-	r.OutDir = r.replaceVariables(r.OutDir)
-//	r.ScriptsDir = r.replaceVariables(r.ScriptsDir)
-//	r.ScriptsSrcDir = r.replaceVariables(r.ScriptsSrcDir)
-	r.SrcDir = r.replaceVariables(r.SrcDir)
-
+	r.mergeVariables()
 	// General Packer Stuff
 	p := PackerTemplate{}
 	p.MinPackerVersion = r.MinPackerVersion
@@ -175,7 +138,7 @@ func (r *RawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 	// instead of adding them to the variable section.
 
 	if r.BuilderType == nil || len(r.BuilderType) <= 0 {
-		err = fmt.Errorf("RawTemplate.createBuilders() error: no builder types were passed")
+		err = fmt.Errorf("no builder types were configured, unable to create builders")
 		logger.Error(err.Error())
 		return
 	}
@@ -186,7 +149,7 @@ func (r *RawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 	var i, ndx int
 	bldrs = make([]interface{}, len(r.BuilderType))
 	for _, bType := range r.BuilderType {
-		logger.Info("Creating builder from RawTemplate: " + bType)
+		logger.Debug("Creating builder from RawTemplate: " + bType)
 		// TODO calculate the length of the two longest Settings and VMSettings sections and make it
 		// that length. That will prevent a panic should there be more than 50 options. Besides its
 		// stupid, on so many levels, to hard code this...which makes me...d'oh!
@@ -252,14 +215,14 @@ func (r *RawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 		default:
 			err = errors.New("the requested builder, '" + bType + "', is not supported")
 			logger.Error(err.Error())
-			return
+			return nil, nil, err
 		}
 		bldrs[ndx] = tmpS
 		ndx++
 		vrbls = append(vrbls, tmpVar...)
 	}
 
-	return
+	return bldrs, vars, nil
 }
 
 func (r *RawTemplate) replaceVariables(s string) string {
@@ -282,7 +245,7 @@ func (r *RawTemplate) variableSection() (map[string]interface{}, error) {
 	var v map[string]interface{}
 	v = make(map[string]interface{})
 
-	logger.Info("Creating variable section from RawTemplate")
+	logger.Debug("Creating variable section from RawTemplate")
 
 	return v, nil
 }
@@ -318,7 +281,7 @@ func (r *RawTemplate) commonVMSettings(old []string, new []string) (Settings map
 			case "centos":
 				notSupported = "Retrieval of CentOS ISO information has not been implemented."
 			default:
-				notSupported = r.Type + " is not supported."
+				notSupported = r.Type + " is not supported"
 			}
 
 			if notSupported != "" {
@@ -391,11 +354,9 @@ func (r *RawTemplate) mergeDistroSettings(d distro) {
 	}
 
 	// merge the build portions.
+	logger.Debugf("Merging old Builder: %v\nand\nnew Builder: %v", r.Builders, d.Builders)
 	r.Builders = getMergedBuilders(r.Builders, d.Builders)
-//	b, _ := json.Marshal(r.Builders)
-	logger.Debug(fmt.Sprint(r.Builders))
-//	d, _ := json.Marshall(d.Builders)
-	logger.Debug(fmt.Sprint(d.Builders))
+	logger.Debugf("Merged Builder: %v", r.Builders)
 	r.PostProcessors = getMergedPostProcessors(r.PostProcessors, d.PostProcessors)
 	r.Provisioners = getMergedProvisioners(r.Provisioners, d.Provisioners)
 
@@ -421,6 +382,51 @@ func (r *RawTemplate) ScriptNames() []string {
 
 	return s
 
+}
+
+func (r *RawTemplate) mergeVariables() {
+	// Set the src_dir and out_dir, in case there are variables embedded in them.
+	// These can be embedded in other dynamic variables so they need to be resolved
+	// first to avoid a mutation issue. Only Rancher static variables can be used
+	// in these two Settings.
+	// check src_dir and out_dir first:
+
+	// Get the delim and set the replacement map, resolve name information
+	r.varVals = map[string]string{r.delim + "type": r.Type, r.delim + "release": r.Release, r.delim + "arch": r.Arch, r.delim + "image": r.Image, r.delim + "date": r.date,  r.delim + "build_name": r.BuildName}
+
+	r.Name = r.replaceVariables(r.Name)
+
+	// Src and Outdir are next, since they can be embedded too
+	r.varVals[r.delim + "name"] = r.Name
+
+	r.SrcDir = trimSuffix(r.replaceVariables(r.SrcDir), "/")
+	r.OutDir = trimSuffix(r.replaceVariables(r.OutDir), "/")
+	// Commands and scripts dir need to be resolved next
+	r.varVals[r.delim + "out_dir"] = r.OutDir
+	r.varVals[r.delim + "src_dir"] = r.SrcDir
+
+	r.CommandsSrcDir = trimSuffix(r.replaceVariables(r.CommandsSrcDir), "/")
+	r.HTTPDir = trimSuffix(r.replaceVariables(r.HTTPDir), "/")
+	r.HTTPSrcDir = trimSuffix(r.replaceVariables(r.HTTPSrcDir), "/")
+	r.ScriptsDir = trimSuffix(r.replaceVariables(r.ScriptsDir), "/")
+	r.ScriptsSrcDir = trimSuffix(r.replaceVariables(r.ScriptsSrcDir), "/")
+/*
+	// Create a full variable replacement map, know that the SrcDir and OutDir stuff are resolved.
+	// Rest of the replacements are done by the packerers.
+	r.varVals[r.delim + "commands_src_dir"] = r.CommandsSrcDir
+	r.varVals[r.delim + "http_dir"] = r.HTTPDir
+	r.varVals[r.delim + "http_src_dir"] = r.HTTPSrcDir
+	r.varVals[r.delim + "scripts_dir"] = r.ScriptsDir
+	r.varVals[r.delim + "scripts_src_dir"] = r.ScriptsSrcDir
+
+	r.CommandsSrcDir = r.replaceVariables(r.CommandsSrcDir)
+	r.HTTPDir = r.replaceVariables(r.HTTPDir)
+	r.HTTPSrcDir = r.replaceVariables(r.HTTPSrcDir)
+	r.OutDir = r.replaceVariables(r.OutDir)
+	r.ScriptsDir = r.replaceVariables(r.ScriptsDir)
+	r.ScriptsSrcDir = r.replaceVariables(r.ScriptsSrcDir)
+	r.SrcDir = r.replaceVariables(r.SrcDir)
+*/
 }
 
 func (i *IODirInf) update(new IODirInf) {

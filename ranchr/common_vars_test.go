@@ -12,28 +12,46 @@ import (
 // will remain in the same file.
 // I know lack of locality, but I'm tired of 1000+ line tests with mostly var
 // setup.
-var testDistroDefaults map[string]RawTemplate
-var testRancherCfg = "../test_files/rancher_test.cfg"
-
+var testDir = "../test_files/"
+var testRancherCfg = testDir + "rancher_test.cfg"
+var testDefaultsFile = testDir + "conf/defaults_test.toml"
+var testSupportedFile = testDir + "conf/supported_test.toml"
+var testBuildsFile = testDir + "conf/builds_test.toml"
+var testBuildListsFile = "../test_files/conf/build_lists_test.toml"
 var today = time.Now().Local().Format("2006-01-02")
-
 var testRawTemplate = newRawTemplate()
+
+var testShellProvisioners1 = map[string]provisioners{
+	"shell": {
+		Settings: []string{"execute_command = :commands_dir/execute_test.command"},
+		Scripts: []string{
+			":scripts_dir/setup_test.sh",
+			":scripts_dir/base_test.sh",
+			":scripts_dir/vagrant_test.sh",
+			":scripts_dir/cleanup_test.sh",
+			":scripts_dir/zerodisk_test.sh",
+		},
+	},
+}
 
 var testDefaults = defaults{
 	IODirInf: IODirInf{
-		OutDir:      "out/:type/:build_name",
-		ScriptsDir:  ":src_dir/scripts",
-		SrcDir:      "src/:type",
-		ScriptsSrcDir:  "",
-		CommandsSrcDir: "",
+		CommandsSrcDir: ":src_dir/commands",
+		HTTPDir: "http",
+		HTTPSrcDir: ":src_dir/http",
+		OutDir:      "../test_files/out/:type",
+		ScriptsDir:  "scripts",
+		ScriptsSrcDir:  ":src_dir/scripts",
+		SrcDir:      "../test_files/src/:type",
 	},
 	PackerInf: PackerInf{
-		MinPackerVersion: "",
 		Description:      "Test Default Rancher template",
+		MinPackerVersion: "0.4.0",
 	},
 	BuildInf: BuildInf{
-		Name:      ":type-:release-:image-:arch",
+		BaseURL: "",
 		BuildName: "",
+		Name:      ":type-:release-:image-:arch",
 	},
 	build: build{
 		BuilderType: []string{
@@ -43,12 +61,12 @@ var testDefaults = defaults{
 		Builders: map[string]builder{
 			"common": {
 				Settings: []string{
-					"boot_command = :commands_dir/boot.command",
+					"boot_command = :commands_src_dir/boot_test.command",
 					"boot_wait = 5s",
 					"disk_size = 20000",
 					"http_directory = http",
 					"iso_checksum_type = sha256",
-					"shutdown_command = :commands_dir/shutdown.command",
+					"shutdown_command = :commands_src_dir/shutdown_test.command",
 					"ssh_password = vagrant",
 					"ssh_port = 22",
 					"ssh_username = vagrant",
@@ -73,139 +91,22 @@ var testDefaults = defaults{
 			"vagrant": {
 				Settings: []string{
 					"keep_input_artifact = false",
-					"output = :out_dir/someComposedBoxName.box",
+					"output = out/rancher-packer.box",
 				},
 			},
 		},
 		Provisioners: map[string]provisioners{
 			"shell": {
 				Settings: []string{
-					"execute_command = :commands_dir/execute.command",
+					"execute_command = :commands_src_dir/execute_test.command",
 				},
 				Scripts: []string{
-					":scripts_dir/setup.sh",
-					":scripts_dir/base.sh",
-					":scripts_dir/vagrant.sh",
-					":scripts_dir/cleanup.sh",
-					":scripts_dir/zerodisk.sh",
+					":scripts_dir/setup_test.sh",
+					":scripts_dir/base_test.sh",
+					":scripts_dir/vagrant_test.sh",
+					":scripts_dir/cleanup_test.sh",
+					":scripts_dir/zerodisk_test.sh",
 				},
-			},
-		},
-	},
-}
-
-var testMergedUbuntu = RawTemplate{
-	PackerInf: PackerInf{MinPackerVersion: "", Description: "Test supported distribution template"},
-	IODirInf: IODirInf{
-		OutDir:      "out/:type/:build_name/",
-		ScriptsDir:  ":src_dir/scripts/",
-		SrcDir:      "src/:type/",
-		ScriptsSrcDir:   "",
-		CommandsSrcDir: "",
-		HTTPDir: "",
-		HTTPSrcDir: "",
-	},
-	BuildInf: BuildInf{Name: ":type-:release-:image-:arch", BuildName: "", 	BaseURL: "http://releases.ubuntu.com/"},
-	date: today,
-	delim: "",
-	Type: "ubuntu",
-	Arch: "amd64",
-	Image: "server",
-	Release: "12.04",
-	varVals: map[string]string{},
-	vars: map[string]string{},
-	build: build{
-		BuilderType: []string{"virtualbox-iso", "vmware-iso" },
-		Builders: map[string]builder{
-			"common": {
-				Settings: []string{
-					"boot_command = :commands_dir/boot.command",
-					"boot_wait = 5s",
-					"disk_size = 20000",
-					"http_directory = http",
-					"iso_checksum_type = sha256",
-					"shutdown_command = :commands_dir/shutdown.command",
-					"ssh_password = vagrant",
-					"ssh_port = 22",
-					"ssh_username = vagrant",
-					"ssh_wait_timeout = 240m",
-				},
-			},
-			"virtualbox-iso": {
-				VMSettings: []string{
-					"cpus=1",
-					"memory=2048",
-				},
-			},
-			"vmware-iso": {
-				VMSettings: []string{
-					"cpuid.coresPerSocket=1",
-					"memsize=2048",
-					"numvcpus=1",
-				},
-			},
-		},
-		PostProcessors: map[string]postProcessors{
-			"vagrant": {
-				Settings: []string{
-					"keep_input_artifact = false",
-					"output = :out_dir/:type-:arch-:version-:image-packer.box",
-				},
-			},
-		},
-		Provisioners: map[string]provisioners{
-			"shell": {
-				Settings: []string{
-					"execute_command = :commands_dir/execute.command",
-				},
-				Scripts: []string{
-					":scripts_dir/setup.sh",
-					":scripts_dir/base.sh",
-					":scripts_dir/vagrant.sh",
-					":scripts_dir/cleanup.sh",
-					":scripts_dir/zerodisk.sh",
-				},
-			},
-		},
-	},
-}
-
-var testMergedCentOS = RawTemplate{PackerInf: PackerInf{MinPackerVersion:"", Description:"Test template config and Rancher options for CentOS"},
-	 IODirInf: IODirInf{CommandsSrcDir:"", HTTPDir:"", HTTPSrcDir:"", OutDir:"out/centos", ScriptsDir:":src_dir/scripts/", ScriptsSrcDir:"", SrcDir:"src/centos"},
-	BuildInf: BuildInf{Name:":type-:release-:image-:arch", BuildName:"", BaseURL:"http://www.centos.org/pub/centos/"},
-	date: today,
-	delim:"",
-	Type:"centos",
-	Arch:"x86_64",
-	Image:"minimal",
-	Release:"6.5",
-	varVals:map[string]string{},
-	vars:map[string]string{},
-	build: build{
-		BuilderType:[]string{"virtualbox-iso", "vmware-iso"},
-		Builders:map[string]builder{
-			"common":{
-				Settings: []string{"boot_command = :commands_dir/boot.command", "boot_wait = 5s", "disk_size = 20000", "http_directory = http", "iso_checksum_type = sha256", "shutdown_command = :commands_dir/shutdown.command", "ssh_password = vagrant", "ssh_port = 22", "ssh_username = vagrant", "ssh_wait_timeout = 240m"},
-				VMSettings:[]string{},
-			},
-			"virtualbox-iso":{
-				Settings:[]string{}, 
-				VMSettings:[]string{"cpus=1", "memory=1024"},
-			},
-			"vmware-iso":{
-				Settings:[]string{}, 
-				VMSettings: []string{"cpuid.coresPerSocket=1", "memsize=1024", "numvcpus=1"},
-			},
-		},	
-		PostProcessors:map[string]postProcessors{
-			"vagrant":{
-				Settings:[]string{"keep_input_artifact = false", "output = :out_dir/someComposedBoxName.box"},
-			},
-		},
-		Provisioners:map[string]provisioners{
-			"shell":{
-				Settings:[]string{"execute_command = :commands_dir/execute.command"}, 
-				Scripts:[]string{":scripts_dir/setup.sh", ":scripts_dir/base.sh", ":scripts_dir/vagrant.sh", ":scripts_dir/cleanup.sh", ":scripts_dir/zerodisk.sh"},
 			},
 		},
 	},
@@ -243,35 +144,35 @@ var testSupportedUbuntu = distro{
 		Builders: map[string]builder{
 			"common": {
 				Settings: []string{
-					"boot_command = :commands_dir/boot.command",
-					"shutdown_command = :commands_dir/shutdown.command",
+					"boot_command = :commands_src_dir/boot_test.command",
+					"shutdown_command = :commands_src_dir/shutdown_test.command",
 				},
 			},
 			"virtualbox-iso": {
 				VMSettings: []string{"memory=2048"},
 			},
 			"vmware-iso": {
-				VMSettings: []string{"memory=2048"},
+				VMSettings: []string{"memsize=2048"},
 			},
 		},
 		PostProcessors: map[string]postProcessors{
 			"vagrant": {
 				Settings: []string{
-					"output = :out_dir/:type-:arch-:version-:image-packer.box",
+					"output = out/:type-:arch-:version-:image-packer.box",
 				},
 			},
 		},
 		Provisioners: map[string]provisioners{
 			"shell": {
 				Settings: []string{
-					"execute_command = :commands_dir/execute.command",
+					"execute_command = :commands_src_dir/execute_test.command",
 				},
 				Scripts: []string{
-					":scripts_dir/setup.sh",
-					":scripts_dir/base.sh",
-					":scripts_dir/vagrant.sh",
-					":scripts_dir/cleanup.sh",
-					":scripts_dir/zerodisk.sh",
+					"scripts/setup_test.sh",
+					"scripts/base_test.sh",
+					"scripts/vagrant_test.sh",
+					"scripts/cleanup_test.sh",
+					"scripts/zerodisk_test.sh",
 				},
 			},
 		},
@@ -301,23 +202,392 @@ var testSupportedCentOS = distro{
 		"6.5",
 	},
 	DefImage: []string{
-		"version = 6.5",
+		"release = 6.5",
 		"image = minimal",
 		"arch = x86_64",
 	},
 }
 
-var testSupported = Supported{}
+//var testRawPackerTemplate = 
+var testDistroDefaultUbuntu = RawTemplate{
+	PackerInf: PackerInf{MinPackerVersion: "", Description: "Test supported distribution template"},
+	IODirInf: IODirInf{
+		CommandsSrcDir: ":src_dir/commands/",
+		HTTPDir: "http/",
+		HTTPSrcDir: ":src_dir/http/",
+		OutDir:      "../test_files/out/:type/",
+		ScriptsDir:  "scripts/",
+		ScriptsSrcDir:  ":src_dir/scripts/",
+		SrcDir:      "../test_files/src/:type/",
+	},
+	BuildInf: BuildInf{
+		Name: ":type-:release-:image-:arch", 
+		BuildName: "", 	
+		BaseURL: "http://releases.ubuntu.com/",
+	},
+	date: today,
+	delim: ":",
+	Type: "ubuntu",
+	Arch: "amd64",
+	Image: "server",
+	Release: "12.04",
+	varVals: map[string]string{},
+	vars: map[string]string{},
+	build: build{
+		BuilderType: []string{"virtualbox-iso", "vmware-iso" },
+		Builders: map[string]builder{
+			"common": {
+				Settings: []string{
+					"boot_command = :commands_src_dir/boot_test.command",
+					"boot_wait = 5s",
+					"disk_size = 20000",
+					"http_directory = http",
+					"iso_checksum_type = sha256",
+					"shutdown_command = :commands_src_dir/shutdown_test.command",
+					"ssh_password = vagrant",
+					"ssh_port = 22",
+					"ssh_username = vagrant",
+					"ssh_wait_timeout = 240m",
+				},
+			},
+			"virtualbox-iso": {
+				VMSettings: []string{
+					"cpus=1",
+					"memory=2048",
+				},
+			},
+			"vmware-iso": {
+				VMSettings: []string{
+					"cpuid.coresPerSocket=1",
+					"memsize=2048",
+					"numvcpus=1",
+				},
+			},
+		},
+		PostProcessors: map[string]postProcessors{
+			"vagrant": {
+				Settings: []string{
+					"keep_input_artifact = false",
+					"output = out/:type-:arch-:version-:image-packer.box",
+				},
+			},
+		},
+		Provisioners: map[string]provisioners{
+			"shell": {
+				Settings: []string{
+					"execute_command = :commands_src_dir/execute_test.command",
+				},
+				Scripts: []string{
+					"scripts/setup_test.sh",
+					"scripts/base_test.sh",
+					"scripts/vagrant_test.sh",
+					"scripts/cleanup_test.sh",
+					"scripts/zerodisk_test.sh",
+				},
+			},
+		},
+	},
+}
 
+var testDistroDefaultCentOS = RawTemplate{PackerInf: PackerInf{MinPackerVersion:"", Description:"Test template config and Rancher options for CentOS"},
+	 IODirInf: IODirInf{CommandsSrcDir:":src_dir/commands/", HTTPDir:"http/", HTTPSrcDir:":src_dir/http/", OutDir:"out/centos", ScriptsDir:"scripts/", ScriptsSrcDir:":src_dir/scripts/", SrcDir:"src/centos"},
+	BuildInf: BuildInf{Name:":type-:release-:image-:arch", BuildName:"", BaseURL:"http://www.centos.org/pub/centos/"},
+	date: today,
+	delim:":",
+	Type:"centos",
+	Arch:"x86_64",
+	Image:"minimal",
+	Release:"6.5",
+	varVals:map[string]string{},
+	vars:map[string]string{},
+	build: build{
+		BuilderType:[]string{"virtualbox-iso", "vmware-iso"},
+		Builders:map[string]builder{
+			"common":{
+				Settings: []string{"boot_command = :commands_src_dir/boot_test.command", "boot_wait = 5s", "disk_size = 20000", "http_directory = http", "iso_checksum_type = sha256", "shutdown_command = :commands_src_dir/shutdown_test.command", "ssh_password = vagrant", "ssh_port = 22", "ssh_username = vagrant", "ssh_wait_timeout = 240m"},
+				VMSettings:[]string{},
+			},
+			"virtualbox-iso":{
+				Settings:[]string{}, 
+				VMSettings:[]string{"cpus=1", "memory=1024"},
+			},
+			"vmware-iso":{
+				Settings:[]string{}, 
+				VMSettings: []string{"cpuid.coresPerSocket=1", "memsize=1024", "numvcpus=1"},
+			},
+		},	
+		PostProcessors:map[string]postProcessors{
+			"vagrant":{
+				Settings:[]string{"keep_input_artifact = false", "output = out/rancher-packer.box"},
+			},
+		},
+		Provisioners:map[string]provisioners{
+			"shell":{
+				Settings:[]string{"execute_command = :commands_src_dir/execute_test.command"}, 
+				Scripts:[]string{":scripts_dir/setup_test.sh", ":scripts_dir/base_test.sh", ":scripts_dir/vagrant_test.sh", ":scripts_dir/cleanup_test.sh", ":scripts_dir/zerodisk_test.sh"},
+			},
+		},
+	},
+}
+
+
+var testBuildTest1 = RawTemplate{
+	PackerInf: PackerInf{
+		Description:      "Test build template #1",
+	},
+	Type:    "ubuntu",
+	Arch:    "amd64",
+	Image:   "server",
+	Release: "1204",
+	build: build{
+		BuilderType: []string{
+			"virtualbox-iso",
+
+		},
+		Builders: map[string]builder{
+			"common": {
+				Settings: []string{
+					"ssh_wait_timeout = 300m",
+			},
+				},
+			"virtualbox-iso": {
+				VMSettings: []string{
+					"memory=4096",
+				},
+			},
+		},
+		PostProcessors: map[string]postProcessors{
+			"vagrant": {
+				Settings: []string{
+					"output = :out_dir/packer.box",
+				},
+			},
+		},
+		Provisioners: map[string]provisioners{
+			"shell": {
+				Settings: []string{
+					"execute_command = :commands_src_dir/execute_test.command",
+				},
+				Scripts: []string{
+					":scripts_dir/setup_test.sh",
+					":scripts_dir/vagrant_test.sh",
+					":scripts_dir/cleanup_test.sh",
+				},
+			},
+		},
+	},
+}
+
+var testBuildTest2 = RawTemplate{
+	PackerInf: PackerInf{
+		Description:      "Test build template #2: causes an error",
+	},
+	Type:    "ubuntuu",
+	Arch:    "amd64",
+	Image:   "desktop",
+	Release: "1204",
+	build: build{
+		BuilderType: []string{
+			"virtualbox-iso",
+			"vmware-iso",
+
+		},
+		Builders: map[string]builder{
+			"common": {
+				Settings: []string{
+					"ssh_wait_timeout = 300m",
+			},
+				},
+			"virtualbox-iso": {
+				VMSettings: []string{
+					"memory=4096",
+				},
+			},
+		},
+	},
+}
+
+var testMergedBuildTest1 = RawTemplate{
+	IODirInf: IODirInf{
+		CommandsSrcDir: ":src_dir/commands",
+		HTTPDir: "http",
+		HTTPSrcDir: ":src_dir/http",
+		OutDir:      "../test_files/out/:type",
+		ScriptsDir:  "scripts",
+		ScriptsSrcDir:  ":src_dir/scripts",
+		SrcDir:      "../test_files/src/:type",
+	},
+	PackerInf: PackerInf{
+		MinPackerVersion: "",
+		Description:      "Test build template",
+	},
+	BuildInf: BuildInf{
+		Name:      ":type-:release-:image-:arch",
+		BuildName: "",
+		BaseURL: "http://releases.ubuntu.com/",
+	},
+	Type:    "ubuntu",
+	Arch:    "amd64",
+	Image:   "server",
+	Release: "12.04",
+	build: build{
+		BuilderType: []string{
+			"virtualbox-iso",
+			"vmware-iso",
+		},
+		Builders: map[string]builder{
+			"common": {
+				Settings: []string{
+					"boot_command = :commands_src_dir/boot_test.command",
+					"boot_wait = 5s",
+					"disk_size = 20000",
+					"http_directory = http",
+					"iso_checksum_type = sha256",
+					"shutdown_command = :commands_src_dir/shutdown_test.command",
+					"ssh_password = vagrant",
+					"ssh_port = 22",
+					"ssh_username = vagrant",
+					"ssh_wait_timeout = 300m",
+				},
+			},
+			"virtualbox-iso": {
+				VMSettings: []string{
+					"cpus=1",
+					"memory=4096",
+				},
+			},
+		},
+		PostProcessors: map[string]postProcessors{
+			"vagrant": {
+				Settings: []string{
+					"keep_input_artifact = false",
+					"output = :out_dir/packer.box",
+				},
+			},
+		},
+		Provisioners: map[string]provisioners{
+			"shell": {
+				Settings: []string{
+					"execute_command = :commands_src_dir/execute_test.command",
+				},
+				Scripts: []string{
+					":scripts_dir/setup_test.sh",
+					":scripts_dir/vagrant_test.sh",
+					":scripts_dir/cleanup_test.sh",
+				},
+			},
+		},
+	},
+}
+
+
+var testMergedBuildTest2 = RawTemplate{
+	IODirInf: IODirInf{
+		CommandsSrcDir: ":src_dir/commands",
+		HTTPDir: "http",
+		HTTPSrcDir: ":src_dir/http",
+		OutDir:      "../test_files/out/:type",
+		ScriptsDir:  "scripts",
+		ScriptsSrcDir:  ":src_dir/scripts",
+		SrcDir:      "../test_files/src/:type",
+	},
+	PackerInf: PackerInf{
+		MinPackerVersion: "",
+		Description:      "Test build template",
+	},
+	BuildInf: BuildInf{
+		Name:      ":type-:release-:image-:arch",
+		BuildName: "",
+		BaseURL: "http://releases.ubuntu.com/",
+	},
+	Type:    "ubuntu",
+	Arch:    "amd64",
+	Image:   "desktop",
+	Release: "12.04",
+	build: build{
+		BuilderType: []string{
+			"virtualbox-iso",
+			"vmware-iso",
+		},
+		Builders: map[string]builder{
+			"common": {
+				Settings: []string{
+					"boot_command = :commands_src_dir/boot_test.command",
+					"boot_wait = 5s",
+					"disk_size = 20000",
+					"http_directory = http",
+					"iso_checksum_type = sha256",
+					"shutdown_command = :commands_src_dir/shutdown_test.command",
+					"ssh_password = vagrant",
+					"ssh_port = 22",
+					"ssh_username = vagrant",
+					"ssh_wait_timeout = 300m",
+				},
+			},
+			"virtualbox-iso": {
+				VMSettings: []string{
+					"cpus=1",
+					"memory=4096",
+				},
+			},
+			"vmware-iso": {
+				VMSettings: []string{
+					"cpuid.coresPerSocket=1",
+					"memsize=1024",
+					"numvcpus=1",
+				},
+			},
+		},
+		PostProcessors: map[string]postProcessors{
+			"vagrant": {
+				Settings: []string{
+					"keep_input_artifact = false",
+					"output = out/someComposedBoxName.box",
+				},
+			},
+		},
+		Provisioners: map[string]provisioners{
+			"shell": {
+				Settings: []string{
+					"execute_command = :commands_src_dir/execute_test.command",
+				},
+				Scripts: []string{
+					":scripts_dir/setup_test.sh",
+					":scripts_dir/base_test.sh",
+					":scripts_dir/vagrant_test.sh",
+					":scripts_dir/cleanup_test.sh",
+					":scripts_dir/zerodisk_test.sh",
+				},
+			},
+		},
+	},
+}
+var testSupported, testSupportedNoBaseURL Supported
+var testMergedBuilds, testDistroDefaults map[string]RawTemplate
+var testBuilds Builds
+var testDataSet bool
 func setCommonTestData() {
-	testSupported.Distro = make(map[string]distro)
+	if testDataSet {
+		return
+	}
+	testSupported.Distro = map[string]distro{}
 	testSupported.Distro["ubuntu"] = testSupportedUbuntu
 	testSupported.Distro["centos"] = testSupportedCentOS
-
-	testDistroDefaults = make(map[string]RawTemplate)
-	testDistroDefaults["ubuntu"] = testMergedUbuntu
-	testDistroDefaults["centos"] = testMergedCentOS
-	
+	testSupportedNoBaseURL.Distro = map[string]distro{}
+	for k, v := range testSupported.Distro {
+		v.BaseURL = ""
+		testSupportedNoBaseURL.Distro[k]=v
+	}
+	testDistroDefaults = map[string]RawTemplate{}
+	testDistroDefaults["ubuntu"] = testDistroDefaultUbuntu
+	testDistroDefaults["centos"] = testDistroDefaultCentOS
+	testBuilds.Build = map[string]RawTemplate{}
+	testBuilds.Build["test1"] = testBuildTest1
+	testBuilds.Build["test2"] = testBuildTest2
+	testMergedBuilds = map[string]RawTemplate{}
+	testMergedBuilds["test1"] = testMergedBuildTest1
+	testMergedBuilds["test2"] = testMergedBuildTest2
+	testDataSet = true
 	return
 }
 
