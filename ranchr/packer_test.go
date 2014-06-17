@@ -8,7 +8,7 @@ import (
 
 func TestTemplateToFileJSON(t *testing.T) {
 	Convey("Given a PackerTemplate", t, func() {
-		p := PackerTemplate{}
+		p := packerTemplate{}
 		Convey("Given an IODirInf, BuildInf, and scripts slice", func() {
 			var scripts []string
 			b := BuildInf{BuildName:"test build"}

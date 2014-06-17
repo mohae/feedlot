@@ -15,7 +15,7 @@ package ranchr
 import (
 	"bufio"
 	"errors"
-	_"fmt"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -48,6 +48,12 @@ var (
 
 var (
 	MessageEmptyValue = "Value expected but %v was empty"
+)
+
+var (
+	supportedDistros  supported
+	supportedDefaults map[string]rawTemplate
+	supportedLoaded  bool
 )
 
 type appConfig struct {
@@ -134,14 +140,24 @@ func SetEnv() error {
 	return nil
 }
 
+func loadSupported() error {
+	var err error
+	if supportedDistros, supportedDefaults, err = distrosInf(); err != nil {
+		logger.Error(err.Error())
+		return err
+	}
+	supportedLoaded = true
+	return nil
+}
+
 // Load the application defaults and the default settings for each supported
 // distribution. These get merged to create the default settings for each
 // distribution as the configured default settings for a supported distro,
 // as defined in the supported.toml, only define distro specific settings
 // and the settings that the supported configuration overrides.
-func DistrosInf() (Supported, map[string]RawTemplate, error) {
+func distrosInf() (supported, map[string]rawTemplate, error) {
 	d := defaults{}
-	s := Supported{}
+	s := supported{}
 	var err error
 	if err = d.Load(); err != nil {
 		logger.Error(err.Error())	
@@ -151,7 +167,7 @@ func DistrosInf() (Supported, map[string]RawTemplate, error) {
 		logger.Error(err.Error())	
 		return s, nil, err
 	}
-	dd := map[string]RawTemplate{}
+	dd := map[string]rawTemplate{}
 	if dd, err = setDistrosDefaults(d, s); err != nil {
 		logger.Error(err.Error())	
 		return s, nil, err
@@ -159,9 +175,41 @@ func DistrosInf() (Supported, map[string]RawTemplate, error) {
 	return s, dd, nil
 }
 
+func BuildDistro(a ArgsFilter) error {
+	if !supportedLoaded {
+		if err := loadSupported(); err != nil {
+			logger.Error(err.Error())
+			return err
+		}
+	}
+	if err := buildPackerTemplateFromDistro(a); err != nil {
+		logger.Error(err.Error())
+		return err
+	}
+	argString := ""
+	if a.Arch != "" {
+		argString += "Arch=" + a.Arch
+	}
+	if a.Image != "" {
+		if argString != "" {
+			argString += ", "
+		}
+		argString += "Image=" + a.Image
+	}
+	if a.Release != "" {
+		if argString != "" {
+			argString += ", "
+		}
+		argString += "Release=" + a.Release
+	}
+
+	logger.Infof("Packer template built for %v using: %s", a.Distro, argString)
+	return nil
+	
+}
 // Create Packer templates from specified build templates.
-func BuildPackerTemplateFromDistro(s Supported, dd map[string]RawTemplate, a ArgsFilter) error {
-	var d RawTemplate
+func buildPackerTemplateFromDistro(a ArgsFilter) error {
+/*	var d RawTemplate
 	var found bool
 	var err error
 	if s.Distro == nil {
@@ -213,15 +261,34 @@ func BuildPackerTemplateFromDistro(s Supported, dd map[string]RawTemplate, a Arg
 		return err
 	}
 	logger.Info("Created Packer template and associated build directory for " + d.BuildName)
-	return nil
+*/	return nil
 }
 
-// Create Packer templates from specified build templates.
-// TODO change this from variadic to a goroutine based, I think.
-func BuildPackerTemplateFromNamedBuild(s Supported, dd map[string]RawTemplate, bldNames ...string) error {
-	// Load the build templates
-	var blds Builds
-	err := blds.Load()
+// Processes the passed build requests. Returns either a message providing
+// information about the processing of the requested builds or an error.
+func BuildBuilds(buildNames ...string) (string, error) {
+	if !supportedLoaded {
+		if err := loadSupported(); err != nil {
+			logger.Error(err.Error())
+			return "", err
+		}
+	}
+	var errorCount, builtCount int
+	for _, buildName := range buildNames {
+		if err := buildPackerTemplateFromNamedBuild(buildName); err != nil {
+			logger.Error(err.Error())
+			errorCount++
+		} else {
+			builtCount++
+		}
+	}
+	return fmt.Sprintf("%v Build requests were processed with %v successfully processed and %v resulting in an error.", errorCount + builtCount, builtCount, errorCount), nil
+}
+
+func buildPackerTemplateFromNamedBuild(buildName string) error {
+/*	// Load the build templates
+	var bld Builds
+	err := bld.Load()
 	if err != nil {
 		logger.Critical(err.Error())
 		return err
@@ -289,8 +356,9 @@ func BuildPackerTemplateFromNamedBuild(s Supported, dd map[string]RawTemplate, b
 	if errCnt > 0 {
 		logger.Warn("BuildPackerTemplateFromNamedBuild encountered an error during processing, the associated Build was not properly built.")
 	}
-
+*/
 	return nil
+
 }
 
 func commandsFromFile(name string) (commands []string, err error) {
@@ -326,9 +394,9 @@ func commandsFromFile(name string) (commands []string, err error) {
 	return commands, nil
 }
 
-func setDistrosDefaults(d defaults, s Supported) (map[string]RawTemplate, error) {
+func setDistrosDefaults(d defaults, s supported) (map[string]rawTemplate, error) {
 	// Create the default and Supported info struct for the Supported distros.
-	dd := map[string]RawTemplate{}
+	dd := map[string]rawTemplate{}
 	for k, v := range s.Distro {
 		tmp := newRawTemplate()
 		tmp.Type = k

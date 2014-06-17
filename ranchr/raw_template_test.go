@@ -26,7 +26,7 @@ func TestNewRawTemplate(t *testing.T) {
 func TestCreateDistroTemplate(t *testing.T) {
 	Convey("Given a distro default template", t, func() {
 		Convey("A distro template should be created", func() {
-			r := RawTemplate{}
+			r := rawTemplate{}
 			r.createDistroTemplate(testDistroDefaults["ubuntu"]) 
 			So(r, ShouldNotResemble, testDistroDefaults["ubuntu"])
 		})
@@ -35,12 +35,12 @@ func TestCreateDistroTemplate(t *testing.T) {
 
 func TestCreatePackerTemplate(t *testing.T) {
 	Convey("Given a template", t, func() {
-		r := RawTemplate{}
+		r := rawTemplate{}
 		r = testDistroDefaults["ubuntu"]
-		Convey("Calling RawTemplate.CreatePackerTemplate() should result in", func() {
-			var pTpl PackerTemplate
+		Convey("Calling rawTemplate.CreatePackerTemplate() should result in", func() {
+			var pTpl packerTemplate
 			var err error
-			pTpl, err = r.CreatePackerTemplate()
+			pTpl, err = r.createPackerTemplate()
 			So(err, ShouldBeNil)
 			So(pTpl, ShouldNotResemble, r)
 		})
@@ -49,7 +49,7 @@ func TestCreatePackerTemplate(t *testing.T) {
 
 func TestCreateBuilders(t *testing.T) {
 	Convey("Given a template", t, func() {
-		r :=RawTemplate{}
+		r := rawTemplate{}
 		r = testDistroDefaults["ubuntu"]
 		var bldrs []interface{}
 		var vars map[string]interface{}	
@@ -120,7 +120,7 @@ func TestReplaceVariables(t *testing.T) {
 // of order map elements, not the result that should occur.
 func TestCommonVMSettings(t *testing.T) {
 	Convey("Given a template", t, func() {
-		r := RawTemplate{}
+		r := rawTemplate{}
 		r = testDistroDefaults["ubuntu"]
 /*		Convey("Given two slices of settings", func() {
 			old :=   []string{
@@ -234,7 +234,7 @@ func TestCommonVMSettings(t *testing.T) {
 func TestMergeBuildSettings(t *testing.T) {
 	Convey("Testing merging 2 build settings", t, func() {
 		Convey("Given an existing Build configuration", func() {
-			r := RawTemplate{}
+			r := rawTemplate{}
 			r = testDistroDefaults["ubuntu"]
 			Convey("Merging the build should result in an updated template", func() {
 				r.mergeBuildSettings(testBuilds.Build["test1"])
@@ -268,9 +268,9 @@ func TestScriptNames(t *testing.T) {
 	Convey("Testing getting a slice of script names from the shell provisioner", t, func() {
 		Convey("Given a shell provisioner", func() {
 			var scripts []string
-			r := RawTemplate{}
+			r := rawTemplate{}
 			r.Provisioners = testShellProvisioners1
-			Convey("Calling RawTemplate.ScriptNames() should return a slice", func() {
+			Convey("Calling rawTemplate.ScriptNames() should return a slice", func() {
 				scripts = r.ScriptNames()
 				So(scripts, ShouldNotBeNil)
 				So(scripts, ShouldContain, "base_test.sh")

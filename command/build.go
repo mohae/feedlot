@@ -80,7 +80,6 @@ Options:
 
 func (c *BuildCommand) Run(args []string) int {
 	var distroFilter, archFilter, imageFilter, releaseFilter, logDirFilter string
-
 	cmdFlags := flag.NewFlagSet("build", flag.ContinueOnError)
 	cmdFlags.Usage = func() { c.Ui.Output(c.Help()) }
 	cmdFlags.StringVar(&distroFilter, "distro", "", "distro filter")
@@ -89,55 +88,26 @@ func (c *BuildCommand) Run(args []string) int {
 	cmdFlags.StringVar(&releaseFilter, "release", "", "release filter")
 	cmdFlags.StringVar(&logDirFilter, "log_dir", "", "log directory")
 	if err := cmdFlags.Parse(args); err != nil {
-
 		c.Ui.Error(fmt.Sprintf("Parse of command-line arguments failed: %s", err))
 		return 1
 	}
-
-	// TODO set logging stuff
-
-	bldArgs := cmdFlags.Args()
-
-	s := ranchr.Supported{}
-	dd := map[string]ranchr.RawTemplate{}
-	s, dd, err := ranchr.DistrosInf()
-
-	if err != nil {
-//		log.Error("Loading the Supported Distro information failed: %s", err)
-		c.Ui.Error(fmt.Sprintf("Loading the Supported Distro information failed: %s", err))
-		return 1
-	}
-
+	buildArgs := cmdFlags.Args()
 	if distroFilter != "" {
 		args := ranchr.ArgsFilter{Arch: archFilter, Distro: distroFilter, Image: imageFilter, Release: releaseFilter}
 		// TODO go it
-		if err := ranchr.BuildPackerTemplateFromDistro(s, dd, args); err != nil {
-//			log.Error(err.Error())
+		if err := ranchr.BuildDistro(args); err != nil {
+			c.Ui.Output(err.Error())
 			return 1
 		}
 	}
-
-	// convert this from a variadic function call to go routines
-	// e.g. each build generates a go routine (need to manage concourrent resource access, e.g. files.)
-	//If there were any builds, generate their templates.
-	if len(bldArgs) > 0 {
-		var bS string
-
-		for _, bld := range bldArgs {
-			bS += bld + " "
-		}
-
-//		log.Info("Processing builds: " + bS)
-		if err := ranchr.BuildPackerTemplateFromNamedBuild(s, dd, bldArgs...); err != nil {
-//			log.Error(err.Error())
+	if len(buildArgs) > 0 {
+		if msg, err := ranchr.BuildBuilds(buildArgs); err != nil {
+			c.Ui.Error(err.Error())
 			return 1
 		}
+		c.Ui.Output(msg)
 	}
-	_ = s
-
-//	log.Info("Rancher Build complete.")
 	c.Ui.Output("Rancher Build complete.")
-
 	return 0
 }
 

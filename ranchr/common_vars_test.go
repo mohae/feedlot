@@ -209,7 +209,7 @@ var testSupportedCentOS = distro{
 }
 
 //var testRawPackerTemplate = 
-var testDistroDefaultUbuntu = RawTemplate{
+var testDistroDefaultUbuntu = rawTemplate{
 	PackerInf: PackerInf{MinPackerVersion: "", Description: "Test supported distribution template"},
 	IODirInf: IODirInf{
 		CommandsSrcDir: ":src_dir/commands/",
@@ -289,7 +289,7 @@ var testDistroDefaultUbuntu = RawTemplate{
 	},
 }
 
-var testDistroDefaultCentOS = RawTemplate{PackerInf: PackerInf{MinPackerVersion:"", Description:"Test template config and Rancher options for CentOS"},
+var testDistroDefaultCentOS = rawTemplate{PackerInf: PackerInf{MinPackerVersion:"", Description:"Test template config and Rancher options for CentOS"},
 	 IODirInf: IODirInf{CommandsSrcDir:":src_dir/commands/", HTTPDir:"http/", HTTPSrcDir:":src_dir/http/", OutDir:"out/centos", ScriptsDir:"scripts/", ScriptsSrcDir:":src_dir/scripts/", SrcDir:"src/centos"},
 	BuildInf: BuildInf{Name:":type-:release-:image-:arch", BuildName:"", BaseURL:"http://www.centos.org/pub/centos/"},
 	date: today,
@@ -331,7 +331,7 @@ var testDistroDefaultCentOS = RawTemplate{PackerInf: PackerInf{MinPackerVersion:
 }
 
 
-var testBuildTest1 = RawTemplate{
+var testBuildTest1 = rawTemplate{
 	PackerInf: PackerInf{
 		Description:      "Test build template #1",
 	},
@@ -378,7 +378,7 @@ var testBuildTest1 = RawTemplate{
 	},
 }
 
-var testBuildTest2 = RawTemplate{
+var testBuildTest2 = rawTemplate{
 	PackerInf: PackerInf{
 		Description:      "Test build template #2: causes an error",
 	},
@@ -407,7 +407,7 @@ var testBuildTest2 = RawTemplate{
 	},
 }
 
-var testMergedBuildTest1 = RawTemplate{
+var testMergedBuildTest1 = rawTemplate{
 	IODirInf: IODirInf{
 		CommandsSrcDir: ":src_dir/commands",
 		HTTPDir: "http",
@@ -481,7 +481,7 @@ var testMergedBuildTest1 = RawTemplate{
 }
 
 
-var testMergedBuildTest2 = RawTemplate{
+var testMergedBuildTest2 = rawTemplate{
 	IODirInf: IODirInf{
 		CommandsSrcDir: ":src_dir/commands",
 		HTTPDir: "http",
@@ -562,9 +562,9 @@ var testMergedBuildTest2 = RawTemplate{
 		},
 	},
 }
-var testSupported, testSupportedNoBaseURL Supported
-var testMergedBuilds, testDistroDefaults map[string]RawTemplate
-var testBuilds Builds
+var testSupported, testSupportedNoBaseURL supported
+var testMergedBuilds, testDistroDefaults map[string]rawTemplate
+var testBuilds builds
 var testDataSet bool
 func setCommonTestData() {
 	if testDataSet {
@@ -578,13 +578,13 @@ func setCommonTestData() {
 		v.BaseURL = ""
 		testSupportedNoBaseURL.Distro[k]=v
 	}
-	testDistroDefaults = map[string]RawTemplate{}
+	testDistroDefaults = map[string]rawTemplate{}
 	testDistroDefaults["ubuntu"] = testDistroDefaultUbuntu
 	testDistroDefaults["centos"] = testDistroDefaultCentOS
-	testBuilds.Build = map[string]RawTemplate{}
+	testBuilds.Build = map[string]rawTemplate{}
 	testBuilds.Build["test1"] = testBuildTest1
 	testBuilds.Build["test2"] = testBuildTest2
-	testMergedBuilds = map[string]RawTemplate{}
+	testMergedBuilds = map[string]rawTemplate{}
 	testMergedBuilds["test1"] = testMergedBuildTest1
 	testMergedBuilds["test2"] = testMergedBuildTest2
 	testDataSet = true

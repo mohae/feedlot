@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-type RawTemplate struct {
+type rawTemplate struct {
 	PackerInf
 	IODirInf
 	BuildInf
@@ -24,19 +24,19 @@ type RawTemplate struct {
 	build
 }
 
-// Returns a RawTemplate with current date in ISO 8601 format. This should be
-// called when a RawTemplate with the current date is desired.
-func newRawTemplate() RawTemplate {
+// Returns a rawTemplate with current date in ISO 8601 format. This should be
+// called when a rawTemplate with the current date is desired.
+func newRawTemplate() rawTemplate {
 	// Set the date, formatted to ISO 8601
 	date := time.Now()
 	splitDate := strings.Split(date.String(), " ")
-	R := RawTemplate{date: splitDate[0], delim: os.Getenv(EnvParamDelimStart)}
+	R := rawTemplate{date: splitDate[0], delim: os.Getenv(EnvParamDelimStart)}
 
 	return R
 }
 
 //
-func (r *RawTemplate) createDistroTemplate(d RawTemplate) {
+func (r *rawTemplate) createDistroTemplate(d rawTemplate) {
 	r.IODirInf = d.IODirInf
 	r.PackerInf = d.PackerInf
 	r.BuildInf = d.BuildInf
@@ -53,16 +53,16 @@ func (r *RawTemplate) createDistroTemplate(d RawTemplate) {
 	return
 }
 
-// Create a Packer template from the RawTemplate that can be marshalled to JSON.
-func (r *RawTemplate) CreatePackerTemplate() (PackerTemplate, error) {
+// Create a Packer template from the rawTemplate that can be marshalled to JSON.
+func (r *rawTemplate)createPackerTemplate() (packerTemplate, error) {
 	var err error
 	var vars map[string]interface{}
 
-	logger.Info("Creating PackerTemplate from a RawTemplate.")
+	logger.Info("Creating PackerTemplate from a rawTemplate.")
 
 	r.mergeVariables()
 	// General Packer Stuff
-	p := PackerTemplate{}
+	p := packerTemplate{}
 	p.MinPackerVersion = r.MinPackerVersion
 	p.Description = r.Description
 
@@ -127,12 +127,12 @@ func (r *RawTemplate) CreatePackerTemplate() (PackerTemplate, error) {
 	// Now we can create the Variable Section
 
 	// Return the generated Packer Template
-	logger.Info("PackerTemplate created from a RawTemplate.")
+	logger.Info("PackerTemplate created from a rawTemplate.")
 
 	return p, nil
 }
 
-func (r *RawTemplate) createBuilders() (bldrs []interface{}, vars map[string]interface{}, err error) {
+func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]interface{}, err error) {
 	// Takes a raw builder and create the appropriate Packer Builders along with a
 	// slice of variables for that section builder type. Some Settings are in-lined
 	// instead of adding them to the variable section.
@@ -149,7 +149,7 @@ func (r *RawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 	var i, ndx int
 	bldrs = make([]interface{}, len(r.BuilderType))
 	for _, bType := range r.BuilderType {
-		logger.Debug("Creating builder from RawTemplate: " + bType)
+		logger.Debug("Creating builder from rawTemplate: " + bType)
 		// TODO calculate the length of the two longest Settings and VMSettings sections and make it
 		// that length. That will prevent a panic should there be more than 50 options. Besides its
 		// stupid, on so many levels, to hard code this...which makes me...d'oh!
@@ -225,7 +225,7 @@ func (r *RawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 	return bldrs, vars, nil
 }
 
-func (r *RawTemplate) replaceVariables(s string) string {
+func (r *rawTemplate) replaceVariables(s string) string {
 	// Checks incoMing string for variables and replaces them with their values.
 
 	//see if the delim is in the string
@@ -240,17 +240,17 @@ func (r *RawTemplate) replaceVariables(s string) string {
 	return s
 }
 
-func (r *RawTemplate) variableSection() (map[string]interface{}, error) {
+func (r *rawTemplate) variableSection() (map[string]interface{}, error) {
 	// Generates the variable section.
 	var v map[string]interface{}
 	v = make(map[string]interface{})
 
-	logger.Debug("Creating variable section from RawTemplate")
+	logger.Debug("Creating variable section from rawTemplate")
 
 	return v, nil
 }
 
-func (r *RawTemplate) commonVMSettings(old []string, new []string) (Settings map[string]interface{}, vars []string, err error) {
+func (r *rawTemplate) commonVMSettings(old []string, new []string) (Settings map[string]interface{}, vars []string, err error) {
 	// Generates the common builder sections for vmWare and VBox
 	var k, v string
 	var tmpSl []string
@@ -317,7 +317,7 @@ func (r *RawTemplate) commonVMSettings(old []string, new []string) (Settings map
 	return Settings, vars, nil
 }
 
-func (r *RawTemplate) mergeBuildSettings(bld RawTemplate) {
+func (r *rawTemplate) mergeBuildSettings(bld rawTemplate) {
 	// merges Settings between an old and new template.
 	// Note: Arch, Image, and Release are not updated here as how these fields
 	// are updated depends on whether this is a build from a distribution's
@@ -339,7 +339,7 @@ func (r *RawTemplate) mergeBuildSettings(bld RawTemplate) {
 	return
 }
 
-func (r *RawTemplate) mergeDistroSettings(d distro) {
+func (r *rawTemplate) mergeDistroSettings(d distro) {
 	// merges Settings between an old and new template.
 	// Note: Arch, Image, and Release are not updated here as how these fields
 	// are updated depends on whether this is a build from a distribution's
@@ -364,7 +364,7 @@ func (r *RawTemplate) mergeDistroSettings(d distro) {
 }
 
 // Get a slice of script names from the shell provisioner, if any.
-func (r *RawTemplate) ScriptNames() []string {
+func (r *rawTemplate) ScriptNames() []string {
 	var s []string
 
 	if len(r.Provisioners["shell"].Scripts) > 0 {
@@ -384,7 +384,7 @@ func (r *RawTemplate) ScriptNames() []string {
 
 }
 
-func (r *RawTemplate) mergeVariables() {
+func (r *rawTemplate) mergeVariables() {
 	// Set the src_dir and out_dir, in case there are variables embedded in them.
 	// These can be embedded in other dynamic variables so they need to be resolved
 	// first to avoid a mutation issue. Only Rancher static variables can be used

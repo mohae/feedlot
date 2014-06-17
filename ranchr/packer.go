@@ -21,7 +21,7 @@ type builderer interface {
 	mergeVMSettings([]string)
 }
 
-type PackerTemplate struct {
+type packerTemplate struct {
 	Description      string                 `json:"description"`
 	MinPackerVersion string                 `json:"min_packer_version"`
 	Builders         []interface{}          `json:"builders"`
@@ -30,7 +30,7 @@ type PackerTemplate struct {
 	Variables        map[string]interface{} `json:"variables"`
 }
 
-func (p *PackerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []string) error {
+func (p *packerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []string) error {
 
 	if i.HTTPDir == "" {
 		err := errors.New("ranchr.TemplateToFileJSON: HTTPDir directory for " + b.BuildName + " not set")
