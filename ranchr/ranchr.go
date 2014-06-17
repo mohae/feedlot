@@ -286,6 +286,20 @@ func BuildBuilds(buildNames ...string) (string, error) {
 		}
 	}
 	var errorCount, builtCount int
+	nBuilds := len(buildNames)
+	doneCh := make(chan error, nBuilds)
+	for i := 0; i < nBuilds; i++ {
+		go buildPackerTemplateFromNamedBuild(buildNames[i], doneCh)
+	}
+	for i := 0; i < nBuilds; i++ {
+		err  := <- doneCh
+		if err != nil {
+			errorCount++
+		} else {
+			builtCount++
+		}
+	}
+/*
 	for _, buildName := range buildNames {
 		if err := buildPackerTemplateFromNamedBuild(buildName); err != nil {
 			logger.Error(err.Error())
@@ -294,19 +308,22 @@ func BuildBuilds(buildNames ...string) (string, error) {
 			builtCount++
 		}
 	}
+*/
 	return fmt.Sprintf("%v Build requests were processed with %v successfully processed and %v resulting in an error.", errorCount + builtCount, builtCount, errorCount), nil
 }
 
-func buildPackerTemplateFromNamedBuild(buildName string) error {
+func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error)  {
 	if buildName == "" {
 		err := errors.New("unable to build a Packer Template from a named build: no build name was passed")
 		logger.Error(err.Error())
-		return err
+		doneCh <- err
+		return
 	}
 	if !supportedLoaded {
 		if err := loadSupported(); err != nil {
 			logger.Error(err.Error())
-			return err
+			doneCh <- err
+			return
 		}
 	}
 	var tpl, bld rawTemplate
@@ -318,13 +335,15 @@ func buildPackerTemplateFromNamedBuild(buildName string) error {
 	if !ok {
 		err := errors.New("Unable to create template for the requested build, " + buildName + ". Requested Build definition was not found.")
 		logger.Error(err.Error())
-		return err
+		doneCh <- err
+		return 
 	}
 	// See if the distro default exists.
 	if tpl, ok = supportedDefaults[bld.Type]; !ok {
 		err := errors.New("Requested distribution, " + bld.Type + ", is not Supported. The Packer template for the requested build could not be created.")
 		logger.Error(err.Error())
-		return err
+		doneCh <- err
+		return
 	}
 	if bld.Arch != "" {
 		tpl.Arch = bld.Arch
@@ -343,17 +362,19 @@ func buildPackerTemplateFromNamedBuild(buildName string) error {
 	var err error
 	if pTpl, err = tpl.createPackerTemplate(); err != nil {
 		logger.Error(err.Error())
-		return err
+		doneCh <- err
+		return
 	}
 	var scripts []string
 	scripts = tpl.ScriptNames()
 	if err = pTpl.TemplateToFileJSON(tpl.IODirInf, tpl.BuildInf, scripts); err != nil {
 		logger.Error(err.Error())
-		return err
+		doneCh <- err
+		return 
 	}
 	logger.Info("Created Packer template and associated build directory for build:" + buildName + ".")
-	return nil
-
+	doneCh <- nil
+	return
 }
 
 func commandsFromFile(name string) (commands []string, err error) {
