@@ -53,7 +53,9 @@ var (
 var (
 	supportedDistros  supported
 	supportedDefaults map[string]rawTemplate
+	supportedBuilds builds
 	supportedLoaded  bool
+
 )
 
 type appConfig struct {
@@ -146,6 +148,10 @@ func loadSupported() error {
 		logger.Error(err.Error())
 		return err
 	}
+	if err = supportedBuilds.Load(); err != nil {
+		logger.Error(err.Error())
+		return err
+	}
 	supportedLoaded = true
 	return nil
 }
@@ -209,21 +215,22 @@ func BuildDistro(a ArgsFilter) error {
 }
 // Create Packer templates from specified build templates.
 func buildPackerTemplateFromDistro(a ArgsFilter) error {
-/*	var d RawTemplate
+	var d rawTemplate
 	var found bool
 	var err error
-	if s.Distro == nil {
+/*	if Distro == nil {
 		err := errors.New("Cannot build requested packer template, the Supported data structure was empty.")
 		logger.Error(err.Error())
 		return err
 	}
+*/
 	if a.Distro == "" {
 		err = errors.New("Cannot build a packer template because no target distro information was passed.")
 		logger.Error(err.Error())
 		return err
 	}
 	// Get the default for this distro, if one isn't found then it isn't Supported.
-	if d, found = dd[a.Distro]; !found {
+	if d, found = supportedDefaults[a.Distro]; !found {
 		err = errors.New("Cannot build a packer template from passed distro: " + a.Distro + " is not Supported. Please pass a Supported distribution.")
 		logger.Error(err.Error())
 		return err
@@ -242,10 +249,10 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 //	d.BuildName = ":type-:release-:arch-:image-rancher"
 	// Now everything can get put in a template
 	rTpl := newRawTemplate()
-	pTpl := PackerTemplate{}
+	pTpl := packerTemplate{}
 	rTpl.createDistroTemplate(d)
 	// Now that the raw template has been made, create a Packer template out of it
-	if pTpl, err = rTpl.CreatePackerTemplate(); err != nil {
+	if pTpl, err = rTpl.createPackerTemplate(); err != nil {
 		logger.Error(err.Error())
 		return err
 	}
@@ -261,7 +268,7 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 		return err
 	}
 	logger.Info("Created Packer template and associated build directory for " + d.BuildName)
-*/	return nil
+	return nil
 }
 
 // Processes the passed build requests. Returns either a message providing
@@ -286,77 +293,60 @@ func BuildBuilds(buildNames ...string) (string, error) {
 }
 
 func buildPackerTemplateFromNamedBuild(buildName string) error {
-/*	// Load the build templates
-	var bld Builds
-	err := bld.Load()
-	if err != nil {
-		logger.Critical(err.Error())
+	if buildName == "" {
+		err := errors.New("unable to build a Packer Template from a named build: no build name was passed")
+		logger.Error(err.Error())
 		return err
 	}
-	var ok, errd bool
-	var errCnt, cnt int
-	var tpl, bld RawTemplate
-	for _, bldName := range bldNames {
-		if bldName == "" {
-			break
-		}
-		cnt++
-		// Check the type and create the defaults for that type, if it doesn't already exist.
-		tpl = RawTemplate{}
-		bld = RawTemplate{}
-		bld, ok = blds.Build[bldName]
-		if !ok {
-			logger.Error("Unable to create template for the requested build, " + bldName + ". Requested Build definition was not found.")
-			errd = true
-		} else {
-			// See if the distro default exists.
-			if tpl, ok = dd[bld.Type]; !ok {
-				logger.Error("Requested distribution, " + bld.Type + ", is not Supported. The Packer template for the requested build could not be created.")
-				errd = true
-			}
-		}
-		if errd {
-			errCnt++
-			errd = false
-			logger.Info("An error occurred while processing build: " + bldName + ".")
-		} else {
-			if bld.Arch != "" {
-				tpl.Arch = bld.Arch
-			}
-			if bld.Image != "" {
-				tpl.Image = bld.Image
-			}
-			if bld.Release != "" {
-				tpl.Release = bld.Release
-			}
-			bld.BuildName = bldName
-			// create build template() then call create packertemplate
-			tpl.build = dd[bld.Type].build
-			tpl.mergeBuildSettings(bld)
-			pTpl := PackerTemplate{}
-			if pTpl, err = tpl.CreatePackerTemplate(); err != nil {
-				logger.Error(err.Error())
-				return err
-			}
-			var scripts []string
-			scripts = tpl.ScriptNames()
-			if err = pTpl.TemplateToFileJSON(tpl.IODirInf, tpl.BuildInf, scripts); err != nil {
-				logger.Error(err.Error())
-				return err
-			}
-			logger.Info("Created Packer template and associated build directory for build:" + bldName + ".")
+	if !supportedLoaded {
+		if err := loadSupported(); err != nil {
+			logger.Error(err.Error())
+			return err
 		}
 	}
-	if cnt == 0 {
-		err = errors.New("BuildPackerTemplateFromNamedBuild error: no build names were passed. Nothing was built.")
-		logger.Warn(err.Error())
+	var tpl, bld rawTemplate
+	var ok bool
+	// Check the type and create the defaults for that type, if it doesn't already exist.
+	tpl = rawTemplate{}
+	bld = rawTemplate{}
+	bld, ok = supportedBuilds.Build[buildName]
+	if !ok {
+		err := errors.New("Unable to create template for the requested build, " + buildName + ". Requested Build definition was not found.")
+		logger.Error(err.Error())
 		return err
 	}
-
-	if errCnt > 0 {
-		logger.Warn("BuildPackerTemplateFromNamedBuild encountered an error during processing, the associated Build was not properly built.")
+	// See if the distro default exists.
+	if tpl, ok = supportedDefaults[bld.Type]; !ok {
+		err := errors.New("Requested distribution, " + bld.Type + ", is not Supported. The Packer template for the requested build could not be created.")
+		logger.Error(err.Error())
+		return err
 	}
-*/
+	if bld.Arch != "" {
+		tpl.Arch = bld.Arch
+	}
+	if bld.Image != "" {
+		tpl.Image = bld.Image
+	}
+	if bld.Release != "" {
+		tpl.Release = bld.Release
+	}
+	bld.BuildName = buildName
+	// create build template() then call create packertemplate
+	tpl.build = supportedDefaults[bld.Type].build
+	tpl.mergeBuildSettings(bld)
+	pTpl := packerTemplate{}
+	var err error
+	if pTpl, err = tpl.createPackerTemplate(); err != nil {
+		logger.Error(err.Error())
+		return err
+	}
+	var scripts []string
+	scripts = tpl.ScriptNames()
+	if err = pTpl.TemplateToFileJSON(tpl.IODirInf, tpl.BuildInf, scripts); err != nil {
+		logger.Error(err.Error())
+		return err
+	}
+	logger.Info("Created Packer template and associated build directory for build:" + buildName + ".")
 	return nil
 
 }
@@ -420,7 +410,7 @@ func setDistrosDefaults(d defaults, s supported) (map[string]rawTemplate, error)
 		tmp.BuildName = d.BuildName
 		tmp.build = d.build
 		tmp.mergeDistroSettings(v)
-		dd[k] = tmp
+		supportedDefaults[k] = tmp
 	}
 	return dd, nil
 }

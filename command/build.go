@@ -101,11 +101,13 @@ func (c *BuildCommand) Run(args []string) int {
 		}
 	}
 	if len(buildArgs) > 0 {
-		if msg, err := ranchr.BuildBuilds(buildArgs); err != nil {
+		var message string
+		var err error
+		if message, err = ranchr.BuildBuilds(buildArgs...); err != nil {
 			c.Ui.Error(err.Error())
 			return 1
 		}
-		c.Ui.Output(msg)
+		c.Ui.Output(message)
 	}
 	c.Ui.Output("Rancher Build complete.")
 	return 0
