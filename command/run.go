@@ -22,7 +22,7 @@ func (c *RunCommand) Help() string {
         with at least one BuildList name. Multiple BuildList names can be
 	specified by using a space separated list.
 
-            rancher run example1
+            $ rancher run example1
 
         The above command generates Packer templates from all of the Rancher
 	Builds that have been specified within the RunList 'example1'.

@@ -165,7 +165,9 @@ func distrosInf() (supported, map[string]rawTemplate, error) {
 	d := defaults{}
 	s := supported{}
 	var err error
-	if err = d.Load(); err != nil {
+	d.LoadOnce()
+	if d.BuilderType == nil {
+		err := errors.New("Loading of the defaults file failed. Please check the log for more info.")
 		logger.Error(err.Error())	
 		return s, nil, err
 	}

@@ -25,8 +25,8 @@ either the -distro flag or a build name. The simplest way to generate a Packer
 template is to run Rancher with just the target distribution name, which must 
 be supported, i.e. exists within Rancher's supported.toml file:
 
-	% rancher build -distro=<distro name>
-	% rancher build -distro=ubuntu
+	$ rancher build -distro=<distro name>
+	$ rancher build -distro=ubuntu
 
 The above command generates a Packer template, targeting Ubuntu, using the
 defaults for that distribution. See the options section for the other flags.
@@ -35,8 +35,8 @@ Rancher can also generate Packer templates using preconfigured Rancher build
 templates via the builds.toml file. The name of the build is used to specify
 which build configuration should be used:
 
-	% rancher build <buildName...>
-	% rancher build 1204-amd64-server 1404-amd64-desktop
+	$ rancher build <buildName...>
+	$ rancher build 1204-amd64-server 1404-amd64-desktop
 
 The above command generates two Packer templates using the 1204-amd64-server
 and 1404-amd64-desktop build configurations. The list of build names is

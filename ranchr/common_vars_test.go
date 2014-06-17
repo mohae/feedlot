@@ -1,7 +1,6 @@
 package ranchr
 
 import (
-	_"testing"
 	"time"
 )
 
