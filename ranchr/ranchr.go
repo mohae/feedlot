@@ -410,7 +410,7 @@ func setDistrosDefaults(d defaults, s supported) (map[string]rawTemplate, error)
 		tmp.BuildName = d.BuildName
 		tmp.build = d.build
 		tmp.mergeDistroSettings(v)
-		supportedDefaults[k] = tmp
+		dd[k] = tmp
 	}
 	return dd, nil
 }
