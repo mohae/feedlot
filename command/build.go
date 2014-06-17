@@ -20,60 +20,50 @@ func (c *BuildCommand) Help() string {
 	helpText := `
 Usage: rancher build [options]
 
-Generates Packer templates. At minimum, this command needs to be run with
+Rancher creates Packer templates. At minimum, this command needs to be run with
 either the -distro flag or a build name. The simplest way to generate a Packer
-template with rancher is to build a template with just the target distribution
-name. The distribution must be supported, i.e. exists within Rancher's
-distros.toml file:
+template is to run Rancher with just the target distribution name, which must 
+be supported, i.e. exists within Rancher's supported.toml file:
 
-	% rancher build -distro=<ditribution name>
+	% rancher build -distro=<distro name>
 	% rancher build -distro=ubuntu
 
 The above command generates a Packer template, targeting Ubuntu, using the
-defaults for that distribution, which are found in the distros.toml configur-
-ation. file. Each of the distro defaults can be selectively overridden using
-some of the other flags listed in the Options section.
+defaults for that distribution. See the options section for the other flags.
 
 Rancher can also generate Packer templates using preconfigured Rancher build
 templates via the builds.toml file. The name of the build is used to specify
 which build configuration should be used:
 
-	% rancher build <build template name...>
-	% rancher build 1204-amd64-server 1310-amd64-desktop
-
+	% rancher build <buildName...>
+	% rancher build 1204-amd64-server 1404-amd64-desktop
 
 The above command generates two Packer templates using the 1204-amd64-server
-and 1310-amd64-desktop build templates. The list of build template names is
-variadic, accepting 1 or more build template names. For builds using the
--distro flag, the -arch, -image, and -release flags are optional. If any of
-them are missing, the distribution's default value for that flag will be used.
+and 1404-amd64-desktop build configurations. The list of build names is
+variadic, accepting 1 or more build names. 
+
+For builds using the -distro flag, the -arch, -image, and -release flags are 
+optional. If any of them are missing, the distribution's default value for that
+flag will be used.
 
 Options:
+-distro=<distroName>	If provided, Rancher will create a Packer template for
+			the passed distro, e.g. ubuntu. This flag can be used
+			with the -arch, -image, and -release flags to override
+			the distro's default values for those settings.
 
--distro=<distroName>	If provided, Rancher will generate a template for the
-			passed distribution name, e.g. ubuntu. This flag can
-			be used along with the -arch, -image, and -release
-			flags to override the Distribution's default values
-			for those settings.
+-arch=<architecture>	Specify whether 32 or 64 bit code should be used. These
+			values are distro dependent. This flag is only used 
+			with the -distro flag.
 
--arch=<architecture>	Specify whether 32 or 64 bit code should be used,
-			e.g."x32" or "amd64" for ubuntu. This flag is only
-			valid when used with the -distro flag.
+-image=<imageType>	The ISO image that the Packer template will use, e.g.
+			server or desktop. These values are distro dependent.
+			This flag is only used with the -distro flag.
 
--image=<imageType>	The type of ISO image that this Packer template will
-			target, e.g. server, desktop, minimal for ubuntu. If
-			the -distro flag is used and this flag is not used,
-			the distro's default imageType will be used. This flag
-			is only valid when used with the -distro flag.
-
--release=<releaseNum>	The release number that this Packer template will
-			target, e.g. 12.04, etc. Only the targeted distri-
-			bution's supported releases are valid. This flag is
-			only valid when used with the -distro flag.
-
--log_dir=<logDirPath>	The directory path in which logging files will be
-			written. This will override the existing logging
-			directory information.
+-release=<releaseNum>	The release number that the Packer template will use,
+			e.g. 12.04, etc. Only the targeted distro's currently
+			supported releases are valid. This flag is only used
+			with the -distro flag.
 `
 	return strings.TrimSpace(helpText)
 }
