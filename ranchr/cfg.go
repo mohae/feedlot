@@ -135,6 +135,7 @@ type defaults struct {
 	BuildInf
 	build
 	load sync.Once
+	loaded	bool
 }
 
 type BuildInf struct {
@@ -178,6 +179,7 @@ func (d *defaults) LoadOnce() {
 			logger.Critical(err.Error())
 			return
 		}
+		d.loaded = true
 		return
 	}
 
@@ -191,6 +193,8 @@ func (d *defaults) LoadOnce() {
 // application.
 type supported struct {
 	Distro map[string]distro
+	load	sync.Once
+	loaded	bool
 }
 
 type distro struct {
@@ -224,35 +228,47 @@ type distro struct {
 	build
 }
 
-// Load the Supported Distros file
-func (s *supported) Load() error {
-	name := os.Getenv(EnvSupportedFile)
-	if name == "" {
-		err := errors.New("could not retrieve the Supported information because the " + EnvSupportedFile + " Env variable was not set. Either set it or check your rancher.cfg setting")
-		logger.Error(err.Error())
-		return err
+func (s *supported) LoadOnce() {
+	loadFunc := func() {
+		name := os.Getenv(EnvSupportedFile)
+		if name == "" {
+			logger.Critical("could not retrieve the Supported information because the " + EnvSupportedFile + " Env variable was not set. Either set it or check your rancher.cfg setting")
+			return 
+		}
+		if _, err := toml.DecodeFile(name, &s); err != nil {
+			logger.Critical(err.Error())
+			return
+		}
+		s.loaded = true
+		return
 	}
-	_, err := toml.DecodeFile(name, &s)
-	return err
+	s.load.Do(loadFunc)
+	return	
 }
 
 // Struct to hold the builds.
 type builds struct {
 	Build map[string]rawTemplate
+	load	sync.Once
+	loaded bool
 }
 
-func (b *builds) Load() error {
-	name := os.Getenv(EnvBuildsFile)
-	if name == "" {
-		err := errors.New("could not retrieve the Builds configurations because the " + EnvBuildsFile + "Env variable was not set. Either set it or check your rancher.cfg setting")
-		logger.Error(err.Error())
-		return err
+func (b *builds) LoadOnce() {
+	loadFunc := func() {
+		name := os.Getenv(EnvBuildsFile)
+		if name == "" {
+			logger.Critical("could not retrieve the Builds configurations because the " + EnvBuildsFile + "Env variable was not set. Either set it or check your rancher.cfg setting")
+			return 
+		}
+		if _, err := toml.DecodeFile(name, &b); err != nil {
+			logger.Critical(err.Error())
+			return
+		}
+		b.loaded = true
+		return
 	}
-	if _, err := toml.DecodeFile(name, &b); err != nil {
-		logger.Error(err.Error())
-		return err
-	}
-	return nil
+	b.load.Do(loadFunc)
+	return	
 }
 
 type buildLists struct {

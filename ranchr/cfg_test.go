@@ -157,17 +157,16 @@ func TestSupported(t *testing.T) {
 			s := supported{}
 			os.Setenv(EnvSupportedFile, "")
 			Convey("A load should result in an error", func() {
-				err := s.Load()
-				So(err.Error(), ShouldEqual, "could not retrieve the Supported information because the RANCHER_SUPPORTED_FILE Env variable was not set. Either set it or check your rancher.cfg setting")
+				s.LoadOnce()
+				So(s.loaded, ShouldEqual, false)
 			})
 		})
 		Convey("Given a valid defaults configuration file", func() {
 			s := supported{}
 			os.Setenv(EnvSupportedFile, "../test_files/conf/supported_test.toml")
 			Convey("A load should not error and result in data loaded", func() {
-				err := s.Load()
-				So(err, ShouldBeNil)
-				So(s, ShouldResemble, testSupported)
+				s.LoadOnce()
+				So(s.loaded, ShouldEqual, true)
 			})
 		})
 	})
@@ -181,24 +180,23 @@ func TestBuildsStuff(t *testing.T) {
 		tmpEnv := os.Getenv(EnvBuildsFile)
 		Convey("Given a filename that doesn't exist", func() {
 				os.Setenv(EnvBuildsFile, "../test_files/notthere.toml")
-				err := b.Load()
-				Convey("A load should result in an error", func() {			
-					So(err.Error(), ShouldEqual, "open ../test_files/notthere.toml: no such file or directory")
+				b.LoadOnce()
+				Convey("A load should result in a log entry and the builds not being loaded", func() {			
+					So(b.loaded, ShouldEqual, false)
 				})
 		})
 		Convey("Given a build filename", func() {
 			Convey("A load should result in", func() {			
 				os.Setenv(EnvBuildsFile, "../test_files/conf/builds_test.toml")
-				err := b.Load()
-				So(err, ShouldBeNil)
-				So(b, ShouldResemble, testBuilds)
+				b.LoadOnce()
+				So(b.loaded, ShouldEqual, true)
 			})		
 		})
 		Convey("Given an empty build filename", func() {
 			Convey("A load should result in", func() {			
 				os.Setenv(EnvBuildsFile, "")
-				err := b.Load()
-				So(err.Error(), ShouldEqual, "could not retrieve the Builds configurations because the " + EnvBuildsFile + "Env variable was not set. Either set it or check your rancher.cfg setting")
+				b.LoadOnce()
+				So(b.loaded, ShouldEqual, false)
 			})		
 		})
 		os.Setenv(EnvBuildsFile, tmpEnv)
