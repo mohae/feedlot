@@ -42,7 +42,7 @@ func (b *builder) mergeVMSettings(new []string) {
 	b.VMSettings = mergeSettingsSlices(b.VMSettings, new)
 }
 
-func (b *builder) settingsToMap(r *RawTemplate) map[string]interface{} {
+func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 	// Go through all of the Settings and convert them to a map. Each setting
 	// is parsed into its constituent parts. The value then goes through
 	// variable replacement to ensure that the settings are properly resolved.
@@ -66,7 +66,7 @@ func (p *postProcessors) mergeSettings(new []string) {
 	p.Settings = mergeSettingsSlices(p.Settings, new)
 }
 
-func (p *postProcessors) settingsToMap(Type string, r *RawTemplate) map[string]interface{} {
+func (p *postProcessors) settingsToMap(Type string, r *rawTemplate) map[string]interface{} {
 	// Go through all of the Settings and convert them to a map. Each setting
 	// is parsed into its constituent parts. The value then goes through
 	// variable replacement to ensure that the settings are properly resolved.
@@ -92,7 +92,7 @@ func (p *provisioners) mergeSettings(new []string) {
 	p.Settings = mergeSettingsSlices(p.Settings, new)
 }
 
-func (p *provisioners) settingsToMap(Type string, r *RawTemplate) map[string]interface{} {
+func (p *provisioners) settingsToMap(Type string, r *rawTemplate) map[string]interface{} {
 	// Go through all of the Settings and convert them to a map. Each setting
 	// is parsed into its constituent parts. The value then goes through
 	// variable replacement to ensure that the settings are properly resolved.
@@ -179,7 +179,7 @@ func (d *defaults) Load() error {
 // To add support for a distribution, the information about it must be added to
 // the supported. file, in addition to adding the code to support it to the 
 // application.
-type Supported struct {
+type supported struct {
 	Distro map[string]distro
 }
 
@@ -215,7 +215,7 @@ type distro struct {
 }
 
 // Load the Supported Distros file
-func (s *Supported) Load() error {
+func (s *supported) Load() error {
 	name := os.Getenv(EnvSupportedFile)
 	if name == "" {
 		err := errors.New("could not retrieve the Supported information because the " + EnvSupportedFile + " Env variable was not set. Either set it or check your rancher.cfg setting")
@@ -227,11 +227,11 @@ func (s *Supported) Load() error {
 }
 
 // Struct to hold the builds.
-type Builds struct {
-	Build map[string]RawTemplate
+type builds struct {
+	Build map[string]rawTemplate
 }
 
-func (b *Builds) Load() error {
+func (b *builds) Load() error {
 	name := os.Getenv(EnvBuildsFile)
 	if name == "" {
 		err := errors.New("could not retrieve the Builds configurations because the " + EnvBuildsFile + "Env variable was not set. Either set it or check your rancher.cfg setting")

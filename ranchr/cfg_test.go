@@ -40,7 +40,7 @@ func TestBuilderStuff(t *testing.T) {
 		})
 
 		Convey("Given a builder settings", func() {
-			rawTpl := &RawTemplate{}
+			rawTpl := &rawTemplate{}
 			res := b.settingsToMap(rawTpl)
 			Convey("They should be turned into a map[string]interface", func() {
 				So(res, ShouldResemble, map[string]interface{}{"key1":"value1", "key2":"value2", "key3":"value3"})
@@ -51,7 +51,7 @@ func TestBuilderStuff(t *testing.T) {
 	Convey("Given a postProcessor or two", t, func() {
 		pp := postProcessors{}
 		pp.Settings = []string{"key1=value1", "key2=value2"}
-		rawTpl := &RawTemplate{}
+		rawTpl := &rawTemplate{}
 		newSettings := []string{"key1=value1", "key2=value22", "key3=value3"}
 		Convey("Given two settings slices", func() {
 			pp.mergeSettings(newSettings)
@@ -74,7 +74,7 @@ func TestBuilderStuff(t *testing.T) {
 	Convey("Given a provisioner or two", t, func() {
 		p := provisioners{}
 		p.Settings = []string{"key1=value1", "key2=value2"}
-		rawTpl := &RawTemplate{}
+		rawTpl := &rawTemplate{}
 		newSettings := []string{"key1=value1", "key2=value22", "key3=value3"}
 		Convey("Given two settings slices", func() {
 			p.mergeSettings(newSettings)
@@ -153,7 +153,7 @@ func TestSupported(t *testing.T) {
 	tmpEnv := os.Getenv(EnvSupportedFile)
 	Convey("Given a Supported struct", t, func() {
 		Convey("Given an empty supported file environment setting", func() {
-			s := Supported{}
+			s := supported{}
 			os.Setenv(EnvSupportedFile, "")
 			Convey("A load should result in an error", func() {
 				err := s.Load()
@@ -161,7 +161,7 @@ func TestSupported(t *testing.T) {
 			})
 		})
 		Convey("Given a valid defaults configuration file", func() {
-			s := Supported{}
+			s := supported{}
 			os.Setenv(EnvSupportedFile, "../test_files/conf/supported_test.toml")
 			Convey("A load should not error and result in data loaded", func() {
 				err := s.Load()
@@ -176,7 +176,7 @@ func TestSupported(t *testing.T) {
 
 func TestBuildsStuff(t *testing.T) {
 	Convey("Given a Builds struct", t, func() {	
-		b := Builds{}
+		b := builds{}
 		tmpEnv := os.Getenv(EnvBuildsFile)
 		Convey("Given a filename that doesn't exist", func() {
 				os.Setenv(EnvBuildsFile, "../test_files/notthere.toml")
