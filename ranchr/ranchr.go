@@ -146,9 +146,12 @@ func loadSupported() error {
 	var err error
 	if supportedDistros, supportedDefaults, err = distrosInf(); err != nil {
 		logger.Error(err.Error())
+		err = errors.New("Load of Default and Supported information failed. Please check prior log entries for more information")
 		return err
 	}
-	if err = supportedBuilds.Load(); err != nil {
+	supportedBuilds.LoadOnce()
+	if supportedBuilds.loaded == false {
+		err := errors.New("Load of Build information failed. Please check prior log entries for more information")
 		logger.Error(err.Error())
 		return err
 	}
@@ -166,13 +169,13 @@ func distrosInf() (supported, map[string]rawTemplate, error) {
 	s := supported{}
 	var err error
 	d.LoadOnce()
-	if d.BuilderType == nil {
+	if d.loaded == false {
 		err := errors.New("Loading of the defaults file failed. Please check the log for more info.")
-		logger.Error(err.Error())	
 		return s, nil, err
 	}
-	if err = s.Load(); err != nil {
-		logger.Error(err.Error())	
+	s.LoadOnce()
+	if s.loaded == false {
+		err := errors.New("Loading of the supported file failed. Please check the log for more info.")
 		return s, nil, err
 	}
 	dd := map[string]rawTemplate{}
