@@ -14,6 +14,7 @@ package ranchr
 import (
 	"errors"
 	"os"
+	"sync"
 
 	"github.com/BurntSushi/toml"
 )
@@ -133,6 +134,7 @@ type defaults struct {
 	PackerInf
 	BuildInf
 	build
+	load sync.Once
 }
 
 type BuildInf struct {
@@ -165,15 +167,23 @@ type PackerInf struct {
 	Description      string `toml:"description" json:"description"`
 }
 
-// Load the defaults file.
-func (d *defaults) Load() error {
-	name := os.Getenv(EnvDefaultsFile)
-	if name == "" {
-		err := errors.New("could not retrieve the default Settings file because the " + EnvDefaultsFile + " ENV variable was not set. Either set it or check your rancher.cfg setting")
-		return err
+func (d *defaults) LoadOnce() {
+	loadFunc := func() {
+		name := os.Getenv(EnvDefaultsFile)
+		if name == "" {
+			logger.Critical("could not retrieve the default Settings file because the " + EnvDefaultsFile + " ENV 	variable was not set. Either set it or check your rancher.cfg setting")
+			return 
+		}
+		if _, err := toml.DecodeFile(name, &d); err != nil {
+			logger.Critical(err.Error())
+			return
+		}
+		return
 	}
-	_, err := toml.DecodeFile(name, &d)
-	return err
+
+	d.load.Do(loadFunc)
+	return
+	
 }
 
 // To add support for a distribution, the information about it must be added to
