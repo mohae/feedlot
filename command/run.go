@@ -16,19 +16,16 @@ type RunCommand struct {
 
 func (c *RunCommand) Help() string {
 	helpText := `
-    Usage: rancher Run [options]
+    Usage: rancher Run <BuildList names...>
 
         Generates Packer templates. At minimum, this command needs to be run
-        with at least one RunList name. 
+        with at least one BuildList name. Multiple BuildList names can be
+	specified by using a space separated list.
 
             rancher run example1
 
         The above command generates Packer templates from all of the Rancher
 	Builds that have been specified within the RunList 'example1'.
-
-    Options:
-
-        -log-level=info         Log level for Rancher.
 `
 	return strings.TrimSpace(helpText)
 }
@@ -47,5 +44,5 @@ func (c *RunCommand) Run(args []string) int {
 }
 
 func (c *RunCommand) Synopsis() string {
-	return "Create Packer templates from the Rancher Build templates specified in the passed RunList."
+	return "Create Packer templates from the Rancher Build templates specified in the passed BuildList(s)."
 }
