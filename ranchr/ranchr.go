@@ -416,7 +416,7 @@ func setDistrosDefaults(d defaults, s supported) (map[string]rawTemplate, error)
 	for k, v := range s.Distro {
 		tmp := newRawTemplate()
 		tmp.Type = k
-		if v.BaseURL == "" {
+		if v.BaseURL == "" && k != "centos" {
 			err := errors.New(k + " does not have its BaseURL configured.")
 			logger.Critical(err.Error())
 			return nil, err

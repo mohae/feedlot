@@ -197,11 +197,11 @@ var testSupportedCentOS = distro{
 		"netinstall",
 	},
 	Release: []string{
-		"5.10",
-		"6.5",
+		"5",
+		"6",
 	},
 	DefImage: []string{
-		"release = 6.5",
+		"release = 6",
 		"image = minimal",
 		"arch = x86_64",
 	},
@@ -296,7 +296,7 @@ var testDistroDefaultCentOS = rawTemplate{PackerInf: PackerInf{MinPackerVersion:
 	Type:"centos",
 	Arch:"x86_64",
 	Image:"minimal",
-	Release:"6.5",
+	Release:"6",
 	varVals:map[string]string{},
 	vars:map[string]string{},
 	build: build{

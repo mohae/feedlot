@@ -55,11 +55,11 @@
 		        "netinstall"
 		]
 		release = [
-		        "5.10",
-	        	"6.5"
+		        "5",
+	        	"6"
 		]
 		default_image = [
-		    	"release = 6.5",
+		    	"release = 6",
 		    	"image = minimal",
 		    	"arch = x86_64",
 		]
