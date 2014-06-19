@@ -14,13 +14,9 @@ Configuration files: All rancher configuration files are written in TOML. The de
 If the defaults shipped with rancher are not to your liking, the default settings files, defaults.toml and supported.toml, can be modified. These files are found in the rancher/conf/ directory. Care should be taken when modifiying these settings.
 
 Issues:
-    Variadic processing of named builds hasn't been tested and will probably be changed.
-    The Run command is not supported, though stubbed out.
-    Some comments are outdated and need to be revised accordingly
-    Some tests are buggy resulting in manual cleanup of the rancher/test_files/out directory.
-    CentOS not supported
-    No pressed.cfg for ubuntu
-    Command and shell scripts for ubuntu may not be totally correct.
-    Configuration file contents are evolving for proper default builds.
 
-
+ * The Run command is not supported, though stubbed out.
+ * Some comments are outdated and need to be revised accordingly
+ * Some tests are buggy resulting in manual cleanup of the rancher/test_files/out directory.
+ * No pressed.cfg for ubuntu
+ * Command and shell scripts for ubuntu may not be totally correct.
