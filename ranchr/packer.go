@@ -79,11 +79,11 @@ func (p *packerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []st
 	var errCnt, okCnt int
 	for _, script := range scripts {
 
-		if wB, err := copyFile(i.ScriptsSrcDir, i.OutDir + "/" + i.ScriptsDir, script); err != nil {
+		if wB, err := copyFile(i.ScriptsSrcDir, appendSlash(i.OutDir) + i.ScriptsDir, script); err != nil {
 			logger.Error(err.Error())
 			errCnt++
 		} else {
-			logger.Info(strconv.FormatInt(wB, 10) + " Bytes were copied from " + i.ScriptsDir + script + " to " + i.OutDir + "/" + script)
+			logger.Info(strconv.FormatInt(wB, 10) + " Bytes were copied from " + i.ScriptsDir + script + " to " + appendSlash(i.OutDir) + script)
 			okCnt++
 		}
 	}
@@ -94,14 +94,14 @@ func (p *packerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []st
 	} else {
 		logger.Info(strconv.Itoa(okCnt) + " scripts were successfully copied.")
 	}
-	if err := os.MkdirAll(i.OutDir + "/http", os.FileMode(0766)); err != nil {
+	if err := os.MkdirAll(appendSlash(i.OutDir) +  "http", os.FileMode(0766)); err != nil {
 		logger.Error(err.Error())
 		return err
 	}
-	if err := copyDirContent(i.HTTPSrcDir, i.OutDir + i.HTTPDir); err != nil {
+	if err := copyDirContent(i.HTTPSrcDir, appendSlash(i.OutDir) + i.HTTPDir); err != nil {
 		logger.Error(err.Error())
 	}
-	logger.Trace("Copied contents of " + i.HTTPSrcDir + " to " + i.OutDir + i.HTTPDir)
+	logger.Trace("Copied contents of " + i.HTTPSrcDir + " to " + appendSlash(i.OutDir) + i.HTTPDir)
 
 	// Write it out as JSON
 	tplJSON, err := json.MarshalIndent(p, "", "\t")
@@ -110,7 +110,7 @@ func (p *packerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []st
 		return err
 	}
 
-	f, err := os.Create(i.OutDir + "/" + b.Name + ".json")
+	f, err := os.Create(appendSlash(i.OutDir) + b.Name + ".json")
 	if err != nil {
 		logger.Error(err.Error())
 		return err
