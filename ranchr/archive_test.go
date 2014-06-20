@@ -28,7 +28,6 @@ func TestArchive(t *testing.T) {
 			})
 		})
 
-
 		Convey("Get a slice of paths within a directory", func() {
 			tst := Archive{}
 			err := tst.SrcWalk("../test_files/src/ubuntu/scripts")
@@ -39,15 +38,14 @@ func TestArchive(t *testing.T) {
 			}
 		})
 
-/*
 		Convey("add a path to Files slice", func() {
 			tst := Archive{}
 			tst.addFilename("../test_files/src/ubuntu/scripts/test_file.sh", nil, nil)
 			Convey("The path slice should have 'test_files/src/ubuntu/scripts/test_file.sh'", func() {
-				So(tst.Files, ShouldResemble, directory{[]file{{path:"../test_files/src/ubuntu/scripts/test_file.sh"}}})
+				So(tst.Files[0].path, ShouldEqual, "../test_files/src/ubuntu/scripts/test_file.sh")
+				So(tst.Files[0].info, ShouldBeNil)
 			})
 		})
-*/
 
 		Convey("Given a target archive location at ../test_files/out/test.tar", func() {
 			tst := Archive{}
@@ -116,7 +114,7 @@ func TestArchive(t *testing.T) {
 
 		Convey("back up a directory", func() {
 			tst := Archive{}
-			filename := "../test_files/test4.tar"
+			filename := "../test_files/out/test4.tar"
 			testFile, _ := os.Create(filename)
 			tW := tar.NewWriter(testFile)
 			if err := tst.priorBuild("../test_files/src/ubuntu/scripts", "gzip"); err == nil {
