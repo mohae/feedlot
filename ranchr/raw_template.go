@@ -313,11 +313,11 @@ func (r *rawTemplate) commonVMSettings(builderType string, old []string, new []s
 			case "ubuntu":
 				rel := &ubuntu{release: release{Arch: r.Arch}}
 				rel.SetISOInfo()
-				Settings["guest_os_type"] = rel.getOSType(builderType)
+				Settings[k] = rel.getOSType(builderType)
 			case "centos":
 				rel := &centOS{release: release{Arch: r.Arch}}
 				rel.SetISOInfo()
-				Settings["guest_os_type"] = rel.URL
+				Settings[k] = rel.getOSType(builderType)
 			}
 		default:
 			// just use the value
