@@ -403,6 +403,7 @@ func (r *rawTemplate) mergeVariables() {
 	// first to avoid a mutation issue. Only Rancher static variables can be used
 	// in these two Settings.
 	// check src_dir and out_dir first:
+	// TODO: replase this mess with something cleaner/resilient
 
 	// Get the delim and set the replacement map, resolve name information
 	r.varVals = map[string]string{r.delim + "type": r.Type, r.delim + "release": r.Release, r.delim + "arch": r.Arch, r.delim + "image": r.Image, r.delim + "date": r.date,  r.delim + "build_name": r.BuildName}
@@ -421,16 +422,20 @@ func (r *rawTemplate) mergeVariables() {
 	r.CommandsSrcDir = trimSuffix(r.replaceVariables(r.CommandsSrcDir), "/")
 	r.HTTPDir = trimSuffix(r.replaceVariables(r.HTTPDir), "/")
 	r.HTTPSrcDir = trimSuffix(r.replaceVariables(r.HTTPSrcDir), "/")
+	r.OutDir = trimSuffix(r.replaceVariables(r.OutDir), "/")
 	r.ScriptsDir = trimSuffix(r.replaceVariables(r.ScriptsDir), "/")
 	r.ScriptsSrcDir = trimSuffix(r.replaceVariables(r.ScriptsSrcDir), "/")
+	r.SrcDir = trimSuffix(r.replaceVariables(r.SrcDir), "/")
 
 	// Create a full variable replacement map, know that the SrcDir and OutDir stuff are resolved.
 	// Rest of the replacements are done by the packerers.
 	r.varVals[r.delim + "commands_src_dir"] = r.CommandsSrcDir
 	r.varVals[r.delim + "http_dir"] = r.HTTPDir
 	r.varVals[r.delim + "http_src_dir"] = r.HTTPSrcDir
+	r.varVals[r.delim + "out_dir"] = r.OutDir
 	r.varVals[r.delim + "scripts_dir"] = r.ScriptsDir
 	r.varVals[r.delim + "scripts_src_dir"] = r.ScriptsSrcDir
+	r.varVals[r.delim + "src_dir"] = r.SrcDir
 
 	r.CommandsSrcDir = trimSuffix(r.replaceVariables(r.CommandsSrcDir), "/")
 	r.HTTPDir = trimSuffix(r.replaceVariables(r.HTTPDir), "/")
