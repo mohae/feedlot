@@ -256,6 +256,7 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	rTpl := newRawTemplate()
 	pTpl := packerTemplate{}
 	rTpl.createDistroTemplate(d)
+	rTpl.BuildName = d.Type + "-" + d.Release + "-" + d.Arch + "-" + d.Image
 	// Now that the raw template has been made, create a Packer template out of it
 	if pTpl, err = rTpl.createPackerTemplate(); err != nil {
 		logger.Error(err.Error())

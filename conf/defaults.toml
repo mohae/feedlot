@@ -8,7 +8,7 @@
 # Type corresponds with a Packer Builder's `type` variable. This is typically
 # the distro name.
 description = "Default Rancher template"
-name = ":type-:release-:image-:arch"
+name = ":build_name"
 commands_src_dir = ":src_dir/commands"
 http_dir = "http"
 http_src_dir = ":src_dir/http"

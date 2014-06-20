@@ -21,6 +21,7 @@ type rawTemplate struct {
 	Release string
 	varVals map[string]string
 	vars    map[string]string
+//	releaseInfo isoer{}
 	build
 }
 

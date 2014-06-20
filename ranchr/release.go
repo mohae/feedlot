@@ -144,10 +144,9 @@ func (u *ubuntu) findChecksum(isoName string) (string, error) {
 
 func (u *ubuntu) setName() {
 	if u.ReleaseFull == "" {
-		u.Name = "ubuntu-" + u.Release + "-" + u.Image + "-" + u.Arch + ".iso"
-	} else {
-		u.Name = "ubuntu-" + u.ReleaseFull + "-" + u.Image + "-" + u.Arch + ".iso"
+		u.ReleaseFull = u.Release
 	}
+	u.Name = "ubuntu-" + u.ReleaseFull + "-" + u.Image + "-" + u.Arch + ".iso"
 
 	return
 }
