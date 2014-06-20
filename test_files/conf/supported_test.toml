@@ -49,7 +49,7 @@
 	[distro.ubuntu.post_processors]
 		[distro.ubuntu.post_processors.vagrant]
 		settings = [
-			"output = out/:type-:arch-:version-:image-packer.box"
+			"output = out/:build_name-packer.box"
 		]
 		[distro.ubuntu.provisioners]
 			[distro.ubuntu.provisioners.shell]
@@ -57,18 +57,17 @@
 				"execute_command = :commands_src_dir/execute_test.command"
 			]
 			scripts = [ 
-				"scripts/setup_test.sh",
-				"scripts/base_test.sh",
-				"scripts/vagrant_test.sh",
-				"scripts/cleanup_test.sh",
-				"scripts/zerodisk_test.sh"
+				":scripts_dir/setup_test.sh",
+				":scripts_dir/base_test.sh",
+				":scripts_dir/vagrant_test.sh",
+				":scripts_dir/sudoers_test.sh",
+				":scripts_dir/cleanup_test.sh",
+
 			]
 
 	[distro.centos]
 	base_url = ""
 	description = "Test template config and Rancher options for CentOS"
-	out_dir = "out/centos"
-	src_dir = "src/centos"
 	arch = [
 	        "i386",
 	        "x86_64"

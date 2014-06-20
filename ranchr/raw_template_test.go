@@ -221,7 +221,7 @@ func TestCommonVMSettings(t *testing.T) {
 					"ssh_username":"vagrant",
 					"iso_checksum":"unknown is not supported",
 				}
-				settings, vars, err = r.commonVMSettings(old, new)	
+				settings, vars, err = r.commonVMSettings("common", old, new)	
 				So(err, ShouldBeNil)
 				So(settings, ShouldResemble, expected) 
 				So(vars, ShouldBeNil)

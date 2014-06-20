@@ -12,7 +12,7 @@ name = ":type-:release-:image-:arch"
 commands_src_dir = ":src_dir/commands"
 http_dir = "http"
 http_src_dir = ":src_dir/http"
-out_dir = "../test_files/out/:type"
+out_dir = "../test_files/out/:type/:build_name"
 scripts_dir = "scripts"
 scripts_src_dir = ":src_dir/scripts"
 src_dir = "../test_files/src/:type"
@@ -27,13 +27,16 @@ builder_type = [
 			"boot_command = :commands_src_dir/boot_test.command",
 			"boot_wait = 5s",
 			"disk_size = 20000",
+			"guest_os_type = ",
+			"headless = true",
 			"http_directory = http",
 			"iso_checksum_type = sha256",
 			"shutdown_command = :commands_src_dir/shutdown_test.command",
 			"ssh_password = vagrant",
 			"ssh_port = 22",
 			"ssh_username = vagrant",
-			"ssh_wait_timeout = 240m"
+			"ssh_wait_timeout = 240m",
+			"virtualbox_version_file = .vbox_version"
 		]
 	[builders.virtualbox-iso]
 		vm_settings = [
@@ -58,9 +61,9 @@ builder_type = [
 			"execute_command = :commands_src_dir/execute_test.command"
 		]
 		scripts = [ 
-			":scripts_dir/setup_test.sh",
-			":scripts_dir/base_test.sh",
-			":scripts_dir/vagrant_test.sh",
-			":scripts_dir/cleanup_test.sh",
-			":scripts_dir/zerodisk_test.sh"
+				":scripts_dir/setup_test.sh",
+				":scripts_dir/guest-additions_test.sh",
+				":scripts_dir/vagrant_test.sh",
+				":scripts_dir/sudoers_test.sh",
+				":scripts_dir/cleanup_test.sh",
 		]
