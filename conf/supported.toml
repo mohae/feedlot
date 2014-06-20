@@ -44,7 +44,7 @@
 			]
 	
 	[distro.centos]
-		base_url = "http://www.centos.org/pub/centos"
+		base_url = ""
 		description = "Default template config and Rancher options for CentOS"
 		arch = [
 		        "i386",

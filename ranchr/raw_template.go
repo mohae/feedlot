@@ -279,7 +279,10 @@ func (r *rawTemplate) commonVMSettings(old []string, new []string) (Settings map
 				Settings["iso_url"] = rel.URL
 				Settings["iso_checksum"] = rel.Checksum
 			case "centos":
-				notSupported = "Retrieval of CentOS ISO information has not been implemented."
+				rel := &centOS{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: strings.ToLower(v)}, Arch: r.Arch, Distro: r.Type, Image: r.Image, Release: r.Release}}
+				rel.SetISOInfo()
+				Settings["iso_url"] = rel.URL
+				Settings["iso_checksum"] = rel.Checksum
 			default:
 				notSupported = r.Type + " is not supported"
 			}
