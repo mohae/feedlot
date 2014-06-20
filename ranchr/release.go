@@ -154,11 +154,10 @@ func (u *ubuntu) setName() {
 func (u *ubuntu) getOSType(buildType string) string {
 	// Get the OSType string for the provided builder
 	// OS Type varies by distro and bit and builder.
-	return buildType
 	switch buildType {
 	case "vmware-iso":
 		switch u.Arch {
-		case "amd_64":
+		case "amd64":
 			return "ubuntu-64"
 		case "i386":
 			return "ubuntu-32"
@@ -167,7 +166,7 @@ func (u *ubuntu) getOSType(buildType string) string {
 		}
 	case "virtualbox-iso":
 		switch u.Arch {
-		case "amd_64":
+		case "amd64":
 			return "Ubuntu_64"
 		case "i386":
 			return "Ubuntu_32"
@@ -209,7 +208,7 @@ func (c *centOS) getOSType(buildType string) string {
 		switch c.Arch {
 		case "x86_64":
 			return "centos-64"
-		case "x86":
+		case "x386":
 			return "centos-32"
 		default:
 			return "linux"
@@ -218,7 +217,7 @@ func (c *centOS) getOSType(buildType string) string {
 		switch c.Arch {
 		case "x86_64":
 			return "RedHat_64"
-		case "x86":
+		case "x386":
 			return "RedHat_32"
 		default:
 			return "linux"
