@@ -65,7 +65,7 @@
 			]
 
 	[distro.centos]
-	base_url = "http://mirrorlist.centos.org/?release=%s&arch=&s&repo=os"
+	base_url = ""
 	description = "Test template config and Rancher options for CentOS"
 	out_dir = "out/centos"
 	src_dir = "src/centos"
