@@ -160,7 +160,7 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 		switch bType {
 		case BuilderVMWare:
 			// Generate the common Settings and their vars
-			if tmpS, tmpVar, err = r.commonVMSettings(r.Builders[BuilderCommon].Settings, r.Builders[bType].Settings); err != nil {
+			if tmpS, tmpVar, err = r.commonVMSettings(bType, r.Builders[BuilderCommon].Settings, r.Builders[bType].Settings); err != nil {
 				fmt.Println(err.Error())
 				logger.Warn(err.Error())
 				err = nil
@@ -184,7 +184,7 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 
 		case BuilderVBox:
 			// Generate the common Settings and their vars
-			if tmpS, tmpVar, err = r.commonVMSettings(r.Builders[BuilderCommon].Settings, r.Builders[bType].Settings); err != nil {
+			if tmpS, tmpVar, err = r.commonVMSettings(bType, r.Builders[BuilderCommon].Settings, r.Builders[bType].Settings); err != nil {
 				logger.Warn(err.Error())
 				fmt.Println(err.Error())
 				err = nil
@@ -251,7 +251,7 @@ func (r *rawTemplate) variableSection() (map[string]interface{}, error) {
 	return v, nil
 }
 
-func (r *rawTemplate) commonVMSettings(old []string, new []string) (Settings map[string]interface{}, vars []string, err error) {
+func (r *rawTemplate) commonVMSettings(builderType string, old []string, new []string) (Settings map[string]interface{}, vars []string, err error) {
 	// Generates the common builder sections for vmWare and VBox
 	var k, v string
 	var tmpSl []string
@@ -292,7 +292,6 @@ func (r *rawTemplate) commonVMSettings(old []string, new []string) (Settings map
 				Settings["iso_url"] = notSupported
 				Settings["iso_checksum"] = notSupported
 			}
-
 		case "boot_command", "shutdown_command":
 			//If it ends in .command, replace it with the command from the filepath
 			var commands []string
@@ -309,7 +308,17 @@ func (r *rawTemplate) commonVMSettings(old []string, new []string) (Settings map
 					Settings[k] = commands[0]
 				}
 			}
-
+		case "guest_os_type":
+			switch r.Type {
+			case "ubuntu":
+				rel := &ubuntu{release: release{Arch: r.Arch}}
+				rel.SetISOInfo()
+				Settings["guest_os_type"] = rel.getOSType(builderType)
+			case "centos":
+				rel := &centOS{release: release{Arch: r.Arch}}
+				rel.SetISOInfo()
+				Settings["guest_os_type"] = rel.URL
+			}
 		default:
 			// just use the value
 			Settings[k] = v
@@ -414,7 +423,7 @@ func (r *rawTemplate) mergeVariables() {
 	r.HTTPSrcDir = trimSuffix(r.replaceVariables(r.HTTPSrcDir), "/")
 	r.ScriptsDir = trimSuffix(r.replaceVariables(r.ScriptsDir), "/")
 	r.ScriptsSrcDir = trimSuffix(r.replaceVariables(r.ScriptsSrcDir), "/")
-/*
+
 	// Create a full variable replacement map, know that the SrcDir and OutDir stuff are resolved.
 	// Rest of the replacements are done by the packerers.
 	r.varVals[r.delim + "commands_src_dir"] = r.CommandsSrcDir
@@ -423,14 +432,13 @@ func (r *rawTemplate) mergeVariables() {
 	r.varVals[r.delim + "scripts_dir"] = r.ScriptsDir
 	r.varVals[r.delim + "scripts_src_dir"] = r.ScriptsSrcDir
 
-	r.CommandsSrcDir = r.replaceVariables(r.CommandsSrcDir)
-	r.HTTPDir = r.replaceVariables(r.HTTPDir)
-	r.HTTPSrcDir = r.replaceVariables(r.HTTPSrcDir)
-	r.OutDir = r.replaceVariables(r.OutDir)
-	r.ScriptsDir = r.replaceVariables(r.ScriptsDir)
-	r.ScriptsSrcDir = r.replaceVariables(r.ScriptsSrcDir)
-	r.SrcDir = r.replaceVariables(r.SrcDir)
-*/
+	r.CommandsSrcDir = trimSuffix(r.replaceVariables(r.CommandsSrcDir), "/")
+	r.HTTPDir = trimSuffix(r.replaceVariables(r.HTTPDir), "/")
+	r.HTTPSrcDir = trimSuffix(r.replaceVariables(r.HTTPSrcDir), "/")
+	r.OutDir = trimSuffix(r.replaceVariables(r.OutDir), "/")
+	r.ScriptsDir = trimSuffix(r.replaceVariables(r.ScriptsDir), "/")
+	r.ScriptsSrcDir = trimSuffix(r.replaceVariables(r.ScriptsSrcDir), "/")
+	r.SrcDir = trimSuffix(r.replaceVariables(r.SrcDir), "/")
 }
 
 func (i *IODirInf) update(new IODirInf) {

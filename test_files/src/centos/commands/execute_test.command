@@ -1,1 +1,1 @@
-"echo 'vagrant'|sudo -S sh '{{.Path}}'"
+"echo 'vagrant' | {{.Vars}} sudo -S -E bash '{{.Path}}'"
