@@ -23,6 +23,7 @@ func (c *RunCommand) Help() string {
 	specified by using a space separated list.
 
             $ rancher run example1
+            $ rancher run example1 example2
 
         The above command generates Packer templates from all of the Rancher
 	Builds that have been specified within the RunList 'example1'.
