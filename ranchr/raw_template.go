@@ -56,11 +56,9 @@ func (r *rawTemplate) createDistroTemplate(d rawTemplate) {
 
 // Create a Packer template from the rawTemplate that can be marshalled to JSON.
 func (r *rawTemplate)createPackerTemplate() (packerTemplate, error) {
+	logger.Debugf("Current rawTemplate state is: %+v", r)
 	var err error
 	var vars map[string]interface{}
-
-	logger.Info("Creating PackerTemplate from a rawTemplate.")
-
 	r.mergeVariables()
 	// General Packer Stuff
 	p := packerTemplate{}
@@ -72,8 +70,7 @@ func (r *rawTemplate)createPackerTemplate() (packerTemplate, error) {
 
 	if p.Builders, vars, err = r.createBuilders(); err != nil {
 		logger.Error(err.Error())
-		fmt.Println(err.Error())
-		err = nil
+		return p, err
 	}
 	// Post-Processors
 	var i int
@@ -141,7 +138,7 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 	if r.BuilderType == nil || len(r.BuilderType) <= 0 {
 		err = fmt.Errorf("no builder types were configured, unable to create builders")
 		logger.Error(err.Error())
-		return
+		return nil, nil, err
 	}
 
 	var vrbls, tmpVar []string
@@ -150,7 +147,7 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 	var i, ndx int
 	bldrs = make([]interface{}, len(r.BuilderType))
 	for _, bType := range r.BuilderType {
-		logger.Debug("Creating builder from rawTemplate: " + bType)
+		logger.Debug(bType)
 		// TODO calculate the length of the two longest Settings and VMSettings sections and make it
 		// that length. That will prevent a panic should there be more than 50 options. Besides its
 		// stupid, on so many levels, to hard code this...which makes me...d'oh!
@@ -161,11 +158,10 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 		case BuilderVMWare:
 			// Generate the common Settings and their vars
 			if tmpS, tmpVar, err = r.commonVMSettings(bType, r.Builders[BuilderCommon].Settings, r.Builders[bType].Settings); err != nil {
-				fmt.Println(err.Error())
-				logger.Warn(err.Error())
-				err = nil
+				logger.Error(err.Error())
+				return nil, nil, err
 			}
-			tmpS["type"] = BuilderVMWare
+			tmpS["type"] = bType
 
 			// Generate builder specific section
 			tmpvm := make(map[string]string, len(r.Builders[bType].VMSettings))
@@ -185,13 +181,11 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 		case BuilderVBox:
 			// Generate the common Settings and their vars
 			if tmpS, tmpVar, err = r.commonVMSettings(bType, r.Builders[BuilderCommon].Settings, r.Builders[bType].Settings); err != nil {
-				logger.Warn(err.Error())
-				fmt.Println(err.Error())
-				err = nil
-				//				return
+				logger.Error(err.Error())
+				return nil, nil, err
 			}
 
-			tmpS["type"] = BuilderVBox
+			tmpS["type"] = bType
 			// Generate Packer Variables
 			// Generate builder specific section
 			tmpVB := make([][]string, len(r.Builders[bType].VMSettings))
@@ -245,9 +239,6 @@ func (r *rawTemplate) variableSection() (map[string]interface{}, error) {
 	// Generates the variable section.
 	var v map[string]interface{}
 	v = make(map[string]interface{})
-
-	logger.Debug("Creating variable section from rawTemplate")
-
 	return v, nil
 }
 
@@ -311,12 +302,11 @@ func (r *rawTemplate) commonVMSettings(builderType string, old []string, new []s
 		case "guest_os_type":
 			switch r.Type {
 			case "ubuntu":
-				rel := &ubuntu{release: release{Arch: r.Arch}}
-				rel.SetISOInfo()
+				rel := &ubuntu{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: strings.ToLower(v)}, Arch: r.Arch, Distro: r.Type, Image: r.Image, Release: r.Release}}
 				Settings[k] = rel.getOSType(builderType)
 			case "centos":
-				rel := &centOS{release: release{Arch: r.Arch}}
-				rel.SetISOInfo()
+				rel := &centOS{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: strings.ToLower(v)}, Arch: r.Arch, Distro: r.Type, Image: r.Image, Release: r.Release}}
+				rel.setBaseURL()
 				Settings[k] = rel.getOSType(builderType)
 			}
 		default:
@@ -331,6 +321,7 @@ func (r *rawTemplate) commonVMSettings(builderType string, old []string, new []s
 }
 
 func (r *rawTemplate) mergeBuildSettings(bld rawTemplate) {
+	logger.Debug(bld)
 	// merges Settings between an old and new template.
 	// Note: Arch, Image, and Release are not updated here as how these fields
 	// are updated depends on whether this is a build from a distribution's
@@ -353,6 +344,7 @@ func (r *rawTemplate) mergeBuildSettings(bld rawTemplate) {
 }
 
 func (r *rawTemplate) mergeDistroSettings(d distro) {
+	logger.Debug(d)
 	// merges Settings between an old and new template.
 	// Note: Arch, Image, and Release are not updated here as how these fields
 	// are updated depends on whether this is a build from a distribution's
@@ -378,6 +370,7 @@ func (r *rawTemplate) mergeDistroSettings(d distro) {
 
 // Get a slice of script names from the shell provisioner, if any.
 func (r *rawTemplate) ScriptNames() []string {
+	logger.Debug("entering")
 	var s []string
 
 	if len(r.Provisioners["shell"].Scripts) > 0 {
@@ -392,7 +385,7 @@ func (r *rawTemplate) ScriptNames() []string {
 		}
 
 	}
-
+	logger.Debug(s)
 	return s
 
 }

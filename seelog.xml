@@ -5,15 +5,17 @@
 	</exceptions>
     <outputs>
         <splitter formatid="all">
-            <console formatid="colored"/>
             <file path="logs/rancher.log"/>
+            <filter levels="critical, error, warn, info, debug, trace">
+                <console formatid="colored"/>
+            </filter>
         </splitter>
 	</outputs>
 	<formats>
 		<format id="fmtinfo" format="[%Level] [%Time] %Msg%n"/>
         <format id="fmtdetail" format="[%LEV] [%Time] [%FuncShort @ %File.%Line] %Msg%n"/>
        	<format id="all" format="[%Lev] [%Time] [@ %File.%Line] %Msg%n"/>
-       	<format id="colored"  format="%EscM(31)%Level%EscM(39) %Msg%n%EscM(0)"/>
+       	<format id="colored"  format="%EscM(31)[%Level]%EscM(39) [%Time] [%FuncShort @ %File.%Line] %Msg%n%EscM(0)"/>
    	</formats>
 </seelog>
 
