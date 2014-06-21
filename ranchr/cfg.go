@@ -175,31 +175,31 @@ type IODirInf struct {
 func (i *IODirInf) update(new IODirInf) {
 
 	if new.CommandsSrcDir != "" {
-		i.CommandsSrcDir = new.CommandsSrcDir
+		i.CommandsSrcDir = appendSlash(new.CommandsSrcDir)
 	}
 
 	if new.HTTPDir != "" {
-		i.HTTPDir = new.HTTPDir
+		i.HTTPDir = appendSlash(new.HTTPDir)
 	}
 
 	if new.HTTPSrcDir != "" {
-		i.HTTPSrcDir = new.HTTPSrcDir
+		i.HTTPSrcDir = appendSlash(new.HTTPSrcDir)
 	}
 
 	if new.OutDir != "" {
-		i.OutDir = new.OutDir
+		i.OutDir = appendSlash(new.OutDir)
 	}
 
 	if new.ScriptsDir != "" {
-		i.ScriptsDir = new.ScriptsDir
+		i.ScriptsDir = appendSlash(new.ScriptsDir)
 	}
 
 	if new.ScriptsSrcDir != "" {
-		i.ScriptsSrcDir = new.ScriptsSrcDir
+		i.ScriptsSrcDir = appendSlash(new.ScriptsSrcDir)
 	}
 
 	if new.SrcDir != "" {
-		i.SrcDir = new.SrcDir
+		i.SrcDir = appendSlash(new.SrcDir)
 	}
 
 	return
@@ -241,8 +241,8 @@ func (d *defaults) LoadOnce() {
 		d.loaded = true
 		return
 	}
-
 	d.load.Do(loadFunc)
+	logger.Debugf("defaults loaded: %v", d)
 	return
 
 }
@@ -302,6 +302,7 @@ func (s *supported) LoadOnce() {
 		return
 	}
 	s.load.Do(loadFunc)
+	logger.Debugf("supported loaded: %v", s)
 	return
 }
 
@@ -327,6 +328,7 @@ func (b *builds) LoadOnce() {
 		return
 	}
 	b.load.Do(loadFunc)
+	logger.Debugf("builds loaded: %v", b)
 	return
 }
 
@@ -352,5 +354,6 @@ func (b *buildLists) Load() error {
 		logger.Error(err.Error())
 		return err
 	}
+	logger.Debugf("buildLists loaded: %v", b)
 	return nil
 }
