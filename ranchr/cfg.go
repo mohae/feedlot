@@ -145,6 +145,19 @@ type BuildInf struct {
 	BaseURL   string `toml:"base_url"`
 }
 
+func (i *BuildInf) update(new BuildInf) {
+
+	if new.Name != "" {
+		i.Name = new.Name
+	}
+
+	if new.BuildName != "" {
+		i.BuildName = new.BuildName
+	}
+
+	return
+}
+
 type IODirInf struct {
 	// IODirInf is used to store information about where Rancher can find and put things.
 	// Source files are always in a SrcDir, e.g. HTTPSrcDir is the source directory for
@@ -159,6 +172,39 @@ type IODirInf struct {
 	SrcDir         string `toml:"src_dir"`
 }
 
+func (i *IODirInf) update(new IODirInf) {
+
+	if new.CommandsSrcDir != "" {
+		i.CommandsSrcDir = new.CommandsSrcDir
+	}
+
+	if new.HTTPDir != "" {
+		i.HTTPDir = new.HTTPDir
+	}
+
+	if new.HTTPSrcDir != "" {
+		i.HTTPSrcDir = new.HTTPSrcDir
+	}
+
+	if new.OutDir != "" {
+		i.OutDir = new.OutDir
+	}
+
+	if new.ScriptsDir != "" {
+		i.ScriptsDir = new.ScriptsDir
+	}
+
+	if new.ScriptsSrcDir != "" {
+		i.ScriptsSrcDir = new.ScriptsSrcDir
+	}
+
+	if new.SrcDir != "" {
+		i.SrcDir = new.SrcDir
+	}
+
+	return
+}
+
 type PackerInf struct {
 	// PackerInf is used to store information about a Packer Template. In Packer, these
 	// fields are optional, put used here because they are always printed out in a
@@ -166,6 +212,19 @@ type PackerInf struct {
 	// be written.
 	MinPackerVersion string `toml:"min_packer_version" json:"min_packer_version"`
 	Description      string `toml:"description" json:"description"`
+}
+
+func (i *PackerInf) update(new PackerInf) {
+
+	if new.MinPackerVersion != "" {
+		i.MinPackerVersion = new.MinPackerVersion
+	}
+
+	if new.Description != "" {
+		i.Description = new.Description
+	}
+
+	return
 }
 
 func (d *defaults) LoadOnce() {
