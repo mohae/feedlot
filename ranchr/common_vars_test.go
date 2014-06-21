@@ -33,7 +33,7 @@ var testShellProvisioners1 = map[string]provisioners{
 	},
 }
 
-var testDefaults = defaults{
+var testDefaults = &defaults{
 	IODirInf: IODirInf{
 		CommandsSrcDir: ":src_dir/commands",
 		HTTPDir:        "http",
@@ -111,7 +111,7 @@ var testDefaults = defaults{
 	},
 }
 
-var testSupportedUbuntu = distro{
+var testSupportedUbuntu = &distro{
 	BuildInf: BuildInf{BaseURL: "http://releases.ubuntu.com/"},
 	IODirInf: IODirInf{},
 	PackerInf: PackerInf{
@@ -178,8 +178,8 @@ var testSupportedUbuntu = distro{
 	},
 }
 
-var testSupportedCentOS = distro{
-	BuildInf: BuildInf{BaseURL: "http://www.centos.org/pub/centos/"},
+var testSupportedCentOS = &distro{
+	BuildInf: BuildInf{BaseURL: ""},
 	IODirInf: IODirInf{
 		OutDir: "out/centos",
 		SrcDir: "src/centos",
@@ -566,10 +566,10 @@ func setCommonTestData() {
 	if testDataSet {
 		return
 	}
-	testSupported.Distro = map[string]distro{}
+	testSupported.Distro = map[string]*distro{}
 	testSupported.Distro["ubuntu"] = testSupportedUbuntu
 	testSupported.Distro["centos"] = testSupportedCentOS
-	testSupportedNoBaseURL.Distro = map[string]distro{}
+	testSupportedNoBaseURL.Distro = map[string]*distro{}
 	for k, v := range testSupported.Distro {
 		v.BaseURL = ""
 		testSupportedNoBaseURL.Distro[k] = v

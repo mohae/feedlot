@@ -741,8 +741,17 @@ func copyDirContent(srcDir string, destDir string) error {
 	// takes 2 directory paths and copies the contents from src to dest
 	//get the contents of srcDir
 	// The archive struct should be renamed to something more appropriate
+	exists, err := pathExists(srcDir)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		err = errors.New("Source, " + srcDir + ", does not exist. Nothing copied.")
+		logger.Info(err.Error())
+		return err
+	}
 	dir := Archive{}
-	err := dir.DirWalk(srcDir)
+	err = dir.DirWalk(srcDir)
 	if err != nil {
 		return err
 	}
@@ -828,4 +837,15 @@ func Substring(s string, i, l int) string {
 		length = len(r)
 	}
 	return string(r[i:length])
+}
+
+func pathExists(p string) (bool, error) {
+	_, err := os.Stat(p)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, err
 }

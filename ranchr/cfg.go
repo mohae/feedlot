@@ -251,7 +251,7 @@ func (d *defaults) LoadOnce() {
 // the supported. file, in addition to adding the code to support it to the
 // application.
 type supported struct {
-	Distro map[string]distro
+	Distro map[string]*distro
 	load   sync.Once
 	loaded bool
 }

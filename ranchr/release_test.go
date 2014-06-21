@@ -63,7 +63,7 @@ func TestUbuntuSetChecksum(t *testing.T) {
 			u.BaseURL = "http://releasea.ubuntu.com"
 			err := u.setChecksum()
 			Convey("The error should be ", func() {
-				So(err.Error(), ShouldEqual, "Get http://releasea.ubuntu.com14.04/ABCSUMS: dial tcp: lookup releasea.ubuntu.com14.04: no such host")
+				So(err.Error(), ShouldEqual, "Get http://releasea.ubuntu.com/14.04/ABCSUMS: dial tcp: lookup releasea.ubuntu.com: no such host")
 			})
 		})
 		Convey("Calling checksum with an invalid filename but valid settings for an iso", func() {
