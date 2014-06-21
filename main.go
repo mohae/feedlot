@@ -1,12 +1,9 @@
-// Main entry point for Rancher.
-//
-//
+// Main entry point for Rancher. 
 //
 // Notes on code in Main: some of the code in runMain is copied from the copy-
 // right holder, Mitchell Hashimoto (github.com/mitchellh), as I am using his
 // cli package.
 package main
-
 import (
 	"fmt"
 	"os"
@@ -16,38 +13,36 @@ import (
 	"github.com/mitchellh/cli"
 	"github.com/mohae/rancher/ranchr"
 )
-
-var Logger log.LoggerInterface
-
+// Application logger variables
+var (
+	AppLogConfigFilename = "RANCHER_LOG_CONFIG_FILENAME"
+	defaultLogConfigFilename = "seelog.xml"
+	Logger log.LoggerInterface
+	LogConfigFilename string
+)
+// Anything non-IO that should be set by default.
 func init() {
-	// Set by default
 }
-
 func main() {
 	// main wraps runMain() and ensures that the log gets flushed prior to exit.
 	// Exit with return code from runMain()
 	defer ranchr.FlushLog()
 	defer log.Flush()
 	rc := runMain()
-	// wait for things to catch up because some log output seems to be missing
-	// dev only? TODO hmmm, this helped me discover I've wasted a lot of time
-	// and explains the craziness >.>
 	os.Exit(rc)
 }
-
 func runMain() int {
-	// runMain parses the Flag for glog, sets up CLI stuff for the supported sub-
-	// commands and runs Rancher.
+	// runMain parses the Flag for glog, sets up CLI stuff for the supported
+	// subcommands and runs Rancher.
 	var err error
 	if err = ranchr.SetEnv(); err != nil {
-		fmt.Println("An error while processing Rancher ranchr.Environment variables: ", err.Error())
+		fmt.Println("An error while processing Rancher Environment variables: ", err.Error())
 		return -1
 	}
 	if err = SetLogging(); err != nil {
 		fmt.Println("An error occurred while configuring application logging: ", err.Error())
 		return -1
 	}
-
 	log.Info("Rancher starting with args: %v", os.Args[:])
 	args := os.Args[1:]
 	// Get the command line args. We shortcut "--version" and "-v" to
@@ -71,17 +66,24 @@ func runMain() int {
 		log.Errorf("Rancher encountered an error: %s\n", err.Error())
 		fmt.Printf("Rancher encountered an error: %s\n", err.Error())
 	}
-	time.Sleep(time.Millisecond * 10000)
 	log.Info("Rancher exiting with an exit code of %v", exitCode)
+	// TODO Force sleep because log messages seem to be dropped...the needs to be addressed
+	time.Sleep(time.Millisecond * 5000)
 	return exitCode
 }
 
+// Set application logging. If the 
 func SetLogging() error {
-	logger, err := log.LoggerFromConfigAsFile("seelog.xml")
+	var err error
+	LogConfigFilename = os.Getenv(AppLogConfigFilename)
+	if LogConfigFilename == "" {
+		LogConfigFilename = defaultLogConfigFilename
+	}
+	Logger, err = log.LoggerFromConfigAsFile(LogConfigFilename)
 	if err != nil {
 		return err
 	}
-	ranchr.UseLogger(logger)
-	log.ReplaceLogger(logger)
+	ranchr.UseLogger(Logger)
+	log.ReplaceLogger(Logger)
 	return nil
 }

@@ -1,3 +1,5 @@
+// Initializes the Commands struct for the application.
+// New commands need to be added to the CommandFactory map.
 package main
 
 import (
