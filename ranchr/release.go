@@ -161,8 +161,6 @@ func (u *ubuntu) getOSType(buildType string) string {
 			return "ubuntu-64"
 		case "i386":
 			return "ubuntu-32"
-		default:
-			return "linux"
 		}
 	case "virtualbox-iso":
 		switch u.Arch {
@@ -170,13 +168,9 @@ func (u *ubuntu) getOSType(buildType string) string {
 			return "Ubuntu_64"
 		case "i386":
 			return "Ubuntu_32"
-		default:
-			return "linux"
 		}
-	default:
-		return "linux"
 	}
-	return ""
+	return "linux"
 }
 
 type centOS struct {
@@ -205,7 +199,6 @@ func (c *centOS) SetISOInfo() error {
 }
 
 func (c *centOS) getOSType(buildType string) string {
-	return buildType
 	// Get the OSType string for the provided builder
 	// OS Type varies by distro and bit and builder.
 	switch buildType {
@@ -215,8 +208,6 @@ func (c *centOS) getOSType(buildType string) string {
 			return "centos-64"
 		case "x386":
 			return "centos-32"
-		default:
-			return "linux"
 		}
 	case "virtualbox-iso":
 		switch c.Arch {
@@ -224,13 +215,9 @@ func (c *centOS) getOSType(buildType string) string {
 			return "RedHat_64"
 		case "x386":
 			return "RedHat_32"
-		default:
-			return "linux"
 		}
-	default:
-		return "linux"
 	}
-	return ""
+	return "linux"
 }
 
 func (c *centOS) setBaseURL() error {
