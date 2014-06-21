@@ -408,30 +408,27 @@ func commandsFromFile(name string) (commands []string, err error) {
 }
 
 func setDistrosDefaults(d *defaults, s *supported) (map[string]rawTemplate, error) {
+	logger.Tracef("defaults: %v\nsupported %v", d, s)
 	// Create the default and Supported info struct for the Supported distros.
 	dd := map[string]rawTemplate{}
 	for k, v := range s.Distro {
-		tmp := newRawTemplate()
-		tmp.Type = k
 		if v.BaseURL == "" && k != "centos" {
 			err := errors.New(k + " does not have its BaseURL configured.")
 			logger.Critical(err.Error())
 			return nil, err
 
 		}
+		tmp := newRawTemplate()
+		tmp.BuildInf = d.BuildInf
+		tmp.IODirInf = d.IODirInf
+		tmp.PackerInf = d.PackerInf
+		tmp.build = d.build	
+		tmp.Type = k
 		tmp.BaseURL = appendSlash(v.BaseURL)
-
 		tmp.Arch, tmp.Image, tmp.Release = getDefaultISOInfo(v.DefImage)
-		tmp.CommandsSrcDir = appendSlash(d.CommandsSrcDir)
-		tmp.HTTPDir = appendSlash(d.HTTPDir)
-		tmp.HTTPSrcDir = appendSlash(d.HTTPSrcDir)
-		tmp.OutDir = appendSlash(d.OutDir)
-		tmp.ScriptsDir = appendSlash(d.ScriptsDir)
-		tmp.ScriptsSrcDir = appendSlash(d.ScriptsSrcDir)
-		tmp.SrcDir = appendSlash(d.SrcDir)
-		tmp.Name = d.Name
-		tmp.BuildName = d.BuildName
-		tmp.build = d.build
+		tmp.BuildInf.update(v.BuildInf)
+		tmp.IODirInf.update(v.IODirInf)
+		tmp.PackerInf.update(v.PackerInf)
 		tmp.mergeDistroSettings(v)
 		dd[k] = tmp
 	}

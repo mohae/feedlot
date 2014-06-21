@@ -31,9 +31,9 @@ func newRawTemplate() rawTemplate {
 	// Set the date, formatted to ISO 8601
 	date := time.Now()
 	splitDate := strings.Split(date.String(), " ")
-	R := rawTemplate{date: splitDate[0], delim: os.Getenv(EnvParamDelimStart)}
+	r := rawTemplate{date: splitDate[0], delim: os.Getenv(EnvParamDelimStart)}
 
-	return R
+	return r
 }
 
 //
@@ -50,7 +50,7 @@ func (r *rawTemplate) createDistroTemplate(d rawTemplate) {
 	r.Builders = d.Builders
 	r.Provisioners = d.Provisioners
 	r.PostProcessors = d.PostProcessors
-
+	logger.Tracef("DistroTemplate: %+v", r)
 	return
 }
 
@@ -344,7 +344,7 @@ func (r *rawTemplate) mergeBuildSettings(bld rawTemplate) {
 }
 
 func (r *rawTemplate) mergeDistroSettings(d distro) {
-	logger.Debug(d)
+	logger.Debugf("%v\n%v", r, d)
 	// merges Settings between an old and new template.
 	// Note: Arch, Image, and Release are not updated here as how these fields
 	// are updated depends on whether this is a build from a distribution's
