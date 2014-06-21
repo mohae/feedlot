@@ -33,7 +33,6 @@ func main() {
 	// wait for things to catch up because some log output seems to be missing
 	// dev only? TODO hmmm, this helped me discover I've wasted a lot of time
 	// and explains the craziness >.>
-	time.Sleep(time.Second *2)
 	os.Exit(rc)
 }
 
@@ -73,6 +72,7 @@ func runMain() int {
 		log.Error("Rancher encountered an error: %s\n", err.Error())
 		fmt.Println("Rancher encountered an error: %s\n", err.Error())
 	}
+	time.Sleep(time.Millisecond * 10000)
 	log.Info("Rancher exiting with an exit code of %v", exitCode)
 	return exitCode
 }

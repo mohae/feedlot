@@ -10,7 +10,7 @@ import (
 	_ "reflect"
 	"strconv"
 	_ "strings"
-	_ "time"
+	"time"
 )
 
 type packerer interface {
@@ -76,6 +76,9 @@ func (p *packerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []st
 		logger.Error(err.Error())
 		return err
 	}
+	// TODO This needs to be handled better...this is too long for most builds but if there are situations
+	// where there is a large archive this is not long enough.
+	time.Sleep(time.Millisecond * 5000)
 
 	var errCnt, okCnt int
 	for _, script := range scripts {
@@ -95,7 +98,9 @@ func (p *packerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []st
 	} else {
 		logger.Info(strconv.Itoa(okCnt) + " scripts were successfully copied.")
 	}
-	if err := os.MkdirAll(appendSlash(i.OutDir) +  "http", os.FileMode(0766)); err != nil {
+	// Make the directory, if necessary, and copy the directory contents for the HTTP directory
+	logger.Tracef("Copy HTTP directory from %s to %s", i.HTTPSrcDir, appendSlash(i.OutDir) + i.HTTPDir)
+	if err := os.MkdirAll(appendSlash(i.OutDir) +  i.HTTPDir, os.FileMode(0766)); err != nil {
 		logger.Error(err.Error())
 		return err
 	}

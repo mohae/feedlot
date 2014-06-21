@@ -19,7 +19,7 @@ import (
 	"io"
 	"os"
 	"strings"
-	"time"
+	_"time"
 
 	"github.com/BurntSushi/toml"
 	seelog "github.com/cihub/seelog"
@@ -777,7 +777,7 @@ func deleteDirContent(dir string) error {
 	// see if the directory exists first, actually any error results in the
 	// same handling so just return on any error instead of doing an
 	// os.IsNotExist(err)
-	logger.Debugf("dir: %v", dir)
+	logger.Debugf("dir: %s", dir)
 	var dirs []string
 	if _, err := os.Stat(dir); err != nil {
 		if os.IsNotExist(err) {
@@ -787,21 +787,21 @@ func deleteDirContent(dir string) error {
 	}
 	dirInf := directory{}
 	dirInf.DirWalk(dir)
+	logger.Tracef("dirIng: %+v", dirInf)
 	dir = appendSlash(dir)
 	for _, file := range dirInf.Files {
 		logger.Tracef("process: %v", dir + file.p)
-		if dir + file.p != dir {
+		if file.info.IsDir() {
+			dirs = append(dirs, dir + file.p)
+			logger.Tracef("added directory: %v", dir + file.p)
+		} else {
 			if err := os.Remove(dir + file.p); err != nil {		
 				logger.Error(err.Error())
 				return err
 			}
 			logger.Tracef("deleted: %v", dir + file.p)
-		} else {
-			dirs = append(dirs, dir + file.p)
-			logger.Tracef("added directory: %v", dir + file.p)
 		}
-	}	
-	time.Sleep(time.Second * 5)
+	}
 	// all the files should now be deleted so its safe to delete the directories
 	// do this in reverse order
 	for i := len(dirs) - 1; i >= 0; i-- {
