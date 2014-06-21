@@ -8,8 +8,8 @@ import (
 	"github.com/mitchellh/cli"
 )
 
-// BuildCommand is a Command implementation that generates Packer templates
-// from named Builds.
+// RunCommand is a Command implementation that generates Packer templates
+// from passed build list names.
 type RunCommand struct {
 	Ui cli.Ui
 }
@@ -39,6 +39,7 @@ func (c *RunCommand) Run(args []string) int {
 	cmdFlags.StringVar(&logLevel, "log-level", "INFO", "log level")
 
 	fmt.Printf("%+v\n", args)
+	fmt.Printf("Not implemented")
 
 	return 0
 
