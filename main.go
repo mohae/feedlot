@@ -68,8 +68,8 @@ func runMain() int {
 	}
 	exitCode, err := cli.Run()
 	if err != nil {
-		log.Error("Rancher encountered an error: %s\n", err.Error())
-		fmt.Println("Rancher encountered an error: %s\n", err.Error())
+		log.Errorf("Rancher encountered an error: %s\n", err.Error())
+		fmt.Printf("Rancher encountered an error: %s\n", err.Error())
 	}
 	time.Sleep(time.Millisecond * 10000)
 	log.Info("Rancher exiting with an exit code of %v", exitCode)
