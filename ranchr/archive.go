@@ -55,6 +55,10 @@ func (d *directory) addFilename(root string, p string, fi os.FileInfo, err error
 		logger.Error(err.Error())
 		return err
 	}
+ 	if rel == "." {
+		logger.Debug("Don't add the relative root")
+		return nil
+	}
 	d.Files = append(d.Files, file{p: rel, info: fi})
 	logger.Tracef("END relative: %v\tabs: %v", rel, p)
 	return nil
@@ -123,14 +127,14 @@ func (a *Archive) priorBuild(p string, t string) error {
 }
 
 func (a *Archive) archivePriorBuild(p string, t string) error {
-	logger.Debug("Creating tarball from " + p + " using ", t)
+	logger.Trace("Creating tarball from " + p + " using ", t)
 	// SrcWalk, as written will always return nil
 	if err := a.DirWalk(p); err != nil {
-		logger.Trace(err.Error())
+		logger.Error(err.Error())
 		return err
 	}
 
-	logger.Debugf("The archive files were: %v", a.Files)
+	logger.Tracef("The archive files were: %v", a.Files)
 	if len(a.Files) <= 1 {
 		// This isn't a real error, just log it and return a non-error state.
 		err := errors.New("No prior builds to archive.")
