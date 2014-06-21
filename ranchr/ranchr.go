@@ -52,7 +52,7 @@ var (
 )
 
 var (
-	supportedDistros  supported
+	supportedDistros  *supported
 	supportedDefaults map[string]rawTemplate
 	supportedBuilds   builds
 	supportedLoaded   bool
@@ -164,9 +164,9 @@ func loadSupported() error {
 // distribution as the configured default settings for a supported distro,
 // as defined in the supported.toml, only define distro specific settings
 // and the settings that the supported configuration overrides.
-func distrosInf() (supported, map[string]rawTemplate, error) {
-	d := defaults{}
-	s := supported{}
+func distrosInf() (*supported, map[string]rawTemplate, error) {
+	d := &defaults{}
+	s := &supported{}
 	var err error
 	d.LoadOnce()
 	if d.loaded == false {
@@ -407,7 +407,7 @@ func commandsFromFile(name string) (commands []string, err error) {
 	return commands, nil
 }
 
-func setDistrosDefaults(d defaults, s supported) (map[string]rawTemplate, error) {
+func setDistrosDefaults(d *defaults, s *supported) (map[string]rawTemplate, error) {
 	// Create the default and Supported info struct for the Supported distros.
 	dd := map[string]rawTemplate{}
 	for k, v := range s.Distro {
