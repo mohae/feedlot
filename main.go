@@ -12,9 +12,9 @@ import (
 	"os"
 	"time"
 
+	log "github.com/cihub/seelog"
 	"github.com/mitchellh/cli"
 	"github.com/mohae/rancher/ranchr"
-	log "github.com/cihub/seelog"
 )
 
 var Logger log.LoggerInterface
@@ -22,7 +22,6 @@ var Logger log.LoggerInterface
 func init() {
 	// Set by default
 }
-
 
 func main() {
 	// main wraps runMain() and ensures that the log gets flushed prior to exit.

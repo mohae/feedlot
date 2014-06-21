@@ -21,7 +21,7 @@ type rawTemplate struct {
 	Release string
 	varVals map[string]string
 	vars    map[string]string
-//	releaseInfo isoer{}
+	//	releaseInfo isoer{}
 	build
 }
 
@@ -55,7 +55,7 @@ func (r *rawTemplate) createDistroTemplate(d rawTemplate) {
 }
 
 // Create a Packer template from the rawTemplate that can be marshalled to JSON.
-func (r *rawTemplate)createPackerTemplate() (packerTemplate, error) {
+func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 	logger.Debugf("Current rawTemplate state is: %+v", r)
 	var err error
 	var vars map[string]interface{}
@@ -399,18 +399,18 @@ func (r *rawTemplate) mergeVariables() {
 	// TODO: replase this mess with something cleaner/resilient
 
 	// Get the delim and set the replacement map, resolve name information
-	r.varVals = map[string]string{r.delim + "type": r.Type, r.delim + "release": r.Release, r.delim + "arch": r.Arch, r.delim + "image": r.Image, r.delim + "date": r.date,  r.delim + "build_name": r.BuildName}
+	r.varVals = map[string]string{r.delim + "type": r.Type, r.delim + "release": r.Release, r.delim + "arch": r.Arch, r.delim + "image": r.Image, r.delim + "date": r.date, r.delim + "build_name": r.BuildName}
 
 	r.Name = r.replaceVariables(r.Name)
 
 	// Src and Outdir are next, since they can be embedded too
-	r.varVals[r.delim + "name"] = r.Name
+	r.varVals[r.delim+"name"] = r.Name
 
 	r.SrcDir = trimSuffix(r.replaceVariables(r.SrcDir), "/")
 	r.OutDir = trimSuffix(r.replaceVariables(r.OutDir), "/")
 	// Commands and scripts dir need to be resolved next
-	r.varVals[r.delim + "out_dir"] = r.OutDir
-	r.varVals[r.delim + "src_dir"] = r.SrcDir
+	r.varVals[r.delim+"out_dir"] = r.OutDir
+	r.varVals[r.delim+"src_dir"] = r.SrcDir
 
 	r.CommandsSrcDir = trimSuffix(r.replaceVariables(r.CommandsSrcDir), "/")
 	r.HTTPDir = trimSuffix(r.replaceVariables(r.HTTPDir), "/")
@@ -422,13 +422,13 @@ func (r *rawTemplate) mergeVariables() {
 
 	// Create a full variable replacement map, know that the SrcDir and OutDir stuff are resolved.
 	// Rest of the replacements are done by the packerers.
-	r.varVals[r.delim + "commands_src_dir"] = r.CommandsSrcDir
-	r.varVals[r.delim + "http_dir"] = r.HTTPDir
-	r.varVals[r.delim + "http_src_dir"] = r.HTTPSrcDir
-	r.varVals[r.delim + "out_dir"] = r.OutDir
-	r.varVals[r.delim + "scripts_dir"] = r.ScriptsDir
-	r.varVals[r.delim + "scripts_src_dir"] = r.ScriptsSrcDir
-	r.varVals[r.delim + "src_dir"] = r.SrcDir
+	r.varVals[r.delim+"commands_src_dir"] = r.CommandsSrcDir
+	r.varVals[r.delim+"http_dir"] = r.HTTPDir
+	r.varVals[r.delim+"http_src_dir"] = r.HTTPSrcDir
+	r.varVals[r.delim+"out_dir"] = r.OutDir
+	r.varVals[r.delim+"scripts_dir"] = r.ScriptsDir
+	r.varVals[r.delim+"scripts_src_dir"] = r.ScriptsSrcDir
+	r.varVals[r.delim+"src_dir"] = r.SrcDir
 
 	r.CommandsSrcDir = trimSuffix(r.replaceVariables(r.CommandsSrcDir), "/")
 	r.HTTPDir = trimSuffix(r.replaceVariables(r.HTTPDir), "/")

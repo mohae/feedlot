@@ -1,5 +1,5 @@
 // Generate Packer templates and associated files for consumption by Packer.
-// 
+//
 // Copyright 2014 Joel Scoble. All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -19,7 +19,7 @@ import (
 	"io"
 	"os"
 	"strings"
-	_"time"
+	_ "time"
 
 	"github.com/BurntSushi/toml"
 	seelog "github.com/cihub/seelog"
@@ -30,7 +30,7 @@ var logger seelog.LoggerInterface
 var (
 	appName = "RANCHER"
 
-	EnvConfig	= appName + "_CONFIG"
+	EnvConfig          = appName + "_CONFIG"
 	EnvLogging         = appName + "_LOGGING"
 	EnvLogFile         = appName + "_LOG_FILE"
 	EnvLogLevel        = appName + "_LOG_LEVEL"
@@ -54,9 +54,8 @@ var (
 var (
 	supportedDistros  supported
 	supportedDefaults map[string]rawTemplate
-	supportedBuilds builds
-	supportedLoaded  bool
-
+	supportedBuilds   builds
+	supportedLoaded   bool
 )
 
 type appConfig struct {
@@ -81,7 +80,7 @@ type ArgsFilter struct {
 // variable prior to running Rancher. In addition, any of the other Rancher
 // TOML file locations can be overridden by setting their corresponding ENV
 // variable prior to running Rancher. The settings in the rancher.cfg file are
-// only used if their corresponding ENV variables aren't set. 
+// only used if their corresponding ENV variables aren't set.
 //
 // ENV variables are used by rancher for the location of its TOML files and
 // Rancher's logging settings.
@@ -181,7 +180,7 @@ func distrosInf() (supported, map[string]rawTemplate, error) {
 	}
 	dd := map[string]rawTemplate{}
 	if dd, err = setDistrosDefaults(d, s); err != nil {
-		logger.Error(err.Error())	
+		logger.Error(err.Error())
 		return s, nil, err
 	}
 	return s, dd, nil
@@ -217,8 +216,9 @@ func BuildDistro(a ArgsFilter) error {
 
 	logger.Infof("Packer template built for %v using: %s", a.Distro, argString)
 	return nil
-	
+
 }
+
 // Create Packer templates from specified build templates.
 func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	var d rawTemplate
@@ -246,7 +246,7 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 		d.Release = a.Release
 	}
 
-//	d.BuildName = ":type-:release-:arch-:image-rancher"
+	//	d.BuildName = ":type-:release-:arch-:image-rancher"
 	// Now everything can get put in a template
 	rTpl := newRawTemplate()
 	pTpl := packerTemplate{}
@@ -262,7 +262,7 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	scripts = rTpl.ScriptNames()
 	// Create the JSON version of the Packer template. This also handles creation of
 	// the build directory and copying all files that the Packer template needs to the
-	// build directory. 
+	// build directory.
 	// TODO break this call up or rename the function
 	logger.Trace("Distro based template built; build the template for JSON")
 	if err = pTpl.TemplateToFileJSON(rTpl.IODirInf, rTpl.BuildInf, scripts); err != nil {
@@ -289,27 +289,27 @@ func BuildBuilds(buildNames ...string) (string, error) {
 		go buildPackerTemplateFromNamedBuild(buildNames[i], doneCh)
 	}
 	for i := 0; i < nBuilds; i++ {
-		err  := <- doneCh
+		err := <-doneCh
 		if err != nil {
 			errorCount++
 		} else {
 			builtCount++
 		}
 	}
-/*
-	for _, buildName := range buildNames {
-		if err := buildPackerTemplateFromNamedBuild(buildName); err != nil {
-			logger.Error(err.Error())
-			errorCount++
-		} else {
-			builtCount++
+	/*
+		for _, buildName := range buildNames {
+			if err := buildPackerTemplateFromNamedBuild(buildName); err != nil {
+				logger.Error(err.Error())
+				errorCount++
+			} else {
+				builtCount++
+			}
 		}
-	}
-*/
-	return fmt.Sprintf("%v Build requests were processed with %v successfully processed and %v resulting in an error.", errorCount + builtCount, builtCount, errorCount), nil
+	*/
+	return fmt.Sprintf("%v Build requests were processed with %v successfully processed and %v resulting in an error.", errorCount+builtCount, builtCount, errorCount), nil
 }
 
-func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error)  {
+func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 	if buildName == "" {
 		err := errors.New("unable to build a Packer Template from a named build: no build name was passed")
 		logger.Error(err.Error())
@@ -333,7 +333,7 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error)  {
 		err := errors.New("Unable to create template for the requested build, " + buildName + ". Requested Build definition was not found.")
 		logger.Error(err.Error())
 		doneCh <- err
-		return 
+		return
 	}
 	// See if the distro default exists.
 	if tpl, ok = supportedDefaults[bld.Type]; !ok {
@@ -367,7 +367,7 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error)  {
 	if err = pTpl.TemplateToFileJSON(tpl.IODirInf, tpl.BuildInf, scripts); err != nil {
 		logger.Error(err.Error())
 		doneCh <- err
-		return 
+		return
 	}
 	logger.Info("Created Packer template and associated build directory for build:" + buildName + ".")
 	doneCh <- nil
@@ -790,23 +790,23 @@ func deleteDirContent(dir string) error {
 	logger.Tracef("dirIng: %+v", dirInf)
 	dir = appendSlash(dir)
 	for _, file := range dirInf.Files {
-		logger.Tracef("process: %v", dir + file.p)
+		logger.Tracef("process: %v", dir+file.p)
 		if file.info.IsDir() {
-			dirs = append(dirs, dir + file.p)
-			logger.Tracef("added directory: %v", dir + file.p)
+			dirs = append(dirs, dir+file.p)
+			logger.Tracef("added directory: %v", dir+file.p)
 		} else {
-			if err := os.Remove(dir + file.p); err != nil {		
+			if err := os.Remove(dir + file.p); err != nil {
 				logger.Error(err.Error())
 				return err
 			}
-			logger.Tracef("deleted: %v", dir + file.p)
+			logger.Tracef("deleted: %v", dir+file.p)
 		}
 	}
 	// all the files should now be deleted so its safe to delete the directories
 	// do this in reverse order
 	for i := len(dirs) - 1; i >= 0; i-- {
 		logger.Tracef("process directory: %v", dirs[i])
-		if err:= os.Remove(dirs[i]); err != nil {
+		if err := os.Remove(dirs[i]); err != nil {
 			logger.Error(err.Error())
 			return err
 		}
@@ -816,7 +816,7 @@ func deleteDirContent(dir string) error {
 
 // Given a string, a position, and a length, return the substring containted
 // within. If the requested index + requested length is greater than the length
-// of the string, the string contents from the index to the end of the string 
+// of the string, the string contents from the index to the end of the string
 // will be returned instead.
 func Substring(s string, i, l int) string {
 	if i <= 0 {
@@ -826,7 +826,7 @@ func Substring(s string, i, l int) string {
 		return ""
 	}
 	r := []rune(s)
-	length := i + l;
+	length := i + l
 	if length > len(r) {
 		length = len(r)
 	}

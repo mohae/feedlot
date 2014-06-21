@@ -1,5 +1,5 @@
 // Generate Packer templates and associated files for consumption by Packer.
-// 
+//
 // Copyright 2014 Joel Scoble. All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 //
 
-// Provides structs for storing the data from the various TOML files that 
+// Provides structs for storing the data from the various TOML files that
 // Rancher uses, along with methods associated with the structs.
 package ranchr
 
@@ -21,10 +21,10 @@ import (
 
 type build struct {
 	// Contains most of the information for Packer templates within a Rancher Build.
-	BuilderType []string `toml:"builder_type"`
-	Builders map[string]builder `toml:"builders"`
+	BuilderType    []string                  `toml:"builder_type"`
+	Builders       map[string]builder        `toml:"builders"`
 	PostProcessors map[string]postProcessors `toml:"post_processors"`
-	Provisioners map[string]provisioners `toml:"provisioners"`
+	Provisioners   map[string]provisioners   `toml:"provisioners"`
 }
 
 type builder struct {
@@ -106,7 +106,7 @@ func (p *provisioners) settingsToMap(Type string, r *rawTemplate) map[string]int
 		switch k {
 		case "execute_command":
 			// Not being able to get the command file won't end the template
-			// generation. Instead, the returned error will be used as the 
+			// generation. Instead, the returned error will be used as the
 			// setting value.
 			// This is probably a bad idea and I should revisit TODO
 			if c, err := commandsFromFile(v); err != nil {
@@ -134,34 +134,34 @@ type defaults struct {
 	PackerInf
 	BuildInf
 	build
-	load sync.Once
-	loaded	bool
+	load   sync.Once
+	loaded bool
 }
 
 type BuildInf struct {
-	// Information about a specific build. 
+	// Information about a specific build.
 	Name      string `toml:"name"`
 	BuildName string `toml:"build_name"`
-	BaseURL		string `toml:"base_url"`
+	BaseURL   string `toml:"base_url"`
 }
 
 type IODirInf struct {
 	// IODirInf is used to store information about where Rancher can find and put things.
-	// Source files are always in a SrcDir, e.g. HTTPSrcDir is the source directory for 
+	// Source files are always in a SrcDir, e.g. HTTPSrcDir is the source directory for
 	// the HTTP directory. The destination directory is always a Dir, e.g. HTTPDir is the
-	// destination directory for the HTTP directory. 
+	// destination directory for the HTTP directory.
 	CommandsSrcDir string `toml:"commands_src_dir"`
-	HTTPDir		string `toml:"http_dir"`
-	HTTPSrcDir	string `toml:"http_src_dir"`
-	OutDir      string `toml:"out_dir"`
-	ScriptsDir  string `toml:"scripts_dir"`
+	HTTPDir        string `toml:"http_dir"`
+	HTTPSrcDir     string `toml:"http_src_dir"`
+	OutDir         string `toml:"out_dir"`
+	ScriptsDir     string `toml:"scripts_dir"`
 	ScriptsSrcDir  string `toml:"scripts_src_dir"`
-	SrcDir      string `toml:"src_dir"`
+	SrcDir         string `toml:"src_dir"`
 }
 
 type PackerInf struct {
 	// PackerInf is used to store information about a Packer Template. In Packer, these
-	// fields are optional, put used here because they are always printed out in a 
+	// fields are optional, put used here because they are always printed out in a
 	// template as custom creation of template output hasn't been written--it may never
 	// be written.
 	MinPackerVersion string `toml:"min_packer_version" json:"min_packer_version"`
@@ -173,7 +173,7 @@ func (d *defaults) LoadOnce() {
 		name := os.Getenv(EnvDefaultsFile)
 		if name == "" {
 			logger.Critical("could not retrieve the default Settings file because the " + EnvDefaultsFile + " ENV 	variable was not set. Either set it or check your rancher.cfg setting")
-			return 
+			return
 		}
 		if _, err := toml.DecodeFile(name, &d); err != nil {
 			logger.Critical(err.Error())
@@ -185,16 +185,16 @@ func (d *defaults) LoadOnce() {
 
 	d.load.Do(loadFunc)
 	return
-	
+
 }
 
 // To add support for a distribution, the information about it must be added to
-// the supported. file, in addition to adding the code to support it to the 
+// the supported. file, in addition to adding the code to support it to the
 // application.
 type supported struct {
 	Distro map[string]distro
-	load	sync.Once
-	loaded	bool
+	load   sync.Once
+	loaded bool
 }
 
 type distro struct {
@@ -202,7 +202,7 @@ type distro struct {
 	// should be able to build a Packer template by only executing the following, at
 	// minimum:
 	//	$ rancher build -distro=ubuntu
-	// All settings can be overridden. The information here represents the standard 
+	// All settings can be overridden. The information here represents the standard
 	// box configuration for its respective distribution.
 	IODirInf
 	PackerInf
@@ -214,8 +214,8 @@ type distro struct {
 	// Supported iso Images, e.g. server, minimal, etc.
 	Image []string `toml:"Image"`
 
-	// Supported Releases: the supported Releases are the Releases available for 
-	// download from that distribution's download page. Archived and unsupported 
+	// Supported Releases: the supported Releases are the Releases available for
+	// download from that distribution's download page. Archived and unsupported
 	// Releases are not used.
 	Release []string `toml:"Release"`
 
@@ -233,7 +233,7 @@ func (s *supported) LoadOnce() {
 		name := os.Getenv(EnvSupportedFile)
 		if name == "" {
 			logger.Critical("could not retrieve the Supported information because the " + EnvSupportedFile + " Env variable was not set. Either set it or check your rancher.cfg setting")
-			return 
+			return
 		}
 		if _, err := toml.DecodeFile(name, &s); err != nil {
 			logger.Critical(err.Error())
@@ -243,13 +243,13 @@ func (s *supported) LoadOnce() {
 		return
 	}
 	s.load.Do(loadFunc)
-	return	
+	return
 }
 
 // Struct to hold the builds.
 type builds struct {
-	Build map[string]rawTemplate
-	load	sync.Once
+	Build  map[string]rawTemplate
+	load   sync.Once
 	loaded bool
 }
 
@@ -258,7 +258,7 @@ func (b *builds) LoadOnce() {
 		name := os.Getenv(EnvBuildsFile)
 		if name == "" {
 			logger.Critical("could not retrieve the Builds configurations because the " + EnvBuildsFile + "Env variable was not set. Either set it or check your rancher.cfg setting")
-			return 
+			return
 		}
 		if _, err := toml.DecodeFile(name, &b); err != nil {
 			logger.Critical(err.Error())
@@ -268,7 +268,7 @@ func (b *builds) LoadOnce() {
 		return
 	}
 	b.load.Do(loadFunc)
-	return	
+	return
 }
 
 type buildLists struct {

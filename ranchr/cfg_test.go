@@ -43,7 +43,7 @@ func TestBuilderStuff(t *testing.T) {
 			rawTpl := &rawTemplate{}
 			res := b.settingsToMap(rawTpl)
 			Convey("They should be turned into a map[string]interface", func() {
-				So(res, ShouldResemble, map[string]interface{}{"key1":"value1", "key2":"value2", "key3":"value3"})
+				So(res, ShouldResemble, map[string]interface{}{"key1": "value1", "key2": "value2", "key3": "value3"})
 			})
 		})
 	})
@@ -66,7 +66,7 @@ func TestBuilderStuff(t *testing.T) {
 		Convey("transform settings to map should result in", func() {
 			res := pp.settingsToMap("vagrant", rawTpl)
 			Convey("Should result in a map[string]interface{}", func() {
-				So(res, ShouldResemble, map[string]interface{}{"type":"vagrant", "key1":"value1", "key2":"value2"})
+				So(res, ShouldResemble, map[string]interface{}{"type": "vagrant", "key1": "value1", "key2": "value2"})
 			})
 		})
 	})
@@ -89,7 +89,7 @@ func TestBuilderStuff(t *testing.T) {
 		Convey("transform settingns map should result in", func() {
 			res := p.settingsToMap("shell", rawTpl)
 			Convey("Should result in a map[string]interface{}", func() {
-				So(res, ShouldResemble, map[string]interface{}{"type":"shell", "key1":"value1", "key2":"value2"})
+				So(res, ShouldResemble, map[string]interface{}{"type": "shell", "key1": "value1", "key2": "value2"})
 			})
 		})
 
@@ -98,8 +98,8 @@ func TestBuilderStuff(t *testing.T) {
 			p.Settings = []string{"key1=value1", "execute_command=../test_files/commands/execute.command"}
 			res := p.settingsToMap("shell", rawTpl)
 			Convey("Should result in a map[string]interface{}", func() {
-				So(res, ShouldResemble, map[string]interface{}{"type":"shell", "key1":"value1",
-"execute_command":"Error: open ../test_files/commands/execute.command: no such file or directory"})
+				So(res, ShouldResemble, map[string]interface{}{"type": "shell", "key1": "value1",
+					"execute_command": "Error: open ../test_files/commands/execute.command: no such file or directory"})
 			})
 		})
 
@@ -108,8 +108,8 @@ func TestBuilderStuff(t *testing.T) {
 			p.Settings = []string{"key1=value1", "execute_command=../test_files/src/ubuntu/commands/execute_test.command"}
 			res := p.settingsToMap("shell", rawTpl)
 			Convey("Should result in a map[string]interface{}", func() {
-				So(res, ShouldResemble, map[string]interface{}{"type":"shell", "key1":"value1",
-"execute_command":"\"echo 'vagrant'|sudo -S sh '{{.Path}}'\""})
+				So(res, ShouldResemble, map[string]interface{}{"type": "shell", "key1": "value1",
+					"execute_command": "\"echo 'vagrant'|sudo -S sh '{{.Path}}'\""})
 			})
 		})
 
@@ -175,58 +175,58 @@ func TestSupported(t *testing.T) {
 }
 
 func TestBuildsStuff(t *testing.T) {
-	Convey("Given a Builds struct", t, func() {	
+	Convey("Given a Builds struct", t, func() {
 		b := builds{}
 		tmpEnv := os.Getenv(EnvBuildsFile)
 		Convey("Given a filename that doesn't exist", func() {
-				os.Setenv(EnvBuildsFile, "../test_files/notthere.toml")
-				b.LoadOnce()
-				Convey("A load should result in a log entry and the builds not being loaded", func() {			
-					So(b.loaded, ShouldEqual, false)
-				})
+			os.Setenv(EnvBuildsFile, "../test_files/notthere.toml")
+			b.LoadOnce()
+			Convey("A load should result in a log entry and the builds not being loaded", func() {
+				So(b.loaded, ShouldEqual, false)
+			})
 		})
 		Convey("Given a build filename", func() {
-			Convey("A load should result in", func() {			
+			Convey("A load should result in", func() {
 				os.Setenv(EnvBuildsFile, "../test_files/conf/builds_test.toml")
 				b.LoadOnce()
 				So(b.loaded, ShouldEqual, true)
-			})		
+			})
 		})
 		Convey("Given an empty build filename", func() {
-			Convey("A load should result in", func() {			
+			Convey("A load should result in", func() {
 				os.Setenv(EnvBuildsFile, "")
 				b.LoadOnce()
 				So(b.loaded, ShouldEqual, false)
-			})		
+			})
 		})
 		os.Setenv(EnvBuildsFile, tmpEnv)
 	})
 }
 
 func TestBuildListsStuff(t *testing.T) {
-	Convey("Given a buildLists struct", t, func() {	
+	Convey("Given a buildLists struct", t, func() {
 		b := buildLists{}
 		tmpEnv := os.Getenv(EnvBuildListsFile)
 		Convey("Given a filename that doesn't exist", func() {
 			os.Setenv(EnvBuildListsFile, "../test_files/notthere.toml")
 			err := b.Load()
-			Convey("A load should result in an error", func() {			
+			Convey("A load should result in an error", func() {
 				So(err.Error(), ShouldEqual, "open ../test_files/notthere.toml: no such file or directory")
 			})
 		})
 		Convey("Given a BuildLists name", func() {
 			os.Setenv(EnvBuildListsFile, "../test_files/conf/build_lists_test.toml")
 			err := b.Load()
-			Convey("A load should successfully load the file", func() {			
+			Convey("A load should successfully load the file", func() {
 				So(err, ShouldBeNil)
-				So(b, ShouldResemble, buildLists{map[string]list{"testlist-1":{Builds: []string{"test1", "test2"}}, "testlist-2":{Builds: []string{"test1", "test2", "test3", "test4"}}}})
+				So(b, ShouldResemble, buildLists{map[string]list{"testlist-1": {Builds: []string{"test1", "test2"}}, "testlist-2": {Builds: []string{"test1", "test2", "test3", "test4"}}}})
 			})
 		})
 		Convey("Given an empty filename", func() {
 			os.Setenv(EnvBuildListsFile, "")
 			err := b.Load()
-			Convey("A load should result in an error", func() {			
-				So(err.Error(), ShouldEqual, "could not retrieve the BuildLists file because the " + EnvBuildListsFile + " Env variable was not set. Either set it or check your rancher.cfg setting")
+			Convey("A load should result in an error", func() {
+				So(err.Error(), ShouldEqual, "could not retrieve the BuildLists file because the "+EnvBuildListsFile+" Env variable was not set. Either set it or check your rancher.cfg setting")
 			})
 		})
 

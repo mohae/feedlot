@@ -2,7 +2,7 @@ package ranchr
 
 import (
 	"testing"
-	_"time"
+	_ "time"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -27,7 +27,7 @@ func TestCreateDistroTemplate(t *testing.T) {
 	Convey("Given a distro default template", t, func() {
 		Convey("A distro template should be created", func() {
 			r := rawTemplate{}
-			r.createDistroTemplate(testDistroDefaults["ubuntu"]) 
+			r.createDistroTemplate(testDistroDefaults["ubuntu"])
 			So(r, ShouldNotResemble, testDistroDefaults["ubuntu"])
 		})
 	})
@@ -52,11 +52,11 @@ func TestCreateBuilders(t *testing.T) {
 		r := rawTemplate{}
 		r = testDistroDefaults["ubuntu"]
 		var bldrs []interface{}
-		var vars map[string]interface{}	
+		var vars map[string]interface{}
 		var err error
 		Convey("Given a call to createBuilders", func() {
 			Convey("Given a valid Builder Type", func() {
-				bldrs, vars, err = r.createBuilders() 
+				bldrs, vars, err = r.createBuilders()
 				So(err, ShouldBeNil)
 				So(vars, ShouldBeNil)
 				So(bldrs, ShouldNotResemble, r)
@@ -76,28 +76,27 @@ func TestCreateBuilders(t *testing.T) {
 				So(bldrs, ShouldBeNil)
 			})
 
-		}) 
+		})
 	})
 }
-
 
 func TestReplaceVariables(t *testing.T) {
 	Convey("Given a new raw template", t, func() {
 		r := newRawTemplate()
 		Convey("Given a Variable:Value map", func() {
 			r.varVals = map[string]string{
-				":arch":"amd64",
-				":command_src_dir":":src_dir/commands",
-				":http_dir":"http",
-				":http_src_dir":":src_dir/http",
-				":image":"server",
-				":name":":type-:release:-:image-:arch",
-				":out_dir":"../test_files/out/:type",
-				":release":"14.04",
-				":scripts_dir":"scripts",
-				":scripts_src_dir":":src_dir/scripts",
-				":src_dir":"../test_files/src/:type",
-				":type":"ubuntu",
+				":arch":            "amd64",
+				":command_src_dir": ":src_dir/commands",
+				":http_dir":        "http",
+				":http_src_dir":    ":src_dir/http",
+				":image":           "server",
+				":name":            ":type-:release:-:image-:arch",
+				":out_dir":         "../test_files/out/:type",
+				":release":         "14.04",
+				":scripts_dir":     "scripts",
+				":scripts_src_dir": ":src_dir/scripts",
+				":src_dir":         "../test_files/src/:type",
+				":type":            "ubuntu",
 			}
 			r.delim = ":"
 			Convey("Given a string to perform replacement on", func() {
@@ -116,120 +115,121 @@ func TestReplaceVariables(t *testing.T) {
 	})
 }
 
-// TODO check shouldnotresemble...ShouldResemble would end up with diffs which were just out 
+// TODO check shouldnotresemble...ShouldResemble would end up with diffs which were just out
 // of order map elements, not the result that should occur.
 func TestCommonVMSettings(t *testing.T) {
 	Convey("Given a template", t, func() {
 		r := rawTemplate{}
 		r = testDistroDefaults["ubuntu"]
-/*		Convey("Given two slices of settings", func() {
-			old :=   []string{
-					"boot_command = ../test_files/src/ubuntu/commands/boot_test.command",
-					"boot_wait = 5s",
-					"disk_size = 20000",
-					"http_directory = http",
-					"iso_checksum_type = sha256",
-					"shutdown_command = ../test_files/src/ubuntu/commands/shutdown_test.command",
-					"ssh_password = vagrant",
-					"ssh_port = 22",
-					"ssh_username = vagrant",
-					"ssh_wait_timeout = 240m",
-				}
-			new := []string{
-					"ssh_port = 222",
-					"ssh_wait_timeout = 300m",
-				}			
-			Convey("merging the setting should result in", func() {
-				var settings map[string]interface{}
-				var vars []string
-				var err error
-				expected := map[string]interface{}{
-					"disk_size":"20000", 
-					"iso_url":"http://releases.ubuntu.com/12.04/ubuntu-12.04.4-server-amd64.iso",
-					"iso_checksum":"3aeb42816253355394897ae80d99a9ba56217c0e98e05294b51f0f5b13bceb54",
-					"boot_command":`"<esc><wait>",
-"<esc><wait>",
-"<enter><wait>",
-"/install/vmlinuz<wait>",
-" auto<wait>",
-" console-setup/ask_detect=false<wait>",
-" console-setup/layoutcode=us<wait>",
-" console-setup/modelcode=pc105<wait>",
-" debconf/frontend=noninteractive<wait>",
-" debian-installer=en_US<wait>",
-" fb=false<wait>",
-" initrd=/install/initrd.gz<wait>",
-" kbd-chooser/method=us<wait>",
-" keyboard-configuration/layout=USA<wait>",
-" keyboard-configuration/variant=USA<wait>",
-" locale=en_US<wait>",
-" netcfg/get_hostname=ubuntu-1204<wait>",
-" netcfg/get_domain=vagrantup.com<wait>",
-" noapic<wait>",
-" preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg<wait>",
-" -- <wait>",
-"<enter><wait>"`,
-					"ssh_username":"vagrant",
-					"boot_wait":"5s",
-					"ssh_password":"vagrant",
-					"ssh_wait_timeout":"300m",
-					"http_directory":"http",
-					"iso_checksum_type":"sha256",
-					"shutdown_command":"\"echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'\"",
-					"ssh_port":"222",
-				}
-				settings, vars, err = r.commonVMSettings(old, new)	
-				So(err, ShouldBeNil)
-				So(settings, ShouldResemble, expected) 
-				So(vars, ShouldBeNil)
-			})
-		})
-*/
+		/*		Convey("Given two slices of settings", func() {
+					old :=   []string{
+							"boot_command = ../test_files/src/ubuntu/commands/boot_test.command",
+							"boot_wait = 5s",
+							"disk_size = 20000",
+							"http_directory = http",
+							"iso_checksum_type = sha256",
+							"shutdown_command = ../test_files/src/ubuntu/commands/shutdown_test.command",
+							"ssh_password = vagrant",
+							"ssh_port = 22",
+							"ssh_username = vagrant",
+							"ssh_wait_timeout = 240m",
+						}
+					new := []string{
+							"ssh_port = 222",
+							"ssh_wait_timeout = 300m",
+						}
+					Convey("merging the setting should result in", func() {
+						var settings map[string]interface{}
+						var vars []string
+						var err error
+						expected := map[string]interface{}{
+							"disk_size":"20000",
+							"iso_url":"http://releases.ubuntu.com/12.04/ubuntu-12.04.4-server-amd64.iso",
+							"iso_checksum":"3aeb42816253355394897ae80d99a9ba56217c0e98e05294b51f0f5b13bceb54",
+							"boot_command":`"<esc><wait>",
+		"<esc><wait>",
+		"<enter><wait>",
+		"/install/vmlinuz<wait>",
+		" auto<wait>",
+		" console-setup/ask_detect=false<wait>",
+		" console-setup/layoutcode=us<wait>",
+		" console-setup/modelcode=pc105<wait>",
+		" debconf/frontend=noninteractive<wait>",
+		" debian-installer=en_US<wait>",
+		" fb=false<wait>",
+		" initrd=/install/initrd.gz<wait>",
+		" kbd-chooser/method=us<wait>",
+		" keyboard-configuration/layout=USA<wait>",
+		" keyboard-configuration/variant=USA<wait>",
+		" locale=en_US<wait>",
+		" netcfg/get_hostname=ubuntu-1204<wait>",
+		" netcfg/get_domain=vagrantup.com<wait>",
+		" noapic<wait>",
+		" preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg<wait>",
+		" -- <wait>",
+		"<enter><wait>"`,
+							"ssh_username":"vagrant",
+							"boot_wait":"5s",
+							"ssh_password":"vagrant",
+							"ssh_wait_timeout":"300m",
+							"http_directory":"http",
+							"iso_checksum_type":"sha256",
+							"shutdown_command":"\"echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'\"",
+							"ssh_port":"222",
+						}
+						settings, vars, err = r.commonVMSettings(old, new)
+						So(err, ShouldBeNil)
+						So(settings, ShouldResemble, expected)
+						So(vars, ShouldBeNil)
+					})
+				})
+		*/
 		Convey("Given an invalid type ", func() {
 			r.Type = "unknown"
-			old :=   []string{
-					"boot_command = :commands_dir/boot.command",
-					"boot_wait = 5s",
-					"disk_size = 20000",
-					"http_directory = http",
-					"iso_checksum_type = sha256",
-					"shutdown_command = :commands_dir/shutdown.command",
-					"ssh_password = vagrant",
-					"ssh_port = 22",
-					"ssh_username = vagrant",
-					"ssh_wait_timeout = 240m",
-				}
+			old := []string{
+				"boot_command = :commands_dir/boot.command",
+				"boot_wait = 5s",
+				"disk_size = 20000",
+				"http_directory = http",
+				"iso_checksum_type = sha256",
+				"shutdown_command = :commands_dir/shutdown.command",
+				"ssh_password = vagrant",
+				"ssh_port = 22",
+				"ssh_username = vagrant",
+				"ssh_wait_timeout = 240m",
+			}
 			new := []string{
-					"ssh_port = 222",
-					"ssh_wait_timeout = 300m",
-				}			
+				"ssh_port = 222",
+				"ssh_wait_timeout = 300m",
+			}
 			Convey("merging the setting should result in", func() {
 				var settings map[string]interface{}
 				var vars []string
 				var err error
 				expected := map[string]interface{}{
-					"boot_wait":"5s",
-					"http_directory":"http",
-					"shutdown_command":"Error: open :commands_dir/shutdown.command: no such file or directory",
-					"ssh_port":"222",
-					"boot_command":"Error: open :commands_dir/boot.command: no such file or directory",
-					"iso_checksum_type":"sha256",
-					"ssh_password":"vagrant",
-					"ssh_wait_timeout":"300m",
-					"disk_size":"20000",
-					"iso_url":"unknown is not supported",
-					"ssh_username":"vagrant",
-					"iso_checksum":"unknown is not supported",
+					"boot_wait":         "5s",
+					"http_directory":    "http",
+					"shutdown_command":  "Error: open :commands_dir/shutdown.command: no such file or directory",
+					"ssh_port":          "222",
+					"boot_command":      "Error: open :commands_dir/boot.command: no such file or directory",
+					"iso_checksum_type": "sha256",
+					"ssh_password":      "vagrant",
+					"ssh_wait_timeout":  "300m",
+					"disk_size":         "20000",
+					"iso_url":           "unknown is not supported",
+					"ssh_username":      "vagrant",
+					"iso_checksum":      "unknown is not supported",
 				}
-				settings, vars, err = r.commonVMSettings("common", old, new)	
+				settings, vars, err = r.commonVMSettings("common", old, new)
 				So(err, ShouldBeNil)
-				So(settings, ShouldResemble, expected) 
+				So(settings, ShouldResemble, expected)
 				So(vars, ShouldBeNil)
 			})
 		})
 	})
 
 }
+
 // TODO ShouldNotResemble vs ShouldResemble DeepEqual issue
 func TestMergeBuildSettings(t *testing.T) {
 	Convey("Testing merging 2 build settings", t, func() {
@@ -240,7 +240,7 @@ func TestMergeBuildSettings(t *testing.T) {
 				r.mergeBuildSettings(testBuilds.Build["test1"])
 				So(r, ShouldNotResemble, testMergedBuilds["test1"])
 			})
-		})	
+		})
 	})
 }
 
@@ -260,7 +260,7 @@ func TestMergeDistroSettings(t *testing.T) {
 				r.mergeDistroSettings(d)
 				So(r, ShouldResemble, expected)
 			})
-		})	
+		})
 	})
 }
 
@@ -305,8 +305,8 @@ func TestIODirInf(t *testing.T) {
 
 	Convey("Given a IODirInf", t, func() {
 
-		Convey("Given an empty new IODirInf", func () {
-			oldIODirInf := IODirInf{CommandsSrcDir:"old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir:"old OutDir", ScriptsDir:"old ScriptsDir", ScriptsSrcDir: "old ScriptsSrcDir", SrcDir: "old SrcDir"}
+		Convey("Given an empty new IODirInf", func() {
+			oldIODirInf := IODirInf{CommandsSrcDir: "old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir: "old OutDir", ScriptsDir: "old ScriptsDir", ScriptsSrcDir: "old ScriptsSrcDir", SrcDir: "old SrcDir"}
 			newIODirInf := IODirInf{}
 
 			oldIODirInf.update(newIODirInf)
@@ -319,9 +319,9 @@ func TestIODirInf(t *testing.T) {
 			So(oldIODirInf.SrcDir, ShouldEqual, "old SrcDir")
 		})
 
-		Convey("Given a populated new IODirInf", func () {
-			oldIODirInf := IODirInf{CommandsSrcDir:"old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir:"old OutDir", ScriptsDir:"old ScriptsDir", ScriptsSrcDir: "old ScriptsSrcDir", SrcDir: "old SrcDir"}
-			newIODirInf := IODirInf{CommandsSrcDir:"new CommandsSrcDir", HTTPDir: "new HTTPDir", HTTPSrcDir: "new HTTPSrcDir", OutDir:"new OutDir", ScriptsDir:"new ScriptsDir", ScriptsSrcDir: "new ScriptsSrcDir", SrcDir: "new SrcDir"}
+		Convey("Given a populated new IODirInf", func() {
+			oldIODirInf := IODirInf{CommandsSrcDir: "old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir: "old OutDir", ScriptsDir: "old ScriptsDir", ScriptsSrcDir: "old ScriptsSrcDir", SrcDir: "old SrcDir"}
+			newIODirInf := IODirInf{CommandsSrcDir: "new CommandsSrcDir", HTTPDir: "new HTTPDir", HTTPSrcDir: "new HTTPSrcDir", OutDir: "new OutDir", ScriptsDir: "new ScriptsDir", ScriptsSrcDir: "new ScriptsSrcDir", SrcDir: "new SrcDir"}
 
 			oldIODirInf.update(newIODirInf)
 			So(oldIODirInf.CommandsSrcDir, ShouldEqual, "new CommandsSrcDir")
@@ -333,10 +333,10 @@ func TestIODirInf(t *testing.T) {
 			So(oldIODirInf.SrcDir, ShouldEqual, "new SrcDir")
 		})
 
-		Convey("Given only one changed value, only that value should change", func () {
-			Convey("Given an updates CommandsSrcDir, only that value should change", func () {
-				oldIODirInf := IODirInf{CommandsSrcDir:"old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir:"old OutDir", ScriptsDir:"old ScriptsDir", ScriptsSrcDir: "old ScriptsSrcDir", SrcDir: "old SrcDir"}
-				newIODirInf := IODirInf{CommandsSrcDir :"CommandsSrcDir"}
+		Convey("Given only one changed value, only that value should change", func() {
+			Convey("Given an updates CommandsSrcDir, only that value should change", func() {
+				oldIODirInf := IODirInf{CommandsSrcDir: "old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir: "old OutDir", ScriptsDir: "old ScriptsDir", ScriptsSrcDir: "old ScriptsSrcDir", SrcDir: "old SrcDir"}
+				newIODirInf := IODirInf{CommandsSrcDir: "CommandsSrcDir"}
 
 				oldIODirInf.update(newIODirInf)
 				So(oldIODirInf.CommandsSrcDir, ShouldEqual, "CommandsSrcDir")
@@ -348,9 +348,9 @@ func TestIODirInf(t *testing.T) {
 				So(oldIODirInf.SrcDir, ShouldEqual, "old SrcDir")
 			})
 
-			Convey("Given an updates HTTPDir, only that value should change", func () {
-				oldIODirInf := IODirInf{CommandsSrcDir:"old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir:"old OutDir", ScriptsDir:"old ScriptsDir", ScriptsSrcDir: "old ScriptsSrcDir", SrcDir: "old SrcDir"}
-				newIODirInf := IODirInf{HTTPDir:"HTTPDir"}
+			Convey("Given an updates HTTPDir, only that value should change", func() {
+				oldIODirInf := IODirInf{CommandsSrcDir: "old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir: "old OutDir", ScriptsDir: "old ScriptsDir", ScriptsSrcDir: "old ScriptsSrcDir", SrcDir: "old SrcDir"}
+				newIODirInf := IODirInf{HTTPDir: "HTTPDir"}
 
 				oldIODirInf.update(newIODirInf)
 				So(oldIODirInf.CommandsSrcDir, ShouldEqual, "old CommandsSrcDir")
@@ -361,8 +361,8 @@ func TestIODirInf(t *testing.T) {
 				So(oldIODirInf.ScriptsSrcDir, ShouldEqual, "old ScriptsSrcDir")
 				So(oldIODirInf.SrcDir, ShouldEqual, "old SrcDir")
 			})
-			Convey("Given an updates HTTPSrcDir, only that value should change", func () {
-				oldIODirInf := IODirInf{CommandsSrcDir:"old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir:"old OutDir", ScriptsDir:"old ScriptsDir", ScriptsSrcDir: "old ScriptsSrcDir", SrcDir: "old SrcDir"}
+			Convey("Given an updates HTTPSrcDir, only that value should change", func() {
+				oldIODirInf := IODirInf{CommandsSrcDir: "old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir: "old OutDir", ScriptsDir: "old ScriptsDir", ScriptsSrcDir: "old ScriptsSrcDir", SrcDir: "old SrcDir"}
 				newIODirInf := IODirInf{HTTPSrcDir: "HTTPSrcDir"}
 
 				oldIODirInf.update(newIODirInf)
@@ -374,9 +374,9 @@ func TestIODirInf(t *testing.T) {
 				So(oldIODirInf.ScriptsSrcDir, ShouldEqual, "old ScriptsSrcDir")
 				So(oldIODirInf.SrcDir, ShouldEqual, "old SrcDir")
 			})
-		
-			Convey("Given an updates OutDir, only that value should change", func () {
-				oldIODirInf := IODirInf{CommandsSrcDir:"old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir:"old OutDir", ScriptsDir:"old ScriptsDir", ScriptsSrcDir: "old ScriptsSrcDir", SrcDir: "old SrcDir"}
+
+			Convey("Given an updates OutDir, only that value should change", func() {
+				oldIODirInf := IODirInf{CommandsSrcDir: "old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir: "old OutDir", ScriptsDir: "old ScriptsDir", ScriptsSrcDir: "old ScriptsSrcDir", SrcDir: "old SrcDir"}
 				newIODirInf := IODirInf{OutDir: "OutDir"}
 
 				oldIODirInf.update(newIODirInf)
@@ -389,8 +389,8 @@ func TestIODirInf(t *testing.T) {
 				So(oldIODirInf.SrcDir, ShouldEqual, "old SrcDir")
 			})
 
-			Convey("Given an updates ScriptsDir, only that value should change", func () {
-				oldIODirInf := IODirInf{CommandsSrcDir:"old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir:"old OutDir", ScriptsDir:"old ScriptsDir", ScriptsSrcDir: "old ScriptsSrcDir", SrcDir: "old SrcDir"}
+			Convey("Given an updates ScriptsDir, only that value should change", func() {
+				oldIODirInf := IODirInf{CommandsSrcDir: "old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir: "old OutDir", ScriptsDir: "old ScriptsDir", ScriptsSrcDir: "old ScriptsSrcDir", SrcDir: "old SrcDir"}
 				newIODirInf := IODirInf{ScriptsDir: "ScriptsDir"}
 
 				oldIODirInf.update(newIODirInf)
@@ -403,8 +403,8 @@ func TestIODirInf(t *testing.T) {
 				So(oldIODirInf.SrcDir, ShouldEqual, "old SrcDir")
 			})
 
-			Convey("Given an updates ScriptsSrcDir, only that value should change", func () {
-				oldIODirInf := IODirInf{CommandsSrcDir:"old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir:"old OutDir", ScriptsDir:"old ScriptsDir", ScriptsSrcDir: "old ScriptsSrcDir", SrcDir: "old SrcDir"}
+			Convey("Given an updates ScriptsSrcDir, only that value should change", func() {
+				oldIODirInf := IODirInf{CommandsSrcDir: "old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir: "old OutDir", ScriptsDir: "old ScriptsDir", ScriptsSrcDir: "old ScriptsSrcDir", SrcDir: "old SrcDir"}
 				newIODirInf := IODirInf{ScriptsSrcDir: "ScriptsSrcDir"}
 
 				oldIODirInf.update(newIODirInf)
@@ -416,8 +416,8 @@ func TestIODirInf(t *testing.T) {
 				So(oldIODirInf.SrcDir, ShouldEqual, "old SrcDir")
 			})
 
-			Convey("Given an updates SrcDir, only that value should change", func () {
-				oldIODirInf := IODirInf{CommandsSrcDir:"old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir:"old OutDir", ScriptsDir:"old ScriptsDir", ScriptsSrcDir: "old ScriptsSrcDir", SrcDir: "old SrcDir"}
+			Convey("Given an updates SrcDir, only that value should change", func() {
+				oldIODirInf := IODirInf{CommandsSrcDir: "old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir: "old OutDir", ScriptsDir: "old ScriptsDir", ScriptsSrcDir: "old ScriptsSrcDir", SrcDir: "old SrcDir"}
 				newIODirInf := IODirInf{SrcDir: "SrcDir"}
 
 				oldIODirInf.update(newIODirInf)
@@ -435,37 +435,36 @@ func TestIODirInf(t *testing.T) {
 func TestPackerInf(t *testing.T) {
 	Convey("Given a PackerInf", t, func() {
 
-		Convey("Given an empty new PackerInf", func () {
+		Convey("Given an empty new PackerInf", func() {
 			oldPackerInf := PackerInf{MinPackerVersion: "0.40", Description: "test info"}
-			newPackerInf := PackerInf{}			
+			newPackerInf := PackerInf{}
 
 			oldPackerInf.update(newPackerInf)
 			So(oldPackerInf.MinPackerVersion, ShouldEqual, "0.40")
 			So(oldPackerInf.Description, ShouldEqual, "test info")
 		})
 
-
-		Convey("Given a new MinPackerVersion", func () {
+		Convey("Given a new MinPackerVersion", func() {
 			oldPackerInf := PackerInf{MinPackerVersion: "0.40", Description: "test info"}
-			newPackerInf := PackerInf{MinPackerVersion:"0.50"}			
+			newPackerInf := PackerInf{MinPackerVersion: "0.50"}
 
 			oldPackerInf.update(newPackerInf)
 			So(oldPackerInf.MinPackerVersion, ShouldEqual, "0.50")
 			So(oldPackerInf.Description, ShouldEqual, "test info")
 		})
 
-		Convey("Given a new description", func () {
+		Convey("Given a new description", func() {
 			oldPackerInf := PackerInf{MinPackerVersion: "0.40", Description: "test info"}
-			newPackerInf := PackerInf{Description:"new test info"}			
+			newPackerInf := PackerInf{Description: "new test info"}
 
 			oldPackerInf.update(newPackerInf)
 			So(oldPackerInf.MinPackerVersion, ShouldEqual, "0.40")
 			So(oldPackerInf.Description, ShouldEqual, "new test info")
-		})	
+		})
 
-		Convey("Given a new MinPackerVersion and BuildName", func () {
+		Convey("Given a new MinPackerVersion and BuildName", func() {
 			oldPackerInf := PackerInf{MinPackerVersion: "0.40", Description: "test info"}
-			newPackerInf := PackerInf{MinPackerVersion:"0.5.1", Description:"updated"}			
+			newPackerInf := PackerInf{MinPackerVersion: "0.5.1", Description: "updated"}
 
 			oldPackerInf.update(newPackerInf)
 			So(oldPackerInf.MinPackerVersion, ShouldEqual, "0.5.1")
@@ -476,38 +475,38 @@ func TestPackerInf(t *testing.T) {
 
 func TestBuildInf(t *testing.T) {
 	Convey("Given a BuildInf", t, func() {
-		oldBuildInf := BuildInf{Name:"old Name", BuildName: "old BuildName"}
+		oldBuildInf := BuildInf{Name: "old Name", BuildName: "old BuildName"}
 		newBuildInf := BuildInf{}
 
 		Convey("Given a new BuildInf", func() {
-			Convey("Given an empty new Name", func () {
+			Convey("Given an empty new Name", func() {
 				oldBuildInf.update(newBuildInf)
 				So(oldBuildInf.Name, ShouldEqual, "old Name")
 				So(oldBuildInf.BuildName, ShouldEqual, "old BuildName")
 			})
 
-			Convey("Given an empty new BuildName", func () {
+			Convey("Given an empty new BuildName", func() {
 				oldBuildInf.update(newBuildInf)
 				So(oldBuildInf.Name, ShouldEqual, "old Name")
 				So(oldBuildInf.BuildName, ShouldEqual, "old BuildName")
 			})
 
-			Convey("Given a new Name", func () {
+			Convey("Given a new Name", func() {
 				newBuildInf.Name = "new Name"
 				oldBuildInf.update(newBuildInf)
 				So(oldBuildInf.Name, ShouldEqual, "new Name")
 				So(oldBuildInf.BuildName, ShouldEqual, "old BuildName")
 			})
 
-			Convey("Given a new BuildName", func () {
+			Convey("Given a new BuildName", func() {
 				newBuildInf.Name = "old Name"
 				newBuildInf.BuildName = "new BuildName"
 				oldBuildInf.update(newBuildInf)
 				So(oldBuildInf.Name, ShouldEqual, "old Name")
 				So(oldBuildInf.BuildName, ShouldEqual, "new BuildName")
-			})	
+			})
 
-			Convey("Given a new Name and BuildName", func () {
+			Convey("Given a new Name and BuildName", func() {
 				newBuildInf.Name = "Name"
 				newBuildInf.BuildName = "BuildName"
 				oldBuildInf.update(newBuildInf)
@@ -517,5 +516,3 @@ func TestBuildInf(t *testing.T) {
 		})
 	})
 }
-
-
