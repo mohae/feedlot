@@ -55,16 +55,22 @@ Options:
 }
 
 func (c *BuildCommand) Run(args []string) int {
-	// Grab the options
 	var distroFilter, archFilter, imageFilter, releaseFilter, logDirFilter string
+
+	// Declare the command flag set and their values.
 	cmdFlags := flag.NewFlagSet("build", flag.ContinueOnError)
-	cmdFlags.Usage = func() { c.Ui.Output(c.Help()) }
+
+	cmdFlags.Usage = func() { 
+		c.Ui.Output(c.Help()) 
+	}
+
 	cmdFlags.StringVar(&distroFilter, "distro", "", "distro filter")
 	cmdFlags.StringVar(&archFilter, "arch", "", "arch filter")
 	cmdFlags.StringVar(&imageFilter, "image", "", "image filter")
 	cmdFlags.StringVar(&releaseFilter, "release", "", "release filter")
 	cmdFlags.StringVar(&logDirFilter, "log_dir", "", "log directory")
 
+	// Parse the passed args for flags.
 	if err := cmdFlags.Parse(args); err != nil {
 		c.Ui.Error(fmt.Sprintf("Parse of command-line arguments failed: %s", err))
 		return 1
