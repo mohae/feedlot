@@ -28,7 +28,7 @@ type iso struct {
 	BaseURL      string
 	Checksum     string
 	ChecksumType string
-	Name	     string
+	Name         string
 	URL          string
 }
 
@@ -127,13 +127,13 @@ func (u *ubuntu) findChecksum(isoName string) (string, error) {
 		}
 	}
 
-	if len(isoName) < pos - 2 {
+	if len(isoName) < pos-2 {
 		err := errors.New("Unable to retrieve checksum information for " + u.Name)
 		logger.Error(err.Error())
 		return "", err
 	}
 
-	if pos - 66 < 1 {
+	if pos-66 < 1 {
 		u.Checksum = isoName[:pos-2]
 	} else {
 		u.Checksum = isoName[pos-66 : pos-2]
@@ -185,6 +185,7 @@ type centOS struct {
 
 // For CentOS, only the whole version is needed. The latest version will be pulled from the iso name
 var centOSMirrorListURL = "http://mirrorlist.centos.org/?release=%s&arch=%s&repo=os"
+
 // Sets the ISO information for a Packer template. If any error occurs, the
 // error is saved to the setting variable. This will be reflected in the
 // resulting Packer template, which will render it unusable until it is fixed.
@@ -234,7 +235,7 @@ func (c *centOS) getOSType(buildType string) string {
 
 func (c *centOS) setBaseURL() error {
 	// Uses the release and arch information to get the list of mirrors.
-	// Picks a mirror and uses that as the baseURL. This is only done if 
+	// Picks a mirror and uses that as the baseURL. This is only done if
 	// the baseURL is empty. If there is a custom value, it is assumed that
 	// it represents the mirror that Rancher should use.
 	var err error
@@ -260,7 +261,7 @@ func (c *centOS) setBaseURL() error {
 	if page, err = getStringFromURL(mirrorURL); err != nil {
 		logger.Error(err.Error())
 		return err
-	}	
+	}
 	mirrors := strings.Split(page, "\n")
 	mirrorCount := len(mirrors)
 	if mirrorCount <= 1 {
@@ -269,7 +270,7 @@ func (c *centOS) setBaseURL() error {
 		return err
 	}
 	// Use the URL provided by the list as the starting point
-	c.BaseURL = mirrors[rand.Intn(mirrorCount - 1)]
+	c.BaseURL = mirrors[rand.Intn(mirrorCount-1)]
 	// But that url is not actually usable for our needs so get the URL structure
 	// and modify it so that it works for isos.
 	baseURL, err := url.Parse(c.BaseURL)
@@ -280,13 +281,13 @@ func (c *centOS) setBaseURL() error {
 	pathParts := strings.Split(baseURL.Path, "/")
 	l := len(pathParts)
 	path := ""
-	for i := 0; i < l - 4; i++ {
+	for i := 0; i < l-4; i++ {
 		path += appendSlash(pathParts[i])
 	}
 	if path != "" {
 		baseURL.Path = trimSuffix(path, "/")
 	}
-	// Set the ReleaseFull 
+	// Set the ReleaseFull
 	c.ReleaseFull = pathParts[l-4]
 	c.BaseURL = baseURL.String()
 	c.setName()
@@ -321,7 +322,7 @@ func (c *centOS) setURL() {
 		// This is just the version, replace it with a release
 		urlParts := strings.Split(c.BaseURL, "/")
 		// The version is the 3rd from last
-		c.Release = urlParts[len(urlParts) - 1]
+		c.Release = urlParts[len(urlParts)-1]
 	}
 	c.URL = appendSlash(c.BaseURL) + c.ReleaseFull + "/isos/" + appendSlash(c.Arch) + c.Name
 	logger.Debug(c.URL)
@@ -362,7 +363,6 @@ func (c *centOS) setName() {
 	c.Name = "CentOS-" + c.ReleaseFull + "-" + c.Arch + "-" + c.Image + ".iso"
 	return
 }
-
 
 func getStringFromURL(url string) (string, error) {
 	// Get the URL resource

@@ -3,9 +3,10 @@ package ranchr
 import (
 	"errors"
 	"io"
-	
+
 	seelog "github.com/cihub/seelog"
 )
+
 func init() {
 	DisableLog()
 }
@@ -28,12 +29,12 @@ func SetLogWriter(writer io.Writer) error {
 	if writer == nil {
 		return errors.New("Nil writer")
 	}
-	
+
 	newLogger, err := seelog.LoggerFromWriterWithMinLevel(writer, seelog.TraceLvl)
 	if err != nil {
 		return err
 	}
-	
+
 	UseLogger(newLogger)
 	return nil
 }
@@ -42,4 +43,3 @@ func SetLogWriter(writer io.Writer) error {
 func FlushLog() {
 	logger.Flush()
 }
-

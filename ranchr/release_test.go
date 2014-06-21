@@ -14,7 +14,7 @@ func newTestUbuntu() ubuntu {
 	u.Image = "server"
 	u.Arch = "amd64"
 	u.ChecksumType = "sha256"
-	u.BaseURL = "http://releases.ubuntu.com/"	
+	u.BaseURL = "http://releases.ubuntu.com/"
 	return u
 }
 
@@ -38,11 +38,11 @@ func TestUbuntuSetISOInfo(t *testing.T) {
 		})
 		Convey("Set ISO info, error", func() {
 			u.Release = ""
-			err := u.SetISOInfo();
+			err := u.SetISOInfo()
 			Convey("Attempt to set ISO information with bad values. The error should be", func() {
 				So(err.Error(), ShouldEqual, "Unable to find ISO information while looking for the release string on the Ubuntu checksums page.")
 			})
-		})		
+		})
 	})
 }
 
@@ -59,7 +59,7 @@ func TestUbuntuSetChecksum(t *testing.T) {
 			})
 		})
 		Convey("Check SetChecksum results with an error on getting url", func() {
-			u.ChecksumType =  "ABC"
+			u.ChecksumType = "ABC"
 			u.BaseURL = "http://releasea.ubuntu.com"
 			err := u.setChecksum()
 			Convey("The error should be ", func() {
@@ -67,7 +67,7 @@ func TestUbuntuSetChecksum(t *testing.T) {
 			})
 		})
 		Convey("Calling checksum with an invalid filename but valid settings for an iso", func() {
-			u.Name =  "aslk"
+			u.Name = "aslk"
 			err := u.setChecksum()
 			Convey("Should not error", func() {
 				So(err, ShouldBeNil)
@@ -78,7 +78,7 @@ func TestUbuntuSetChecksum(t *testing.T) {
 		})
 		Convey("Check SetChecksum results with an error on parsing url get results", func() {
 			// use at least 1 invalid setting
-			u.Image =  "random"
+			u.Image = "random"
 			err := u.setChecksum()
 			Convey("The error should be ", func() {
 				So(err.Error(), ShouldEqual, "Unable to retrieve checksum while looking for ubuntu-14.04-random-amd64.iso on the Ubuntu checksums page.")
@@ -177,7 +177,7 @@ getPAge testing?
 
 		Convey("Given a blank url", func() {
 			_, err := getStringFromURL("");
-	
+
 			Convey("The result should be an error", func() {
 				So(err.Error(), ShouldEqual, "Get : unsupported protocol scheme \"\"")
 			})
@@ -198,11 +198,11 @@ getPAge testing?
 				So(u.URL, ShouldEqual, "http://releases.ubuntu.com/14.04/ubuntu-14.04-server-amd64.iso")
 			})
 		})
-			
+
 		Convey("Given a url", func() {
 			if res, err := getStringFromURL("http://www.example.com"); err == nil {
 				Convey("The result should be ", func() {
-					So(res, ShouldEqual, 
+					So(res, ShouldEqual,
 `<!doctype html>
 <html>
 <head>
@@ -217,7 +217,7 @@ getPAge testing?
         margin: 0;
         padding: 0;
         font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
-        
+
     }
     div {
         width: 600px;
@@ -241,7 +241,7 @@ getPAge testing?
             padding: 1em;
         }
     }
-    </style>    
+    </style>
 </head>
 
 <body>
@@ -275,7 +275,7 @@ func TestCentOSSetURL(t *testing.T) {
 		c := newTestCentOS()
 		Convey("Setting the URL", func() {
 			// Since the baseurl is picked at random, to respect the mirrolist
-			// structure, just make sure it isn't empty.	
+			// structure, just make sure it isn't empty.
 			err := c.setBaseURL()
 			So(err, ShouldBeNil)
 			So(c.BaseURL, ShouldNotEqual, "")
@@ -284,7 +284,7 @@ func TestCentOSSetURL(t *testing.T) {
 			//Make sure the name is set
 			Convey("Setting the iso name", func() {
 				c.setName()
-				So(c.Name, ShouldEqual, "CentOS-" + c.ReleaseFull + "-" + c.Arch + "-minimal.iso")
+				So(c.Name, ShouldEqual, "CentOS-"+c.ReleaseFull+"-"+c.Arch+"-minimal.iso")
 				Convey("Setting the BaseURL", func() {
 					c.setURL()
 					So(c.URL, ShouldNotEqual, "")
@@ -345,19 +345,19 @@ d8aaf698408c0c01843446da4a20b1ac03d27f87aad3b3b7b7f42c6163be83b9  CentOS-6.5-x86
 func TestCentOSSetISOInfo(t *testing.T) {
 	Convey("Given a new release object for CentOS", t, func() {
 		c := newTestCentOS()
-		Convey("Set ISO info", func() {	
+		Convey("Set ISO info", func() {
 			err := c.SetISOInfo()
 			Convey("Should not result in an  error", func() {
 				So(err, ShouldBeNil)
 			})
 			Convey("The URL should be", func() {
 				So(c.URL, ShouldNotEqual, "")
-				Convey("And it should be a valid url", func(){
+				Convey("And it should be a valid url", func() {
 					u, err := url.Parse(c.URL)
 					So(err, ShouldBeNil)
 					So(u.Scheme, ShouldEqual, "http")
 					So(u.Host, ShouldNotEqual, "")
-					parts :=  strings.Split(u.Path,"/")
+					parts := strings.Split(u.Path, "/")
 					l := len(parts)
 					So(parts[l-4], ShouldEqual, "6.5")
 					So(parts[l-3], ShouldEqual, "isos")
@@ -373,7 +373,7 @@ func TestCentOSSetISOInfo(t *testing.T) {
 					So(u.Scheme, ShouldNotEqual, "")
 					So(u.Scheme, ShouldNotEqual, "ftp")
 					So(u.Host, ShouldNotEqual, "")
-					So(u.Path, ShouldNotEqual,"")
+					So(u.Path, ShouldNotEqual, "")
 				})
 			})
 			Convey("The Checksum should be", func() {
@@ -389,10 +389,9 @@ func TestCentOSSetISOInfo(t *testing.T) {
 			Convey("Attempt to set ISO information with bad values. The error should be", func() {
 				So(err.Error(), ShouldEqual, "Unable to set BaseURL information for CentOS because the Release was not set.")
 			})
-		})		
+		})
 	})
 }
-
 
 func TestCentOSSetChecksum(t *testing.T) {
 	Convey("Given a supported distro struct", t, func() {
@@ -409,15 +408,15 @@ func TestCentOSSetChecksum(t *testing.T) {
 			})
 		})
 		Convey("Check SetChecksum results with an error on getting url", func() {
-			c.ChecksumType =  "ABC"
+			c.ChecksumType = "ABC"
 			c.BaseURL = "http://adfarfawer.com/notaurl"
 			err := c.setChecksum()
 			Convey("The error should be ", func() {
-				So(err.Error(), ShouldEqual, "Get http://adfarfawer.com/notaurl/" + c.ReleaseFull + "/isos/" + c.Arch + "/abcsum.txt: dial tcp: lookup adfarfawer.com: no such host")
+				So(err.Error(), ShouldEqual, "Get http://adfarfawer.com/notaurl/"+c.ReleaseFull+"/isos/"+c.Arch+"/abcsum.txt: dial tcp: lookup adfarfawer.com: no such host")
 			})
-		})		
+		})
 		Convey("Check SetChecksum results with an error on parsing url get results", func() {
-			c.Name =  "aslk"
+			c.Name = "aslk"
 			err := c.setChecksum()
 			Convey("The error should be ", func() {
 				So(err.Error(), ShouldNotEqual, "ssz")

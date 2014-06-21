@@ -1,16 +1,16 @@
 package ranchr
 
 import (
-	_"archive/tar"
+	_ "archive/tar"
 	"compress/gzip"
 	"errors"
 	"io"
 	"os"
 	"path"
 	"path/filepath"
-	_"strings"
+	_ "strings"
 	"time"
-	
+
 	"github.com/dotcloud/tar"
 )
 
@@ -18,7 +18,7 @@ type Archive struct {
 	OutDir string
 	Name   string
 	Type   string
-	directory 
+	directory
 }
 
 type directory struct {
@@ -28,7 +28,7 @@ type directory struct {
 }
 
 type file struct {
-	p string
+	p    string
 	info os.FileInfo
 }
 
@@ -43,7 +43,7 @@ func (d *directory) DirWalk(dirPath string) error {
 	callback := func(p string, fi os.FileInfo, err error) error {
 		return d.addFilename(fullPath, p, fi, err)
 	}
-	
+
 	return filepath.Walk(fullPath, callback)
 }
 
@@ -55,7 +55,7 @@ func (d *directory) addFilename(root string, p string, fi os.FileInfo, err error
 		logger.Error(err.Error())
 		return err
 	}
- 	if rel == "." {
+	if rel == "." {
 		logger.Debug("Don't add the relative root")
 		return nil
 	}
@@ -127,7 +127,7 @@ func (a *Archive) priorBuild(p string, t string) error {
 }
 
 func (a *Archive) archivePriorBuild(p string, t string) error {
-	logger.Trace("Creating tarball from " + p + " using ", t)
+	logger.Trace("Creating tarball from "+p+" using ", t)
 	// SrcWalk, as written will always return nil
 	if err := a.DirWalk(p); err != nil {
 		logger.Error(err.Error())
@@ -160,10 +160,10 @@ func (a *Archive) archivePriorBuild(p string, t string) error {
 	tW := tar.NewWriter(gw)
 	defer tW.Close()
 	// Go through each file in the path and add it to the archive
-	var cnt int	
+	var cnt int
 	for _, file := range a.Files {
-		// 
-		if err := a.addFile(tW, appendSlash(relPath) + file.p); err != nil {
+		//
+		if err := a.addFile(tW, appendSlash(relPath)+file.p); err != nil {
 			logger.Critical(err.Error())
 			return err
 		}

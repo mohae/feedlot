@@ -4,10 +4,10 @@ import (
 	_ "errors"
 	_ "fmt"
 	"os"
-	_"reflect"
-	_"strconv"
+	_ "reflect"
+	_ "strconv"
 	"testing"
-	_"time"
+	_ "time"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -52,22 +52,22 @@ func TestSetEnv(t *testing.T) {
 				So(err, ShouldBeNil)
 			})
 			Convey("And EnvDefaultsFile setting should be set", func() {
-				So( os.Getenv(EnvDefaultsFile), ShouldEqual,testDefaultsFile)
+				So(os.Getenv(EnvDefaultsFile), ShouldEqual, testDefaultsFile)
 			})
 			Convey("And EnvSupportedFile setting should be set", func() {
-				So( os.Getenv(EnvSupportedFile), ShouldEqual, testSupportedFile)
+				So(os.Getenv(EnvSupportedFile), ShouldEqual, testSupportedFile)
 			})
 			Convey("And EnvBuildsFile setting should be set", func() {
-				So( os.Getenv(EnvBuildsFile), ShouldEqual, testBuildsFile)
+				So(os.Getenv(EnvBuildsFile), ShouldEqual, testBuildsFile)
 			})
 			Convey("And EnvBuildListsFile setting should be set", func() {
-				So( os.Getenv(EnvBuildListsFile), ShouldEqual, testBuildListsFile)
-		 	})
+				So(os.Getenv(EnvBuildListsFile), ShouldEqual, testBuildListsFile)
+			})
 			Convey("And EnvParamDelim setting should be set", func() {
-				So( os.Getenv(EnvParamDelimStart), ShouldEqual, ":")
+				So(os.Getenv(EnvParamDelimStart), ShouldEqual, ":")
 			})
 			Convey("And EnvLogging setting should be set", func() {
-				So( os.Getenv(EnvLogging), ShouldEqual, "true")
+				So(os.Getenv(EnvLogging), ShouldEqual, "true")
 			})
 		})
 		Convey("Given a valid EnvConfig setting", func() {
@@ -77,7 +77,7 @@ func TestSetEnv(t *testing.T) {
 				So(err, ShouldBeNil)
 			})
 			Convey("And EnvDefaultsFile setting should be set", func() {
-				So( os.Getenv(EnvDefaultsFile), ShouldEqual, testDefaultsFile)
+				So(os.Getenv(EnvDefaultsFile), ShouldEqual, testDefaultsFile)
 			})
 		})
 
@@ -104,7 +104,7 @@ func TestdistrosInf(t *testing.T) {
 		Convey("Given that the EnvDefaultsFile is not set", func() {
 			os.Setenv(EnvDefaultsFile, "")
 			Convey("A call to distrosInf() should result in", func() {
-				s, dd, err = distrosInf() 
+				s, dd, err = distrosInf()
 				So(err.Error(), ShouldEqual, "could not retrieve the default Settings file because the RANCHER_DEFAULTS_FILE ENV variable was not set. Either set it or check your rancher.cfg setting")
 				So(s, ShouldResemble, supported{})
 				So(dd, ShouldBeNil)
@@ -126,7 +126,7 @@ func TestdistrosInf(t *testing.T) {
 			Convey("A call to distrosInf() should result in", func() {
 				s, dd, err = distrosInf()
 				So(err, ShouldBeNil)
-				So(s, ShouldResemble, testSupported )
+				So(s, ShouldResemble, testSupported)
 				//TODO ShouldResemble comes back as false when diff shows no difference
 				// probably a minor data structure difference that isn't shown in ui as
 				// type information isn't displayed. fix
@@ -135,7 +135,7 @@ func TestdistrosInf(t *testing.T) {
 		})
 	})
 	os.Setenv(EnvDefaultsFile, tmpEnvDefaultsFile)
-	os.Setenv(EnvSupportedFile, tmpEnvSupportedFile)	
+	os.Setenv(EnvSupportedFile, tmpEnvSupportedFile)
 }
 
 // TODO redo testing for new structure
@@ -170,7 +170,7 @@ func TestbuildPackerTemplateFromDistros(t *testing.T) {
 				a = ArgsFilter{Distro:"ubuntu", Arch:"amd64", Image:"desktop", Release:"14.04"}
 				err := buildPackerTemplateFromDistro(testSupported, testDistroDefaults, a)
 				So(err, ShouldBeNil)
-			})		
+			})
 		})
 		os.Setenv(EnvConfig, tmp)
 	})
@@ -190,7 +190,7 @@ func TestbuildPackerTemplateFromNamedBuild(t *testing.T) {
 				Convey("Calling buildPackerTemplateFromNamedBuild should result in", func() {
 					err := buildPackerTemplateFromNamedBuild(s, dd, "")
 					So(err.Error(), ShouldEqual, "open look/for/it/here/: no such file or directory")
-				})	
+				})
 			})
 			Convey("Given a valid build config file", func() {
 				os.Setenv(EnvBuildsFile, "../test_files/conf/builds_test.toml")
@@ -245,7 +245,7 @@ func TestCommandsFromFile(t *testing.T) {
 }
 
 func TestSetDistrosDefaults(t *testing.T) {
-	Convey("Testing setDistrosDefaults", t, func(){
+	Convey("Testing setDistrosDefaults", t, func() {
 		var defaults map[string]rawTemplate
 		var err error
 		Convey("Given a defaults and supported data without the BaseUrl set", func() {
@@ -254,7 +254,7 @@ func TestSetDistrosDefaults(t *testing.T) {
 				So(err.Error(), ShouldEqual, "ubuntu does not have its BaseURL configured.")
 				So(defaults, ShouldBeNil)
 			})
-		})	
+		})
 		Convey("Given a defaults and supported data", func() {
 			Convey("Should result in", func() {
 				defaults, err = setDistrosDefaults(testDefaults, testSupported)
@@ -262,7 +262,7 @@ func TestSetDistrosDefaults(t *testing.T) {
 				// TODO ShouldResemble issue
 				So(defaults, ShouldNotResemble, testDistroDefaults)
 			})
-		})	
+		})
 
 	})
 }
@@ -288,7 +288,7 @@ func TestMergeSlices(t *testing.T) {
 			s1 = []string{"element1", "element2", "element3"}
 			s2 = []string{"element3", "element4"}
 			res = mergeSlices(s1, s2)
-			So(res, ShouldResemble, []string{"element1", "element2", "element3","element4"})
+			So(res, ShouldResemble, []string{"element1", "element2", "element3", "element4"})
 		})
 	})
 }
@@ -334,7 +334,7 @@ func TestVarMapFromSlice(t *testing.T) {
 		Convey("Passing a valid slice", func() {
 			sl := []string{"key1=value1", "key2=value2"}
 			res = varMapFromSlice(sl)
-			resEqual := map[string]interface{}{"key1":"value1", "key2":"value2"}
+			resEqual := map[string]interface{}{"key1": "value1", "key2": "value2"}
 			So(res, ShouldResemble, resEqual)
 		})
 	})
@@ -407,13 +407,13 @@ func TestGetMergedBuilders(t *testing.T) {
 		})
 		Convey("Given an empty new builder", func() {
 			oldB = map[string]builder{
-				"common":{
-					Settings:[]string{
+				"common": {
+					Settings: []string{
 						"http_directory=http",
 						"ssh_port=22",
 						"ssh_username=vagrant",
 					},
-					VMSettings:[]string{
+					VMSettings: []string{
 						"memory=1024",
 					},
 				},
@@ -423,12 +423,12 @@ func TestGetMergedBuilders(t *testing.T) {
 		})
 		Convey("Given an empty old builder", func() {
 			newB = map[string]builder{
-				"common":{
-					Settings:[]string{
+				"common": {
+					Settings: []string{
 						"checksum_type=sha256",
 						"ssh_port=222",
 					},
-					VMSettings:[]string{
+					VMSettings: []string{
 						"memory=4096",
 					},
 				},
@@ -438,37 +438,37 @@ func TestGetMergedBuilders(t *testing.T) {
 		})
 		Convey("Given two builders", func() {
 			oldB = map[string]builder{
-				"common":{
-					Settings:[]string{
+				"common": {
+					Settings: []string{
 						"http_directory=http",
 						"ssh_port=22",
-						 "ssh_username=vagrant",
+						"ssh_username=vagrant",
 					},
-					VMSettings:[]string{
+					VMSettings: []string{
 						"memory=1024",
 					},
 				},
 			}
 			newB = map[string]builder{
-				"common":{
-					Settings:[]string{
+				"common": {
+					Settings: []string{
 						"checksum_type=sha256",
 						"ssh_port=222",
 					},
-					VMSettings:[]string{
+					VMSettings: []string{
 						"memory=4096",
 					},
 				},
 			}
 			compareB = map[string]builder{
-				"common":{
-					Settings:[]string{
+				"common": {
+					Settings: []string{
 						"http_directory=http",
 						"ssh_port=222",
 						"ssh_username=vagrant",
 						"checksum_type=sha256",
 					},
-					VMSettings:[]string{
+					VMSettings: []string{
 						"memory=4096",
 					},
 				},
@@ -478,8 +478,8 @@ func TestGetMergedBuilders(t *testing.T) {
 		})
 		Convey("Given two builders, empty old VMsetting", func() {
 			oldB = map[string]builder{
-				"common":{
-					Settings:[]string{
+				"common": {
+					Settings: []string{
 						"http_directory=http",
 						"ssh_port=22",
 						"ssh_username=vagrant",
@@ -487,25 +487,25 @@ func TestGetMergedBuilders(t *testing.T) {
 				},
 			}
 			newB = map[string]builder{
-				"common":{
-					Settings:[]string{
+				"common": {
+					Settings: []string{
 						"checksum_type=sha256",
 						"ssh_port=222",
 					},
-					VMSettings:[]string{
+					VMSettings: []string{
 						"memory=4096",
 					},
 				},
 			}
 			compareB = map[string]builder{
-				"common":{
-					Settings:[]string{
+				"common": {
+					Settings: []string{
 						"http_directory=http",
 						"ssh_port=222",
 						"ssh_username=vagrant",
 						"checksum_type=sha256",
 					},
-					VMSettings:[]string{
+					VMSettings: []string{
 						"memory=4096",
 					},
 				},
@@ -515,34 +515,34 @@ func TestGetMergedBuilders(t *testing.T) {
 		})
 		Convey("Given two builders, empty new VMsetting", func() {
 			oldB = map[string]builder{
-				"common":{
-					Settings:[]string{
+				"common": {
+					Settings: []string{
 						"http_directory=http",
 						"ssh_port=22",
 						"ssh_username=vagrant",
 					},
-					VMSettings:[]string{
+					VMSettings: []string{
 						"memory=1024",
 					},
 				},
 			}
 			newB = map[string]builder{
-				"common":{
-					Settings:[]string{
+				"common": {
+					Settings: []string{
 						"checksum_type=sha256",
 						"ssh_port=222",
 					},
 				},
 			}
 			compareB = map[string]builder{
-				"common":{
-					Settings:[]string{
+				"common": {
+					Settings: []string{
 						"http_directory=http",
 						"ssh_port=222",
 						"ssh_username=vagrant",
 						"checksum_type=sha256",
 					},
-					VMSettings:[]string{
+					VMSettings: []string{
 						"memory=1024",
 					},
 				},
@@ -552,30 +552,30 @@ func TestGetMergedBuilders(t *testing.T) {
 		})
 		Convey("Given two builders, empty old setting", func() {
 			oldB = map[string]builder{
-				"common":{
-					VMSettings:[]string{
+				"common": {
+					VMSettings: []string{
 						"memory=1024",
 					},
 				},
 			}
 			newB = map[string]builder{
-				"common":{
-					Settings:[]string{
+				"common": {
+					Settings: []string{
 						"checksum_type=sha256",
 						"ssh_port=222",
 					},
-					VMSettings:[]string{
+					VMSettings: []string{
 						"memory=4096",
 					},
 				},
 			}
 			compareB = map[string]builder{
-				"common":{
-					Settings:[]string{
+				"common": {
+					Settings: []string{
 						"checksum_type=sha256",
 						"ssh_port=222",
 					},
-					VMSettings:[]string{
+					VMSettings: []string{
 						"memory=4096",
 					},
 				},
@@ -585,32 +585,32 @@ func TestGetMergedBuilders(t *testing.T) {
 		})
 		Convey("Given two builders, empty new setting", func() {
 			oldB = map[string]builder{
-				"common":{
-					Settings:[]string{
+				"common": {
+					Settings: []string{
 						"http_directory=http",
 						"ssh_port=22",
 						"ssh_username=vagrant",
 					},
-					VMSettings:[]string{
+					VMSettings: []string{
 						"memory=1024",
 					},
 				},
 			}
 			newB = map[string]builder{
-				"common":{
-					VMSettings:[]string{
+				"common": {
+					VMSettings: []string{
 						"memory=4096",
 					},
 				},
-			}	
+			}
 			compareB = map[string]builder{
-				"common":{
-					Settings:[]string{
+				"common": {
+					Settings: []string{
 						"http_directory=http",
 						"ssh_port=22",
 						"ssh_username=vagrant",
 					},
-					VMSettings:[]string{
+					VMSettings: []string{
 						"memory=4096",
 					},
 				},
@@ -618,7 +618,6 @@ func TestGetMergedBuilders(t *testing.T) {
 			mergedB = getMergedBuilders(oldB, newB)
 			So(mergedB, ShouldResemble, compareB)
 		})
-
 
 	})
 }
@@ -631,49 +630,49 @@ func TestGetMergedPostProcessors(t *testing.T) {
 			So(mergedPP, ShouldResemble, emptyPP)
 		})
 		Convey("Given an empty new postProcessor", func() {
-			oldPP =  map[string]postProcessors{
-			"vagrant": {
-				Settings: []string{
-					"keep_input_artifact = false",
-					"output = :out_dir/someComposedBoxName.box",
-				},
-			}}
+			oldPP = map[string]postProcessors{
+				"vagrant": {
+					Settings: []string{
+						"keep_input_artifact = false",
+						"output = :out_dir/someComposedBoxName.box",
+					},
+				}}
 			mergedPP = getMergedPostProcessors(oldPP, newPP)
 			So(mergedPP, ShouldResemble, oldPP)
 		})
 		Convey("Given an empty old postProcessor", func() {
 			newPP = map[string]postProcessors{
-			"vagrant": {
-				Settings: []string{
-					"keep_input_artifact = false",
-					"output = out/NewName.box",
-				},
-			}}
+				"vagrant": {
+					Settings: []string{
+						"keep_input_artifact = false",
+						"output = out/NewName.box",
+					},
+				}}
 			mergedPP = getMergedPostProcessors(oldPP, newPP)
 			So(mergedPP, ShouldResemble, newPP)
 		})
 		Convey("Given two postProcessors", func() {
-			oldPP =  map[string]postProcessors{
-			"vagrant": {
-				Settings: []string{
-					"keep_input_artifact = false",
-					"output = :out_dir/someComposedBoxName.box",
-				},
-			}}
+			oldPP = map[string]postProcessors{
+				"vagrant": {
+					Settings: []string{
+						"keep_input_artifact = false",
+						"output = :out_dir/someComposedBoxName.box",
+					},
+				}}
 			newPP = map[string]postProcessors{
-			"vagrant": {
-				Settings: []string{
-					"keep_input_artifact = false",
-					"output = out/NewName.box",
-				},
-			}}
+				"vagrant": {
+					Settings: []string{
+						"keep_input_artifact = false",
+						"output = out/NewName.box",
+					},
+				}}
 			comparePP = map[string]postProcessors{
-			"vagrant": {
-				Settings: []string{
-					"keep_input_artifact = false",
-					"output = out/NewName.box",
-				},
-			}}			
+				"vagrant": {
+					Settings: []string{
+						"keep_input_artifact = false",
+						"output = out/NewName.box",
+					},
+				}}
 			mergedPP = getMergedPostProcessors(oldPP, newPP)
 			So(mergedPP, ShouldResemble, comparePP)
 		})
@@ -691,61 +690,61 @@ func TestGetMergedProvisioners(t *testing.T) {
 		})
 		Convey("Given an empty new provisioner", func() {
 			oldP = map[string]provisioners{
-			"shell": {
-				Settings: []string{"execute_command = :commands_dir/execute.command"},
-				Scripts: []string{
-					":scripts_dir/setup.sh",
-					":scripts_dir/base.sh",
-					":scripts_dir/vagrant.sh",
-					":scripts_dir/cleanup.sh",
-					":scripts_dir/zerodisk.sh",
-				},
-			}}
+				"shell": {
+					Settings: []string{"execute_command = :commands_dir/execute.command"},
+					Scripts: []string{
+						":scripts_dir/setup.sh",
+						":scripts_dir/base.sh",
+						":scripts_dir/vagrant.sh",
+						":scripts_dir/cleanup.sh",
+						":scripts_dir/zerodisk.sh",
+					},
+				}}
 			mergedP = getMergedProvisioners(oldP, newP)
 			So(mergedP, ShouldResemble, oldP)
 		})
 		Convey("Given two provisioners", func() {
 			oldP = map[string]provisioners{
-			"shell": {
-				Settings: []string{"execute_command = :commands_dir/execute.command"},
-				Scripts: []string{
-					":scripts_dir/setup.sh",
-					":scripts_dir/base.sh",
-					":scripts_dir/vagrant.sh",
-					":scripts_dir/cleanup.sh",
-					":scripts_dir/zerodisk.sh",
-				},
-			}}
+				"shell": {
+					Settings: []string{"execute_command = :commands_dir/execute.command"},
+					Scripts: []string{
+						":scripts_dir/setup.sh",
+						":scripts_dir/base.sh",
+						":scripts_dir/vagrant.sh",
+						":scripts_dir/cleanup.sh",
+						":scripts_dir/zerodisk.sh",
+					},
+				}}
 			newP = map[string]provisioners{
-			"shell": {
-				Scripts: []string{
-					"scripts/setup.sh",
-					"scripts/vagrant.sh",
-					"scripts/zerodisk.sh",
-				},
-			}}
+				"shell": {
+					Scripts: []string{
+						"scripts/setup.sh",
+						"scripts/vagrant.sh",
+						"scripts/zerodisk.sh",
+					},
+				}}
 			compareP = map[string]provisioners{
-			"shell": {
-				Settings: []string{"execute_command = :commands_dir/execute.command"},
-				Scripts: []string{
-					"scripts/setup.sh",
-					"scripts/vagrant.sh",
-					"scripts/zerodisk.sh",
-				},
-			}}
+				"shell": {
+					Settings: []string{"execute_command = :commands_dir/execute.command"},
+					Scripts: []string{
+						"scripts/setup.sh",
+						"scripts/vagrant.sh",
+						"scripts/zerodisk.sh",
+					},
+				}}
 			mergedP = getMergedProvisioners(oldP, newP)
 			So(mergedP, ShouldResemble, compareP)
 		})
 		oldP = map[string]provisioners{}
 		Convey("Given an empty old provisioner", func() {
 			newP = map[string]provisioners{
-			"shell": {
-				Scripts: []string{
-					"scripts/setup.sh",
-					"scripts/vagrant.sh",
-					"scripts/zerodisk.sh",
-				},
-			}}
+				"shell": {
+					Scripts: []string{
+						"scripts/setup.sh",
+						"scripts/vagrant.sh",
+						"scripts/zerodisk.sh",
+					},
+				}}
 			mergedP = getMergedProvisioners(oldP, newP)
 			So(mergedP, ShouldResemble, newP)
 		})
@@ -794,22 +793,22 @@ func TestTrimSuffix(t *testing.T) {
 func TestCopyFile(t *testing.T) {
 	Convey("Testing CopyFile", t, func() {
 		Convey("Calling copyfile with an empty srcDir", func() {
-			wB, err := copyFile("", testDir + "test", "")
+			wB, err := copyFile("", testDir+"test", "")
 			So(wB, ShouldEqual, 0)
 			So(err.Error(), ShouldEqual, "copyFile: no source directory passed")
 		})
 		Convey("Calling copyfile with an empty DestDir", func() {
-			wB, err := copyFile(testDir + "conf", "", "")
+			wB, err := copyFile(testDir+"conf", "", "")
 			So(wB, ShouldEqual, 0)
 			So(err.Error(), ShouldEqual, "copyFile: no destination directory passed")
 		})
 		Convey("Calling copyfile with an empty filename", func() {
-			wB, err := copyFile(testDir + "conf", testDir + "test", "")
+			wB, err := copyFile(testDir+"conf", testDir+"test", "")
 			So(wB, ShouldEqual, 0)
 			So(err.Error(), ShouldEqual, "copyFile: no filename passed")
 		})
 		Convey("Calling copyfile", func() {
-			wB, err := copyFile(testDir + "conf", testDir + "test", "builds_test.toml")
+			wB, err := copyFile(testDir+"conf", testDir+"test", "builds_test.toml")
 			So(wB, ShouldEqual, 1484)
 			So(err, ShouldBeNil)
 		})
@@ -818,13 +817,13 @@ func TestCopyFile(t *testing.T) {
 
 func TestCopyDirContent(t *testing.T) {
 	Convey("Testing CopyDirContent", t, func() {
-		os.MkdirAll(testDir + "test",  os.FileMode(0766))
+		os.MkdirAll(testDir+"test", os.FileMode(0766))
 		Convey("Given a directory with some files, copying it", func() {
-			err := copyDirContent(testDir + "conf", testDir + "test")
+			err := copyDirContent(testDir+"conf", testDir+"test")
 			So(err, ShouldBeNil)
 		})
 		Convey("Given an invalid directory, copying it", func() {
-			err := copyDirContent(testDir + "buildbuild", testDir + "test")
+			err := copyDirContent(testDir+"buildbuild", testDir+"test")
 			So(err.Error(), ShouldEqual, "../test_files/buildbuild does not exist")
 		})
 	})
@@ -833,7 +832,7 @@ func TestCopyDirContent(t *testing.T) {
 func TestDeleteDirContent(t *testing.T) {
 	Convey("Testing DeleteDirContent", t, func() {
 		Convey("Given a directory with some files", func() {
-			os.MkdirAll(testDir + "test",  os.FileMode(0766))
+			os.MkdirAll(testDir+"test", os.FileMode(0766))
 			testFile1, err := os.Create(testDir + "test/test1.txt")
 			if err == nil {
 				testFile1.Close()
@@ -850,7 +849,7 @@ func TestDeleteDirContent(t *testing.T) {
 				err := deleteDirContent(testDir + "test")
 				So(err, ShouldBeNil)
 			})
-		})	
+		})
 	})
 }
 
@@ -879,5 +878,3 @@ func TestSubString(t *testing.T) {
 		})
 	})
 }
-
-

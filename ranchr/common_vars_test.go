@@ -36,19 +36,19 @@ var testShellProvisioners1 = map[string]provisioners{
 var testDefaults = defaults{
 	IODirInf: IODirInf{
 		CommandsSrcDir: ":src_dir/commands",
-		HTTPDir: "http",
-		HTTPSrcDir: ":src_dir/http",
-		OutDir:      "../test_files/out/:type",
-		ScriptsDir:  "scripts",
+		HTTPDir:        "http",
+		HTTPSrcDir:     ":src_dir/http",
+		OutDir:         "../test_files/out/:type",
+		ScriptsDir:     "scripts",
 		ScriptsSrcDir:  ":src_dir/scripts",
-		SrcDir:      "../test_files/src/:type",
+		SrcDir:         "../test_files/src/:type",
 	},
 	PackerInf: PackerInf{
 		Description:      "Test Default Rancher template",
 		MinPackerVersion: "0.4.0",
 	},
 	BuildInf: BuildInf{
-		BaseURL: "",
+		BaseURL:   "",
 		BuildName: "",
 		Name:      ":type-:release-:image-:arch",
 	},
@@ -70,8 +70,8 @@ var testDefaults = defaults{
 					"ssh_port = 22",
 					"ssh_username = vagrant",
 					"ssh_wait_timeout = 240m",
-			},
 				},
+			},
 			"virtualbox-iso": {
 				VMSettings: []string{
 					"cpus=1",
@@ -207,33 +207,33 @@ var testSupportedCentOS = distro{
 	},
 }
 
-//var testRawPackerTemplate = 
+//var testRawPackerTemplate =
 var testDistroDefaultUbuntu = rawTemplate{
 	PackerInf: PackerInf{MinPackerVersion: "", Description: "Test supported distribution template"},
 	IODirInf: IODirInf{
 		CommandsSrcDir: ":src_dir/commands/",
-		HTTPDir: "http/",
-		HTTPSrcDir: ":src_dir/http/",
-		OutDir:      "../test_files/out/:type/",
-		ScriptsDir:  "scripts/",
+		HTTPDir:        "http/",
+		HTTPSrcDir:     ":src_dir/http/",
+		OutDir:         "../test_files/out/:type/",
+		ScriptsDir:     "scripts/",
 		ScriptsSrcDir:  ":src_dir/scripts/",
-		SrcDir:      "../test_files/src/:type/",
+		SrcDir:         "../test_files/src/:type/",
 	},
 	BuildInf: BuildInf{
-		Name: ":type-:release-:image-:arch", 
-		BuildName: "", 	
-		BaseURL: "http://releases.ubuntu.com/",
+		Name:      ":type-:release-:image-:arch",
+		BuildName: "",
+		BaseURL:   "http://releases.ubuntu.com/",
 	},
-	date: today,
-	delim: ":",
-	Type: "ubuntu",
-	Arch: "amd64",
-	Image: "server",
+	date:    today,
+	delim:   ":",
+	Type:    "ubuntu",
+	Arch:    "amd64",
+	Image:   "server",
 	Release: "12.04",
 	varVals: map[string]string{},
-	vars: map[string]string{},
+	vars:    map[string]string{},
 	build: build{
-		BuilderType: []string{"virtualbox-iso", "vmware-iso" },
+		BuilderType: []string{"virtualbox-iso", "vmware-iso"},
 		Builders: map[string]builder{
 			"common": {
 				Settings: []string{
@@ -288,51 +288,50 @@ var testDistroDefaultUbuntu = rawTemplate{
 	},
 }
 
-var testDistroDefaultCentOS = rawTemplate{PackerInf: PackerInf{MinPackerVersion:"", Description:"Test template config and Rancher options for CentOS"},
-	 IODirInf: IODirInf{CommandsSrcDir:":src_dir/commands/", HTTPDir:"http/", HTTPSrcDir:":src_dir/http/", OutDir:"out/centos", ScriptsDir:"scripts/", ScriptsSrcDir:":src_dir/scripts/", SrcDir:"src/centos"},
-	BuildInf: BuildInf{Name:":type-:release-:image-:arch", BuildName:"", BaseURL:"http://www.centos.org/pub/centos/"},
-	date: today,
-	delim:":",
-	Type:"centos",
-	Arch:"x86_64",
-	Image:"minimal",
-	Release:"6",
-	varVals:map[string]string{},
-	vars:map[string]string{},
+var testDistroDefaultCentOS = rawTemplate{PackerInf: PackerInf{MinPackerVersion: "", Description: "Test template config and Rancher options for CentOS"},
+	IODirInf: IODirInf{CommandsSrcDir: ":src_dir/commands/", HTTPDir: "http/", HTTPSrcDir: ":src_dir/http/", OutDir: "out/centos", ScriptsDir: "scripts/", ScriptsSrcDir: ":src_dir/scripts/", SrcDir: "src/centos"},
+	BuildInf: BuildInf{Name: ":type-:release-:image-:arch", BuildName: "", BaseURL: "http://www.centos.org/pub/centos/"},
+	date:     today,
+	delim:    ":",
+	Type:     "centos",
+	Arch:     "x86_64",
+	Image:    "minimal",
+	Release:  "6",
+	varVals:  map[string]string{},
+	vars:     map[string]string{},
 	build: build{
-		BuilderType:[]string{"virtualbox-iso", "vmware-iso"},
-		Builders:map[string]builder{
-			"common":{
-				Settings: []string{"boot_command = :commands_src_dir/boot_test.command", "boot_wait = 5s", "disk_size = 20000", "http_directory = http", "iso_checksum_type = sha256", "shutdown_command = :commands_src_dir/shutdown_test.command", "ssh_password = vagrant", "ssh_port = 22", "ssh_username = vagrant", "ssh_wait_timeout = 240m"},
-				VMSettings:[]string{},
+		BuilderType: []string{"virtualbox-iso", "vmware-iso"},
+		Builders: map[string]builder{
+			"common": {
+				Settings:   []string{"boot_command = :commands_src_dir/boot_test.command", "boot_wait = 5s", "disk_size = 20000", "http_directory = http", "iso_checksum_type = sha256", "shutdown_command = :commands_src_dir/shutdown_test.command", "ssh_password = vagrant", "ssh_port = 22", "ssh_username = vagrant", "ssh_wait_timeout = 240m"},
+				VMSettings: []string{},
 			},
-			"virtualbox-iso":{
-				Settings:[]string{}, 
-				VMSettings:[]string{"cpus=1", "memory=1024"},
+			"virtualbox-iso": {
+				Settings:   []string{},
+				VMSettings: []string{"cpus=1", "memory=1024"},
 			},
-			"vmware-iso":{
-				Settings:[]string{}, 
+			"vmware-iso": {
+				Settings:   []string{},
 				VMSettings: []string{"cpuid.coresPerSocket=1", "memsize=1024", "numvcpus=1"},
 			},
-		},	
-		PostProcessors:map[string]postProcessors{
-			"vagrant":{
-				Settings:[]string{"keep_input_artifact = false", "output = out/rancher-packer.box"},
+		},
+		PostProcessors: map[string]postProcessors{
+			"vagrant": {
+				Settings: []string{"keep_input_artifact = false", "output = out/rancher-packer.box"},
 			},
 		},
-		Provisioners:map[string]provisioners{
-			"shell":{
-				Settings:[]string{"execute_command = :commands_src_dir/execute_test.command"}, 
-				Scripts:[]string{":scripts_dir/setup_test.sh", ":scripts_dir/base_test.sh", ":scripts_dir/vagrant_test.sh", ":scripts_dir/cleanup_test.sh", ":scripts_dir/zerodisk_test.sh"},
+		Provisioners: map[string]provisioners{
+			"shell": {
+				Settings: []string{"execute_command = :commands_src_dir/execute_test.command"},
+				Scripts:  []string{":scripts_dir/setup_test.sh", ":scripts_dir/base_test.sh", ":scripts_dir/vagrant_test.sh", ":scripts_dir/cleanup_test.sh", ":scripts_dir/zerodisk_test.sh"},
 			},
 		},
 	},
 }
 
-
 var testBuildTest1 = rawTemplate{
 	PackerInf: PackerInf{
-		Description:      "Test build template #1",
+		Description: "Test build template #1",
 	},
 	Type:    "ubuntu",
 	Arch:    "amd64",
@@ -341,14 +340,13 @@ var testBuildTest1 = rawTemplate{
 	build: build{
 		BuilderType: []string{
 			"virtualbox-iso",
-
 		},
 		Builders: map[string]builder{
 			"common": {
 				Settings: []string{
 					"ssh_wait_timeout = 300m",
-			},
 				},
+			},
 			"virtualbox-iso": {
 				VMSettings: []string{
 					"memory=4096",
@@ -379,7 +377,7 @@ var testBuildTest1 = rawTemplate{
 
 var testBuildTest2 = rawTemplate{
 	PackerInf: PackerInf{
-		Description:      "Test build template #2: causes an error",
+		Description: "Test build template #2: causes an error",
 	},
 	Type:    "ubuntuu",
 	Arch:    "amd64",
@@ -389,14 +387,13 @@ var testBuildTest2 = rawTemplate{
 		BuilderType: []string{
 			"virtualbox-iso",
 			"vmware-iso",
-
 		},
 		Builders: map[string]builder{
 			"common": {
 				Settings: []string{
 					"ssh_wait_timeout = 300m",
-			},
 				},
+			},
 			"virtualbox-iso": {
 				VMSettings: []string{
 					"memory=4096",
@@ -409,12 +406,12 @@ var testBuildTest2 = rawTemplate{
 var testMergedBuildTest1 = rawTemplate{
 	IODirInf: IODirInf{
 		CommandsSrcDir: ":src_dir/commands",
-		HTTPDir: "http",
-		HTTPSrcDir: ":src_dir/http",
-		OutDir:      "../test_files/out/:type",
-		ScriptsDir:  "scripts",
+		HTTPDir:        "http",
+		HTTPSrcDir:     ":src_dir/http",
+		OutDir:         "../test_files/out/:type",
+		ScriptsDir:     "scripts",
 		ScriptsSrcDir:  ":src_dir/scripts",
-		SrcDir:      "../test_files/src/:type",
+		SrcDir:         "../test_files/src/:type",
 	},
 	PackerInf: PackerInf{
 		MinPackerVersion: "",
@@ -423,7 +420,7 @@ var testMergedBuildTest1 = rawTemplate{
 	BuildInf: BuildInf{
 		Name:      ":type-:release-:image-:arch",
 		BuildName: "",
-		BaseURL: "http://releases.ubuntu.com/",
+		BaseURL:   "http://releases.ubuntu.com/",
 	},
 	Type:    "ubuntu",
 	Arch:    "amd64",
@@ -479,16 +476,15 @@ var testMergedBuildTest1 = rawTemplate{
 	},
 }
 
-
 var testMergedBuildTest2 = rawTemplate{
 	IODirInf: IODirInf{
 		CommandsSrcDir: ":src_dir/commands",
-		HTTPDir: "http",
-		HTTPSrcDir: ":src_dir/http",
-		OutDir:      "../test_files/out/:type",
-		ScriptsDir:  "scripts",
+		HTTPDir:        "http",
+		HTTPSrcDir:     ":src_dir/http",
+		OutDir:         "../test_files/out/:type",
+		ScriptsDir:     "scripts",
 		ScriptsSrcDir:  ":src_dir/scripts",
-		SrcDir:      "../test_files/src/:type",
+		SrcDir:         "../test_files/src/:type",
 	},
 	PackerInf: PackerInf{
 		MinPackerVersion: "",
@@ -497,7 +493,7 @@ var testMergedBuildTest2 = rawTemplate{
 	BuildInf: BuildInf{
 		Name:      ":type-:release-:image-:arch",
 		BuildName: "",
-		BaseURL: "http://releases.ubuntu.com/",
+		BaseURL:   "http://releases.ubuntu.com/",
 	},
 	Type:    "ubuntu",
 	Arch:    "amd64",
@@ -565,6 +561,7 @@ var testSupported, testSupportedNoBaseURL supported
 var testMergedBuilds, testDistroDefaults map[string]rawTemplate
 var testBuilds builds
 var testDataSet bool
+
 func setCommonTestData() {
 	if testDataSet {
 		return
@@ -575,7 +572,7 @@ func setCommonTestData() {
 	testSupportedNoBaseURL.Distro = map[string]distro{}
 	for k, v := range testSupported.Distro {
 		v.BaseURL = ""
-		testSupportedNoBaseURL.Distro[k]=v
+		testSupportedNoBaseURL.Distro[k] = v
 	}
 	testDistroDefaults = map[string]rawTemplate{}
 	testDistroDefaults["ubuntu"] = testDistroDefaultUbuntu
@@ -589,7 +586,6 @@ func setCommonTestData() {
 	testDataSet = true
 	return
 }
-
 
 //BuildUbuntu
 //BuildCentos

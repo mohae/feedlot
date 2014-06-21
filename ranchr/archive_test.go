@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/smartystreets/goconvey/convey"
 	"github.com/dotcloud/tar"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestArchive(t *testing.T) {
@@ -66,13 +66,13 @@ func TestArchive(t *testing.T) {
 						})
 					})
 
-					err1 := tst.addFile(tW, "../test_files/doesntExist")					
+					err1 := tst.addFile(tW, "../test_files/doesntExist")
 					Convey("Adding a file that doesn't exist to the archive", func() {
 						Convey("Should result in an error", func() {
 							So(err1.Error(), ShouldEqual, "open ../test_files/doesntExist: no such file or directory")
 						})
 					})
-				})	
+				})
 			})
 		})
 
@@ -88,7 +88,6 @@ func TestArchive(t *testing.T) {
 			tW.Close()
 		})
 
-
 		Convey("back up a directory: empty directory", func() {
 			tst := Archive{}
 			filename := "../test_files/out/test3.tar"
@@ -96,7 +95,7 @@ func TestArchive(t *testing.T) {
 			tW := tar.NewWriter(testFile)
 			err := tst.priorBuild("../test_files/empty/", "gzip")
 			Convey("Should not result in an error", func() {
-					So(err, ShouldBeNil)
+				So(err, ShouldBeNil)
 			})
 
 			Convey("Should not result in a gzip archive", func() {
@@ -124,8 +123,8 @@ func TestArchive(t *testing.T) {
 			}
 			tW.Close()
 		})
-					
-	})	
+
+	})
 
 	// Remove any tarballs that may be created
 	files, _ := ioutil.ReadDir("../test_files/out")
@@ -137,7 +136,7 @@ func TestArchive(t *testing.T) {
 			case ".gz":
 				fallthrough
 			case ".tar":
-				os.Remove("../test_files/out/" + file.Name())			
+				os.Remove("../test_files/out/" + file.Name())
 			}
 		}
 	}
