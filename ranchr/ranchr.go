@@ -19,6 +19,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/BurntSushi/toml"
 	seelog "github.com/cihub/seelog"
@@ -223,12 +224,6 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	var d rawTemplate
 	var found bool
 	var err error
-/*	if Distro == nil {
-		err := errors.New("Cannot build requested packer template, the Supported data structure was empty.")
-		logger.Error(err.Error())
-		return err
-	}
-*/
 	if a.Distro == "" {
 		err = errors.New("Cannot build a packer template because no target distro information was passed.")
 		logger.Error(err.Error())
@@ -269,6 +264,7 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	// the build directory and copying all files that the Packer template needs to the
 	// build directory. 
 	// TODO break this call up or rename the function
+	logger.Trace("Distro based template built; build the template for JSON")
 	if err = pTpl.TemplateToFileJSON(rTpl.IODirInf, rTpl.BuildInf, scripts); err != nil {
 		logger.Error(err.Error())
 		return err
@@ -749,7 +745,7 @@ func copyDirContent(srcDir string, destDir string) error {
 	//get the contents of srcDir
 	// The archive struct should be renamed to something more appropriate
 	dir := Archive{}
-	err := dir.SrcWalk(srcDir)
+	err := dir.DirWalk(srcDir)
 	if err != nil {
 		return err
 	}
@@ -757,12 +753,12 @@ func copyDirContent(srcDir string, destDir string) error {
 		if file.info == nil {
 			// if the info is empty, whatever this entry represents
 			// doesn't actually exist.
-			err := errors.New(file.path + " does not exist")
+			err := errors.New(file.p + " does not exist")
 			logger.Error(err.Error())
 			return err
 		}
 		if file.info.IsDir() {
-			if err := os.MkdirAll(file.path, os.FileMode(0766)); err != nil {
+			if err := os.MkdirAll(file.p, os.FileMode(0766)); err != nil {
 				logger.Error(err.Error())
 				return err
 			}
@@ -781,6 +777,8 @@ func deleteDirContent(dir string) error {
 	// see if the directory exists first, actually any error results in the
 	// same handling so just return on any error instead of doing an
 	// os.IsNotExist(err)
+	logger.Debugf("dir: %v", dir)
+	var dirs []string
 	if _, err := os.Stat(dir); err != nil {
 		if os.IsNotExist(err) {
 			logger.Error(err.Error())
@@ -788,13 +786,29 @@ func deleteDirContent(dir string) error {
 		}
 	}
 	dirInf := directory{}
-	dirInf.SrcWalk(dir)
+	dirInf.DirWalk(dir)
+	dir = appendSlash(dir)
 	for _, file := range dirInf.Files {
-		if file.path != dir {
-			if err := os.Remove(file.path); err != nil {		
+		logger.Tracef("process: %v", dir + file.p)
+		if dir + file.p != dir {
+			if err := os.Remove(dir + file.p); err != nil {		
 				logger.Error(err.Error())
 				return err
 			}
+			logger.Tracef("deleted: %v", dir + file.p)
+		} else {
+			dirs = append(dirs, dir + file.p)
+			logger.Tracef("added directory: %v", dir + file.p)
+		}
+	}	
+	time.Sleep(time.Second * 5)
+	// all the files should now be deleted so its safe to delete the directories
+	// do this in reverse order
+	for i := len(dirs) - 1; i >= 0; i-- {
+		logger.Tracef("process directory: %v", dirs[i])
+		if err:= os.Remove(dirs[i]); err != nil {
+			logger.Error(err.Error())
+			return err
 		}
 	}
 	return nil

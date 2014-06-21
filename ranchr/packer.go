@@ -31,7 +31,7 @@ type packerTemplate struct {
 }
 
 func (p *packerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []string) error {
-
+	logger.Debugf("%v/n%v/n%v", i, b, scripts)
 	if i.HTTPDir == "" {
 		err := errors.New("ranchr.TemplateToFileJSON: HTTPDir directory for " + b.BuildName + " not set")
 		logger.Error(err.Error())
@@ -68,10 +68,11 @@ func (p *packerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []st
 		return err
 	}
 
-	// If the output directory exists, create a tarball.
+	// priorBuild handles both the archiving and deletion of the prior build, if it exists, i.e.
+	// if the build's output path exists.
 	a := Archive{}
 
-	if err := a.priorBuild(i.OutDir, "gzip"); err != nil {
+	if err := a.priorBuild(appendSlash(i.OutDir), "gzip"); err != nil {
 		logger.Error(err.Error())
 		return err
 	}

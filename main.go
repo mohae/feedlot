@@ -10,6 +10,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/mitchellh/cli"
 	"github.com/mohae/rancher/ranchr"
@@ -29,6 +30,10 @@ func main() {
 	defer ranchr.FlushLog()
 	defer log.Flush()
 	rc := runMain()
+	// wait for things to catch up because some log output seems to be missing
+	// dev only? TODO hmmm, this helped me discover I've wasted a lot of time
+	// and explains the craziness >.>
+	time.Sleep(time.Second *2)
 	os.Exit(rc)
 }
 

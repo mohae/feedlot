@@ -64,7 +64,7 @@ func (u *ubuntu) setChecksum() error {
 	// if the last character of the base url isn't a /, add it
 	var page string
 	var err error
-	if page, err = getStringFromURL(u.BaseURL + u.Release + "/" + strings.ToUpper(u.ChecksumType) + "SUMS"); err != nil {
+	if page, err = getStringFromURL(appendSlash(u.BaseURL) + appendSlash(u.Release) + strings.ToUpper(u.ChecksumType) + "SUMS"); err != nil {
 		logger.Error(err.Error())
 		return err
 	}
@@ -80,7 +80,7 @@ func (u *ubuntu) setChecksum() error {
 
 func (u *ubuntu) setURL() {
 	// Its ok to use Release in the directory path because Release will resolve correctly, at the directory level, for Ubuntu.
-	u.URL = u.BaseURL + u.Release + "/" + u.Name
+	u.URL = appendSlash(u.BaseURL) + appendSlash(u.Release) + u.Name
 
 	return
 }
@@ -189,13 +189,17 @@ var centOSMirrorListURL = "http://mirrorlist.centos.org/?release=%s&arch=%s&repo
 // error is saved to the setting variable. This will be reflected in the
 // resulting Packer template, which will render it unusable until it is fixed.
 func (c *centOS) SetISOInfo() error {
+	logger.Debugf("Current state: %+v", c)
 	if err := c.setBaseURL(); err != nil {
+		logger.Debugf("%+v", err)
 		return err
 	}
 	if err := c.setChecksum(); err != nil {
+		logger.Debugf("%+v", err)
 		return err
 	}
 	c.setURL()
+	logger.Debug("Exiting...")
 	return nil
 }
 
@@ -270,13 +274,14 @@ func (c *centOS) setBaseURL() error {
 	// and modify it so that it works for isos.
 	baseURL, err := url.Parse(c.BaseURL)
 	if err != nil {
+		logger.Error(err)
 		return err
 	}
 	pathParts := strings.Split(baseURL.Path, "/")
 	l := len(pathParts)
 	path := ""
 	for i := 0; i < l - 4; i++ {
-		path += pathParts[i] + "/"
+		path += appendSlash(pathParts[i])
 	}
 	if path != "" {
 		baseURL.Path = trimSuffix(path, "/")
@@ -285,6 +290,7 @@ func (c *centOS) setBaseURL() error {
 	c.ReleaseFull = pathParts[l-4]
 	c.BaseURL = baseURL.String()
 	c.setName()
+	logger.Debugf("BaseURL:%v, Name:%v", c.BaseURL, c.Name)
 	return nil
 }
 
@@ -293,7 +299,7 @@ func (c *centOS) setChecksum() error {
 	// if the last character of the base url isn't a /, add it
 	var page string
 	var err error
-	if page, err = getStringFromURL(c.BaseURL + "/" + c.ReleaseFull + "/isos/" + c.Arch + "/" + strings.ToLower(c.ChecksumType) + "sum.txt"); err != nil {
+	if page, err = getStringFromURL(appendSlash(c.BaseURL) + c.ReleaseFull + "/isos/" + appendSlash(c.Arch) + strings.ToLower(c.ChecksumType) + "sum.txt"); err != nil {
 		logger.Error(err.Error())
 		return err
 	}
@@ -302,11 +308,12 @@ func (c *centOS) setChecksum() error {
 		logger.Error(err.Error())
 		return err
 	}
-
+	logger.Debug(c.Checksum)
 	return nil
 }
 
 func (c *centOS) setURL() {
+	logger.Debug("entering")
 	// The release needs to be set to the current release, not the major version, this only
 	// applies if the number is a whole number.
 	releaseParts := strings.Split(c.Release, ".")
@@ -316,11 +323,13 @@ func (c *centOS) setURL() {
 		// The version is the 3rd from last
 		c.Release = urlParts[len(urlParts) - 1]
 	}
-	c.URL = c.BaseURL + "/" + c.ReleaseFull + "/isos/" + c.Arch + "/" + c.Name
+	c.URL = appendSlash(c.BaseURL) + c.ReleaseFull + "/isos/" + appendSlash(c.Arch) + c.Name
+	logger.Debug(c.URL)
 	return
 }
 
 func (c *centOS) findChecksum(page string) (string, error) {
+	logger.Debugf("page: %+vname: %s", page, c.Name)
 	// Finds the line in the incoming string with the isoName requested,
 	// strips out the checksum and returns it. This is for CentOS checksums
 	// which are in plaintext.
@@ -342,6 +351,7 @@ func (c *centOS) findChecksum(page string) (string, error) {
 	tmpSl := strings.Split(tmpRel, "\n")
 	// The checksum we want is the last element in the array
 	checksum := strings.TrimSpace(tmpSl[len(tmpSl)-1])
+	logger.Debug("Checksum: " + checksum)
 	return checksum, nil
 }
 

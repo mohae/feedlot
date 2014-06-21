@@ -28,18 +28,41 @@ type directory struct {
 }
 
 type file struct {
-	path string
+	p string
 	info os.FileInfo
 }
 
-func (d *directory) SrcWalk(src string) error {
+func (d *directory) DirWalk(dirPath string) error {
 	// If the directory exists, create a list of its contents.
-	return filepath.Walk(src, d.addFilename)
+	fullPath, err := filepath.Abs(dirPath)
+	if err != nil {
+		logger.Error(err.Error())
+		return err
+	}
+
+	callback := func(p string, fi os.FileInfo, err error) error {
+		return d.addFilename(fullPath, p, fi, err)
+	}
+	
+	return filepath.Walk(fullPath, callback)
 }
 
-func (d *directory) addFilename(p string, f os.FileInfo, err error) error {
+func (d *directory) addFilename(root string, p string, fi os.FileInfo, err error) error {
 	// Add a file to the slice of files for which an archive will be created.
-	d.Files = append(d.Files, file{path: p, info: f})
+	if !fi.IsDir() {
+		return nil
+	}
+	rel, err := filepath.Rel(root, p)
+	if err != nil {
+		logger.Error(err.Error())
+		return err
+	}
+	if rel == "." {
+		logger.Debug("Don't add the relative root")
+		return nil
+	}
+	d.Files = append(d.Files, file{p: rel, info: fi})
+	logger.Tracef("relative: %v\tabs: %v", rel, p)
 	return nil
 }
 
@@ -60,7 +83,7 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 	}
 	switch fileMode := fileStat.Mode(); {
 	case fileMode.IsDir():
-		logger.Info("Is Directory: ", filename)
+		logger.Trace("Is Directory: ", filename)
 		return nil
 	}
 	tarHeader := new(tar.Header)
@@ -81,20 +104,37 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 	return nil
 }
 
-func (a *Archive) priorBuild(src string, t string) error {
-	logger.Tracef("Entering priorBuild with type: %v with %v", t, src)
+func (a *Archive) priorBuild(p string, t string) error {
+	// Ff the src directory exists, an archive is created
+	// and the directory is deleted.
+	logger.Debugf("t: %v\nsrc: %v", t, p)
 	// see if src exists, if it doesn't then don't do anything
-	if _, err := os.Stat(src); err != nil {
+	if _, err := os.Stat(p); err != nil {
 		if os.IsNotExist(err) {
-			logger.Info("tarball of prior build run not needed because " + src + " does not exist")
+			logger.Trace("processing of prior build run not needed because " + p + " does not exist")
 			return nil
 		}
 		logger.Error(err.Error())
 		return err
 	}
-	logger.Info("Creating tarball from " + src + " using ", t)
+	if err := a.archivePriorBuild(p, t); err != nil {
+		logger.Error(err.Error())
+		return err
+	}
+	if err := a.deletePriorBuild(p); err != nil {
+		logger.Error(err.Error())
+		return err
+	}
+	return nil
+}
+
+func (a *Archive) archivePriorBuild(p string, t string) error {
+	logger.Debug("Creating tarball from " + p + " using ", t)
 	// SrcWalk, as written will always return nil
-	_ = a.SrcWalk(src);
+	if err := a.DirWalk(p); err != nil {
+		logger.Trace(err.Error())
+		return err
+	}
 
 	logger.Debugf("The archive files were: %v", a.Files)
 	if len(a.Files) <= 1 {
@@ -105,8 +145,9 @@ func (a *Archive) priorBuild(src string, t string) error {
 	}
 	// Get the current date and time in RFC3339 format with custom formatting.
 	nowF := formattedNow()
-	tarBallName := path.Dir(a.Files[0].path) + "-" + nowF + ".tar.gz"
-	logger.Debugf("The files within %v will be archived and saved as %v.", src, tarBallName)
+	relPath := path.Dir(p)
+	tarBallName := relPath + a.Name + "-" + nowF + ".tar.gz"
+	logger.Debugf("The files within %v will be archived and saved as %v.", p, tarBallName)
 	// Create the new archive file.
 	tBall, err := os.Create(tarBallName)
 	if err != nil {
@@ -124,7 +165,7 @@ func (a *Archive) priorBuild(src string, t string) error {
 	var cnt int	
 	for _, file := range a.Files {
 		// 
-		if err := a.addFile(tW, file.path); err != nil {
+		if err := a.addFile(tW, appendSlash(relPath) + file.p); err != nil {
 			logger.Critical(err.Error())
 			return err
 		}
@@ -134,8 +175,13 @@ func (a *Archive) priorBuild(src string, t string) error {
 	return nil
 }
 
+func (a *Archive) deletePriorBuild(p string) error {
+	//delete the contents of the passed directory
+	return deleteDirContent(p)
+}
+
 func formattedNow() string {
-	// Time in ISO 8601 like format. The differenze being the : have been
+	// Time in ISO 8601 like format. The difference being the : have been
 	// removed from the time.
 	return time.Now().Local().Format("2006-01-02T150405Z0700")
 }
