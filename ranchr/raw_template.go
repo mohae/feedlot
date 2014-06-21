@@ -343,7 +343,7 @@ func (r *rawTemplate) mergeBuildSettings(bld rawTemplate) {
 	return
 }
 
-func (r *rawTemplate) mergeDistroSettings(d distro) {
+func (r *rawTemplate) mergeDistroSettings(d *distro) {
 	logger.Debugf("%v\n%v", r, d)
 	// merges Settings between an old and new template.
 	// Note: Arch, Image, and Release are not updated here as how these fields

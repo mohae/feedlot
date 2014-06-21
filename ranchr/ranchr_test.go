@@ -96,7 +96,7 @@ func TestSetEnv(t *testing.T) {
 func TestdistrosInf(t *testing.T) {
 	var err error
 	dd := map[string]rawTemplate{}
-	s := supported{}
+	s := &supported{}
 	tmpEnvDefaultsFile := os.Getenv(EnvDefaultsFile)
 	tmpEnvSupportedFile := os.Getenv(EnvSupportedFile)
 
@@ -250,14 +250,15 @@ func TestSetDistrosDefaults(t *testing.T) {
 		var err error
 		Convey("Given a defaults and supported data without the BaseUrl set", func() {
 			Convey("Should result in", func() {
-				defaults, err = setDistrosDefaults(testDefaults, testSupportedNoBaseURL)
+				defaults, err = setDistrosDefaults(testDefaults, &testSupportedNoBaseURL)
 				So(err.Error(), ShouldEqual, "ubuntu does not have its BaseURL configured.")
 				So(defaults, ShouldBeNil)
 			})
 		})
 		Convey("Given a defaults and supported data", func() {
 			Convey("Should result in", func() {
-				defaults, err = setDistrosDefaults(testDefaults, testSupported)
+				testSupportedUbuntu.BaseURL = "http://releases.ubuntu.org/"
+				defaults, err = setDistrosDefaults(testDefaults, &testSupported)
 				So(err, ShouldBeNil)
 				// TODO ShouldResemble issue
 				So(defaults, ShouldNotResemble, testDistroDefaults)
@@ -824,7 +825,7 @@ func TestCopyDirContent(t *testing.T) {
 		})
 		Convey("Given an invalid directory, copying it", func() {
 			err := copyDirContent(testDir+"buildbuild", testDir+"test")
-			So(err.Error(), ShouldEqual, "../test_files/buildbuild does not exist")
+			So(err.Error(), ShouldEqual, "Source, ../test_files/buildbuild, does not exist. Nothing copied.")
 		})
 	})
 }

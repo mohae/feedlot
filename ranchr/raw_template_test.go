@@ -324,13 +324,13 @@ func TestIODirInf(t *testing.T) {
 			newIODirInf := IODirInf{CommandsSrcDir: "new CommandsSrcDir", HTTPDir: "new HTTPDir", HTTPSrcDir: "new HTTPSrcDir", OutDir: "new OutDir", ScriptsDir: "new ScriptsDir", ScriptsSrcDir: "new ScriptsSrcDir", SrcDir: "new SrcDir"}
 
 			oldIODirInf.update(newIODirInf)
-			So(oldIODirInf.CommandsSrcDir, ShouldEqual, "new CommandsSrcDir")
-			So(oldIODirInf.HTTPDir, ShouldEqual, "new HTTPDir")
-			So(oldIODirInf.HTTPSrcDir, ShouldEqual, "new HTTPSrcDir")
-			So(oldIODirInf.OutDir, ShouldEqual, "new OutDir")
-			So(oldIODirInf.ScriptsDir, ShouldEqual, "new ScriptsDir")
-			So(oldIODirInf.ScriptsSrcDir, ShouldEqual, "new ScriptsSrcDir")
-			So(oldIODirInf.SrcDir, ShouldEqual, "new SrcDir")
+			So(oldIODirInf.CommandsSrcDir, ShouldEqual, "new CommandsSrcDir/")
+			So(oldIODirInf.HTTPDir, ShouldEqual, "new HTTPDir/")
+			So(oldIODirInf.HTTPSrcDir, ShouldEqual, "new HTTPSrcDir/")
+			So(oldIODirInf.OutDir, ShouldEqual, "new OutDir/")
+			So(oldIODirInf.ScriptsDir, ShouldEqual, "new ScriptsDir/")
+			So(oldIODirInf.ScriptsSrcDir, ShouldEqual, "new ScriptsSrcDir/")
+			So(oldIODirInf.SrcDir, ShouldEqual, "new SrcDir/")
 		})
 
 		Convey("Given only one changed value, only that value should change", func() {
@@ -339,7 +339,7 @@ func TestIODirInf(t *testing.T) {
 				newIODirInf := IODirInf{CommandsSrcDir: "CommandsSrcDir"}
 
 				oldIODirInf.update(newIODirInf)
-				So(oldIODirInf.CommandsSrcDir, ShouldEqual, "CommandsSrcDir")
+				So(oldIODirInf.CommandsSrcDir, ShouldEqual, "CommandsSrcDir/")
 				So(oldIODirInf.HTTPDir, ShouldEqual, "old HTTPDir")
 				So(oldIODirInf.HTTPSrcDir, ShouldEqual, "old HTTPSrcDir")
 				So(oldIODirInf.OutDir, ShouldEqual, "old OutDir")
@@ -354,7 +354,7 @@ func TestIODirInf(t *testing.T) {
 
 				oldIODirInf.update(newIODirInf)
 				So(oldIODirInf.CommandsSrcDir, ShouldEqual, "old CommandsSrcDir")
-				So(oldIODirInf.HTTPDir, ShouldEqual, "HTTPDir")
+				So(oldIODirInf.HTTPDir, ShouldEqual, "HTTPDir/")
 				So(oldIODirInf.HTTPSrcDir, ShouldEqual, "old HTTPSrcDir")
 				So(oldIODirInf.OutDir, ShouldEqual, "old OutDir")
 				So(oldIODirInf.ScriptsDir, ShouldEqual, "old ScriptsDir")
@@ -368,7 +368,7 @@ func TestIODirInf(t *testing.T) {
 				oldIODirInf.update(newIODirInf)
 				So(oldIODirInf.CommandsSrcDir, ShouldEqual, "old CommandsSrcDir")
 				So(oldIODirInf.HTTPDir, ShouldEqual, "old HTTPDir")
-				So(oldIODirInf.HTTPSrcDir, ShouldEqual, "HTTPSrcDir")
+				So(oldIODirInf.HTTPSrcDir, ShouldEqual, "HTTPSrcDir/")
 				So(oldIODirInf.OutDir, ShouldEqual, "old OutDir")
 				So(oldIODirInf.ScriptsDir, ShouldEqual, "old ScriptsDir")
 				So(oldIODirInf.ScriptsSrcDir, ShouldEqual, "old ScriptsSrcDir")
@@ -383,7 +383,7 @@ func TestIODirInf(t *testing.T) {
 				So(oldIODirInf.CommandsSrcDir, ShouldEqual, "old CommandsSrcDir")
 				So(oldIODirInf.HTTPDir, ShouldEqual, "old HTTPDir")
 				So(oldIODirInf.HTTPSrcDir, ShouldEqual, "old HTTPSrcDir")
-				So(oldIODirInf.OutDir, ShouldEqual, "OutDir")
+				So(oldIODirInf.OutDir, ShouldEqual, "OutDir/")
 				So(oldIODirInf.ScriptsDir, ShouldEqual, "old ScriptsDir")
 				So(oldIODirInf.ScriptsSrcDir, ShouldEqual, "old ScriptsSrcDir")
 				So(oldIODirInf.SrcDir, ShouldEqual, "old SrcDir")
@@ -398,7 +398,7 @@ func TestIODirInf(t *testing.T) {
 				So(oldIODirInf.HTTPDir, ShouldEqual, "old HTTPDir")
 				So(oldIODirInf.HTTPSrcDir, ShouldEqual, "old HTTPSrcDir")
 				So(oldIODirInf.OutDir, ShouldEqual, "old OutDir")
-				So(oldIODirInf.ScriptsDir, ShouldEqual, "ScriptsDir")
+				So(oldIODirInf.ScriptsDir, ShouldEqual, "ScriptsDir/")
 				So(oldIODirInf.ScriptsSrcDir, ShouldEqual, "old ScriptsSrcDir")
 				So(oldIODirInf.SrcDir, ShouldEqual, "old SrcDir")
 			})
@@ -412,7 +412,7 @@ func TestIODirInf(t *testing.T) {
 				So(oldIODirInf.HTTPDir, ShouldEqual, "old HTTPDir")
 				So(oldIODirInf.HTTPSrcDir, ShouldEqual, "old HTTPSrcDir")
 				So(oldIODirInf.OutDir, ShouldEqual, "old OutDir")
-				So(oldIODirInf.ScriptsSrcDir, ShouldEqual, "ScriptsSrcDir")
+				So(oldIODirInf.ScriptsSrcDir, ShouldEqual, "ScriptsSrcDir/")
 				So(oldIODirInf.SrcDir, ShouldEqual, "old SrcDir")
 			})
 
@@ -426,7 +426,7 @@ func TestIODirInf(t *testing.T) {
 				So(oldIODirInf.HTTPSrcDir, ShouldEqual, "old HTTPSrcDir")
 				So(oldIODirInf.OutDir, ShouldEqual, "old OutDir")
 				So(oldIODirInf.ScriptsSrcDir, ShouldEqual, "old ScriptsSrcDir")
-				So(oldIODirInf.SrcDir, ShouldEqual, "SrcDir")
+				So(oldIODirInf.SrcDir, ShouldEqual, "SrcDir/")
 			})
 		})
 	})

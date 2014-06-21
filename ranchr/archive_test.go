@@ -30,7 +30,7 @@ func TestArchive(t *testing.T) {
 
 		Convey("Get a slice of paths within a directory", func() {
 			tst := Archive{}
-			err := tst.SrcWalk("../test_files/src/ubuntu/scripts")
+			err := tst.DirWalk("../test_files/src/ubuntu/scripts")
 			if err == nil {
 				Convey("The files within the walked path should be:", func() {
 					So(tst.Files, ShouldNotBeEmpty)
@@ -40,9 +40,9 @@ func TestArchive(t *testing.T) {
 
 		Convey("add a path to Files slice", func() {
 			tst := Archive{}
-			tst.addFilename("../test_files/src/ubuntu/scripts/test_file.sh", nil, nil)
+			tst.addFilename("", "../test_files/src/ubuntu/scripts/test_file.sh", nil, nil)
 			Convey("The path slice should have 'test_files/src/ubuntu/scripts/test_file.sh'", func() {
-				So(tst.Files[0].path, ShouldEqual, "../test_files/src/ubuntu/scripts/test_file.sh")
+				So(tst.Files[0].p, ShouldEqual, "../test_files/src/ubuntu/scripts/test_file.sh")
 				So(tst.Files[0].info, ShouldBeNil)
 			})
 		})
