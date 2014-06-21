@@ -49,20 +49,14 @@ func (d *directory) DirWalk(dirPath string) error {
 
 func (d *directory) addFilename(root string, p string, fi os.FileInfo, err error) error {
 	// Add a file to the slice of files for which an archive will be created.
-	if !fi.IsDir() {
-		return nil
-	}
+	logger.Tracef("BEGIN:  root: %v, path: %v, fi: %+v", root, p, fi)
 	rel, err := filepath.Rel(root, p)
 	if err != nil {
 		logger.Error(err.Error())
 		return err
 	}
-	if rel == "." {
-		logger.Debug("Don't add the relative root")
-		return nil
-	}
 	d.Files = append(d.Files, file{p: rel, info: fi})
-	logger.Tracef("relative: %v\tabs: %v", rel, p)
+	logger.Tracef("END relative: %v\tabs: %v", rel, p)
 	return nil
 }
 
