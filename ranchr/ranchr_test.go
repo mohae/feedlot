@@ -372,16 +372,14 @@ func TestKeyIndexInVarSlice(t *testing.T) {
 	})
 }
 
-func TestGetVariableName(t *testing.T) {
-	Convey("Testing getVariableName", t, func() {
+func TestGetPackerVariableFromStringe(t *testing.T) {
+	Convey("Testing getPackerVariableFromString", t, func() {
 		Convey("Given an empty value", func() {
-			res, err := getVariableName("")
+			res := getPackerVariableFromString("")
 			So(res, ShouldEqual, "")
-			So(err.Error(), ShouldEqual, "no variable name was passed")
 		})
 		Convey("Given a passed value", func() {
-			res, err := getVariableName("variableName")
-			So(err, ShouldBeNil)
+			res := getPackerVariableFromString("variableName")
 			So(res, ShouldEqual, "{{user `variableName` }}")
 		})
 	})
