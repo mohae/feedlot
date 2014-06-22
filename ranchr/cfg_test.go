@@ -87,7 +87,10 @@ func TestBuilderStuff(t *testing.T) {
 		})
 
 		Convey("transform settingns map should result in", func() {
-			res := p.settingsToMap("shell", rawTpl)
+			res, err := p.settingsToMap("shell", rawTpl)
+			Convey("Should not error", func() {
+				So(err, ShouldBeNil)
+			})
 			Convey("Should result in a map[string]interface{}", func() {
 				So(res, ShouldResemble, map[string]interface{}{"type": "shell", "key1": "value1", "key2": "value2"})
 			})
@@ -96,7 +99,10 @@ func TestBuilderStuff(t *testing.T) {
 		Convey("transform settings map with an invalid command file name embedded should result in", func() {
 			p := provisioners{}
 			p.Settings = []string{"key1=value1", "execute_command=../test_files/commands/execute.command"}
-			res := p.settingsToMap("shell", rawTpl)
+			res, err := p.settingsToMap("shell", rawTpl)
+			Convey("Should not error", func() {
+				So(err, ShouldBeNil)
+			})
 			Convey("Should result in a map[string]interface{}", func() {
 				So(res, ShouldResemble, map[string]interface{}{"type": "shell", "key1": "value1",
 					"execute_command": "Error: open ../test_files/commands/execute.command: no such file or directory"})
@@ -106,7 +112,10 @@ func TestBuilderStuff(t *testing.T) {
 		Convey("transform settings map with an invalid command file name embedded should result in", func() {
 			p := provisioners{}
 			p.Settings = []string{"key1=value1", "execute_command=../test_files/src/ubuntu/commands/execute_test.command"}
-			res := p.settingsToMap("shell", rawTpl)
+			res, err := p.settingsToMap("shell", rawTpl)
+			Convey("Should not error", func() {
+				So(err, ShouldBeNil)
+			})
 			Convey("Should result in a map[string]interface{}", func() {
 				So(res, ShouldResemble, map[string]interface{}{"type": "shell", "key1": "value1",
 					"execute_command": "\"echo 'vagrant'|sudo -S sh '{{.Path}}'\""})
