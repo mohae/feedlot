@@ -703,6 +703,9 @@ func keyIndexInVarSlice(key string, sl []string) int {
 // getPackerVariableFromString takes the passed string and creates a Packer
 // variable from it and returns that string.
 func getPackerVariableFromString(s string) string {
+	if s == "" {
+		return s
+	}
 	return "{{user `" + s + "` }}"
 }
 

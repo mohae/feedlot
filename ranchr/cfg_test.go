@@ -100,12 +100,11 @@ func TestBuilderStuff(t *testing.T) {
 			p := provisioners{}
 			p.Settings = []string{"key1=value1", "execute_command=../test_files/commands/execute.command"}
 			res, err := p.settingsToMap("shell", rawTpl)
-			Convey("Should not error", func() {
-				So(err, ShouldBeNil)
+			Convey("Should result in an error", func() {
+				So(err.Error(), ShouldEqual, "open ../test_files/commands/execute.command: no such file or directory")
 			})
 			Convey("Should result in a map[string]interface{}", func() {
-				So(res, ShouldResemble, map[string]interface{}{"type": "shell", "key1": "value1",
-					"execute_command": "Error: open ../test_files/commands/execute.command: no such file or directory"})
+				So(res, ShouldBeNil)
 			})
 		})
 

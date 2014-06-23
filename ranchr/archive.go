@@ -2,6 +2,7 @@ package ranchr
 
 import (
 	"compress/gzip"
+	"errors"
 	"io"
 	"os"
 	"path"
@@ -44,8 +45,31 @@ type file struct {
 // Walk the passed path, making a list of all the files that are children of
 // the path.
 func (d *directory) DirWalk(dirPath string) error {
+	var err error
 	// If the directory exists, create a list of its contents.
-	fullPath, err := filepath.Abs(dirPath)
+	if dirPath == "" {
+		// If nothing was passed, do nothing. This is not an error.
+		// However archive.Files will be nil
+		logger.Warn("No path information was received.")
+		return nil
+	}
+
+	// See if the path exists
+	var exists bool
+	exists, err = pathExists(dirPath)
+	if err != nil {
+		logger.Error(err.Error())
+		return err
+	}
+
+	if !exists {
+		err = errors.New("Unable to create a list of directory contents because the received path, " + dirPath + ", does not exist")
+		logger.Error(err.Error())
+		return err
+	}
+
+	var fullPath string
+	fullPath, err = filepath.Abs(dirPath)
 	if err != nil {
 		logger.Error(err.Error())
 		return err
@@ -64,6 +88,19 @@ func (d *directory) DirWalk(dirPath string) error {
 func (d *directory) addFilename(root string, p string, fi os.FileInfo, err error) error {
 	// Add a file to the slice of files for which an archive will be created.
 	logger.Tracef("BEGIN:  root: %v, path: %v, fi: %+v", root, p, fi)
+	
+	// See if the path exists
+	var exists bool
+	exists, err = pathExists(p)
+	if err != nil {
+		logger.Error(err.Error())
+		return err
+	}
+	if !exists {
+		err = errors.New("The passed filename, " + p + ", does not exist. Nothing added.")
+		logger.Error(err.Error())
+		return err
+	}
 
 	// Get the relative information.
 	rel, err := filepath.Rel(root, p)

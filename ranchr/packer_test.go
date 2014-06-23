@@ -50,11 +50,11 @@ func TestTemplateToFileJSON(t *testing.T) {
 				i := IODirInf{HTTPDir: "http", HTTPSrcDir: "../test_files/http/", OutDir: "../test_files/out/empty/", SrcDir: "../test_files/", ScriptsDir: "scripts", ScriptsSrcDir: "../test_files/scripts/"}
 				Scripts := []string{"cleanup_test.sh", "setup_test.sh", "test_file.sh"}
 				err := p.TemplateToFileJSON(i, b, Scripts)
-				So(err, ShouldBeNil)
+				So(err.Error(), ShouldEqual, "Source, ../test_files/http/, does not exist. Nothing copied.")
 			})
 
 			Convey("Calling TemplateToJSON with IODirInf and an output directory with contents", func() {
-				i := IODirInf{HTTPDir: "http", HTTPSrcDir: "../test_files/http/", OutDir: "../test_files/out/build/", SrcDir: "../test_files/", ScriptsDir: "scripts", ScriptsSrcDir: "../test_files/scripts/"}
+				i := IODirInf{HTTPDir: "http", HTTPSrcDir: "../test_files/src/ubuntu/http/", OutDir: "../test_files/out/build/", SrcDir: "../test_files/src/ubuntu/", ScriptsDir: "scripts", ScriptsSrcDir: "../test_files/src/ubuntu/scripts/"}
 				Scripts := []string{"cleanup_test.sh", "setup_test.sh", "test_file.sh"}
 				err := p.TemplateToFileJSON(i, b, Scripts)
 				So(err, ShouldBeNil)
@@ -64,7 +64,7 @@ func TestTemplateToFileJSON(t *testing.T) {
 				i := IODirInf{HTTPDir: "http", HTTPSrcDir: "../test_files/http/", OutDir: "../test_files/out/build/", SrcDir: "../test_files/", ScriptsDir: "scripts", ScriptsSrcDir: "../test_files/scripts/"}
 				Scripts := []string{"cleanup_test.sh", "setup_test.sh", "not_there.sh", "missing.sh", "test_file.sh"}
 				err := p.TemplateToFileJSON(i, b, Scripts)
-				So(err, ShouldBeNil)
+				So(err.Error(), ShouldEqual, "Source, ../test_files/http/, does not exist. Nothing copied.")
 			})
 
 		})

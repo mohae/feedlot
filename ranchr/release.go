@@ -66,7 +66,7 @@ func (u *ubuntu) setChecksum() error {
 	// for Ubuntu dl directories.
 	var page string
 	var err error
-	if page, err = getStringFromURL(u.BaseURL + appendSlash(u.Release) + strings.ToUpper(u.ChecksumType) + "SUMS"); err != nil {
+	if page, err = getStringFromURL(appendSlash(u.BaseURL) + appendSlash(u.Release) + strings.ToUpper(u.ChecksumType) + "SUMS"); err != nil {
 		logger.Error(err.Error())
 		return err
 	}
@@ -83,7 +83,7 @@ func (u *ubuntu) setChecksum() error {
 func (u *ubuntu) setURL() {
 	// Its ok to use Release in the directory path because Release will resolve
 	// correctly, at the directory level, for Ubuntu.
-	u.URL = u.BaseURL + appendSlash(u.Release) + u.Name
+	u.URL = appendSlash(u.BaseURL) + appendSlash(u.Release) + u.Name
 
 	return
 }
