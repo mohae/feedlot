@@ -11,44 +11,66 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestArchive(t *testing.T) {
-	Convey("Testing Archive", t, func() {
 
-		tmpDir := os.TempDir()
-		_ = tmpDir
-
-		Convey("return the current date time, local, in rfc3339 format", func() {
-			fmtDateTime := formattedNow()
-			// This doesn't feel right, as it just replicated the actual function
-			// but I don't know how else to generate the needed dynamic value
-			// and doing it this way will at least detect changes to the formula.
-			dateTime := time.Now().Local().Format("2006-01-02T150405Z0700")
-			Convey("The string should be now in an ISO 8601 like format format w local timezone(Z). The :s have been stripped out of the time though.", func() {
-				So(fmtDateTime, ShouldEqual, dateTime)
+func TestDirWalk(t *testing.T) {
+	Convey("Testing Archive.DirWalk...", t, func() {
+		tst := Archive{}
+		Convey("Given an empty path, calling DirWalk", func() {
+			err := tst.DirWalk("")
+			Convey("Should not error", func() {
+				So(err, ShouldBeNil)
+			})
+			Convey("Files slice should be empty", func() {
+				So(tst.Files, ShouldBeEmpty)
 			})
 		})
 
-		Convey("Get a slice of paths within a directory", func() {
-			tst := Archive{}
-			err := tst.DirWalk("../test_files/src/ubuntu/scripts")
-			if err == nil {
-				Convey("The files within the walked path should be:", func() {
-					So(tst.Files, ShouldNotBeEmpty)
-				})
-			}
+		Convey("Given an invalid path, calling DirWalk", func() {
+			err := tst.DirWalk("invalid/path/to/archive")
+			Convey("Should result in an error", func() {
+				So(err.Error(), ShouldEqual, "Unable to create a list of directory contents because the received path, invalid/path/to/archive, does not exist")
+			})
 		})
 
-		Convey("add a path to Files slice", func() {
-			tst := Archive{}
-			tst.addFilename("", "../test_files/src/ubuntu/scripts/test_file.sh", nil, nil)
-			Convey("The path slice should have 'test_files/src/ubuntu/scripts/test_file.sh'", func() {
+		Convey("Given a valid path, calling DirWalk", func() {
+			err := tst.DirWalk("../test_files/src/ubuntu/scripts/")
+			Convey("Should not result in an error", func() {
+				So(err, ShouldBeNil)
+			})
+			Convey("Should result in a slice of file paths", func() {
+				So(len(tst.Files), ShouldEqual, 6)
+			})
+		})
+	})
+}
+
+func TestAddFilename(t *testing.T) {
+	Convey("Given an Archive and a filename", t, func() {
+		tst := Archive{}
+		Convey("Adding a path to the Files slice", func() {
+			err := tst.addFilename("", "../test_files/src/ubuntu/scripts/test_file.sh", nil, nil)
+			Convey("Should not result in an error", func() {
+				So(err, ShouldBeNil)
+			})
+			Convey("Should result in the file being added to the list", func() {
 				So(tst.Files[0].p, ShouldEqual, "../test_files/src/ubuntu/scripts/test_file.sh")
 				So(tst.Files[0].info, ShouldBeNil)
 			})
 		})
+		Convey("Adding an invalid path to the Files slice", func() {
+			err := tst.addFilename("", "../test_files/src/ubuntu/scripts/dne_test_file.sh", nil, nil)
+			Convey("Should result in an error", func() {
+				So(err.Error(), ShouldEqual, "The passed filename, ../test_files/src/ubuntu/scripts/dne_test_file.sh, does not exist. Nothing added.")
+				So(tst.Files, ShouldBeEmpty)
+			})
+		})
+	})
+}
 
+func TestAddFile(t *testing.T) {
+	Convey("Given a tar writer and a filename", t, func() {
+		tst := Archive{}
 		Convey("Given a target archive location at ../test_files/out/test.tar", func() {
-			tst := Archive{}
 			filename := "../test_files/out/test1.tar"
 			Convey("Given a create for target archive", func() {
 				testFile, err := os.Create(filename)
@@ -75,9 +97,13 @@ func TestArchive(t *testing.T) {
 				})
 			})
 		})
+	})
+}
 
-		Convey("back up a directory: src does not exist", func() {
-			tst := Archive{}
+func TestPriorBuild(t *testing.T) {
+	Convey("Given an Archive", t, func() {
+		tst := Archive{}
+		Convey("Given a src that does not exist", func() {
 			filename := "../test_files/out/test2.tar"
 			testFile, _ := os.Create(filename)
 			tW := tar.NewWriter(testFile)
@@ -125,7 +151,9 @@ func TestArchive(t *testing.T) {
 		})
 
 	})
+}
 
+/*
 	// Remove any tarballs that may be created
 	files, _ := ioutil.ReadDir("../test_files/out")
 	var ext string
@@ -141,3 +169,18 @@ func TestArchive(t *testing.T) {
 		}
 	}
 }
+*/
+
+func TestFormattedNow(t *testing.T) {
+	Convey("Given a call to formattedNow()", t, func() {
+		fmtDateTime := formattedNow()
+		// This doesn't feel right, as it just replicated the actual function
+		// but I don't know how else to generate the needed dynamic value
+		// and doing it this way will at least detect changes to the formula.
+		dateTime := time.Now().Local().Format("2006-01-02T150405Z0700")
+		Convey("The string should be now in an ISO 8601 like format format w local timezone(Z). The :s have been stripped out of the time though.", func() {
+			So(fmtDateTime, ShouldEqual, dateTime)
+		})
+	})
+}
+

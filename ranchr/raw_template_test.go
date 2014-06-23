@@ -56,6 +56,8 @@ func TestCreateBuilders(t *testing.T) {
 		var err error
 		Convey("Given a call to createBuilders", func() {
 			Convey("Given a valid Builder Type", func() {
+				//first merge the variables so that create builders will work
+				r.mergeVariables()
 				bldrs, vars, err = r.createBuilders()
 				So(err, ShouldBeNil)
 				So(vars, ShouldBeNil)
@@ -206,23 +208,9 @@ func TestCommonVMSettings(t *testing.T) {
 				var settings map[string]interface{}
 				var vars []string
 				var err error
-				expected := map[string]interface{}{
-					"boot_wait":         "5s",
-					"http_directory":    "http",
-					"shutdown_command":  "Error: open :commands_dir/shutdown.command: no such file or directory",
-					"ssh_port":          "222",
-					"boot_command":      "Error: open :commands_dir/boot.command: no such file or directory",
-					"iso_checksum_type": "sha256",
-					"ssh_password":      "vagrant",
-					"ssh_wait_timeout":  "300m",
-					"disk_size":         "20000",
-					"iso_url":           "unknown is not supported",
-					"ssh_username":      "vagrant",
-					"iso_checksum":      "unknown is not supported",
-				}
 				settings, vars, err = r.commonVMSettings("common", old, new)
-				So(err, ShouldBeNil)
-				So(settings, ShouldResemble, expected)
+				So(err.Error(), ShouldEqual, "open :commands_dir/boot.command: no such file or directory")
+				So(settings, ShouldBeNil)
 				So(vars, ShouldBeNil)
 			})
 		})
