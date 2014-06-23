@@ -311,20 +311,14 @@ func (c *centOS) setBaseURL() error {
 		return err
 	}
 
+	// The baseURL is not what we want...replacing `os` with `isos` will
+	// point the baseURL to the iso location.	
+	baseURL.Path = strings.Replace(baseURL.Path, "/os/", "/isos/", 1)
+
+	// Extract the full release number, instead of using the version.
 	pathParts := strings.Split(baseURL.Path, "/")
-	l := len(pathParts)
-	path := ""
-
-	for i := 0; i < l-4; i++ {
-		path += appendSlash(pathParts[i])
-	}
-
-	if path != "" {
-		baseURL.Path = trimSuffix(path, "/")
-	}
-
 	// Set the ReleaseFull
-	c.ReleaseFull = pathParts[l-4]
+	c.ReleaseFull = pathParts[len(pathParts)-4]
 	c.BaseURL = baseURL.String()
 	c.setName()
 
@@ -338,7 +332,7 @@ func (c *centOS) setChecksum() error {
 	var page string
 	var err error
 
-	if page, err = getStringFromURL(appendSlash(c.BaseURL) + c.ReleaseFull + "/isos/" + appendSlash(c.Arch) + strings.ToLower(c.ChecksumType) + "sum.txt"); err != nil {
+	if page, err = getStringFromURL(c.BaseURL + strings.ToLower(c.ChecksumType) + "sum.txt"); err != nil {
 		logger.Error(err.Error())
 		return err
 	}
@@ -355,6 +349,7 @@ func (c *centOS) setChecksum() error {
 
 func (c *centOS) setURL() {
 	logger.Debug("Entering...")
+/*
 	// The release needs to be set to the current release, not the major version, this only
 	// applies if the number is a whole number.
 	releaseParts := strings.Split(c.Release, ".")
@@ -365,8 +360,8 @@ func (c *centOS) setURL() {
 		// The version is the 3rd from last
 		c.Release = urlParts[len(urlParts)-1]
 	}
-
-	c.URL = appendSlash(c.BaseURL) + c.ReleaseFull + "/isos/" + appendSlash(c.Arch) + c.Name
+*/
+	c.URL = c.BaseURL + c.Name
 
 	logger.Debug(c.URL)
 	return

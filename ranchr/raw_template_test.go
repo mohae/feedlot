@@ -106,8 +106,8 @@ func TestReplaceVariables(t *testing.T) {
 				So(s, ShouldEqual, "../test_files/src/ubuntu/command")
 			})
 			Convey("Given a string without any delimiters", func() {
-				s := r.replaceVariables("src_dir/command")
-				So(s, ShouldEqual, "src_dir/command")
+				s := r.replaceVariables(":src_dir/command")
+				So(s, ShouldEqual, "../test_files/src/ubuntu/command")
 			})
 			Convey("Given another string", func() {
 				s := r.replaceVariables("../test_files/out/:type")
