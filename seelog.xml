@@ -27,7 +27,7 @@
 		<format id="fmtinfo" format="[%Level] [%Time] %Msg%n"/>
         <format id="fmtdetail" format="[%LEV] [%Time] [%FuncShort @ %File.%Line] %Msg%n"/>
        	<format id="all" format="[%Lev] [%Time] [@ %File.%Line] %Msg%n"/>
-       	<format id="blue"  format="%EscM(34)[%Level]%EscM(39) [%Time] [%EscM(34;1)%FuncShort %EscM(39) %EscM(;1)@ %File.%Line%EscM(;0)]] %Msg%n%EscM(0)"/>	       		
+       	<format id="blue"  format="%EscM(34)[%Level]%EscM(39) [%Time] [%EscM(34;1)%FuncShort %EscM(39) %EscM(;1)@ %File.%Line%EscM(;0)] %Msg%n%EscM(0)"/>
 	<format id="green"  format="%EscM(32)[%Level]%EscM(39) [%Time] [%EscM(32;1)%FuncShort %EscM(39) %EscM(;1)@ %File.%Line%EscM(;0)] %Msg%n%EscM(0)"/>
 	<format id="magenta"  format="%EscM(35)[%Level]%EscM(39) [%Time] [%EscM(35;1)%FuncShort %EscM(39) %EscM(;1)@ %File.%Line%EscM(;0)] %Msg%n%EscM(0)"/>
        	<format id="red"  format="%EscM(31)[%Level]%EscM(39) [%Time] [%EscM(32;1)%FuncShort %EscM(39) %EscM(;1)@ %File.%Line%EscM(;0)] %Msg%n%EscM(0)"/>
