@@ -20,10 +20,20 @@ func init() {
 
 // Distro Iso information
 type iso struct {
+	// The BaseURL for download url formation. Usage of this is distro 
+	// specific.
 	BaseURL      string
+
+	// The actual checksum for the ISO file that this struct represents.
 	Checksum     string
+
+	// The type of the Checksum.
 	ChecksumType string
+
+	// Name of the ISO.
 	Name         string
+
+	// The URL of the ISO
 	isoURL       string
 }
 
@@ -173,9 +183,9 @@ func (u *ubuntu) setName() {
 	return
 }
 
+// getOSType returns the OSType string for the provided builder. The OS Type
+// varies by distro, arch, and builder.
 func (u *ubuntu) getOSType(buildType string) string {
-	// Get the OSType string for the provided builder
-	// OS Type varies by distro and bit and builder.
 	switch buildType {
 	case "vmware-iso":
 
@@ -202,9 +212,9 @@ func (u *ubuntu) getOSType(buildType string) string {
 // centOS wrapper to release.
 type centOS struct {
 	release
-//	isoRedirectURL string
 }
 
+// isoRedirectURL returns the currect url for the desired version and architecture.
 func (c *centOS) isoRedirectURL() string {
 	return fmt.Sprintf("http://isoredirect.centos.org/centos/%s/isos/%s/", c.Release, c.Arch)
 }
@@ -283,9 +293,9 @@ func (c *centOS) setReleaseNumber() error {
 	return nil
 }
 	
+// getOSType returns the OSType string for the provided builder. The OS Type
+// varies by distro, arch, and builder.
 func (c *centOS) getOSType(buildType string) string {
-	// Get the OSType string for the provided builder
-	// OS Type varies by distro and bit and builder.
 	switch buildType {
 	case "vmware-iso":
 
@@ -310,9 +320,9 @@ func (c *centOS) getOSType(buildType string) string {
 }
 
 
+// setChecksum finds the URL for the checksum page for the current mirror,
+// retrieves the page, and finds the checksum for the release ISO.
 func (c *centOS) setChecksum() error {
-	// Don't check for ReleaseFull existence since Release will also resolve for Ubuntu dl directories.
-	// if the last character of the base url isn't a /, add it
 	var page string
 	var err error
 	url := c.checksumURL()
@@ -397,6 +407,7 @@ func (c *centOS) randomISOURL() (string, error ){
 		return
 	}
 	f(doc)
+
 	// Randomly choose from the slice.
 	url := trimSuffix(isoURLs[rand.Intn(len(isoURLs) - 1)], "\n") + c.Name
 	logger.Trace("ISO url: ", url)
@@ -434,6 +445,7 @@ func (c *centOS) findChecksum(page string) (string, error) {
 	return checksum, nil
 }
 
+// Set the name of the ISO.
 func (c *centOS) setName() {
 	c.Name = "CentOS-" + c.ReleaseFull + "-" + c.Arch + "-" + c.Image + ".iso"
 	return
