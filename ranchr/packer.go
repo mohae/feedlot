@@ -1,21 +1,22 @@
 package ranchr
 
 import (
-	"encoding/json"
 	"errors"
 	"io"
 	"os"
 	"strconv"
 	"time"
+
+	json "github.com/mohae/customjson"
 )
 
 type packerTemplate struct {
 	Description      string                 `json:"description"`
 	MinPackerVersion string                 `json:"min_packer_version"`
-	Builders         []interface{}          `json:"builders"`
-	PostProcessors   []interface{}          `json:"post-processors"`
-	Provisioners     []interface{}          `json:"provisioners"`
-	Variables        map[string]interface{} `json:"variables"`
+	Builders         []interface{}          `json:"builders,omitempty"`
+	PostProcessors   []interface{}          `json:"post-processors,omitempty"`
+	Provisioners     []interface{}          `json:"provisioners,omitempty"`
+	Variables        map[string]interface{} `json:"variables,omitempty"`
 }
 
 // Creates a Packer template and writes it out as a JSON file. This function
