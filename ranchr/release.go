@@ -382,8 +382,9 @@ func (c *centOS) randomISOURL() (string, error ){
 		if n.Type == html.ElementNode && n.Data == "a" {
 			for _, a := range n.Attr {
 				if a.Key == "href" {
-					// Only add iso urls
-					if strings.Contains(a.Val, c.Arch) {
+					// Only add iso urls that aren't ftp, since we aren't supporting
+					// checksum retrieval via ftp
+					if strings.Contains(a.Val, c.Arch) && !strings.Contains(a.Val, "ftp://") {
 						isoURLs = append(isoURLs, a.Val)
 					}
 					break
