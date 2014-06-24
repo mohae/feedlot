@@ -13,6 +13,10 @@ type rawTemplate struct {
 	IODirInf
 	BuildInf
 
+	// Convenience for distros that need ChecksumType for more than finding
+	// the ISO checksum, e.g. CentOS.
+	ChecksumType	string
+
 	// Current date in ISO 8601
 	date    string
 
@@ -273,25 +277,25 @@ func (r *rawTemplate) commonVMSettings(builderType string, old []string, new []s
 		//		var tmp interface{}
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
-
+		logger.Tracef("%s:%s", k, v)
 		switch k {
 		case "iso_checksum_type":
 			// look up the release information and
 			// add all the iso entries to the map
-
+			logger.Tracef("%s ChecksumType: %s", r.Type, v)
 			var notSupported string
 			Settings[k] = v
-
+			r.ChecksumType = v
 			switch r.Type {
 			case "ubuntu":
-				rel := &ubuntu{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: strings.ToUpper(v)}, Arch: r.Arch, Distro: r.Type, Image: r.Image, Release: r.Release}}
+				rel := &ubuntu{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: v}, Arch: r.Arch, Distro: r.Type, Image: r.Image, Release: r.Release}}
 				rel.SetISOInfo()
-				Settings["iso_url"] = rel.URL
+				Settings["iso_url"] = rel.isoURL
 				Settings["iso_checksum"] = rel.Checksum
 			case "centos":
-				rel := &centOS{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: strings.ToLower(v)}, Arch: r.Arch, Distro: r.Type, Image: r.Image, Release: r.Release}}
+				rel := &centOS{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: v}, Arch: r.Arch, Distro: r.Type, Image: r.Image, Release: r.Release}}
 				rel.SetISOInfo()
-				Settings["iso_url"] = rel.URL
+				Settings["iso_url"] = rel.isoURL
 				Settings["iso_checksum"] = rel.Checksum
 			default:
 				notSupported = r.Type + " is not supported"
@@ -325,11 +329,15 @@ func (r *rawTemplate) commonVMSettings(builderType string, old []string, new []s
 
 			switch r.Type {
 			case "ubuntu":
-				rel := &ubuntu{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: strings.ToLower(v)}, Arch: r.Arch, Distro: r.Type, Image: r.Image, Release: r.Release}}
+				rel := &ubuntu{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: r.ChecksumType}, Arch: r.Arch, Distro: r.Type, Image: r.Image, Release: r.Release}}
 				Settings[k] = rel.getOSType(builderType)
 			case "centos":
-				rel := &centOS{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: strings.ToLower(v)}, Arch: r.Arch, Distro: r.Type, Image: r.Image, Release: r.Release}}
-				rel.setBaseURL()
+				rel := &centOS{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: r.ChecksumType}, Arch: r.Arch, Distro: r.Type, Image: r.Image, Release: r.Release}}
+				err := rel.SetISOInfo()
+				if err != nil {
+					logger.Error(err.Error())
+					return nil, nil, err
+				}
 				Settings[k] = rel.getOSType(builderType)
 			}
 
