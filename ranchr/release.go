@@ -224,13 +224,29 @@ func (c *centOS) isoRedirectURL() string {
 // resulting Packer template, which will render it unusable until it is fixed.
 func (c *centOS) SetISOInfo() error {
 	logger.Debugf("Current state: %+v", c)
+	if c.Arch == "" {
+		err := errors.New("Arch was empty, unable to continue")
+		logger.Error(err.Error())
+		return err
+	}
 
+	if c.Release == "" {
+		err := errors.New("Release was empty, unable to continue")
+		logger.Error(err.Error())
+		return err
+	}
+		
 	// Make sure that the version and release are set, Release and FullRelease
 	// respectively. Make sure they are both set properly.
-	c.setReleaseInfo()
+	err := c.setReleaseInfo()
+	if err != nil {
+		logger.Error(err.Error())
+		return err
+	}
+
 	c.setName()
 	// Set the ISO URL
-	err := c.setISOURL()
+	err = c.setISOURL()
 	if err != nil {
 		logger.Error(err.Error())
 		return err
