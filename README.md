@@ -1,6 +1,6 @@
 rancher
 =======
-Ranchers supply products to packers. Rancher creates templates Packer templates. Ok, a bit of a stretch, but it's the best I could come up with.
+Ranchers supply products to packers. Rancher creates Packer templates. Ok, a bit of a stretch, but it's the best I could come up with.
 
 I created this because I found Packer templates more painful to work with than I would like, and why should I have to figure out the ISO information? Also there was a lot of replication between builders. So I did what any sane programmer would do, I wrote a program to do it for me. Because, that's a totally easier and simpler to do...
 
