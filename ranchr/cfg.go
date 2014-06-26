@@ -13,7 +13,9 @@ package ranchr
 
 import (
 	"errors"
+	"fmt"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/BurntSushi/toml"
@@ -85,12 +87,24 @@ func (p *postProcessors) mergeSettings(new []string) {
 // is parsed into its constituent parts. The value then goes through
 // variable replacement to ensure that the settings are properly resolved.
 func (p *postProcessors) settingsToMap(Type string, r *rawTemplate) map[string]interface{} {
-	var k, v string
+	var k string
+	var v interface{}
 	m := make(map[string]interface{}, len(p.Settings))
 	m["type"] = Type
 	for _, s := range p.Settings {
 		k, v = parseVar(s)
-		v = r.replaceVariables(v)
+
+		switch k {
+		case "keep_input_artifact":
+			if strings.ToLower(fmt.Sprint(v)) == "true" {
+				v = true
+			} else {
+				v = false
+			}
+		default:
+			v = r.replaceVariables(fmt.Sprint(v))
+		}
+
 		m[k] = v
 	}
 	return m
