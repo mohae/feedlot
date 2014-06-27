@@ -5,9 +5,9 @@ apt-get purge -y unity-scope-calculator unity-scope-chromiumbookmarks unity-scop
 ## add gnome option; aka Do I have to use Unity?...no 
 #apt-get install gnome-session-fallback
 ## or use Cinnamon...there's others ofc.
-add-apt-repository ppa:tsvetko.tsvetkov/cinnamon
+add-apt-repository -y ppa:tsvetko.tsvetkov/cinnamon
 apt-get update -y
 apt-get install -y cinnamon
 ##remove auto reporting
-service apport stop ; sudo sed -ibak -e s/^enabled\=1$/enabled\=0/ /etc/default/apport ; sudo mv /etc/default/apportbak 
+service apport stop ; sudo sed -ibak -e s/^enabled\=1$/enabled\=0/ /etc/default/apport ; mv /etc/default/apportbak ~/ 
 
