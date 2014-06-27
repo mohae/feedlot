@@ -9,5 +9,13 @@ add-apt-repository -y ppa:tsvetko.tsvetkov/cinnamon
 apt-get update -y
 apt-get install -y cinnamon
 ##remove auto reporting
-service apport stop ; sudo sed -ibak -e s/^enabled\=1$/enabled\=0/ /etc/default/apport ; mv /etc/default/apportbak ~/ 
+service apport stop ; sed -ibak -e s/^enabled\=1$/enabled\=0/ /etc/default/apport ; mv /etc/default/apportbak ~/ 
+apportbak 
+gksu getdit /etc/default/appport
+## Remove dots from login...because why are they there?
+gsettings set com.canonical.unity-greeter draw-grid false
+## Remove guest login
+echo allow-guest=false | tee -a /etc/lightdm/lightdm.conf.d/50-unity-greeter.conf
+## Remove remote login
+echo greeter-show-remote-login=false | tee -a /etc/lightdm/lighdm.conf.d/50-unity-greeter.conf
 
