@@ -5,7 +5,7 @@ apt-get purge -y unity-scope-calculator unity-scope-chromiumbookmarks unity-scop
 ## add gnome option; aka Do I have to use Unity?...no 
 #apt-get install gnome-session-fallback
 ## or use Cinnamon...there's others ofc.
-add-apt-repository ppa:gwendal-lebihan-dev/cinnamon-stable
+add-apt-repository ppa:tsvetko.tsvetkov/cinnamon
 apt-get update -y
 apt-get install -y cinnamon
 ##remove auto reporting
