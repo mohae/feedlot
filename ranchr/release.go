@@ -78,6 +78,7 @@ func (u *ubuntu) setChecksum() error {
 	// for Ubuntu dl directories.
 	var page string
 	var err error
+
 	if page, err = getStringFromURL(appendSlash(u.BaseURL) + appendSlash(u.Release) + strings.ToUpper(u.ChecksumType) + "SUMS"); err != nil {
 		jww.ERROR.Print(err.Error())
 		return err
@@ -225,6 +226,7 @@ func (c *centOS) isoRedirectURL() string {
 // resulting Packer template, which will render it unusable until it is fixed.
 func (c *centOS) SetISOInfo() error {
 	jww.DEBUG.Printf("Current state: %+v", c)
+
 	if c.Arch == "" {
 		err := errors.New("Arch was empty, unable to continue")
 		jww.ERROR.Print(err.Error())
@@ -240,14 +242,15 @@ func (c *centOS) SetISOInfo() error {
 	// Make sure that the version and release are set, Release and FullRelease
 	// respectively. Make sure they are both set properly.
 	err := c.setReleaseInfo()
+
 	if err != nil {
 		jww.ERROR.Print(err.Error())
 		return err
 	}
 
 	c.setName()
-	// Set the ISO URL
 	err = c.setISOURL()
+
 	if err != nil {
 		jww.ERROR.Print(err.Error())
 		return err
@@ -292,6 +295,7 @@ func (c *centOS) setReleaseNumber() error {
 	var err error
 
 	mirrorURL := fmt.Sprintf("http://mirrorlist.centos.org/?release=%s&arch=%s&repo=os", c.Release, c.Arch)
+
 	if page, err = getStringFromURL(mirrorURL); err != nil {
 		jww.ERROR.Print(err.Error())
 		return err
@@ -333,6 +337,7 @@ func (c *centOS) getOSType(buildType string) string {
 		}
 
 	}
+
 	return "linux"
 }
 
@@ -343,12 +348,15 @@ func (c *centOS) setChecksum() error {
 	var err error
 	url := c.checksumURL()
 	jww.TRACE.Print("URL:", url)
+
 	if page, err = getStringFromURL(url); err != nil {
 		jww.ERROR.Print(err.Error())
 		return err
 	}
+
 	jww.TRACE.Print(page)
 	// Now that we have a page...we need to find the checksum and set it
+
 	if c.Checksum, err = c.findChecksum(page); err != nil {
 		jww.ERROR.Print(err.Error())
 		return err
@@ -376,6 +384,7 @@ func (c *centOS) setISOURL() error {
 
 	var err error
 	c.isoURL, err = c.randomISOURL()
+
 	if err != nil {
 		jww.ERROR.Print(err.Error())
 		return err
@@ -390,12 +399,14 @@ func (c *centOS) randomISOURL() (string, error) {
 	jww.TRACE.Printf("rediredctURL: %s", redirectURL)
 	page, err := getStringFromURL(redirectURL)
 	jww.TRACE.Print(page)
+
 	if err != nil {
 		jww.ERROR.Print(err.Error())
 		return "", err
 	}
 
 	doc, err := html.Parse(strings.NewReader(page))
+
 	if err != nil {
 
 		jww.ERROR.Print(err.Error())
@@ -404,6 +415,7 @@ func (c *centOS) randomISOURL() (string, error) {
 
 	var f func(*html.Node)
 	var isoURLs []string
+
 	f = func(n *html.Node) {
 		if n.Type == html.ElementNode && n.Data == "a" {
 			for _, a := range n.Attr {
@@ -470,6 +482,7 @@ func (c *centOS) setName() {
 func getStringFromURL(url string) (string, error) {
 	// Get the URL resource
 	res, err := http.Get(url)
+
 	if err != nil {
 		jww.CRITICAL.Print(err)
 		return "", err
@@ -480,11 +493,12 @@ func getStringFromURL(url string) (string, error) {
 
 	// Read the resoponse body into page
 	page, err := ioutil.ReadAll(res.Body)
+
 	if err != nil {
 		jww.CRITICAL.Print(err)
 		return "", err
 	}
+
 	//convert the page to a string and return it
 	return string(page), nil
-
 }

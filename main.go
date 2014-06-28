@@ -25,6 +25,7 @@ func runMain() int {
 	// runMain parses the Flag for glog, sets up CLI stuff for the supported
 	// subcommands and runs Rancher.
 	var err error
+
 	if err = ranchr.SetEnv(); err != nil {
 		fmt.Println("An error while processing Rancher Environment variables: ", err.Error())
 		return -1
@@ -35,6 +36,7 @@ func runMain() int {
 
 	jww.INFO.Printf("Rancher starting with args: %v", os.Args[:])
 	args := os.Args[1:]
+
 	// Get the command line args. We shortcut "--version" and "-v" to
 	// just show the version.
 	for _, arg := range args {
@@ -85,17 +87,21 @@ func SetLogging() {
 
 	// Take care of log output stuff
 	if ranchr.AppConfig.LogToFile {
+
 		// if the filename isn't set, use a temp log file
 		if ranchr.AppConfig.LogFilename == "" {
 			jww.UseTempLogFile("rancher")
 		} else {
 			jww.SetLogFile(ranchr.AppConfig.LogFilename)
 		}
+
 	}
+
 	return
 }
 
 func getJWWLevel(level string) jww.Level {
+
 	switch level {
 	case "TRACE":
 		return jww.LevelTrace
@@ -112,6 +118,7 @@ func getJWWLevel(level string) jww.Level {
 	case "FATAL":
 		return jww.LevelFatal
 	}
+
 	// It should never get to this...but if it does return a valid level
 	return jww.LevelInfo
 }

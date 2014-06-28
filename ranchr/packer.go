@@ -84,6 +84,7 @@ func (p *packerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []st
 	var errCnt, okCnt int
 
 	for _, script := range scripts {
+
 		if wB, err := copyFile(i.ScriptsSrcDir, appendSlash(i.OutDir)+i.ScriptsDir, script); err != nil {
 			jww.ERROR.Print(err.Error())
 			errCnt++
@@ -91,6 +92,7 @@ func (p *packerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []st
 			jww.TRACE.Print(strconv.FormatInt(wB, 10) + " Bytes were copied from " + i.ScriptsDir + script + " to " + appendSlash(i.OutDir) + script)
 			okCnt++
 		}
+
 	}
 
 	if errCnt > 0 {

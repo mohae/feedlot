@@ -41,11 +41,11 @@ type build struct {
 
 // Defines a representation of the builder section of a Packer template.
 type builder struct {
-	// The settings slices store key value pairs in the format of "key=value"
 	// Settings that are common to both builders.
 	Settings []string `toml:"Settings"`
 
 	// VM Specific settings. Each VM builder should have its own defined.
+	// The 'common' builder does not have this section
 	VMSettings []string `toml:"vm_Settings"`
 }
 
@@ -71,6 +71,7 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 		v = r.replaceVariables(v)
 		m[k] = v
 	}
+
 	return m
 }
 
@@ -92,6 +93,7 @@ func (p *postProcessors) settingsToMap(Type string, r *rawTemplate) map[string]i
 	var v interface{}
 	m := make(map[string]interface{}, len(p.Settings))
 	m["type"] = Type
+
 	for _, s := range p.Settings {
 		k, v = parseVar(s)
 
@@ -108,6 +110,7 @@ func (p *postProcessors) settingsToMap(Type string, r *rawTemplate) map[string]i
 
 		m[k] = v
 	}
+
 	return m
 }
 
@@ -293,6 +296,7 @@ func (d *defaults) LoadOnce() error {
 			jww.CRITICAL.Print(err.Error())
 			return
 		}
+
 		d.loaded = true
 		return
 	}
@@ -381,6 +385,7 @@ func (s *supported) LoadOnce() error {
 	if err != nil {
 		return err
 	}
+
 	jww.DEBUG.Printf("supported loaded: %v", s)
 	return nil
 }
@@ -407,10 +412,12 @@ func (b *builds) LoadOnce() error {
 			jww.CRITICAL.Print(err.Error())
 			return
 		}
+
 		if _, err = toml.DecodeFile(name, &b); err != nil {
 			jww.CRITICAL.Print(err.Error())
 			return
 		}
+
 		b.loaded = true
 		return
 	}
@@ -440,6 +447,7 @@ type list struct {
 func (b *buildLists) Load() error {
 	// Load the build lists.
 	name := os.Getenv(EnvBuildListsFile)
+
 	if name == "" {
 		err := errors.New("could not retrieve the BuildLists file because the " + EnvBuildListsFile + " Env variable was not set. Either set it or check your rancher.cfg setting")
 		jww.ERROR.Print(err.Error())

@@ -99,10 +99,12 @@ func SetEnv() error {
 	tmp = os.Getenv(EnvDefaultsFile)
 
 	if tmp == "" {
+
 		if err = os.Setenv(EnvDefaultsFile, AppConfig.DefaultsFile); err != nil {
 			jww.ERROR.Println(err.Error())
 			return err
 		}
+
 	}
 
 	tmp = os.Getenv(EnvSupportedFile)
@@ -113,6 +115,7 @@ func SetEnv() error {
 			jww.ERROR.Println(err.Error())
 			return err
 		}
+
 	}
 
 	tmp = os.Getenv(EnvBuildsFile)
@@ -123,6 +126,7 @@ func SetEnv() error {
 			jww.ERROR.Println(err.Error())
 			return err
 		}
+
 	}
 
 	tmp = os.Getenv(EnvBuildListsFile)
@@ -133,6 +137,7 @@ func SetEnv() error {
 			jww.ERROR.Println(err.Error())
 			return err
 		}
+
 	}
 
 	tmp = os.Getenv(EnvParamDelimStart)
@@ -143,6 +148,7 @@ func SetEnv() error {
 			jww.ERROR.Println(err.Error())
 			return err
 		}
+
 	}
 
 	return nil
@@ -159,6 +165,7 @@ func loadSupported() error {
 	}
 
 	err = supportedBuilds.LoadOnce()
+
 	if err != nil {
 		jww.ERROR.Println(err.Error())
 		return err
@@ -204,10 +211,12 @@ func distrosInf() (*supported, map[string]rawTemplate, error) {
 
 func BuildDistro(a ArgsFilter) error {
 	if !supportedLoaded {
+
 		if err := loadSupported(); err != nil {
 			jww.ERROR.Println(err.Error())
 			return err
 		}
+
 	}
 
 	if err := buildPackerTemplateFromDistro(a); err != nil {
@@ -293,12 +302,12 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	// Get the scripts for this build, if any.
 	var scripts []string
 	scripts = rTpl.ScriptNames()
-
 	// Create the JSON version of the Packer template. This also handles creation of
 	// the build directory and copying all files that the Packer template needs to the
 	// build directory.
 	// TODO break this call up or rename the function
 	jww.TRACE.Println("Distro based template built; build the template for JSON")
+
 	if err = pTpl.TemplateToFileJSON(rTpl.IODirInf, rTpl.BuildInf, scripts); err != nil {
 		jww.ERROR.Println(err.Error())
 		return err
@@ -312,10 +321,12 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 // information about the processing of the requested builds or an error.
 func BuildBuilds(buildNames ...string) (string, error) {
 	if !supportedLoaded {
+
 		if err := loadSupported(); err != nil {
 			jww.ERROR.Println(err.Error())
 			return "", err
 		}
+
 	}
 
 	// Make as many channels as there are build requests.
@@ -331,11 +342,13 @@ func BuildBuilds(buildNames ...string) (string, error) {
 	// Wait for channel done responses.
 	for i := 0; i < nBuilds; i++ {
 		err := <-doneCh
+
 		if err != nil {
 			errorCount++
 		} else {
 			builtCount++
 		}
+
 	}
 
 	return fmt.Sprintf("Create Packer templates from named builds: %v Builds were successfully processed and %v Builds resulted in an error.", builtCount, errorCount), nil
@@ -449,15 +462,19 @@ func commandsFromFile(name string) (commands []string, err error) {
 			err = cerr
 		}
 	}()
+
 	//New Reader for the string
 	scanner := bufio.NewScanner(f)
+
 	for scanner.Scan() {
 		commands = append(commands, scanner.Text())
 	}
+
 	if err = scanner.Err(); err != nil {
 		jww.WARN.Println(err.Error())
 		return
 	}
+
 	return commands, nil
 }
 
@@ -470,6 +487,7 @@ func setDistrosDefaults(d *defaults, s *supported) (map[string]rawTemplate, erro
 
 	// Generate the default settings for each distro.
 	for k, v := range s.Distro {
+
 		// See if the base url exists for non centos distros
 		if v.BaseURL == "" && k != "centos" {
 			err := errors.New(k + " does not have its BaseURL configured.")
@@ -577,7 +595,6 @@ func mergeSettingsSlices(s1 []string, s2 []string) []string {
 	}
 
 	ms1 := map[string]interface{}{}
-
 	// Create a map of variables from the first slice for comparison reasons.
 	ms1 = varMapFromSlice(s1)
 
@@ -588,18 +605,20 @@ func mergeSettingsSlices(s1 []string, s2 []string) []string {
 	// Make a slice with a length equal to the sum of the two input slices.
 	tempSl := make([]string, len(s1)+len(s2))
 	copy(tempSl, s1)
-
 	i := len(s1) - 1
 	indx := 0
 	var k string
+
 	// For each element in the second slice, get the key. If it already
 	// exists, update the existing value, otherwise add it to the merged
 	// slice
 	for _, v := range s2 {
 		k, _ = parseVar(v)
+
 		if _, ok := ms1[k]; ok {
 			// This key already exists. Find it and update it.
 			indx = keyIndexInVarSlice(k, tempSl)
+
 			if indx < 0 {
 				jww.WARN.Println("The key, " + k + ", was not updated to '" + v + "' because it was not found in the target slice.")
 			} else {
@@ -736,6 +755,7 @@ func getMergedBuilders(old map[string]builder, new map[string]builder) map[strin
 		keys2[cnt] = k
 		cnt++
 	}
+
 	// Merge this slice down to get a final list of keys.
 	var keys3 []string
 	keys3 = mergeSlices(keys1, keys2)
@@ -820,9 +840,11 @@ func appendSlash(s string) string {
 	if s == "" {
 		return s
 	}
+
 	if !strings.HasSuffix(s, "/") {
 		s += "/"
 	}
+
 	return s
 }
 
@@ -831,6 +853,7 @@ func trimSuffix(s string, suffix string) string {
 	if strings.HasSuffix(s, suffix) {
 		s = s[:len(s)-len(suffix)]
 	}
+
 	return s
 }
 
