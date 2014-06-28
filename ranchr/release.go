@@ -53,9 +53,7 @@ type ubuntu struct {
 	release
 }
 
-// Sets the ISO information for a Packer template. If any error occurs, the
-// error is saved to the setting variable. This will be reflected in the
-// resulting Packer template, which will render it unusable until it is fixed.
+// Sets the ISO information for a Packer template.
 func (u *ubuntu) SetISOInfo() error {
 	// Set the ISO name.
 	u.setName()
@@ -123,7 +121,7 @@ func (u *ubuntu) findChecksum(page string) (string, error) {
 	pos := strings.Index(page, u.Name)
 	if pos <= 0 {
 		// if it wasn't found, there's a chance that there's an extension on the release number
-		// e.g. 12.04.4 instead of 12.04. This usually affects the LTS versions, I think.
+		// e.g. 12.04.4 instead of 12.04. This should only be true for LTS releases.
 		// For this look for a line  that contains .iso.
 		// Substring the release string and explode it on '-'. Update isoName
 		pos = strings.Index(page, ".iso")
@@ -156,7 +154,7 @@ func (u *ubuntu) findChecksum(page string) (string, error) {
 		}
 	}
 
-	// Safety check...shouldn't occur.
+	// Safety check...should never occur, but sanity check it anyways.
 	if len(page) < pos-2 {
 		err := errors.New("Unable to retrieve checksum information for " + u.Name)
 		jww.ERROR.Println(err.Error())
@@ -208,7 +206,9 @@ func (u *ubuntu) getOSType(buildType string) string {
 		}
 
 	}
-	return "linux"
+
+	// Shouldn't get here unless the buildType passed is an unsupported one.
+	return "unsupported"
 }
 
 // centOS wrapper to release.
@@ -221,9 +221,7 @@ func (c *centOS) isoRedirectURL() string {
 	return fmt.Sprintf("http://isoredirect.centos.org/centos/%s/isos/%s/", c.Release, c.Arch)
 }
 
-// Sets the ISO information for a Packer template. If any error occurs, the
-// error is saved to the setting variable. This will be reflected in the
-// resulting Packer template, which will render it unusable until it is fixed.
+// Sets the ISO information for a Packer template.
 func (c *centOS) SetISOInfo() error {
 	jww.TRACE.Printf("Current state: %+v", c)
 
@@ -300,7 +298,7 @@ func (c *centOS) setReleaseNumber() error {
 		return err
 	}
 
-	// Could just parse the string, but breaking it up into lines makes it easier.
+	// Could just parse the string, but breaking it up is simpler.
 	lines := strings.Split(page, "\n")
 
 	// Each line is an URL, split the first one to make it easier to get the version.

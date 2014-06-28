@@ -427,7 +427,8 @@ func (r *rawTemplate) ScriptNames() []string {
 // in these two Settings.
 func (r *rawTemplate) mergeVariables() {
 	// check src_dir and out_dir first:
-	// TODO: replace this mess with something cleaner/resilient
+	// TODO: replace this mess with something cleaner/resilient because this
+	// is ugly and poorly written code...My Bad :(
 
 	// Get the delim and set the replacement map, resolve name information
 	r.varVals = map[string]string{r.delim + "type": r.Type, r.delim + "release": r.Release, r.delim + "arch": r.Arch, r.delim + "image": r.Image, r.delim + "date": r.date, r.delim + "build_name": r.BuildName}
