@@ -332,7 +332,13 @@ func (r *rawTemplate) commonVMSettings(builderType string, old []string, new []s
 			switch r.Type {
 			case "ubuntu":
 				rel := &ubuntu{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: r.ChecksumType}, Arch: r.Arch, Distro: r.Type, Image: r.Image, Release: r.Release}}
-				Settings[k] = rel.getOSType(builderType)
+				osType, err := rel.getOSType(builderType)
+				if err != nil {
+					jww.ERROR.Println(err.Error())
+					return nil, nil, err
+				}
+
+				Settings[k] = osType
 			case "centos":
 				rel := &centOS{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: r.ChecksumType}, Arch: r.Arch, Distro: r.Type, Image: r.Image, Release: r.Release}}
 				err := rel.SetISOInfo()
@@ -340,7 +346,14 @@ func (r *rawTemplate) commonVMSettings(builderType string, old []string, new []s
 					jww.ERROR.Println(err.Error())
 					return nil, nil, err
 				}
-				Settings[k] = rel.getOSType(builderType)
+
+				osType, err := rel.getOSType(builderType)
+				if err != nil {
+					jww.ERROR.Println(err.Error())
+					return nil, nil, err
+				}
+
+				Settings[k] = osType
 			}
 
 		default:

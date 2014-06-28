@@ -185,30 +185,31 @@ func (u *ubuntu) setName() {
 
 // getOSType returns the OSType string for the provided builder. The OS Type
 // varies by distro, arch, and builder.
-func (u *ubuntu) getOSType(buildType string) string {
+func (u *ubuntu) getOSType(buildType string) (string, error) {
 	switch buildType {
 	case "vmware-iso":
 
 		switch u.Arch {
 		case "amd64":
-			return "ubuntu-64"
+			return "ubuntu-64", nil
 		case "i386":
-			return "ubuntu-32"
+			return "ubuntu-32", nil
 		}
 
 	case "virtualbox-iso":
 
 		switch u.Arch {
 		case "amd64":
-			return "Ubuntu_64"
+			return "Ubuntu_64", nil
 		case "i386":
-			return "Ubuntu_32"
+			return "Ubuntu_32", nil
 		}
 
 	}
 
 	// Shouldn't get here unless the buildType passed is an unsupported one.
-	return "unsupported"
+	err := errors.New(fmt.Sprintf("release.getOSType: the builder '%s' is unsupported", buildType))
+	return "", err
 }
 
 // centOS wrapper to release.
@@ -313,29 +314,31 @@ func (c *centOS) setReleaseNumber() error {
 
 // getOSType returns the OSType string for the provided builder. The OS Type
 // varies by distro, arch, and builder.
-func (c *centOS) getOSType(buildType string) string {
+func (c *centOS) getOSType(buildType string) (string, error) {
 	switch buildType {
 	case "vmware-iso":
 
 		switch c.Arch {
 		case "x86_64":
-			return "centos-64"
+			return "centos-64", nil
 		case "x386":
-			return "centos-32"
+			return "centos-32", nil
 		}
 
 	case "virtualbox-iso":
 
 		switch c.Arch {
 		case "x86_64":
-			return "RedHat_64"
+			return "RedHat_64", nil
 		case "x386":
-			return "RedHat_32"
+			return "RedHat_32", nil
 		}
 
 	}
 
-	return "linux"
+	// Shouldn't get here unless the buildType passed is an unsupported one.
+	err := errors.New(fmt.Sprintf("release.getOSType: the builder '%s' is unsupported", buildType))
+	return "", err
 }
 
 // setChecksum finds the URL for the checksum page for the current mirror,
