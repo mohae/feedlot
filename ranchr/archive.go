@@ -13,6 +13,7 @@ import (
 	jww "github.com/spf13/jwalterweatherman"
 )
 
+var timeFormat = "2006-01-02T150405Z0700"
 // Hold information about an archive.
 type Archive struct {
 	// Path to the target directory for the archive output.
@@ -102,10 +103,10 @@ func (d *directory) addFilename(root string, p string, fi os.FileInfo, err error
 		return err
 	}
 
+	// If it doesn't exist, log it and move on 
 	if !exists {
 		err = errors.New("The passed filename, " + p + ", does not exist. Nothing added.")
-		jww.ERROR.Println(err.Error())
-		return err
+		jww.WARN.Println(err.Error())
 	}
 
 	// Get the relative information.
@@ -130,7 +131,7 @@ func (d *directory) addFilename(root string, p string, fi os.FileInfo, err error
 func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 	// Add the passed file, if it exists, to the archive, otherwise error.
 	// This preserves mode and modification.
-	// TODO preserve ownership
+	// TODO check ownership/permissions
 	file, err := os.Open(filename)
 
 	if err != nil {
@@ -146,11 +147,9 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 		return err
 	}
 
-	// Don't add directories--is this a good idea?
+	// Don't add directory
 	fileMode := fileStat.Mode()
-
 	if fileMode.IsDir() {
-		jww.TRACE.Println("Is Directory: ", filename)
 		return nil
 	}
 
@@ -180,8 +179,6 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 // deleting those artifacts. This prevents any stale elements from persisting
 // to the new build.
 func (a *Archive) priorBuild(p string, t string) error {
-	jww.DEBUG.Printf("t: %v\nsrc: %v", t, p)
-
 	// See if src exists, if it doesn't then don't do anything
 	if _, err := os.Stat(p); err != nil {
 
@@ -199,7 +196,7 @@ func (a *Archive) priorBuild(p string, t string) error {
 		jww.ERROR.Println(err.Error())
 		return err
 	}
-
+	
 	// Delete the old artifacts.
 	if err := a.deletePriorBuild(p); err != nil {
 		jww.ERROR.Println(err.Error())
@@ -281,5 +278,5 @@ func (a *Archive) deletePriorBuild(p string) error {
 func formattedNow() string {
 	// Time in ISO 8601 like format. The difference being the : have been
 	// removed from the time.
-	return time.Now().Local().Format("2006-01-02T150405Z0700")
+	return time.Now().Local().Format(timeFormat)
 }

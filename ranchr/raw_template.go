@@ -99,7 +99,7 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 	// Builders
 	iSl := make([]interface{}, len(r.Builders))
 	if p.Builders, vars, err = r.createBuilders(); err != nil {
-		jww.ERROR.Print(err.Error())
+		jww.ERROR.Println(err.Error())
 		return p, err
 	}
 
@@ -113,7 +113,7 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 
 		if sM == nil {
 			err = errors.New("an error occured while trying to create the Packer post-processor template for " + k)
-			jww.CRITICAL.Print(err.Error())
+			jww.ERROR.Println(err.Error())
 			return p, err
 		}
 
@@ -130,7 +130,7 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 	for k, pr := range r.Provisioners {
 		iM, err = pr.settingsToMap(k, r)
 		if err != nil {
-			jww.CRITICAL.Print(err.Error())
+			jww.ERROR.Println(err.Error())
 			return p, err
 		}
 
@@ -156,7 +156,7 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 	// TODO
 
 	// Return the generated Packer Template
-	jww.DEBUG.Print("PackerTemplate created from a rawTemplate.")
+	jww.DEBUG.Println("PackerTemplate created from a rawTemplate.")
 
 	return p, nil
 }
@@ -167,7 +167,7 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]interface{}, err error) {
 	if r.BuilderType == nil || len(r.BuilderType) <= 0 {
 		err = fmt.Errorf("no builder types were configured, unable to create builders")
-		jww.ERROR.Print(err.Error())
+		jww.ERROR.Println(err.Error())
 		return nil, nil, err
 	}
 
@@ -179,7 +179,7 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 
 	// Generate the builders for each builder type.
 	for _, bType := range r.BuilderType {
-		jww.TRACE.Print(bType)
+		jww.TRACE.Println(bType)
 		// TODO calculate the length of the two longest Settings and VMSettings sections and make it
 		// that length. That will prevent a panic should there be more than 50 options. Besides its
 		// stupid, on so many levels, to hard code this...which makes me...d'oh!
@@ -190,7 +190,7 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 		case BuilderVMWare:
 			// Generate the common Settings and their vars
 			if tmpS, tmpVar, err = r.commonVMSettings(bType, r.Builders[BuilderCommon].Settings, r.Builders[bType].Settings); err != nil {
-				jww.ERROR.Print(err.Error())
+				jww.ERROR.Println(err.Error())
 				return nil, nil, err
 			}
 
@@ -209,7 +209,7 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 		case BuilderVBox:
 			// Generate the common Settings and their vars
 			if tmpS, tmpVar, err = r.commonVMSettings(bType, r.Builders[BuilderCommon].Settings, r.Builders[bType].Settings); err != nil {
-				jww.ERROR.Print(err.Error())
+				jww.ERROR.Println(err.Error())
 				return nil, nil, err
 			}
 
@@ -232,7 +232,7 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 
 		default:
 			err = errors.New("the requested builder, '" + bType + "', is not supported")
-			jww.ERROR.Print(err.Error())
+			jww.ERROR.Println(err.Error())
 			return nil, nil, err
 		}
 		bldrs[ndx] = tmpS
@@ -313,7 +313,7 @@ func (r *rawTemplate) commonVMSettings(builderType string, old []string, new []s
 			var commands []string
 
 			if commands, err = commandsFromFile(v); err != nil {
-				jww.ERROR.Print(err.Error())
+				jww.ERROR.Println(err.Error())
 				return nil, nil, err
 			} else {
 
@@ -337,7 +337,7 @@ func (r *rawTemplate) commonVMSettings(builderType string, old []string, new []s
 				rel := &centOS{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: r.ChecksumType}, Arch: r.Arch, Distro: r.Type, Image: r.Image, Release: r.Release}}
 				err := rel.SetISOInfo()
 				if err != nil {
-					jww.ERROR.Print(err.Error())
+					jww.ERROR.Println(err.Error())
 					return nil, nil, err
 				}
 				Settings[k] = rel.getOSType(builderType)
@@ -401,7 +401,7 @@ func (r *rawTemplate) mergeDistroSettings(d *distro) {
 
 // Get a slice of script names from the shell provisioner, if any.
 func (r *rawTemplate) ScriptNames() []string {
-	jww.DEBUG.Print("entering")
+	jww.DEBUG.Println("Entering rawTemplate.ScriptNames...")
 	var s []string
 
 	if len(r.Provisioners["shell"].Scripts) > 0 {
@@ -416,7 +416,7 @@ func (r *rawTemplate) ScriptNames() []string {
 		}
 
 	}
-	jww.DEBUG.Print(s)
+	jww.DEBUG.Println("Exiting rawTemplate.ScriptNames...")
 	return s
 
 }

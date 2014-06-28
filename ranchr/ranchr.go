@@ -258,17 +258,16 @@ func BuildDistro(a ArgsFilter) error {
 func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	var d rawTemplate
 	var found bool
-	var err error
 
 	if a.Distro == "" {
-		err = errors.New("Cannot build a packer template because no target distro information was passed.")
+		err := errors.New("Cannot build a packer template because no target distro information was passed.")
 		jww.ERROR.Println(err.Error())
 		return err
 	}
 
 	// Get the default for this distro, if one isn't found then it isn't Supported.
 	if d, found = supportedDefaults[a.Distro]; !found {
-		err = errors.New("Cannot build a packer template from passed distro: " + a.Distro + " is not Supported. Please pass a Supported distribution.")
+		err := errors.New("Cannot build a packer template from passed distro: " + a.Distro + " is not Supported. Please pass a Supported distribution.")
 		jww.ERROR.Println(err.Error())
 		return err
 	}
@@ -290,6 +289,7 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	// Now everything can get put in a template
 	rTpl := newRawTemplate()
 	pTpl := packerTemplate{}
+	var err error
 	rTpl.createDistroTemplate(d)
 	rTpl.BuildName = d.Type + "-" + d.Release + "-" + d.Arch + "-" + d.Image
 
@@ -308,7 +308,7 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	// TODO break this call up or rename the function
 	jww.TRACE.Println("Distro based template built; build the template for JSON")
 
-	if err = pTpl.TemplateToFileJSON(rTpl.IODirInf, rTpl.BuildInf, scripts); err != nil {
+	if err := pTpl.TemplateToFileJSON(rTpl.IODirInf, rTpl.BuildInf, scripts); err != nil {
 		jww.ERROR.Println(err.Error())
 		return err
 	}
@@ -320,6 +320,9 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 // Processes the passed build requests. Returns either a message providing
 // information about the processing of the requested builds or an error.
 func BuildBuilds(buildNames ...string) (string, error) {
+	// Only load supported if it hasn't been loaded. Even though LoadSupported
+	// uses a mutex to control access to prevent race conditions, no need to
+	// call it if its already loaded.
 	if !supportedLoaded {
 
 		if err := loadSupported(); err != nil {
@@ -1020,10 +1023,10 @@ func deleteDirContent(dir string) error {
 	return nil
 }
 
-// Given a string, a position, and a length, return the substring containted
+// Given a string, a position, and a length, return the substring contained
 // within. If the requested index + requested length is greater than the length
 // of the string, the string contents from the index to the end of the string
-// will be returned instead.
+// will be returned instead. Note this assumes UTF-8, i.e. uses rune.
 func Substring(s string, i, l int) string {
 	if i <= 0 {
 		return ""

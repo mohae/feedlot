@@ -1,11 +1,11 @@
-// Generate Packer templates and associated files for consumption by Packer.
-//
 // Copyright 2014 Joel Scoble. All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-//
+
+// Package ranchr implements the creation of Packer templates from Rancher
+// build definitions.
 
 // Provides structs for storing the data from the various TOML files that
 // Rancher uses, along with methods associated with the structs.
@@ -80,7 +80,8 @@ type postProcessors struct {
 	Settings []string
 }
 
-// Merge the settings section of a post-processor. New values supercede existing ones.
+// Merge the settings section of a post-processor. New values supercede 
+// existing ones.
 func (p *postProcessors) mergeSettings(new []string) {
 	p.Settings = mergeSettingsSlices(p.Settings, new)
 }
