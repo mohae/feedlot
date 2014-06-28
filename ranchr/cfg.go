@@ -19,30 +19,31 @@ import (
 	"sync"
 
 	"github.com/BurntSushi/toml"
+	jww "github.com/spf13/jwalterweatherman"
 )
 
 // Contains most of the information for Packer templates within a Rancher Build.
 type build struct {
 	// Targeted builders: the values are consistent with Packer's, e.g.
 	// `virtualbox.iso` is used for VirtualBox.
-	BuilderType    []string                  `toml:"builder_type"`
-	
+	BuilderType []string `toml:"builder_type"`
+
 	// A map of builder configuration. There should always be a `common`
 	// builder, which has settings common to both VMWare and VirtualBox.
-	Builders       map[string]builder        `toml:"builders"`
+	Builders map[string]builder `toml:"builders"`
 
 	// A map of post-processor configurations.
 	PostProcessors map[string]postProcessors `toml:"post_processors"`
 
-	// A map of provisioner configurations. 
-	Provisioners   map[string]provisioners   `toml:"provisioners"`
+	// A map of provisioner configurations.
+	Provisioners map[string]provisioners `toml:"provisioners"`
 }
 
 // Defines a representation of the builder section of a Packer template.
 type builder struct {
 	// The settings slices store key value pairs in the format of "key=value"
-	// Settings that are common to both builders. 
-	Settings   []string `toml:"Settings"`
+	// Settings that are common to both builders.
+	Settings []string `toml:"Settings"`
 
 	// VM Specific settings. Each VM builder should have its own defined.
 	VMSettings []string `toml:"vm_Settings"`
@@ -115,7 +116,7 @@ type provisioners struct {
 	Settings []string `toml:"settings"`
 
 	// Scripts are defined separately because it's simpler that way.
-	Scripts  []string `toml:"scripts"`
+	Scripts []string `toml:"scripts"`
 }
 
 // Merge the settings section of a post-processor. New values supercede existing ones.
@@ -123,8 +124,8 @@ func (p *provisioners) mergeSettings(new []string) {
 	p.Settings = mergeSettingsSlices(p.Settings, new)
 }
 
-// Go through all of the Settings and convert them to a map. Each setting is 
-// parsed into its constituent parts. The value then goes through variable 
+// Go through all of the Settings and convert them to a map. Each setting is
+// parsed into its constituent parts. The value then goes through variable
 // replacement to ensure that the settings are properly resolved.
 func (p *provisioners) settingsToMap(Type string, r *rawTemplate) (map[string]interface{}, error) {
 	var k, v string
@@ -140,10 +141,10 @@ func (p *provisioners) settingsToMap(Type string, r *rawTemplate) (map[string]in
 		switch k {
 		case "execute_command":
 			// Get the command from the specified file
-			var c 	[]string
+			var c []string
 
 			if c, err = commandsFromFile(v); err != nil {
-				logger.Error(err.Error())
+				jww.ERROR.Print(err.Error())
 				return nil, err
 			}
 			v = c[0]
@@ -191,8 +192,8 @@ func (i *BuildInf) update(new BuildInf) {
 	return
 }
 
-// IODirInf is used to store information about where Rancher can find and put 
-// things. Source files are always in a SrcDir, e.g. HTTPSrcDir is the source 
+// IODirInf is used to store information about where Rancher can find and put
+// things. Source files are always in a SrcDir, e.g. HTTPSrcDir is the source
 // directory for the HTTP directory. The destination directory is always a Dir,
 // e.g. HTTPDir is the destination directory for the HTTP directory.
 type IODirInf struct {
@@ -200,23 +201,23 @@ type IODirInf struct {
 	CommandsSrcDir string `toml:"commands_src_dir"`
 
 	// The directory that will be used for the HTTP setting.
-	HTTPDir        string `toml:"http_dir"`
+	HTTPDir string `toml:"http_dir"`
 
 	// The directory that is the source for files to be copied to the HTTP
 	// directory, HTTPDir
-	HTTPSrcDir     string `toml:"http_src_dir"`
+	HTTPSrcDir string `toml:"http_src_dir"`
 
 	// The directory that the output artifacts will be written to.
-	OutDir         string `toml:"out_dir"`
+	OutDir string `toml:"out_dir"`
 
 	// The directory that scripts for the Packer template will be copied to.
-	ScriptsDir     string `toml:"scripts_dir"`
+	ScriptsDir string `toml:"scripts_dir"`
 
 	// The directory that contains the scripts that will be copied.
-	ScriptsSrcDir  string `toml:"scripts_src_dir"`
+	ScriptsSrcDir string `toml:"scripts_src_dir"`
 
 	// The directory that contains the source files for this build.
-	SrcDir         string `toml:"src_dir"`
+	SrcDir string `toml:"src_dir"`
 }
 
 func (i *IODirInf) update(new IODirInf) {
@@ -281,21 +282,21 @@ func (d *defaults) LoadOnce() error {
 
 	loadFunc := func() {
 		name := os.Getenv(EnvDefaultsFile)
-	
+
 		if name == "" {
 			err = errors.New("could not retrieve the default Settings file because the " + EnvDefaultsFile + " ENV 	variable was not set. Either set it or check your rancher.cfg setting")
-			logger.Critical(err.Error())
+			jww.CRITICAL.Print(err.Error())
 			return
 		}
 
 		if _, err = toml.DecodeFile(name, &d); err != nil {
-			logger.Critical(err.Error())
+			jww.CRITICAL.Print(err.Error())
 			return
 		}
 		d.loaded = true
-		return 
+		return
 	}
-	
+
 	d.load.Do(loadFunc)
 
 	// Don't need to log this as the loadFunc logged already logged it
@@ -303,7 +304,7 @@ func (d *defaults) LoadOnce() error {
 		return err
 	}
 
-	logger.Debugf("defaults loaded: %v", d)
+	jww.DEBUG.Printf("defaults loaded: %v", d)
 
 	return nil
 }
@@ -317,8 +318,8 @@ type supported struct {
 	loaded bool
 }
 
-// Struct to hold the details of supported distros. From this information a 
-// user should be able to build a Packer template by only executing the 
+// Struct to hold the details of supported distros. From this information a
+// user should be able to build a Packer template by only executing the
 // following, at minimum:
 //	$ rancher build -distro=ubuntu
 // All settings can be overridden. The information here represents the standard
@@ -350,8 +351,8 @@ type distro struct {
 }
 
 // Ensures that the supported distro information only get loaded once. Uses a
-// mutex to prevent race conditions as there can be concurrent processing of 
-// Packer templates. When loaded, it sets the loaded boolean so that it only 
+// mutex to prevent race conditions as there can be concurrent processing of
+// Packer templates. When loaded, it sets the loaded boolean so that it only
 // needs to be called when it hasn't been loaded.
 func (s *supported) LoadOnce() error {
 	var err error
@@ -361,26 +362,26 @@ func (s *supported) LoadOnce() error {
 
 		if name == "" {
 			err = errors.New("could not retrieve the Supported information because the " + EnvSupportedFile + " Env variable was not set. Either set it or check your rancher.cfg setting")
-			logger.Critical(err.Error())
-			return 
+			jww.CRITICAL.Print(err.Error())
+			return
 		}
 
 		if _, err = toml.DecodeFile(name, &s); err != nil {
-			logger.Critical(err.Error())
-			return 
+			jww.CRITICAL.Print(err.Error())
+			return
 		}
 
 		s.loaded = true
-		return 
+		return
 	}
 
 	s.load.Do(loadFunc)
-	
+
 	// Don't need to log the error as loadFunc already did it.
 	if err != nil {
 		return err
 	}
-	logger.Debugf("supported loaded: %v", s)
+	jww.DEBUG.Printf("supported loaded: %v", s)
 	return nil
 }
 
@@ -403,11 +404,11 @@ func (b *builds) LoadOnce() error {
 
 		if name == "" {
 			err = errors.New("could not retrieve the Builds configurations because the " + EnvBuildsFile + "Env variable was not set. Either set it or check your rancher.cfg setting")
-			logger.Critical(err.Error())
+			jww.CRITICAL.Print(err.Error())
 			return
 		}
 		if _, err = toml.DecodeFile(name, &b); err != nil {
-			logger.Critical(err.Error())
+			jww.CRITICAL.Print(err.Error())
 			return
 		}
 		b.loaded = true
@@ -421,7 +422,7 @@ func (b *builds) LoadOnce() error {
 		return err
 	}
 
-	logger.Debugf("builds loaded: %v", b)
+	jww.DEBUG.Printf("builds loaded: %v", b)
 	return nil
 }
 
@@ -441,15 +442,15 @@ func (b *buildLists) Load() error {
 	name := os.Getenv(EnvBuildListsFile)
 	if name == "" {
 		err := errors.New("could not retrieve the BuildLists file because the " + EnvBuildListsFile + " Env variable was not set. Either set it or check your rancher.cfg setting")
-		logger.Error(err.Error())
+		jww.ERROR.Print(err.Error())
 		return err
 	}
 
 	if _, err := toml.DecodeFile(name, &b); err != nil {
-		logger.Error(err.Error())
+		jww.ERROR.Print(err.Error())
 		return err
 	}
 
-	logger.Debugf("buildLists loaded: %v", b)
+	jww.DEBUG.Printf("buildLists loaded: %v", b)
 	return nil
 }

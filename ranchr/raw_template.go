@@ -6,6 +6,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	jww "github.com/spf13/jwalterweatherman"
 )
 
 type rawTemplate struct {
@@ -15,27 +17,27 @@ type rawTemplate struct {
 
 	// Convenience for distros that need ChecksumType for more than finding
 	// the ISO checksum, e.g. CentOS.
-	ChecksumType	string
+	ChecksumType string
 
 	// Current date in ISO 8601
-	date    string
+	date string
 
 	// The character(s) used to identify variables for Rancher. By default
 	// this is a colon, :. Currently only a starting delimeter is supported.
-	delim   string
+	delim string
 
 	// The distro that this template targets. The type must be a supported
 	// type, i.e. defined in supported.toml. The values for type are
 	// consistent with Packer values.
-	Type    string
+	Type string
 
 	// The architecture for the ISO image, this is either 32bit or 64bit,
 	// with the actual values being dependent on the operating system and
 	// the target builder.
-	Arch    string
+	Arch string
 
 	// The image for the ISO. This is distro dependent.
-	Image   string
+	Image string
 
 	// The release, or version, for the ISO. Usage and values are distro
 	// dependent, however only version currently supported images that are
@@ -46,7 +48,7 @@ type rawTemplate struct {
 	varVals map[string]string
 
 	// Variable name mapping...currently not supported
-	vars    map[string]string
+	vars map[string]string
 
 	// Contains all the build information needed to create the target Packer
 	// template and its associated artifacts.
@@ -82,7 +84,7 @@ func (r *rawTemplate) createDistroTemplate(d rawTemplate) {
 
 // Create a Packer template from the rawTemplate that can be marshalled to JSON.
 func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
-	logger.Debugf("Entering...")
+	jww.DEBUG.Printf("Entering...")
 	var err error
 	var vars map[string]interface{}
 
@@ -97,7 +99,7 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 	// Builders
 	iSl := make([]interface{}, len(r.Builders))
 	if p.Builders, vars, err = r.createBuilders(); err != nil {
-		logger.Error(err.Error())
+		jww.ERROR.Print(err.Error())
 		return p, err
 	}
 
@@ -111,7 +113,7 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 
 		if sM == nil {
 			err = errors.New("an error occured while trying to create the Packer post-processor template for " + k)
-			logger.Critical(err.Error())
+			jww.CRITICAL.Print(err.Error())
 			return p, err
 		}
 
@@ -128,7 +130,7 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 	for k, pr := range r.Provisioners {
 		iM, err = pr.settingsToMap(k, r)
 		if err != nil {
-			logger.Critical(err.Error())
+			jww.CRITICAL.Print(err.Error())
 			return p, err
 		}
 
@@ -154,7 +156,7 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 	// TODO
 
 	// Return the generated Packer Template
-	logger.Debug("PackerTemplate created from a rawTemplate.")
+	jww.DEBUG.Print("PackerTemplate created from a rawTemplate.")
 
 	return p, nil
 }
@@ -165,7 +167,7 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]interface{}, err error) {
 	if r.BuilderType == nil || len(r.BuilderType) <= 0 {
 		err = fmt.Errorf("no builder types were configured, unable to create builders")
-		logger.Error(err.Error())
+		jww.ERROR.Print(err.Error())
 		return nil, nil, err
 	}
 
@@ -177,7 +179,7 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 
 	// Generate the builders for each builder type.
 	for _, bType := range r.BuilderType {
-		logger.Trace(bType)
+		jww.TRACE.Print(bType)
 		// TODO calculate the length of the two longest Settings and VMSettings sections and make it
 		// that length. That will prevent a panic should there be more than 50 options. Besides its
 		// stupid, on so many levels, to hard code this...which makes me...d'oh!
@@ -188,7 +190,7 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 		case BuilderVMWare:
 			// Generate the common Settings and their vars
 			if tmpS, tmpVar, err = r.commonVMSettings(bType, r.Builders[BuilderCommon].Settings, r.Builders[bType].Settings); err != nil {
-				logger.Error(err.Error())
+				jww.ERROR.Print(err.Error())
 				return nil, nil, err
 			}
 
@@ -207,7 +209,7 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 		case BuilderVBox:
 			// Generate the common Settings and their vars
 			if tmpS, tmpVar, err = r.commonVMSettings(bType, r.Builders[BuilderCommon].Settings, r.Builders[bType].Settings); err != nil {
-				logger.Error(err.Error())
+				jww.ERROR.Print(err.Error())
 				return nil, nil, err
 			}
 
@@ -230,7 +232,7 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 
 		default:
 			err = errors.New("the requested builder, '" + bType + "', is not supported")
-			logger.Error(err.Error())
+			jww.ERROR.Print(err.Error())
 			return nil, nil, err
 		}
 		bldrs[ndx] = tmpS
@@ -277,12 +279,12 @@ func (r *rawTemplate) commonVMSettings(builderType string, old []string, new []s
 		//		var tmp interface{}
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
-		logger.Tracef("%s:%s", k, v)
+		jww.TRACE.Printf("%s:%s", k, v)
 		switch k {
 		case "iso_checksum_type":
 			// look up the release information and
 			// add all the iso entries to the map
-			logger.Tracef("%s ChecksumType: %s", r.Type, v)
+			jww.TRACE.Printf("%s ChecksumType: %s", r.Type, v)
 			var notSupported string
 			Settings[k] = v
 			r.ChecksumType = v
@@ -311,7 +313,7 @@ func (r *rawTemplate) commonVMSettings(builderType string, old []string, new []s
 			var commands []string
 
 			if commands, err = commandsFromFile(v); err != nil {
-				logger.Error(err.Error())
+				jww.ERROR.Print(err.Error())
 				return nil, nil, err
 			} else {
 
@@ -335,7 +337,7 @@ func (r *rawTemplate) commonVMSettings(builderType string, old []string, new []s
 				rel := &centOS{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: r.ChecksumType}, Arch: r.Arch, Distro: r.Type, Image: r.Image, Release: r.Release}}
 				err := rel.SetISOInfo()
 				if err != nil {
-					logger.Error(err.Error())
+					jww.ERROR.Print(err.Error())
 					return nil, nil, err
 				}
 				Settings[k] = rel.getOSType(builderType)
@@ -354,7 +356,7 @@ func (r *rawTemplate) commonVMSettings(builderType string, old []string, new []s
 // are updated depends on whether this is a build from a distribution's
 // default template or from a defined build template.
 func (r *rawTemplate) mergeBuildSettings(bld rawTemplate) {
-	logger.Debug(bld)
+	jww.DEBUG.Print(bld)
 	r.IODirInf.update(bld.IODirInf)
 	r.PackerInf.update(bld.PackerInf)
 	r.BuildInf.update(bld.BuildInf)
@@ -373,7 +375,7 @@ func (r *rawTemplate) mergeBuildSettings(bld rawTemplate) {
 }
 
 func (r *rawTemplate) mergeDistroSettings(d *distro) {
-	logger.Tracef("%v\n%v", r, d)
+	jww.TRACE.Printf("%v\n%v", r, d)
 	// merges Settings between an old and new template.
 	// Note: Arch, Image, and Release are not updated here as how these fields
 	// are updated depends on whether this is a build from a distribution's
@@ -388,9 +390,9 @@ func (r *rawTemplate) mergeDistroSettings(d *distro) {
 	}
 
 	// merge the build portions.
-	logger.Tracef("Merging old Builder: %v\nand new Builder: %v", r.Builders, d.Builders)
+	jww.TRACE.Printf("Merging old Builder: %v\nand new Builder: %v", r.Builders, d.Builders)
 	r.Builders = getMergedBuilders(r.Builders, d.Builders)
-	logger.Tracef("Merged Builder: %v", r.Builders)
+	jww.TRACE.Printf("Merged Builder: %v", r.Builders)
 	r.PostProcessors = getMergedPostProcessors(r.PostProcessors, d.PostProcessors)
 	r.Provisioners = getMergedProvisioners(r.Provisioners, d.Provisioners)
 
@@ -399,7 +401,7 @@ func (r *rawTemplate) mergeDistroSettings(d *distro) {
 
 // Get a slice of script names from the shell provisioner, if any.
 func (r *rawTemplate) ScriptNames() []string {
-	logger.Debug("entering")
+	jww.DEBUG.Print("entering")
 	var s []string
 
 	if len(r.Provisioners["shell"].Scripts) > 0 {
@@ -414,7 +416,7 @@ func (r *rawTemplate) ScriptNames() []string {
 		}
 
 	}
-	logger.Debug(s)
+	jww.DEBUG.Print(s)
 	return s
 
 }
@@ -467,4 +469,3 @@ func (r *rawTemplate) mergeVariables() {
 	r.ScriptsSrcDir = trimSuffix(r.replaceVariables(r.ScriptsSrcDir), "/")
 	r.SrcDir = trimSuffix(r.replaceVariables(r.SrcDir), "/")
 }
-

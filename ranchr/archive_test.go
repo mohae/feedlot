@@ -11,7 +11,6 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-
 func TestDirWalk(t *testing.T) {
 	Convey("Testing Archive.DirWalk...", t, func() {
 		tst := Archive{}
@@ -183,4 +182,3 @@ func TestFormattedNow(t *testing.T) {
 		})
 	})
 }
-

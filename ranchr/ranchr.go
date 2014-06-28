@@ -21,23 +21,21 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
-	seelog "github.com/cihub/seelog"
+	jww "github.com/spf13/jwalterweatherman"
 )
 
-var logger seelog.LoggerInterface
-
 var (
-	appName = "RANCHER"
-
+	appName            = "RANCHER"
 	EnvConfig          = appName + "_CONFIG"
-	EnvLogging         = appName + "_LOGGING"
-	EnvLogFile         = appName + "_LOG_FILE"
-	EnvLogLevel        = appName + "_LOG_LEVEL"
 	EnvBuildsFile      = appName + "_BUILDS_FILE"
 	EnvBuildListsFile  = appName + "_BUILD_LISTS_FILE"
 	EnvDefaultsFile    = appName + "_DEFAULTS_FILE"
 	EnvSupportedFile   = appName + "_SUPPORTED_FILE"
 	EnvParamDelimStart = appName + "_PARAM_DELIM_START"
+	EnvLogToFile       = appName + "_LOG_TO_FILE"
+	EnvLogFilename     = appName + "_LOG_FILENAME"
+	EnvLogLevelFile    = appName + "_LOG_LEVEL_FILE"
+	EnvLogLevelStdout  = appName + "_LOG_MAX_Stdout"
 )
 
 var (
@@ -47,22 +45,23 @@ var (
 )
 
 var (
-	MessageEmptyValue = "Value expected but %v was empty"
-)
-
-var (
 	supportedDistros  *supported
 	supportedDefaults map[string]rawTemplate
 	supportedBuilds   builds
 	supportedLoaded   bool
 )
 
+var AppConfig appConfig
+
 type appConfig struct {
-	Logging         string
 	DefaultsFile    string `toml:"defaults_file"`
 	SupportedFile   string `toml:"Supported_file"`
 	BuildsFile      string `toml:"builds_file"`
 	BuildListsFile  string `toml:"build_lists_file"`
+	LogToFile       bool   `toml:"log_to_file"`
+	LogFilename     string `toml:"log_filename"`
+	LogLevelFile    string `toml:"log_level_file"`
+	LogLevelStdout  string `toml:"log_level_stdout"`
 	ParamDelimStart string `toml:"param_delim_start"`
 }
 
@@ -85,7 +84,6 @@ type ArgsFilter struct {
 // Rancher's logging settings.
 func SetEnv() error {
 	var err error
-	var config appConfig
 	var tmp string
 	tmp = os.Getenv(EnvConfig)
 
@@ -93,75 +91,58 @@ func SetEnv() error {
 		tmp = "rancher.cfg"
 	}
 
-	if _, err = toml.DecodeFile(tmp, &config); err != nil {
-		logger.Error(err.Error())
+	if _, err = toml.DecodeFile(tmp, &AppConfig); err != nil {
+		jww.ERROR.Println(err.Error())
 		return err
 	}
 
 	tmp = os.Getenv(EnvDefaultsFile)
 
 	if tmp == "" {
-
-		if err = os.Setenv(EnvDefaultsFile, config.DefaultsFile); err != nil {
-			logger.Error(err.Error())
+		if err = os.Setenv(EnvDefaultsFile, AppConfig.DefaultsFile); err != nil {
+			jww.ERROR.Println(err.Error())
 			return err
 		}
-
 	}
 
 	tmp = os.Getenv(EnvSupportedFile)
 
 	if tmp == "" {
 
-		if err = os.Setenv(EnvSupportedFile, config.SupportedFile); err != nil {
-			logger.Error(err.Error())
+		if err = os.Setenv(EnvSupportedFile, AppConfig.SupportedFile); err != nil {
+			jww.ERROR.Println(err.Error())
 			return err
 		}
-
 	}
 
 	tmp = os.Getenv(EnvBuildsFile)
 
 	if tmp == "" {
 
-		if err = os.Setenv(EnvBuildsFile, config.BuildsFile); err != nil {
-			logger.Error(err.Error())
+		if err = os.Setenv(EnvBuildsFile, AppConfig.BuildsFile); err != nil {
+			jww.ERROR.Println(err.Error())
 			return err
 		}
-
 	}
 
 	tmp = os.Getenv(EnvBuildListsFile)
 
 	if tmp == "" {
 
-		if err = os.Setenv(EnvBuildListsFile, config.BuildListsFile); err != nil {
-			logger.Error(err.Error())
+		if err = os.Setenv(EnvBuildListsFile, AppConfig.BuildListsFile); err != nil {
+			jww.ERROR.Println(err.Error())
 			return err
 		}
-
 	}
 
 	tmp = os.Getenv(EnvParamDelimStart)
 
 	if tmp == "" {
 
-		if err = os.Setenv(EnvParamDelimStart, config.ParamDelimStart); err != nil {
-			logger.Error(err.Error())
+		if err = os.Setenv(EnvParamDelimStart, AppConfig.ParamDelimStart); err != nil {
+			jww.ERROR.Println(err.Error())
 			return err
 		}
-
-	}
-
-	tmp = os.Getenv(EnvLogging)
-
-	if tmp == "" {
-
-		if err = os.Setenv(EnvLogging, config.Logging); err != nil {
-			logger.Error(err.Error())
-			return err
-		}
-
 	}
 
 	return nil
@@ -173,13 +154,13 @@ func loadSupported() error {
 	var err error
 
 	if supportedDistros, supportedDefaults, err = distrosInf(); err != nil {
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return err
 	}
 
 	err = supportedBuilds.LoadOnce()
 	if err != nil {
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return err
 	}
 
@@ -200,21 +181,21 @@ func distrosInf() (*supported, map[string]rawTemplate, error) {
 	err = d.LoadOnce()
 
 	if err != nil {
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return s, nil, err
 	}
 
 	err = s.LoadOnce()
 
 	if err != nil {
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return s, nil, err
 	}
 
 	dd := map[string]rawTemplate{}
 
 	if dd, err = setDistrosDefaults(d, s); err != nil {
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return s, nil, err
 	}
 
@@ -224,13 +205,13 @@ func distrosInf() (*supported, map[string]rawTemplate, error) {
 func BuildDistro(a ArgsFilter) error {
 	if !supportedLoaded {
 		if err := loadSupported(); err != nil {
-			logger.Error(err.Error())
+			jww.ERROR.Println(err.Error())
 			return err
 		}
 	}
 
 	if err := buildPackerTemplateFromDistro(a); err != nil {
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return err
 	}
 
@@ -259,7 +240,7 @@ func BuildDistro(a ArgsFilter) error {
 
 	}
 
-	logger.Infof("Packer template built for %v using: %s", a.Distro, argString)
+	jww.INFO.Printf("Packer template built for %v using: %s", a.Distro, argString)
 	return nil
 
 }
@@ -272,14 +253,14 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 
 	if a.Distro == "" {
 		err = errors.New("Cannot build a packer template because no target distro information was passed.")
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return err
 	}
 
 	// Get the default for this distro, if one isn't found then it isn't Supported.
 	if d, found = supportedDefaults[a.Distro]; !found {
 		err = errors.New("Cannot build a packer template from passed distro: " + a.Distro + " is not Supported. Please pass a Supported distribution.")
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return err
 	}
 
@@ -305,7 +286,7 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 
 	// Now that the raw template has been made, create a Packer template out of it
 	if pTpl, err = rTpl.createPackerTemplate(); err != nil {
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return err
 	}
 
@@ -317,13 +298,13 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	// the build directory and copying all files that the Packer template needs to the
 	// build directory.
 	// TODO break this call up or rename the function
-	logger.Trace("Distro based template built; build the template for JSON")
+	jww.TRACE.Println("Distro based template built; build the template for JSON")
 	if err = pTpl.TemplateToFileJSON(rTpl.IODirInf, rTpl.BuildInf, scripts); err != nil {
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return err
 	}
 
-	logger.Info("Created Packer template and associated build directory for " + d.BuildName)
+	jww.INFO.Println("Created Packer template and associated build directory for " + d.BuildName)
 	return nil
 }
 
@@ -332,7 +313,7 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 func BuildBuilds(buildNames ...string) (string, error) {
 	if !supportedLoaded {
 		if err := loadSupported(); err != nil {
-			logger.Error(err.Error())
+			jww.ERROR.Println(err.Error())
 			return "", err
 		}
 	}
@@ -365,7 +346,7 @@ func BuildBuilds(buildNames ...string) (string, error) {
 func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 	if buildName == "" {
 		err := errors.New("unable to build a Packer Template from a named build: no build name was passed")
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		doneCh <- err
 		return
 	}
@@ -373,7 +354,7 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 	if !supportedLoaded {
 
 		if err := loadSupported(); err != nil {
-			logger.Error(err.Error())
+			jww.ERROR.Println(err.Error())
 			doneCh <- err
 			return
 		}
@@ -389,7 +370,7 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 
 	if !ok {
 		err := errors.New("Unable to create template for the requested build, " + buildName + ". Requested Build definition was not found.")
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		doneCh <- err
 		return
 	}
@@ -397,7 +378,7 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 	// See if the distro default exists.
 	if tpl, ok = supportedDefaults[bld.Type]; !ok {
 		err := errors.New("Requested distribution, " + bld.Type + ", is not Supported. The Packer template for the requested build could not be created.")
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		doneCh <- err
 		return
 	}
@@ -424,7 +405,7 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 	var err error
 
 	if pTpl, err = tpl.createPackerTemplate(); err != nil {
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		doneCh <- err
 		return
 	}
@@ -434,12 +415,12 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 	scripts = tpl.ScriptNames()
 
 	if err = pTpl.TemplateToFileJSON(tpl.IODirInf, tpl.BuildInf, scripts); err != nil {
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		doneCh <- err
 		return
 	}
 
-	logger.Info("Created Packer template and associated build directory for build:" + buildName + ".")
+	jww.INFO.Println("Created Packer template and associated build directory for build:" + buildName + ".")
 	doneCh <- nil
 	return
 }
@@ -450,21 +431,21 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 func commandsFromFile(name string) (commands []string, err error) {
 	if name == "" {
 		err = errors.New("the passed Command filename was empty")
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return commands, err
 	}
 
 	f, errf := os.Open(name)
 	if errf != nil {
 		err = errf
-		logger.Error(errf.Error())
+		jww.ERROR.Println(errf.Error())
 		return commands, err
 	}
 
 	// always close what's been opened and check returned error
 	defer func() {
 		if cerr := f.Close(); cerr != nil && err == nil {
-			logger.Warn(cerr.Error())
+			jww.WARN.Println(cerr.Error())
 			err = cerr
 		}
 	}()
@@ -474,7 +455,7 @@ func commandsFromFile(name string) (commands []string, err error) {
 		commands = append(commands, scanner.Text())
 	}
 	if err = scanner.Err(); err != nil {
-		logger.Warn(err.Error())
+		jww.WARN.Println(err.Error())
 		return
 	}
 	return commands, nil
@@ -483,7 +464,7 @@ func commandsFromFile(name string) (commands []string, err error) {
 // setDistrosDefaults takes the defaults and suppported settings and creates
 // default build settings for each supported distro.
 func setDistrosDefaults(d *defaults, s *supported) (map[string]rawTemplate, error) {
-	logger.Tracef("defaults: %v\nsupported %v", d, s)
+	jww.TRACE.Printf("defaults: %v\nsupported %v", d, s)
 	// Create the distro default map
 	dd := map[string]rawTemplate{}
 
@@ -492,7 +473,7 @@ func setDistrosDefaults(d *defaults, s *supported) (map[string]rawTemplate, erro
 		// See if the base url exists for non centos distros
 		if v.BaseURL == "" && k != "centos" {
 			err := errors.New(k + " does not have its BaseURL configured.")
-			logger.Critical(err.Error())
+			jww.CRITICAL.Println(err.Error())
 			return nil, err
 
 		}
@@ -504,7 +485,7 @@ func setDistrosDefaults(d *defaults, s *supported) (map[string]rawTemplate, erro
 		tmp.BuildInf = d.BuildInf
 		tmp.IODirInf = d.IODirInf
 		tmp.PackerInf = d.PackerInf
-		tmp.build = d.build	
+		tmp.build = d.build
 		tmp.Type = k
 
 		// Now update it with the distro settings.
@@ -514,7 +495,7 @@ func setDistrosDefaults(d *defaults, s *supported) (map[string]rawTemplate, erro
 		tmp.IODirInf.update(v.IODirInf)
 		tmp.PackerInf.update(v.PackerInf)
 		tmp.mergeDistroSettings(v)
-		
+
 		// assign it to the return slice
 		dd[k] = tmp
 	}
@@ -529,7 +510,7 @@ func mergeSlices(s1 []string, s2 []string) []string {
 	if (s1 == nil || len(s1) <= 0) && (s2 == nil || len(s2) <= 0) {
 		return nil
 	}
-	
+
 	if s1 == nil || len(s1) <= 0 {
 		return s2
 	}
@@ -543,7 +524,7 @@ func mergeSlices(s1 []string, s2 []string) []string {
 	copy(tempSl, s1)
 	i := len(s1) - 1
 	var found bool
-	
+
 	// Go through every element in the second slice.
 	for _, v := range s2 {
 
@@ -577,10 +558,10 @@ func mergeSlices(s1 []string, s2 []string) []string {
 
 // mergeSettingsSlices merges two slices of settings. In cases of a key
 // collision, the second slice, s2, takes precedence. There are no duplicates
-// at the end of this operation. 
+// at the end of this operation.
 //
 // Since settings use  embedded key=value pairs, the key is extracted from each
-// value and matches are performed on the key only as the value will be 
+// value and matches are performed on the key only as the value will be
 // different if the key appears in both slices.
 func mergeSettingsSlices(s1 []string, s2 []string) []string {
 	if (s1 == nil || len(s1) <= 0) && (s2 == nil || len(s2) <= 0) {
@@ -601,7 +582,7 @@ func mergeSettingsSlices(s1 []string, s2 []string) []string {
 	ms1 = varMapFromSlice(s1)
 
 	if ms1 == nil {
-		logger.Critical("Unable to create a variable map from the passed slice.")
+		jww.CRITICAL.Println("Unable to create a variable map from the passed slice.")
 	}
 
 	// Make a slice with a length equal to the sum of the two input slices.
@@ -611,7 +592,7 @@ func mergeSettingsSlices(s1 []string, s2 []string) []string {
 	i := len(s1) - 1
 	indx := 0
 	var k string
-	// For each element in the second slice, get the key. If it already 
+	// For each element in the second slice, get the key. If it already
 	// exists, update the existing value, otherwise add it to the merged
 	// slice
 	for _, v := range s2 {
@@ -620,7 +601,7 @@ func mergeSettingsSlices(s1 []string, s2 []string) []string {
 			// This key already exists. Find it and update it.
 			indx = keyIndexInVarSlice(k, tempSl)
 			if indx < 0 {
-				logger.Warn("The key, " + k + ", was not updated to '" + v + "' because it was not found in the target slice.")
+				jww.WARN.Println("The key, " + k + ", was not updated to '" + v + "' because it was not found in the target slice.")
 			} else {
 				tempSl[indx] = v
 			}
@@ -639,12 +620,11 @@ func mergeSettingsSlices(s1 []string, s2 []string) []string {
 	return retSl
 }
 
-
 // varMapFromSlice creates a map from the passed slice. A Rancher var string
 // contains a key=value string.
 func varMapFromSlice(vars []string) map[string]interface{} {
 	if vars == nil {
-		logger.Warn("Unable to create a Packer Settings map because no variables were received")
+		jww.WARN.Println("Unable to create a Packer Settings map because no variables were received")
 		return nil
 	}
 
@@ -667,7 +647,7 @@ func parseVar(s string) (k string, v string) {
 	// The key is assumed to be everything before the first equal sign.
 	// The value is assumed to be everything after the first equal sign and
 	// may also contain equal signs.
-	// Both the key and value can have leading and trailing spaces. These 
+	// Both the key and value can have leading and trailing spaces. These
 	// will be trimmed.
 	arr := strings.SplitN(s, "=", 2)
 	k = strings.Trim(arr[0], " ")
@@ -724,7 +704,7 @@ func getDefaultISOInfo(d []string) (Arch string, Image string, Release string) {
 		case "release":
 			Release = v
 		default:
-			logger.Warn("Unknown default key: " + k)
+			jww.WARN.Println("Unknown default key: " + k)
 		}
 
 	}
@@ -859,19 +839,19 @@ func trimSuffix(s string, suffix string) string {
 func copyFile(srcDir string, destDir string, file string) (written int64, err error) {
 	if srcDir == "" {
 		err := errors.New("copyFile: no source directory passed")
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return 0, err
 	}
 
 	if destDir == "" {
 		err := errors.New("copyFile: no destination directory passed")
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return 0, err
 	}
 
 	if file == "" {
 		err := errors.New("copyFile: no filename passed")
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return 0, err
 	}
 
@@ -883,7 +863,7 @@ func copyFile(srcDir string, destDir string, file string) (written int64, err er
 	// Create the scripts dir and copy each script from sript_src to out_dir/scripts/
 	// while keeping track of success/failures.
 	if err = os.MkdirAll(destDir, os.FileMode(0766)); err != nil {
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return 0, err
 	}
 
@@ -891,7 +871,7 @@ func copyFile(srcDir string, destDir string, file string) (written int64, err er
 
 	// Open the source script
 	if fs, err = os.Open(src); err != nil {
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return 0, err
 	}
 	defer fs.Close()
@@ -899,12 +879,12 @@ func copyFile(srcDir string, destDir string, file string) (written int64, err er
 	// Open the destination, create or truncate as needed.
 	fd, err = os.Create(dest)
 	if err != nil {
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return 0, err
 	}
 	defer func() {
 		if cerr := fd.Close(); cerr != nil && err == nil {
-			logger.Warn(cerr.Error())
+			jww.WARN.Println(cerr.Error())
 			err = cerr
 		}
 	}()
@@ -922,7 +902,7 @@ func copyDirContent(srcDir string, destDir string) error {
 
 	if !exists {
 		err = errors.New("Source, " + srcDir + ", does not exist. Nothing copied.")
-		logger.Info(err.Error())
+		jww.INFO.Println(err.Error())
 		return err
 	}
 
@@ -939,21 +919,21 @@ func copyDirContent(srcDir string, destDir string) error {
 			// if the info is empty, whatever this entry represents
 			// doesn't actually exist.
 			err := errors.New(file.p + " does not exist")
-			logger.Error(err.Error())
+			jww.ERROR.Println(err.Error())
 			return err
 		}
 
 		if file.info.IsDir() {
 
 			if err := os.MkdirAll(file.p, os.FileMode(0766)); err != nil {
-				logger.Error(err.Error())
+				jww.ERROR.Println(err.Error())
 				return err
 			}
 
 		} else {
 
 			if _, err := copyFile(srcDir, destDir, file.info.Name()); err != nil {
-				logger.Error(err.Error())
+				jww.ERROR.Println(err.Error())
 				return err
 			}
 
@@ -963,9 +943,9 @@ func copyDirContent(srcDir string, destDir string) error {
 	return nil
 }
 
-// deleteDirContent deletes the contents of a directory. 
+// deleteDirContent deletes the contents of a directory.
 func deleteDirContent(dir string) error {
-	logger.Debugf("dir: %s", dir)
+	jww.DEBUG.Printf("dir: %s", dir)
 	var dirs []string
 	// see if the directory exists first, actually any error results in the
 	// same handling so just return on any error instead of doing an
@@ -973,7 +953,7 @@ func deleteDirContent(dir string) error {
 	if _, err := os.Stat(dir); err != nil {
 
 		if os.IsNotExist(err) {
-			logger.Error(err.Error())
+			jww.ERROR.Println(err.Error())
 			return err
 		}
 
@@ -981,23 +961,23 @@ func deleteDirContent(dir string) error {
 
 	dirInf := directory{}
 	dirInf.DirWalk(dir)
-	logger.Tracef("dirIng: %+v", dirInf)
+	jww.TRACE.Printf("dirIng: %+v", dirInf)
 	dir = appendSlash(dir)
 
 	for _, file := range dirInf.Files {
-		logger.Tracef("process: %v", dir+file.p)
+		jww.TRACE.Printf("process: %v", dir+file.p)
 
 		if file.info.IsDir() {
 			dirs = append(dirs, dir+file.p)
-			logger.Tracef("added directory: %v", dir+file.p)
+			jww.TRACE.Printf("added directory: %v", dir+file.p)
 		} else {
 
 			if err := os.Remove(dir + file.p); err != nil {
-				logger.Error(err.Error())
+				jww.ERROR.Println(err.Error())
 				return err
 			}
 
-			logger.Tracef("deleted: %v", dir+file.p)
+			jww.TRACE.Printf("deleted: %v", dir+file.p)
 		}
 	}
 
@@ -1005,10 +985,10 @@ func deleteDirContent(dir string) error {
 	// do this in reverse order
 	for i := len(dirs) - 1; i >= 0; i-- {
 
-		logger.Tracef("process directory: %v", dirs[i])
+		jww.TRACE.Printf("process directory: %v", dirs[i])
 
 		if err := os.Remove(dirs[i]); err != nil {
-			logger.Error(err.Error())
+			jww.ERROR.Println(err.Error())
 			return err
 		}
 

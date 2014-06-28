@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/dotcloud/tar"
+	jww "github.com/spf13/jwalterweatherman"
 )
 
 // Hold information about an archive.
@@ -18,10 +19,10 @@ type Archive struct {
 	OutDir string
 
 	// Name of the archive.
-	Name   string
+	Name string
 
 	// Compression type to be used.
-	Type   string
+	Type string
 
 	// List of files to add to the archive.
 	directory
@@ -36,7 +37,7 @@ type directory struct {
 // Basic information about a file
 type file struct {
 	// The file's path
-	p    string
+	p string
 
 	// The file's FileInfo
 	info os.FileInfo
@@ -50,7 +51,7 @@ func (d *directory) DirWalk(dirPath string) error {
 	if dirPath == "" {
 		// If nothing was passed, do nothing. This is not an error.
 		// However archive.Files will be nil
-		logger.Warn("No path information was received.")
+		jww.WARN.Println("No path information was received.")
 		return nil
 	}
 
@@ -58,20 +59,20 @@ func (d *directory) DirWalk(dirPath string) error {
 	var exists bool
 	exists, err = pathExists(dirPath)
 	if err != nil {
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return err
 	}
 
 	if !exists {
 		err = errors.New("Unable to create a list of directory contents because the received path, " + dirPath + ", does not exist")
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return err
 	}
 
 	var fullPath string
 	fullPath, err = filepath.Abs(dirPath)
 	if err != nil {
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return err
 	}
 
@@ -87,36 +88,36 @@ func (d *directory) DirWalk(dirPath string) error {
 // Add the current file information to the file slice.
 func (d *directory) addFilename(root string, p string, fi os.FileInfo, err error) error {
 	// Add a file to the slice of files for which an archive will be created.
-	logger.Tracef("BEGIN:  root: %v, path: %v, fi: %+v", root, p, fi)
-	
+	jww.TRACE.Printf("BEGIN:  root: %v, path: %v, fi: %+v", root, p, fi)
+
 	// See if the path exists
 	var exists bool
 	exists, err = pathExists(p)
 	if err != nil {
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return err
 	}
 	if !exists {
 		err = errors.New("The passed filename, " + p + ", does not exist. Nothing added.")
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return err
 	}
 
 	// Get the relative information.
 	rel, err := filepath.Rel(root, p)
 	if err != nil {
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return err
 	}
 
 	if rel == "." {
-		logger.Trace("Don't add the relative root")
+		jww.TRACE.Println("Don't add the relative root")
 		return nil
 	}
 
 	// Add the file information.
 	d.Files = append(d.Files, file{p: rel, info: fi})
-	logger.Tracef("END relative: %v\tabs: %v", rel, p)
+	jww.TRACE.Printf("END relative: %v\tabs: %v", rel, p)
 	return nil
 }
 
@@ -126,21 +127,21 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 	// TODO preserve ownership
 	file, err := os.Open(filename)
 	if err != nil {
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return err
 	}
 	defer file.Close()
 
 	var fileStat os.FileInfo
 	if fileStat, err = file.Stat(); err != nil {
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return err
 	}
 
 	// Don't add directories--is this a good idea?
 	fileMode := fileStat.Mode()
 	if fileMode.IsDir() {
-		logger.Trace("Is Directory: ", filename)
+		jww.TRACE.Println("Is Directory: ", filename)
 		return nil
 	}
 
@@ -153,13 +154,13 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 
 	// Write the file header to the tarball.
 	if err := tW.WriteHeader(tarHeader); err != nil {
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return err
 	}
 
 	// Add the file to the tarball.
 	if _, err := io.Copy(tW, file); err != nil {
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return err
 	}
 
@@ -170,27 +171,27 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 // deleting those artifacts. This prevents any stale elements from persisting
 // to the new build.
 func (a *Archive) priorBuild(p string, t string) error {
-	logger.Debugf("t: %v\nsrc: %v", t, p)
+	jww.DEBUG.Printf("t: %v\nsrc: %v", t, p)
 
 	// See if src exists, if it doesn't then don't do anything
 	if _, err := os.Stat(p); err != nil {
 		if os.IsNotExist(err) {
-			logger.Trace("processing of prior build run not needed because " + p + " does not exist")
+			jww.TRACE.Println("processing of prior build run not needed because " + p + " does not exist")
 			return nil
 		}
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return err
 	}
 
 	// Archive the old artifacts.
 	if err := a.archivePriorBuild(p, t); err != nil {
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return err
 	}
 
 	// Delete the old artifacts.
 	if err := a.deletePriorBuild(p); err != nil {
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return err
 	}
 
@@ -198,40 +199,40 @@ func (a *Archive) priorBuild(p string, t string) error {
 }
 
 func (a *Archive) archivePriorBuild(p string, t string) error {
-	logger.Trace("Creating tarball from "+p+" using ", t)
+	jww.TRACE.Println("Creating tarball from "+p+" using ", t)
 
 	// Get a list of directory contents
 	if err := a.DirWalk(p); err != nil {
-		logger.Error(err.Error())
+		jww.ERROR.Println(err.Error())
 		return err
 	}
 
 	if len(a.Files) <= 1 {
 		// This isn't a real error, just log it and return a non-error state.
-		logger.Debug("No prior builds to archive.")
+		jww.DEBUG.Println("No prior builds to archive.")
 		return nil
 	}
 
 	// Get the current date and time in a slightly modifie ISO 8601 format:
 	// the colons are stripped from the time.
 	nowF := formattedNow()
-	
+
 	// Get the relative path so that it can be added to the tarball name.
 	relPath := path.Dir(p)
 	// The tarball's name is the directory name + current time + extensions.
 	tarBallName := relPath + a.Name + "-" + nowF + ".tar.gz"
-	logger.Tracef("The files within %v will be archived and saved as %v.", p, tarBallName)
+	jww.TRACE.Printf("The files within %v will be archived and saved as %v.", p, tarBallName)
 
 	// Create the new archive file.
 	tBall, err := os.Create(tarBallName)
 	if err != nil {
-		logger.Critical(err.Error())
+		jww.CRITICAL.Println(err.Error())
 		return err
 	}
 	// Close the file with error handling
 	defer func() {
 		if cerr := tBall.Close(); cerr != nil && err == nil {
-			logger.Error(cerr.Error())
+			jww.ERROR.Print(cerr.Error())
 			err = cerr
 		}
 	}()
@@ -245,16 +246,16 @@ func (a *Archive) archivePriorBuild(p string, t string) error {
 	defer tW.Close()
 
 	// Go through each file in the path and add it to the archive
-	var i	int
-	var f 	file
+	var i int
+	var f file
 	for i, f = range a.Files {
-		if err := a.addFile(tW, appendSlash(relPath) + f.p); err != nil {
-			logger.Critical(err.Error())
+		if err := a.addFile(tW, appendSlash(relPath)+f.p); err != nil {
+			jww.CRITICAL.Println(err.Error())
 			return err
 		}
 	}
 
-	logger.Tracef("Exiting priorBuild. %v files were added to the archive.", i)
+	jww.DEBUG.Printf("Exiting priorBuild. %v files were added to the archive.", i)
 
 	return nil
 }

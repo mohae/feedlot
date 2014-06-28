@@ -60,8 +60,8 @@ func (c *BuildCommand) Run(args []string) int {
 	// Declare the command flag set and their values.
 	cmdFlags := flag.NewFlagSet("build", flag.ContinueOnError)
 
-	cmdFlags.Usage = func() { 
-		c.Ui.Output(c.Help()) 
+	cmdFlags.Usage = func() {
+		c.Ui.Output(c.Help())
 	}
 
 	cmdFlags.StringVar(&distroFilter, "distro", "", "distro filter")

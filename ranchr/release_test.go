@@ -415,7 +415,7 @@ func TestCentOSSetChecksum(t *testing.T) {
 			c.BaseURL = "http://adfarfawer.com/notaurl/" + c.ReleaseFull + "/isos/" + c.Arch + "/"
 			err := c.setChecksum()
 			Convey("The error should be ", func() {
-//				So(err.Error(), ShouldEqual, "Get " + c.BaseURL + "abcsum.txt: dial tcp: lookup adfarfawer.com: no such host")
+				//				So(err.Error(), ShouldEqual, "Get " + c.BaseURL + "abcsum.txt: dial tcp: lookup adfarfawer.com: no such host")
 				So(err, ShouldNotBeNil)
 			})
 		})
