@@ -143,7 +143,7 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 		return err
 	}
 
-	// Don't add directory
+	// Don't add directories--they result in tar header errors.
 	fileMode := fileStat.Mode()
 	if fileMode.IsDir() {
 		return nil
