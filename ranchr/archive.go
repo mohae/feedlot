@@ -47,8 +47,6 @@ type file struct {
 // Walk the passed path, making a list of all the files that are children of
 // the path.
 func (d *directory) DirWalk(dirPath string) error {
-	var err error
-
 	// If the directory exists, create a list of its contents.
 	if dirPath == "" {
 		// If nothing was passed, do nothing. This is not an error.
@@ -58,8 +56,7 @@ func (d *directory) DirWalk(dirPath string) error {
 	}
 
 	// See if the path exists
-	var exists bool
-	exists, err = pathExists(dirPath)
+	exists, err := pathExists(dirPath)
 
 	if err != nil {
 		jww.ERROR.Println(err.Error())
@@ -72,8 +69,7 @@ func (d *directory) DirWalk(dirPath string) error {
 		return err
 	}
 
-	var fullPath string
-	fullPath, err = filepath.Abs(dirPath)
+	fullPath, err := filepath.Abs(dirPath)
 
 	if err != nil {
 		jww.ERROR.Println(err.Error())
