@@ -8,7 +8,6 @@ package main
 import (
 	"fmt"
 	"os"
-	_"time"
 
 	"github.com/mitchellh/cli"
 	"github.com/mohae/rancher/ranchr"
@@ -21,6 +20,7 @@ func main() {
 	rc := runMain()
 	os.Exit(rc)
 }
+
 func runMain() int {
 	// runMain parses the Flag for glog, sets up CLI stuff for the supported
 	// subcommands and runs Rancher.
@@ -29,7 +29,7 @@ func runMain() int {
 		fmt.Println("An error while processing Rancher Environment variables: ", err.Error())
 		return -1
 	}
-	
+
 	// Logging setup
 	SetLogging()
 
@@ -46,15 +46,20 @@ func runMain() int {
 			break
 		}
 	}
+
 	cli := &cli.CLI{
 		Args:     args,
 		Commands: Commands,
 		HelpFunc: cli.BasicHelpFunc("rancher"),
 	}
+
 	exitCode, err := cli.Run()
+
 	if err != nil {
 		jww.ERROR.Printf("Rancher encountered an error: %s\n", err.Error())
+
 	}
+
 	jww.INFO.Printf("Rancher exiting with an exit code of %v", exitCode)
 	// TODO Force sleep because log messages seem to be dropped...this needs to be addressed
 	//	time.Sleep(time.Millisecond * 5000)
