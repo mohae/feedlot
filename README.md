@@ -1,16 +1,18 @@
 rancher
 =======
-Ranchers supply products to packers. Rancher creates Packer templates. Ok, a bit of a stretch, but it's the best I could come up with.
 
-I created this because I found Packer templates more painful to work with than I would like, and why should I have to figure out the ISO information? Also there was a lot of replication between builders. So I did what any sane programmer would do, I wrote a program to do it for me. Because, that's a totally easier and simpler to do...
+>I am rarely happier than when spending entire day programming my computer to perform automatically a task that it would otherwise take me a good ten seconds to do by hand
+>  -Douglas Adams, _Last chance to See_
+
+Ranchers supply products to packers to process and package. Rancher creates Packer templates for Packer to process and generate artifacts. Ok, a bit of a stretch, but it's the best I could come up with.
 
 As it stands, this is a mvp with support for only VirtualBox and VMWare buiilders, the shell provisioner, and vagrant post-processor. Overrides are not supported for provisioners and post-processors. 
 
-The Packer templates are generated from either the default Packer settings for a supported distro or from a Rancher build template. Rancher saves the results of a build to an directory of the same name within the output directory. This includes the .json file, referenced script files, and a configuration file for unattended installs of the distribution.
+Packer templates are generated from either the default Packer settings for a supported distro or from a Rancher build template. Rancher saves the results of a build to an directory of the same name within the output directory. This includes the .json file, referenced script files, and a configuration file for unattended installs of the distribution.
 
 If the output directory for a given build already contains artifacts, Rancher will archive the target directory and save it as a .tgz using the directory name and the current date and time in a slightly modified ISO 8601 format, the `:` are stripped from the time in the filename. The old artifacts will then be deleted so that Rancher can ensure that the output from the current build will have a clean directory to write to.
 
-Supported Distros:
+Currently Supported Distros:
     * ubuntu
     * centos
 
@@ -51,13 +53,13 @@ The `defaults.toml` file contain most of the defaults for builds. A few settings
 ###`conf/supported.toml`###
 The `supported.toml` file defines the supported operating systems, referred to as distros or distributions, and their settings, including any distro specific overrides. Because Rancher does distro specific processing, like ISO information look-up, Packer templates can be generated for supported distributions only. 
 
-Each supported distro has a `defaults` section, which defines the default `architecture`, `image`, and `release` for the distro. These defaults define the target ISO to use.
+Each supported distro has a `defaults` section, which defines the default `architecture`, `image`, and `release` for the distro. These defaults define the target ISO to use unless the defaults are overridden by either flags or configuration.
 
 ####Distro Defaults####
 The settings in the `defaults.toml` and `supported.toml` files are merged and the result, for each supported distro, being the distribution's default template. This is used for Rancher builds that use thee `-distro` flag. They are also used as the basis for the templates defined in `builds.toml`. 
 
 ####CentOS specific####
-For CentOS, the `base_url` should only be used if you want to use a specific iso redirect mirror. The mirror url should be the url download string, less the iso name. So an ISO located at `http://bay.uchicago.edu/centos/6.5/isos/x86_64/CentOS-6.5-c86_64-minimal.iso` would have a `base_url` of `http://bay.uchicago.edu/centos/6.5/isos/x86_64/`.
+For CentOS, the `base_url` should only be used if you want to use a specific iso redirect mirror. The mirror url should be the url download string, less the iso name. So an ISO located at `http://bay.uchicago.edu/centos/6.5/isos/x86_64/CentOS-6.5-c86_64-minimal.iso` would have a `base_url` of `http://bay.uchicago.edu/centos/6.5/isos/x86_64/`. No validation is done on the `base_url` so you need to make sure that the URL is correct for your release and architecture.
 
 If the `base_url` is left empty, the url will be randomly selected from that isoredirect.centos.org page for the desired CentOS version and architecture.
 
@@ -66,19 +68,21 @@ If the `base_url` is left empty, the url will be randomly selected from that iso
 
 Each build, at minimum, must have a `type`, which is named after Packer's `type` and represents the target distro.
 
+Builds are used in conjunction with the `build` command or are added to `buildlists.toml` as part of a buildlist.
+
 ###`conf.d/buildlists.toml`###
-`buildlists.toml` defines named lists of builds. These name lists are used in conjunction with the `rancher buildlists` command.
+`buildlists.toml` defines named lists of builds. These name lists are used in conjunction with the `rancher buildlists buildlistNames...` command. If you often find that the `build` sub-command is used with mupltiple build names, a buildlist might be useful instead. 
 
 ##Rancher Commands##
 Rancher uses mitchellh's cli package, with support for the `build` and `buildlists` custom commands, along with the standard `version` and `help` commands.
 
 ###`build`###
-`rancher build buildNames...`
+`rancher build <flags> buildNames...`
 
 Supported Flags:
 
-* -distro=<distroname>
-* -arch=<arch>
+* -distro=<distro name>
+* -arch=<architecture>
 * -image=<image>
 * -release=<release>
 
@@ -89,18 +93,7 @@ If the `-distro` flag is passed, a build based on the default setting for the di
 
 Generate the Packer templates for all of the builds listed within the passed buildlists. No flags are supported.
 
-##Issues##
- * The buildlist command is not supported.
- * Some comments are outdated and need to be revised accordingly
- * preseed.cfg not tested (some may just be touch artifacts)
- * ks.cfg not tested (some may just be touch artifacts)
- * commands not tested (some may just be touch artifacts)
- * scripts not tested (some may just be touch artifacts)
-
-##Other notes:##
+##Notes:##
  * Fully commented example toml files not created.
  * Docs needed
- * For CentOS, the ISO resolution is done on a per builder basis, which means that a Packer template could point to different ISO locations. Caching the first results will probably be added so that the locations are consistently used.
-
-
 
