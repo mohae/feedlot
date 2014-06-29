@@ -37,6 +37,12 @@ type iso struct {
 	isoURL string
 }
 
+type releaser interface {
+	SetISOInfo() error
+	setChecksum() error
+	setISOURL() error
+}
+
 // Release information. Usage of Release and ReleaseFull, along with what
 // constitutes valid values, are distro dependent.
 type release struct {
@@ -91,12 +97,14 @@ func (u *ubuntu) setChecksum() error {
 	return nil
 }
 
-func (u *ubuntu) setISOURL() {
+func (u *ubuntu) setISOURL() error {
 	// Its ok to use Release in the directory path because Release will resolve
 	// correctly, at the directory level, for Ubuntu.
 	u.isoURL = appendSlash(u.BaseURL) + appendSlash(u.Release) + u.Name
 
-	return
+	// This never errors so return nil...error is needed for other
+	// implementations of the interface.
+	return nil
 }
 
 // findChecksum finds the checksum in the passed page string for the current

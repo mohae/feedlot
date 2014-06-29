@@ -15,6 +15,12 @@ type rawTemplate struct {
 	IODirInf
 	BuildInf
 
+	// holds release information
+	releaseISO releaser
+
+	// the builder specific string for the template's OS and Arch
+	osType	string
+
 	// Convenience for distros that need ChecksumType for more than finding
 	// the ISO checksum, e.g. CentOS.
 	ChecksumType string
@@ -268,45 +274,44 @@ func (r *rawTemplate) variableSection() (map[string]interface{}, error) {
 // Generates the common builder sections for vmWare and VBox
 func (r *rawTemplate) commonVMSettings(builderType string, old []string, new []string) (Settings map[string]interface{}, vars []string, err error) {
 	var k, v string
-	var tmpSl []string
-	maxLen := len(old) + len(new) + 4
-	tmpSl = make([]string, maxLen)
-	//	vars = make([]string, maxLen)
-	Settings = make(map[string]interface{}, maxLen)
-	tmpSl = mergeSettingsSlices(old, new)
+	var mergedSlice []string
 
-	for _, s := range tmpSl {
+	maxLen := len(old) + len(new) + 4
+	mergedSlice = make([]string, maxLen)
+	Settings = make(map[string]interface{}, maxLen)
+	mergedSlice = mergeSettingsSlices(old, new)
+
+	// First set the ISO info for the desired release, if it's not already set
+	if r.osType == "" {
+		err = r.ISOInfo(builderType, mergedSlice)	
+		if err != nil {
+			jww.ERROR.Println(err.Error())
+			return nil, nil, err
+		}
+	}
+	jww.TRACE.Printf("rawTemplate post r.ISOInfo(): %v", r)
+	for _, s := range mergedSlice {
 		//		var tmp interface{}
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		jww.TRACE.Printf("%s:%s", k, v)
 		switch k {
 		case "iso_checksum_type":
-			// look up the release information and
-			// add all the iso entries to the map
-			jww.TRACE.Printf("%s ChecksumType: %s", r.Type, v)
-			var notSupported string
-			Settings[k] = v
-			r.ChecksumType = v
 			switch r.Type {
 			case "ubuntu":
-				rel := &ubuntu{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: v}, Arch: r.Arch, Distro: r.Type, Image: r.Image, Release: r.Release}}
-				rel.SetISOInfo()
-				Settings["iso_url"] = rel.isoURL
-				Settings["iso_checksum"] = rel.Checksum
+				Settings["iso_url"] = r.releaseISO.(*ubuntu).isoURL
+				Settings["iso_checksum"] = r.releaseISO.(*ubuntu).Checksum
+
 			case "centos":
-				rel := &centOS{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: v}, Arch: r.Arch, Distro: r.Type, Image: r.Image, Release: r.Release}}
-				rel.SetISOInfo()
-				Settings["iso_url"] = rel.isoURL
-				Settings["iso_checksum"] = rel.Checksum
-			default:
-				notSupported = r.Type + " is not supported"
+				Settings["iso_url"] = r.releaseISO.(*centOS).isoURL
+				Settings["iso_checksum"] = r.releaseISO.(*centOS).Checksum
+
+			case "default":
+				err = errors.New("rawTemplate.CommonVMSettings: " + k + " is not a supported builder type")
+				jww.ERROR.Println(err.Error())
+				return nil, nil, err
 			}
 
-			if notSupported != "" {
-				Settings["iso_url"] = notSupported
-				Settings["iso_checksum"] = notSupported
-			}
 
 		case "boot_command", "shutdown_command":
 			//If it ends in .command, replace it with the command from the filepath
@@ -328,33 +333,7 @@ func (r *rawTemplate) commonVMSettings(builderType string, old []string, new []s
 			}
 
 		case "guest_os_type":
-
-			switch r.Type {
-			case "ubuntu":
-				rel := &ubuntu{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: r.ChecksumType}, Arch: r.Arch, Distro: r.Type, Image: r.Image, Release: r.Release}}
-				osType, err := rel.getOSType(builderType)
-				if err != nil {
-					jww.ERROR.Println(err.Error())
-					return nil, nil, err
-				}
-
-				Settings[k] = osType
-			case "centos":
-				rel := &centOS{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: r.ChecksumType}, Arch: r.Arch, Distro: r.Type, Image: r.Image, Release: r.Release}}
-				err := rel.SetISOInfo()
-				if err != nil {
-					jww.ERROR.Println(err.Error())
-					return nil, nil, err
-				}
-
-				osType, err := rel.getOSType(builderType)
-				if err != nil {
-					jww.ERROR.Println(err.Error())
-					return nil, nil, err
-				}
-
-				Settings[k] = osType
-			}
+			Settings[k] = r.osType
 
 		default:
 			// just use the value
@@ -482,4 +461,45 @@ func (r *rawTemplate) mergeVariables() {
 	r.ScriptsDir = trimSuffix(r.replaceVariables(r.ScriptsDir), "/")
 	r.ScriptsSrcDir = trimSuffix(r.replaceVariables(r.ScriptsSrcDir), "/")
 	r.SrcDir = trimSuffix(r.replaceVariables(r.SrcDir), "/")
+}
+
+func (r *rawTemplate) ISOInfo(builderType string, settings []string) error {
+	jww.TRACE.Printf("Entering rawTemplate.ISOInfo")
+	var k, v, checksumType string
+	var err error
+
+	// Only the iso_checksum_type is needed for this.
+	for _, s := range settings {
+		k, v = parseVar(s)
+
+		switch k {
+		case "iso_checksum_type":
+			checksumType = v
+		}
+	}
+
+	switch r.Type {
+	case "ubuntu":
+		r.releaseISO = &ubuntu{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: checksumType}, Arch: r.Arch, Distro: r.Type, Image: r.Image, Release: r.Release}}
+		r.releaseISO.SetISOInfo()
+
+		r.osType, err = r.releaseISO.(*ubuntu).getOSType(builderType)
+		if err != nil {
+			jww.ERROR.Println(err.Error())
+			return err
+		}	
+
+	case "centos":
+		r.releaseISO = &centOS{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: checksumType}, Arch: r.Arch, Distro: r.Type, Image: r.Image, Release: r.Release}}
+		r.releaseISO.SetISOInfo()
+
+		r.osType, err = r.releaseISO.(*centOS).getOSType(builderType)
+		if err != nil {
+			jww.ERROR.Println(err.Error())
+			return err
+		}
+		
+	}
+	jww.TRACE.Printf("Exit rawTemplate.ISOInfo")
+	return nil
 }
