@@ -862,7 +862,7 @@ func trimSuffix(s string, suffix string) string {
 
 // copyFile copies a file from source directory to destination directory. It
 // returns either the number of bytes written or an error.
-func copyFile(srcDir string, destDir string, file string) (written int64, err error) {
+func copyFile(file string, srcDir string, destDir string) (written int64, err error) {
 	if srcDir == "" {
 		err := errors.New("copyFile: no source directory passed")
 		jww.ERROR.Println(err.Error())
@@ -958,7 +958,7 @@ func copyDirContent(srcDir string, destDir string) error {
 
 		} else {
 
-			if _, err := copyFile(srcDir, destDir, file.info.Name()); err != nil {
+			if _, err := copyFile(file.info.Name(), srcDir, destDir); err != nil {
 				jww.ERROR.Println(err.Error())
 				return err
 			}

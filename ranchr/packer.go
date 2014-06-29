@@ -28,7 +28,6 @@ type packerTemplate struct {
 // The Dir related settings in the Rancher configuration files relate to the
 // handling of source artifacts, including their directories, and their output
 // settings.
-// TODO break this up
 func (p *packerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []string) error {
 	jww.DEBUG.Printf("%v/n%v/n%v", i, b, scripts)
 
@@ -81,40 +80,15 @@ func (p *packerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []st
 	// where there is a large archive this is not long enough.
 	time.Sleep(time.Millisecond * 2000)
 
-	var errCnt, okCnt int
-
-	for _, script := range scripts {
-
-		if wB, err := copyFile(i.ScriptsSrcDir, appendSlash(i.OutDir)+i.ScriptsDir, script); err != nil {
-			jww.ERROR.Print(err.Error())
-			errCnt++
-		} else {
-			jww.TRACE.Print(strconv.FormatInt(wB, 10) + " Bytes were copied from " + i.ScriptsDir + script + " to " + appendSlash(i.OutDir) + script)
-			okCnt++
-		}
-
-	}
-
-	if errCnt > 0 {
-		jww.ERROR.Print("Copy of scripts for build, " + b.BuildName + ", had " + strconv.Itoa(errCnt) + " errors. There were " + strconv.Itoa(okCnt) + " scripts that were copied without error.")
-	} else {
-		jww.TRACE.Print(strconv.Itoa(okCnt) + " scripts were successfully copied for " + b.BuildName)
-	}
-
-	// Make the directory, if necessary, and copy the directory contents for the HTTP directory
-	jww.TRACE.Printf("Copy HTTP directory from %s to %s", i.HTTPSrcDir, appendSlash(i.OutDir)+i.HTTPDir)
-
-	if err := os.MkdirAll(appendSlash(i.OutDir)+i.HTTPDir, os.FileMode(0766)); err != nil {
-		jww.ERROR.Print(err.Error())
+	if err := copyScripts(scripts, i.ScriptsSrcDir, appendSlash(i.OutDir) + i.ScriptsDir); err != nil {
+		jww.ERROR.Println(err.Error())
 		return err
 	}
 
-	if err := copyDirContent(i.HTTPSrcDir, appendSlash(i.OutDir)+i.HTTPDir); err != nil {
+	if err := copyDirContent(i.HTTPSrcDir, appendSlash(i.OutDir) + i.HTTPDir); err != nil {
 		jww.ERROR.Print(err.Error())
 		return err
 	}
-
-	jww.TRACE.Print("Copied contents of " + i.HTTPSrcDir + " to " + appendSlash(i.OutDir) + i.HTTPDir)
 
 	// Write it out as JSON
 	tplJSON, err := json.MarshalIndent(p, "", "\t")
@@ -143,6 +117,33 @@ func (p *packerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []st
 	}
 
 	jww.DEBUG.Print("Packer template directory, JSON, and contents were created and copied for " + b.BuildName)
+
+	return nil
+}
+
+func copyScripts(scripts []string, src string, dest string) error {
+	var errCnt, okCnt int
+	var wB int64
+	var err error
+
+	for _, script := range scripts {
+
+		if wB, err = copyFile(script, src, dest); err != nil {
+			jww.ERROR.Print(err.Error())
+			errCnt++
+		} else {
+			jww.TRACE.Print(strconv.FormatInt(wB, 10) + " Bytes were copied from " + src + " to " + dest)
+			okCnt++
+		}
+
+	}
+
+	if errCnt > 0 {
+		jww.ERROR.Print("Copy of scripts for build had " + strconv.Itoa(errCnt) + " errors. There were " + strconv.Itoa(okCnt) + " scripts that were copied without error.")
+		return err
+	} else {
+		jww.TRACE.Print(strconv.Itoa(okCnt) + " scripts were successfully copied")
+	}
 
 	return nil
 }
