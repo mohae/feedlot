@@ -2,7 +2,8 @@ rancher
 =======
 
 >I am rarely happier than when spending entire day programming my computer to perform automatically a task that it would otherwise take me a good ten seconds to do by hand
->  -Douglas Adams, _Last chance to See_
+> 
+>   -Douglas Adams, _Last chance to See_
 
 Ranchers supply products to packers to process and package. Rancher creates Packer templates for Packer to process and generate artifacts. Ok, a bit of a stretch, but it's the best I could come up with.
 
