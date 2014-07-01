@@ -93,16 +93,15 @@ func (d *directory) addFilename(root string, p string, fi os.FileInfo, err error
 	// See if the path exists
 	var exists bool
 	exists, err = pathExists(p)
-
 	if err != nil {
 		jww.ERROR.Println(err.Error())
 		return err
 	}
 
-	// If it doesn't exist, log it and move on 
 	if !exists {
-		err = errors.New("The passed filename, " + p + ", does not exist. Nothing added.")
-		jww.WARN.Println(err.Error())
+		err = errors.New("The passed filename, " + p + ", does not exist.")
+		jww.ERROR.Println(err.Error())
+		return err
 	}
 
 	// Get the relative information.

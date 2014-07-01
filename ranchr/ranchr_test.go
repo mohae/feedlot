@@ -19,19 +19,26 @@ func init() {
 func TestSetEnv(t *testing.T) {
 	// Preserve current state.
 	tmpConfig := os.Getenv(EnvConfig)
-	tmpDefaultsFile := os.Getenv(EnvDefaultsFile)
-	tmpSupportedFile := os.Getenv(EnvSupportedFile)
 	tmpBuildsFile := os.Getenv(EnvBuildsFile)
 	tmpBuildListsFile := os.Getenv(EnvBuildListsFile)
+	tmpDefaultsFile := os.Getenv(EnvDefaultsFile)
+	tmpLogToFile := os.Getenv(EnvLogToFile)
+	tmpLogFilename := os.Getenv(EnvLogFilename)
+	tmpLogLevelFile := os.Getenv(EnvLogLevelFile)
+	tmpLogLevelStdout := os.Getenv(EnvLogLevelStdout)
 	tmpParamDelimStart := os.Getenv(EnvParamDelimStart)
-	tmpLogging := os.Getenv(EnvLogging)
+	tmpSupportedFile := os.Getenv(EnvSupportedFile)
+
 	os.Setenv(EnvConfig, "")
-	os.Setenv(EnvDefaultsFile, "")
-	os.Setenv(EnvSupportedFile, "")
 	os.Setenv(EnvBuildsFile, "")
 	os.Setenv(EnvBuildListsFile, "")
+	os.Setenv(EnvDefaultsFile, "")
+	os.Setenv(EnvLogToFile, "")
+	os.Setenv(EnvLogFilename, "")
+	os.Setenv(EnvLogLevelFile, "")
+	os.Setenv(EnvLogLevelStdout, "")
 	os.Setenv(EnvParamDelimStart, "")
-	os.Setenv(EnvLogging, "")
+	os.Setenv(EnvSupportedFile, "")
 	Convey("Given an some Env settings which may or may not exist", t, func() {
 		// note, normally calling SetEnv() with an empty env setting for AppConfig
 		// would not result in an error, instead the application's default rancher.cfg
@@ -51,24 +58,34 @@ func TestSetEnv(t *testing.T) {
 			Convey("Calling SetEnv() should result in an error", func() {
 				So(err, ShouldBeNil)
 			})
-			Convey("And EnvDefaultsFile setting should be set", func() {
-				So(os.Getenv(EnvDefaultsFile), ShouldEqual, testDefaultsFile)
-			})
-			Convey("And EnvSupportedFile setting should be set", func() {
-				So(os.Getenv(EnvSupportedFile), ShouldEqual, testSupportedFile)
-			})
 			Convey("And EnvBuildsFile setting should be set", func() {
 				So(os.Getenv(EnvBuildsFile), ShouldEqual, testBuildsFile)
 			})
 			Convey("And EnvBuildListsFile setting should be set", func() {
 				So(os.Getenv(EnvBuildListsFile), ShouldEqual, testBuildListsFile)
 			})
-			Convey("And EnvParamDelim setting should be set", func() {
-				So(os.Getenv(EnvParamDelimStart), ShouldEqual, ":")
+			Convey("And EnvDefaultsFile setting should be set", func() {
+				So(os.Getenv(EnvDefaultsFile), ShouldEqual, testDefaultsFile)
 			})
-			Convey("And EnvLogging setting should be set", func() {
-				So(os.Getenv(EnvLogging), ShouldEqual, "true")
+			Convey("And LogToFile setting should be set", func() {
+				So(os.Getenv(EnvLogToFile), ShouldEqual, false)
 			})
+			Convey("And LogFilename setting should be set", func() {
+				So(os.Getenv(EnvLogFilename), ShouldEqual, "")
+			})
+			Convey("And LogLevelFile setting should be set", func() {
+				So(os.Getenv(EnvLogLevelFile), ShouldEqual, "")
+			})
+			Convey("And LogLevelStdout setting should be set", func() {
+				So(os.Getenv(EnvLogLevelStdout), ShouldEqual, "")
+			})
+			Convey("And ParamDelimStart setting should be set", func() {
+				So(os.Getenv(EnvParamDelimStart), ShouldEqual, "")
+			})
+			Convey("And EnvSupportedFile setting should be set", func() {
+				So(os.Getenv(EnvSupportedFile), ShouldEqual, testSupportedFile)
+			})
+
 		})
 		Convey("Given a valid EnvConfig setting", func() {
 			os.Setenv(EnvConfig, testRancherCfg)
@@ -85,12 +102,15 @@ func TestSetEnv(t *testing.T) {
 
 	// Restore the state
 	os.Setenv(EnvConfig, tmpConfig)
-	os.Setenv(EnvDefaultsFile, tmpDefaultsFile)
-	os.Setenv(EnvSupportedFile, tmpSupportedFile)
 	os.Setenv(EnvBuildsFile, tmpBuildsFile)
 	os.Setenv(EnvBuildListsFile, tmpBuildListsFile)
+	os.Setenv(EnvDefaultsFile, tmpDefaultsFile)
+	os.Setenv(EnvLogToFile, tmpLogToFile)
+	os.Setenv(EnvLogFilename, tmpLogFilename)
+	os.Setenv(EnvLogLevelFile, tmpLogLevelFile)
+	os.Setenv(EnvLogLevelStdout, tmpLogLevelStdout)
 	os.Setenv(EnvParamDelimStart, tmpParamDelimStart)
-	os.Setenv(EnvLogging, tmpLogging)
+	os.Setenv(EnvSupportedFile, tmpSupportedFile)
 }
 
 func TestdistrosInf(t *testing.T) {

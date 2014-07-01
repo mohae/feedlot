@@ -54,15 +54,15 @@ var (
 var AppConfig appConfig
 
 type appConfig struct {
-	DefaultsFile    string `toml:"defaults_file"`
-	SupportedFile   string `toml:"Supported_file"`
 	BuildsFile      string `toml:"builds_file"`
 	BuildListsFile  string `toml:"build_lists_file"`
+	DefaultsFile    string `toml:"defaults_file"`
 	LogToFile       bool   `toml:"log_to_file"`
 	LogFilename     string `toml:"log_filename"`
 	LogLevelFile    string `toml:"log_level_file"`
 	LogLevelStdout  string `toml:"log_level_stdout"`
 	ParamDelimStart string `toml:"param_delim_start"`
+	SupportedFile   string `toml:"Supported_file"`
 }
 
 type ArgsFilter struct {

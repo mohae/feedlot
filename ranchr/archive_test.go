@@ -59,7 +59,7 @@ func TestAddFilename(t *testing.T) {
 		Convey("Adding an invalid path to the Files slice", func() {
 			err := tst.addFilename("", "../test_files/src/ubuntu/scripts/dne_test_file.sh", nil, nil)
 			Convey("Should result in an error", func() {
-				So(err.Error(), ShouldEqual, "The passed filename, ../test_files/src/ubuntu/scripts/dne_test_file.sh, does not exist. Nothing added.")
+				So(err.Error(), ShouldEqual, "The passed filename, ../test_files/src/ubuntu/scripts/dne_test_file.sh, does not exist.")
 				So(tst.Files, ShouldBeEmpty)
 			})
 		})

@@ -47,10 +47,10 @@ func TestTemplateToFileJSON(t *testing.T) {
 			})
 
 			Convey("Calling TemplateToJSON with IODirInf and an empty output directory ", func() {
-				i := IODirInf{HTTPDir: "http", HTTPSrcDir: "../test_files/http/", OutDir: "../test_files/out/empty/", SrcDir: "../test_files/", ScriptsDir: "scripts", ScriptsSrcDir: "../test_files/scripts/"}
+				i := IODirInf{HTTPDir: "http", HTTPSrcDir: "../test_files/src/ubuntu/http/", OutDir: "../test_files/out/empty/", SrcDir: "../test_files/", ScriptsDir: "scripts", ScriptsSrcDir: "../test_files/src/ubuntu/scripts/"}
 				Scripts := []string{"cleanup_test.sh", "setup_test.sh", "test_file.sh"}
 				err := p.TemplateToFileJSON(i, b, Scripts)
-				So(err.Error(), ShouldEqual, "Source, ../test_files/http/, does not exist. Nothing copied.")
+				So(err.Error(), ShouldEqual, "open ../test_files/scripts/test_file.sh: no such file or directory")
 			})
 
 			Convey("Calling TemplateToJSON with IODirInf and an output directory with contents", func() {
