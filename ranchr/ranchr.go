@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/BurntSushi/toml"
@@ -96,28 +97,6 @@ func SetEnv() error {
 		return err
 	}
 
-	tmp = os.Getenv(EnvDefaultsFile)
-
-	if tmp == "" {
-
-		if err = os.Setenv(EnvDefaultsFile, AppConfig.DefaultsFile); err != nil {
-			jww.ERROR.Println(err.Error())
-			return err
-		}
-
-	}
-
-	tmp = os.Getenv(EnvSupportedFile)
-
-	if tmp == "" {
-
-		if err = os.Setenv(EnvSupportedFile, AppConfig.SupportedFile); err != nil {
-			jww.ERROR.Println(err.Error())
-			return err
-		}
-
-	}
-
 	tmp = os.Getenv(EnvBuildsFile)
 
 	if tmp == "" {
@@ -140,11 +119,75 @@ func SetEnv() error {
 
 	}
 
-	tmp = os.Getenv(EnvParamDelimStart)
+	tmp = os.Getenv(EnvDefaultsFile)
+
+	if tmp == "" {
+
+		if err = os.Setenv(EnvDefaultsFile, AppConfig.DefaultsFile); err != nil {
+			jww.ERROR.Println(err.Error())
+			return err
+		}
+
+	}
+
+	tmp = os.Getenv(EnvLogToFile)
+
+	if tmp == "" {
+
+		if err = os.Setenv(EnvLogToFile, strconv.FormatBool(AppConfig.LogToFile)); err != nil {
+			jww.ERROR.Println(err.Error())
+			return err
+		}
+
+	}
+
+	tmp = os.Getenv(EnvLogFilename)
+
+	if tmp == "" {
+
+		if err = os.Setenv(EnvLogFilename, AppConfig.LogFilename); err != nil {
+			jww.ERROR.Println(err.Error())
+			return err
+		}
+
+	}
+
+	tmp = os.Getenv(EnvLogLevelFile)
+
+	if tmp == "" {
+
+		if err = os.Setenv(EnvLogLevelFile, AppConfig.LogLevelFile); err != nil {
+			jww.ERROR.Println(err.Error())
+			return err
+		}
+
+	}
+
+	tmp = os.Getenv(EnvLogLevelStdout)
+
+	if tmp == "" {
+
+		if err = os.Setenv(EnvLogLevelStdout, AppConfig.LogLevelStdout); err != nil {
+			jww.ERROR.Println(err.Error())
+			return err
+		}
+
+	}
 
 	if tmp == "" {
 
 		if err = os.Setenv(EnvParamDelimStart, AppConfig.ParamDelimStart); err != nil {
+			jww.ERROR.Println(err.Error())
+			return err
+		}
+
+	}
+
+	tmp = os.Getenv(EnvSupportedFile)
+
+	if tmp == "" {
+
+		if err = os.Setenv(EnvSupportedFile, AppConfig.SupportedFile); err != nil {
 			jww.ERROR.Println(err.Error())
 			return err
 		}

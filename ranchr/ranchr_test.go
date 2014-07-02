@@ -68,19 +68,19 @@ func TestSetEnv(t *testing.T) {
 				So(os.Getenv(EnvDefaultsFile), ShouldEqual, testDefaultsFile)
 			})
 			Convey("And LogToFile setting should be set", func() {
-				So(os.Getenv(EnvLogToFile), ShouldEqual, false)
+				So(os.Getenv(EnvLogToFile), ShouldEqual, "false")
 			})
 			Convey("And LogFilename setting should be set", func() {
 				So(os.Getenv(EnvLogFilename), ShouldEqual, "")
 			})
 			Convey("And LogLevelFile setting should be set", func() {
-				So(os.Getenv(EnvLogLevelFile), ShouldEqual, "")
+				So(os.Getenv(EnvLogLevelFile), ShouldEqual, "INFO")
 			})
 			Convey("And LogLevelStdout setting should be set", func() {
-				So(os.Getenv(EnvLogLevelStdout), ShouldEqual, "")
+				So(os.Getenv(EnvLogLevelStdout), ShouldEqual, "TRACE")
 			})
 			Convey("And ParamDelimStart setting should be set", func() {
-				So(os.Getenv(EnvParamDelimStart), ShouldEqual, "")
+				So(os.Getenv(EnvParamDelimStart), ShouldEqual, ":")
 			})
 			Convey("And EnvSupportedFile setting should be set", func() {
 				So(os.Getenv(EnvSupportedFile), ShouldEqual, testSupportedFile)
@@ -814,22 +814,22 @@ func TestTrimSuffix(t *testing.T) {
 func TestCopyFile(t *testing.T) {
 	Convey("Testing CopyFile", t, func() {
 		Convey("Calling copyfile with an empty srcDir", func() {
-			wB, err := copyFile("", testDir+"test", "")
+			wB, err := copyFile("", "", testDir+"test")
 			So(wB, ShouldEqual, 0)
 			So(err.Error(), ShouldEqual, "copyFile: no source directory passed")
 		})
 		Convey("Calling copyfile with an empty DestDir", func() {
-			wB, err := copyFile(testDir+"conf", "", "")
+			wB, err := copyFile("",testDir+"conf", "")
 			So(wB, ShouldEqual, 0)
 			So(err.Error(), ShouldEqual, "copyFile: no destination directory passed")
 		})
 		Convey("Calling copyfile with an empty filename", func() {
-			wB, err := copyFile(testDir+"conf", testDir+"test", "")
+			wB, err := copyFile("", testDir+"conf", testDir+"test")
 			So(wB, ShouldEqual, 0)
 			So(err.Error(), ShouldEqual, "copyFile: no filename passed")
 		})
 		Convey("Calling copyfile", func() {
-			wB, err := copyFile(testDir+"conf", testDir+"test", "builds_test.toml")
+			wB, err := copyFile("builds_test.toml", testDir+"conf", testDir+"test")
 			So(wB, ShouldEqual, 1484)
 			So(err, ShouldBeNil)
 		})
