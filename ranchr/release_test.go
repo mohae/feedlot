@@ -1,18 +1,15 @@
 package ranchr
 
 import (
-	"net/url"
-	"strings"
+	_"net/url"
+	_"strings"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func newTestUbuntu() ubuntu {
-	u := ubuntu{}
-	u.Release = "14.04"
-	u.Image = "server"
-	u.Arch = "amd64"
+	u := ubuntu{release{Release:"14.04", Image:"server", Arch:"amd64"}}
 	u.ChecksumType = "sha256"
 	u.BaseURL = "http://releases.ubuntu.com/"
 	return u
@@ -47,7 +44,7 @@ func TestUbuntuSetISOInfo(t *testing.T) {
 }
 
 func TestUbuntuSetChecksum(t *testing.T) {
-	Convey("Given a supported distro struct", t, func() {
+	Convey("Given an Ubuntu struct", t, func() {
 		u := newTestUbuntu()
 		Convey("Given the ubuntu 14.04 information, check checksum retrieval is working.", func() {
 			err := u.setChecksum()
@@ -88,7 +85,7 @@ func TestUbuntuSetChecksum(t *testing.T) {
 }
 
 func TestUbuntuSetURL(t *testing.T) {
-	Convey("Given a supported distro struct", t, func() {
+	Convey("Given an Ubuntu struct", t, func() {
 		u := newTestUbuntu()
 		u.setName()
 		Convey("Setting the URL", func() {
@@ -99,7 +96,7 @@ func TestUbuntuSetURL(t *testing.T) {
 }
 
 func TestUbuntuFindChecksum(t *testing.T) {
-	Convey("Given a supported distro struct", t, func() {
+	Convey("Given an Ubuntu struct", t, func() {
 		var err error
 		var s string
 		u := newTestUbuntu()
@@ -155,147 +152,288 @@ fbe7f159337551cc5ce9f0ff72acefef567f3dcd30750425287588c554978501 *ubuntu-12.04.4
 	})
 }
 
-/*
-getPAge testing?
-		Convey("Given a release of 14.04, image = server, arch = amd64", func() {
-			u := newTestUbuntu()
-
-			Convey("The Name should be 'ubuntu-14.04-server-amd64.iso'", func() {
-				So(u.Name, ShouldEqual, "ubuntu-14.04-server-amd64.iso")
-			})S
-		})
-
-
-		Convey("Given a release full of 14.04.4, image = server, arch = amd64", func() {
-			u := newTestUbuntu()
-			u.ReleaseFull = "14.04.4"
-			u.SetName()
-			Convey("The Name should be ", func() {
-				So(u.Name, ShouldEqual, "ubuntu-14.04.4-server-amd64.iso")
+func TestUbuntuGetOSType(t *testing.T) {
+	Convey("Given an ubuntu struct getting the OS Type from a string", t, func() {
+		Convey("Given amd64 architecture", func() {
+			u := ubuntu{release{Arch:"amd64"}}
+			Convey("Given a vmware builder", func() {
+				buildType := "vmware-iso"
+				Convey("Calling ubuntu.getOSType should result in", func() {
+					res, err := u.getOSType(buildType)
+					So(err, ShouldBeNil)
+					So(res, ShouldEqual, "ubuntu-64")
+				})
+			
 			})
+			Convey("Given a virtualbox builder", func() {
+				buildType := "virtualbox-iso"
+				Convey("Calling ubuntu.getOSType should result in", func() {
+					res, err := u.getOSType(buildType)
+					So(err, ShouldBeNil)
+					So(res, ShouldEqual, "Ubuntu_64")
+				})
+			})			
 		})
-
-		Convey("Given a blank url", func() {
-			_, err := getStringFromURL("");
-
-			Convey("The result should be an error", func() {
-				So(err.Error(), ShouldEqual, "Get : unsupported protocol scheme \"\"")
+		Convey("Given i386 architecture", func() {
+			u := ubuntu{release{Arch:"i386"}}
+			Convey("Given a vmware builder", func() {
+				buildType := "vmware-iso"
+				Convey("Calling ubuntu.getOSType should result in", func() {
+					res, err := u.getOSType(buildType)
+					So(err, ShouldBeNil)
+					So(res, ShouldEqual, "ubuntu-32")
+				})
+			
 			})
-		})
-
-		Convey("Given a local url", func() {
-			if res, err := getStringFromURL("localhost:6060"); err == nil {
-				Convey("The result should be ", func() {
+			Convey("Given a virtualbox builder", func() {
+				buildType := "virtualbox-iso"
+				Convey("Calling ubuntu.getOSType should result in", func() {
+					res, err := u.getOSType(buildType)
+					So(err, ShouldBeNil)
+					So(res, ShouldEqual, "Ubuntu_32")
+				})
+			})	
+			Convey("Given an invalid builder", func() {
+				buildType := "voodoo"
+				Convey("Calling ubuntu.getOSType should result in", func() {
+					res, err := u.getOSType(buildType)
+					So(err.Error(), ShouldEqual, "ubuntu.getOSType: the builder 'voodoo' is not supported")
 					So(res, ShouldEqual, "")
 				})
-			}
-		})
-
-
-		Convey("Given the base url, release, and filename is set", func() {
-			u := newTestUbuntu()
-			Convey("The result should be", func() {
-				So(u.isoURL, ShouldEqual, "http://releases.ubuntu.com/14.04/ubuntu-14.04-server-amd64.iso")
-			})
-		})
-
-		Convey("Given a url", func() {
-			if res, err := getStringFromURL("http://www.example.com"); err == nil {
-				Convey("The result should be ", func() {
-					So(res, ShouldEqual,
-`<!doctype html>
-<html>
-<head>
-    <title>Example Domain</title>
-
-    <meta charset="utf-8" />
-    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style type="text/css">
-    body {
-        background-color: #f0f0f2;
-        margin: 0;
-        padding: 0;
-        font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
-
-    }
-    div {
-        width: 600px;
-        margin: 5em auto;
-        padding: 50px;
-        background-color: #fff;
-        border-radius: 1em;
-    }
-    a:link, a:visited {
-        color: #38488f;
-        text-decoration: none;
-    }
-    @media (max-width: 700px) {
-        body {
-            background-color: #fff;
-        }
-        div {
-            width: auto;
-            margin: 0 auto;
-            border-radius: 0;
-            padding: 1em;
-        }
-    }
-    </style>
-</head>
-
-<body>
-<div>
-    <h1>Example Domain</h1>
-    <p>This domain is established to be used for illustrative examples in documents. You may use this
-    domain in examples without prior coordination or asking for permission.</p>
-    <p><a href="http://www.iana.org/domains/example">More information...</a></p>
-</div>
-</body>
-</html>
-`)
-				})
-			}
+			})					
 		})
 	})
 }
-*/
 
 func newTestCentOS() centOS {
-	c := centOS{}
-	c.Release = "6"
-	c.Image = "minimal"
-	c.Arch = "x86_64"
+	c := centOS{release{Release:"6", Image:"minimal", Arch:"x86_64"}}
 	c.ChecksumType = "sha256"
 	return c
 }
 
-func TestCentOSSetURL(t *testing.T) {
-	Convey("Given a supported distro struct", t, func() {
+func TestCentOSISORedirectURL(t *testing.T) {
+	Convey("Given a CentOS struct", t, func() {
 		c := newTestCentOS()
-		Convey("Setting the URL", func() {
-			// Since the baseurl is picked at random, to respect the mirrolist
-			// structure, just make sure it isn't empty.
+		Convey("calling isoRedirectURL", func() {
+			redirectURL := c.isoRedirectURL()
+				So(redirectURL, ShouldEqual, "http://isoredirect.centos.org/centos/" + c.Release + "/isos/" + c.Arch + "/")
+		})
+	})
+}
+
+func TestSetISOInfo(t *testing.T) {
+	Convey("Given a CentOS struct", t, func() {
+		c := newTestCentOS()
+		Convey("calling SetISOInfo", func() {
+			err := c.SetISOInfo()
+			So(err, ShouldBeNil)
+			So(c.ReleaseFull, ShouldStartWith, "6")
+			So(c.Name, ShouldNotEqual, "")
+			So(c.isoURL, ShouldStartWith, "http://")
+			So(c.isoURL, ShouldEndWith, ".iso")
+		})
+		Convey("calling SetISOInfo with empty Arch", func() {
+			c.Arch = ""
+			err := c.SetISOInfo()
+			So(err.Error(), ShouldEqual, "Arch was empty, unable to continue")
+		})
+		Convey("calling SetISOInfo with empty Arch", func() {
+			c.Release = ""
+			err := c.SetISOInfo()
+			So(err.Error(), ShouldEqual, "Release was empty, unable to continue")
+		})
+		Convey("calling SetISOInfo with an invalid baseURL", func() {
+			c.BaseURL = "http://example.com/"
+			err := c.SetISOInfo()
+			So(err.Error(), ShouldEqual, "Unable to find ISO information while looking for the release string on the CentOS checksums page.")
+		})
+		Convey("calling SetISOInfo with an empty checksumType", func() {
+			c.ChecksumType = ""
+			err := c.SetISOInfo()
+			So(err.Error(), ShouldEqual, "Checksum Type not set")
+		})
+	})
+}
+
+func TestCentOSsetReleaseNumber(t *testing.T) {
+	Convey("Given a CentOS struct", t, func() {
+		c := newTestCentOS()
+		Convey("calling setReleseNumber", func() {
+			err := c.setReleaseNumber()
+			So(err, ShouldBeNil)
+			// Only test for the first part, as the sub-version number may change
+			So(c.ReleaseFull, ShouldStartWith, "6.")
+		})
+	})
+}
+
+func TestCentOSsetReleaseInfo(t *testing.T) {
+	Convey("Given a CentOS struct", t, func() {
+		c := newTestCentOS()
+		Convey("calling setReleseInfo", func() {
 			err := c.setReleaseInfo()
 			So(err, ShouldBeNil)
-			So(c.BaseURL, ShouldEqual, "")
-			// And release full should be set
-			So(c.ReleaseFull, ShouldNotEqual, "")
-			//Make sure the name is set
-			Convey("Setting the iso name", func() {
-				c.setName()
-				So(c.Name, ShouldEqual, "CentOS-"+c.ReleaseFull+"-"+c.Arch+"-minimal.iso")
-				Convey("Setting the BaseURL", func() {
-					c.setISOURL()
-					So(c.isoURL, ShouldNotEqual, "")
+			// Release should always be a whole number
+			So(c.Release, ShouldEqual, "6")
+		})
+	})
+}
+
+func TestCentOSSetName(t *testing.T) {
+	Convey("Given a CentOS struct", t, func() {
+		c := newTestCentOS()
+		c.setReleaseInfo()
+		Convey("Setting the name", func() {
+			c.setName()
+			So(c.Name, ShouldEqual, "CentOS-" + c.ReleaseFull + "-" + c.Arch + "-" + c.Image + ".iso")
+		})
+	})
+}
+
+func TestCentOSGetOSType(t *testing.T) {
+	Convey("Given an centOS struct getting the OS Type from a string", t, func() {
+		Convey("Given x86_64 architecture", func() {
+			c := centOS{release{Arch:"x86_64"}}
+			Convey("Given a vmware builder", func() {
+				buildType := "vmware-iso"
+				Convey("Calling centOS.getOSType should result in", func() {
+					res, err := c.getOSType(buildType)
+					So(err, ShouldBeNil)
+					So(res, ShouldEqual, "centos-64")
 				})
+			
+			})
+			Convey("Given a virtualbox builder", func() {
+				buildType := "virtualbox-iso"
+				Convey("Calling centOS.getOSType should result in", func() {
+					res, err := c.getOSType(buildType)
+					So(err, ShouldBeNil)
+					So(res, ShouldEqual, "RedHat_64")
+				})
+			})			
+		})
+		Convey("Given x386 architecture", func() {
+			c := centOS{release{Arch:"x386"}}
+			Convey("Given a vmware builder", func() {
+				buildType := "vmware-iso"
+				Convey("Calling centOS.getOSType should result in", func() {
+					res, err := c.getOSType(buildType)
+					So(err, ShouldBeNil)
+					So(res, ShouldEqual, "centos-32")
+				})
+			
+			})
+			Convey("Given a virtualbox builder", func() {
+				buildType := "virtualbox-iso"
+				Convey("Calling centOS.getOSType should result in", func() {
+					res, err := c.getOSType(buildType)
+					So(err, ShouldBeNil)
+					So(res, ShouldEqual, "RedHat_32")
+				})
+			})	
+			Convey("Given an invalid builder", func() {
+				buildType := "voodoo"
+				Convey("Calling centOS.getOSType should result in", func() {
+					res, err := c.getOSType(buildType)
+					So(err.Error(), ShouldEqual, "centOS.getOSType: the builder 'voodoo' is not supported")
+					So(res, ShouldEqual, "")
+				})
+			})					
+		})
+	})
+}
+
+func TestCentOSSetChecksum(t *testing.T) {
+	Convey("Given a supported distro struct", t, func() {
+		c := newTestCentOS()
+		c.setReleaseInfo()
+		Convey("Given the CentOS 6 information, check checksum retrieval is working.", func() {
+			Convey("setting the Checksum without the baseURL set", func() {
+				err := c.setChecksum()
+				So(err.Error(), ShouldEqual, "Get sha256sum.txt: unsupported protocol scheme \"\"")
+			})
+			Convey("Setting the Checksum without the checksumType set", func() {
+				c.ChecksumType = ""
+				err := c.setChecksum()
+				So(err.Error(), ShouldEqual, "Checksum Type not set")
+			})
+			Convey("Setting the checksum with the baseurl set  ", func() {
+				c.ChecksumType = "sha256"
+				c.setISOURL()
+				err := c.setChecksum()
+				So(err, ShouldBeNil)
+// TODO investigate this test further
+//				So(c.Checksum, ShouldEqual, "f9d84907d77df62017944cb23cab66305e94ee6ae6c1126415b81cc5e999bdd0")
+			})
+		})
+		Convey("Check SetChecksum results with an error on getting url", func() {
+			c.ChecksumType = "ABC"
+			c.BaseURL = "http://example.com/notaurl/" + c.ReleaseFull + "/isos/" + c.Arch + "/"
+			err := c.setChecksum()
+			Convey("The error should be ", func() {
+				//				So(err.Error(), ShouldEqual, "Get " + c.BaseURL + "abcsum.txt: dial tcp: lookup adfarfawer.com: no such host")
+				So(err, ShouldNotBeNil)
+			})
+		})
+		Convey("Check SetChecksum results with an error on parsing url get results", func() {
+			c.Name = "aslk"
+			err := c.setChecksum()
+			Convey("The error should be ", func() {
+				So(err.Error(), ShouldNotEqual, "ssz")
 			})
 		})
 	})
 }
 
+func TestCentOSChecksumURL(t *testing.T) {
+	Convey("Given a CentOS struct", t, func() {
+		c := newTestCentOS()
+		c.setReleaseInfo()
+		c.setISOURL()		
+		Convey("Setting the ISO URL", func() {
+			checksumURL := c.checksumURL()
+			So(checksumURL, ShouldStartWith, "http://")
+			So(checksumURL, ShouldEndWith, c.ReleaseFull + "/isos/" + c.Arch + "/sha256sum.txt")
+		})	
+	})
+}
+
+func TestCentOSsetISOURL(t *testing.T) {
+	Convey("Given a CentOS struct", t, func() {
+		c := newTestCentOS()
+		c.setReleaseInfo()
+		c.setName()
+		Convey("Setting the ISO URL", func() {
+			err := c.setISOURL()
+			So(err, ShouldBeNil)
+			So(c.isoURL, ShouldStartWith, "http://")
+			So(c.isoURL, ShouldEndWith, c.ReleaseFull + "/isos/" + c.Arch + "/CentOS-" + c.ReleaseFull + "-" + c.Arch + "-" + c.Image + ".iso")
+		})	
+		Convey("Setting the isoURL without an empty BaseURL", func() {
+			c.BaseURL = "http://example.com/"
+			err := c.setISOURL()
+			So(err, ShouldBeNil)
+			So(c.isoURL, ShouldEqual, "http://example.com/CentOS-" + c.ReleaseFull + "-" + c.Arch + "-" + c.Image + ".iso")
+		})
+	})
+}
+
+func TestCentOSrandomISOURL(t *testing.T) {
+	Convey("Given a CentOS struct", t, func() {
+		c := newTestCentOS()
+		c.setReleaseInfo()
+		c.setName()
+		Convey("Setting the ISO URL", func() {
+			randomURL, err := c.randomISOURL()
+			So(err, ShouldBeNil)
+			So(randomURL, ShouldStartWith, "http://")
+			So(randomURL, ShouldEndWith, c.ReleaseFull + "/isos/" + c.Arch + "/CentOS-" + c.ReleaseFull + "-" + c.Arch + "-" + c.Image + ".iso")
+		})	
+	})
+}
+
 func TestCentOSFindChecksum(t *testing.T) {
-	Convey("Given a supported distro struct", t, func() {
+	Convey("Given a CentOS struct", t, func() {
 		var err error
 		var s string
 		c := newTestCentOS()
@@ -342,89 +480,15 @@ d8aaf698408c0c01843446da4a20b1ac03d27f87aad3b3b7b7f42c6163be83b9  CentOS-6.5-x86
 	})
 }
 
-func TestCentOSSetISOInfo(t *testing.T) {
-	Convey("Given a new release object for CentOS", t, func() {
+func TestCentOSsetName(t *testing.T) {
+	Convey("Given a CentOS struct", t, func() {
 		c := newTestCentOS()
-		Convey("Set ISO info", func() {
-			err := c.SetISOInfo()
-			Convey("Should not result in an  error", func() {
-				So(err, ShouldBeNil)
-			})
-			Convey("The URL should be", func() {
-				So(c.isoURL, ShouldNotEqual, "")
-				Convey("And it should be a valid url", func() {
-					u, err := url.Parse(c.isoURL)
-					So(err, ShouldBeNil)
-					So(u.Scheme, ShouldEqual, "http")
-					So(u.Host, ShouldNotEqual, "")
-					parts := strings.Split(u.Path, "/")
-					l := len(parts)
-					So(parts[l-4], ShouldEqual, "6.5")
-					So(parts[l-3], ShouldEqual, "isos")
-					So(parts[l-2], ShouldEqual, "x86_64")
-				})
-			})
-			Convey("The BaseURL not should exist", func() {
-				// Since this is random we just check that scheme, host, and path exist
-				So(c.BaseURL, ShouldEqual, "")
-			})
-			Convey("The isoURL should Exist", func() {
-				So(c.isoURL, ShouldNotEqual, "")
-				Convey("And it should be a valid url", func() {
-					u, err := url.Parse(c.isoURL)
-					So(err, ShouldBeNil)
-					So(u.Scheme, ShouldNotEqual, "")
-					So(u.Scheme, ShouldNotEqual, "ftp")
-					So(u.Host, ShouldNotEqual, "")
-					So(u.Path, ShouldNotEqual, "")
-				})
-			})
-			Convey("The Checksum should be", func() {
-				So(c.Checksum, ShouldEqual, "f9d84907d77df62017944cb23cab66305e94ee6ae6c1126415b81cc5e999bdd0")
-			})
-			Convey("The Name should be", func() {
-				So(c.Name, ShouldEqual, "CentOS-6.5-x86_64-minimal.iso")
-			})
-		})
-		Convey("Set ISO info, error", func() {
-			c.Release = ""
-			err := c.SetISOInfo()
-			Convey("Attempt to set ISO information with bad values. The error should be", func() {
-				So(err.Error(), ShouldEqual, "Release was empty, unable to continue")
-			})
+		c.setReleaseInfo()
+		Convey("calling setName", func() {
+			c.setName()
+			So(c.Name, ShouldStartWith, "CentOS-")
+			So(c.Name, ShouldEndWith, ".iso")
 		})
 	})
 }
 
-func TestCentOSSetChecksum(t *testing.T) {
-	Convey("Given a supported distro struct", t, func() {
-		c := newTestCentOS()
-		c.setReleaseInfo()
-		c.SetISOInfo()
-		Convey("Given the CentOS 6 information, check checksum retrieval is working.", func() {
-			err := c.setChecksum()
-			Convey("Should not result in an error", func() {
-				So(err, ShouldBeNil)
-			})
-			Convey("The set checksum should be ", func() {
-				So(c.Checksum, ShouldEqual, "f9d84907d77df62017944cb23cab66305e94ee6ae6c1126415b81cc5e999bdd0")
-			})
-		})
-		Convey("Check SetChecksum results with an error on getting url", func() {
-			c.ChecksumType = "ABC"
-			c.BaseURL = "http://adfarfawer.com/notaurl/" + c.ReleaseFull + "/isos/" + c.Arch + "/"
-			err := c.setChecksum()
-			Convey("The error should be ", func() {
-				//				So(err.Error(), ShouldEqual, "Get " + c.BaseURL + "abcsum.txt: dial tcp: lookup adfarfawer.com: no such host")
-				So(err, ShouldNotBeNil)
-			})
-		})
-		Convey("Check SetChecksum results with an error on parsing url get results", func() {
-			c.Name = "aslk"
-			err := c.setChecksum()
-			Convey("The error should be ", func() {
-				So(err.Error(), ShouldNotEqual, "ssz")
-			})
-		})
-	})
-}

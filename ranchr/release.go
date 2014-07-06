@@ -216,7 +216,7 @@ func (u *ubuntu) getOSType(buildType string) (string, error) {
 	}
 
 	// Shouldn't get here unless the buildType passed is an unsupported one.
-	err := errors.New(fmt.Sprintf("release.getOSType: the builder '%s' is unsupported", buildType))
+	err := errors.New(fmt.Sprintf("ubuntu.getOSType: the builder '%s' is not supported", buildType))
 	return "", err
 }
 
@@ -249,15 +249,14 @@ func (c *centOS) SetISOInfo() error {
 	// Make sure that the version and release are set, Release and FullRelease
 	// respectively. Make sure they are both set properly.
 	err := c.setReleaseInfo()
-
 	if err != nil {
 		jww.ERROR.Println(err.Error())
 		return err
 	}
 
 	c.setName()
-	err = c.setISOURL()
 
+	err = c.setISOURL()
 	if err != nil {
 		jww.ERROR.Println(err.Error())
 		return err
@@ -345,7 +344,7 @@ func (c *centOS) getOSType(buildType string) (string, error) {
 	}
 
 	// Shouldn't get here unless the buildType passed is an unsupported one.
-	err := errors.New(fmt.Sprintf("release.getOSType: the builder '%s' is unsupported", buildType))
+	err := errors.New(fmt.Sprintf("centOS.getOSType: the builder '%s' is not supported", buildType))
 	return "", err
 }
 
@@ -354,6 +353,13 @@ func (c *centOS) getOSType(buildType string) (string, error) {
 func (c *centOS) setChecksum() error {
 	var page string
 	var err error
+
+	if c.ChecksumType == "" {
+		err := errors.New("Checksum Type not set")
+		jww.ERROR.Println(err.Error())
+		return err
+	}
+
 	url := c.checksumURL()
 	jww.TRACE.Println("URL:", url)
 
@@ -392,7 +398,6 @@ func (c *centOS) setISOURL() error {
 
 	var err error
 	c.isoURL, err = c.randomISOURL()
-
 	if err != nil {
 		jww.ERROR.Println(err.Error())
 		return err
@@ -406,15 +411,13 @@ func (c *centOS) randomISOURL() (string, error) {
 	redirectURL := c.isoRedirectURL()
 	jww.TRACE.Printf("redirectURL: %s", redirectURL)
 	page, err := getStringFromURL(redirectURL)
-	jww.TRACE.Print(page)
-
 	if err != nil {
 		jww.ERROR.Println(err.Error())
 		return "", err
 	}
+	jww.TRACE.Print(page)
 
 	doc, err := html.Parse(strings.NewReader(page))
-
 	if err != nil {
 
 		jww.ERROR.Println(err.Error())
@@ -490,7 +493,6 @@ func (c *centOS) setName() {
 func getStringFromURL(url string) (string, error) {
 	// Get the URL resource
 	res, err := http.Get(url)
-
 	if err != nil {
 		jww.ERROR.Println(err)
 		return "", err
@@ -501,7 +503,6 @@ func getStringFromURL(url string) (string, error) {
 
 	// Read the resoponse body into page
 	page, err := ioutil.ReadAll(res.Body)
-
 	if err != nil {
 		jww.ERROR.Print(err)
 		return "", err
