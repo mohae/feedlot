@@ -234,7 +234,7 @@ func TestBuildListsStuff(t *testing.T) {
 			os.Setenv(EnvBuildListsFile, "")
 			err := b.Load()
 			Convey("A load should result in an error", func() {
-				So(err.Error(), ShouldEqual, "could not retrieve the BuildLists file because the "+EnvBuildListsFile+" Env variable was not set. Either set it or check your rancher.cfg setting")
+				So(err.Error(), ShouldEqual, "could not retrieve the BuildLists file because the "+EnvBuildListsFile+" environment variable was not set. Either set it or check your rancher.cfg setting")
 			})
 		})
 

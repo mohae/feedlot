@@ -288,7 +288,7 @@ func (d *defaults) LoadOnce() error {
 		name := os.Getenv(EnvDefaultsFile)
 
 		if name == "" {
-			err = errors.New("could not retrieve the default Settings file because the " + EnvDefaultsFile + " ENV 	variable was not set. Either set it or check your rancher.cfg setting")
+			err = errors.New("could not retrieve the default Settings because the " + EnvDefaultsFile + " environment variable was not set. Either set it or check your rancher.cfg setting")
 			jww.CRITICAL.Print(err.Error())
 			return
 		}
@@ -366,7 +366,7 @@ func (s *supported) LoadOnce() error {
 		name := os.Getenv(EnvSupportedFile)
 
 		if name == "" {
-			err = errors.New("could not retrieve the Supported information because the " + EnvSupportedFile + " Env variable was not set. Either set it or check your rancher.cfg setting")
+			err = errors.New("could not retrieve the Supported information because the " + EnvSupportedFile + " environment variable was not set. Either set it or check your rancher.cfg setting")
 			jww.CRITICAL.Print(err.Error())
 			return
 		}
@@ -409,7 +409,7 @@ func (b *builds) LoadOnce() error {
 		name := os.Getenv(EnvBuildsFile)
 
 		if name == "" {
-			err = errors.New("could not retrieve the Builds configurations because the " + EnvBuildsFile + "Env variable was not set. Either set it or check your rancher.cfg setting")
+			err = errors.New("could not retrieve the Builds configurations because the " + EnvBuildsFile + " environment variable was not set. Either set it or check your rancher.cfg setting")
 			jww.CRITICAL.Print(err.Error())
 			return
 		}
@@ -450,7 +450,7 @@ func (b *buildLists) Load() error {
 	name := os.Getenv(EnvBuildListsFile)
 
 	if name == "" {
-		err := errors.New("could not retrieve the BuildLists file because the " + EnvBuildListsFile + " Env variable was not set. Either set it or check your rancher.cfg setting")
+		err := errors.New("could not retrieve the BuildLists file because the " + EnvBuildListsFile + " environment variable was not set. Either set it or check your rancher.cfg setting")
 		jww.ERROR.Print(err.Error())
 		return err
 	}

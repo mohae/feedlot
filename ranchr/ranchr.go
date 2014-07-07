@@ -334,6 +334,9 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	pTpl := packerTemplate{}
 	var err error
 	rTpl.createDistroTemplate(d)
+
+	// Since distro builds don't actually have a build name, we create one
+	// out of the args used to create it.
 	rTpl.BuildName = d.Type + "-" + d.Release + "-" + d.Arch + "-" + d.Image
 
 	// Now that the raw template has been made, create a Packer template out of it

@@ -35,8 +35,8 @@
 	[distro.ubuntu.builders]			
 		[distro.ubuntu.builders.common]
 		settings = [
-		    	"boot_command = :commands_src_dir/boot_test.command",
-	    		"shutdown_command = :commands_src_dir/shutdown_test.command"
+		    	"boot_command = ../test_files/src/ubuntu/commands/boot_test.command",
+	    		"shutdown_command = :command_src_dir/shutdown_test.command"
 		]
 		[distro.ubuntu.builders.virtualbox-iso]
 		vm_settings = [
@@ -54,7 +54,7 @@
 		[distro.ubuntu.provisioners]
 			[distro.ubuntu.provisioners.shell]
 			settings = [
-				"execute_command = :commands_src_dir/execute_test.command"
+				"execute_command = :command_src_dir/execute_test.command"
 			]
 			scripts = [ 
 				":scripts_dir/setup_test.sh",

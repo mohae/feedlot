@@ -430,11 +430,14 @@ func (r *rawTemplate) mergeVariables() {
 	// Src and Outdir are next, since they can be embedded too
 	r.varVals[r.delim+"name"] = r.Name
 
-	r.SrcDir = trimSuffix(r.replaceVariables(r.SrcDir), "/")
-	r.OutDir = trimSuffix(r.replaceVariables(r.OutDir), "/")
-	// Commands and scripts dir need to be resolved next
-	r.varVals[r.delim+"out_dir"] = r.OutDir
-	r.varVals[r.delim+"src_dir"] = r.SrcDir
+	// go through thrice to catch multiple embedded vars, hopefully the dynamic path isn't that insane
+	for i := 0; i < 3; i++ {
+		r.SrcDir = trimSuffix(r.replaceVariables(r.SrcDir), "/")
+		r.OutDir = trimSuffix(r.replaceVariables(r.OutDir), "/")
+		// Commands and scripts dir need to be resolved next
+		r.varVals[r.delim+"out_dir"] = r.OutDir
+		r.varVals[r.delim+"src_dir"] = r.SrcDir
+	}
 
 	r.CommandsSrcDir = trimSuffix(r.replaceVariables(r.CommandsSrcDir), "/")
 	r.HTTPDir = trimSuffix(r.replaceVariables(r.HTTPDir), "/")

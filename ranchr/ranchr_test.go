@@ -125,7 +125,7 @@ func TestdistrosInf(t *testing.T) {
 			os.Setenv(EnvDefaultsFile, "")
 			Convey("A call to distrosInf() should result in", func() {
 				s, dd, err = distrosInf()
-				So(err.Error(), ShouldEqual, "could not retrieve the default Settings file because the RANCHER_DEFAULTS_FILE ENV variable was not set. Either set it or check your rancher.cfg setting")
+				So(err.Error(), ShouldEqual, "could not retrieve the default Settings file because the RANCHER_DEFAULTS_FILE environment variable was not set. Either set it or check your rancher.cfg setting")
 				So(s, ShouldResemble, supported{})
 				So(dd, ShouldBeNil)
 			})
@@ -135,7 +135,7 @@ func TestdistrosInf(t *testing.T) {
 			os.Setenv(EnvSupportedFile, "")
 			Convey("A call to distrosInf() should result in", func() {
 				s, dd, err = distrosInf()
-				So(err.Error(), ShouldEqual, "could not retrieve the supported information because the RANCHER_SUPPORTED_FILE Env variable was not set. Either set it or check your rancher.cfg setting")
+				So(err.Error(), ShouldEqual, "could not retrieve the supported information because the RANCHER_SUPPORTED_FILE environment variable was not set. Either set it or check your rancher.cfg setting")
 				So(s, ShouldResemble, supported{})
 				So(dd, ShouldBeNil)
 			})
@@ -158,12 +158,55 @@ func TestdistrosInf(t *testing.T) {
 	os.Setenv(EnvSupportedFile, tmpEnvSupportedFile)
 }
 
-// TODO redo testing for new structure
-/*
+// TODO add check of results other than error state
+func TestLoadSupported(t *testing.T) {
+	tmpEnvBuildsFile := os.Getenv(EnvBuildsFile)
+	tmpEnvDefaultsFile := os.Getenv(EnvDefaultsFile)
+	tmpEnvSupportedFile := os.Getenv(EnvSupportedFile)
+	Convey("Testing loadSupported", t, func() {
+		Convey("Load Supported without setting the RANCHER_DEFAULTS_FILE environment variable.", func() {
+			os.Setenv(EnvDefaultsFile, "")
+			err := loadSupported()
+			// Use start with end with because a - is detected where one does not exist.
+			So(err.Error(), ShouldEqual, "could not retrieve the default Settings because the RANCHER_DEFAULTS_FILE environment variable was not set. Either set it or check your rancher.cfg setting")
+		})
+		Convey("Load Supported without setting the RANCHER_BUILDS_FILE environment variable.", func() {
+			os.Setenv(EnvBuildsFile, "")
+			os.Setenv(EnvDefaultsFile, "../test_files/conf/defaults_test.toml")
+			os.Setenv(EnvSupportedFile, "../test_files/conf/supported_test.toml")
+			err := loadSupported()
+			// Use start with end with because a - is detected where one does not exist.
+			So(err.Error(), ShouldEqual, "could not retrieve the Builds configurations because the RANCHER_BUILDS_FILE environment variable was not set. Either set it or check your rancher.cfg setting")
+		})
+		Convey("Load with the environment variable set.", func() {
+			os.Setenv(EnvBuildsFile, "../test_files/conf/builds_test.toml")
+			os.Setenv(EnvDefaultsFile, "../test_files/conf/defaults_test.toml")
+			os.Setenv(EnvSupportedFile, "../test_files/conf/supported_test.toml")
+			err := loadSupported()
+			So(err, ShouldBeNil)
+		})
+	})
+	os.Setenv(EnvBuildsFile, tmpEnvBuildsFile)
+	os.Setenv(EnvDefaultsFile, tmpEnvDefaultsFile)
+	os.Setenv(EnvSupportedFile, tmpEnvSupportedFile)
+}
+
+// TODO add check of results other than error state and fix
+func TestBuildDistro(t *testing.T) {
+	Convey("given an ArgsFilter", t, func() {
+		aFilter := ArgsFilter{Arch: "amd64", Distro: "ubuntu", Image: "server", Release: "14.04"}
+		Convey("Calling BuildDistro", func() {
+			err := BuildDistro(aFilter)
+//			So(err, ShouldBeNil)
+			_ = err
+		})
+	})
+}
+
 func TestbuildPackerTemplateFromDistros(t *testing.T) {
 	a := ArgsFilter{}
-	s := supported{}
-	dd := map[string]RawTemplate{}
+//	s := supported{}
+//	dd := map[string]rawTemplate{}
 	Convey("Given a buildPackerTemplateFromDistro call", t, func() {
 		tmp := os.Getenv(EnvConfig)
 		Convey(" with empty or nil args", func() {
@@ -171,24 +214,24 @@ func TestbuildPackerTemplateFromDistros(t *testing.T) {
 			So(err.Error(), ShouldEqual, "Cannot build requested packer template, the supported data structure was empty.")
 		})
 		Convey( " with a nil ArgsFilter", func() {
-			err := buildPackerTemplateFromDistro(, dd, a)
+			err := buildPackerTemplateFromDistro(a)
 			So(err.Error(), ShouldEqual, "Cannot build a packer template because no target distro information was passed.")
 		})
 		Convey(" with an empty distro defaults data structure", func() {
 			a.Distro = "ubuntu"
-			err := buildPackerTemplateFromDistro(testSupported, dd, a)
+			err := buildPackerTemplateFromDistro(a)
 			So(err.Error(), ShouldEqual, "Cannot build a packer template from passed distro: ubuntu is not supported. Please pass a supported distribution.")
 		})
 		Convey(" with an unsupported distro", func() {
 			a.Distro = "slackware"
-			err := buildPackerTemplateFromDistro(testSupported, testDistroDefaults, a)
+			err := buildPackerTemplateFromDistro(a)
 			So(err.Error(), ShouldEqual, "Cannot build a packer template from passed distro: slackware is not supported. Please pass a supported distribution.")
 		})
 		Convey(" with valid information", func() {
 	 		_ = os.Setenv(EnvConfig, testRancherCfg)
 			Convey( "with overrides", func() {
 				a = ArgsFilter{Distro:"ubuntu", Arch:"amd64", Image:"desktop", Release:"14.04"}
-				err := buildPackerTemplateFromDistro(testSupported, testDistroDefaults, a)
+				err := buildPackerTemplateFromDistro(a)
 				So(err, ShouldBeNil)
 			})
 		})
@@ -197,6 +240,38 @@ func TestbuildPackerTemplateFromDistros(t *testing.T) {
 
 }
 
+func TestBuildBuilds(t *testing.T) {
+	Convey("Testing BuildBuilds", t, func() {
+		Convey("Given an empty build name", func() {
+			bldName := ""
+			Convey("Calling BuilBuilds should result in", func() {
+				resultString, err := BuildBuilds(bldName)
+				So(err, ShouldEqual, "z")
+				So(resultString, ShouldEqual, "")
+			})
+		})
+		Convey("Given a build name", func() {
+			bldName := "test1"
+			Convey("Calling BuilBuilds should result in", func() {
+				resultString, err := BuildBuilds(bldName)
+				So(err, ShouldBeNil)
+				So(resultString, ShouldEqual, "")
+			})
+		})		
+
+		Convey("Given more than 1 build name", func() {
+			bldName1 := "test1"
+			bldName2 := "test2"
+			Convey("Calling BuilBuilds should result in", func() {
+				resultString, err := BuildBuilds(bldName1, bldName2)
+				So(err, ShouldBeNil)
+				So(resultString, ShouldEqual, "")
+			})
+		})
+	})		
+}
+/*
+TODO learn how to test w channels
 func TestbuildPackerTemplateFromNamedBuild(t *testing.T) {
 	s := testSupported
 	dd := testDistroDefaults
@@ -208,7 +283,7 @@ func TestbuildPackerTemplateFromNamedBuild(t *testing.T) {
 			Convey("Given setting the build config file to an invalid value", func() {
 				os.Setenv(EnvBuildsFile, "look/for/it/here/")
 				Convey("Calling buildPackerTemplateFromNamedBuild should result in", func() {
-					err := buildPackerTemplateFromNamedBuild(s, dd, "")
+					err := buildPackerTemplateFromNamedBuild("")
 					So(err.Error(), ShouldEqual, "open look/for/it/here/: no such file or directory")
 				})
 			})
@@ -238,6 +313,7 @@ func TestbuildPackerTemplateFromNamedBuild(t *testing.T) {
 
 }
 */
+
 func TestCommandsFromFile(t *testing.T) {
 	executeCommand := []string{"\"echo 'vagrant'|sudo -S sh '{{.Path}}'\""}
 	bootCommand := []string{"\"\", \"\", \"\", \"/install/vmlinuz\", \" auto\", \" console-setup/ask_detect=false\", \" console-setup/layoutcode=us\", \" console-setup/modelcode=pc105\", \" debconf/frontend=noninteractive\", \" debian-installer=en_US\", \" fb=false\", \" initrd=/install/initrd.gz\", \" kbd-chooser/method=us\", \" keyboard-configuration/layout=USA\", \" keyboard-configuration/variant=USA\", \" locale=en_US\", \" netcfg/get_hostname=ubuntu-1204\", \" netcfg/get_domain=vagrantup.com\", \" noapic\", \" preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg\", \" -- \", \"\""}
@@ -394,7 +470,7 @@ func TestKeyIndexInVarSlice(t *testing.T) {
 	})
 }
 
-func TestGetPackerVariableFromStringe(t *testing.T) {
+func TestGetPackerVariableFromString(t *testing.T) {
 	Convey("Testing getPackerVariableFromString", t, func() {
 		Convey("Given an empty value", func() {
 			res := getPackerVariableFromString("")

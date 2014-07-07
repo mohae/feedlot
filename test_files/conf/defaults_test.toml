@@ -8,7 +8,7 @@
 # Type corresponds with a Packer Builder's `type` variable. This is typically
 # the distro name.
 description = "Test Default Rancher template"
-name = ":type-:release-:image-:arch"
+name = ":build_name"
 commands_src_dir = ":src_dir/commands"
 http_dir = "http"
 http_src_dir = ":src_dir/http"
@@ -36,9 +36,12 @@ builder_type = [
 			"ssh_port = 22",
 			"ssh_username = vagrant",
 			"ssh_wait_timeout = 240m",
-			"virtualbox_version_file = .vbox_version"
 		]
 	[builders.virtualbox-iso]
+		settings = [
+			"guest_os_type = ",
+			"virtualbox_version_file = .vbox_version"
+		]
 		vm_settings = [
 			"cpus=1",
 			"memory=1024"	
@@ -52,6 +55,7 @@ builder_type = [
 [post_processors]
 	[post_processors.vagrant]
 		settings = [
+			"compression_level = 9",
 			"keep_input_artifact = false",
 			"output = out/rancher-packer.box"
 		]
