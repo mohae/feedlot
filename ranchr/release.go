@@ -216,7 +216,7 @@ func (u *ubuntu) getOSType(buildType string) (string, error) {
 	}
 
 	// Shouldn't get here unless the buildType passed is an unsupported one.
-	err := errors.New(fmt.Sprintf("ubuntu.getOSType: the builder '%s' is not supported", buildType))
+	err := fmt.Errorf("ubuntu.getOSType: the builder '%s' is not supported", buildType)
 	return "", err
 }
 
@@ -344,7 +344,7 @@ func (c *centOS) getOSType(buildType string) (string, error) {
 	}
 
 	// Shouldn't get here unless the buildType passed is an unsupported one.
-	err := errors.New(fmt.Sprintf("centOS.getOSType: the builder '%s' is not supported", buildType))
+	err := fmt.Errorf("centOS.getOSType: the builder '%s' is not supported", buildType)
 	return "", err
 }
 

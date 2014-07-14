@@ -12,7 +12,7 @@ import (
 // BuildCommand is a Command implementation that generates Packer templates
 // from named named builds and passed build arguments.
 type BuildCommand struct {
-	Ui cli.Ui
+	UI cli.Ui
 }
 
 // Help prints the help text for the build sub-command.
@@ -62,7 +62,7 @@ func (c *BuildCommand) Run(args []string) int {
 	cmdFlags := flag.NewFlagSet("build", flag.ContinueOnError)
 
 	cmdFlags.Usage = func() {
-		c.Ui.Output(c.Help())
+		c.UI.Output(c.Help())
 	}
 
 	cmdFlags.StringVar(&distroFilter, "distro", "", "distro filter")
@@ -73,7 +73,7 @@ func (c *BuildCommand) Run(args []string) int {
 
 	// Parse the passed args for flags.
 	if err := cmdFlags.Parse(args); err != nil {
-		c.Ui.Error(fmt.Sprintf("Parse of command-line arguments failed: %s", err))
+		c.UI.Error(fmt.Sprintf("Parse of command-line arguments failed: %s", err))
 		return 1
 	}
 
@@ -84,7 +84,7 @@ func (c *BuildCommand) Run(args []string) int {
 	if distroFilter != "" {
 		args := ranchr.ArgsFilter{Arch: archFilter, Distro: distroFilter, Image: imageFilter, Release: releaseFilter}
 		if err := ranchr.BuildDistro(args); err != nil {
-			c.Ui.Output(err.Error())
+			c.UI.Output(err.Error())
 			return 1
 		}
 	}
@@ -94,13 +94,13 @@ func (c *BuildCommand) Run(args []string) int {
 		var message string
 		var err error
 		if message, err = ranchr.BuildBuilds(buildArgs...); err != nil {
-			c.Ui.Error(err.Error())
+			c.UI.Error(err.Error())
 			return 1
 		}
-		c.Ui.Output(message)
+		c.UI.Output(message)
 	}
 
-	c.Ui.Output("Rancher Build complete.")
+	c.UI.Output("Rancher Build complete.")
 	return 0
 }
 

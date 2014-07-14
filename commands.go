@@ -17,12 +17,12 @@ func init() {
 	Commands = map[string]cli.CommandFactory{
 		"build": func() (cli.Command, error) {
 			return &command.BuildCommand{
-				Ui: ui,
+				UI: ui,
 			}, nil
 		},
 		"run": func() (cli.Command, error) {
 			return &command.RunCommand{
-				Ui: ui,
+				UI: ui,
 			}, nil
 		},
 		"version": func() (cli.Command, error) {
@@ -30,7 +30,7 @@ func init() {
 				Revision:          GitCommit,
 				Version:           Version,
 				VersionPrerelease: VersionPrerelease,
-				Ui:                ui,
+				UI:                ui,
 			}, nil
 		},
 	}

@@ -6,9 +6,6 @@
 
 // Package ranchr implements the creation of Packer templates from Rancher
 // build definitions.
-
-// Provides structs for storing the data from the various TOML files that
-// Rancher uses, along with methods associated with the structs.
 package ranchr
 
 import (
@@ -177,9 +174,14 @@ type defaults struct {
 	loaded bool
 }
 
-// Information about a specific build.
+// BuildInf is a container for information about a specific build.
 type BuildInf struct {
+	// Name is the name for the build. This may be an assigned value from
+	// a TOML file setting.
 	Name      string `toml:"name"`
+	// BuildName is the name of the build. This is either the name, as
+	// specified in the build.toml file, or a generated name for -distro
+	// flag based builds.
 	BuildName string `toml:"build_name"`
 	BaseURL   string `toml:"base_url"`
 }

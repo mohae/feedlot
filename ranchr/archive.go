@@ -15,7 +15,7 @@ import (
 
 var timeFormat = "2006-01-02T150405Z0700"
 
-// Hold information about an archive.
+// Archive holds information about an archive.
 type Archive struct {
 	// Path to the target directory for the archive output.
 	OutDir string
@@ -30,13 +30,13 @@ type Archive struct {
 	directory
 }
 
-// Container for files to add to an archive.
+// directory is a container for files to add to an archive.
 type directory struct {
 	// A slice of file structs.
 	Files []file
 }
 
-// Basic information about a file
+// file contains information about a file
 type file struct {
 	// The file's path
 	p string
@@ -45,7 +45,7 @@ type file struct {
 	info os.FileInfo
 }
 
-// Walk the passed path, making a list of all the files that are children of
+// DirWalk walks the passed path, making a list of all the files that are children of
 // the path.
 func (d *directory) DirWalk(dirPath string) error {
 	// If the directory exists, create a list of its contents.

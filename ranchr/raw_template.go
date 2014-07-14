@@ -319,16 +319,14 @@ func (r *rawTemplate) commonVMSettings(builderType string, old []string, new []s
 			if commands, err = commandsFromFile(v); err != nil {
 				jww.ERROR.Println(err.Error())
 				return nil, nil, err
+			} 
+			
+			// Boot commands are slices, the others are just a string.
+			if k == "boot_command" {
+				Settings[k] = commands
 			} else {
-
-				// Boot commands are slices, the others are just a string.
-				if k == "boot_command" {
-					Settings[k] = commands
-				} else {
-					// Assume it's the first element.
-					Settings[k] = commands[0]
-				}
-
+				// Assume it's the first element.
+				Settings[k] = commands[0]
 			}
 
 		case "guest_os_type":

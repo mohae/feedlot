@@ -12,7 +12,7 @@ type VersionCommand struct {
 	Revision          string
 	Version           string
 	VersionPrerelease string
-	Ui                cli.Ui
+	UI                cli.Ui
 }
 
 // Help prints the Help text for the version sub-command
@@ -32,7 +32,7 @@ func (c *VersionCommand) Run(_ []string) int {
 		}
 	}
 
-	c.Ui.Output(versionString.String())
+	c.UI.Output(versionString.String())
 
 	return 0
 }

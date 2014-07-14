@@ -142,9 +142,8 @@ func copyScripts(scripts []string, src string, dest string) error {
 	if errCnt > 0 {
 		jww.ERROR.Print("Copy of scripts for build had " + strconv.Itoa(errCnt) + " errors. There were " + strconv.Itoa(okCnt) + " scripts that were copied without error.")
 		return err
-	} else {
-		jww.TRACE.Print(strconv.Itoa(okCnt) + " scripts were successfully copied")
 	}
-
+	
+	jww.TRACE.Print(strconv.Itoa(okCnt) + " scripts were successfully copied")	
 	return nil
 }

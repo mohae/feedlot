@@ -7,8 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 //
 
-// A Ranch is where Ranchers get their work done, same here. This package is
-// just a way of organizing code for Rancher. It also contains the package
+// Package ranchr is a package for organizing Rancher code. It also contains the package
 // level variables and sets up logging.
 package ranchr
 
@@ -27,21 +26,35 @@ import (
 
 var (
 	appName            = "RANCHER"
+
+	// EnvConfig is the name of the environment variable name for the config file.
 	EnvConfig          = appName + "_CONFIG"
+	// EnvBuildsFile is the name of the environment variable name for the builds file.
 	EnvBuildsFile      = appName + "_BUILDS_FILE"
+	// EnvBuildListsFile is the name of the environment variable name for the build lists file.
 	EnvBuildListsFile  = appName + "_BUILD_LISTS_FILE"
+	// EnvDefaultsFile is the name of the environment variable name for the defaults file.
 	EnvDefaultsFile    = appName + "_DEFAULTS_FILE"
+	// EnvSupportedFile is the name of the environment variable name for the supported file.
 	EnvSupportedFile   = appName + "_SUPPORTED_FILE"
+	// EnvParamDelimStart is the name of the environment variable name for the delimter that starts Rancher variables.
 	EnvParamDelimStart = appName + "_PARAM_DELIM_START"
+	// EnvLogToFile is the name of the environment variable name for whether or not Rancher logs to a file.
 	EnvLogToFile       = appName + "_LOG_TO_FILE"
+	// EnvLogFilename is the name of the environment variable name for the log filename, if logging to file is enabled..
 	EnvLogFilename     = appName + "_LOG_FILENAME"
+	// EnvLogLevelFile is the name of the environment variable name for the file output's log level.
 	EnvLogLevelFile    = appName + "_LOG_LEVEL_FILE"
+	// EnvLogLevelStdout is the name of the environment variable name for stdout's log level.
 	EnvLogLevelStdout  = appName + "_LOG_LEVEL_STDOUT"
 )
 
 var (
+	// BuilderCommon is the name of the common builder section in the toml files.
 	BuilderCommon = "common"
+	// BuilderVBox is the name of the VirtualBox builder section in the toml files.
 	BuilderVBox   = "virtualbox-iso"
+	// BuilderVMWare is the name of the VMWare builder section in the toml files.
 	BuilderVMWare = "vmware-iso"
 )
 
@@ -52,6 +65,7 @@ var (
 	supportedLoaded   bool
 )
 
+// AppConfig contains the current Rancher configuration...loaded at start-up.
 var AppConfig appConfig
 
 type appConfig struct {
@@ -66,14 +80,23 @@ type appConfig struct {
 	SupportedFile   string `toml:"Supported_file"`
 }
 
+// ArgsFilter has all the valid commandline flags for the build-subcommand.
 type ArgsFilter struct {
+	// Arch is a distribution specific string for the OS's target 
+	// architecture.
 	Arch    string
+	// Distro is the name of the distribution, this value is consistent
+	// with Packer.
 	Distro  string
+	// Image is the type of ISO image that is to be used. This is a 
+	// distribution specific value.
 	Image   string
+	// Release is the release number or string of the ISO that is to be 
+	// used. The valid values are distribution specific.
 	Release string
 }
 
-// Set the environment variables, if they do not already exist.
+// SetEnv sets the environment variables, if they do not already exist.
 //
 // The location of the rancher.cfg file can be overridden by setting its ENV
 // variable prior to running Rancher. In addition, any of the other Rancher
@@ -252,6 +275,10 @@ func distrosInf() (*supported, map[string]rawTemplate, error) {
 	return s, dd, nil
 }
 
+// BuildDistro creates a build based on the target distro's defaults. The 
+// ArgsFilter contains information on the target distro and any overrides
+// that are to be applied to the build.
+// Returns an error or nil if successful.
 func BuildDistro(a ArgsFilter) error {
 	if !supportedLoaded {
 
@@ -363,8 +390,10 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	return nil
 }
 
-// Processes the passed build requests. Returns either a message providing
-// information about the processing of the requested builds or an error.
+// BuildBuilds manages the process of creating Packer Build templates out of 
+// the passed build names. All builds are done concurrently. 
+// Returns either a message providing information about the processing of the
+// requested builds or an error.
 func BuildBuilds(buildNames ...string) (string, error) {
 	if buildNames[0] == "" {
 		err := errors.New("Nothing to build. No build name was passed")
@@ -798,7 +827,7 @@ func getMergedBuilders(old map[string]builder, new map[string]builder) map[strin
 	keys1 := make([]string, len(old))
 	cnt := 0
 
-	for k, _ := range old {
+	for k := range old {
 		keys1[cnt] = k
 		cnt++
 	}
@@ -806,7 +835,7 @@ func getMergedBuilders(old map[string]builder, new map[string]builder) map[strin
 	keys2 := make([]string, len(new))
 	cnt = 0
 
-	for k, _ := range new {
+	for k := range new {
 		keys2[cnt] = k
 		cnt++
 	}
@@ -1075,10 +1104,10 @@ func deleteDirContent(dir string) error {
 	return nil
 }
 
-// Given a string, a position, and a length, return the substring contained
-// within. If the requested index + requested length is greater than the length
-// of the string, the string contents from the index to the end of the string
-// will be returned instead. Note this assumes UTF-8, i.e. uses rune.
+// Substring returns a substring of s starting at i for a length of l chars.
+// If the requested index + requested length is greater than the length of the
+// string, the string contents from the index to the end of the string will be
+// returned instead. Note this assumes UTF-8, i.e. uses rune.
 func Substring(s string, i, l int) string {
 	if i <= 0 {
 		return ""

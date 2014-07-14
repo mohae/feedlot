@@ -11,7 +11,7 @@ import (
 // RunCommand is a Command implementation that generates Packer templates
 // from passed build list names.
 type RunCommand struct {
-	Ui cli.Ui
+	UI cli.Ui
 }
 
 // Help prints the help text for the run sub-command. 
@@ -37,7 +37,7 @@ func (c *RunCommand) Run(args []string) int {
 	var logLevel string
 
 	cmdFlags := flag.NewFlagSet("run", flag.ContinueOnError)
-	cmdFlags.Usage = func() { c.Ui.Output(c.Help()) }
+	cmdFlags.Usage = func() { c.UI.Output(c.Help()) }
 	cmdFlags.StringVar(&logLevel, "log-level", "INFO", "log level")
 
 	fmt.Printf("%+v\n", args)
