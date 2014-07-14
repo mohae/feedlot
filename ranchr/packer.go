@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"encoding/json"
-//	json "github.com/mohae/customjson"
+	//	json "github.com/mohae/customjson"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -81,12 +81,12 @@ func (p *packerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []st
 	// where there is a large archive this is not long enough.
 	time.Sleep(time.Millisecond * 2000)
 
-	if err := copyScripts(scripts, i.ScriptsSrcDir, appendSlash(i.OutDir) + i.ScriptsDir); err != nil {
+	if err := copyScripts(scripts, i.ScriptsSrcDir, appendSlash(i.OutDir)+i.ScriptsDir); err != nil {
 		jww.ERROR.Println(err.Error())
 		return err
 	}
 
-	if err := copyDirContent(i.HTTPSrcDir, appendSlash(i.OutDir) + i.HTTPDir); err != nil {
+	if err := copyDirContent(i.HTTPSrcDir, appendSlash(i.OutDir)+i.HTTPDir); err != nil {
 		jww.ERROR.Print(err.Error())
 		return err
 	}

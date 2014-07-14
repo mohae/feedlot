@@ -197,7 +197,7 @@ func TestBuildDistro(t *testing.T) {
 		aFilter := ArgsFilter{Arch: "amd64", Distro: "ubuntu", Image: "server", Release: "14.04"}
 		Convey("Calling BuildDistro", func() {
 			err := BuildDistro(aFilter)
-//			So(err, ShouldBeNil)
+			//			So(err, ShouldBeNil)
 			_ = err
 		})
 	})
@@ -205,15 +205,15 @@ func TestBuildDistro(t *testing.T) {
 
 func TestbuildPackerTemplateFromDistros(t *testing.T) {
 	a := ArgsFilter{}
-//	s := supported{}
-//	dd := map[string]rawTemplate{}
+	//	s := supported{}
+	//	dd := map[string]rawTemplate{}
 	Convey("Given a buildPackerTemplateFromDistro call", t, func() {
 		tmp := os.Getenv(EnvConfig)
 		Convey(" with empty or nil args", func() {
 			err := buildPackerTemplateFromDistro(a)
 			So(err.Error(), ShouldEqual, "Cannot build requested packer template, the supported data structure was empty.")
 		})
-		Convey( " with a nil ArgsFilter", func() {
+		Convey(" with a nil ArgsFilter", func() {
 			err := buildPackerTemplateFromDistro(a)
 			So(err.Error(), ShouldEqual, "Cannot build a packer template because no target distro information was passed.")
 		})
@@ -228,9 +228,9 @@ func TestbuildPackerTemplateFromDistros(t *testing.T) {
 			So(err.Error(), ShouldEqual, "Cannot build a packer template from passed distro: slackware is not supported. Please pass a supported distribution.")
 		})
 		Convey(" with valid information", func() {
-	 		_ = os.Setenv(EnvConfig, testRancherCfg)
-			Convey( "with overrides", func() {
-				a = ArgsFilter{Distro:"ubuntu", Arch:"amd64", Image:"desktop", Release:"14.04"}
+			_ = os.Setenv(EnvConfig, testRancherCfg)
+			Convey("with overrides", func() {
+				a = ArgsFilter{Distro: "ubuntu", Arch: "amd64", Image: "desktop", Release: "14.04"}
 				err := buildPackerTemplateFromDistro(a)
 				So(err, ShouldBeNil)
 			})
@@ -239,6 +239,7 @@ func TestbuildPackerTemplateFromDistros(t *testing.T) {
 	})
 
 }
+
 /*
 func TestBuildBuilds(t *testing.T) {
 	Convey("Testing BuildBuilds", t, func() {
@@ -253,7 +254,7 @@ func TestBuildBuilds(t *testing.T) {
 		os.Setenv(EnvParamDelimStart, ":")
 		os.Setenv(EnvSupportedFile, testSupportedFile)
 		_ = loadSupported()
-	
+
 		Convey("Given an empty build name", func() {
 			bldName := ""
 			Convey("Calling BuilBuilds should result in", func() {
@@ -269,7 +270,7 @@ func TestBuildBuilds(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(resultString, ShouldEqual, "Create Packer templates from named builds: 1 Builds were successfully processed and 0 Builds resulted in an error.")
 			})
-		})		
+		})
 
 		Convey("Given more than 1 build name", func() {
 			bldName1 := "test1"
@@ -285,7 +286,7 @@ func TestBuildBuilds(t *testing.T) {
 		os.Setenv(EnvDefaultsFile, tmpEnvDefaultsFile)
 		os.Setenv(EnvParamDelimStart, tmpEnvParamDelimStart)
 		os.Setenv(EnvSupportedFile, tmpEnvSupportedFile)
-	})		
+	})
 }
 /*/
 func TestbuildPackerTemplateFromNamedBuild(t *testing.T) {
@@ -337,7 +338,6 @@ func TestbuildPackerTemplateFromNamedBuild(t *testing.T) {
 
 }
 
-
 func TestCommandsFromFile(t *testing.T) {
 	executeCommand := []string{"\"echo 'vagrant'|sudo -S sh '{{.Path}}'\""}
 	bootCommand := []string{"\"\", \"\", \"\", \"/install/vmlinuz\", \" auto\", \" console-setup/ask_detect=false\", \" console-setup/layoutcode=us\", \" console-setup/modelcode=pc105\", \" debconf/frontend=noninteractive\", \" debian-installer=en_US\", \" fb=false\", \" initrd=/install/initrd.gz\", \" kbd-chooser/method=us\", \" keyboard-configuration/layout=USA\", \" keyboard-configuration/variant=USA\", \" locale=en_US\", \" netcfg/get_hostname=ubuntu-1204\", \" netcfg/get_domain=vagrantup.com\", \" noapic\", \" preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg\", \" -- \", \"\""}
@@ -363,7 +363,6 @@ func TestCommandsFromFile(t *testing.T) {
 
 	})
 }
-
 
 func TestSetDistrosDefaults(t *testing.T) {
 	Convey("Testing setDistrosDefaults", t, func() {
@@ -918,7 +917,7 @@ func TestCopyFile(t *testing.T) {
 			So(err.Error(), ShouldEqual, "copyFile: no source directory passed")
 		})
 		Convey("Calling copyfile with an empty DestDir", func() {
-			wB, err := copyFile("",testDir+"conf", "")
+			wB, err := copyFile("", testDir+"conf", "")
 			So(wB, ShouldEqual, 0)
 			So(err.Error(), ShouldEqual, "copyFile: no destination directory passed")
 		})

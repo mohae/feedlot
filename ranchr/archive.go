@@ -14,6 +14,7 @@ import (
 )
 
 var timeFormat = "2006-01-02T150405Z0700"
+
 // Hold information about an archive.
 type Archive struct {
 	// Path to the target directory for the archive output.
@@ -191,7 +192,7 @@ func (a *Archive) priorBuild(p string, t string) error {
 		jww.ERROR.Println(err.Error())
 		return err
 	}
-	
+
 	// Delete the old artifacts.
 	if err := a.deletePriorBuild(p); err != nil {
 		jww.ERROR.Println(err.Error())

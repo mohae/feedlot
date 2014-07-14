@@ -19,7 +19,7 @@ type rawTemplate struct {
 	releaseISO releaser
 
 	// the builder specific string for the template's OS and Arch
-	osType	string
+	osType string
 
 	// Convenience for distros that need ChecksumType for more than finding
 	// the ISO checksum, e.g. CentOS.
@@ -283,7 +283,7 @@ func (r *rawTemplate) commonVMSettings(builderType string, old []string, new []s
 
 	// First set the ISO info for the desired release, if it's not already set
 	if r.osType == "" {
-		err = r.ISOInfo(builderType, mergedSlice)	
+		err = r.ISOInfo(builderType, mergedSlice)
 		if err != nil {
 			jww.ERROR.Println(err.Error())
 			return nil, nil, err
@@ -311,7 +311,6 @@ func (r *rawTemplate) commonVMSettings(builderType string, old []string, new []s
 				jww.ERROR.Println(err.Error())
 				return nil, nil, err
 			}
-
 
 		case "boot_command", "shutdown_command":
 			//If it ends in .command, replace it with the command from the filepath
@@ -488,7 +487,7 @@ func (r *rawTemplate) ISOInfo(builderType string, settings []string) error {
 		if err != nil {
 			jww.ERROR.Println(err.Error())
 			return err
-		}	
+		}
 
 	case "centos":
 		r.releaseISO = &centOS{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: checksumType}, Arch: r.Arch, Distro: r.Type, Image: r.Image, Release: r.Release}}
@@ -499,7 +498,7 @@ func (r *rawTemplate) ISOInfo(builderType string, settings []string) error {
 			jww.ERROR.Println(err.Error())
 			return err
 		}
-		
+
 	}
 	jww.TRACE.Printf("Exit rawTemplate.ISOInfo")
 	return nil

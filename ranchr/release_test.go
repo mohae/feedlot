@@ -1,15 +1,15 @@
 package ranchr
 
 import (
-	_"net/url"
-	_"strings"
+	_ "net/url"
+	_ "strings"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func newTestUbuntu() ubuntu {
-	u := ubuntu{release{Release:"14.04", Image:"server", Arch:"amd64"}}
+	u := ubuntu{release{Release: "14.04", Image: "server", Arch: "amd64"}}
 	u.ChecksumType = "sha256"
 	u.BaseURL = "http://releases.ubuntu.com/"
 	return u
@@ -155,7 +155,7 @@ fbe7f159337551cc5ce9f0ff72acefef567f3dcd30750425287588c554978501 *ubuntu-12.04.4
 func TestUbuntuGetOSType(t *testing.T) {
 	Convey("Given an ubuntu struct getting the OS Type from a string", t, func() {
 		Convey("Given amd64 architecture", func() {
-			u := ubuntu{release{Arch:"amd64"}}
+			u := ubuntu{release{Arch: "amd64"}}
 			Convey("Given a vmware builder", func() {
 				buildType := "vmware-iso"
 				Convey("Calling ubuntu.getOSType should result in", func() {
@@ -163,7 +163,7 @@ func TestUbuntuGetOSType(t *testing.T) {
 					So(err, ShouldBeNil)
 					So(res, ShouldEqual, "ubuntu-64")
 				})
-			
+
 			})
 			Convey("Given a virtualbox builder", func() {
 				buildType := "virtualbox-iso"
@@ -172,10 +172,10 @@ func TestUbuntuGetOSType(t *testing.T) {
 					So(err, ShouldBeNil)
 					So(res, ShouldEqual, "Ubuntu_64")
 				})
-			})			
+			})
 		})
 		Convey("Given i386 architecture", func() {
-			u := ubuntu{release{Arch:"i386"}}
+			u := ubuntu{release{Arch: "i386"}}
 			Convey("Given a vmware builder", func() {
 				buildType := "vmware-iso"
 				Convey("Calling ubuntu.getOSType should result in", func() {
@@ -183,7 +183,7 @@ func TestUbuntuGetOSType(t *testing.T) {
 					So(err, ShouldBeNil)
 					So(res, ShouldEqual, "ubuntu-32")
 				})
-			
+
 			})
 			Convey("Given a virtualbox builder", func() {
 				buildType := "virtualbox-iso"
@@ -192,7 +192,7 @@ func TestUbuntuGetOSType(t *testing.T) {
 					So(err, ShouldBeNil)
 					So(res, ShouldEqual, "Ubuntu_32")
 				})
-			})	
+			})
 			Convey("Given an invalid builder", func() {
 				buildType := "voodoo"
 				Convey("Calling ubuntu.getOSType should result in", func() {
@@ -200,13 +200,13 @@ func TestUbuntuGetOSType(t *testing.T) {
 					So(err.Error(), ShouldEqual, "ubuntu.getOSType: the builder 'voodoo' is not supported")
 					So(res, ShouldEqual, "")
 				})
-			})					
+			})
 		})
 	})
 }
 
 func newTestCentOS() centOS {
-	c := centOS{release{Release:"6", Image:"minimal", Arch:"x86_64"}}
+	c := centOS{release{Release: "6", Image: "minimal", Arch: "x86_64"}}
 	c.ChecksumType = "sha256"
 	return c
 }
@@ -216,7 +216,7 @@ func TestCentOSISORedirectURL(t *testing.T) {
 		c := newTestCentOS()
 		Convey("calling isoRedirectURL", func() {
 			redirectURL := c.isoRedirectURL()
-				So(redirectURL, ShouldEqual, "http://isoredirect.centos.org/centos/" + c.Release + "/isos/" + c.Arch + "/")
+			So(redirectURL, ShouldEqual, "http://isoredirect.centos.org/centos/"+c.Release+"/isos/"+c.Arch+"/")
 		})
 	})
 }
@@ -285,7 +285,7 @@ func TestCentOSSetName(t *testing.T) {
 		c.setReleaseInfo()
 		Convey("Setting the name", func() {
 			c.setName()
-			So(c.Name, ShouldEqual, "CentOS-" + c.ReleaseFull + "-" + c.Arch + "-" + c.Image + ".iso")
+			So(c.Name, ShouldEqual, "CentOS-"+c.ReleaseFull+"-"+c.Arch+"-"+c.Image+".iso")
 		})
 	})
 }
@@ -293,7 +293,7 @@ func TestCentOSSetName(t *testing.T) {
 func TestCentOSGetOSType(t *testing.T) {
 	Convey("Given an centOS struct getting the OS Type from a string", t, func() {
 		Convey("Given x86_64 architecture", func() {
-			c := centOS{release{Arch:"x86_64"}}
+			c := centOS{release{Arch: "x86_64"}}
 			Convey("Given a vmware builder", func() {
 				buildType := "vmware-iso"
 				Convey("Calling centOS.getOSType should result in", func() {
@@ -301,7 +301,7 @@ func TestCentOSGetOSType(t *testing.T) {
 					So(err, ShouldBeNil)
 					So(res, ShouldEqual, "centos-64")
 				})
-			
+
 			})
 			Convey("Given a virtualbox builder", func() {
 				buildType := "virtualbox-iso"
@@ -310,10 +310,10 @@ func TestCentOSGetOSType(t *testing.T) {
 					So(err, ShouldBeNil)
 					So(res, ShouldEqual, "RedHat_64")
 				})
-			})			
+			})
 		})
 		Convey("Given x386 architecture", func() {
-			c := centOS{release{Arch:"x386"}}
+			c := centOS{release{Arch: "x386"}}
 			Convey("Given a vmware builder", func() {
 				buildType := "vmware-iso"
 				Convey("Calling centOS.getOSType should result in", func() {
@@ -321,7 +321,7 @@ func TestCentOSGetOSType(t *testing.T) {
 					So(err, ShouldBeNil)
 					So(res, ShouldEqual, "centos-32")
 				})
-			
+
 			})
 			Convey("Given a virtualbox builder", func() {
 				buildType := "virtualbox-iso"
@@ -330,7 +330,7 @@ func TestCentOSGetOSType(t *testing.T) {
 					So(err, ShouldBeNil)
 					So(res, ShouldEqual, "RedHat_32")
 				})
-			})	
+			})
 			Convey("Given an invalid builder", func() {
 				buildType := "voodoo"
 				Convey("Calling centOS.getOSType should result in", func() {
@@ -338,7 +338,7 @@ func TestCentOSGetOSType(t *testing.T) {
 					So(err.Error(), ShouldEqual, "centOS.getOSType: the builder 'voodoo' is not supported")
 					So(res, ShouldEqual, "")
 				})
-			})					
+			})
 		})
 	})
 }
@@ -362,8 +362,8 @@ func TestCentOSSetChecksum(t *testing.T) {
 				c.setISOURL()
 				err := c.setChecksum()
 				So(err, ShouldBeNil)
-// TODO investigate this test further
-//				So(c.Checksum, ShouldEqual, "f9d84907d77df62017944cb23cab66305e94ee6ae6c1126415b81cc5e999bdd0")
+				// TODO investigate this test further
+				//				So(c.Checksum, ShouldEqual, "f9d84907d77df62017944cb23cab66305e94ee6ae6c1126415b81cc5e999bdd0")
 			})
 		})
 		Convey("Check SetChecksum results with an error on getting url", func() {
@@ -389,12 +389,12 @@ func TestCentOSChecksumURL(t *testing.T) {
 	Convey("Given a CentOS struct", t, func() {
 		c := newTestCentOS()
 		c.setReleaseInfo()
-		c.setISOURL()		
+		c.setISOURL()
 		Convey("Setting the ISO URL", func() {
 			checksumURL := c.checksumURL()
 			So(checksumURL, ShouldStartWith, "http://")
-			So(checksumURL, ShouldEndWith, c.ReleaseFull + "/isos/" + c.Arch + "/sha256sum.txt")
-		})	
+			So(checksumURL, ShouldEndWith, c.ReleaseFull+"/isos/"+c.Arch+"/sha256sum.txt")
+		})
 	})
 }
 
@@ -407,13 +407,13 @@ func TestCentOSsetISOURL(t *testing.T) {
 			err := c.setISOURL()
 			So(err, ShouldBeNil)
 			So(c.isoURL, ShouldStartWith, "http://")
-			So(c.isoURL, ShouldEndWith, c.ReleaseFull + "/isos/" + c.Arch + "/CentOS-" + c.ReleaseFull + "-" + c.Arch + "-" + c.Image + ".iso")
-		})	
+			So(c.isoURL, ShouldEndWith, c.ReleaseFull+"/isos/"+c.Arch+"/CentOS-"+c.ReleaseFull+"-"+c.Arch+"-"+c.Image+".iso")
+		})
 		Convey("Setting the isoURL without an empty BaseURL", func() {
 			c.BaseURL = "http://example.com/"
 			err := c.setISOURL()
 			So(err, ShouldBeNil)
-			So(c.isoURL, ShouldEqual, "http://example.com/CentOS-" + c.ReleaseFull + "-" + c.Arch + "-" + c.Image + ".iso")
+			So(c.isoURL, ShouldEqual, "http://example.com/CentOS-"+c.ReleaseFull+"-"+c.Arch+"-"+c.Image+".iso")
 		})
 	})
 }
@@ -427,8 +427,8 @@ func TestCentOSrandomISOURL(t *testing.T) {
 			randomURL, err := c.randomISOURL()
 			So(err, ShouldBeNil)
 			So(randomURL, ShouldStartWith, "http://")
-			So(randomURL, ShouldEndWith, c.ReleaseFull + "/isos/" + c.Arch + "/CentOS-" + c.ReleaseFull + "-" + c.Arch + "-" + c.Image + ".iso")
-		})	
+			So(randomURL, ShouldEndWith, c.ReleaseFull+"/isos/"+c.Arch+"/CentOS-"+c.ReleaseFull+"-"+c.Arch+"-"+c.Image+".iso")
+		})
 	})
 }
 
@@ -491,4 +491,3 @@ func TestCentOSsetName(t *testing.T) {
 		})
 	})
 }
-

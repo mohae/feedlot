@@ -80,7 +80,7 @@ type postProcessors struct {
 	Settings []string
 }
 
-// Merge the settings section of a post-processor. New values supercede 
+// Merge the settings section of a post-processor. New values supercede
 // existing ones.
 func (p *postProcessors) mergeSettings(new []string) {
 	p.Settings = mergeSettingsSlices(p.Settings, new)
