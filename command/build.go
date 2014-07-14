@@ -15,7 +15,7 @@ type BuildCommand struct {
 	Ui cli.Ui
 }
 
-// Rancher help text.
+// Help prints help text for the build sub-command.
 func (c *BuildCommand) Help() string {
 	helpText := `
 Usage: rancher build [options] <buildName...>
@@ -54,6 +54,7 @@ Options:
 	return strings.TrimSpace(helpText)
 }
 
+// Run runs the build sub-command, handling all passed args and flags.
 func (c *BuildCommand) Run(args []string) int {
 	var distroFilter, archFilter, imageFilter, releaseFilter, logDirFilter string
 
@@ -103,6 +104,7 @@ func (c *BuildCommand) Run(args []string) int {
 	return 0
 }
 
+// Synopsis provides a precis of the build sub-command.
 func (c *BuildCommand) Synopsis() string {
 	return "Create a Packer template from either supported distro defaults or pre-defined Rancher build configurations."
 }
