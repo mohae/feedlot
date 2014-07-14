@@ -68,7 +68,7 @@ func runMain() int {
 	return exitCode
 }
 
-// Set application logging. If the
+// SetLogging sets application logging settings.
 func SetLogging() {
 	// By default, jww has sane log level config; e.g. only log Warn and Above when a
 	// io.writer is present. Error and above get printed to stdout. Info and lower
