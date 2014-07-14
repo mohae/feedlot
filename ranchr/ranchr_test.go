@@ -239,14 +239,26 @@ func TestbuildPackerTemplateFromDistros(t *testing.T) {
 	})
 
 }
-
+/*
 func TestBuildBuilds(t *testing.T) {
 	Convey("Testing BuildBuilds", t, func() {
+		tmpEnvConfig := os.Getenv(EnvConfig)
+		tmpEnvBuildsFile := os.Getenv(EnvBuildsFile)
+		tmpEnvDefaultsFile := os.Getenv(EnvDefaultsFile)
+		tmpEnvParamDelimStart := os.Getenv(EnvParamDelimStart)
+		tmpEnvSupportedFile := os.Getenv(EnvSupportedFile)
+		os.Setenv(EnvConfig, testRancherCfg)
+		os.Setenv(EnvBuildsFile, testBuildsFile)
+		os.Setenv(EnvDefaultsFile, testDefaultsFile)
+		os.Setenv(EnvParamDelimStart, ":")
+		os.Setenv(EnvSupportedFile, testSupportedFile)
+		_ = loadSupported()
+	
 		Convey("Given an empty build name", func() {
 			bldName := ""
 			Convey("Calling BuilBuilds should result in", func() {
 				resultString, err := BuildBuilds(bldName)
-				So(err, ShouldEqual, "z")
+				So(err.Error(), ShouldEqual, "Nothing to build. No build name was passed")
 				So(resultString, ShouldEqual, "")
 			})
 		})
@@ -255,7 +267,7 @@ func TestBuildBuilds(t *testing.T) {
 			Convey("Calling BuilBuilds should result in", func() {
 				resultString, err := BuildBuilds(bldName)
 				So(err, ShouldBeNil)
-				So(resultString, ShouldEqual, "")
+				So(resultString, ShouldEqual, "Create Packer templates from named builds: 1 Builds were successfully processed and 0 Builds resulted in an error.")
 			})
 		})		
 
@@ -265,16 +277,18 @@ func TestBuildBuilds(t *testing.T) {
 			Convey("Calling BuilBuilds should result in", func() {
 				resultString, err := BuildBuilds(bldName1, bldName2)
 				So(err, ShouldBeNil)
-				So(resultString, ShouldEqual, "")
+				So(resultString, ShouldEqual, "Create Packer templates from named builds: 1 Builds were successfully processed and 1 Builds resulted in an error.")
 			})
 		})
+		os.Setenv(EnvConfig, tmpEnvConfig)
+		os.Setenv(EnvBuildsFile, tmpEnvBuildsFile)
+		os.Setenv(EnvDefaultsFile, tmpEnvDefaultsFile)
+		os.Setenv(EnvParamDelimStart, tmpEnvParamDelimStart)
+		os.Setenv(EnvSupportedFile, tmpEnvSupportedFile)
 	})		
 }
-/*
-TODO learn how to test w channels
+/*/
 func TestbuildPackerTemplateFromNamedBuild(t *testing.T) {
-	s := testSupported
-	dd := testDistroDefaults
 	tmp := os.Getenv(EnvConfig)
 	tmpBuildsFile := os.Getenv(EnvBuildsFile)
 	Convey("Given a some configuration information and Build names", t, func() {
@@ -283,26 +297,36 @@ func TestbuildPackerTemplateFromNamedBuild(t *testing.T) {
 			Convey("Given setting the build config file to an invalid value", func() {
 				os.Setenv(EnvBuildsFile, "look/for/it/here/")
 				Convey("Calling buildPackerTemplateFromNamedBuild should result in", func() {
-					err := buildPackerTemplateFromNamedBuild("")
+					doneCh := make(chan error, 1)
+					go buildPackerTemplateFromNamedBuild("", doneCh)
+					err := <-doneCh
 					So(err.Error(), ShouldEqual, "open look/for/it/here/: no such file or directory")
 				})
 			})
 			Convey("Given a valid build config file", func() {
 				os.Setenv(EnvBuildsFile, "../test_files/conf/builds_test.toml")
 				Convey("Calling buildPackerTemplateFromNamedBuild with an empty build name", func() {
-					err := buildPackerTemplateFromNamedBuild(s, dd, "")
+					doneCh := make(chan error, 1)
+					go buildPackerTemplateFromNamedBuild("", doneCh)
+					err := <-doneCh
 					So(err.Error(), ShouldEqual, "buildPackerTemplateFromNamedBuild error: no build names were passed. Nothing was built.")
 				})
 				Convey("Calling buildPackerTemplateFromNamedBuild with a valid build name", func() {
-					err := buildPackerTemplateFromNamedBuild(s, dd, "test1")
+					doneCh := make(chan error, 1)
+					go buildPackerTemplateFromNamedBuild("test1", doneCh)
+					err := <-doneCh
 					So(err, ShouldBeNil)
 				})
 				Convey("Calling buildPackerTemplateFromNamedBuild with an invalid build name", func() {
-					err := buildPackerTemplateFromNamedBuild(s, dd, "test11")
+					doneCh := make(chan error, 1)
+					go buildPackerTemplateFromNamedBuild("test11", doneCh)
+					err := <-doneCh
 					So(err, ShouldBeNil)
 				})
 				Convey("Calling buildPackerTemplateFromNamedBuild with a build name configured with an invalid type", func() {
-					err := buildPackerTemplateFromNamedBuild(s, dd, "test2")
+					doneCh := make(chan error, 1)
+					go buildPackerTemplateFromNamedBuild("test2", doneCh)
+					err := <-doneCh
 					So(err, ShouldBeNil)
 				})
 			})
@@ -312,7 +336,7 @@ func TestbuildPackerTemplateFromNamedBuild(t *testing.T) {
 	os.Setenv(EnvBuildsFile, tmpBuildsFile)
 
 }
-*/
+
 
 func TestCommandsFromFile(t *testing.T) {
 	executeCommand := []string{"\"echo 'vagrant'|sudo -S sh '{{.Path}}'\""}
@@ -340,7 +364,7 @@ func TestCommandsFromFile(t *testing.T) {
 	})
 }
 
-/*
+
 func TestSetDistrosDefaults(t *testing.T) {
 	Convey("Testing setDistrosDefaults", t, func() {
 		var defaults map[string]rawTemplate
@@ -364,7 +388,6 @@ func TestSetDistrosDefaults(t *testing.T) {
 
 	})
 }
-*/
 
 func TestMergeSlices(t *testing.T) {
 	Convey("Testing mergeSlices", t, func() {

@@ -22,7 +22,7 @@ var testRawTemplate = newRawTemplate()
 
 var testShellProvisioners1 = map[string]provisioners{
 	"shell": {
-		Settings: []string{"execute_command = :commands_dir/execute_test.command"},
+		Settings: []string{"execute_command = :commands_src_dir/execute_test.command"},
 		Scripts: []string{
 			":scripts_dir/setup_test.sh",
 			":scripts_dir/base_test.sh",
@@ -289,7 +289,7 @@ var testDistroDefaultUbuntu = rawTemplate{
 }
 
 var testDistroDefaultCentOS = rawTemplate{PackerInf: PackerInf{MinPackerVersion: "", Description: "Test template config and Rancher options for CentOS"},
-	IODirInf: IODirInf{CommandsSrcDir: ":src_dir/commands/", HTTPDir: "http/", HTTPSrcDir: ":src_dir/http/", OutDir: "out/centos", ScriptsDir: "scripts/", ScriptsSrcDir: ":src_dir/scripts/", SrcDir: "src/centos"},
+	IODirInf: IODirInf{CommandsSrcDir: ":src_dir/commands/", HTTPDir: "http/", HTTPSrcDir: ":src_dir/http/", OutDir: "out/centos", ScriptsDir: "scripts/", ScriptsSrcDir: ":src_dir/scripts/", SrcDir: "../test_files/src/centos"},
 	BuildInf: BuildInf{Name: ":type-:release-:image-:arch", BuildName: "", BaseURL: "http://www.centos.org/pub/centos/"},
 	date:     today,
 	delim:    ":",

@@ -36,7 +36,7 @@ var (
 	EnvLogToFile       = appName + "_LOG_TO_FILE"
 	EnvLogFilename     = appName + "_LOG_FILENAME"
 	EnvLogLevelFile    = appName + "_LOG_LEVEL_FILE"
-	EnvLogLevelStdout  = appName + "_LOG_MAX_Stdout"
+	EnvLogLevelStdout  = appName + "_LOG_LEVEL_STDOUT"
 )
 
 var (
@@ -366,6 +366,11 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 // Processes the passed build requests. Returns either a message providing
 // information about the processing of the requested builds or an error.
 func BuildBuilds(buildNames ...string) (string, error) {
+	if buildNames[0] == "" {
+		err := errors.New("Nothing to build. No build name was passed")
+		jww.ERROR.Println(err.Error())
+		return "", err
+	}
 	// Only load supported if it hasn't been loaded. Even though LoadSupported
 	// uses a mutex to control access to prevent race conditions, no need to
 	// call it if its already loaded.
@@ -393,6 +398,7 @@ func BuildBuilds(buildNames ...string) (string, error) {
 		err := <-doneCh
 
 		if err != nil {
+			return "", err
 			errorCount++
 		} else {
 			builtCount++
