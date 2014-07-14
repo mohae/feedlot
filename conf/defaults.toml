@@ -4,11 +4,11 @@ description = "Default Rancher template"
 name = ":build_name"
 commands_src_dir = ":src_dir/commands"
 http_dir = "http"
-http_src_dir = ":src_dir/http"
+http_src_dir = ":src_dir/:http_dir"
 out_dir = "out/:type/:build_name"
 src_dir = "src/:type"
 scripts_dir = "scripts"
-scripts_src_dir = ":src_dir/scripts"
+scripts_src_dir = ":src_dir/:scripts_dir"
 min_packer_version = "0.4.0"
 builder_type = [
     "virtualbox-iso",
