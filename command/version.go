@@ -15,10 +15,12 @@ type VersionCommand struct {
 	Ui                cli.Ui
 }
 
+// Help prints the Help text for the version sub-command
 func (c *VersionCommand) Help() string {
-	return ""
+	return "Prints Rancher's version information."
 }
 
+// Run runs the version sub-command.
 func (c *VersionCommand) Run(_ []string) int {
 	var versionString bytes.Buffer
 	fmt.Fprintf(&versionString, "Rancher v%s", c.Version)
@@ -35,6 +37,7 @@ func (c *VersionCommand) Run(_ []string) int {
 	return 0
 }
 
+// Synopsis provides a precis of the version sub-command.
 func (c *VersionCommand) Synopsis() string {
 	return "Prints the Rancher version"
 }
