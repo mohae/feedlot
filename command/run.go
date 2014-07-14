@@ -14,6 +14,7 @@ type RunCommand struct {
 	Ui cli.Ui
 }
 
+// Help prints the help text for the run sub-command. 
 func (c *RunCommand) Help() string {
 	helpText := `
     Usage: rancher Run <BuildList names...>
@@ -31,6 +32,7 @@ func (c *RunCommand) Help() string {
 	return strings.TrimSpace(helpText)
 }
 
+// Run runs the run sub-command; the args are a variadic list of build list names.
 func (c *RunCommand) Run(args []string) int {
 	var logLevel string
 
@@ -45,6 +47,7 @@ func (c *RunCommand) Run(args []string) int {
 
 }
 
+// Synopsis provides a precis of the run sub-command.
 func (c *RunCommand) Synopsis() string {
 	return "Create Packer templates from the Rancher Build templates specified in the passed BuildList(s)."
 }

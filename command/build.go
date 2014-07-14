@@ -15,7 +15,7 @@ type BuildCommand struct {
 	Ui cli.Ui
 }
 
-// Help prints help text for the build sub-command.
+// Help prints the help text for the build sub-command.
 func (c *BuildCommand) Help() string {
 	helpText := `
 Usage: rancher build [options] <buildName...>
