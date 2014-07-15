@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Add/set the sudoers stuff
 groupadd -r admin
-usermod -a -g admin vagrant
+groupadd -r sudo
 
 # Back up before the screw up
 cp /etc/sudoers /etc/sudoers.orig
