@@ -16,9 +16,7 @@
         		"amd64"
         	]
         	image = [
-        		"desktop",
-        		"server",
-        		"alternate"
+        		"server"
         	]
         	release = [
         		"10.04",

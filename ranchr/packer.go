@@ -7,8 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"encoding/json"
-	//	json "github.com/mohae/customjson"
+	json "github.com/mohae/customjson"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
