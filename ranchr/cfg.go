@@ -74,6 +74,11 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 
 // Type for handling the post-processor section of the configs.
 type postProcessors struct {
+	// Support Packer post-processors' `except` configuration.
+	Except []string
+	// Support Packer post-processors' `only` configuration.
+	Only []string
+	// Rest of the settings in "key=value" format.
 	Settings []string
 }
 
@@ -81,6 +86,22 @@ type postProcessors struct {
 // existing ones.
 func (p *postProcessors) mergeSettings(new []string) {
 	p.Settings = mergeSettingsSlices(p.Settings, new)
+}
+
+// Merge the Except section of a post-processor. If there are new values,
+// replace the existing values.
+func (p *postProcessors) mergeExcept(new []string) {
+	if len(new) > 0 {
+		p.Except = new
+	}
+}
+
+// Merge the Only section of a post-processor. New values supercede
+// existing ones.
+func (p *postProcessors) mergeOnly(new []string) {
+	if len(new) > 0 {
+		p.Only = new
+	}
 }
 
 // Go through all of the Settings and convert them to a map. Each setting
@@ -114,10 +135,30 @@ func (p *postProcessors) settingsToMap(Type string, r *rawTemplate) map[string]i
 
 // Type for handling the provisioners sections of the configs.
 type provisioners struct {
+	// Support Packer Provisioner's `except` configuration.
+	Except []string
+	// Support Packer Provisioner's `only` configuration.
+	Only []string
+	// Rest of the settings in "key=value" format.
 	Settings []string `toml:"settings"`
-
 	// Scripts are defined separately because it's simpler that way.
 	Scripts []string `toml:"scripts"`
+}
+
+// Merge the Except section of a post-processor. If there are new values,
+// replace the existing values.
+func (p *provisioners) mergeExcept(new []string) {
+	if len(new) > 0 {
+		p.Except = new
+	}
+}
+
+// Merge the Only section of a post-processor. New values supercede
+// existing ones.
+func (p *provisioners) mergeOnly(new []string) {
+	if len(new) > 0 {
+		p.Only = new
+	}
 }
 
 // Merge the settings section of a post-processor. New values supercede existing ones.
@@ -152,6 +193,16 @@ func (p *provisioners) settingsToMap(Type string, r *rawTemplate) (map[string]in
 		}
 
 		m[k] = v
+	}
+
+	// Add except array.
+	if p.Except != nil {
+		m["except"] = p.Except
+	}
+
+	// Add only array.
+	if p.Only != nil {
+		m["only"] = p.Only
 	}
 
 	return m, nil
