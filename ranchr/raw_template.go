@@ -301,10 +301,12 @@ func (r *rawTemplate) commonVMSettings(builderType string, old []string, new []s
 			case "ubuntu":
 				Settings["iso_url"] = r.releaseISO.(*ubuntu).isoURL
 				Settings["iso_checksum"] = r.releaseISO.(*ubuntu).Checksum
+				Settings["iso_checksum_type"] = r.releaseISO.(*ubuntu).ChecksumType
 
 			case "centos":
 				Settings["iso_url"] = r.releaseISO.(*centOS).isoURL
 				Settings["iso_checksum"] = r.releaseISO.(*centOS).Checksum
+				Settings["iso_checksum_type"] = r.releaseISO.(*centOS).ChecksumType
 
 			case "default":
 				err = errors.New("rawTemplate.CommonVMSettings: " + k + " is not a supported builder type")

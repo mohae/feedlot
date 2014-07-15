@@ -26,11 +26,15 @@
 			settings = [
 				"output = :out_dir/packer.box"
 			]
+			only = ["virtualbox-iso"]
+			except = ["docker"]
 		[build.test1.provisioners]
 			[build.test1.provisioners.shell]
 			settings = [
 				"execute_command = :commands_src_dir/execute_test.command"
 			]
+			only = ["virtualbox-iso"]
+			except = ["docker"]
 			scripts = [
 				":scripts_dir/setup_test.sh",
 				":scripts_dir/vagrant_test.sh",

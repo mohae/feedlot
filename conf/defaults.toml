@@ -61,7 +61,6 @@ builder_type = [
 		]
 		scripts = [ 
 			":scripts_dir/setup.sh",
-			":scripts_dir/guest-additions.sh",
 			":scripts_dir/vagrant.sh",
 			":scripts_dir/sudoers.sh",
 			":scripts_dir/cleanup.sh",
