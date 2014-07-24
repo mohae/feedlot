@@ -4,7 +4,7 @@
 # build configuration with the Rancher and distro defaults.
 [build] 
 	[build.1204-amd64-server]
-		type = "ubuntu"		# id is the distro ID, this is used to find default settings.
+		type = "ubuntu"
 		description = "ubuntu LTS 1204 amd64 server build, minimal install"
 		arch = "amd64"
 		image = "server"
@@ -23,7 +23,7 @@
 			]
 
 	[build.1404-dev]
-		type = "ubuntu"		# id is the distro ID, this is used to find default settings.
+		type = "ubuntu"
 		description = "ubuntu LTS 1404 amd64 desktop build, minimal install w go"
 	        arch = "amd64"
 	        release = "14.04"

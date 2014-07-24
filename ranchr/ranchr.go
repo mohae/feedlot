@@ -881,6 +881,8 @@ func getMergedPostProcessors(old map[string]postProcessors, new map[string]postP
 		p := postProcessors{}
 		p = old[k]
 		p.mergeSettings(v.Settings)
+		p.mergeExcept(v.Except)
+		p.mergeOnly(v.Only)
 		tmp[k] = p
 	}
 
@@ -906,7 +908,8 @@ func getMergedProvisioners(old map[string]provisioners, new map[string]provision
 		p := provisioners{}
 		p = old[k]
 		p.mergeSettings(v.Settings)
-
+		p.mergeExcept(v.Except)
+		p.mergeOnly(v.Only)
 		if len(v.Scripts) > 0 {
 			p.setScripts(v.Scripts)
 		}

@@ -130,6 +130,7 @@ func (p *postProcessors) settingsToMap(Type string, r *rawTemplate) map[string]i
 		m[k] = v
 	}
 
+	jww.TRACE.Printf("post-processors Map: %v\n",m)
 	return m
 }
 
@@ -204,6 +205,8 @@ func (p *provisioners) settingsToMap(Type string, r *rawTemplate) (map[string]in
 	if p.Only != nil {
 		m["only"] = p.Only
 	}
+
+	jww.TRACE.Printf("Provisioners Map: %v\n",m)
 
 	return m, nil
 }
