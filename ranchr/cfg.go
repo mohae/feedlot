@@ -29,8 +29,16 @@ type build struct {
 	// builder, which has settings common to both VMWare and VirtualBox.
 	Builders map[string]builder `toml:"builders"`
 
+	// Targeted post-processors: the values are consistent with Packer's, e.g.
+	// `vagrant` is used for Vagrant.
+	PostProcessorType []string `toml:"post_processor_type"`
+
 	// A map of post-processor configurations.
 	PostProcessors map[string]postProcessors `toml:"post_processors"`
+
+	// Targeted provisioners: the values are consistent with Packer's, e.g.
+	// `shell` is used for shell.
+	PostProcessorType []string `toml:"post_processor_type"`
 
 	// A map of provisioner configurations.
 	Provisioners map[string]provisioners `toml:"provisioners"`
