@@ -80,6 +80,13 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 	return m
 }
 
+type postProcessorer interface {
+	mergeSettings([]string)
+  	overrideExcept([]string)
+	overrideOnly([]string)
+	isPostProcessor()
+}
+
 // Type for handling the post-processor section of the configs.
 type postProcessors struct {
 	// Rest of the settings in "key=value" format.
@@ -155,7 +162,9 @@ func (p *postProcessors) settingsToMap(Type string, r *rawTemplate) map[string]i
 // 
 type provisionerer interface {
 	mergeSettings([]string)
-  	isProvisioner()
+  	overrideExcept([]string)
+	overrideOnly([]string)
+	isProvisioner()
 }
 
 // Provisioners: type for common elements for provisioners.
@@ -163,6 +172,9 @@ type Provisioners struct {
 	// Rest of the settings in "key=value" format.
 	Settings []string `toml:"settings"`
 	// Scripts are defined separately because it's simpler that way.
+	Except []string `toml:"except"`
+	// Support Packer Provisioner's `only` configuration.
+	Only []string `toml:"only"`
 }
 
 // isProvisioner() exists for interface reasons--otherwise non-provisioner
@@ -176,9 +188,6 @@ type shellProvisioner struct {
 	Provisioners
 	Scripts []string `toml:"scripts"`
 	// Support Packer Provisioner's `except` configuration.
-	Except []string `toml:"except"`
-	// Support Packer Provisioner's `only` configuration.
-	Only []string `toml:"only"`
 }
 
 // Merge the settings section of a post-processor. New values supercede existing ones.
@@ -188,7 +197,7 @@ func (p *Provisioners) mergeSettings(new []string) {
 
 // overrideExcept overrides the existing values in the Except
 // section if there are any new values passed to it.
-func (p *shellProvisioner) overrideExcept(new []string) {
+func (p *Provisioner) overrideExcept(new []string) {
 	if len(new) > 0 {
 		p.Except = new
 	}
@@ -196,10 +205,13 @@ func (p *shellProvisioner) overrideExcept(new []string) {
 
 // overrideOnly overrides the existing values in the Only
 // section if there are any new values passed to it.
-func (p *shellProvisioner) overrideOnly(new []string) {
+func (p *Provisioner) overrideOnly(new []string) {
 	if len(new) > 0 {
 		p.Only = new
 	}
+}
+
+func (p *Provisioner) isProvisioner() {
 }
 
 // Go through all of the Settings and convert them to a map. Each setting is

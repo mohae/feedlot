@@ -29,22 +29,31 @@ var (
 
 	// EnvConfig is the name of the environment variable name for the config file.
 	EnvConfig          = appName + "_CONFIG"
+
 	// EnvBuildsFile is the name of the environment variable name for the builds file.
 	EnvBuildsFile      = appName + "_BUILDS_FILE"
+
 	// EnvBuildListsFile is the name of the environment variable name for the build lists file.
 	EnvBuildListsFile  = appName + "_BUILD_LISTS_FILE"
+
 	// EnvDefaultsFile is the name of the environment variable name for the defaults file.
 	EnvDefaultsFile    = appName + "_DEFAULTS_FILE"
+
 	// EnvSupportedFile is the name of the environment variable name for the supported file.
 	EnvSupportedFile   = appName + "_SUPPORTED_FILE"
+
 	// EnvParamDelimStart is the name of the environment variable name for the delimter that starts Rancher variables.
 	EnvParamDelimStart = appName + "_PARAM_DELIM_START"
+
 	// EnvLogToFile is the name of the environment variable name for whether or not Rancher logs to a file.
 	EnvLogToFile       = appName + "_LOG_TO_FILE"
+
 	// EnvLogFilename is the name of the environment variable name for the log filename, if logging to file is enabled..
 	EnvLogFilename     = appName + "_LOG_FILENAME"
+
 	// EnvLogLevelFile is the name of the environment variable name for the file output's log level.
 	EnvLogLevelFile    = appName + "_LOG_LEVEL_FILE"
+
 	// EnvLogLevelStdout is the name of the environment variable name for stdout's log level.
 	EnvLogLevelStdout  = appName + "_LOG_LEVEL_STDOUT"
 )
@@ -52,8 +61,10 @@ var (
 var (
 	// BuilderCommon is the name of the common builder section in the toml files.
 	BuilderCommon = "common"
+
 	// BuilderVBox is the name of the VirtualBox builder section in the toml files.
 	BuilderVBox   = "virtualbox-iso"
+
 	// BuilderVMWare is the name of the VMWare builder section in the toml files.
 	BuilderVMWare = "vmware-iso"
 
@@ -63,11 +74,14 @@ var (
 	// ProvisionerAnsible is the name of the Ansible Provisioner
 	ProvisionerAnsible = "ansible-local"
 
+	// ProvisionerFileUploads is the name of the Salt Provisioner
+	ProvisionerFileUploads = "file"
+
 	// ProvisionerSalt is the name of the Salt Provisioner
 	ProvisionerSalt = "salt-masterless"
 
-	// ProvisionerShell is the name of the Shell Provisioner
-	ProvisionerShell = "shell"
+	// ProvisionerShellScripts is the name of the Shell Scripts Provisioner
+	ProvisionerShellScripts = "shell"
 )
 
 var (
@@ -97,12 +111,15 @@ type ArgsFilter struct {
 	// Arch is a distribution specific string for the OS's target 
 	// architecture.
 	Arch    string
+
 	// Distro is the name of the distribution, this value is consistent
 	// with Packer.
 	Distro  string
+
 	// Image is the type of ISO image that is to be used. This is a 
 	// distribution specific value.
 	Image   string
+
 	// Release is the release number or string of the ISO that is to be 
 	// used. The valid values are distribution specific.
 	Release string
@@ -387,6 +404,7 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	// Get the scripts for this build, if any.
 	var scripts []string
 	scripts = rTpl.ScriptNames()
+
 	// Create the JSON version of the Packer template. This also handles creation of
 	// the build directory and copying all files that the Packer template needs to the
 	// build directory.
@@ -412,6 +430,7 @@ func BuildBuilds(buildNames ...string) (string, error) {
 		jww.ERROR.Println(err.Error())
 		return "", err
 	}
+
 	// Only load supported if it hasn't been loaded. Even though LoadSupported
 	// uses a mutex to control access to prevent race conditions, no need to
 	// call it if its already loaded.
@@ -836,34 +855,16 @@ func getMergedBuilders(old map[string]builder, new map[string]builder) map[strin
 	}
 
 	// Get all the keys in both maps
-	keys1 := make([]string, len(old))
-	cnt := 0
+	// Get the all keys from both maps
+	var keys[]string
+	keys = keysFromMaps(old, new)
 
-	for k := range old {
-		keys1[cnt] = k
-		cnt++
-	}
-
-	keys2 := make([]string, len(new))
-	cnt = 0
-
-	for k := range new {
-		keys2[cnt] = k
-		cnt++
-	}
-
-	// Merge this slice down to get a final list of keys.
-	var keys3 []string
-	keys3 = mergeSlices(keys1, keys2)
 	bM := map[string]builder{}
-
 	for _, v := range keys3 {
 		b := builder{}
 		b = old[v]
-
 		b.mergeSettings(new[v].Settings)
 		b.mergeVMSettings(new[v].VMSettings)
-
 		bM[v] = b
 	}
 
@@ -881,22 +882,25 @@ func getMergedBuilders(old map[string]builder, new map[string]builder) map[strin
 // If there isn't a new config, return the existing as there are no
 // overrides
 func getMergedPostProcessors(old map[string]postProcessors, new map[string]postProcessors) map[string]postProcessors {
-	if len(new) <= 0 {
+	// If there is nothing new, old equals merged.
+	if len(new) <= 0 || new == nil {
 		return old
 	}
 
-	// Go through each PostProcessors and merge new Settings with the old
-	// Settings.
-	tmp := map[string]postProcessors{}
+	// Get the all keys from both maps
+	var keys[]string
+	keys = keysFromMaps(old, new)
 
-	for k, v := range new {
+	pM := map[string]postProcessors{}
+
+	for _, v := range keys {
 		p := postProcessors{}
-		p = old[k]
-		p.mergeSettings(v.Settings)
-		tmp[k] = p
+		p = old[v]
+		p.mergeVMSettings(new[v].VMSettings)
+		pM[v] = p
 	}
 
-	return tmp
+	return pM
 }
 
 // merges the new config with the old. The updates occur as follows:
@@ -908,24 +912,25 @@ func getMergedPostProcessors(old map[string]postProcessors, new map[string]postP
 //	  exists in the `old` map but it does not exist in the `new` map, that
 //        provisioners will be orphaned.
 func getMergedProvisioners(old map[string]provisioners, new map[string]provisioners) map[string]provisioners {
-	if len(new) <= 0 {
+	// If there is nothing new, old equals merged.
+	if len(new) <= 0 || new == nil {
 		return old
 	}
 
-	tmp := map[string]provisioners{}
+	// Get the all keys from both maps
+	var keys[]string
+	keys = keysFromMaps(old, new)
 
-	for k, v := range new {
+	pM := map[string]provisioners{}
+
+	for _, v := range keys {
 		p := provisioners{}
-		p = old[k]
-		p.mergeSettings(v.Settings)
-		if len(v.Scripts) > 0 {
-			p.setScripts(v.Scripts)
-		}
-
-		tmp[k] = p
+		p = old[v]
+		p.mergeVMSettings(new[v].VMSettings)
+		pM[v] = p
 	}
 
-	return tmp
+	return pM
 }
 
 // appendSlash appends a slash to the passed string. If the string already ends
@@ -1151,3 +1156,24 @@ func pathExists(p string) (bool, error) {
 
 	return false, err
 }
+
+// Takes a variadic array of maps and returns a merged key
+func getKeysFromMaps(m ...map[string]interface{}) []string {
+	mapCnt := 0
+	keyCnt :=0
+	var tmpK []string
+	var keys [][]string
+        for _, tmpM := range m {
+		// Get all the keys
+		for k := range tmpM {
+			keys[cnt] = k
+			cnt++
+		}
+	}
+
+	keys3 = mergeSlices(keys1, keys2)
+	}
+
+	return keys
+}
+		
