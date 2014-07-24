@@ -74,12 +74,12 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 
 // Type for handling the post-processor section of the configs.
 type postProcessors struct {
+	// Rest of the settings in "key=value" format.
+	Settings []string
 	// Support Packer post-processors' `except` configuration.
 	Except []string
 	// Support Packer post-processors' `only` configuration.
 	Only []string
-	// Rest of the settings in "key=value" format.
-	Settings []string
 }
 
 // Merge the settings section of a post-processor. New values supercede
@@ -135,14 +135,14 @@ func (p *postProcessors) settingsToMap(Type string, r *rawTemplate) map[string]i
 
 // Type for handling the provisioners sections of the configs.
 type provisioners struct {
-	// Support Packer Provisioner's `except` configuration.
-	Except []string
-	// Support Packer Provisioner's `only` configuration.
-	Only []string
 	// Rest of the settings in "key=value" format.
 	Settings []string `toml:"settings"`
 	// Scripts are defined separately because it's simpler that way.
 	Scripts []string `toml:"scripts"`
+	// Support Packer Provisioner's `except` configuration.
+	Except []string `toml:"except"`
+	// Support Packer Provisioner's `only` configuration.
+	Only []string `toml:"only"`
 }
 
 // Merge the Except section of a post-processor. If there are new values,

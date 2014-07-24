@@ -32,8 +32,23 @@
 			"virtualbox-iso"
 		]
 		[build.1404-dev.builders]
-			[build.1404-dev.virtualbox-iso]
+			[build.1404-dev.builders.virtualbox-iso]
 			vm_settings = [
 				"memory=4096"
 			]
-
+		[build.1404-dev.post-processors]
+			[build.1404-dev.post-processors.vagrant]
+			except = [
+				"docker"
+			]
+			only = [
+				"virtualbox-iso"
+			]
+		[build.1404-dev.provisioners]
+			[build.1404-dev.provisioners.shell]
+			except = [
+				"docker"
+			]
+			only = [
+				"virtualbox-iso"
+			]

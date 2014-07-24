@@ -358,6 +358,12 @@ var testBuildTest1 = rawTemplate{
 				Settings: []string{
 					"output = :out_dir/packer.box",
 				},
+				Except: []string{
+					"docker",
+				},
+				Only: []string{
+					"virtualbox-iso",
+				},
 			},
 		},
 		Provisioners: map[string]provisioners{
@@ -369,6 +375,12 @@ var testBuildTest1 = rawTemplate{
 					":scripts_dir/setup_test.sh",
 					":scripts_dir/vagrant_test.sh",
 					":scripts_dir/cleanup_test.sh",
+				},
+				Except: []string{
+					"docker",
+				},
+				Only: []string{
+					"virtualbox-iso",
 				},
 			},
 		},
@@ -459,6 +471,12 @@ var testMergedBuildTest1 = rawTemplate{
 					"keep_input_artifact = false",
 					"output = :out_dir/packer.box",
 				},
+				Except: []string{
+					"docker",
+				},
+				Only: []string{
+					"virtualbox-iso",
+				},
 			},
 		},
 		Provisioners: map[string]provisioners{
@@ -470,6 +488,12 @@ var testMergedBuildTest1 = rawTemplate{
 					":scripts_dir/setup_test.sh",
 					":scripts_dir/vagrant_test.sh",
 					":scripts_dir/cleanup_test.sh",
+				},
+				Except: []string{
+					"docker",
+				},
+				Only: []string{
+					"virtualbox-iso",
 				},
 			},
 		},

@@ -198,6 +198,8 @@ func TestBuildsStuff(t *testing.T) {
 				os.Setenv(EnvBuildsFile, "../test_files/conf/builds_test.toml")
 				b.LoadOnce()
 				So(b.loaded, ShouldEqual, true)
+				So(b.Build["test1"], ShouldResemble, testBuilds.Build["test1"])
+				So(b.Build["test2"], ShouldResemble, testBuilds.Build["test2"])
 			})
 		})
 		Convey("Given an empty build filename", func() {
