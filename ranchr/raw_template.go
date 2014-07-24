@@ -385,8 +385,9 @@ func (r *rawTemplate) mergeDistroSettings(d *distro) {
 	r.Builders = getMergedBuilders(r.Builders, d.Builders)
 	jww.TRACE.Printf("Merged Builder: %v", r.Builders)
 	r.PostProcessors = getMergedPostProcessors(r.PostProcessors, d.PostProcessors)
+	jww.TRACE.Printf("Merged PostProcessors: %v", r.PostProcessors)
 	r.Provisioners = getMergedProvisioners(r.Provisioners, d.Provisioners)
-
+	jww.TRACE.Printf("Merged Provisioners: %v", r.Provisioners)
 	return
 }
 

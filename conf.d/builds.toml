@@ -36,8 +36,8 @@
 			vm_settings = [
 				"memory=4096"
 			]
-		[build.1404-dev.post-processors]
-			[build.1404-dev.post-processors.vagrant]
+		[build.1404-dev.post_processors]
+			[build.1404-dev.post_processors.vagrant]
 			except = [
 				"docker"
 			]

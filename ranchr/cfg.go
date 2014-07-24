@@ -75,11 +75,11 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 // Type for handling the post-processor section of the configs.
 type postProcessors struct {
 	// Rest of the settings in "key=value" format.
-	Settings []string
+	Settings []string `toml:"settings"`
 	// Support Packer post-processors' `except` configuration.
-	Except []string
+	Except []string `toml:"except"`
 	// Support Packer post-processors' `only` configuration.
-	Only []string
+	Only []string `toml:"only"`
 }
 
 // Merge the settings section of a post-processor. New values supercede
@@ -88,17 +88,17 @@ func (p *postProcessors) mergeSettings(new []string) {
 	p.Settings = mergeSettingsSlices(p.Settings, new)
 }
 
-// Merge the Except section of a post-processor. If there are new values,
-// replace the existing values.
-func (p *postProcessors) mergeExcept(new []string) {
+// overrideExcept overrides the existing values in the Except
+// section if there are any new values passed to it.
+func (p *postProcessors) overrideExcept(new []string) {
 	if len(new) > 0 {
 		p.Except = new
 	}
 }
 
-// Merge the Only section of a post-processor. New values supercede
-// existing ones.
-func (p *postProcessors) mergeOnly(new []string) {
+// overrideOnly overrides the existing values in the Only
+// section if there are any new values passed to it.
+func (p *postProcessors) overrideOnly(new []string) {
 	if len(new) > 0 {
 		p.Only = new
 	}
@@ -130,6 +130,16 @@ func (p *postProcessors) settingsToMap(Type string, r *rawTemplate) map[string]i
 		m[k] = v
 	}
 
+	// Add except array.
+	if p.Except != nil {
+		m["except"] = p.Except
+	}
+
+	// Add only array.
+	if p.Only != nil {
+		m["only"] = p.Only
+	}
+
 	jww.TRACE.Printf("post-processors Map: %v\n",m)
 	return m
 }
@@ -146,17 +156,17 @@ type provisioners struct {
 	Only []string `toml:"only"`
 }
 
-// Merge the Except section of a post-processor. If there are new values,
-// replace the existing values.
-func (p *provisioners) mergeExcept(new []string) {
+// overrideExcept overrides the existing values in the Except
+// section if there are any new values passed to it.
+func (p *provisioners) overrideExcept(new []string) {
 	if len(new) > 0 {
 		p.Except = new
 	}
 }
 
-// Merge the Only section of a post-processor. New values supercede
-// existing ones.
-func (p *provisioners) mergeOnly(new []string) {
+// overrideOnly overrides the existing values in the Only
+// section if there are any new values passed to it.
+func (p *provisioners) overrideOnly(new []string) {
 	if len(new) > 0 {
 		p.Only = new
 	}
