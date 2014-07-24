@@ -52,6 +52,9 @@ builder_type = [
 			"memsize=1024",
 			"numvcpus=1"
 		]
+post_processor_type = [
+	"vagrant"
+]
 [post_processors]
 	[post_processors.vagrant]
 		settings = [
@@ -59,6 +62,9 @@ builder_type = [
 			"keep_input_artifact = false",
 			"output = out/rancher-packer.box"
 		]
+provisioner_type = [
+	"shell"
+]
 [provisioners]
 	[provisioners.shell]
 		settings = [

@@ -415,6 +415,26 @@ var testBuildTest2 = rawTemplate{
 	},
 }
 
+var testBuildCentOS6Salt = rawTemplate{
+	PackerInf: PackerInf{
+		Description: "Test build template for salt provisioner using CentOS6",
+	},
+	Type:    "centos",
+	build: build{
+		BuilderType: []string{
+			"virtualbox-iso",
+		},
+		Provisioner: map[string]provisioner{
+			"salt-masterless": {
+				Settings: []string{
+					"local_state_tree = ~/saltstates/centos6/salt",
+					"skip_bootstrap = true",
+				},
+			},
+		},
+	},
+}
+
 var testMergedBuildTest1 = rawTemplate{
 	IODirInf: IODirInf{
 		CommandsSrcDir: ":src_dir/commands",
@@ -581,6 +601,94 @@ var testMergedBuildTest2 = rawTemplate{
 		},
 	},
 }
+
+var testMergedBuildCentOS6Salt = rawTemplate{
+	IODirInf: IODirInf{
+		CommandsSrcDir: ":src_dir/commands",
+		HTTPDir:        "http",
+		HTTPSrcDir:     ":src_dir/http",
+		OutDir:         "../test_files/out/:type",
+		ScriptsDir:     "scripts",
+		ScriptsSrcDir:  ":src_dir/scripts",
+		SrcDir:         "../test_files/src/:type",
+	},
+	PackerInf: PackerInf{
+		MinPackerVersion: "",
+		Description:      "Test build template for salt provisioner using CentOS6",
+	},
+	BuildInf: BuildInf{
+		Name:      ":type-:release-:image-:arch",
+		BuildName: "",
+		BaseURL:   "",
+	},
+	Type:    "centos",
+	Arch:    "x86_64",
+	Image:   "minimal",
+	Release: "6",
+	build: build{
+		BuilderType: []string{
+			"virtualbox-iso",
+		},
+		Builders: map[string]builder{
+			"common": {
+				Settings: []string{
+					"boot_command = :commands_src_dir/boot_test.command",
+					"boot_wait = 5s",
+					"disk_size = 20000",
+					"http_directory = http",
+					"iso_checksum_type = sha256",
+					"shutdown_command = :commands_src_dir/shutdown_test.command",
+					"ssh_password = vagrant",
+					"ssh_port = 22",
+					"ssh_username = vagrant",
+					"ssh_wait_timeout = 300m",
+				},
+			},
+			"virtualbox-iso": {
+				VMSettings: []string{
+					"cpus=1",
+					"memory=4096",
+				},
+			},
+			"vmware-iso": {
+				VMSettings: []string{
+					"cpuid.coresPerSocket=1",
+					"memsize=1024",
+					"numvcpus=1",
+				},
+			},
+		},
+		PostProcessors: map[string]postProcessors{
+			"vagrant": {
+				Settings: []string{
+					"keep_input_artifact = false",
+					"output = out/someComposedBoxName.box",
+				},
+			},
+		},
+		Provisioners: map[string]provisioners{
+			"salt-masterless": {
+				Settings = []string {
+					"local_state_tree = ~/saltstates/centos6/salt",
+					"skip_bootstrap = true",
+				},
+			},
+			"shell": {
+				Settings: []string{
+					"execute_command = :commands_src_dir/execute_test.command",
+				},
+				Scripts: []string{
+					":scripts_dir/setup_test.sh",
+					":scripts_dir/base_test.sh",
+					":scripts_dir/vagrant_test.sh",
+					":scripts_dir/cleanup_test.sh",
+					":scripts_dir/zerodisk_test.sh",
+				},
+			},
+		},
+	},
+}
+
 var testSupported, testSupportedNoBaseURL supported
 var testMergedBuilds, testDistroDefaults map[string]rawTemplate
 var testBuilds builds
@@ -604,9 +712,11 @@ func setCommonTestData() {
 	testBuilds.Build = map[string]rawTemplate{}
 	testBuilds.Build["test1"] = testBuildTest1
 	testBuilds.Build["test2"] = testBuildTest2
+	testBuilds.Build["test-centos6-salt"] = testBuildCentOS6Salt
 	testMergedBuilds = map[string]rawTemplate{}
 	testMergedBuilds["test1"] = testMergedBuildTest1
 	testMergedBuilds["test2"] = testMergedBuildTest2
+	testMergedBuilds["test-centos6-salt"] = testMergedBuildCentOS6Salt
 	testDataSet = true
 	return
 }

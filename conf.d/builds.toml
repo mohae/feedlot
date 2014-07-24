@@ -60,7 +60,10 @@
 			"virtualbox-iso"
 		]
 		[build.centos6-salt.provisioner.salt-masterless]
-			"local_state_tree": "~/saltstack/centos6/salt"
+			settings = [
+				"local_state_tree = ~/saltstack/centos6/salt"
+			]
+			
 
 	[build.centos6-ansible]
 		type = "centos"

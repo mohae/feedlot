@@ -56,6 +56,18 @@ var (
 	BuilderVBox   = "virtualbox-iso"
 	// BuilderVMWare is the name of the VMWare builder section in the toml files.
 	BuilderVMWare = "vmware-iso"
+
+	// PostProcessorVagrant is the name of the Vagrant PostProcessor
+	PostProcessorVagrant = "vagrant"
+
+	// ProvisionerAnsible is the name of the Ansible Provisioner
+	ProvisionerAnsible = "ansible-local"
+
+	// ProvisionerSalt is the name of the Salt Provisioner
+	ProvisionerSalt = "salt-masterless"
+
+	// ProvisionerShell is the name of the Shell Provisioner
+	ProvisionerShell = "shell"
 )
 
 var (

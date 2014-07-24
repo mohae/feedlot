@@ -144,11 +144,28 @@ func (p *postProcessors) settingsToMap(Type string, r *rawTemplate) map[string]i
 	return m
 }
 
-// Type for handling the provisioners sections of the configs.
-type provisioners struct {
+// 
+type provisionerer interface {
+	mergeSettings([]string)
+  	isProvisioner()
+}
+
+// Provisioners: type for common elements for provisioners.
+type Provisioners struct {
 	// Rest of the settings in "key=value" format.
 	Settings []string `toml:"settings"`
 	// Scripts are defined separately because it's simpler that way.
+}
+
+// isProvisioner() exists for interface reasons--otherwise non-provisioner
+// related structs would match becaues mergeSettings([]string) is a method
+// that is common to several other structs.
+func (p *Provisioner) isProvisioner() {	
+}
+
+// shell implimentation of provisioner
+type shellProvisioner struct {
+	Provisioners
 	Scripts []string `toml:"scripts"`
 	// Support Packer Provisioner's `except` configuration.
 	Except []string `toml:"except"`
@@ -156,9 +173,14 @@ type provisioners struct {
 	Only []string `toml:"only"`
 }
 
+// Merge the settings section of a post-processor. New values supercede existing ones.
+func (p *Provisioners) mergeSettings(new []string) {
+	p.Settings = mergeSettingsSlices(p.Settings, new)
+}
+
 // overrideExcept overrides the existing values in the Except
 // section if there are any new values passed to it.
-func (p *provisioners) overrideExcept(new []string) {
+func (p *shellProvisioner) overrideExcept(new []string) {
 	if len(new) > 0 {
 		p.Except = new
 	}
@@ -166,21 +188,16 @@ func (p *provisioners) overrideExcept(new []string) {
 
 // overrideOnly overrides the existing values in the Only
 // section if there are any new values passed to it.
-func (p *provisioners) overrideOnly(new []string) {
+func (p *shellProvisioner) overrideOnly(new []string) {
 	if len(new) > 0 {
 		p.Only = new
 	}
 }
 
-// Merge the settings section of a post-processor. New values supercede existing ones.
-func (p *provisioners) mergeSettings(new []string) {
-	p.Settings = mergeSettingsSlices(p.Settings, new)
-}
-
 // Go through all of the Settings and convert them to a map. Each setting is
 // parsed into its constituent parts. The value then goes through variable
 // replacement to ensure that the settings are properly resolved.
-func (p *provisioners) settingsToMap(Type string, r *rawTemplate) (map[string]interface{}, error) {
+func (p *shellProvisioners) settingsToMap(Type string, r *rawTemplate) (map[string]interface{}, error) {
 	var k, v string
 	var err error
 
@@ -221,7 +238,7 @@ func (p *provisioners) settingsToMap(Type string, r *rawTemplate) (map[string]in
 	return m, nil
 }
 
-func (p *provisioners) setScripts(new []string) {
+func (p *shellProvisioners) setScripts(new []string) {
 	// Scripts are only replaced if it has values, otherwise the existing values are used.
 	if len(new) > 0 {
 		p.Scripts = new

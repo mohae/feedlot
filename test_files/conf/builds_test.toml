@@ -60,3 +60,19 @@
 				"memory=4096"
 			]
 
+        [build.test-centos6-salt]
+		type = "centos"
+		description = "Test build template for salt provisioner using CentOS6"
+		builder_type = [
+			"virtualbox-iso"
+		]
+		provisioner_type = [
+			"shell",
+			"salt-masterless"
+		]
+		[build.centos6-salt.provisioner]
+			[build.centos6-salt.provisioner.salt-masterless]
+				settings = [
+					"local_state_tree = ~/saltstates/centos6/salt",
+					"skip_bootstrap = true"
+				]
