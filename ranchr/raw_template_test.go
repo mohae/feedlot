@@ -123,69 +123,6 @@ func TestCommonVMSettings(t *testing.T) {
 	Convey("Given a template", t, func() {
 		r := rawTemplate{}
 		r = testDistroDefaults["ubuntu"]
-		/*		Convey("Given two slices of settings", func() {
-							old :=   []string{
-									"boot_command = ../test_files/src/ubuntu/commands/boot_test.command",
-									"boot_wait = 5s",
-									"disk_size = 20000",
-									"http_directory = http",
-									"iso_checksum_type = sha256",
-									"shutdown_command = ../test_files/src/ubuntu/commands/shutdown_test.command",
-									"ssh_password = vagrant",
-									"ssh_port = 22",
-									"ssh_username = vagrant",
-									"ssh_wait_timeout = 240m",
-								}
-							new := []string{
-									"ssh_port = 222",
-									"ssh_wait_timeout = 300m",
-								}
-							Convey("merging the setting should result in", func() {
-								var settings map[string]interface{}
-								var vars []string
-								var err error
-								expected := map[string]interface{}{
-									"disk_size":"20000",
-									"iso_url":"http://releases.ubuntu.com/12.04/ubuntu-12.04.4-server-amd64.iso",
-									"iso_checksum":"3aeb42816253355394897ae80d99a9ba56217c0e98e05294b51f0f5b13bceb54",
-									"boot_command":`"<esc><wait>",
-				"<esc><wait>",
-				"<enter><wait>",
-				"/install/vmlinuz<wait>",
-				" auto<wait>",
-				" console-setup/ask_detect=false<wait>",
-				" console-setup/layoutcode=us<wait>",
-				" console-setup/modelcode=pc105<wait>",
-				" debconf/frontend=noninteractive<wait>",
-				" debian-installer=en_US<wait>",
-				" fb=false<wait>",
-				" initrd=/install/initrd.gz<wait>",
-				" kbd-chooser/method=us<wait>",
-				" keyboard-configuration/layout=USA<wait>",
-				" keyboard-configuration/variant=USA<wait>",
-				" locale=en_US<wait>",
-				" netcfg/get_hostname=ubuntu-1204<wait>",
-				" netcfg/get_domain=vagrantup.com<wait>",
-				" noapic<wait>",
-				" preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg<wait>",
-				" -- <wait>",
-				"<enter><wait>"`,
-									"ssh_username":"vagrant",
-									"boot_wait":"5s",
-									"ssh_password":"vagrant",
-									"ssh_wait_timeout":"300m",
-									"http_directory":"http",
-									"iso_checksum_type":"sha256",
-									"shutdown_command":"\"echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'\"",
-									"ssh_port":"222",
-								}
-								settings, vars, err = r.commonVMSettings(old, new)
-								So(err, ShouldBeNil)
-								So(settings, ShouldResemble, expected)
-								So(vars, ShouldBeNil)
-							})
-						})
-		*/
 		Convey("Given an invalid type ", func() {
 			r.Type = "unknown"
 			old := []string{
