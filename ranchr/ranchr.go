@@ -636,7 +636,32 @@ func setDistrosDefaults(d *defaults, s *supported) (map[string]rawTemplate, erro
 	return dd, nil
 }
 
-// Takes two slices and returns the de-duped, merged list. The elements are
+// MergeSlices takes a variadic input of []string and returns a string slice
+// with all of the values within the slices merged, later occurrences of the
+// same key override previous.
+func MergeSlices(s ...[]string) []string {
+	// If nothing is received return nothing
+	if (s == nil){
+		return nil
+	}
+
+	// If there is only 1, there is nothing to merge
+	if len(s) == 1 {
+		return s[0]
+	}
+
+	// Otherwise merge slices, starting with s1 & s2
+	var merged []string
+
+
+	for k, tmpS :=  range s {
+		merged = mergeSlices(merged, tmpS)
+	}
+
+	return merged
+}
+
+// mergeSlices Takes two slices and returns the de-duped, merged list. The elements are
 // returned in order of first encounter-duplicate keys are discarded.
 func mergeSlices(s1 []string, s2 []string) []string {
 	// If nothing is received return nothing
@@ -651,12 +676,6 @@ func mergeSlices(s1 []string, s2 []string) []string {
 	if s2 == nil || len(s2) == 0 {
 		return s1
 	}
-
-	// Make a slice with a length equal to the sum of the two input slices.
-	tempSl := make([]string, len(s1)+len(s2))
-	copy(tempSl, s1)
-	i := len(s1) - 1
-	var found bool
 
 	// Go through every element in the second slice.
 	for _, v := range s2 {
@@ -1159,20 +1178,20 @@ func pathExists(p string) (bool, error) {
 
 // Takes a variadic array of maps and returns a merged key
 func getKeysFromMaps(m ...map[string]interface{}) []string {
-	mapCnt := 0
-	keyCnt :=0
+	cnt := 0
 	var tmpK []string
-	var keys [][]string
-        for _, tmpM := range m {
+	keys :=make([][]int, len(m))
+        for i, tmpM := range m {
+		cnt = 0;
 		// Get all the keys
+		keys[i] = make([]string, len(tmpM))
 		for k := range tmpM {
-			keys[cnt] = k
+			keys[i][cnt] = k
 			cnt++
 		}
 	}
 
-	keys3 = mergeSlices(keys1, keys2)
-	}
+	mergedKeys = mergeSlices(keys)
 
 	return keys
 }
