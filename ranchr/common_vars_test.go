@@ -20,10 +20,12 @@ var testBuildListsFile = "../test_files/conf/build_lists_test.toml"
 var today = time.Now().Local().Format("2006-01-02")
 var testRawTemplate = newRawTemplate()
 
+/*
 var testProvisioners = map[string]provisioner{
 	"shell": {
 		Settings: []string{
 			"execute_command = :commands_src_dir/execute_test.command",
+		
 			[]string{
 				":scripts_dir/setup_test.sh",
 				":scripts_dir/base_test.sh",
@@ -35,6 +37,7 @@ var testProvisioners = map[string]provisioner{
 
 	},
 }
+*/
 
 var testDefaults = &defaults{
 	IODirInf: IODirInf{
@@ -56,7 +59,7 @@ var testDefaults = &defaults{
 		Name:      ":type-:release-:image-:arch",
 	},
 	build: build{
-		BuilderType: []string{
+		BuilderTypes: []string{
 			"virtualbox-iso",
 			"vmware-iso",
 		},
@@ -89,6 +92,9 @@ var testDefaults = &defaults{
 				},
 			},
 		},
+		PostProcessorTypes: []string{
+			"vagrant",
+		},
 		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				Settings: []string{
@@ -97,12 +103,13 @@ var testDefaults = &defaults{
 				},
 			},
 		},
+/*
 		Provisioners: map[string]provisioner{
 			"shell": {
 				Settings: []string{
 					"execute_command = :commands_src_dir/execute_test.command",
 				},
-/*
+
 				Scripts: []string{
 					":scripts_dir/setup_test.sh",
 					":scripts_dir/base_test.sh",
@@ -110,9 +117,10 @@ var testDefaults = &defaults{
 					":scripts_dir/cleanup_test.sh",
 					":scripts_dir/zerodisk_test.sh",
 				},
-*/
+
 			},
 		},
+*/
 	},
 }
 
@@ -166,12 +174,12 @@ var testSupportedUbuntu = &distro{
 				},
 			},
 		},
+/*
 		Provisioners: map[string]provisioner{
 			"shell": {
 				Settings: []string{
 					"execute_command = :commands_src_dir/execute_test.command",
 				},
-/*
 				Scripts: []string{
 					"scripts/setup_test.sh",
 					"scripts/base_test.sh",
@@ -179,9 +187,9 @@ var testSupportedUbuntu = &distro{
 					"scripts/cleanup_test.sh",
 					"scripts/zerodisk_test.sh",
 				},
-*/
 			},
 		},
+*/
 	},
 }
 
@@ -240,7 +248,7 @@ var testDistroDefaultUbuntu = rawTemplate{
 	varVals: map[string]string{},
 	vars:    map[string]string{},
 	build: build{
-		BuilderType: []string{"virtualbox-iso", "vmware-iso"},
+		BuilderTypes: []string{"virtualbox-iso", "vmware-iso"},
 		Builders: map[string]builder{
 			"common": {
 				Settings: []string{
@@ -270,6 +278,7 @@ var testDistroDefaultUbuntu = rawTemplate{
 				},
 			},
 		},
+		PostProcessorTypes: []string{ "vagrant" },
 		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				Settings: []string{
@@ -278,12 +287,12 @@ var testDistroDefaultUbuntu = rawTemplate{
 				},
 			},
 		},
+/*
 		Provisioners: map[string]provisioner{
 			"shell": {
 				Settings: []string{
 					"execute_command = :commands_src_dir/execute_test.command",
 				},
-/*
 				Scripts: []string{
 					"scripts/setup_test.sh",
 					"scripts/base_test.sh",
@@ -291,9 +300,9 @@ var testDistroDefaultUbuntu = rawTemplate{
 					"scripts/cleanup_test.sh",
 					"scripts/zerodisk_test.sh",
 				},
-*/
 			},
 		},
+*/
 	},
 }
 
@@ -309,7 +318,7 @@ var testDistroDefaultCentOS = rawTemplate{PackerInf: PackerInf{MinPackerVersion:
 	varVals:  map[string]string{},
 	vars:     map[string]string{},
 	build: build{
-		BuilderType: []string{"virtualbox-iso", "vmware-iso"},
+		BuilderTypes: []string{"virtualbox-iso", "vmware-iso"},
 		Builders: map[string]builder{
 			"common": {
 				Settings:   []string{"boot_command = :commands_src_dir/boot_test.command", "boot_wait = 5s", "disk_size = 20000", "http_directory = http", "iso_checksum_type = sha256", "shutdown_command = :commands_src_dir/shutdown_test.command", "ssh_password = vagrant", "ssh_port = 22", "ssh_username = vagrant", "ssh_wait_timeout = 240m"},
@@ -324,6 +333,8 @@ var testDistroDefaultCentOS = rawTemplate{PackerInf: PackerInf{MinPackerVersion:
 				VMSettings: []string{"cpuid.coresPerSocket=1", "memsize=1024", "numvcpus=1"},
 			},
 		},
+		PostProcessorTypes: []string{"vagrant"},
+/*
 		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				Settings: []string{"keep_input_artifact = false", "output = out/rancher-packer.box"},
@@ -332,11 +343,10 @@ var testDistroDefaultCentOS = rawTemplate{PackerInf: PackerInf{MinPackerVersion:
 		Provisioners: map[string]provisioner{
 			"shell": {
 				Settings: []string{"execute_command = :commands_src_dir/execute_test.command"},
-/*
 				Scripts:  []string{":scripts_dir/setup_test.sh", ":scripts_dir/base_test.sh", ":scripts_dir/vagrant_test.sh", ":scripts_dir/cleanup_test.sh", ":scripts_dir/zerodisk_test.sh"},
-*/
 			},
 		},
+*/
 	},
 }
 
@@ -349,7 +359,7 @@ var testBuildTest1 = rawTemplate{
 	Image:   "server",
 	Release: "1204",
 	build: build{
-		BuilderType: []string{
+		BuilderTypes: []string{
 			"virtualbox-iso",
 		},
 		Builders: map[string]builder{
@@ -364,31 +374,27 @@ var testBuildTest1 = rawTemplate{
 				},
 			},
 		},
+		PostProcessorTypes: []string{
+			"vagrant",
+		},
 		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				Settings: []string{
 					"output = :out_dir/packer.box",
 				},
-				Except: []string{
-					"docker",
-				},
-				Only: []string{
-					"virtualbox-iso",
-				},
 			},
 		},
+/*
 		Provisioners: map[string]provisioner{
 			"shell": {
 				Settings: []string{
 					"execute_command = :commands_src_dir/execute_test.command",
 				},
-/*
 				Scripts: []string{
 					":scripts_dir/setup_test.sh",
 					":scripts_dir/vagrant_test.sh",
 					":scripts_dir/cleanup_test.sh",
 				},
-*/
 				Except: []string{
 					"docker",
 				},
@@ -397,6 +403,7 @@ var testBuildTest1 = rawTemplate{
 				},
 			},
 		},
+*/
 	},
 }
 
@@ -409,7 +416,7 @@ var testBuildTest2 = rawTemplate{
 	Image:   "desktop",
 	Release: "1204",
 	build: build{
-		BuilderType: []string{
+		BuilderTypes: []string{
 			"virtualbox-iso",
 			"vmware-iso",
 		},
@@ -434,7 +441,7 @@ var testBuildCentOS6Salt = rawTemplate{
 	},
 	Type:    "centos",
 	build: build{
-		BuilderType: []string{
+		BuilderTypes: []string{
 			"virtualbox-iso",
 		},
 /*		Provisioner: map[string]provisioner{
@@ -473,7 +480,7 @@ var testMergedBuildTest1 = rawTemplate{
 	Image:   "server",
 	Release: "12.04",
 	build: build{
-		BuilderType: []string{
+		BuilderTypes: []string{
 			"virtualbox-iso",
 			"vmware-iso",
 		},
@@ -499,32 +506,29 @@ var testMergedBuildTest1 = rawTemplate{
 				},
 			},
 		},
+		PostProcessorTypes: []string{
+			"vagrant",
+		},
 		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				Settings: []string{
 					"keep_input_artifact = false",
 					"output = :out_dir/packer.box",
 				},
-				Except: []string{
-					"docker",
-				},
-				Only: []string{
-					"virtualbox-iso",
-				},
 			},
 		},
+/*
 		Provisioners: map[string]provisioner{
 			"shell": {
 				Settings: []string{
 					"execute_command = :commands_src_dir/execute_test.command",
 				},
-/*
 				Scripts: []string{
 					":scripts_dir/setup_test.sh",
 					":scripts_dir/vagrant_test.sh",
 					":scripts_dir/cleanup_test.sh",
 				},
-*/
+
 				Except: []string{
 					"docker",
 				},
@@ -533,6 +537,7 @@ var testMergedBuildTest1 = rawTemplate{
 				},
 			},
 		},
+*/
 	},
 }
 
@@ -560,7 +565,7 @@ var testMergedBuildTest2 = rawTemplate{
 	Image:   "desktop",
 	Release: "12.04",
 	build: build{
-		BuilderType: []string{
+		BuilderTypes: []string{
 			"virtualbox-iso",
 			"vmware-iso",
 		},
@@ -593,6 +598,9 @@ var testMergedBuildTest2 = rawTemplate{
 				},
 			},
 		},
+		PostProcessorTypes: []string{
+			"vagrant",
+		},
 		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				Settings: []string{
@@ -601,21 +609,22 @@ var testMergedBuildTest2 = rawTemplate{
 				},
 			},
 		},
+/*
 		Provisioners: map[string]provisioner{
 			"shell": {
 				Settings: []string{
 					"execute_command = :commands_src_dir/execute_test.command",
 				},
-/*				Scripts: []string{
+				Scripts: []string{
 					":scripts_dir/setup_test.sh",
 					":scripts_dir/base_test.sh",
 					":scripts_dir/vagrant_test.sh",
 					":scripts_dir/cleanup_test.sh",
 					":scripts_dir/zerodisk_test.sh",
 				},
-*/
 			},
 		},
+*/
 	},
 }
 
@@ -643,7 +652,7 @@ var testMergedBuildCentOS6Salt = rawTemplate{
 	Image:   "minimal",
 	Release: "6",
 	build: build{
-		BuilderType: []string{
+		BuilderTypes: []string{
 			"virtualbox-iso",
 		},
 		Builders: map[string]builder{
@@ -675,6 +684,9 @@ var testMergedBuildCentOS6Salt = rawTemplate{
 				},
 			},
 		},
+		PostProcessorTypes: []string{
+			"vagrant",
+		},
 		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				Settings: []string{
@@ -683,8 +695,8 @@ var testMergedBuildCentOS6Salt = rawTemplate{
 				},
 			},
 		},
-		Provisioners: map[string]provisionerer{
 /*
+		Provisioners: map[string]provisionerer{
 			"salt-masterless": saltProvisioner{
 				provisioner: {
 					Settings: []string {
@@ -693,8 +705,6 @@ var testMergedBuildCentOS6Salt = rawTemplate{
 					},
 				},
 			},
-*/
-/*
 			"shell": &shellProvisioner{
 
 				provisioner: provisioner{
@@ -711,8 +721,8 @@ var testMergedBuildCentOS6Salt = rawTemplate{
 					":scripts_dir/zerodisk_test.sh",
 				},
 			},
-*/
 		},
+*/
 	},
 }
 

@@ -64,14 +64,14 @@ func TestCreateBuilders(t *testing.T) {
 				So(bldrs, ShouldNotResemble, r)
 			})
 			Convey("Given an unsupported Builder Types", func() {
-				r.BuilderType[0] = "unsupported"
+				r.BuilderTypes[0] = "unsupported"
 				bldrs, vars, err = r.createBuilders()
 				So(err.Error(), ShouldEqual, "the requested builder, 'unsupported', is not supported")
 				So(vars, ShouldBeNil)
 				So(bldrs, ShouldBeNil)
 			})
 			Convey("Given no Builder Types", func() {
-				r.BuilderType = nil
+				r.BuilderTypes = nil
 				bldrs, vars, err = r.createBuilders()
 				So(err.Error(), ShouldEqual, "no builder types were configured, unable to create builders")
 				So(vars, ShouldBeNil)
@@ -179,9 +179,9 @@ func TestMergeDistroSettings(t *testing.T) {
 				So(r, ShouldResemble, testDistroDefaults["ubuntu"])
 			})
 			Convey("Merging the two with a builderType", func() {
-				d.BuilderType = []string{"virtualbox-iso", "vmware-iso"}
+				d.BuilderTypes = []string{"virtualbox-iso", "vmware-iso"}
 				expected := testDistroDefaults["ubuntu"]
-				expected.BuilderType = d.BuilderType
+				expected.BuilderTypes = d.BuilderTypes
 				r.mergeDistroSettings(d)
 				So(r, ShouldResemble, expected)
 			})

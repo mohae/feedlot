@@ -81,10 +81,12 @@ func (r *rawTemplate) createDistroTemplate(d rawTemplate) {
 	r.Type = d.Type
 	r.Image = d.Image
 	r.Release = d.Release
-	r.BuilderType = d.BuilderType
+	r.BuilderTypes = d.BuilderTypes
 	r.Builders = d.Builders
-	r.Provisioners = d.Provisioners
+	r.PostProcessorTypes = d.PostProcessorTypes
 	r.PostProcessors = d.PostProcessors
+//	r.ProvisionersType = d.ProvisionersType
+//	r.Provisioners = d.Provisioners
 	return
 }
 
@@ -119,6 +121,7 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 		return p, err
 	}
 
+/*
 	// Provisioners
 //	i := 0
 //	iM := make(map[string]interface{})
@@ -128,7 +131,7 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 		jww.ERROR.Println(err.Error())
 		return p, err
 	}
-
+*/
 /*	for k, pr := range r.Provisioners {
 		iM, err = pr.settingsToMap(k, r)
 		if err != nil {
@@ -167,7 +170,7 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 // slice of variables for that section builder type. Some Settings are in-lined
 // instead of adding them to the variable section.
 func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]interface{}, err error) {
-	if r.BuilderType == nil || len(r.BuilderType) <= 0 {
+	if r.BuilderTypes == nil || len(r.BuilderTypes) <= 0 {
 		err = fmt.Errorf("no builder types were configured, unable to create builders")
 		jww.ERROR.Println(err.Error())
 		return nil, nil, err
@@ -177,10 +180,10 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 	var tmpS map[string]interface{}
 	var k, val, v string
 	var i, ndx int
-	bldrs = make([]interface{}, len(r.BuilderType))
+	bldrs = make([]interface{}, len(r.BuilderTypes))
 
 	// Generate the builders for each builder type.
-	for _, bType := range r.BuilderType {
+	for _, bType := range r.BuilderTypes {
 		jww.TRACE.Println(bType)
 		// TODO calculate the length of the two longest Settings and VMSettings sections and make it
 		// that length. That will prevent a panic should there be more than 50 options. Besides its
@@ -245,8 +248,9 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 	return bldrs, vars, nil
 }
 
+
 func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]interface{}, err error) {
-	if r.PostProcessorType == nil || len(r.PostProcessorType) <= 0 {
+	if r.PostProcessorTypes == nil || len(r.PostProcessorTypes) <= 0 {
 		err = fmt.Errorf("no post-processors types were configured, unable to create post-processors")
 		jww.ERROR.Println(err.Error())
 		return nil, nil, err
@@ -255,10 +259,10 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]i
 	var vrbls, tmpVar []string
 	var tmpS map[string]interface{}
 	var ndx int
-	p = make([]interface{}, len(r.PostProcessorType))
+	p = make([]interface{}, len(r.PostProcessorTypes))
 
 	// Generate the builders for each builder type.
-	for _, pType := range r.PostProcessorType {
+	for _, pType := range r.PostProcessorTypes {
 		jww.TRACE.Println(pType)
 		// TODO calculate the length of the two longest Settings sections
 		// and make it that length. That will prevent a panic should 
@@ -290,6 +294,7 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]i
 	return p, vars, nil
 }
 
+/*
 func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]interface{}, err error) {
 	if r.ProvisionerType == nil || len(r.ProvisionerType) <= 0 {
 		err = fmt.Errorf("no provisioner types were configured, unable to create provisioners")
@@ -338,6 +343,7 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 
 	return p, vars, nil
 }
+*/
 
 // Checks incoming string for variables and replaces them with their values.
 func (r *rawTemplate) replaceVariables(s string) string {
@@ -443,14 +449,14 @@ func (r *rawTemplate) mergeBuildSettings(bld rawTemplate) {
 	r.BuildInf.update(bld.BuildInf)
 
 	// If defined, Builders override any prior builder Settings.
-	if bld.BuilderType != nil && len(bld.BuilderType) > 0 {
-		r.BuilderType = bld.BuilderType
+	if bld.BuilderTypes != nil && len(bld.BuilderTypes) > 0 {
+		r.BuilderTypes = bld.BuilderTypes
 	}
 
 	// merge the build portions.
 	r.Builders = getMergedBuilders(r.Builders, bld.Builders)
 	r.PostProcessors = getMergedPostProcessors(r.PostProcessors, bld.PostProcessors)
-	r.Provisioners = getMergedProvisioners(r.Provisioners, bld.Provisioners)
+//	r.Provisioners = getMergedProvisioners(r.Provisioners, bld.Provisioners)
 
 	return
 }
@@ -466,8 +472,8 @@ func (r *rawTemplate) mergeDistroSettings(d *distro) {
 
 	r.BuildInf.update(d.BuildInf)
 	// If defined, Builders override any prior builder Settings
-	if d.BuilderType != nil && len(d.BuilderType) > 0 {
-		r.BuilderType = d.BuilderType
+	if d.BuilderTypes != nil && len(d.BuilderTypes) > 0 {
+		r.BuilderTypes = d.BuilderTypes
 	}
 
 	// merge the build portions.
@@ -476,8 +482,8 @@ func (r *rawTemplate) mergeDistroSettings(d *distro) {
 	jww.TRACE.Printf("Merged Builder: %v", r.Builders)
 	r.PostProcessors = getMergedPostProcessors(r.PostProcessors, d.PostProcessors)
 	jww.TRACE.Printf("Merged PostProcessors: %v", r.PostProcessors)
-	r.Provisioners = getMergedProvisioners(r.Provisioners, d.Provisioners)
-	jww.TRACE.Printf("Merged Provisioners: %v", r.Provisioners)
+//	r.Provisioners = getMergedProvisioners(r.Provisioners, d.Provisioners)
+//	jww.TRACE.Printf("Merged Provisioners: %v", r.Provisioners)
 	return
 }
 

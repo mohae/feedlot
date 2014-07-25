@@ -23,7 +23,7 @@ import (
 type build struct {
 	// Targeted builders: the values are consistent with Packer's, e.g.
 	// `virtualbox.iso` is used for VirtualBox.
-	BuilderType []string `toml:"builder_type"`
+	BuilderTypes []string `toml:"builder_types"`
 
 	// A map of builder configuration. There should always be a `common`
 	// builder, which has settings common to both VMWare and VirtualBox.
@@ -31,17 +31,18 @@ type build struct {
 
 	// Targeted post-processors: the values are consistent with Packer's, e.g.
 	// `vagrant` is used for Vagrant.
-	PostProcessorType []string `toml:"post_processor_type"`
+	PostProcessorTypes []string `toml:"post_processor_types"`
 
 	// A map of post-processor configurations.
 	PostProcessors map[string]postProcessor `toml:"post_processors"`
-
+/*
 	// Targeted provisioners: the values are consistent with Packer's, e.g.
 	// `shell` is used for shell.
 	ProvisionerType []string `toml:"post_processor_type"`
 
 	// A map of provisioner configurations.
 	Provisioners map[string]provisioner `toml:"provisioners"`
+*/
 }
 
 // Defines a representation of the builder section of a Packer template.
@@ -121,16 +122,6 @@ func (p *postProcessor) settingsToMap(Type string, r *rawTemplate) map[string]in
 		m[k] = v
 	}
 
-	// Add except array.
-	if p.Except != nil {
-		m["except"] = p.Except
-	}
-
-	// Add only array.
-	if p.Only != nil {
-		m["only"] = p.Only
-	}
-
 	jww.TRACE.Printf("post-processors Map: %v\n",m)
 	return m
 }
@@ -151,6 +142,7 @@ func (p *provisioner) mergeSettings(new []string) {
 }
 */
 
+/*
 // Go through all of the Settings and convert them to a map. Each setting is
 // parsed into its constituent parts. The value then goes through variable
 // replacement to ensure that the settings are properly resolved.
@@ -178,7 +170,7 @@ func (p *provisioner) settingsToMap(Type string, r *rawTemplate) (map[string]int
 			}
 			v = c[0]
 		}
-*/
+*
 //		m[k] = v
 	}
 
@@ -196,6 +188,7 @@ func (p *provisioner) settingsToMap(Type string, r *rawTemplate) (map[string]int
 
 	return m, nil
 }
+*/
 
 /*
 func (p *provisioner) setScripts(new []string) {
