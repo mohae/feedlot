@@ -741,74 +741,77 @@ func TestGetMergedBuilders(t *testing.T) {
 	})
 }
 
-func TestGetMergedPostProcessors(t *testing.T) {
-	Convey("Testing getMergedPostProcessors", t, func() {
-		var oldPP, newPP, emptyPP, mergedPP, comparePP map[string]postProcessors
-		Convey("Given two empty postProcessors", func() {
-			mergedPP = getMergedPostProcessors(oldPP, newPP)
+/*
+func TestGetMergedpostProcessor(t *testing.T) {
+	Convey("Testing getMergedpostProcessor", t, func() {
+		var oldPP, newPP, emptyPP, mergedPP, comparePP map[string]postProcessor
+		Convey("Given two empty postProcessor", func() {
+			mergedPP = getMergedpostProcessor(oldPP, newPP)
 			So(mergedPP, ShouldResemble, emptyPP)
 		})
 		Convey("Given an empty new postProcessor", func() {
-			oldPP = map[string]postProcessors{
+			oldPP = map[string]postProcessor{
 				"vagrant": {
 					Settings: []string{
 						"keep_input_artifact = false",
 						"output = :out_dir/someComposedBoxName.box",
 					},
 				}}
-			mergedPP = getMergedPostProcessors(oldPP, newPP)
+			mergedPP = getMergedpostProcessor(oldPP, newPP)
 			So(mergedPP, ShouldResemble, oldPP)
 		})
 		Convey("Given an empty old postProcessor", func() {
-			newPP = map[string]postProcessors{
+			newPP = map[string]postProcessor{
 				"vagrant": {
 					Settings: []string{
 						"keep_input_artifact = false",
 						"output = out/NewName.box",
 					},
 				}}
-			mergedPP = getMergedPostProcessors(oldPP, newPP)
+			mergedPP = getMergedpostProcessor(oldPP, newPP)
 			So(mergedPP, ShouldResemble, newPP)
 		})
-		Convey("Given two postProcessors", func() {
-			oldPP = map[string]postProcessors{
+		Convey("Given two postProcessor", func() {
+			oldPP = map[string]postProcessor{
 				"vagrant": {
 					Settings: []string{
 						"keep_input_artifact = false",
 						"output = :out_dir/someComposedBoxName.box",
 					},
 				}}
-			newPP = map[string]postProcessors{
+			newPP = map[string]postProcessor{
 				"vagrant": {
 					Settings: []string{
 						"keep_input_artifact = false",
 						"output = out/NewName.box",
 					},
 				}}
-			comparePP = map[string]postProcessors{
+			comparePP = map[string]postProcessor{
 				"vagrant": {
 					Settings: []string{
 						"keep_input_artifact = false",
 						"output = out/NewName.box",
 					},
 				}}
-			mergedPP = getMergedPostProcessors(oldPP, newPP)
+			mergedPP = getMergedpostProcessor(oldPP, newPP)
 			So(mergedPP, ShouldResemble, comparePP)
 		})
 	})
 
 }
+*/
 
-func TestGetMergedProvisioners(t *testing.T) {
-	Convey("Testing getMergedProvisioners", t, func() {
-		var oldP, newP, emptyP, mergedP, compareP map[string]provisioners
-		Convey("Given two empty provisioners", func() {
-			mergedP = getMergedProvisioners(oldP, newP)
+/*
+func TestGetMergedprovisioner(t *testing.T) {
+	Convey("Testing getMergedprovisioner", t, func() {
+		var oldP, newP, emptyP, mergedP, compareP map[string]provisioner
+		Convey("Given two empty provisioner", func() {
+			mergedP = getMergedprovisioner(oldP, newP)
 			// TODO ShouldResemble issue
 			So(mergedP, ShouldNotResemble, emptyP)
 		})
 		Convey("Given an empty new provisioner", func() {
-			oldP = map[string]provisioners{
+			oldP = map[string]provisioner{
 				"shell": {
 					Settings: []string{"execute_command = :commands_dir/execute.command"},
 					Scripts: []string{
@@ -819,11 +822,11 @@ func TestGetMergedProvisioners(t *testing.T) {
 						":scripts_dir/zerodisk.sh",
 					},
 				}}
-			mergedP = getMergedProvisioners(oldP, newP)
+			mergedP = getMergedprovisioner(oldP, newP)
 			So(mergedP, ShouldResemble, oldP)
 		})
-		Convey("Given two provisioners", func() {
-			oldP = map[string]provisioners{
+		Convey("Given two provisioner", func() {
+			oldP = map[string]provisioner{
 				"shell": {
 					Settings: []string{"execute_command = :commands_dir/execute.command"},
 					Scripts: []string{
@@ -834,7 +837,7 @@ func TestGetMergedProvisioners(t *testing.T) {
 						":scripts_dir/zerodisk.sh",
 					},
 				}}
-			newP = map[string]provisioners{
+			newP = map[string]provisioner{
 				"shell": {
 					Scripts: []string{
 						"scripts/setup.sh",
@@ -842,7 +845,7 @@ func TestGetMergedProvisioners(t *testing.T) {
 						"scripts/zerodisk.sh",
 					},
 				}}
-			compareP = map[string]provisioners{
+			compareP = map[string]provisioner{
 				"shell": {
 					Settings: []string{"execute_command = :commands_dir/execute.command"},
 					Scripts: []string{
@@ -851,12 +854,12 @@ func TestGetMergedProvisioners(t *testing.T) {
 						"scripts/zerodisk.sh",
 					},
 				}}
-			mergedP = getMergedProvisioners(oldP, newP)
+			mergedP = getMergedprovisioner(oldP, newP)
 			So(mergedP, ShouldResemble, compareP)
 		})
-		oldP = map[string]provisioners{}
+		oldP = map[string]provisioner{}
 		Convey("Given an empty old provisioner", func() {
-			newP = map[string]provisioners{
+			newP = map[string]provisioner{
 				"shell": {
 					Scripts: []string{
 						"scripts/setup.sh",
@@ -864,13 +867,15 @@ func TestGetMergedProvisioners(t *testing.T) {
 						"scripts/zerodisk.sh",
 					},
 				}}
-			mergedP = getMergedProvisioners(oldP, newP)
+			mergedP = getMergedprovisioner(oldP, newP)
 			So(mergedP, ShouldResemble, newP)
 		})
 
 	})
 
 }
+*/
+
 func TestAppendSlash(t *testing.T) {
 	Convey("Testing AppendSlash", t, func() {
 		Convey("calling appendSlash with an empty string", func() {

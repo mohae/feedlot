@@ -20,9 +20,11 @@ var testBuildListsFile = "../test_files/conf/build_lists_test.toml"
 var today = time.Now().Local().Format("2006-01-02")
 var testRawTemplate = newRawTemplate()
 
-var testShellProvisioners1 = map[string]provisioners{
+var testShellProvisioners = map[string]shellProvisioner{
 	"shell": {
-		Settings: []string{"execute_command = :commands_src_dir/execute_test.command"},
+		provisioner: provisioner{
+			Settings: []string{"execute_command = :commands_src_dir/execute_test.command"},
+		},
 		Scripts: []string{
 			":scripts_dir/setup_test.sh",
 			":scripts_dir/base_test.sh",
@@ -86,7 +88,7 @@ var testDefaults = &defaults{
 				},
 			},
 		},
-		PostProcessors: map[string]postProcessors{
+		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				Settings: []string{
 					"keep_input_artifact = false",
@@ -94,11 +96,12 @@ var testDefaults = &defaults{
 				},
 			},
 		},
-		Provisioners: map[string]provisioners{
+		Provisioners: map[string]provisioner{
 			"shell": {
 				Settings: []string{
 					"execute_command = :commands_src_dir/execute_test.command",
 				},
+/*
 				Scripts: []string{
 					":scripts_dir/setup_test.sh",
 					":scripts_dir/base_test.sh",
@@ -106,6 +109,7 @@ var testDefaults = &defaults{
 					":scripts_dir/cleanup_test.sh",
 					":scripts_dir/zerodisk_test.sh",
 				},
+*/
 			},
 		},
 	},
@@ -154,18 +158,19 @@ var testSupportedUbuntu = &distro{
 				VMSettings: []string{"memsize=2048"},
 			},
 		},
-		PostProcessors: map[string]postProcessors{
+		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				Settings: []string{
 					"output = out/:type-:arch-:version-:image-packer.box",
 				},
 			},
 		},
-		Provisioners: map[string]provisioners{
+		Provisioners: map[string]provisioner{
 			"shell": {
 				Settings: []string{
 					"execute_command = :commands_src_dir/execute_test.command",
 				},
+/*
 				Scripts: []string{
 					"scripts/setup_test.sh",
 					"scripts/base_test.sh",
@@ -173,6 +178,7 @@ var testSupportedUbuntu = &distro{
 					"scripts/cleanup_test.sh",
 					"scripts/zerodisk_test.sh",
 				},
+*/
 			},
 		},
 	},
@@ -263,7 +269,7 @@ var testDistroDefaultUbuntu = rawTemplate{
 				},
 			},
 		},
-		PostProcessors: map[string]postProcessors{
+		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				Settings: []string{
 					"keep_input_artifact = false",
@@ -271,11 +277,12 @@ var testDistroDefaultUbuntu = rawTemplate{
 				},
 			},
 		},
-		Provisioners: map[string]provisioners{
+		Provisioners: map[string]provisioner{
 			"shell": {
 				Settings: []string{
 					"execute_command = :commands_src_dir/execute_test.command",
 				},
+/*
 				Scripts: []string{
 					"scripts/setup_test.sh",
 					"scripts/base_test.sh",
@@ -283,6 +290,7 @@ var testDistroDefaultUbuntu = rawTemplate{
 					"scripts/cleanup_test.sh",
 					"scripts/zerodisk_test.sh",
 				},
+*/
 			},
 		},
 	},
@@ -315,15 +323,17 @@ var testDistroDefaultCentOS = rawTemplate{PackerInf: PackerInf{MinPackerVersion:
 				VMSettings: []string{"cpuid.coresPerSocket=1", "memsize=1024", "numvcpus=1"},
 			},
 		},
-		PostProcessors: map[string]postProcessors{
+		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				Settings: []string{"keep_input_artifact = false", "output = out/rancher-packer.box"},
 			},
 		},
-		Provisioners: map[string]provisioners{
+		Provisioners: map[string]provisioner{
 			"shell": {
 				Settings: []string{"execute_command = :commands_src_dir/execute_test.command"},
+/*
 				Scripts:  []string{":scripts_dir/setup_test.sh", ":scripts_dir/base_test.sh", ":scripts_dir/vagrant_test.sh", ":scripts_dir/cleanup_test.sh", ":scripts_dir/zerodisk_test.sh"},
+*/
 			},
 		},
 	},
@@ -353,7 +363,7 @@ var testBuildTest1 = rawTemplate{
 				},
 			},
 		},
-		PostProcessors: map[string]postProcessors{
+		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				Settings: []string{
 					"output = :out_dir/packer.box",
@@ -366,16 +376,18 @@ var testBuildTest1 = rawTemplate{
 				},
 			},
 		},
-		Provisioners: map[string]provisioners{
+		Provisioners: map[string]provisioner{
 			"shell": {
 				Settings: []string{
 					"execute_command = :commands_src_dir/execute_test.command",
 				},
+/*
 				Scripts: []string{
 					":scripts_dir/setup_test.sh",
 					":scripts_dir/vagrant_test.sh",
 					":scripts_dir/cleanup_test.sh",
 				},
+*/
 				Except: []string{
 					"docker",
 				},
@@ -424,7 +436,7 @@ var testBuildCentOS6Salt = rawTemplate{
 		BuilderType: []string{
 			"virtualbox-iso",
 		},
-		Provisioner: map[string]provisioner{
+/*		Provisioner: map[string]provisioner{
 			"salt-masterless": {
 				Settings: []string{
 					"local_state_tree = ~/saltstates/centos6/salt",
@@ -432,6 +444,7 @@ var testBuildCentOS6Salt = rawTemplate{
 				},
 			},
 		},
+*/
 	},
 }
 
@@ -485,7 +498,7 @@ var testMergedBuildTest1 = rawTemplate{
 				},
 			},
 		},
-		PostProcessors: map[string]postProcessors{
+		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				Settings: []string{
 					"keep_input_artifact = false",
@@ -499,16 +512,18 @@ var testMergedBuildTest1 = rawTemplate{
 				},
 			},
 		},
-		Provisioners: map[string]provisioners{
+		Provisioners: map[string]provisioner{
 			"shell": {
 				Settings: []string{
 					"execute_command = :commands_src_dir/execute_test.command",
 				},
+/*
 				Scripts: []string{
 					":scripts_dir/setup_test.sh",
 					":scripts_dir/vagrant_test.sh",
 					":scripts_dir/cleanup_test.sh",
 				},
+*/
 				Except: []string{
 					"docker",
 				},
@@ -577,7 +592,7 @@ var testMergedBuildTest2 = rawTemplate{
 				},
 			},
 		},
-		PostProcessors: map[string]postProcessors{
+		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				Settings: []string{
 					"keep_input_artifact = false",
@@ -585,18 +600,19 @@ var testMergedBuildTest2 = rawTemplate{
 				},
 			},
 		},
-		Provisioners: map[string]provisioners{
+		Provisioners: map[string]provisioner{
 			"shell": {
 				Settings: []string{
 					"execute_command = :commands_src_dir/execute_test.command",
 				},
-				Scripts: []string{
+/*				Scripts: []string{
 					":scripts_dir/setup_test.sh",
 					":scripts_dir/base_test.sh",
 					":scripts_dir/vagrant_test.sh",
 					":scripts_dir/cleanup_test.sh",
 					":scripts_dir/zerodisk_test.sh",
 				},
+*/
 			},
 		},
 	},
@@ -658,7 +674,7 @@ var testMergedBuildCentOS6Salt = rawTemplate{
 				},
 			},
 		},
-		PostProcessors: map[string]postProcessors{
+		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				Settings: []string{
 					"keep_input_artifact = false",
@@ -666,9 +682,9 @@ var testMergedBuildCentOS6Salt = rawTemplate{
 				},
 			},
 		},
-		Provisioners: map[string]provisioners{
+		Provisioners: map[string]provisioner{
 			"salt-masterless": {
-				Settings = []string {
+				Settings: []string {
 					"local_state_tree = ~/saltstates/centos6/salt",
 					"skip_bootstrap = true",
 				},
@@ -677,6 +693,7 @@ var testMergedBuildCentOS6Salt = rawTemplate{
 				Settings: []string{
 					"execute_command = :commands_src_dir/execute_test.command",
 				},
+/*
 				Scripts: []string{
 					":scripts_dir/setup_test.sh",
 					":scripts_dir/base_test.sh",
@@ -684,6 +701,7 @@ var testMergedBuildCentOS6Salt = rawTemplate{
 					":scripts_dir/cleanup_test.sh",
 					":scripts_dir/zerodisk_test.sh",
 				},
+*/
 			},
 		},
 	},

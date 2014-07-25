@@ -71,6 +71,9 @@ var (
 	// PostProcessorVagrant is the name of the Vagrant PostProcessor
 	PostProcessorVagrant = "vagrant"
 
+	// PostProcessorVagrant is the name of the Vagrant PostProcessor
+	PostProcessorVagrantCloud = "vagrant-cloud"
+
 	// ProvisionerAnsible is the name of the Ansible Provisioner
 	ProvisionerAnsible = "ansible-local"
 
@@ -654,7 +657,7 @@ func MergeSlices(s ...[]string) []string {
 	var merged []string
 
 
-	for k, tmpS :=  range s {
+	for _, tmpS :=  range s {
 		merged = mergeSlices(merged, tmpS)
 	}
 
@@ -670,12 +673,17 @@ func mergeSlices(s1 []string, s2 []string) []string {
 	}
 
 	if s1 == nil || len(s1) <= 0 {
-		return s2
 	}
+		return s2
 
 	if s2 == nil || len(s2) == 0 {
 		return s1
 	}
+
+	tempSl := make([]string, len(s1) + len(s2))
+	copy(tempSl, s1)
+	i := len(s1) - 1
+	var found bool
 
 	// Go through every element in the second slice.
 	for _, v := range s2 {
@@ -873,13 +881,23 @@ func getMergedBuilders(old map[string]builder, new map[string]builder) map[strin
 		return old
 	}
 
-	// Get all the keys in both maps
-	// Get the all keys from both maps
+	// Convert to an interface.
+	var ifaceOld map[string]interface{} = make(map[string]interface{}, len(old))
+	for i, o := range old {
+		ifaceOld[i] = o
+	}
+	// Convert to an interface.
+	var ifaceNew map[string]interface{} = make(map[string]interface{}, len(new))
+	for i, n := range new {
+		ifaceNew[i] = n
+	}
+
+	// Get all the keys from map.
 	var keys[]string
-	keys = keysFromMaps(old, new)
+	keys = keysFromMaps(ifaceOld, ifaceNew)
 
 	bM := map[string]builder{}
-	for _, v := range keys3 {
+	for _, v := range keys {
 		b := builder{}
 		b = old[v]
 		b.mergeSettings(new[v].Settings)
@@ -900,22 +918,34 @@ func getMergedBuilders(old map[string]builder, new map[string]builder) map[strin
 //        postProcessor will be orphaned.
 // If there isn't a new config, return the existing as there are no
 // overrides
-func getMergedPostProcessors(old map[string]postProcessors, new map[string]postProcessors) map[string]postProcessors {
+func getMergedPostProcessors(old map[string]postProcessor, new map[string]postProcessor) map[string]postProcessor {
 	// If there is nothing new, old equals merged.
 	if len(new) <= 0 || new == nil {
 		return old
 	}
 
+	// Convert to an interface.
+	var ifaceOld map[string]interface{} = make(map[string]interface{}, len(old))
+	for i, o := range old {
+		ifaceOld[i] = o
+	}
+
+	// Convert to an interface.
+	var ifaceNew map[string]interface{} = make(map[string]interface{}, len(new))
+	for i, n := range new {
+		ifaceNew[i] = n
+	}
+
 	// Get the all keys from both maps
 	var keys[]string
-	keys = keysFromMaps(old, new)
+	keys = keysFromMaps(ifaceOld, ifaceNew)
 
-	pM := map[string]postProcessors{}
+	pM := map[string]postProcessor{}
 
 	for _, v := range keys {
-		p := postProcessors{}
+		p := postProcessor{}
 		p = old[v]
-		p.mergeVMSettings(new[v].VMSettings)
+		p.mergeSettings(new[v].Settings)
 		pM[v] = p
 	}
 
@@ -930,22 +960,33 @@ func getMergedPostProcessors(old map[string]postProcessors, new map[string]postP
 //        all existing provisioners. In this situation, if a provisioners
 //	  exists in the `old` map but it does not exist in the `new` map, that
 //        provisioners will be orphaned.
-func getMergedProvisioners(old map[string]provisioners, new map[string]provisioners) map[string]provisioners {
+func getMergedProvisioners(old map[string]provisioner, new map[string]provisioner) map[string]provisioner {
 	// If there is nothing new, old equals merged.
 	if len(new) <= 0 || new == nil {
 		return old
 	}
+	// Convert to an interface.
+	var ifaceOld map[string]interface{} = make(map[string]interface{}, len(old))
+	for i, o := range old {
+		ifaceOld[i] = o
+	}
+
+	// Convert to an interface.
+	var ifaceNew map[string]interface{} = make(map[string]interface{}, len(new))
+	for i, n := range new {
+		ifaceNew[i] = n
+	}
 
 	// Get the all keys from both maps
 	var keys[]string
-	keys = keysFromMaps(old, new)
+	keys = keysFromMaps(ifaceOld, ifaceNew)
 
-	pM := map[string]provisioners{}
+	pM := map[string]provisioner{}
 
 	for _, v := range keys {
-		p := provisioners{}
+		p := provisioner{}
 		p = old[v]
-		p.mergeVMSettings(new[v].VMSettings)
+		p.mergeSettings(new[v].Settings)
 		pM[v] = p
 	}
 
@@ -1177,22 +1218,25 @@ func pathExists(p string) (bool, error) {
 }
 
 // Takes a variadic array of maps and returns a merged key
-func getKeysFromMaps(m ...map[string]interface{}) []string {
+// types is the 'type' of the interface, e.g. 'virtualbox-iso', 'vagrant', 
+// 'shell', etc. 
+func keysFromMaps(m ...map[string]interface{}) []string {
 	cnt := 0
-	var tmpK []string
-	keys :=make([][]int, len(m))
+	types := make([][]string, len(m))
+	
+	// For each passed interface
         for i, tmpM := range m {
 		cnt = 0;
-		// Get all the keys
-		keys[i] = make([]string, len(tmpM))
+		tmpK := make([]string, len(tmpM))
 		for k := range tmpM {
-			keys[i][cnt] = k
+			tmpK[cnt] = k
 			cnt++
 		}
+		types[i] = tmpK
 	}
 
-	mergedKeys = mergeSlices(keys)
+	mergedKeys := MergeSlices(types...)
 
-	return keys
+	return mergedKeys
 }
 		

@@ -189,6 +189,7 @@ func TestMergeDistroSettings(t *testing.T) {
 	})
 }
 
+/*
 func TestScriptNames(t *testing.T) {
 	Convey("Testing getting a slice of script names from the shell provisioner", t, func() {
 		Convey("Given a shell provisioner", func() {
@@ -209,6 +210,7 @@ func TestScriptNames(t *testing.T) {
 		})
 	})
 }
+*/
 
 func TestMergeVariables(t *testing.T) {
 	Convey("Given a raw template", t, func() {

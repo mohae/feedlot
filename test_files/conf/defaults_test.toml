@@ -53,7 +53,8 @@ builder_type = [
 			"numvcpus=1"
 		]
 post_processor_type = [
-	"vagrant"
+	"vagrant",
+	"vagrant-cloud"
 ]
 [post_processors]
 	[post_processors.vagrant]
@@ -62,6 +63,14 @@ post_processor_type = [
 			"keep_input_artifact = false",
 			"output = out/rancher-packer.box"
 		]
+	[post_processors.vagrant-cloud]
+		settings = [
+			"access_token = getAValidTokenFrom-VagrantCloud.com",
+			"box_tag = foo/bar",
+			"no_release = true",
+			"version = 1.0.1"
+		]
+
 provisioner_type = [
 	"shell"
 ]

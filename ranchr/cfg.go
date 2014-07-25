@@ -34,14 +34,14 @@ type build struct {
 	PostProcessorType []string `toml:"post_processor_type"`
 
 	// A map of post-processor configurations.
-	PostProcessors map[string]postProcessors `toml:"post_processors"`
+	PostProcessors map[string]postProcessor `toml:"post_processors"`
 
 	// Targeted provisioners: the values are consistent with Packer's, e.g.
 	// `shell` is used for shell.
-	PostProcessorType []string `toml:"post_processor_type"`
+	ProvisionerType []string `toml:"post_processor_type"`
 
 	// A map of provisioner configurations.
-	Provisioners map[string]provisioners `toml:"provisioners"`
+	Provisioners map[string]provisioner `toml:"provisioners"`
 }
 
 // Defines a representation of the builder section of a Packer template.
@@ -88,7 +88,7 @@ type postProcessorer interface {
 }
 
 // Type for handling the post-processor section of the configs.
-type postProcessors struct {
+type postProcessor struct {
 	// Rest of the settings in "key=value" format.
 	Settings []string `toml:"settings"`
 	// Support Packer post-processors' `except` configuration.
@@ -99,13 +99,13 @@ type postProcessors struct {
 
 // Merge the settings section of a post-processor. New values supercede
 // existing ones.
-func (p *postProcessors) mergeSettings(new []string) {
+func (p *postProcessor) mergeSettings(new []string) {
 	p.Settings = mergeSettingsSlices(p.Settings, new)
 }
 
 // overrideExcept overrides the existing values in the Except
 // section if there are any new values passed to it.
-func (p *postProcessors) overrideExcept(new []string) {
+func (p *postProcessor) overrideExcept(new []string) {
 	if len(new) > 0 {
 		p.Except = new
 	}
@@ -113,7 +113,7 @@ func (p *postProcessors) overrideExcept(new []string) {
 
 // overrideOnly overrides the existing values in the Only
 // section if there are any new values passed to it.
-func (p *postProcessors) overrideOnly(new []string) {
+func (p *postProcessor) overrideOnly(new []string) {
 	if len(new) > 0 {
 		p.Only = new
 	}
@@ -122,7 +122,7 @@ func (p *postProcessors) overrideOnly(new []string) {
 // Go through all of the Settings and convert them to a map. Each setting
 // is parsed into its constituent parts. The value then goes through
 // variable replacement to ensure that the settings are properly resolved.
-func (p *postProcessors) settingsToMap(Type string, r *rawTemplate) map[string]interface{} {
+func (p *postProcessor) settingsToMap(Type string, r *rawTemplate) map[string]interface{} {
 	var k string
 	var v interface{}
 	m := make(map[string]interface{}, len(p.Settings))
@@ -167,8 +167,8 @@ type provisionerer interface {
 	isProvisioner()
 }
 
-// Provisioners: type for common elements for provisioners.
-type Provisioners struct {
+// provisioners: type for common elements for provisioners.
+type provisioner struct {
 	// Rest of the settings in "key=value" format.
 	Settings []string `toml:"settings"`
 	// Scripts are defined separately because it's simpler that way.
@@ -180,24 +180,24 @@ type Provisioners struct {
 // isProvisioner() exists for interface reasons--otherwise non-provisioner
 // related structs would match becaues mergeSettings([]string) is a method
 // that is common to several other structs.
-func (p *Provisioner) isProvisioner() {	
+func (p *provisioner) isProvisioner() {	
 }
 
 // shell implimentation of provisioner
 type shellProvisioner struct {
-	Provisioners
+	provisioner
 	Scripts []string `toml:"scripts"`
 	// Support Packer Provisioner's `except` configuration.
 }
 
 // Merge the settings section of a post-processor. New values supercede existing ones.
-func (p *Provisioners) mergeSettings(new []string) {
+func (p *provisioner) mergeSettings(new []string) {
 	p.Settings = mergeSettingsSlices(p.Settings, new)
 }
 
 // overrideExcept overrides the existing values in the Except
 // section if there are any new values passed to it.
-func (p *Provisioner) overrideExcept(new []string) {
+func (p *provisioner) overrideExcept(new []string) {
 	if len(new) > 0 {
 		p.Except = new
 	}
@@ -205,19 +205,16 @@ func (p *Provisioner) overrideExcept(new []string) {
 
 // overrideOnly overrides the existing values in the Only
 // section if there are any new values passed to it.
-func (p *Provisioner) overrideOnly(new []string) {
+func (p *provisioner) overrideOnly(new []string) {
 	if len(new) > 0 {
 		p.Only = new
 	}
 }
 
-func (p *Provisioner) isProvisioner() {
-}
-
 // Go through all of the Settings and convert them to a map. Each setting is
 // parsed into its constituent parts. The value then goes through variable
 // replacement to ensure that the settings are properly resolved.
-func (p *shellProvisioners) settingsToMap(Type string, r *rawTemplate) (map[string]interface{}, error) {
+func (p *shellProvisioner) settingsToMap(Type string, r *rawTemplate) (map[string]interface{}, error) {
 	var k, v string
 	var err error
 
@@ -258,7 +255,7 @@ func (p *shellProvisioners) settingsToMap(Type string, r *rawTemplate) (map[stri
 	return m, nil
 }
 
-func (p *shellProvisioners) setScripts(new []string) {
+func (p *shellProvisioner) setScripts(new []string) {
 	// Scripts are only replaced if it has values, otherwise the existing values are used.
 	if len(new) > 0 {
 		p.Scripts = new

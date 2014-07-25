@@ -110,30 +110,26 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 	}
 
 	// Post-Processors
-	var i int
-	var sM map[string]interface{}
+//	var i int
+//	var sM map[string]interface{}
 	iSl = make([]interface{}, len(r.PostProcessors))
 
-	for k, pp := range r.PostProcessors {
-		sM = pp.settingsToMap(k, r)
-
-		if sM == nil {
-			err = errors.New("an error occured while trying to create the Packer post-processor template for " + k)
-			jww.ERROR.Println(err.Error())
-			return p, err
-		}
-
-		iSl[i] = sM
-		i++
+	if p.PostProcessors, vars, err = r.createPostProcessors(); err != nil {
+		jww.ERROR.Println(err.Error())
+		return p, err
 	}
 
-	p.PostProcessors = iSl
-
 	// Provisioners
-	i = 0
-	iM := make(map[string]interface{})
+//	i := 0
+//	iM := make(map[string]interface{})
 	iSl = make([]interface{}, len(r.Provisioners))
-	for k, pr := range r.Provisioners {
+
+	if p.Provisioners, vars, err = r.createProvisioners(); err != nil {
+		jww.ERROR.Println(err.Error())
+		return p, err
+	}
+
+/*	for k, pr := range r.Provisioners {
 		iM, err = pr.settingsToMap(k, r)
 		if err != nil {
 			jww.ERROR.Println(err.Error())
@@ -155,7 +151,7 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 		i++
 	}
 
-	p.Provisioners = iSl
+*/	p.Provisioners = iSl
 	p.Variables = vars
 
 	// Now we can create the Variable Section
@@ -247,6 +243,100 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 	}
 
 	return bldrs, vars, nil
+}
+
+func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]interface{}, err error) {
+	if r.PostProcessorType == nil || len(r.PostProcessorType) <= 0 {
+		err = fmt.Errorf("no post-processors types were configured, unable to create post-processors")
+		jww.ERROR.Println(err.Error())
+		return nil, nil, err
+	}
+
+	var vrbls, tmpVar []string
+	var tmpS map[string]interface{}
+	var ndx int
+	p = make([]interface{}, len(r.PostProcessorType))
+
+	// Generate the builders for each builder type.
+	for _, pType := range r.PostProcessorType {
+		jww.TRACE.Println(pType)
+		// TODO calculate the length of the two longest Settings sections
+		// and make it that length. That will prevent a panic should 
+		// there be more than 50 options. Besides its stupid, on so many 
+		// levels, to hard code this...which makes me...d'oh!
+		tmpVar = make([]string, 50)
+		tmpS = make(map[string]interface{})
+
+		switch pType {
+		case PostProcessorVagrant:
+			// Create the settings
+//			tmpS,  ok = p.(settingsToMap(k, r)
+
+		case PostProcessorVagrantCloud:
+			// Create the settings
+//			tmpS = p.settingsToMap(k, r)
+
+		default:
+			err = errors.New("the requested post-processor, '" + pType + "', is not supported")
+			jww.ERROR.Println(err.Error())
+			return nil, nil, err
+		}
+
+		p[ndx] = tmpS
+		ndx++
+		vrbls = append(vrbls, tmpVar...)
+	}
+
+	return p, vars, nil
+}
+
+func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]interface{}, err error) {
+	if r.ProvisionerType == nil || len(r.ProvisionerType) <= 0 {
+		err = fmt.Errorf("no provisioner types were configured, unable to create provisioners")
+		jww.ERROR.Println(err.Error())
+		return nil, nil, err
+	}
+
+	var vrbls, tmpVar []string
+	var tmpS map[string]interface{}
+	var ndx int
+	p = make([]interface{}, len(r.ProvisionerType))
+
+	// Generate the builders for each builder type.
+	for _, pType := range r.ProvisionerType {
+		jww.TRACE.Println(pType)
+		// TODO calculate the length of the two longest Settings sections
+		// and make it that length. That will prevent a panic should 
+		// there be more than 50 options. Besides its stupid, on so many 
+		// levels, to hard code this...which makes me...d'oh!
+		tmpVar = make([]string, 50)
+		tmpS = make(map[string]interface{})
+
+		switch pType {
+		case ProvisionerAnsible:
+			// Create the settings
+//			tmpS = p.settingsToMap(pType, r)
+
+		case ProvisionerSalt:
+			// Create the settings
+//			tmpS = p.settingsToMap(pType, r)
+
+		case ProvisionerShellScripts:
+			// Create the settings
+//			tmpS = p.settingsToMap(pType, r)
+
+		default:
+			err = errors.New("the requested provisioner, '" + pType + "', is not supported")
+			jww.ERROR.Println(err.Error())
+			return nil, nil, err
+		}
+
+		p[ndx] = tmpS
+		ndx++
+		vrbls = append(vrbls, tmpVar...)
+	}
+
+	return p, vars, nil
 }
 
 // Checks incoming string for variables and replaces them with their values.
@@ -395,8 +485,8 @@ func (r *rawTemplate) mergeDistroSettings(d *distro) {
 func (r *rawTemplate) ScriptNames() []string {
 	jww.DEBUG.Println("Entering rawTemplate.ScriptNames...")
 	var s []string
-
-	if len(r.Provisioners["shell"].Scripts) > 0 {
+	//TODO
+/*	if len(r.Provisioners["shell"].Scripts) > 0 {
 		s = make([]string, len(r.Provisioners["shell"].Scripts))
 
 		for i, script := range r.Provisioners["shell"].Scripts {
@@ -408,6 +498,7 @@ func (r *rawTemplate) ScriptNames() []string {
 		}
 
 	}
+*/
 	jww.DEBUG.Println("Exiting rawTemplate.ScriptNames...")
 	return s
 
