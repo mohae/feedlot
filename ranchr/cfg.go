@@ -80,43 +80,19 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 	return m
 }
 
-type postProcessorer interface {
-	mergeSettings([]string)
-  	overrideExcept([]string)
-	overrideOnly([]string)
-	isPostProcessor()
-}
-
 // Type for handling the post-processor section of the configs.
 type postProcessor struct {
-	// Rest of the settings in "key=value" format.
-	Settings []string `toml:"settings"`
-	// Support Packer post-processors' `except` configuration.
-	Except []string `toml:"except"`
-	// Support Packer post-processors' `only` configuration.
-	Only []string `toml:"only"`
+	// Settings are string settings in "key=value" format.
+	Settings []string
+	
+	// Arrays are the string array settings.
+	Arrays map[string]interface{}
 }
 
 // Merge the settings section of a post-processor. New values supercede
 // existing ones.
 func (p *postProcessor) mergeSettings(new []string) {
 	p.Settings = mergeSettingsSlices(p.Settings, new)
-}
-
-// overrideExcept overrides the existing values in the Except
-// section if there are any new values passed to it.
-func (p *postProcessor) overrideExcept(new []string) {
-	if len(new) > 0 {
-		p.Except = new
-	}
-}
-
-// overrideOnly overrides the existing values in the Only
-// section if there are any new values passed to it.
-func (p *postProcessor) overrideOnly(new []string) {
-	if len(new) > 0 {
-		p.Only = new
-	}
 }
 
 // Go through all of the Settings and convert them to a map. Each setting
@@ -159,69 +135,35 @@ func (p *postProcessor) settingsToMap(Type string, r *rawTemplate) map[string]in
 	return m
 }
 
-// 
-type provisionerer interface {
-	mergeSettings([]string)
-  	overrideExcept([]string)
-	overrideOnly([]string)
-	isProvisioner()
-}
-
-// provisioners: type for common elements for provisioners.
+// provisioner: type for common elements for provisioners.
 type provisioner struct {
-	// Rest of the settings in "key=value" format.
-	Settings []string `toml:"settings"`
-	// Scripts are defined separately because it's simpler that way.
-	Except []string `toml:"except"`
-	// Support Packer Provisioner's `only` configuration.
-	Only []string `toml:"only"`
+	// Settings are string settings in "key=value" format.
+	Settings []string
+	
+	// Arrays are the string array settings.
+	Arrays map[string]interface{}
 }
 
-// isProvisioner() exists for interface reasons--otherwise non-provisioner
-// related structs would match becaues mergeSettings([]string) is a method
-// that is common to several other structs.
-func (p *provisioner) isProvisioner() {	
-}
-
-// shell implimentation of provisioner
-type shellProvisioner struct {
-	provisioner
-	Scripts []string `toml:"scripts"`
-	// Support Packer Provisioner's `except` configuration.
-}
-
+/*
 // Merge the settings section of a post-processor. New values supercede existing ones.
 func (p *provisioner) mergeSettings(new []string) {
 	p.Settings = mergeSettingsSlices(p.Settings, new)
 }
-
-// overrideExcept overrides the existing values in the Except
-// section if there are any new values passed to it.
-func (p *provisioner) overrideExcept(new []string) {
-	if len(new) > 0 {
-		p.Except = new
-	}
-}
-
-// overrideOnly overrides the existing values in the Only
-// section if there are any new values passed to it.
-func (p *provisioner) overrideOnly(new []string) {
-	if len(new) > 0 {
-		p.Only = new
-	}
-}
+*/
 
 // Go through all of the Settings and convert them to a map. Each setting is
 // parsed into its constituent parts. The value then goes through variable
 // replacement to ensure that the settings are properly resolved.
-func (p *shellProvisioner) settingsToMap(Type string, r *rawTemplate) (map[string]interface{}, error) {
-	var k, v string
-	var err error
+func (p *provisioner) settingsToMap(Type string, r *rawTemplate) (map[string]interface{}, error) {
+//	var k, v string
+//	var err error
 
 	m := make(map[string]interface{}, len(p.Settings))
 	m["type"] = Type
 
 	for _, s := range p.Settings {
+		jww.TRACE.Printf("%v\n", s)
+/*
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 
@@ -236,8 +178,8 @@ func (p *shellProvisioner) settingsToMap(Type string, r *rawTemplate) (map[strin
 			}
 			v = c[0]
 		}
-
-		m[k] = v
+*/
+//		m[k] = v
 	}
 
 	// Add except array.
@@ -255,12 +197,14 @@ func (p *shellProvisioner) settingsToMap(Type string, r *rawTemplate) (map[strin
 	return m, nil
 }
 
-func (p *shellProvisioner) setScripts(new []string) {
+/*
+func (p *provisioner) setScripts(new []string) {
 	// Scripts are only replaced if it has values, otherwise the existing values are used.
 	if len(new) > 0 {
 		p.Scripts = new
 	}
 }
+*/
 
 // defaults is used to store Rancher application level defaults for Packer templates.
 type defaults struct {

@@ -986,7 +986,7 @@ func getMergedProvisioners(old map[string]provisioner, new map[string]provisione
 	for _, v := range keys {
 		p := provisioner{}
 		p = old[v]
-		p.mergeSettings(new[v].Settings)
+//		p.mergeSettings(new[v].Settings)
 		pM[v] = p
 	}
 

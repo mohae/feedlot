@@ -20,18 +20,19 @@ var testBuildListsFile = "../test_files/conf/build_lists_test.toml"
 var today = time.Now().Local().Format("2006-01-02")
 var testRawTemplate = newRawTemplate()
 
-var testShellProvisioners = map[string]shellProvisioner{
+var testProvisioners = map[string]provisioner{
 	"shell": {
-		provisioner: provisioner{
-			Settings: []string{"execute_command = :commands_src_dir/execute_test.command"},
+		Settings: []string{
+			"execute_command = :commands_src_dir/execute_test.command",
+			[]string{
+				":scripts_dir/setup_test.sh",
+				":scripts_dir/base_test.sh",
+				":scripts_dir/vagrant_test.sh",
+				":scripts_dir/cleanup_test.sh",
+				":scripts_dir/zerodisk_test.sh",
+			},
 		},
-		Scripts: []string{
-			":scripts_dir/setup_test.sh",
-			":scripts_dir/base_test.sh",
-			":scripts_dir/vagrant_test.sh",
-			":scripts_dir/cleanup_test.sh",
-			":scripts_dir/zerodisk_test.sh",
-		},
+
 	},
 }
 
@@ -682,18 +683,26 @@ var testMergedBuildCentOS6Salt = rawTemplate{
 				},
 			},
 		},
-		Provisioners: map[string]provisioner{
-			"salt-masterless": {
-				Settings: []string {
-					"local_state_tree = ~/saltstates/centos6/salt",
-					"skip_bootstrap = true",
+		Provisioners: map[string]provisionerer{
+/*
+			"salt-masterless": saltProvisioner{
+				provisioner: {
+					Settings: []string {
+						"local_state_tree = ~/saltstates/centos6/salt",
+						"skip_bootstrap = true",
+					},
 				},
 			},
-			"shell": {
-				Settings: []string{
-					"execute_command = :commands_src_dir/execute_test.command",
-				},
+*/
 /*
+			"shell": &shellProvisioner{
+
+				provisioner: provisioner{
+					Settings: []string{
+						"execute_command = :commands_src_dir/execute_test.command",
+					},
+				},
+
 				Scripts: []string{
 					":scripts_dir/setup_test.sh",
 					":scripts_dir/base_test.sh",
@@ -701,8 +710,8 @@ var testMergedBuildCentOS6Salt = rawTemplate{
 					":scripts_dir/cleanup_test.sh",
 					":scripts_dir/zerodisk_test.sh",
 				},
-*/
 			},
+*/
 		},
 	},
 }

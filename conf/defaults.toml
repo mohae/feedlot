@@ -64,10 +64,11 @@ provisioner_type = [
 	[provisioners.shell]
 		settings = [
 			"execute_command = :commands_src_dir/execute.command"
+			scripts = [ 
+				":scripts_dir/setup.sh",
+				":scripts_dir/vagrant.sh",
+				":scripts_dir/sudoers.sh",
+				":scripts_dir/cleanup.sh",
+			]
 		]
-		scripts = [ 
-			":scripts_dir/setup.sh",
-			":scripts_dir/vagrant.sh",
-			":scripts_dir/sudoers.sh",
-			":scripts_dir/cleanup.sh",
-		]
+

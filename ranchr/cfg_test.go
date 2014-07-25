@@ -71,7 +71,7 @@ func TestBuilderStuff(t *testing.T) {
 		})
 	})
 
-	Convey("Given a provisioner or two", t, func() {
+/*	Convey("Given a provisioner or two", t, func() {
 		p := provisioner{}
 		p.Settings = []string{"key1=value1", "key2=value2"}
 //		rawTpl := &rawTemplate{}
@@ -85,7 +85,7 @@ func TestBuilderStuff(t *testing.T) {
 				So(p.Settings, ShouldNotContain, "key2=value2")
 			})
 		})
-
+*/
 /*
 		Convey("transform settingns map should result in", func() {
 			res, err := p.settingsToMap("shell", rawTpl)
@@ -138,7 +138,7 @@ func TestBuilderStuff(t *testing.T) {
 			})
 		})
 */
-	})
+//	})
 }
 
 func TestDefaults(t *testing.T) {
