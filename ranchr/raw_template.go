@@ -10,6 +10,8 @@ import (
 	jww "github.com/spf13/jwalterweatherman"
 )
 
+// rawTemplate holds all the information for a Rancher template. This is used
+// to generate the Packer Build.
 type rawTemplate struct {
 	PackerInf
 	IODirInf
@@ -61,8 +63,8 @@ type rawTemplate struct {
 	build
 }
 
-// Returns a rawTemplate with current date in ISO 8601 format. This should be
-// called when a rawTemplate with the current date is desired.
+// mewRawTemplate returns a rawTemplate with current date in ISO 8601 format.
+// This should be called when a rawTemplate with the current date is desired.
 func newRawTemplate() rawTemplate {
 	// Set the date, formatted to ISO 8601
 	date := time.Now()
@@ -71,7 +73,8 @@ func newRawTemplate() rawTemplate {
 	return r
 }
 
-// Assign the default template values to the rawTemplate.
+// r.createDistroTemplate assigns the default distro template values to a
+// rawTemplate
 func (r *rawTemplate) createDistroTemplate(d rawTemplate) {
 	r.IODirInf = d.IODirInf
 	r.PackerInf = d.PackerInf
@@ -90,7 +93,8 @@ func (r *rawTemplate) createDistroTemplate(d rawTemplate) {
 	return
 }
 
-// Create a Packer template from the rawTemplate that can be marshalled to JSON.
+// r.createPackerTemplate creates a Packer template from the rawTemplate that
+// can be marshalled to JSON.
 func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 	jww.DEBUG.Printf("Entering...")
 	var err error
@@ -112,8 +116,8 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 	}
 
 	// Post-Processors
-//	var i int
-//	var sM map[string]interface{}
+	var i int
+	var sM map[string]interface{}
 	iSl = make([]interface{}, len(r.PostProcessors))
 
 	if p.PostProcessors, vars, err = r.createPostProcessors(); err != nil {
@@ -166,9 +170,9 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 	return p, nil
 }
 
-// Takes a raw builder and create the appropriate Packer Builders along with a
-// slice of variables for that section builder type. Some Settings are in-lined
-// instead of adding them to the variable section.
+// r.createBuilders takes a raw builder and create the appropriate Packer
+// Builders along with a slice of variables for that section builder type.
+// Some Settings are in-lined instead of adding them to the variable section.
 func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]interface{}, err error) {
 	if r.BuilderTypes == nil || len(r.BuilderTypes) <= 0 {
 		err = fmt.Errorf("no builder types were configured, unable to create builders")
@@ -185,6 +189,7 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 	// Generate the builders for each builder type.
 	for _, bType := range r.BuilderTypes {
 		jww.TRACE.Println(bType)
+
 		// TODO calculate the length of the two longest Settings and VMSettings sections and make it
 		// that length. That will prevent a panic should there be more than 50 options. Besides its
 		// stupid, on so many levels, to hard code this...which makes me...d'oh!
@@ -192,33 +197,22 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 		tmpS = make(map[string]interface{})
 
 		switch bType {
-		case BuilderVMWare:
+		case BuilderVMWareISO:
+			tmpS, tmpVar, err = r.createBuilderVMWareISO()
+		case BuilderVMWareOVF:
+//			tmpS, tmpVar, err = r.createBuilderVMWareOVF
+
+		case BuilderVirtualBoxISO:
+//			tmpS, tmpVar, err = r.createBuilderVirtualBoxISO
+
+		case BuilderVirtualBoxOVF:
+//			tmpS, tmpVar, err = r.createVirtualBoxOVF
 			// Generate the common Settings and their vars
 			if tmpS, tmpVar, err = r.commonVMSettings(bType, r.Builders[BuilderCommon].Settings, r.Builders[bType].Settings); err != nil {
 				jww.ERROR.Println(err.Error())
 				return nil, nil, err
 			}
 
-			tmpS["type"] = bType
-
-			// Generate builder specific section
-			tmpvm := make(map[string]string, len(r.Builders[bType].VMSettings))
-
-			for i, v = range r.Builders[bType].VMSettings {
-				k, val = parseVar(v)
-				val = r.replaceVariables(val)
-				tmpvm[k] = val
-				tmpS["vmx_data"] = tmpvm
-			}
-
-		case BuilderVBox:
-			// Generate the common Settings and their vars
-			if tmpS, tmpVar, err = r.commonVMSettings(bType, r.Builders[BuilderCommon].Settings, r.Builders[bType].Settings); err != nil {
-				jww.ERROR.Println(err.Error())
-				return nil, nil, err
-			}
-
-			tmpS["type"] = bType
 			// Generate Packer Variables
 			// Generate builder specific section
 			tmpVB := make([][]string, len(r.Builders[bType].VMSettings))
@@ -240,6 +234,8 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 			jww.ERROR.Println(err.Error())
 			return nil, nil, err
 		}
+
+		tmps["type"] = bType
 		bldrs[ndx] = tmpS
 		ndx++
 		vrbls = append(vrbls, tmpVar...)
@@ -248,7 +244,28 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 	return bldrs, vars, nil
 }
 
+// r.createBuilderVMWareISO generates the settings for a vmware-iso builder.
+func (r *rawTemplate) createBuilderVMWareISO() (settings map[string]interface{}, vars []string, err error) {
+	// Generate the common Settings and their vars
+	if tmpS, tmpVar, err = r.commonVMSettings(bType, r.Builders[BuilderCommon].Settings, r.Builders[bType].Settings); err != nil {
+		jww.ERROR.Println(err.Error())
+		return nil, nil, err
+	}
 
+	tmpS["type"] = bType
+
+	// Generate builder specific section
+	tmpvm := make(map[string]string, len(r.Builders[bType].VMSettings))
+
+	for i, v = range r.Builders[bType].VMSettings {
+		k, val = parseVar(v)
+		val = r.replaceVariables(val)
+		tmpvm[k] = val
+		tmpS["vmx_data"] = tmpvm
+	}
+}
+
+// r.createPostProcessors creates the PostProcessors for a build.
 func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]interface{}, err error) {
 	if r.PostProcessorTypes == nil || len(r.PostProcessorTypes) <= 0 {
 		err = fmt.Errorf("no post-processors types were configured, unable to create post-processors")
@@ -345,7 +362,8 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 }
 */
 
-// Checks incoming string for variables and replaces them with their values.
+// r.replaceVariables checks incoming string for variables and replaces them
+// with their values.
 func (r *rawTemplate) replaceVariables(s string) string {
 	//see if the delim is in the string
 	if strings.Index(s, r.delim) < 0 {
@@ -360,88 +378,18 @@ func (r *rawTemplate) replaceVariables(s string) string {
 	return s
 }
 
-// Generates the variable section.
+// r.variableSection generates the variable section. This doesn't do anything
+// at the moment.
 func (r *rawTemplate) variableSection() (map[string]interface{}, error) {
 	var v map[string]interface{}
 	v = make(map[string]interface{})
 	return v, nil
 }
 
-// Generates the common builder sections for vmWare and VBox
-func (r *rawTemplate) commonVMSettings(builderType string, old []string, new []string) (Settings map[string]interface{}, vars []string, err error) {
-	var k, v string
-	var mergedSlice []string
-
-	maxLen := len(old) + len(new) + 4
-	mergedSlice = make([]string, maxLen)
-	Settings = make(map[string]interface{}, maxLen)
-	mergedSlice = mergeSettingsSlices(old, new)
-
-	// First set the ISO info for the desired release, if it's not already set
-	if r.osType == "" {
-		err = r.ISOInfo(builderType, mergedSlice)
-		if err != nil {
-			jww.ERROR.Println(err.Error())
-			return nil, nil, err
-		}
-	}
-	jww.TRACE.Printf("rawTemplate post r.ISOInfo(): %v", r)
-	for _, s := range mergedSlice {
-		//		var tmp interface{}
-		k, v = parseVar(s)
-		v = r.replaceVariables(v)
-		jww.TRACE.Printf("%s:%s", k, v)
-		switch k {
-		case "iso_checksum_type":
-			switch r.Type {
-			case "ubuntu":
-				Settings["iso_url"] = r.releaseISO.(*ubuntu).isoURL
-				Settings["iso_checksum"] = r.releaseISO.(*ubuntu).Checksum
-				Settings["iso_checksum_type"] = r.releaseISO.(*ubuntu).ChecksumType
-
-			case "centos":
-				Settings["iso_url"] = r.releaseISO.(*centOS).isoURL
-				Settings["iso_checksum"] = r.releaseISO.(*centOS).Checksum
-				Settings["iso_checksum_type"] = r.releaseISO.(*centOS).ChecksumType
-
-			case "default":
-				err = errors.New("rawTemplate.CommonVMSettings: " + k + " is not a supported builder type")
-				jww.ERROR.Println(err.Error())
-				return nil, nil, err
-			}
-
-		case "boot_command", "shutdown_command":
-			//If it ends in .command, replace it with the command from the filepath
-			var commands []string
-
-			if commands, err = commandsFromFile(v); err != nil {
-				jww.ERROR.Println(err.Error())
-				return nil, nil, err
-			} 
-			
-			// Boot commands are slices, the others are just a string.
-			if k == "boot_command" {
-				Settings[k] = commands
-			} else {
-				// Assume it's the first element.
-				Settings[k] = commands[0]
-			}
-
-		case "guest_os_type":
-			Settings[k] = r.osType
-
-		default:
-			// just use the value
-			Settings[k] = v
-		}
-	}
-	return Settings, vars, nil
-}
-
-// merges Settings between an old and new template.
-// Note: Arch, Image, and Release are not updated here as how these fields
-// are updated depends on whether this is a build from a distribution's
-// default template or from a defined build template.
+// r.mergeBuildSettings merges Settings between an old and new template. Note:
+// Arch, Image, and Release are not updated here as how these fields are 
+// updated depends on whether this is a build from a distribution's default 
+// template or from a defined build template.
 func (r *rawTemplate) mergeBuildSettings(bld rawTemplate) {
 	jww.DEBUG.Print(bld)
 	r.IODirInf.update(bld.IODirInf)
@@ -461,6 +409,9 @@ func (r *rawTemplate) mergeBuildSettings(bld rawTemplate) {
 	return
 }
 
+// r.mergeDistroSettings merges the settings...hmm the name doesn't
+// seem to reflect what it actually is doing.
+// TODO rename this 
 func (r *rawTemplate) mergeDistroSettings(d *distro) {
 	jww.TRACE.Printf("%v\n%v", r, d)
 	// merges Settings between an old and new template.

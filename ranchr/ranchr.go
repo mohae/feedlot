@@ -62,11 +62,17 @@ var (
 	// BuilderCommon is the name of the common builder section in the toml files.
 	BuilderCommon = "common"
 
-	// BuilderVBox is the name of the VirtualBox builder section in the toml files.
-	BuilderVBox   = "virtualbox-iso"
+	// BuilderVirtualBoxISO is the name of the VirtualBox builder section in the toml files.
+	BuilderVirtualBoxISO   = "virtualbox-iso"
 
-	// BuilderVMWare is the name of the VMWare builder section in the toml files.
-	BuilderVMWare = "vmware-iso"
+	// BuilderVirtualBoxOVF is the name of the VirtualBox builder section in the toml files.
+	BuilderVirtualBoxOVF  = "virtualbox-ovf"
+
+	// BuilderVMWareISO is the name of the VirtualBox builder section in the toml files.
+	BuilderVMWareISO   = "vmware-iso"
+
+	// BuilderVMWareOVF is the name of the VirtualBox builder section in the toml files.
+	BuilderVMWareOVF  = "vmware-ovf"
 
 	// PostProcessorVagrant is the name of the Vagrant PostProcessor
 	PostProcessorVagrant = "vagrant"
