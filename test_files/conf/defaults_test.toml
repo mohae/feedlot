@@ -17,7 +17,7 @@ scripts_dir = "scripts"
 scripts_src_dir = ":src_dir/scripts"
 src_dir = "../test_files/src/:type"
 min_packer_version = "0.4.0"
-builder_type = [
+builder_types = [
     "virtualbox-iso",
     "vmware-iso"
 ]
@@ -35,11 +35,10 @@ builder_type = [
 			"ssh_password = vagrant",
 			"ssh_port = 22",
 			"ssh_username = vagrant",
-			"ssh_wait_timeout = 240m",
+			"ssh_wait_timeout = 240m"
 		]
 	[builders.virtualbox-iso]
 		settings = [
-			"guest_os_type = ",
 			"virtualbox_version_file = .vbox_version"
 		]
 		vm_settings = [
@@ -52,7 +51,7 @@ builder_type = [
 			"memsize=1024",
 			"numvcpus=1"
 		]
-post_processor_type = [
+post_processor_types = [
 	"vagrant",
 	"vagrant-cloud"
 ]
@@ -77,7 +76,7 @@ post_processor_type = [
 			"version = 1.0.1"
 		]
 
-provisioner_type = [
+provisioner_types = [
 	"shell"
 ]
 [provisioners]
@@ -85,10 +84,17 @@ provisioner_type = [
 		settings = [
 			"execute_command = :commands_src_dir/execute_test.command"
 		]
-		[post_processors.shell.arrays]
+		[provisioners.shell.arrays]
+			except = [
+				"docker"
+			]
+			only = [
+				"virtualbox-iso"
+			]
 			scripts = [ 
 				":scripts_dir/setup_test.sh",
 				":scripts_dir/vagrant_test.sh",
 				":scripts_dir/sudoers_test.sh",
 				":scripts_dir/cleanup_test.sh",
 			]
+

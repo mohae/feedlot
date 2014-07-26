@@ -45,7 +45,7 @@ var testDefaults = &defaults{
 		CommandsSrcDir: ":src_dir/commands",
 		HTTPDir:        "http",
 		HTTPSrcDir:     ":src_dir/http",
-		OutDir:         "../test_files/out/:type",
+		OutDir:         "../test_files/out/:type/:build_name",
 		ScriptsDir:     "scripts",
 		ScriptsSrcDir:  ":src_dir/scripts",
 		SrcDir:         "../test_files/src/:type",
@@ -57,7 +57,7 @@ var testDefaults = &defaults{
 	BuildInf: BuildInf{
 		BaseURL:   "",
 		BuildName: "",
-		Name:      ":type-:release-:image-:arch",
+		Name:      ":build_name",
 	},
 	build: build{
 		BuilderTypes: []string{
@@ -70,6 +70,8 @@ var testDefaults = &defaults{
 					"boot_command = :commands_src_dir/boot_test.command",
 					"boot_wait = 5s",
 					"disk_size = 20000",
+					"guest_os_type = ",
+					"headless = true",
 					"http_directory = http",
 					"iso_checksum_type = sha256",
 					"shutdown_command = :commands_src_dir/shutdown_test.command",
@@ -80,12 +82,16 @@ var testDefaults = &defaults{
 				},
 			},
 			"virtualbox-iso": {
-				VMSettings: []string{
+				Settings: []string {
+					"virtualbox_version_file = .vbox_version",
+				},
+				VMSettings: []string {
 					"cpus=1",
 					"memory=1024",
 				},
 			},
 			"vmware-iso": {
+				Settings: []string{},
 				VMSettings: []string{
 					"cpuid.coresPerSocket=1",
 					"memsize=1024",
@@ -95,12 +101,28 @@ var testDefaults = &defaults{
 		},
 		PostProcessorTypes: []string{
 			"vagrant",
+			"vagrant-cloud",
 		},
 		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				Settings: []string{
+					"compression_level = 9",
 					"keep_input_artifact = false",
 					"output = out/rancher-packer.box",
+				},
+				Arrays: map[string]interface{}{
+					"include": []string {
+						"include1",
+						"include2",
+					},
+				},
+			},
+			"vagrant-cloud": {
+				Settings: []string{
+					"access_token = getAValidTokenFrom-VagrantCloud.com",
+					"box_tag = foo/bar",
+					"no_release = true",
+					"version = 1.0.1",
 				},
 			},
 		},
@@ -113,21 +135,29 @@ var testDefaults = &defaults{
 					"execute_command = :commands_src_dir/execute_test.command",
 				},
 				Arrays: map[string]interface{}{
-					"scripts": []string{
+					"except": []string {
+						"docker",
+					},
+					"only": []string {
+						"virtualbox-iso",
+					},
+					"scripts": []string {
  						":scripts_dir/setup_test.sh",
-						":scripts_dir/base_test.sh",
 						":scripts_dir/vagrant_test.sh",
+						":scripts_dir/sudoers_test.sh",
 						":scripts_dir/cleanup_test.sh",
-						":scripts_dir/zerodisk_test.sh",
 					},
 				},
 			},
 		},
 	},
+	loaded: true,
 }
 
 var testSupportedUbuntu = &distro{
-	BuildInf: BuildInf{BaseURL: "http://releases.ubuntu.com/"},
+	BuildInf: BuildInf{
+		BaseURL: "http://releases.ubuntu.com/",
+	},
 	IODirInf: IODirInf{},
 	PackerInf: PackerInf{
 		MinPackerVersion: "",
@@ -158,36 +188,38 @@ var testSupportedUbuntu = &distro{
 		Builders: map[string]builder{
 			"common": {
 				Settings: []string{
-					"boot_command = :commands_src_dir/boot_test.command",
-					"shutdown_command = :commands_src_dir/shutdown_test.command",
+					"boot_command = ../test_files/src/ubuntu/commands/boot_test.command",
+					"shutdown_command = :command_src_dir/shutdown_test.command",
 				},
 			},
 			"virtualbox-iso": {
+				Settings: []string{},
 				VMSettings: []string{"memory=2048"},
 			},
 			"vmware-iso": {
+				Settings: []string{},
 				VMSettings: []string{"memsize=2048"},
 			},
 		},
 		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				Settings: []string{
-					"output = out/:type-:arch-:version-:image-packer.box",
+					"output = out/:build_name-packer.box",
 				},
 			},
 		},
 		Provisioners: map[string]provisioner{
 			"shell": {
 				Settings: []string{
-					"execute_command = :commands_src_dir/execute_test.command",
+					"execute_command = :command_src_dir/execute_test.command",
 				},
 				Arrays: map[string]interface{}{
 					"scripts": []string{
-						"scripts/setup_test.sh",
-						"scripts/base_test.sh",
-						"scripts/vagrant_test.sh",
-						"scripts/cleanup_test.sh",
-						"scripts/zerodisk_test.sh",
+						":scripts_dir/setup_test.sh",
+						":scripts_dir/base_test.sh",
+						":scripts_dir/vagrant_test.sh",
+						":scripts_dir/sudoers_test.sh",
+						":scripts_dir/cleanup_test.sh",
 					},
 				},
 			},
@@ -414,6 +446,7 @@ var testBuildTest1 = rawTemplate{
 				Settings: []string{
 					"ssh_wait_timeout = 300m",
 				},
+				VMSettings: []string{},
 			},
 			"virtualbox-iso": {
 				VMSettings: []string{
@@ -423,14 +456,29 @@ var testBuildTest1 = rawTemplate{
 		},
 		PostProcessorTypes: []string{
 			"vagrant",
+			"vagrant-cloud",
 		},
 		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				Settings: []string{
 					"output = :out_dir/packer.box",
 				},
+				Arrays: map[string]interface{}{
+					"include": []string {
+						"include1",
+						"include2",
+					},
+				},
 			},
-		},
+			"vagrant-cloud": {
+				Settings: []string{
+					"access_token = getAValidTokenFrom-VagrantCloud.com",
+					"box_tag = foo/bar/baz",
+					"no_release = false",
+					"version = 1.0.2",
+				},
+			},
+		},	
 		ProvisionerTypes: []string{
 			"shell",
 		},
@@ -443,6 +491,7 @@ var testBuildTest1 = rawTemplate{
 					"scripts": []string{
 						":scripts_dir/setup_test.sh",
 						":scripts_dir/vagrant_test.sh",
+						":scripts_dir/sudoers_test.sh",
 						":scripts_dir/cleanup_test.sh",
 					},
 					"except": []string{

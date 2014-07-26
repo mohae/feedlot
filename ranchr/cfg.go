@@ -38,7 +38,7 @@ type build struct {
 
 	// Targeted provisioners: the values are consistent with Packer's, e.g.
 	// `shell` is used for shell.
-	ProvisionerTypes []string `toml:"post_processor_type"`
+	ProvisionerTypes []string `toml:"provisioner_types"`
 
 	// A map of provisioner configurations.
 	Provisioners map[string]provisioner `toml:"provisioners"`
@@ -47,11 +47,11 @@ type build struct {
 // Defines a representation of the builder section of a Packer template.
 type builder struct {
 	// Settings that are common to both builders.
-	Settings []string `toml:"Settings"`
+	Settings []string `toml:"settings"`
 
 	// VM Specific settings. Each VM builder should have its own defined.
 	// The 'common' builder does not have this section
-	VMSettings []string `toml:"vm_Settings"`
+	VMSettings []string `toml:"vm_settings"`
 }
 
 // Merge the settings section of a builder. New values supercede existing ones.
@@ -334,7 +334,6 @@ func (d *defaults) LoadOnce() error {
 			return
 		}
 
-		d.loaded = true
 		return
 	}
 
@@ -346,6 +345,7 @@ func (d *defaults) LoadOnce() error {
 	}
 
 	jww.DEBUG.Printf("defaults loaded: %v", d)
+	d.loaded = true
 
 	return nil
 }

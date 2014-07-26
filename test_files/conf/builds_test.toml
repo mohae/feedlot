@@ -21,13 +21,29 @@
 			vm_settings = [
 				"memory=4096"
 			]
+		post_processor_types = [
+			"vagrant",
+			"vagrant-cloud"
+		]
 		[build.test1.post_processors]
 			[build.test1.post_processors.vagrant]
 			settings = [
 				"output = :out_dir/packer.box"
 			]
-			except = ["docker"]
-			only = ["virtualbox-iso"]
+				[build.test1.post_processors.vagrant.arrays]
+					except = ["docker"]
+					only = ["virtualbox-iso"]
+
+			[build.test1.post_processors.vagrant-cloud]
+			settings = [
+				"access_token = getAValidTokenFrom-VagrantCloud.com",
+				"box_tag = foo/bar/baz",
+				"no_release = false",
+				"version = 1.0.2
+			]
+		provisioner_types = [
+			"shell"
+		]
 		[build.test1.provisioners]
 			[build.test1.provisioners.shell]
 			settings = [

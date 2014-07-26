@@ -71,10 +71,11 @@ func TestBuilderStuff(t *testing.T) {
 		})
 	})
 
-/*	Convey("Given a provisioner or two", t, func() {
+/*
+	Convey("Given a provisioner or two", t, func() {
 		p := provisioner{}
 		p.Settings = []string{"key1=value1", "key2=value2"}
-//		rawTpl := &rawTemplate{}
+		rawTpl := &rawTemplate{}
 		newSettings := []string{"key1=value1", "key2=value22", "key3=value3"}
 		Convey("Given two settings slices", func() {
 			p.mergeSettings(newSettings)
@@ -85,8 +86,7 @@ func TestBuilderStuff(t *testing.T) {
 				So(p.Settings, ShouldNotContain, "key2=value2")
 			})
 		})
-*/
-/*
+
 		Convey("transform settingns map should result in", func() {
 			res, err := p.settingsToMap("shell", rawTpl)
 			Convey("Should not error", func() {
@@ -96,9 +96,9 @@ func TestBuilderStuff(t *testing.T) {
 				So(res, ShouldResemble, map[string]interface{}{"type": "shell", "key1": "value1", "key2": "value2"})
 			})
 		})
-*/
 
-/*
+
+
 		Convey("transform settings map with an invalid command file name embedded should result in", func() {
 			p := provisioner{}
 			p.Settings = []string{"key1=value1", "execute_command=../test_files/commands/execute.command"}
@@ -110,8 +110,8 @@ func TestBuilderStuff(t *testing.T) {
 				So(res, ShouldBeNil)
 			})
 		})
-*/
 
+*/
 /*
 		Convey("transform settings map with an invalid command file name embedded should result in", func() {
 			p := provisioner{}
@@ -125,9 +125,9 @@ func TestBuilderStuff(t *testing.T) {
 					"execute_command": "\"echo 'vagrant'|sudo -S sh '{{.Path}}'\""})
 			})
 		})
-*/
 
-/*
+
+
 		Convey("given a slice with new script names, ", func() {
 			p := provisioner{}
 			p.Scripts = []string{"script1", "script2"}
@@ -137,8 +137,9 @@ func TestBuilderStuff(t *testing.T) {
 				So(p.Scripts, ShouldResemble, []string{"script3", "script4"})
 			})
 		})
+
+	})
 */
-//	})
 }
 
 func TestDefaults(t *testing.T) {
@@ -148,7 +149,8 @@ func TestDefaults(t *testing.T) {
 			d := defaults{}
 			os.Setenv(EnvDefaultsFile, "")
 			Convey("A load should result in an error", func() {
-				d.LoadOnce()
+				err := d.LoadOnce()
+				So(err.Error(), ShouldEqual, "could not retrieve the default Settings because the RANCHER_DEFAULTS_FILE environment variable was not set. Either set it or check your rancher.cfg setting")
 				So(d.MinPackerVersion, ShouldEqual, "")
 			})
 		})
@@ -156,10 +158,17 @@ func TestDefaults(t *testing.T) {
 			d := defaults{}
 			os.Setenv(EnvDefaultsFile, "../test_files/conf/defaults_test.toml")
 			Convey("A load should not error and result in data loaded", func() {
-				d.LoadOnce()
-				So(d, ShouldNotResemble, testDefaults)
-				//TODO replace the invalid So above with more specific
-				// tests due to sync.Once addition
+				err := d.LoadOnce()
+				So(err, ShouldBeNil)
+				So(d.IODirInf, ShouldResemble, testDefaults.IODirInf)
+				So(d.PackerInf, ShouldResemble, testDefaults.PackerInf)
+				So(d.BuildInf, ShouldResemble, testDefaults.BuildInf)
+				So(d.build.BuilderTypes, ShouldResemble, testDefaults.build.BuilderTypes)
+				So(d.build.Builders, ShouldResemble, testDefaults.build.Builders)
+				So(d.build.PostProcessorTypes, ShouldResemble, testDefaults.build.PostProcessorTypes)
+				So(d.build.PostProcessors, ShouldResemble, testDefaults.build.PostProcessors)
+				So(d.build.ProvisionerTypes, ShouldResemble, testDefaults.build.ProvisionerTypes)
+				So(d.build.Provisioners, ShouldResemble, testDefaults.build.Provisioners)
 			})
 		})
 	})
@@ -173,16 +182,20 @@ func TestSupported(t *testing.T) {
 			s := supported{}
 			os.Setenv(EnvSupportedFile, "")
 			Convey("A load should result in an error", func() {
-				s.LoadOnce()
+				err := s.LoadOnce()
 				So(s.loaded, ShouldEqual, false)
+				So(err.Error(), ShouldEqual, "could not retrieve the Supported information because the RANCHER_SUPPORTED_FILE environment variable was not set. Either set it or check your rancher.cfg setting")
 			})
 		})
 		Convey("Given a valid defaults configuration file", func() {
 			s := supported{}
 			os.Setenv(EnvSupportedFile, "../test_files/conf/supported_test.toml")
 			Convey("A load should not error and result in data loaded", func() {
-				s.LoadOnce()
+				err := s.LoadOnce()
+				So(err, ShouldBeNil)
 				So(s.loaded, ShouldEqual, true)
+				So(s.Distro["ubuntu"], ShouldResemble, testSupported.Distro["ubuntu"])
+				So(s.Distro["centos"], ShouldResemble, testSupported.Distro["centos"])
 			})
 		})
 	})

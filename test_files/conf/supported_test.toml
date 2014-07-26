@@ -56,14 +56,14 @@
 			settings = [
 				"execute_command = :command_src_dir/execute_test.command"
 			]
-			scripts = [ 
-				":scripts_dir/setup_test.sh",
-				":scripts_dir/base_test.sh",
-				":scripts_dir/vagrant_test.sh",
-				":scripts_dir/sudoers_test.sh",
-				":scripts_dir/cleanup_test.sh",
-
-			]
+			[distro.ubuntu.provisioners.shell.arrays]
+				scripts = [ 
+					":scripts_dir/setup_test.sh",
+					":scripts_dir/base_test.sh",
+					":scripts_dir/vagrant_test.sh",
+					":scripts_dir/sudoers_test.sh",
+					":scripts_dir/cleanup_test.sh"
+				]
 
 	[distro.centos]
 	base_url = ""
@@ -83,5 +83,5 @@
 	default_image = [
 	    	"release = 6",
 	    	"image = minimal",
-	    	"arch = x86_64",
+	    	"arch = x86_64"
 	]

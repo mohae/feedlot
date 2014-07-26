@@ -197,7 +197,7 @@ func TestBuildDistro(t *testing.T) {
 		aFilter := ArgsFilter{Arch: "amd64", Distro: "ubuntu", Image: "server", Release: "14.04"}
 		Convey("Calling BuildDistro", func() {
 			err := BuildDistro(aFilter)
-			//			So(err, ShouldBeNil)
+			So(err, ShouldBeNil)
 			_ = err
 		})
 	})
@@ -741,12 +741,12 @@ func TestGetMergedBuilders(t *testing.T) {
 	})
 }
 
-/*
-func TestGetMergedpostProcessor(t *testing.T) {
-	Convey("Testing getMergedpostProcessor", t, func() {
+
+func TestgetMergedPostProcessors(t *testing.T) {
+	Convey("Testing getMergedPostProcessors", t, func() {
 		var oldPP, newPP, emptyPP, mergedPP, comparePP map[string]postProcessor
 		Convey("Given two empty postProcessor", func() {
-			mergedPP = getMergedpostProcessor(oldPP, newPP)
+			mergedPP = getMergedPostProcessors(oldPP, newPP)
 			So(mergedPP, ShouldResemble, emptyPP)
 		})
 		Convey("Given an empty new postProcessor", func() {
@@ -757,7 +757,7 @@ func TestGetMergedpostProcessor(t *testing.T) {
 						"output = :out_dir/someComposedBoxName.box",
 					},
 				}}
-			mergedPP = getMergedpostProcessor(oldPP, newPP)
+			mergedPP = getMergedPostProcessors(oldPP, newPP)
 			So(mergedPP, ShouldResemble, oldPP)
 		})
 		Convey("Given an empty old postProcessor", func() {
@@ -768,7 +768,7 @@ func TestGetMergedpostProcessor(t *testing.T) {
 						"output = out/NewName.box",
 					},
 				}}
-			mergedPP = getMergedpostProcessor(oldPP, newPP)
+			mergedPP = getMergedPostProcessors(oldPP, newPP)
 			So(mergedPP, ShouldResemble, newPP)
 		})
 		Convey("Given two postProcessor", func() {
@@ -793,13 +793,12 @@ func TestGetMergedpostProcessor(t *testing.T) {
 						"output = out/NewName.box",
 					},
 				}}
-			mergedPP = getMergedpostProcessor(oldPP, newPP)
+			mergedPP = getMergedPostProcessors(oldPP, newPP)
 			So(mergedPP, ShouldResemble, comparePP)
 		})
 	})
 
 }
-*/
 
 /*
 func TestGetMergedprovisioner(t *testing.T) {
