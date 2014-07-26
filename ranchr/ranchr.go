@@ -679,8 +679,9 @@ func mergeSlices(s1 []string, s2 []string) []string {
 	}
 
 	if s1 == nil || len(s1) <= 0 {
-	}
 		return s2
+	}
+
 
 	if s2 == nil || len(s2) == 0 {
 		return s1
