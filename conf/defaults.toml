@@ -10,7 +10,7 @@ src_dir = "src/:type"
 scripts_dir = "scripts"
 scripts_src_dir = ":src_dir/:scripts_dir"
 min_packer_version = "0.4.0"
-builder_type = [
+builder_types = [
     "virtualbox-iso",
     "vmware-iso"
 ]
@@ -47,7 +47,7 @@ builder_type = [
 			"memsize=1024",
 			"numvcpus=1"
 		]
-post_processor_type = [
+post_processor_types = [
 	"vagrant"
 ]
 [post_processors]
@@ -57,7 +57,7 @@ post_processor_type = [
 			"keep_input_artifact = false",
 			"output = out/vagrant/"
 		]
-provisioner_type = [
+provisioner_types = [
 	"shell"
 ]
 [provisioners]

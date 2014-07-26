@@ -87,6 +87,8 @@ func (r *rawTemplate) createBuilderVMWareISO() (settings map[string]interface{},
 
 // r.createBuilderVirtualboxISO generates the settings for a vmware-iso builder.
 func (r *rawTemplate) createBuilderVirtualBoxISO() (settings map[string]interface{}, vars []string, err error) {
+	settings = make(map[string]interface{})
+
 	// Each create function is responsible for setting its own type.
 	settings["type"] = BuilderVirtualBoxISO
 

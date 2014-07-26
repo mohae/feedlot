@@ -39,7 +39,7 @@
 				"access_token = getAValidTokenFrom-VagrantCloud.com",
 				"box_tag = foo/bar/baz",
 				"no_release = false",
-				"version = 1.0.2
+				"version = 1.0.2"
 			]
 		provisioner_types = [
 			"shell"
@@ -49,13 +49,14 @@
 			settings = [
 				"execute_command = :commands_src_dir/execute_test.command"
 			]
-			scripts = [
-				":scripts_dir/setup_test.sh",
-				":scripts_dir/vagrant_test.sh",
-				":scripts_dir/cleanup_test.sh"
-			]
-			except = ["docker"]
-			only = ["virtualbox-iso"]
+				[build.test1.provisioners.shell.arrays]
+				scripts = [
+					":scripts_dir/setup_test.sh",
+					":scripts_dir/vagrant_test.sh",
+					":scripts_dir/cleanup_test.sh"
+				]
+				except = ["docker"]
+				only = ["virtualbox-iso"]
 	[build.test2]
 		type = "ubuntuu"
 		description = "Test build template #2: causes an error"

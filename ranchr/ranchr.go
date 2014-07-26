@@ -27,8 +27,8 @@ import (
 var (
 	appName            = "RANCHER"
 
-	// EnvConfig is the name of the environment variable name for the config file.
-	EnvConfig          = appName + "_CONFIG"
+	// EnvRancerhFiile is the name of the environment variable name for Rancher's config file.
+	EnvRancherFile        = appName + "_CONFIG"
 
 	// EnvBuildsFile is the name of the environment variable name for the builds file.
 	EnvBuildsFile      = appName + "_BUILDS_FILE"
@@ -89,8 +89,13 @@ var (
 	// ProvisionerSalt is the name of the Salt Provisioner
 	ProvisionerSalt = "salt-masterless"
 
-	// ProvisionerShellScripts is the name of the Shell Scripts Provisioner
-	ProvisionerShellScripts = "shell"
+	// ProvisionerShell is the name of the Shell Provisioner
+	ProvisionerShell = "shell"
+
+	// ProvisionerShellScripts is an alias for the Shell provisioner as the
+	// Shell provisioner is technically the Shell Script provisioner, in
+	// the Packer documentation
+	ProvisionerShellScripts = ProvisionerShell
 )
 
 var (
@@ -147,7 +152,7 @@ type ArgsFilter struct {
 func SetEnv() error {
 	var err error
 	var tmp string
-	tmp = os.Getenv(EnvConfig)
+	tmp = os.Getenv(EnvRancherFile)
 
 	if tmp == "" {
 		tmp = "rancher.cfg"
@@ -396,13 +401,15 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	//	d.BuildName = ":type-:release-:arch-:image-rancher"
 	// Now everything can get put in a template
 	rTpl := newRawTemplate()
-	pTpl := packerTemplate{}
-	var err error
 	rTpl.createDistroTemplate(d)
 
 	// Since distro builds don't actually have a build name, we create one
 	// out of the args used to create it.
 	rTpl.BuildName = d.Type + "-" + d.Release + "-" + d.Arch + "-" + d.Image
+
+/* TODO disable packer template creation for now
+	pTpl := packerTemplate{}
+	var err error
 
 	// Now that the raw template has been made, create a Packer template out of it
 	if pTpl, err = rTpl.createPackerTemplate(); err != nil {
@@ -424,7 +431,7 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 		jww.ERROR.Println(err.Error())
 		return err
 	}
-
+*/
 	jww.INFO.Println("Created Packer template and associated build directory for " + d.BuildName)
 	return nil
 }
@@ -538,6 +545,8 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 	// create build template() then call create packertemplate
 	tpl.build = supportedDefaults[bld.Type].build
 	tpl.mergeBuildSettings(bld)
+
+/* TODO disable creation of packer tempalte for now
 	pTpl := packerTemplate{}
 	var err error
 
@@ -551,12 +560,15 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 	var scripts []string
 	scripts = tpl.ScriptNames()
 
+*/
+
+/* TODO, disable writing out of final template, for now
 	if err = pTpl.TemplateToFileJSON(tpl.IODirInf, tpl.BuildInf, scripts); err != nil {
 		jww.ERROR.Println(err.Error())
 		doneCh <- err
 		return
 	}
-
+*/
 	jww.INFO.Println("Created Packer template and associated build directory for build:" + buildName + ".")
 	doneCh <- nil
 	return

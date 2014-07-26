@@ -212,7 +212,7 @@ type defaults struct {
 type BuildInf struct {
 	// Name is the name for the build. This may be an assigned value from
 	// a TOML file setting.
-	Name      string `toml:"name"`
+	Name      string
 	// BuildName is the name of the build. This is either the name, as
 	// specified in the build.toml file, or a generated name for -distro
 	// flag based builds.

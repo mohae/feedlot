@@ -33,6 +33,7 @@ func TestCreateDistroTemplate(t *testing.T) {
 	})
 }
 
+/*
 func TestCreatePackerTemplate(t *testing.T) {
 	Convey("Given a template", t, func() {
 		r := rawTemplate{}
@@ -46,7 +47,7 @@ func TestCreatePackerTemplate(t *testing.T) {
 		})
 	})
 }
-
+*/
 func TestCreateBuilders(t *testing.T) {
 	Convey("Given a template", t, func() {
 		r := rawTemplate{}

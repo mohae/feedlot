@@ -18,7 +18,7 @@ func init() {
 
 func TestSetEnv(t *testing.T) {
 	// Preserve current state.
-	tmpConfig := os.Getenv(EnvConfig)
+	tmpConfig := os.Getenv(EnvRancherFile)
 	tmpBuildsFile := os.Getenv(EnvBuildsFile)
 	tmpBuildListsFile := os.Getenv(EnvBuildListsFile)
 	tmpDefaultsFile := os.Getenv(EnvDefaultsFile)
@@ -29,7 +29,7 @@ func TestSetEnv(t *testing.T) {
 	tmpParamDelimStart := os.Getenv(EnvParamDelimStart)
 	tmpSupportedFile := os.Getenv(EnvSupportedFile)
 
-	os.Setenv(EnvConfig, "")
+	os.Setenv(EnvRancherFile, "")
 	os.Setenv(EnvBuildsFile, "")
 	os.Setenv(EnvBuildListsFile, "")
 	os.Setenv(EnvDefaultsFile, "")
@@ -45,15 +45,15 @@ func TestSetEnv(t *testing.T) {
 		// file would be used to set the env variables. Since this is test, that file
 		// doesn't exist, which is the error we check for instead. So this test is just
 		// a proxy for an invalid rancher.cfg filename setting.
-		Convey("Given an empty EnvConfig setting", func() {
-			os.Setenv(EnvConfig, "")
+		Convey("Given an empty EnvRancherFile setting", func() {
+			os.Setenv(EnvRancherFile, "")
 			err := SetEnv()
 			Convey("Calling SetEnv() should result in an error", func() {
 				So(err.Error(), ShouldEqual, "open rancher.cfg: no such file or directory")
 			})
 		})
-		Convey("Given a valid EnvConfig setting", func() {
-			os.Setenv(EnvConfig, testRancherCfg)
+		Convey("Given a valid EnvRancherFile setting", func() {
+			os.Setenv(EnvRancherFile, testRancherCfg)
 			err := SetEnv()
 			Convey("Calling SetEnv() should result in an error", func() {
 				So(err, ShouldBeNil)
@@ -87,8 +87,8 @@ func TestSetEnv(t *testing.T) {
 			})
 
 		})
-		Convey("Given a valid EnvConfig setting", func() {
-			os.Setenv(EnvConfig, testRancherCfg)
+		Convey("Given a valid EnvRancherFile setting", func() {
+			os.Setenv(EnvRancherFile, testRancherCfg)
 			err := SetEnv()
 			Convey("Calling SetEnv() should result in an error", func() {
 				So(err, ShouldBeNil)
@@ -101,7 +101,7 @@ func TestSetEnv(t *testing.T) {
 	})
 
 	// Restore the state
-	os.Setenv(EnvConfig, tmpConfig)
+	os.Setenv(EnvRancherFile, tmpConfig)
 	os.Setenv(EnvBuildsFile, tmpBuildsFile)
 	os.Setenv(EnvBuildListsFile, tmpBuildListsFile)
 	os.Setenv(EnvDefaultsFile, tmpDefaultsFile)
@@ -208,7 +208,7 @@ func TestbuildPackerTemplateFromDistros(t *testing.T) {
 	//	s := supported{}
 	//	dd := map[string]rawTemplate{}
 	Convey("Given a buildPackerTemplateFromDistro call", t, func() {
-		tmp := os.Getenv(EnvConfig)
+		tmp := os.Getenv(EnvRancherFile)
 		Convey(" with empty or nil args", func() {
 			err := buildPackerTemplateFromDistro(a)
 			So(err.Error(), ShouldEqual, "Cannot build requested packer template, the supported data structure was empty.")
@@ -228,14 +228,14 @@ func TestbuildPackerTemplateFromDistros(t *testing.T) {
 			So(err.Error(), ShouldEqual, "Cannot build a packer template from passed distro: slackware is not supported. Please pass a supported distribution.")
 		})
 		Convey(" with valid information", func() {
-			_ = os.Setenv(EnvConfig, testRancherCfg)
+			_ = os.Setenv(EnvRancherFile, testRancherCfg)
 			Convey("with overrides", func() {
 				a = ArgsFilter{Distro: "ubuntu", Arch: "amd64", Image: "desktop", Release: "14.04"}
 				err := buildPackerTemplateFromDistro(a)
 				So(err, ShouldBeNil)
 			})
 		})
-		os.Setenv(EnvConfig, tmp)
+		os.Setenv(EnvRancherFile, tmp)
 	})
 
 }
@@ -243,12 +243,12 @@ func TestbuildPackerTemplateFromDistros(t *testing.T) {
 /*
 func TestBuildBuilds(t *testing.T) {
 	Convey("Testing BuildBuilds", t, func() {
-		tmpEnvConfig := os.Getenv(EnvConfig)
+		tmpEnvRancherFile := os.Getenv(EnvRancherFile)
 		tmpEnvBuildsFile := os.Getenv(EnvBuildsFile)
 		tmpEnvDefaultsFile := os.Getenv(EnvDefaultsFile)
 		tmpEnvParamDelimStart := os.Getenv(EnvParamDelimStart)
 		tmpEnvSupportedFile := os.Getenv(EnvSupportedFile)
-		os.Setenv(EnvConfig, testRancherCfg)
+		os.Setenv(EnvRancherFile, testRancherCfg)
 		os.Setenv(EnvBuildsFile, testBuildsFile)
 		os.Setenv(EnvDefaultsFile, testDefaultsFile)
 		os.Setenv(EnvParamDelimStart, ":")
@@ -281,7 +281,7 @@ func TestBuildBuilds(t *testing.T) {
 				So(resultString, ShouldEqual, "Create Packer templates from named builds: 1 Builds were successfully processed and 1 Builds resulted in an error.")
 			})
 		})
-		os.Setenv(EnvConfig, tmpEnvConfig)
+		os.Setenv(EnvRancherFile, tmpEnvRancherFile)
 		os.Setenv(EnvBuildsFile, tmpEnvBuildsFile)
 		os.Setenv(EnvDefaultsFile, tmpEnvDefaultsFile)
 		os.Setenv(EnvParamDelimStart, tmpEnvParamDelimStart)
@@ -290,11 +290,11 @@ func TestBuildBuilds(t *testing.T) {
 }
 /*/
 func TestbuildPackerTemplateFromNamedBuild(t *testing.T) {
-	tmp := os.Getenv(EnvConfig)
+	tmp := os.Getenv(EnvRancherFile)
 	tmpBuildsFile := os.Getenv(EnvBuildsFile)
 	Convey("Given a some configuration information and Build names", t, func() {
 		Convey("Given overriding the configuration to use test files", func() {
-			os.Setenv(EnvConfig, testRancherCfg)
+			os.Setenv(EnvRancherFile, testRancherCfg)
 			Convey("Given setting the build config file to an invalid value", func() {
 				os.Setenv(EnvBuildsFile, "look/for/it/here/")
 				Convey("Calling buildPackerTemplateFromNamedBuild should result in", func() {
@@ -333,7 +333,7 @@ func TestbuildPackerTemplateFromNamedBuild(t *testing.T) {
 			})
 		})
 	})
-	os.Setenv(EnvConfig, tmp)
+	os.Setenv(EnvRancherFile, tmp)
 	os.Setenv(EnvBuildsFile, tmpBuildsFile)
 
 }

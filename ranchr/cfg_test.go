@@ -155,20 +155,21 @@ func TestDefaults(t *testing.T) {
 			})
 		})
 		Convey("Given a valid defaults configuration file", func() {
-			d := defaults{}
 			os.Setenv(EnvDefaultsFile, "../test_files/conf/defaults_test.toml")
+			d := defaults{}
+			err := d.LoadOnce()
 			Convey("A load should not error and result in data loaded", func() {
-				err := d.LoadOnce()
 				So(err, ShouldBeNil)
 				So(d.IODirInf, ShouldResemble, testDefaults.IODirInf)
 				So(d.PackerInf, ShouldResemble, testDefaults.PackerInf)
 				So(d.BuildInf, ShouldResemble, testDefaults.BuildInf)
 				So(d.build.BuilderTypes, ShouldResemble, testDefaults.build.BuilderTypes)
-				So(d.build.Builders, ShouldResemble, testDefaults.build.Builders)
+				So(d.build.Builders[BuilderVirtualBoxISO], ShouldResemble, testDefaults.build.Builders[BuilderVirtualBoxISO])
 				So(d.build.PostProcessorTypes, ShouldResemble, testDefaults.build.PostProcessorTypes)
-				So(d.build.PostProcessors, ShouldResemble, testDefaults.build.PostProcessors)
+				So(d.build.PostProcessors[PostProcessorVagrant], ShouldResemble, testDefaults.build.PostProcessors[PostProcessorVagrant])
+				So(d.build.PostProcessors[PostProcessorVagrantCloud], ShouldResemble, testDefaults.build.PostProcessors[PostProcessorVagrantCloud])
 				So(d.build.ProvisionerTypes, ShouldResemble, testDefaults.build.ProvisionerTypes)
-				So(d.build.Provisioners, ShouldResemble, testDefaults.build.Provisioners)
+				So(d.build.Provisioners[ProvisionerShell], ShouldResemble, testDefaults.build.Provisioners[ProvisionerShell])
 			})
 		})
 	})
