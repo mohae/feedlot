@@ -156,6 +156,7 @@ func TestDefaults(t *testing.T) {
 		})
 		Convey("Given a valid defaults configuration file", func() {
 			os.Setenv(EnvDefaultsFile, "../test_files/conf/defaults_test.toml")
+			os.Setenv(EnvRancherFile, "../test_files/rancher.cfg")
 			d := defaults{}
 			err := d.LoadOnce()
 			Convey("A load should not error and result in data loaded", func() {

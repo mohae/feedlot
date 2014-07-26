@@ -260,7 +260,7 @@ var testSupportedCentOS = &distro{
 var testDistroDefaultUbuntu = rawTemplate{
 	PackerInf: PackerInf{MinPackerVersion: "", Description: "Test supported distribution template"},
 	IODirInf: IODirInf{
-		CommandsSrcDir: ":src_dir/commands/",
+		CommandsSrcDir: "../test_files/src/ubuntu/commands/",
 		HTTPDir:        "http/",
 		HTTPSrcDir:     ":src_dir/http/",
 		OutDir:         "../test_files/out/:type/",
@@ -286,12 +286,12 @@ var testDistroDefaultUbuntu = rawTemplate{
 		Builders: map[string]builder{
 			"common": {
 				Settings: []string{
-					"boot_command = :commands_src_dir/boot_test.command",
+					"boot_command = ../test_files/src/ubuntu/commands/boot_test.command",
 					"boot_wait = 5s",
 					"disk_size = 20000",
 					"http_directory = http",
 					"iso_checksum_type = sha256",
-					"shutdown_command = :commands_src_dir/shutdown_test.command",
+					"shutdown_command = ../test_files/src/ubuntu/commands/shutdown_test.command",
 					"ssh_password = vagrant",
 					"ssh_port = 22",
 					"ssh_username = vagrant",
@@ -317,7 +317,7 @@ var testDistroDefaultUbuntu = rawTemplate{
 			"vagrant": {
 				Settings: []string{
 					"keep_input_artifact = false",
-					"output = out/:type-:arch-:version-:image-packer.box",
+					"output = out/:build_name-packer.box",
 				},
 			},
 		},
@@ -446,7 +446,6 @@ var testBuildTest1 = rawTemplate{
 				Settings: []string{
 					"ssh_wait_timeout = 300m",
 				},
-				VMSettings: []string{},
 			},
 			"virtualbox-iso": {
 				VMSettings: []string{
@@ -464,9 +463,11 @@ var testBuildTest1 = rawTemplate{
 					"output = :out_dir/packer.box",
 				},
 				Arrays: map[string]interface{}{
-					"include": []string {
-						"include1",
-						"include2",
+					"except": []string {
+						"docker",
+					},
+					"only": []string {
+						"virtualbox-iso",
 					},
 				},
 			},
@@ -491,7 +492,6 @@ var testBuildTest1 = rawTemplate{
 					"scripts": []string{
 						":scripts_dir/setup_test.sh",
 						":scripts_dir/vagrant_test.sh",
-						":scripts_dir/sudoers_test.sh",
 						":scripts_dir/cleanup_test.sh",
 					},
 					"except": []string{

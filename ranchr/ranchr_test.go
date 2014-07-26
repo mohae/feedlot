@@ -932,7 +932,7 @@ func TestCopyFile(t *testing.T) {
 		})
 		Convey("Calling copyfile", func() {
 			wB, err := copyFile("builds_test.toml", testDir+"conf", testDir+"test")
-			So(wB, ShouldEqual, 2366)
+			So(wB, ShouldEqual, 2418)
 			So(err, ShouldBeNil)
 		})
 	})

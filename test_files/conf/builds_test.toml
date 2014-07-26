@@ -50,13 +50,13 @@
 				"execute_command = :commands_src_dir/execute_test.command"
 			]
 				[build.test1.provisioners.shell.arrays]
+				except = ["docker"]
+				only = ["virtualbox-iso"]
 				scripts = [
 					":scripts_dir/setup_test.sh",
 					":scripts_dir/vagrant_test.sh",
 					":scripts_dir/cleanup_test.sh"
 				]
-				except = ["docker"]
-				only = ["virtualbox-iso"]
 	[build.test2]
 		type = "ubuntuu"
 		description = "Test build template #2: causes an error"
