@@ -35,14 +35,13 @@ type build struct {
 
 	// A map of post-processor configurations.
 	PostProcessors map[string]postProcessor `toml:"post_processors"`
-/*
+
 	// Targeted provisioners: the values are consistent with Packer's, e.g.
 	// `shell` is used for shell.
-	ProvisionerType []string `toml:"post_processor_type"`
+	ProvisionerTypes []string `toml:"post_processor_type"`
 
 	// A map of provisioner configurations.
 	Provisioners map[string]provisioner `toml:"provisioners"`
-*/
 }
 
 // Defines a representation of the builder section of a Packer template.

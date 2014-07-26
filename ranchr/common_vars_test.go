@@ -20,13 +20,14 @@ var testBuildListsFile = "../test_files/conf/build_lists_test.toml"
 var today = time.Now().Local().Format("2006-01-02")
 var testRawTemplate = newRawTemplate()
 
-/*
+
 var testProvisioners = map[string]provisioner{
 	"shell": {
 		Settings: []string{
 			"execute_command = :commands_src_dir/execute_test.command",
-		
-			[]string{
+		},
+		Arrays: map[string]interface{} {		
+			"scripts": []string{
 				":scripts_dir/setup_test.sh",
 				":scripts_dir/base_test.sh",
 				":scripts_dir/vagrant_test.sh",
@@ -37,7 +38,7 @@ var testProvisioners = map[string]provisioner{
 
 	},
 }
-*/
+
 
 var testDefaults = &defaults{
 	IODirInf: IODirInf{
@@ -103,24 +104,25 @@ var testDefaults = &defaults{
 				},
 			},
 		},
-/*
+		ProvisionerTypes: []string{
+			"shell",
+		},
 		Provisioners: map[string]provisioner{
 			"shell": {
 				Settings: []string{
 					"execute_command = :commands_src_dir/execute_test.command",
 				},
-
-				Scripts: []string{
-					":scripts_dir/setup_test.sh",
-					":scripts_dir/base_test.sh",
-					":scripts_dir/vagrant_test.sh",
-					":scripts_dir/cleanup_test.sh",
-					":scripts_dir/zerodisk_test.sh",
+				Arrays: map[string]interface{}{
+					"scripts": []string{
+ 						":scripts_dir/setup_test.sh",
+						":scripts_dir/base_test.sh",
+						":scripts_dir/vagrant_test.sh",
+						":scripts_dir/cleanup_test.sh",
+						":scripts_dir/zerodisk_test.sh",
+					},
 				},
-
 			},
 		},
-*/
 	},
 }
 
@@ -174,22 +176,22 @@ var testSupportedUbuntu = &distro{
 				},
 			},
 		},
-/*
 		Provisioners: map[string]provisioner{
 			"shell": {
 				Settings: []string{
 					"execute_command = :commands_src_dir/execute_test.command",
 				},
-				Scripts: []string{
-					"scripts/setup_test.sh",
-					"scripts/base_test.sh",
-					"scripts/vagrant_test.sh",
-					"scripts/cleanup_test.sh",
-					"scripts/zerodisk_test.sh",
+				Arrays: map[string]interface{}{
+					"scripts": []string{
+						"scripts/setup_test.sh",
+						"scripts/base_test.sh",
+						"scripts/vagrant_test.sh",
+						"scripts/cleanup_test.sh",
+						"scripts/zerodisk_test.sh",
+					},
 				},
 			},
 		},
-*/
 	},
 }
 
@@ -287,28 +289,45 @@ var testDistroDefaultUbuntu = rawTemplate{
 				},
 			},
 		},
-/*
+		ProvisionerTypes: []string{ "shell" },
 		Provisioners: map[string]provisioner{
 			"shell": {
 				Settings: []string{
 					"execute_command = :commands_src_dir/execute_test.command",
 				},
-				Scripts: []string{
-					"scripts/setup_test.sh",
-					"scripts/base_test.sh",
-					"scripts/vagrant_test.sh",
-					"scripts/cleanup_test.sh",
-					"scripts/zerodisk_test.sh",
+				Arrays: map[string]interface{}{
+					"scripts": []string{
+						"scripts/setup_test.sh",
+						"scripts/base_test.sh",
+						"scripts/vagrant_test.sh",
+						"scripts/cleanup_test.sh",
+						"scripts/zerodisk_test.sh",
+					},
 				},
 			},
 		},
-*/
 	},
 }
 
-var testDistroDefaultCentOS = rawTemplate{PackerInf: PackerInf{MinPackerVersion: "", Description: "Test template config and Rancher options for CentOS"},
-	IODirInf: IODirInf{CommandsSrcDir: ":src_dir/commands/", HTTPDir: "http/", HTTPSrcDir: ":src_dir/http/", OutDir: "out/centos", ScriptsDir: "scripts/", ScriptsSrcDir: ":src_dir/scripts/", SrcDir: "../test_files/src/centos"},
-	BuildInf: BuildInf{Name: ":type-:release-:image-:arch", BuildName: "", BaseURL: "http://www.centos.org/pub/centos/"},
+var testDistroDefaultCentOS = rawTemplate{
+	PackerInf: PackerInf{
+		MinPackerVersion: "",
+		Description: "Test template config and Rancher options for CentOS",
+	},
+	IODirInf: IODirInf{
+		CommandsSrcDir: ":src_dir/commands/",
+		HTTPDir: "http/",
+		HTTPSrcDir: ":src_dir/http/",
+		OutDir: "out/centos",
+		ScriptsDir: "scripts/",
+		ScriptsSrcDir: ":src_dir/scripts/",
+		SrcDir: "../test_files/src/centos",
+	},
+	BuildInf: BuildInf{
+		Name: ":type-:release-:image-:arch",
+		BuildName: "",
+		BaseURL: "http://www.centos.org/pub/centos/",
+	},
 	date:     today,
 	delim:    ":",
 	Type:     "centos",
@@ -321,32 +340,60 @@ var testDistroDefaultCentOS = rawTemplate{PackerInf: PackerInf{MinPackerVersion:
 		BuilderTypes: []string{"virtualbox-iso", "vmware-iso"},
 		Builders: map[string]builder{
 			"common": {
-				Settings:   []string{"boot_command = :commands_src_dir/boot_test.command", "boot_wait = 5s", "disk_size = 20000", "http_directory = http", "iso_checksum_type = sha256", "shutdown_command = :commands_src_dir/shutdown_test.command", "ssh_password = vagrant", "ssh_port = 22", "ssh_username = vagrant", "ssh_wait_timeout = 240m"},
-				VMSettings: []string{},
+				Settings:   []string{
+					"boot_command = :commands_src_dir/boot_test.command",
+					"boot_wait = 5s",
+					"disk_size = 20000",
+					"http_directory = http",
+					"iso_checksum_type = sha256",
+					"shutdown_command = :commands_src_dir/shutdown_test.command",
+					"ssh_password = vagrant",
+					"ssh_port = 22",
+					"ssh_username = vagrant",
+					"ssh_wait_timeout = 240m",
+				},
 			},
 			"virtualbox-iso": {
 				Settings:   []string{},
-				VMSettings: []string{"cpus=1", "memory=1024"},
+				VMSettings: []string{
+					"cpus=1",
+					"memory=1024",
+				},
 			},
 			"vmware-iso": {
 				Settings:   []string{},
-				VMSettings: []string{"cpuid.coresPerSocket=1", "memsize=1024", "numvcpus=1"},
+				VMSettings: []string{
+					"cpuid.coresPerSocket=1",
+					"memsize=1024",
+					"numvcpus=1",
+				},
 			},
 		},
 		PostProcessorTypes: []string{"vagrant"},
-/*
 		PostProcessors: map[string]postProcessor{
 			"vagrant": {
-				Settings: []string{"keep_input_artifact = false", "output = out/rancher-packer.box"},
+				Settings: []string{
+					"keep_input_artifact = false",
+					"output = out/rancher-packer.box",
+				},
 			},
 		},
 		Provisioners: map[string]provisioner{
 			"shell": {
-				Settings: []string{"execute_command = :commands_src_dir/execute_test.command"},
-				Scripts:  []string{":scripts_dir/setup_test.sh", ":scripts_dir/base_test.sh", ":scripts_dir/vagrant_test.sh", ":scripts_dir/cleanup_test.sh", ":scripts_dir/zerodisk_test.sh"},
+				Settings: []string{
+					"execute_command = :commands_src_dir/execute_test.command",
+				},
+				Arrays: map[string]interface{}{
+					"scripts":  []string{
+						":scripts_dir/setup_test.sh",
+						":scripts_dir/base_test.sh",
+						":scripts_dir/vagrant_test.sh",
+						":scripts_dir/cleanup_test.sh",
+						":scripts_dir/zerodisk_test.sh",
+					},
+				},
 			},
 		},
-*/
 	},
 }
 
@@ -384,26 +431,29 @@ var testBuildTest1 = rawTemplate{
 				},
 			},
 		},
-/*
+		ProvisionerTypes: []string{
+			"shell",
+		},
 		Provisioners: map[string]provisioner{
 			"shell": {
 				Settings: []string{
 					"execute_command = :commands_src_dir/execute_test.command",
 				},
-				Scripts: []string{
-					":scripts_dir/setup_test.sh",
-					":scripts_dir/vagrant_test.sh",
-					":scripts_dir/cleanup_test.sh",
-				},
-				Except: []string{
-					"docker",
-				},
-				Only: []string{
-					"virtualbox-iso",
+				Arrays: map[string]interface{}{
+					"scripts": []string{
+						":scripts_dir/setup_test.sh",
+						":scripts_dir/vagrant_test.sh",
+						":scripts_dir/cleanup_test.sh",
+					},
+					"except": []string{
+						"docker",
+					},
+					"only": []string{
+						"virtualbox-iso",
+					},
 				},
 			},
 		},
-*/
 	},
 }
 
@@ -444,7 +494,7 @@ var testBuildCentOS6Salt = rawTemplate{
 		BuilderTypes: []string{
 			"virtualbox-iso",
 		},
-/*		Provisioner: map[string]provisioner{
+		Provisioners: map[string]provisioner{
 			"salt-masterless": {
 				Settings: []string{
 					"local_state_tree = ~/saltstates/centos6/salt",
@@ -452,7 +502,6 @@ var testBuildCentOS6Salt = rawTemplate{
 				},
 			},
 		},
-*/
 	},
 }
 
@@ -517,27 +566,29 @@ var testMergedBuildTest1 = rawTemplate{
 				},
 			},
 		},
-/*
+		ProvisionerTypes: []string{
+			"shell",
+		},
 		Provisioners: map[string]provisioner{
 			"shell": {
 				Settings: []string{
 					"execute_command = :commands_src_dir/execute_test.command",
 				},
-				Scripts: []string{
-					":scripts_dir/setup_test.sh",
-					":scripts_dir/vagrant_test.sh",
-					":scripts_dir/cleanup_test.sh",
-				},
-
-				Except: []string{
-					"docker",
-				},
-				Only: []string{
-					"virtualbox-iso",
+				Arrays: map[string]interface{}{
+					"scripts": []string{
+						":scripts_dir/setup_test.sh",
+						":scripts_dir/vagrant_test.sh",
+						":scripts_dir/cleanup_test.sh",
+					},
+					"except": []string{
+						"docker",
+					},
+					"only": []string{
+						"virtualbox-iso",
+					},
 				},
 			},
 		},
-*/
 	},
 }
 
@@ -609,22 +660,25 @@ var testMergedBuildTest2 = rawTemplate{
 				},
 			},
 		},
-/*
+		ProvisionerTypes: []string{
+			"shell",
+		},
 		Provisioners: map[string]provisioner{
 			"shell": {
 				Settings: []string{
 					"execute_command = :commands_src_dir/execute_test.command",
 				},
-				Scripts: []string{
-					":scripts_dir/setup_test.sh",
-					":scripts_dir/base_test.sh",
-					":scripts_dir/vagrant_test.sh",
-					":scripts_dir/cleanup_test.sh",
-					":scripts_dir/zerodisk_test.sh",
+				Arrays: map[string]interface{}{
+					"scripts": []string{
+						":scripts_dir/setup_test.sh",
+						":scripts_dir/base_test.sh",
+						":scripts_dir/vagrant_test.sh",
+						":scripts_dir/cleanup_test.sh",
+						":scripts_dir/zerodisk_test.sh",
+					},
 				},
 			},
 		},
-*/
 	},
 }
 
@@ -695,34 +749,31 @@ var testMergedBuildCentOS6Salt = rawTemplate{
 				},
 			},
 		},
-/*
-		Provisioners: map[string]provisionerer{
-			"salt-masterless": saltProvisioner{
-				provisioner: {
-					Settings: []string {
-						"local_state_tree = ~/saltstates/centos6/salt",
-						"skip_bootstrap = true",
-					},
+		ProvisionerTypes: []string{
+			"shell",
+		},
+		Provisioners: map[string]provisioner{
+			"salt-masterless": {
+				Settings: []string {
+					"local_state_tree = ~/saltstates/centos6/salt",
+					"skip_bootstrap = true",
 				},
 			},
-			"shell": &shellProvisioner{
-
-				provisioner: provisioner{
-					Settings: []string{
-						"execute_command = :commands_src_dir/execute_test.command",
-					},
+			"shell": {
+				Settings: []string{
+					"execute_command = :commands_src_dir/execute_test.command",
 				},
-
-				Scripts: []string{
-					":scripts_dir/setup_test.sh",
-					":scripts_dir/base_test.sh",
-					":scripts_dir/vagrant_test.sh",
-					":scripts_dir/cleanup_test.sh",
-					":scripts_dir/zerodisk_test.sh",
+				Arrays: map[string]interface{}{
+					"scripts": []string{
+						":scripts_dir/setup_test.sh",
+						":scripts_dir/base_test.sh",
+						":scripts_dir/vagrant_test.sh",
+						":scripts_dir/cleanup_test.sh",
+						":scripts_dir/zerodisk_test.sh",
+					},
 				},
 			},
 		},
-*/
 	},
 }
 
@@ -757,6 +808,5 @@ func setCommonTestData() {
 	testDataSet = true
 	return
 }
-
 //BuildUbuntu
 //BuildCentos
