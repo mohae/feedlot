@@ -1,8 +1,6 @@
 package ranchr
 
 import (
-	"errors"
-	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -116,8 +114,6 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 	}
 
 	// Post-Processors
-	var i int
-	var sM map[string]interface{}
 	iSl = make([]interface{}, len(r.PostProcessors))
 
 	if p.PostProcessors, vars, err = r.createPostProcessors(); err != nil {

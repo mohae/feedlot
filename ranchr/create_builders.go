@@ -2,7 +2,14 @@
 // rawTemplates. Any new builders should be added here.
 package ranchr
 
-import ()
+import (
+	"errors"
+	"fmt"
+	"strconv"
+	"strings"
+
+	jww "github.com/spf13/jwalterweatherman"
+)
 
 // r.createBuilders takes a raw builder and create the appropriate Packer
 // Builders along with a slice of variables for that section builder type.
@@ -16,8 +23,7 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 
 	var vrbls, tmpVar []string
 	var tmpS map[string]interface{}
-	var k, val, v string
-	var i, ndx int
+	var ndx int
 	bldrs = make([]interface{}, len(r.BuilderTypes))
 
 	// Generate the builders for each builder type.
@@ -80,12 +86,14 @@ func (r *rawTemplate) createBuilderVMWareISO() (settings map[string]interface{},
 */
 
 // r.createBuilderVirtualboxISO generates the settings for a vmware-iso builder.
-func (r *rawTemplate) createBuilderVirtualboxISO() (settings map[string]interface{}, vars []string, err error) {
+func (r *rawTemplate) createBuilderVirtualBoxISO() (settings map[string]interface{}, vars []string, err error) {
 	// Each create function is responsible for setting its own type.
-	tmpS["type"] = BuilderVirtualBoxISO
+	settings["type"] = BuilderVirtualBoxISO
 
 	// Merge the settings between common and this builders.
 	mergedSlice := mergeSettingsSlices(r.Builders[BuilderCommon].Settings, r.Builders[BuilderVirtualBoxISO].Settings)
+
+	var k, v string
 
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
@@ -129,7 +137,7 @@ func (r *rawTemplate) createBuilderVirtualboxISO() (settings map[string]interfac
 		case "iso_checksum_type":
 			// First set the ISO info for the desired release, if it's not already set
 			if r.osType == "" {
-				err = r.ISOInfo(builderType, mergedSlice)
+				err = r.ISOInfo(BuilderVirtualBoxISO, mergedSlice)
 				if err != nil {
 					jww.ERROR.Println(err.Error())
 					return nil, nil, err
@@ -180,11 +188,10 @@ func (r *rawTemplate) createBuilderVirtualboxISO() (settings map[string]interfac
 	}
 	// Generate Packer Variables
 	// Generate builder specific section
-	tmpVB := make([][]string, len(r.Builders[bType].VMSettings))
-	ndx = 0
+	tmpVB := make([][]string, len(r.Builders[BuilderVirtualBoxISO].VMSettings))
 
-	for i, v = range r.Builders[bType].VMSettings {
-		k, val = parseVar(v)
+	for i, v := range r.Builders[BuilderVirtualBoxISO].VMSettings {
+		k, val := parseVar(v)
 		val = r.replaceVariables(val)
 		tmpVB[i] = make([]string, 4)
 		tmpVB[i][0] = "modifyvm"
@@ -192,7 +199,7 @@ func (r *rawTemplate) createBuilderVirtualboxISO() (settings map[string]interfac
 		tmpVB[i][2] = "--" + k
 		tmpVB[i][3] = val
 	}
-	tmpS["vboxmanage"] = tmpVB
+	settings["vboxmanage"] = tmpVB
 
 	return settings, nil, nil
 }
@@ -203,7 +210,7 @@ vmx
 // r.createBuilderVirtualboxISO generates the settings for a vmware-iso builder.
 func (r *rawTemplate) createBuilderVMWareISO() (settings map[string]interface{}, vars []string, err error) {
 	// Each create function is responsible for setting its own type.
-	tmpS["type"] = BuilderVMWareISO
+	settings["type"] = BuilderVMWareISO
 
 	// Merge the settings between common and this builders.
 	mergedSlice := mergeSettingsSlices(r.Builders[BuilderCommon].Settings, r.Builders[BuilderVMWareISO].Settings)
@@ -212,7 +219,7 @@ func (r *rawTemplate) createBuilderVMWareISO() (settings map[string]interface{},
 	// to this builder.
 	for _, s := range mergedSlice {
 		// var tmp interface{}
-		k, v = parseVar(s)
+		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
 		case "boot_command":
@@ -251,7 +258,7 @@ func (r *rawTemplate) createBuilderVMWareISO() (settings map[string]interface{},
 		case "iso_checksum_type":
 			// First set the ISO info for the desired release, if it's not already set
 			if r.osType == "" {
-				err = r.ISOInfo(builderType, mergedSlice)
+				err = r.ISOInfo(BuilderVMWareISO, mergedSlice)
 				if err != nil {
 					jww.ERROR.Println(err.Error())
 					return nil, nil, err

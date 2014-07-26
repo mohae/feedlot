@@ -2,7 +2,12 @@
 // Add supported post-processors here.
 package ranchr
 
-import ()
+import (
+	"errors"
+	"fmt"
+
+	jww "github.com/spf13/jwalterweatherman"
+)
 
 // r.createPostProcessors creates the PostProcessors for a build.
 func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]interface{}, err error) {
