@@ -63,6 +63,12 @@ post_processor_type = [
 			"keep_input_artifact = false",
 			"output = out/rancher-packer.box"
 		]
+		[post_processors.vagrant.arrays]
+			include = [
+				"include1",
+				"include2"
+			]		
+			
 	[post_processors.vagrant-cloud]
 		settings = [
 			"access_token = getAValidTokenFrom-VagrantCloud.com",
@@ -79,10 +85,10 @@ provisioner_type = [
 		settings = [
 			"execute_command = :commands_src_dir/execute_test.command"
 		]
-		scripts = [ 
+		[post_processors.shell.arrays]
+			scripts = [ 
 				":scripts_dir/setup_test.sh",
-				":scripts_dir/guest-additions_test.sh",
 				":scripts_dir/vagrant_test.sh",
 				":scripts_dir/sudoers_test.sh",
 				":scripts_dir/cleanup_test.sh",
-		]
+			]
