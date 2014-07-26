@@ -9,7 +9,7 @@
 		arch = "amd64"
 		image = "server"
 		release = "12.04"
-		builder_type = [
+		builder_types = [
 			"virtualbox-iso"
 		]
 		[build.1204-amd64-server.builders]
@@ -28,7 +28,7 @@
 	        arch = "amd64"
 	        release = "14.04"
 	        image = "server"
-	        builder_type = [
+	        builder_types = [
 			"virtualbox-iso"
 		]
 		[build.1404-dev.builders]
@@ -36,28 +36,39 @@
 			vm_settings = [
 				"memory=4096"
 			]
+		post_processor_types = [
+			"vagrant"
+		]
 		[build.1404-dev.post_processors]
 			[build.1404-dev.post_processors.vagrant]
-			except = [
-				"docker"
-			]
-			only = [
-				"virtualbox-iso"
-			]
+				[build.1404-dev.post_processors.vagrant.arrays]
+				except = [
+					"docker"
+				]
+				only = [
+					"virtualbox-iso"
+				]
+		provisioner_types = [
+			"shell"
+		]
 		[build.1404-dev.provisioners]
 			[build.1404-dev.provisioners.shell]
-			except = [
-				"docker"
-			]
-			only = [
-				"virtualbox-iso"
-			]
+				[build.1404-dev.provisioners.arrays]
+				except = [
+					"docker"
+				]
+				only = [
+					"virtualbox-iso"
+				]
 
         [build.centos6-salt]
 		type = "centos"
 		description = "Centos 6 with salt provisioning"
-		builder_type = [
+		builder_types = [
 			"virtualbox-iso"
+		]
+		provisioner_types = [
+			"salt-masterless"
 		]
 		[build.centos6-salt.provisioner.salt-masterless]
 			settings = [
@@ -68,45 +79,53 @@
 	[build.centos6-ansible]
 		type = "centos"
 		description = "Centos6 with ansible provisioning"
-		builder_type = [
+		builder_types = [
 			"virtualbox-iso"
+		]
+		provisioner_types = [
+			"ansible-local"
+		]
 		[build.centos6-ansible.provisioner.ansible-local]
 			settings = [
 				"command = ansible-playbook-command-override",
 				"inventory_file = playbook-inventory.yaml",
 				"playbook_file = local.yaml"
 			]
-			extra_arguments[
+			extra_arguments = [
 				"arg1",
 				"arg2"
 			]
 
 	[build.centos6-chef-solo]
 		type = "centos"
-		description = "CentOS6 with chef-silo provisioning"
-		builder_type = [
+		description = "CentOS6 with chef-solo provisioning"
+		builder_types = [
 			"virtualbox-iso"
 		]
+		provisioner_types = [
+			"chef-solo"
+		]
 		[build.centos6-chef-solo.provisioner.chef-solo]
-			cookbook_paths = [
-				"cookbooks"
-			]
-			remote_cookbook_paths= [
-				"remote_cookbooks"
-			]
-			run_list = [
-				"runlist"
-			]
-			settings = [
-				"config_template = chef.config.tpl",
-				"data_bags_path = data.bags.path",
-				"encrypted_data_bag_secret_path = encrypted.data.bag.secret.path",
-				"execute_command = :command_src_dir/:buildname/chef/execute.command"
-				"install_command = :command_src_dir/:buildname/chef/install.command"
-				"json = :src_dir/:buildname/chef/node_attributes.json
-				"prevent_sudo = false",
-				"roles_path = :src_dir/:buildname/roles",
-				"skip_install = false",
-				"staging_directory = :out_dir/staging/"
-			]
+			[build.centos6-chef-solo.provisioner.chef-solo.arrays]
+				cookbook_paths = [
+					"cookbooks"
+				]
+				remote_cookbook_paths= [
+					"remote_cookbooks"
+				]
+				run_list = [
+					"runlist"
+				]
+				settings = [
+					"config_template = chef.config.tpl",
+					"data_bags_path = data.bags.path",
+					"encrypted_data_bag_secret_path = encrypted.data.bag.secret.path",
+					"execute_command = :command_src_dir/:buildname/chef/execute.command",
+					"install_command = :command_src_dir/:buildname/chef/install.command",
+					"json = :src_dir/:buildname/chef/node_attributes.json",
+					"prevent_sudo = false",
+					"roles_path = :src_dir/:buildname/roles",
+					"skip_install = false",
+					"staging_directory = :out_dir/staging/"
+				]
 
