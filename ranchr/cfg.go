@@ -62,17 +62,23 @@ type builder struct {
 
 // Merge the settings section of a builder. New values supercede existing ones.
 func (b *builder) mergeSettings(new []string) {
+	if new == nil {
+		return
+	}
 	b.Settings = mergeSettingsSlices(b.Settings, new)
 }
 
 // mergeVMSettings Merge the VMSettings section of a builder. New values supercede existing ones.
 //
 func (b *builder) mergeVMSettings(new []string) {
+	if new == nil {
+		return
+	}
 	old := interfaceToStringSlice(b.Arrays[VMSettings])
-	fmt.Printf("mergeVMSettings%v\n", new)
-	fmt.Printf("mergeVMSettings%v\n", old)
 	old = mergeSettingsSlices(old, new)
-	fmt.Printf("mergeVMSettings%v\n", old)
+	if b.Arrays == nil {
+		b.Arrays = map[string]interface{}{}
+	}
 	b.Arrays[VMSettings] = old
 }
 

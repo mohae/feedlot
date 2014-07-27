@@ -105,7 +105,7 @@ var (
 	indent = "    "
 
 	//VMSetting is the constant for builders with vm-settings
-	VMSettings = "vm-settings"
+	VMSettings = "vm_settings"
 )
 
 var (
@@ -910,6 +910,9 @@ func getMergedBuilders(old map[string]builder, new map[string]builder) map[strin
 		return old
 	}
 
+	jww.TRACE.Println("getMergedBuilders-new:\t" + json.MarshalIndentToString(new, "", indent))
+	jww.TRACE.Println("getMergedBuilders-old:\t" + json.MarshalIndentToString(new[BuilderVirtualBoxISO], "", indent))
+
 	// Convert to an interface.
 	var ifaceOld map[string]interface{} = make(map[string]interface{}, len(old))
 	for i, o := range old {
@@ -926,17 +929,18 @@ func getMergedBuilders(old map[string]builder, new map[string]builder) map[strin
 	keys = keysFromMaps(ifaceOld, ifaceNew)
 
 	bM := map[string]builder{}
+	var vm_settings []string
 
 	for _, v := range keys {
 		b := builder{}
 		b = old[v]
 		b.mergeSettings(new[v].Settings)
-		vm_settings := interfaceToStringSlice(new[v].Arrays[VMSettings])
+		vm_settings = interfaceToStringSlice(new[v].Arrays[VMSettings])
 		b.mergeVMSettings(vm_settings)
 		bM[v] = b
 	}
 
-	jww.TRACE.Println("getMergedBuilders-OLD:\t" + json.MarshalIndentToString(old, "", indent))
+	jww.TRACE.Println("getMergedBuilders-old-postMerge:\t" + json.MarshalIndentToString(old, "", indent))
 	return bM
 }
 
