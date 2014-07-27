@@ -73,6 +73,7 @@ func (b *builder) mergeVMSettings(new []string) {
 	fmt.Printf("mergeVMSettings%v\n", old)
 	old = mergeSettingsSlices(old, new)
 	fmt.Printf("mergeVMSettings%v\n", old)
+	b.Arrays[VMSettings] = old
 }
 
 
@@ -89,7 +90,7 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 		m[k] = v
 	}
 
-	return nil
+	return m
 }
 
 // Type for handling the post-processor section of the configs.
