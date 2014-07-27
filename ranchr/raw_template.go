@@ -210,7 +210,7 @@ func (r *rawTemplate) mergeBuildSettings(bld rawTemplate) {
 	}
 
 	// merge the build portions.
-//	r.Builders = getMergedBuilders(r.Builders, bld.Builders)
+	r.Builders = getMergedBuilders(r.Builders, bld.Builders)
 //	r.PostProcessors = getMergedPostProcessors(r.PostProcessors, bld.PostProcessors)
 //	r.Provisioners = getMergedProvisioners(r.Provisioners, bld.Provisioners)
 

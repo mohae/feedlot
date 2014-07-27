@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -100,8 +101,11 @@ var (
 )
 
 var (
-	// Indent: default indent to use for marshal stuff
+	// indent: default indent to use for marshal stuff
 	indent = "    "
+
+	//VMSetting is the constant for builders with vm-settings
+	VMSettings = "vm-settings"
 )
 
 var (
@@ -409,7 +413,6 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	rTpl := newRawTemplate()
 	rTpl.createDistroTemplate(d)
 	
-
 	// Since distro builds don't actually have a build name, we create one
 	// out of the args used to create it.
 	rTpl.BuildName = d.Type + "-" + d.Release + "-" + d.Arch + "-" + d.Image
@@ -512,26 +515,6 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 
 	}
 
-	type Foo struct {
-		bar	int
-		baz	string
-		fiz	[]string
-	}
-
-	
-	foo := Foo{10, "baz", []string{"fee", "fie", "fo", "fum"}}
-	FooJSON := json.MarshalIndentToString(foo, "", "    ")
-	
-	f, err := os.Create("/tmp/foo.json")
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	io.WriteString(f, FooJSON)
-
-	f.Close()
-
 	var tpl, bld rawTemplate
 	var ok bool
 	// Check the type and create the defaults for that type, if it doesn't already exist.
@@ -572,7 +555,6 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 	// create build template() then call create packertemplate
 	tpl.build = supportedDefaults[bld.Type].build
 	tpl.mergeBuildSettings(bld)
-
 
 /* TODO disable creation of packer tempalte for now
 	pTpl := packerTemplate{}
@@ -940,19 +922,21 @@ func getMergedBuilders(old map[string]builder, new map[string]builder) map[strin
 	}
 
 	// Get all the keys from map.
-	var keys[]string
+	var keys []string
 	keys = keysFromMaps(ifaceOld, ifaceNew)
 
 	bM := map[string]builder{}
+
 	for _, v := range keys {
 		b := builder{}
 		b = old[v]
 		b.mergeSettings(new[v].Settings)
-// TODO abstraction fix
-//		b.mergeVMSettings(new[v].VMSettings)
+		vm_settings := interfaceToStringSlice(new[v].Arrays[VMSettings])
+		b.mergeVMSettings(vm_settings)
 		bM[v] = b
 	}
 
+	jww.TRACE.Println("getMergedBuilders-OLD:\t" + json.MarshalIndentToString(old, "", indent))
 	return bM
 }
 
@@ -1286,4 +1270,29 @@ func keysFromMaps(m ...map[string]interface{}) []string {
 	mergedKeys := MergeSlices(types...)
 
 	return mergedKeys
+}
+
+// interfaceToStringSlice takes an interface and returns a slice of strings.
+// returns an error if interface is not a slice of strings
+func interfaceToStringSlice(v interface{}) []string {
+	if v == nil {
+		return nil
+	}
+
+	var sl []string
+
+	switch reflect.TypeOf(v).Kind() {
+	case reflect.Slice:
+		s := reflect.ValueOf(v)
+
+		sLen := s.Len()
+		for i := 0; i < sLen; i++ {
+			sl[i] = s.Index(i).String()
+		}
+
+	default:
+		return nil
+	}
+		
+	return sl
 }

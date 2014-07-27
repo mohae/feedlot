@@ -29,7 +29,7 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 
 	// Generate the builders for each builder type.
 	for _, bType := range r.BuilderTypes {
-		jww.TRACE.Println(json.MarshalIndentToString(bType, "", indent))
+		jww.TRACE.Println(bType)
 
 		// TODO calculate the length of the two longest Settings and VMSettings sections and make it
 		// that length. That will prevent a panic should there be more than 50 options. Besides its
@@ -93,6 +93,8 @@ func (r *rawTemplate) createBuilderVirtualBoxISO() (settings map[string]interfac
 	// Each create function is responsible for setting its own type.
 	settings["type"] = BuilderVirtualBoxISO
 
+	jww.TRACE.Println("createBuilderVirtualBoxISO--common:\t" + json.MarshalIndentToString(r.Builders[BuilderCommon].Settings, "", indent))
+	jww.TRACE.Println("createBuilderVirtualBoxISO--\t" + json.MarshalIndentToString(r.Builders[BuilderVirtualBoxISO].Settings, "", indent))
 	// Merge the settings between common and this builders.
 	mergedSlice := mergeSettingsSlices(r.Builders[BuilderCommon].Settings, r.Builders[BuilderVirtualBoxISO].Settings)
 
@@ -189,6 +191,9 @@ func (r *rawTemplate) createBuilderVirtualBoxISO() (settings map[string]interfac
 
 		}
 	}
+
+	jww.TRACE.Println("settings:\t" + json.MarshalIndentToString(settings, "", indent))
+	jww.TRACE.Println("arrays:\t" + json.MarshalIndentToString(r.Builders[BuilderVirtualBoxISO].Arrays, "", indent))
 	// Generate Packer Variables
 	// Generate builder specific section
 /*

@@ -28,21 +28,21 @@ type build struct {
 
 	// A map of builder configuration. There should always be a `common`
 	// builder, which has settings common to both VMWare and VirtualBox.
-	Builders map[string]templateSection `toml:"builders"`
+	Builders map[string]builder `toml:"builders"`
 
 	// Targeted post-processors: the values are consistent with Packer's, e.g.
 	// `vagrant` is used for Vagrant.
 	PostProcessorTypes []string `toml:"post_processor_types"`
 
 	// A map of post-processor configurations.
-	PostProcessors map[string]templateSection `toml:"post_processors"`
+	PostProcessors map[string]postProcessor `toml:"post_processors"`
 
 	// Targeted provisioners: the values are consistent with Packer's, e.g.
 	// `shell` is used for shell.
 	ProvisionerTypes []string `toml:"provisioner_types"`
 
 	// A map of provisioner configurations.
-	Provisioners map[string]templateSection `toml:"provisioners"`
+	Provisioners map[string]provisioner `toml:"provisioners"`
 }
 
 // templateSection is used as an embedded type.
@@ -59,16 +59,22 @@ type builder struct {
 }
 
 
+
 // Merge the settings section of a builder. New values supercede existing ones.
 func (b *builder) mergeSettings(new []string) {
 	b.Settings = mergeSettingsSlices(b.Settings, new)
 }
-/*
-// Merge the VMSettings section of a builder. New values supercede existing ones.
-func (b *builder) mergeArrays(new []string) {
-//	b.VMSettings = mergeArrays(b.Arrays, new)
+
+// mergeVMSettings Merge the VMSettings section of a builder. New values supercede existing ones.
+//
+func (b *builder) mergeVMSettings(new []string) {
+	old := interfaceToStringSlice(b.Arrays[VMSettings])
+	fmt.Printf("mergeVMSettings%v\n", new)
+	fmt.Printf("mergeVMSettings%v\n", old)
+	old = mergeSettingsSlices(old, new)
+	fmt.Printf("mergeVMSettings%v\n", old)
 }
-*/
+
 
 // Go through all of the Settings and convert them to a map. Each setting
 // is parsed into its constituent parts. The value then goes through
