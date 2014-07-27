@@ -39,13 +39,15 @@
 	    		"shutdown_command = :command_src_dir/shutdown_test.command"
 		]
 		[distro.ubuntu.builders.virtualbox-iso]
-		vm_settings = [
-			"memory=2048"
-		]
+			[distro.ubuntu.builders.virtualbox-iso.arrays]
+			vm_settings = [
+				"memory=2048"
+			]
 		[distro.ubuntu.builders.vmware-iso]
-		vm_settings = [
-			"memsize=2048"
-		]
+			[distro.ubuntu.builders.vmware-iso.arrays]
+			vm_settings = [
+				"memsize=2048"
+			]
 	[distro.ubuntu.post_processors]
 		[distro.ubuntu.post_processors.vagrant]
 		settings = [
@@ -57,13 +59,13 @@
 				"execute_command = :command_src_dir/execute_test.command"
 			]
 			[distro.ubuntu.provisioners.shell.arrays]
-				scripts = [ 
-					":scripts_dir/setup_test.sh",
-					":scripts_dir/base_test.sh",
-					":scripts_dir/vagrant_test.sh",
-					":scripts_dir/sudoers_test.sh",
-					":scripts_dir/cleanup_test.sh"
-				]
+			scripts = [ 
+				":scripts_dir/setup_test.sh",
+				":scripts_dir/base_test.sh",
+				":scripts_dir/vagrant_test.sh",
+				":scripts_dir/sudoers_test.sh",
+				":scripts_dir/cleanup_test.sh"
+			]
 
 	[distro.centos]
 	base_url = ""

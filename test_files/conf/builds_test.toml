@@ -9,8 +9,15 @@
 		arch = "amd64"
 		image = "server"
 		release = "1204"
-		builder_type = [
+		builder_types = [
 			"virtualbox-iso"
+		]
+		post_processor_types = [
+			"vagrant",
+			"vagrant-cloud"
+		]
+		provisioner_types = [
+			"shell"
 		]
 		[build.test1.builders]
 			[build.test1.builders.common]
@@ -18,21 +25,18 @@
 				"ssh_wait_timeout = 300m"
 			]
 			[build.test1.builders.virtualbox-iso]
-			vm_settings = [
-				"memory=4096"
-			]
-		post_processor_types = [
-			"vagrant",
-			"vagrant-cloud"
-		]
+				[build.test1.builders.virtualbox-iso.arrays]
+				vm_settings = [
+					"memory=4096"
+				]
 		[build.test1.post_processors]
 			[build.test1.post_processors.vagrant]
 			settings = [
 				"output = :out_dir/packer.box"
 			]
 				[build.test1.post_processors.vagrant.arrays]
-					except = ["docker"]
-					only = ["virtualbox-iso"]
+				except = ["docker"]
+				only = ["virtualbox-iso"]
 
 			[build.test1.post_processors.vagrant-cloud]
 			settings = [
@@ -41,9 +45,6 @@
 				"no_release = false",
 				"version = 1.0.2"
 			]
-		provisioner_types = [
-			"shell"
-		]
 		[build.test1.provisioners]
 			[build.test1.provisioners.shell]
 			settings = [
@@ -63,27 +64,28 @@
 		arch = "amd64"
 		image = "desktop"
 		release = "1204"
-		builder_type = [
+		builder_types = [
 			"virtualbox-iso",
 			"vmware-iso"
 		]
 		[build.test2.builders]
 			[build.test2.builders.common]
-			settings = [
-				"ssh_wait_timeout = 300m"
-			]
+				settings = [
+					"ssh_wait_timeout = 300m"
+				]
 			[build.test2.builders.virtualbox-iso]
-			vm_settings = [
-				"memory=4096"
-			]
+				[build.test2.builders.virtualbox-iso.arrays]
+				vm_settings = [
+					"memory=4096"
+				]
 
         [build.test-centos6-salt]
 		type = "centos"
 		description = "Test build template for salt provisioner using CentOS6"
-		builder_type = [
+		builder_types = [
 			"virtualbox-iso"
 		]
-		provisioner_type = [
+		provisioner_types = [
 			"shell",
 			"salt-masterless"
 		]

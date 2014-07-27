@@ -9,7 +9,7 @@
 [distro]
 
 	[distro.ubuntu]
-		base_url = "http://releases.ubuntu.com"
+		base_url = "http://releases.ubuntu.com/"
 		description = "Default template config and Rancher options for Ubuntu"
         	arch = [
         		"i386",

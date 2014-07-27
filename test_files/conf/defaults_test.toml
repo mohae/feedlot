@@ -21,6 +21,13 @@ builder_types = [
     "virtualbox-iso",
     "vmware-iso"
 ]
+post_processor_types = [
+	"vagrant",
+	"vagrant-cloud"
+]
+provisioner_types = [
+	"shell"
+]
 [builders]
 	[builders.common]
 		settings = [	
@@ -51,10 +58,6 @@ builder_types = [
 			"memsize=1024",
 			"numvcpus=1"
 		]
-post_processor_types = [
-	"vagrant",
-	"vagrant-cloud"
-]
 [post_processors]
 	[post_processors.vagrant]
 		settings = [
@@ -75,10 +78,6 @@ post_processor_types = [
 			"no_release = true",
 			"version = 1.0.1"
 		]
-
-provisioner_types = [
-	"shell"
-]
 [provisioners]
 	[provisioners.shell]
 		settings = [
