@@ -1284,8 +1284,8 @@ func interfaceToStringSlice(v interface{}) []string {
 	switch reflect.TypeOf(v).Kind() {
 	case reflect.Slice:
 		s := reflect.ValueOf(v)
-
 		sLen := s.Len()
+		sl = make([]string, sLen)
 		for i := 0; i < sLen; i++ {
 			sl[i] = s.Index(i).String()
 		}
