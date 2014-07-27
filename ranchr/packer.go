@@ -29,7 +29,7 @@ type packerTemplate struct {
 // handling of source artifacts, including their directories, and their output
 // settings.
 func (p *packerTemplate) TemplateToFileJSON(i IODirInf, b BuildInf, scripts []string) error {
-	jww.DEBUG.Printf("%v/n%v/n%v", i, b, scripts)
+	jww.DEBUG.Printf("%v/n%v/n%v", i, b, json.MarshalIndentToString(scripts, "", indent))
 
 	if i.HTTPDir == "" {
 		err := errors.New("ranchr.TemplateToFileJSON: HTTPDir directory for " + b.BuildName + " not set")

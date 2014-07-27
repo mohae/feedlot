@@ -14,62 +14,64 @@ builder_types = [
     "virtualbox-iso",
     "vmware-iso"
 ]
-[builders]
-	[builders.common]
-		settings = [	
-			"boot_command = :commands_src_dir/boot.command",
-			"boot_wait = 5s",
-			"disk_size = 20000",
-			"headless = true",
-			"http_directory = :http_dir",
-			"iso_checksum_type = sha256",
-			"shutdown_command = :commands_src_dir/shutdown.command",
-			"ssh_password = vagrant",
-			"ssh_port = 22",
-			"ssh_username = vagrant",
-			"ssh_wait_timeout = 240m",
-		]
-	[builders.virtualbox-iso]
-		settings = [
-			"guest_os_type = ",
-			"virtualbox_version_file = .vbox_version"
-		]
-		vm_settings = [
-			"cpus=1",
-			"memory=1024"	
-		]
-	[builders.vmware-iso]
-		settings = [
-			"guest_os_type = ",
-		]
-		vm_settings = [
-			"cpuid.coresPerSocket=1",
-			"memsize=1024",
-			"numvcpus=1"
-		]
 post_processor_types = [
 	"vagrant"
 ]
-[post_processors]
-	[post_processors.vagrant]
-		settings = [
-			"compression_level = 9",
-			"keep_input_artifact = false",
-			"output = out/vagrant/"
-		]
 provisioner_types = [
 	"shell"
 ]
+[builders]
+	[builders.common]
+	settings = [	
+		"boot_command = :commands_src_dir/boot.command",
+		"boot_wait = 5s",
+		"disk_size = 20000",
+		"headless = true",
+		"http_directory = :http_dir",
+		"iso_checksum_type = sha256",
+		"shutdown_command = :commands_src_dir/shutdown.command",
+		"ssh_password = vagrant",
+		"ssh_port = 22",
+		"ssh_username = vagrant",
+		"ssh_wait_timeout = 240m",
+	]
+	[builders.virtualbox-iso]
+	settings = [
+		"guest_os_type = ",
+		"virtualbox_version_file = .vbox_version"
+	]
+	[builders.virtualbox-iso.arrays]
+	vm_settings = [
+		"cpus=1",
+		"memory=1024"	
+	]
+	[builders.vmware-iso]
+	settings = [
+		"guest_os_type = ",
+	]
+	[builders.vmware-iso.arrays]
+	vm_settings = [
+		"cpuid.coresPerSocket=1",
+		"memsize=1024",
+		"numvcpus=1"
+	]
+[post_processors]
+	[post_processors.vagrant]
+	settings = [
+		"compression_level = 9",
+		"keep_input_artifact = false",
+		"output = out/vagrant/"
+	]
 [provisioners]
 	[provisioners.shell]
-		settings = [
-			"execute_command = :commands_src_dir/execute.command"
-		]
-		[provisioners.shell.arrays]
-			scripts = [ 
-				":scripts_dir/setup.sh",
-				":scripts_dir/vagrant.sh",
-				":scripts_dir/sudoers.sh",
-				":scripts_dir/cleanup.sh",
-			]
+	settings = [
+		"execute_command = :commands_src_dir/execute.command"
+	]
+	[provisioners.shell.arrays]
+	scripts = [ 
+		":scripts_dir/setup.sh",
+		":scripts_dir/vagrant.sh",
+		":scripts_dir/sudoers.sh",
+		":scripts_dir/cleanup.sh",
+	]
 

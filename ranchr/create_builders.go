@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	json "github.com/mohae/customjson"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -28,7 +29,7 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 
 	// Generate the builders for each builder type.
 	for _, bType := range r.BuilderTypes {
-		jww.TRACE.Println(bType)
+		jww.TRACE.Println(json.MarshalIndentToString(bType, "", indent))
 
 		// TODO calculate the length of the two longest Settings and VMSettings sections and make it
 		// that length. That will prevent a panic should there be more than 50 options. Besides its
@@ -190,6 +191,7 @@ func (r *rawTemplate) createBuilderVirtualBoxISO() (settings map[string]interfac
 	}
 	// Generate Packer Variables
 	// Generate builder specific section
+/*
 	tmpVB := make([][]string, len(r.Builders[BuilderVirtualBoxISO].VMSettings))
 
 	for i, v := range r.Builders[BuilderVirtualBoxISO].VMSettings {
@@ -202,7 +204,7 @@ func (r *rawTemplate) createBuilderVirtualBoxISO() (settings map[string]interfac
 		tmpVB[i][3] = val
 	}
 	settings["vboxmanage"] = tmpVB
-
+*/
 	return settings, nil, nil
 }
 

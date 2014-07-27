@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
+	json "github.com/mohae/customjson"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -96,6 +97,11 @@ var (
 	// Shell provisioner is technically the Shell Script provisioner, in
 	// the Packer documentation
 	ProvisionerShellScripts = ProvisionerShell
+)
+
+var (
+	// Indent: default indent to use for marshal stuff
+	indent = "    "
 )
 
 var (
@@ -402,6 +408,7 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	// Now everything can get put in a template
 	rTpl := newRawTemplate()
 	rTpl.createDistroTemplate(d)
+	
 
 	// Since distro builds don't actually have a build name, we create one
 	// out of the args used to create it.
@@ -505,6 +512,26 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 
 	}
 
+	type Foo struct {
+		bar	int
+		baz	string
+		fiz	[]string
+	}
+
+	
+	foo := Foo{10, "baz", []string{"fee", "fie", "fo", "fum"}}
+	FooJSON := json.MarshalIndentToString(foo, "", "    ")
+	
+	f, err := os.Create("/tmp/foo.json")
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	io.WriteString(f, FooJSON)
+
+	f.Close()
+
 	var tpl, bld rawTemplate
 	var ok bool
 	// Check the type and create the defaults for that type, if it doesn't already exist.
@@ -545,6 +572,7 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 	// create build template() then call create packertemplate
 	tpl.build = supportedDefaults[bld.Type].build
 	tpl.mergeBuildSettings(bld)
+
 
 /* TODO disable creation of packer tempalte for now
 	pTpl := packerTemplate{}
@@ -617,7 +645,7 @@ func commandsFromFile(name string) (commands []string, err error) {
 // setDistrosDefaults takes the defaults and suppported settings and creates
 // default build settings for each supported distro.
 func setDistrosDefaults(d *defaults, s *supported) (map[string]rawTemplate, error) {
-	jww.TRACE.Printf("defaults: %v\nsupported %v", d, s)
+	jww.TRACE.Printf("defaults: %v\nsupported %v", json.MarshalIndentToString(d, "", indent), json.MarshalIndentToString(s, "", indent))
 	// Create the distro default map
 	dd := map[string]rawTemplate{}
 
@@ -920,7 +948,8 @@ func getMergedBuilders(old map[string]builder, new map[string]builder) map[strin
 		b := builder{}
 		b = old[v]
 		b.mergeSettings(new[v].Settings)
-		b.mergeVMSettings(new[v].VMSettings)
+// TODO abstraction fix
+//		b.mergeVMSettings(new[v].VMSettings)
 		bM[v] = b
 	}
 
@@ -1258,4 +1287,3 @@ func keysFromMaps(m ...map[string]interface{}) []string {
 
 	return mergedKeys
 }
-		

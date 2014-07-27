@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	json "github.com/mohae/customjson"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -198,7 +199,7 @@ func (r *rawTemplate) variableSection() (map[string]interface{}, error) {
 // updated depends on whether this is a build from a distribution's default 
 // template or from a defined build template.
 func (r *rawTemplate) mergeBuildSettings(bld rawTemplate) {
-	jww.DEBUG.Print(bld)
+	jww.TRACE.Print(json.MarshalIndentToString(bld, "", indent))
 	r.IODirInf.update(bld.IODirInf)
 	r.PackerInf.update(bld.PackerInf)
 	r.BuildInf.update(bld.BuildInf)
@@ -209,8 +210,8 @@ func (r *rawTemplate) mergeBuildSettings(bld rawTemplate) {
 	}
 
 	// merge the build portions.
-	r.Builders = getMergedBuilders(r.Builders, bld.Builders)
-	r.PostProcessors = getMergedPostProcessors(r.PostProcessors, bld.PostProcessors)
+//	r.Builders = getMergedBuilders(r.Builders, bld.Builders)
+//	r.PostProcessors = getMergedPostProcessors(r.PostProcessors, bld.PostProcessors)
 //	r.Provisioners = getMergedProvisioners(r.Provisioners, bld.Provisioners)
 
 	return
@@ -220,7 +221,7 @@ func (r *rawTemplate) mergeBuildSettings(bld rawTemplate) {
 // seem to reflect what it actually is doing.
 // TODO rename this 
 func (r *rawTemplate) mergeDistroSettings(d *distro) {
-	jww.TRACE.Printf("%v\n%v", r, d)
+	jww.TRACE.Printf("%v\n%v", json.MarshalIndentToString(r, "", indent), json.MarshalIndentToString(d, "", indent))
 	// merges Settings between an old and new template.
 	// Note: Arch, Image, and Release are not updated here as how these fields
 	// are updated depends on whether this is a build from a distribution's
@@ -235,11 +236,11 @@ func (r *rawTemplate) mergeDistroSettings(d *distro) {
 	}
 
 	// merge the build portions.
-	jww.TRACE.Printf("Merging old Builder: %v\nand new Builder: %v", r.Builders, d.Builders)
-	r.Builders = getMergedBuilders(r.Builders, d.Builders)
-	jww.TRACE.Printf("Merged Builder: %v", r.Builders)
-	r.PostProcessors = getMergedPostProcessors(r.PostProcessors, d.PostProcessors)
-	jww.TRACE.Printf("Merged PostProcessors: %v", r.PostProcessors)
+	jww.TRACE.Printf("Merging old Builder: %v\nand new Builder: %v", json.MarshalIndentToString(r.Builders, "", indent), json.MarshalIndentToString(d.Builders, "", indent))
+//	r.Builders = getMergedBuilders(r.Builders, d.Builders)
+//	jww.TRACE.Printf("Merged Builder: %v", r.Builders)
+//	r.PostProcessors = getMergedPostProcessors(r.PostProcessors, d.PostProcessors)
+//	jww.TRACE.Printf("Merged PostProcessors: %v", r.PostProcessors)
 //	r.Provisioners = getMergedProvisioners(r.Provisioners, d.Provisioners)
 //	jww.TRACE.Printf("Merged Provisioners: %v", r.Provisioners)
 	return

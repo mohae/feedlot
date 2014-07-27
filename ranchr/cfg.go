@@ -16,6 +16,7 @@ import (
 	"sync"
 
 	"github.com/BurntSushi/toml"
+	json "github.com/mohae/customjson"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -27,49 +28,54 @@ type build struct {
 
 	// A map of builder configuration. There should always be a `common`
 	// builder, which has settings common to both VMWare and VirtualBox.
-	Builders map[string]builder `toml:"builders"`
+	Builders map[string]templateSection `toml:"builders"`
 
 	// Targeted post-processors: the values are consistent with Packer's, e.g.
 	// `vagrant` is used for Vagrant.
 	PostProcessorTypes []string `toml:"post_processor_types"`
 
 	// A map of post-processor configurations.
-	PostProcessors map[string]postProcessor `toml:"post_processors"`
+	PostProcessors map[string]templateSection `toml:"post_processors"`
 
 	// Targeted provisioners: the values are consistent with Packer's, e.g.
 	// `shell` is used for shell.
 	ProvisionerTypes []string `toml:"provisioner_types"`
 
 	// A map of provisioner configurations.
-	Provisioners map[string]provisioner `toml:"provisioners"`
+	Provisioners map[string]templateSection `toml:"provisioners"`
 }
 
-// Defines a representation of the builder section of a Packer template.
+// templateSection is used as an embedded type.
+type templateSection struct {
+	// Settings are string settings in "key=value" format.
+	Settings []string
+	
+	// Arrays are the string array settings.
+	Arrays map[string]interface{}
+}
+// builder represents a builder Packer template section.
 type builder struct {
-	// Settings that are common to both builders.
-	Settings []string `toml:"settings"`
-
-	// VM Specific settings. Each VM builder should have its own defined.
-	// The 'common' builder does not have this section
-	VMSettings []string `toml:"vm_settings"`
+	templateSection
 }
+
 
 // Merge the settings section of a builder. New values supercede existing ones.
 func (b *builder) mergeSettings(new []string) {
 	b.Settings = mergeSettingsSlices(b.Settings, new)
 }
-
+/*
 // Merge the VMSettings section of a builder. New values supercede existing ones.
-func (b *builder) mergeVMSettings(new []string) {
-	b.VMSettings = mergeSettingsSlices(b.VMSettings, new)
+func (b *builder) mergeArrays(new []string) {
+//	b.VMSettings = mergeArrays(b.Arrays, new)
 }
+*/
 
 // Go through all of the Settings and convert them to a map. Each setting
 // is parsed into its constituent parts. The value then goes through
 // variable replacement to ensure that the settings are properly resolved.
 func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 	var k, v string
-	m := make(map[string]interface{}, len(b.Settings)+len(b.VMSettings))
+	m := make(map[string]interface{})
 
 	for _, s := range b.Settings {
 		k, v = parseVar(s)
@@ -77,16 +83,12 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 		m[k] = v
 	}
 
-	return m
+	return nil
 }
 
 // Type for handling the post-processor section of the configs.
 type postProcessor struct {
-	// Settings are string settings in "key=value" format.
-	Settings []string
-	
-	// Arrays are the string array settings.
-	Arrays map[string]interface{}
+	templateSection
 }
 
 // Merge the settings section of a post-processor. New values supercede
@@ -121,17 +123,13 @@ func (p *postProcessor) settingsToMap(Type string, r *rawTemplate) map[string]in
 		m[k] = v
 	}
 
-	jww.TRACE.Printf("post-processors Map: %v\n",m)
+	jww.TRACE.Printf("post-processors Map: %v\n", json.MarshalIndentToString(m, "", indent))
 	return m
 }
 
 // provisioner: type for common elements for provisioners.
 type provisioner struct {
-	// Settings are string settings in "key=value" format.
-	Settings []string
-	
-	// Arrays are the string array settings.
-	Arrays map[string]interface{}
+	templateSection
 }
 
 /*
@@ -344,7 +342,7 @@ func (d *defaults) LoadOnce() error {
 		return err
 	}
 
-	jww.DEBUG.Printf("defaults loaded: %v", d)
+	jww.TRACE.Printf("defaults loaded: %v", json.MarshalIndentToString(d, "", indent))
 	d.loaded = true
 
 	return nil
@@ -423,7 +421,7 @@ func (s *supported) LoadOnce() error {
 		return err
 	}
 
-	jww.DEBUG.Printf("supported loaded: %v", s)
+	jww.TRACE.Printf("supported loaded: %v", json.MarshalIndentToString(s, "", indent))
 	return nil
 }
 
@@ -466,7 +464,7 @@ func (b *builds) LoadOnce() error {
 		return err
 	}
 
-	jww.DEBUG.Printf("builds loaded: %v", b)
+	jww.TRACE.Printf("builds loaded: %v", json.MarshalIndentToString(b, "", indent))
 	return nil
 }
 
@@ -496,6 +494,6 @@ func (b *buildLists) Load() error {
 		return err
 	}
 
-	jww.DEBUG.Printf("buildLists loaded: %v", b)
+	jww.TRACE.Printf("buildLists loaded: %v", json.MarshalIndentToString(b, "", indent))
 	return nil
 }
