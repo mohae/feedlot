@@ -556,7 +556,6 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 	tpl.build = supportedDefaults[bld.Type].build
 	tpl.mergeBuildSettings(bld)
 
-/* TODO disable creation of packer tempalte for now
 	pTpl := packerTemplate{}
 	var err error
 
@@ -566,11 +565,11 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 		return
 	}
 
+	jww.TRACE.Println("buildPackerTemplateFromNamedBuild-post tpl.createPackerTemplate:\n" + json.MarshalIndentToString(pTpl, "", indent))
 	// Process the scripts for the Packer template.
-	var scripts []string
-	scripts = tpl.ScriptNames()
+//	var scripts []string
+//	scripts = tpl.ScriptNames()
 
-*/
 
 /* TODO, disable writing out of final template, for now
 	if err = pTpl.TemplateToFileJSON(tpl.IODirInf, tpl.BuildInf, scripts); err != nil {
@@ -582,6 +581,18 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 	jww.INFO.Println("Created Packer template and associated build directory for build:" + buildName + ".")
 	doneCh <- nil
 	return
+}
+
+// getSliceLenFromIface takes an interface that's assumed to be a slice and
+// returns its length. If it is not a slice, an error is returned.
+func getSliceLenFromIface(v interface{}) (int, error) {
+	switch reflect.TypeOf(v).Kind() {
+	case reflect.Slice:
+		sl := reflect.ValueOf(v)
+		return sl.Len(), nil
+	}
+
+	return 0, fmt.Errorf("err: getSliceLenFromIface expected a slice, go" + reflect.TypeOf(v).Kind().String())
 }
 
 // Takes the name of the command file, including path, and returns a slice of
@@ -936,8 +947,13 @@ func getMergedBuilders(old map[string]builder, new map[string]builder) map[strin
 		b = old[v]
 		b.mergeSettings(new[v].Settings)
 		vm_settings = interfaceToStringSlice(new[v].Arrays[VMSettings])
-		b.mergeVMSettings(vm_settings)
-		bM[v] = b
+		// If there is anything to merge, do so
+		if vm_settings != nil {
+			jww.TRACE.Println("getMergedBuilders-build-preMerge:\t" + json.MarshalIndentToString(b, "", indent))			
+			b.mergeVMSettings(vm_settings)
+			jww.TRACE.Println("getMergedBuilders-build-preMerge:\t" + json.MarshalIndentToString(b, "", indent))			
+			bM[v] = b
+		}
 	}
 
 	jww.TRACE.Println("getMergedBuilders-old-postMerge:\t" + json.MarshalIndentToString(old, "", indent))
@@ -1289,9 +1305,9 @@ func interfaceToStringSlice(v interface{}) []string {
 	case reflect.Slice:
 		s := reflect.ValueOf(v)
 		sLen := s.Len()
-		sl = make([]string, sLen)
+
 		for i := 0; i < sLen; i++ {
-			sl[i] = s.Index(i).String()
+			sl = append(sl, s.Index(i).Interface().(string))
 		}
 
 	default:

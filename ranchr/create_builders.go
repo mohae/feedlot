@@ -75,9 +75,9 @@ func (r *rawTemplate) createBuilderVMWareISO() (settings map[string]interface{},
 	tmpS["type"] = bType
 
 	// Generate builder specific section
-	tmpvm := make(map[string]string, len(r.Builders[bType].VMSettings))
+	tmpvm := make(map[string]string, len(r.Builders[bType].Arrays[VMSettings]))
 
-	for i, v = range r.Builders[bType].VMSettings {
+	for i, v = range r.Builders[bType].Arrays[VMSettings] {
 		k, val = parseVar(v)
 		val = r.replaceVariables(val)
 		tmpvm[k] = val
@@ -196,10 +196,16 @@ func (r *rawTemplate) createBuilderVirtualBoxISO() (settings map[string]interfac
 	jww.TRACE.Println("arrays:\t" + json.MarshalIndentToString(r.Builders[BuilderVirtualBoxISO].Arrays, "", indent))
 	// Generate Packer Variables
 	// Generate builder specific section
-/*
-	tmpVB := make([][]string, len(r.Builders[BuilderVirtualBoxISO].VMSettings))
+	l, err := getSliceLenFromIface(r.Builders[BuilderVirtualBoxISO].Arrays[VMSettings])
+	if err != nil {	
+		return nil, nil, err
+	}
 
-	for i, v := range r.Builders[BuilderVirtualBoxISO].VMSettings {
+	jww.TRACE.Println(l)
+	tmpVB := make([][]string, l)
+	vm_settings := interfaceToStringSlice(r.Builders[BuilderVirtualBoxISO].Arrays[VMSettings])
+	jww.TRACE.Println("createBuilderVirtualBoxISO-vm_settings-slice" + json.MarshalIndentToString(vm_settings, "", indent))
+	for i, v := range vm_settings {
 		k, val := parseVar(v)
 		val = r.replaceVariables(val)
 		tmpVB[i] = make([]string, 4)
@@ -208,8 +214,9 @@ func (r *rawTemplate) createBuilderVirtualBoxISO() (settings map[string]interfac
 		tmpVB[i][2] = "--" + k
 		tmpVB[i][3] = val
 	}
+
 	settings["vboxmanage"] = tmpVB
-*/
+
 	return settings, nil, nil
 }
 
