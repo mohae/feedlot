@@ -12,52 +12,6 @@ import (
 	jww "github.com/spf13/jwalterweatherman"
 )
 
-// builder represents a builder Packer template section.
-type builder struct {
-	templateSection
-}
-
-
-
-// Merge the settings section of a builder. New values supercede existing ones.
-func (b *builder) mergeSettings(new []string) {
-	if new == nil {
-		return
-	}
-	b.Settings = mergeSettingsSlices(b.Settings, new)
-}
-
-// mergeVMSettings Merge the VMSettings section of a builder. New values supercede existing ones.
-//
-func (b *builder) mergeVMSettings(new []string) {
-	if new == nil {
-		return
-	}
-	old := interfaceToStringSlice(b.Arrays[VMSettings])
-	old = mergeSettingsSlices(old, new)
-	if b.Arrays == nil {
-		b.Arrays = map[string]interface{}{}
-	}
-	b.Arrays[VMSettings] = old
-}
-
-
-// Go through all of the Settings and convert them to a map. Each setting
-// is parsed into its constituent parts. The value then goes through
-// variable replacement to ensure that the settings are properly resolved.
-func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
-	var k, v string
-	m := make(map[string]interface{})
-
-	for _, s := range b.Settings {
-		k, v = parseVar(s)
-		v = r.replaceVariables(v)
-		m[k] = v
-	}
-
-	return m
-}
-
 // r.createBuilders takes a raw builder and create the appropriate Packer
 // Builders along with a slice of variables for that section builder type.
 // Some Settings are in-lined instead of adding them to the variable section.
@@ -84,7 +38,7 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 	// for BuilderCommon as everything else is usually builder specific, even
 	// if they have common names, e.g. difference between specifying memory 
 	// between VMWare and VirtualBox.
-//	r.upddateBuilderCommon
+//	r.updateBuilderCommon
 
 
 	jww.TRACE.Println("rawTemplate.createBuilders:\t" + json.MarshalIndentToString(r, "", indent))
@@ -281,7 +235,7 @@ func (r *rawTemplate) createBuilderVirtualBoxISO() (settings map[string]interfac
 /*
 vmx
 */
-// r.createBuilderVirtualboxISO generates the settings for a vmware-iso builder.
+// r.createBuilderVMWareISO generates the settings for a vmware-iso builder.
 func (r *rawTemplate) createBuilderVMWareISO() (settings map[string]interface{}, vars []string, err error) {
 	// Each create function is responsible for setting its own type.
 	settings["type"] = BuilderVMWareISO
@@ -434,7 +388,7 @@ func (r *rawTemplate) updateBuilders(new map[string]*builder) {
 	// Get all the keys from map.
 	var keys []string
 	keys = keysFromMaps(ifaceOld, ifaceNew)
-	jww.TRACE.Println("rawTemplate.updateBuilders keys: \t" + fmt.Sprintf("%v", keys))
+
 	bM := map[string]builder{}
 	var vm_settings []string
 
@@ -468,36 +422,6 @@ func (r *rawTemplate) updateBuilders(new map[string]*builder) {
 
 	jww.TRACE.Println("rawTemplate.updateBuilders-r.Builders-postMerge:\t" + json.MarshalIndentToString(r.Builders, "", indent))
 	return 
-}
-
-// r.updateBuildSettings merges Settings between an old and new template. Note:
-// Arch, Image, and Release are not updated here as how these fields are 
-// updated depends on whether this is a build from a distribution's default 
-// template or from a defined build template.
-func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
-	jww.TRACE.Print(json.MarshalIndentToString(bld, "", indent))
-	r.IODirInf.update(bld.IODirInf)
-	r.PackerInf.update(bld.PackerInf)
-	r.BuildInf.update(bld.BuildInf)
-
-	// If defined, Builders override any prior builder Settings.
-	if bld.BuilderTypes != nil && len(bld.BuilderTypes) > 0 {
-		r.BuilderTypes = bld.BuilderTypes
-	}
-
-	// TODO merge the build portions.
-	// Should this be broken up? No
-	// it should be calling a method so nothing is returned!
-	//
-	// Plan: 
-	//	update builders
-	r.updateBuilders(bld.Builders)
-//	r.updatePostProcessors(bld.PostProcessors)
-//	r.updateProvisioners(bld.Provisioners)
-//	r.PostProcessors = getMergedPostProcessors(r.PostProcessors, bld.PostProcessors)
-//	r.Provisioners = getMergedProvisioners(r.Provisioners, bld.Provisioners)
-
-	return
 }
 
 // r.updateBuilderCommonSettings updates rawTemplate's BuilderCommon settings

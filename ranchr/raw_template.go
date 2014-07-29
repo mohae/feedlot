@@ -70,6 +70,11 @@ func newRawTemplate() *rawTemplate {
 	splitDate := strings.Split(date.String(), " ")
 	return &rawTemplate{date: splitDate[0], delim: os.Getenv(EnvParamDelimStart)}
 }
+//
+// ASDFJKWJETGFOJAW EJAWERTGJOAWORJGQAWJORGOJ#WQRG%$JW#A JM
+// AKGOFPRAJKETFOQAWJE$TGPFQ$TGJ Q#$TQPJ$TG#QWJGHPQJ%GYHPJQ#%YGJHP
+// ASDFJKWJETGFOJAW EJAWERTGJOAWORJGQAWJORGOJ#WQRG%$JW#A JM
+// AKGOFPRAJKETFOQAWJE$TGPFQ$TGJ Q#$TQPJ$TG#QWJGHPQJ%GYHPJQ#%YGJHP
 
 // r.setDefaultTemplate sets the current template with the passed template
 // information, which is the distro's default template. All raw templates start
@@ -200,7 +205,7 @@ func (r *rawTemplate) variableSection() (map[string]interface{}, error) {
 // final default settings for each supported distribution.
 //
 func (r *rawTemplate) update(d *distro) {
-	jww.TRACE.Printf("%v\n%v", json.MarshalIndentToString(r, "", indent), json.MarshalIndentToString(d, "", indent))
+	jww.TRACE.Println("rawTemplate.update\n" + json.MarshalIndentToString(d, "", indent))
 	// merges Settings between an old and new template.
 	// Note: Arch, Image, and Release are not updated here as how these fields
 	// are updated depends on whether this is a build from a distribution's
@@ -224,16 +229,46 @@ func (r *rawTemplate) update(d *distro) {
 		r.ProvisionerTypes = d.ProvisionerTypes
 	}
 	// merge the build portions.
-	jww.TRACE.Printf("Merging old Builder: %v\nand new Builder: %v", json.MarshalIndentToString(r.Builders, "", indent), json.MarshalIndentToString(d.Builders, "", indent))
 	r.updateBuilders(d.Builders)
-	jww.TRACE.Printf("Merged Builder: %v", r.Builders)
-//	r.PostProcessors = getMergedPostProcessors(r.PostProcessors, d.PostProcessors)
+//	jww.TRACE.Printf("Merged Builder: %v", r.Builders)
+	r.updatePostProcessors(d.PostProcessors)
 //	jww.TRACE.Printf("Merged PostProcessors: %v", r.PostProcessors)
-//	r.Provisioners = getMergedProvisioners(r.Provisioners, d.Provisioners)
+	r.updateProvisioners(d.Provisioners)
 //	jww.TRACE.Printf("Merged Provisioners: %v", r.Provisioners)
 	return
 }
 
+/*
+// r.updateBuildSettings merges Settings between an old and new template. Note:
+// Arch, Image, and Release are not updated here as how these fields are 
+// updated depends on whether this is a build from a distribution's default 
+// template or from a defined build template.
+func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
+	jww.TRACE.Print(json.MarshalIndentToString(bld, "", indent))
+	r.IODirInf.update(bld.IODirInf)
+	r.PackerInf.update(bld.PackerInf)
+	r.BuildInf.update(bld.BuildInf)
+
+	// If defined, Builders override any prior builder Settings.
+	if bld.BuilderTypes != nil && len(bld.BuilderTypes) > 0 {
+		r.BuilderTypes = bld.BuilderTypes
+	}
+
+	// TODO merge the build portions.
+	// Should this be broken up? No
+	// it should be calling a method so nothing is returned!
+	//
+	// Plan: 
+	//	update builders
+	r.updateBuilders(bld.Builders)
+	r.updatePostProcessors(bld.PostProcessors)
+//	r.updateProvisioners(bld.Provisioners)
+//	r.PostProcessors = getMergedPostProcessors(r.PostProcessors, bld.PostProcessors)
+//	r.Provisioners = getMergedProvisioners(r.Provisioners, bld.Provisioners)
+
+	return
+}
+*/
 // Get a slice of script names from the shell provisioner, if any.
 func (r *rawTemplate) ScriptNames() []string {
 	jww.DEBUG.Println("Entering rawTemplate.ScriptNames...")

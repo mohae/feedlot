@@ -108,13 +108,8 @@ var (
 	VMSettings = "vm_settings"
 )
 
-// Vars to hold the Rancher config file settings, *.TOML, and to flag whether
-// they have been loaded. 
-var (
-	distroDefaults map[string]*rawTemplate
-	distroDefaultsSet   bool
-	supportedBuilds 	*builds
-)
+var     Builds		*builds
+var 	distros 	distroDefaults
 
 // AppConfig contains the current Rancher configuration...loaded at start-up.
 var AppConfig appConfig
@@ -149,6 +144,113 @@ type ArgsFilter struct {
 	// used. The valid values are distribution specific.
 	Release string
 }
+
+// distroDefaults contains the defaults for all supported distros and a flag
+// whether its been set or not.
+type distroDefaults struct {
+	Templates map[string]*rawTemplate
+	IsSet   bool
+}
+	
+// GetTemplate returns a deep copy of the default template for the passed 
+// distro name. If the distro does not exist, an error is returned.
+// TODO make the template a DeeopCopy
+func (d *distroDefaults) GetTemplate(n string) (*rawTemplate, error) {
+	var t *rawTemplate
+	var ok bool
+
+	if t, ok = d.Templates[n]; !ok {
+		return t, fmt.Errorf("distroDefaults.GetTemplate: The requested Distro, " + n + " is not supported. No template to return")
+	}
+
+	copy := newRawTemplate()
+		
+	copy.PackerInf = t.PackerInf
+	copy.IODirInf = t.IODirInf
+	copy.BuildInf = t.BuildInf
+	copy.releaseISO = t.releaseISO
+	copy.date = t.date
+	copy.delim = t.delim
+	copy.Type = t.Type
+	copy.Arch = t.Arch
+	copy.Image = t.Image
+	copy.Release = t.Release
+	copy.varVals = t.varVals
+	copy.vars = t.vars
+	tmp := t.build.DeepCopy()
+	copy.build = tmp
+
+	return copy, nil
+}
+
+// Set sets the default templates for each distro.
+func (d *distroDefaults) Set() error {
+	dflts := &defaults{}
+	if err := dflts.LoadOnce(); err != nil {
+		jww.ERROR.Println(err.Error())
+		return err
+	}
+
+	s := &supported{}
+	if err := s.LoadOnce(); err != nil {
+		jww.ERROR.Println(err.Error())
+		return err
+	}
+
+	d.Templates = map[string]*rawTemplate{}
+
+	// Generate the default settings for each distro.
+	for k, v := range s.Distro {
+
+		// See if the base url exists for non centos distros
+		if v.BaseURL == "" && k != "centos" {
+			err := errors.New("setDistroDefaults: " + k + " does not have its BaseURL configured.")
+			jww.CRITICAL.Println(err.Error())
+			return err
+
+		}
+
+		// Create the struct for the default settings
+		tmp := newRawTemplate()
+
+		// First assign it all the default settings.
+		tmp.BuildInf = dflts.BuildInf
+		tmp.IODirInf = dflts.IODirInf
+		tmp.PackerInf = dflts.PackerInf
+		tmp.build = dflts.build.DeepCopy()
+		tmp.Type = k
+
+		// Now update it with the distro settings.
+		tmp.BaseURL = appendSlash(v.BaseURL)
+		tmp.Arch, tmp.Image, tmp.Release = getDefaultISOInfo(v.DefImage)
+
+		// merge the Distro Settings
+		tmp.update(v)
+
+	fmt.Println("+++++++++++++++++++++++++\n")
+	fmt.Printf("t%s\t%p\n",dflts.build , dflts.build)
+	fmt.Println("+++++++++++++++++++++++++\n")
+	fmt.Printf("%s\t%p\n",tmp.build , tmp.build)
+	fmt.Println("+++++++++++++++++++++++++\n")
+
+		// assign it to the return slice
+		d.Templates[k] = tmp
+	}
+
+	distros.IsSet = true
+
+	return nil	
+}
+/*
+// rancherBuilds holds the build definitions for rancher.
+type rancherBuilds struct {
+	Build *build
+}
+
+// 
+func (r *rancherBuilds) Get(n string) build
+
+*/
 
 // SetEnv sets the environment variables, if they do not already exist.
 //
@@ -268,66 +370,11 @@ func SetEnv() error {
 // Set DistroDefaults
 func loadBuilds() error {
 	var err error
-	supportedBuilds = &builds{}
-	if err = supportedBuilds.LoadOnce(); err != nil {
+	Builds = &builds{}
+	if err = Builds.LoadOnce(); err != nil {
 		jww.ERROR.Println(err.Error())
 		return err
 	}
-	return nil
-}
-
-// setDistroDefaults loads Rancher's default settings and supported distros
-// information. Each supported distro is merged with Rancher's defaults to
-// set the Distro's default settings.
-func setDistroDefaults() error {
-	d := &defaults{}
-	if err := d.LoadOnce(); err != nil {
-		jww.ERROR.Println(err.Error())
-		return err
-	}
-
-	s := &supported{}
-	if err := s.LoadOnce(); err != nil {
-		jww.ERROR.Println(err.Error())
-		return err
-	}
-
-	distroDefaults = map[string]*rawTemplate{}
-
-	// Generate the default settings for each distro.
-	for k, v := range s.Distro {
-
-		// See if the base url exists for non centos distros
-		if v.BaseURL == "" && k != "centos" {
-			err := errors.New("setDistroDefaults: " + k + " does not have its BaseURL configured.")
-			jww.CRITICAL.Println(err.Error())
-			return err
-
-		}
-
-		// Create the struct for the default settings
-		tmp := newRawTemplate()
-
-		// First assign it all the default settings.
-		tmp.BuildInf = d.BuildInf
-		tmp.IODirInf = d.IODirInf
-		tmp.PackerInf = d.PackerInf
-		tmp.build = d.build
-		tmp.Type = k
-
-		// Now update it with the distro settings.
-		tmp.BaseURL = appendSlash(v.BaseURL)
-		tmp.Arch, tmp.Image, tmp.Release = getDefaultISOInfo(v.DefImage)
-		
-		// merge the Distro Settings
-		tmp.update(v)
-
-		// assign it to the return slice
-		distroDefaults[k] = tmp
-	}
-
-	distroDefaultsSet = true
-
 	return nil
 }
 
@@ -336,9 +383,9 @@ func setDistroDefaults() error {
 // that are to be applied to the build.
 // Returns an error or nil if successful.
 func BuildDistro(a ArgsFilter) error {
-	if !distroDefaultsSet {
+	if !distros.IsSet {
 
-		if err := setDistroDefaults(); err != nil {
+		if err := distros.Set(); err != nil {
 			jww.ERROR.Println(err.Error())
 			return err
 		}
@@ -383,22 +430,20 @@ func BuildDistro(a ArgsFilter) error {
 // Create Packer templates from specified build templates.
 func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	var d *rawTemplate
-	var found bool
+	var err error
 
 	if a.Distro == "" {
-		err := errors.New("buildPackerTemplateFromDistro: Cannot build a packer template because no target distro information was passed.")
+		err = errors.New("buildPackerTemplateFromDistro: Cannot build a packer template because no target distro information was passed.")
 		jww.ERROR.Println(err.Error())
 		return err
 	}
 
-	// set the Distro Defaults
-	setDistroDefaults()
-	jww.TRACE.Println(json.MarshalIndentToString(distroDefaults, "", "   "))
+	jww.TRACE.Println(json.MarshalIndentToString(distros, "", "   "))
 	return nil
 
 	// Get the default for this distro, if one isn't found then it isn't Supported.
-	if d, found = distroDefaults[a.Distro]; !found {
-		err := errors.New("buildPackerTemplateFromDistro: Cannot build a packer template from passed distro: " + a.Distro + " is not Supported. Please pass a Supported distribution.")
+	if d, err = distros.GetTemplate(a.Distro); err != nil {
+		err = errors.New("buildPackerTemplateFromDistro: Cannot build a packer template from passed distro: " + a.Distro + " is not Supported. Please pass a Supported distribution.")
 		jww.ERROR.Println(err.Error())
 		return err
 	}
@@ -429,7 +474,6 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	rTpl.BuildName = d.Type + "-" + d.Release + "-" + d.Arch + "-" + d.Image
 
 	pTpl := packerTemplate{}
-	var err error
 
 	// Now that the raw template has been made, create a Packer template out of it
 	if pTpl, err = rTpl.createPackerTemplate(); err != nil {
@@ -472,9 +516,9 @@ func BuildBuilds(buildNames ...string) (string, error) {
 	// Only load supported if it hasn't been loaded. Even though LoadSupported
 	// uses a mutex to control access to prevent race conditions, no need to
 	// call it if its already loaded.
-	if !distroDefaultsSet {
+	if !distros.IsSet {
 
-		if err := setDistroDefaults(); err != nil {
+		if err := distros.Set(); err != nil {
 			jww.ERROR.Println(err.Error())
 			return "", err
 		}
@@ -519,7 +563,7 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 		doneCh <- err
 		return
 	}
-
+/*
 	var tpl, bld *rawTemplate
 	var ok bool
 	// Check the type and create the defaults for that type, if it doesn't already exist.
@@ -576,15 +620,14 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 //	scripts = tpl.ScriptNames()
 
 
-/* TODO, disable writing out of final template, for now
 	if err = pTpl.TemplateToFileJSON(tpl.IODirInf, tpl.BuildInf, scripts); err != nil {
 		jww.ERROR.Println(err.Error())
 		doneCh <- err
 		return
 	}
-*/
 	jww.INFO.Println("Created Packer template and associated build directory for build:" + buildName + ".")
 	doneCh <- nil
+*/
 	return
 }
 
@@ -876,49 +919,6 @@ func getDefaultISOInfo(d []string) (Arch string, Image string, Release string) {
 }
 
 
-// Merges the new config with the old. The updates occur as follows:
-//
-//	* The existing configuration is used when no `new` postProcessors are
-//	  specified.
-//	* When 1 or more `new` postProcessors are specified, they will replace
-//        all existing postProcessors. In this situation, if a postProcessor
-//	  exists in the `old` map but it does not exist in the `new` map, that
-//        postProcessor will be orphaned.
-// If there isn't a new config, return the existing as there are no
-// overrides
-func getMergedPostProcessors(old map[string]postProcessor, new map[string]postProcessor) map[string]postProcessor {
-	// If there is nothing new, old equals merged.
-	if len(new) <= 0 || new == nil {
-		return old
-	}
-
-	// Convert to an interface.
-	var ifaceOld map[string]interface{} = make(map[string]interface{}, len(old))
-	for i, o := range old {
-		ifaceOld[i] = o
-	}
-
-	// Convert to an interface.
-	var ifaceNew map[string]interface{} = make(map[string]interface{}, len(new))
-	for i, n := range new {
-		ifaceNew[i] = n
-	}
-
-	// Get the all keys from both maps
-	var keys[]string
-	keys = keysFromMaps(ifaceOld, ifaceNew)
-
-	pM := map[string]postProcessor{}
-
-	for _, v := range keys {
-		p := postProcessor{}
-		p = old[v]
-		p.mergeSettings(new[v].Settings)
-		pM[v] = p
-	}
-
-	return pM
-}
 
 // merges the new config with the old. The updates occur as follows:
 //

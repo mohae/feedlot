@@ -10,9 +10,7 @@ package ranchr
 
 import (
 	"errors"
-	"fmt"
 	"os"
-	"strings"
 	"sync"
 
 	"github.com/BurntSushi/toml"
@@ -45,6 +43,44 @@ type build struct {
 	Provisioners map[string]*provisioner `toml:"provisioners"`
 }
 
+// build.DeepCopy makes a deep copy of the build and returns it.
+func (b *build) DeepCopy() build {
+	copy := &build{
+		BuilderTypes: []string{},
+		Builders: map[string]*builder{}, 
+		PostProcessorTypes: []string{},
+		PostProcessors: map[string]*postProcessor{}, 
+		ProvisionerTypes: []string{},
+		Provisioners: map[string]*provisioner{}, 
+	}
+
+	if b.BuilderTypes != nil || len(b.BuilderTypes) > 0 {
+		copy.BuilderTypes = b.BuilderTypes
+	}
+
+	if b.PostProcessorTypes != nil || len(b.PostProcessorTypes) > 0 {
+		copy.PostProcessorTypes = b.PostProcessorTypes
+	}
+
+	if b.ProvisionerTypes != nil || len(b.ProvisionerTypes) > 0 {
+		copy.ProvisionerTypes = b.ProvisionerTypes
+	}
+
+	for k, v := range b.Builders {
+		copy.Builders[k] = v.DeepCopy()
+	}
+
+	for k, v := range b.PostProcessors {
+		copy.PostProcessors[k] = v.DeepCopy()
+	}
+
+	for k, v := range b.Provisioners {
+		copy.Provisioners[k] = v.DeepCopy()
+	}
+
+	return *copy
+}
+
 // templateSection is used as an embedded type.
 type templateSection struct {
 	// Settings are string settings in "key=value" format.
@@ -54,45 +90,85 @@ type templateSection struct {
 	Arrays map[string]interface{}
 }
 
+
+// builder represents a builder Packer template section.
+type builder struct {
+	templateSection
+}
+
+// builder.DeepCopy copies the builder values instead of the pointers.
+func (b *builder) DeepCopy() *builder {
+	c := &builder{}
+	*c = *b
+	return c
+}
+
+// mergeSettings the settings section of a builder. New values supercede existing ones.
+func (b *builder) mergeSettings(new []string) {
+	if new == nil {
+		return
+	}
+	b.Settings = mergeSettingsSlices(b.Settings, new)
+}
+
+// mergeVMSettings Merge the VMSettings section of a builder. New values supercede existing ones.
+//
+func (b *builder) mergeVMSettings(new []string) {
+	if new == nil {
+		return
+	}
+	old := interfaceToStringSlice(b.Arrays[VMSettings])
+	old = mergeSettingsSlices(old, new)
+	if b.Arrays == nil {
+		b.Arrays = map[string]interface{}{}
+	}
+	b.Arrays[VMSettings] = old
+}
+
+
+// Go through all of the Settings and convert them to a map. Each setting
+// is parsed into its constituent parts. The value then goes through
+// variable replacement to ensure that the settings are properly resolved.
+func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
+	var k, v string
+	m := make(map[string]interface{})
+
+	for _, s := range b.Settings {
+		k, v = parseVar(s)
+		v = r.replaceVariables(v)
+		m[k] = v
+	}
+
+	return m
+}
+
 // Type for handling the post-processor section of the configs.
 type postProcessor struct {
 	templateSection
 }
 
-// Merge the settings section of a post-processor. New values supercede
-// existing ones.
-func (p *postProcessor) mergeSettings(new []string) {
-	p.Settings = mergeSettingsSlices(p.Settings, new)
+// builder.DeepCopy copies the builder values instead of the pointers.
+func (p *postProcessor) DeepCopy() *postProcessor {
+	c := &postProcessor{}
+	*c = *p
+	return c
 }
 
-// Go through all of the Settings and convert them to a map. Each setting
-// is parsed into its constituent parts. The value then goes through
-// variable replacement to ensure that the settings are properly resolved.
-func (p *postProcessor) settingsToMap(Type string, r *rawTemplate) map[string]interface{} {
-	var k string
-	var v interface{}
-	m := make(map[string]interface{}, len(p.Settings))
-	m["type"] = Type
-
-	for _, s := range p.Settings {
-		k, v = parseVar(s)
-
-		switch k {
-		case "keep_input_artifact":
-			if strings.ToLower(fmt.Sprint(v)) == "true" {
-				v = true
-			} else {
-				v = false
-			}
-		default:
-			v = r.replaceVariables(fmt.Sprint(v))
-		}
-
-		m[k] = v
+// postProcessor.mergeSettings  merges the settings section of a post-processor
+// with the passed slice of settings. New values supercede existing ones.
+func (p *postProcessor) mergeSettings(new []string) {
+	if new == nil {
+		return
+	}
+	jww.TRACE.Println("====================\n\n" + json.MarshalIndentToString(p, "", "    "))
+	if p.Settings == nil {
+		p.Settings = new
 	}
 
-	jww.TRACE.Printf("post-processors Map: %v\n", json.MarshalIndentToString(m, "", indent))
-	return m
+	// merge the keys
+
+	// go through all the keys and do the appropriate action
+	p.Settings = mergeSettingsSlices(p.Settings, new)
 }
 
 // provisioner: type for common elements for provisioners.
@@ -100,13 +176,43 @@ type provisioner struct {
 	templateSection
 }
 
-/*
-// Merge the settings section of a post-processor. New values supercede existing ones.
+// builder.DeepCopy copies the builder values instead of the pointers.
+func (p *provisioner) DeepCopy() *provisioner {
+	c := &provisioner{}
+	*c = *p
+	return c
+}
+
+// provisioner.mergeSettings  merges the settings section of a provisioner
+// with the passed slice of settings. New values supercede existing ones.
 func (p *provisioner) mergeSettings(new []string) {
+	if new == nil {
+		return
+	}
 	p.Settings = mergeSettingsSlices(p.Settings, new)
 }
-*/
 
+/*
+// provisioner.mergeArrays merges the passed map with the existing Arrays.
+// depending on the array element, the merge may either be an update or a
+// replacement of existing, e.g. some Arrays, like only and except replace
+// any existing value instead of updating it.
+//
+// TODO figure out how to represent an unsetting of an existing element, i.e
+// if p has Array["except"] and that element is missing from new, the existing
+// Array["except"] will not be deleted. Another way to represent an unsetting
+// needs to be done.
+func (p *provisioner) mergeSettings(new map[string]interface{}) {
+	if new == nil {
+		return
+	}
+
+	// merge the keys
+
+	// go through all the keys and do the appropriate action
+//	p.Settings = mergeSettingsSlices(p.Settings, new)
+}
+*/
 /*
 // Go through all of the Settings and convert them to a map. Each setting is
 // parsed into its constituent parts. The value then goes through variable

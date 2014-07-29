@@ -3,6 +3,61 @@
 package ranchr
 
 import ()
+
+// Merges the new config with the old. The updates occur as follows:
+//
+//	* The existing configuration is used when no `new` postProcessors are
+//	  specified.
+//	* When 1 or more `new` postProcessors are specified, they will replace
+//        all existing postProcessors. In this situation, if a postProcessor
+//	  exists in the `old` map but it does not exist in the `new` map, that
+//        postProcessor will be orphaned.
+// If there isn't a new config, return the existing as there are no
+// overrides
+func (r *rawTemplate) updateProvisioners(new map[string]*provisioner) {
+	// If there is nothing new, old equals merged.
+	if len(new) <= 0 || new == nil {
+		return
+	}
+
+	// Convert to an interface.
+	var ifaceOld map[string]interface{} = make(map[string]interface{}, len(r.Provisioners))
+	for i, o := range r.Provisioners {
+		ifaceOld[i] = o
+	}
+
+	// Convert to an interface.
+	var ifaceNew map[string]interface{} = make(map[string]interface{}, len(new))
+	for i, n := range new {
+		ifaceNew[i] = n
+	}
+
+	// Get the all keys from both maps
+	var keys[]string
+	keys = keysFromMaps(ifaceOld, ifaceNew)
+
+	pM := map[string]provisioner{}
+	p := &provisioner{}
+
+	for _, v := range keys {
+		p = r.Provisioners[v]
+		
+		if p == nil {
+			p = &provisioner{templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
+		}
+
+		// If the element for this key doesn't exist, skip it.
+		if _, ok := new[v]; !ok {
+			continue
+		}
+
+		p.mergeSettings(new[v].Settings)
+		pM[v] = *p
+	}
+
+	return
+}
+
 /*
 func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]interface{}, err error) {
 	if r.ProvisionerType == nil || len(r.ProvisionerType) <= 0 {
