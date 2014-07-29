@@ -28,21 +28,21 @@ type build struct {
 
 	// A map of builder configuration. There should always be a `common`
 	// builder, which has settings common to both VMWare and VirtualBox.
-	Builders map[string]builder `toml:"builders"`
+	Builders map[string]*builder `toml:"builders"`
 
 	// Targeted post-processors: the values are consistent with Packer's, e.g.
 	// `vagrant` is used for Vagrant.
 	PostProcessorTypes []string `toml:"post_processor_types"`
 
 	// A map of post-processor configurations.
-	PostProcessors map[string]postProcessor `toml:"post_processors"`
+	PostProcessors map[string]*postProcessor `toml:"post_processors"`
 
 	// Targeted provisioners: the values are consistent with Packer's, e.g.
 	// `shell` is used for shell.
 	ProvisionerTypes []string `toml:"provisioner_types"`
 
 	// A map of provisioner configurations.
-	Provisioners map[string]provisioner `toml:"provisioners"`
+	Provisioners map[string]*provisioner `toml:"provisioners"`
 }
 
 // templateSection is used as an embedded type.
@@ -52,51 +52,6 @@ type templateSection struct {
 	
 	// Arrays are the string array settings.
 	Arrays map[string]interface{}
-}
-// builder represents a builder Packer template section.
-type builder struct {
-	templateSection
-}
-
-
-
-// Merge the settings section of a builder. New values supercede existing ones.
-func (b *builder) mergeSettings(new []string) {
-	if new == nil {
-		return
-	}
-	b.Settings = mergeSettingsSlices(b.Settings, new)
-}
-
-// mergeVMSettings Merge the VMSettings section of a builder. New values supercede existing ones.
-//
-func (b *builder) mergeVMSettings(new []string) {
-	if new == nil {
-		return
-	}
-	old := interfaceToStringSlice(b.Arrays[VMSettings])
-	old = mergeSettingsSlices(old, new)
-	if b.Arrays == nil {
-		b.Arrays = map[string]interface{}{}
-	}
-	b.Arrays[VMSettings] = old
-}
-
-
-// Go through all of the Settings and convert them to a map. Each setting
-// is parsed into its constituent parts. The value then goes through
-// variable replacement to ensure that the settings are properly resolved.
-func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
-	var k, v string
-	m := make(map[string]interface{})
-
-	for _, s := range b.Settings {
-		k, v = parseVar(s)
-		v = r.replaceVariables(v)
-		m[k] = v
-	}
-
-	return m
 }
 
 // Type for handling the post-processor section of the configs.
@@ -219,6 +174,43 @@ type defaults struct {
 	loaded bool
 }
 
+// Ensures that the default configs get loaded once. Uses a mutex to prevent
+// race conditions as there can be concurrent processing of Packer templates.
+// When loaded, it sets the loaded boolean so that it only needs to be called
+// when it hasn't been loaded.
+func (d *defaults) LoadOnce() error {
+	var err error
+
+	loadFunc := func() {
+		name := os.Getenv(EnvDefaultsFile)
+
+		if name == "" {
+			err = errors.New("could not retrieve the default Settings because the " + EnvDefaultsFile + " environment variable was not set. Either set it or check your rancher.cfg setting")
+			jww.CRITICAL.Print(err.Error())
+			return
+		}
+
+		if _, err = toml.DecodeFile(name, d); err != nil {
+			jww.CRITICAL.Print(err.Error())
+			return
+		}
+
+		return
+	}
+
+	d.load.Do(loadFunc)
+
+	// Don't need to log this as the loadFunc logged already logged it
+	if err != nil {
+		return err
+	}
+
+	jww.TRACE.Printf("defaults loaded: %v", json.MarshalIndentToString(d, "", indent))
+	d.loaded = true
+
+	return nil
+}
+
 // BuildInf is a container for information about a specific build.
 type BuildInf struct {
 	// Name is the name for the build. This may be an assigned value from
@@ -324,52 +316,6 @@ func (i *PackerInf) update(new PackerInf) {
 	return
 }
 
-// Ensures that the default configs get loaded once. Uses a mutex to prevent
-// race conditions as there can be concurrent processing of Packer templates.
-// When loaded, it sets the loaded boolean so that it only needs to be called
-// when it hasn't been loaded.
-func (d *defaults) LoadOnce() error {
-	var err error
-
-	loadFunc := func() {
-		name := os.Getenv(EnvDefaultsFile)
-
-		if name == "" {
-			err = errors.New("could not retrieve the default Settings because the " + EnvDefaultsFile + " environment variable was not set. Either set it or check your rancher.cfg setting")
-			jww.CRITICAL.Print(err.Error())
-			return
-		}
-
-		if _, err = toml.DecodeFile(name, &d); err != nil {
-			jww.CRITICAL.Print(err.Error())
-			return
-		}
-
-		return
-	}
-
-	d.load.Do(loadFunc)
-
-	// Don't need to log this as the loadFunc logged already logged it
-	if err != nil {
-		return err
-	}
-
-	jww.TRACE.Printf("defaults loaded: %v", json.MarshalIndentToString(d, "", indent))
-	d.loaded = true
-
-	return nil
-}
-
-// To add support for a distribution, the information about it must be added to
-// the supported. file, in addition to adding the code to support it to the
-// application.
-type supported struct {
-	Distro map[string]*distro
-	load   sync.Once
-	loaded bool
-}
-
 // Struct to hold the details of supported distros. From this information a
 // user should be able to build a Packer template by only executing the
 // following, at minimum:
@@ -400,6 +346,15 @@ type distro struct {
 	// The configurations needed to generate the default settings for a build for this
 	// distribution.
 	build
+}
+
+// To add support for a distribution, the information about it must be added to
+// the supported. file, in addition to adding the code to support it to the
+// application.
+type supported struct {
+	Distro map[string]*distro
+	load   sync.Once
+	loaded bool
 }
 
 // Ensures that the supported distro information only get loaded once. Uses a
@@ -440,7 +395,7 @@ func (s *supported) LoadOnce() error {
 
 // Struct to hold the builds.
 type builds struct {
-	Build  map[string]rawTemplate
+	Build  map[string]*rawTemplate
 	load   sync.Once
 	loaded bool
 }

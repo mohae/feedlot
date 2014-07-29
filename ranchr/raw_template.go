@@ -64,17 +64,17 @@ type rawTemplate struct {
 
 // mewRawTemplate returns a rawTemplate with current date in ISO 8601 format.
 // This should be called when a rawTemplate with the current date is desired.
-func newRawTemplate() rawTemplate {
+func newRawTemplate() *rawTemplate {
 	// Set the date, formatted to ISO 8601
 	date := time.Now()
 	splitDate := strings.Split(date.String(), " ")
-	r := rawTemplate{date: splitDate[0], delim: os.Getenv(EnvParamDelimStart)}
-	return r
+	return &rawTemplate{date: splitDate[0], delim: os.Getenv(EnvParamDelimStart)}
 }
 
-// r.createDistroTemplate assigns the default distro template values to a
-// rawTemplate
-func (r *rawTemplate) createDistroTemplate(d rawTemplate) {
+// r.setDefaultTemplate sets the current template with the passed template
+// information, which is the distro's default template. All raw templates start
+// with this.
+func (r *rawTemplate)initDistroTemplate(d *rawTemplate) {
 	r.IODirInf = d.IODirInf
 	r.PackerInf = d.PackerInf
 	r.BuildInf = d.BuildInf
@@ -87,8 +87,8 @@ func (r *rawTemplate) createDistroTemplate(d rawTemplate) {
 	r.Builders = d.Builders
 	r.PostProcessorTypes = d.PostProcessorTypes
 	r.PostProcessors = d.PostProcessors
-//	r.ProvisionersType = d.ProvisionersType
-//	r.Provisioners = d.Provisioners
+	r.ProvisionerTypes = d.ProvisionerTypes
+	r.Provisioners = d.Provisioners
 	return
 }
 
@@ -194,33 +194,12 @@ func (r *rawTemplate) variableSection() (map[string]interface{}, error) {
 	return v, nil
 }
 
-// r.mergeBuildSettings merges Settings between an old and new template. Note:
-// Arch, Image, and Release are not updated here as how these fields are 
-// updated depends on whether this is a build from a distribution's default 
-// template or from a defined build template.
-func (r *rawTemplate) mergeBuildSettings(bld rawTemplate) {
-	jww.TRACE.Print(json.MarshalIndentToString(bld, "", indent))
-	r.IODirInf.update(bld.IODirInf)
-	r.PackerInf.update(bld.PackerInf)
-	r.BuildInf.update(bld.BuildInf)
 
-	// If defined, Builders override any prior builder Settings.
-	if bld.BuilderTypes != nil && len(bld.BuilderTypes) > 0 {
-		r.BuilderTypes = bld.BuilderTypes
-	}
-
-	// merge the build portions.
-	r.Builders = getMergedBuilders(r.Builders, bld.Builders)
-//	r.PostProcessors = getMergedPostProcessors(r.PostProcessors, bld.PostProcessors)
-//	r.Provisioners = getMergedProvisioners(r.Provisioners, bld.Provisioners)
-
-	return
-}
-
-// r.mergeDistroSettings merges the settings...hmm the name doesn't
-// seem to reflect what it actually is doing.
-// TODO rename this 
-func (r *rawTemplate) mergeDistroSettings(d *distro) {
+// r.update takes the incoming distro settings and merges
+// them with its existing settings, which are rancher's defaults to create the
+// final default settings for each supported distribution.
+//
+func (r *rawTemplate) update(d *distro) {
 	jww.TRACE.Printf("%v\n%v", json.MarshalIndentToString(r, "", indent), json.MarshalIndentToString(d, "", indent))
 	// merges Settings between an old and new template.
 	// Note: Arch, Image, and Release are not updated here as how these fields
@@ -228,17 +207,26 @@ func (r *rawTemplate) mergeDistroSettings(d *distro) {
 	// default template or from a defined build template.
 	r.IODirInf.update(d.IODirInf)
 	r.PackerInf.update(d.PackerInf)
-
 	r.BuildInf.update(d.BuildInf)
-	// If defined, Builders override any prior builder Settings
+
+	// If defined, BuilderTypes override any prior BuilderTypes Settings
 	if d.BuilderTypes != nil && len(d.BuilderTypes) > 0 {
 		r.BuilderTypes = d.BuilderTypes
 	}
 
+	// If defined, PostProcessorTypes override any prior PostProcessorTypes Settings
+	if d.PostProcessorTypes != nil && len(d.PostProcessorTypes) > 0 {
+		r.PostProcessorTypes = d.PostProcessorTypes
+	}
+
+	// If defined, ProvisionerTypes override any prior ProvisionerTypes Settings
+	if d.ProvisionerTypes != nil && len(d.ProvisionerTypes) > 0 {
+		r.ProvisionerTypes = d.ProvisionerTypes
+	}
 	// merge the build portions.
 	jww.TRACE.Printf("Merging old Builder: %v\nand new Builder: %v", json.MarshalIndentToString(r.Builders, "", indent), json.MarshalIndentToString(d.Builders, "", indent))
-//	r.Builders = getMergedBuilders(r.Builders, d.Builders)
-//	jww.TRACE.Printf("Merged Builder: %v", r.Builders)
+	r.updateBuilders(d.Builders)
+	jww.TRACE.Printf("Merged Builder: %v", r.Builders)
 //	r.PostProcessors = getMergedPostProcessors(r.PostProcessors, d.PostProcessors)
 //	jww.TRACE.Printf("Merged PostProcessors: %v", r.PostProcessors)
 //	r.Provisioners = getMergedProvisioners(r.Provisioners, d.Provisioners)
