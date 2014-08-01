@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	json "github.com/mohae/customjson"
+	_ "github.com/mohae/customjson"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -178,8 +178,6 @@ func (r *rawTemplate) variableSection() (map[string]interface{}, error) {
 // existing settings, which are set to rancher's defaults, to create the 
 // default template.
 func (r *rawTemplate) setDefaults(d *distro) {
-//	jww.TRACE.Printf("rawTemplate.setDefaults: entering using-------------\n%s\nDistro Settings:\t%s", json.MarshalToString(r), json.MarshalToString(d))
-
 	// merges Settings between an old and new template.
 	// Note: Arch, Image, and Release are not updated here as how these fields
 	// are updated depends on whether this is a build from a distribution's
@@ -203,10 +201,8 @@ func (r *rawTemplate) setDefaults(d *distro) {
 		r.ProvisionerTypes = d.ProvisionerTypes
 	}
 
-	jww.TRACE.Printf("+++++++++++++++++rawTemplate.setDefaults:\nupdate template builders with %#s\n", json.MarshalToString(d.Builders))
 	// merge the build portions.
 	r.updateBuilders(d.Builders)
-	jww.TRACE.Printf("+++++++++++++++++rawTemplate.setDefaults:\nupdated template builders using %#s\n", json.MarshalToString(r.Builders))
 
 	r.updatePostProcessors(d.PostProcessors)
 //	jww.TRACE.Printf("Merged PostProcessors: %v", r.PostProcessors)
@@ -357,6 +353,5 @@ func (r *rawTemplate) ISOInfo(builderType string, settings []string) error {
 		}
 
 	}
-	jww.TRACE.Printf("Exit rawTemplate.ISOInfo")
 	return nil
 }

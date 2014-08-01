@@ -67,9 +67,7 @@ func (b *build) DeepCopy() build {
 	}
 
 	for k, v := range b.Builders {
-//	jww.TRACE.Printf("\tDeepCopy\t%p\n%v\n", v, v)
 		copy.Builders[k] = v.DeepCopy()
-//	jww.TRACE.Printf("\tDeepCopy\t%p\n%v\n",copy.Builders[k], copy.Builders[k])
 	}
 
 	for k, v := range b.PostProcessors {
@@ -80,8 +78,6 @@ func (b *build) DeepCopy() build {
 		copy.Provisioners[k] = v.DeepCopy()
 	}
 
-//	jww.TRACE.Printf("\tDeepCopy Orig:\t%p\n%v\n", b, b)
-//	jww.TRACE.Printf("\tDeepCopy Copy:\t%p\n%v\n", copy, copy)
 	return *copy
 }
 
@@ -97,12 +93,11 @@ type templateSection struct {
 // templateSection.DeepCopy updates its information with new via a deep copy. 
 func (t *templateSection) DeepCopy(new templateSection) {
 	//Deep Copy of settings
+	t.Settings = make([]string, len(new.Settings))
 	copy(t.Settings, new.Settings)
 
 	// make a deep copy of the Arrays(map[string]interface)
-	jww.TRACE.Printf("\t\tnew.Arrays\t%p\n%v\n", new.Arrays, new.Arrays)
 	t.Arrays = deepCopyMapStringInterface(new.Arrays)
-	jww.TRACE.Printf("\t\tt.Arrays\t%p\n%v\n", t.Arrays, t.Arrays)
 }
 
 // builder represents a builder Packer template section.
@@ -112,15 +107,9 @@ type builder struct {
 
 // builder.DeepCopy copies the builder values instead of the pointers.
 func (b *builder) DeepCopy() *builder {
-	jww.TRACE.Println("***DEEPCOPY***")
 	var c *builder
 	c = &builder{templateSection: templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
 	c.templateSection.DeepCopy(b.templateSection)
-//	*c = *b
-	if b.templateSection.Arrays != nil {
-		jww.TRACE.Printf("\tB\t%p\n%v\n", b.templateSection.Arrays, b.templateSection.Arrays)
-		jww.TRACE.Printf("\tC\t%p\n%v\n", c.templateSection.Arrays, c.templateSection.Arrays)
-	}
 	return c
 }
 
@@ -146,15 +135,10 @@ func (b *builder) mergedVMSettings(new []string) []string {
 	if new == nil {
 		return nil
 	}
-	jww.TRACE.Println("*******************************")
-	jww.TRACE.Printf("\nVMSettings	mergeVMSettings %p:\t%s\n", b.Arrays[VMSettings], b.Arrays[VMSettings])	
 
 	var merged []string
 	old := deepCopyInterfaceToSliceString(b.Arrays[VMSettings])
-	jww.TRACE.Printf("OLD		mergeVMSettings %p:\t%s\n", old, old)
-	jww.TRACE.Printf("NEW		mergeVMSettings %p:\t%s\n", new, new)
 	merged = mergeSettingsSlices(old, new)
-	jww.TRACE.Printf("merged		mergeVMSettings %p:\t%s\n", merged, merged)
 
 	if b.Arrays == nil {
 		b.Arrays = map[string]interface{}{}
@@ -184,10 +168,15 @@ type postProcessor struct {
 	templateSection
 }
 
-// builder.DeepCopy copies the builder values instead of the pointers.
+// postProcessor.DeepCopy copies the postProcessor values instead of the pointers.
 func (p *postProcessor) DeepCopy() *postProcessor {
-	c := &postProcessor{}
-	*c = *p
+	if p == nil {
+		return nil
+	}
+
+	var c *postProcessor
+	c = &postProcessor{templateSection: templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
+	c.templateSection.DeepCopy(p.templateSection)
 	return c
 }
 
@@ -200,10 +189,26 @@ func (p *postProcessor) mergeSettings(new []string) {
 //	jww.TRACE.Println("====================\n\n" + json.MarshalToString(p))
 	if p.Settings == nil {
 		p.Settings = new
+		return
 	}
 
 	// merge the keys
+	// go through all the keys and do the appropriate action
+	p.Settings = mergeSettingsSlices(p.Settings, new)
+}
 
+// postProcessor.mergeArrays  merges the settings section of a post-processor
+// with the passed slice of settings. New values supercede existing ones.
+func (p *postProcessor) mergeArrays(m map[string]interface{}) {
+	if m == nil {
+		return
+	}
+
+	if p.Arrays == nil {
+		p.Arrays = m
+	}
+
+	// merge the keys
 	// go through all the keys and do the appropriate action
 //	p.Settings = mergeSettingsSlices(p.Settings, new)
 }
@@ -213,10 +218,11 @@ type provisioner struct {
 	templateSection
 }
 
-// builder.DeepCopy copies the builder values instead of the pointers.
+// postProcessor.DeepCopy copies the postProcessor values instead of the pointers.
 func (p *provisioner) DeepCopy() *provisioner {
-	c := &provisioner{}
-	*c = *p
+	var c *provisioner
+	c = &provisioner{templateSection: templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
+	c.templateSection.DeepCopy(p.templateSection)
 	return c
 }
 
@@ -226,7 +232,11 @@ func (p *provisioner) mergeSettings(new []string) {
 	if new == nil {
 		return
 	}
-//	p.Settings = mergeSettingsSlices(p.Settings, new)
+	if p.Settings == nil {
+		p.Settings = new
+		return
+	}
+	p.Settings = mergeSettingsSlices(p.Settings, new)
 }
 
 /*

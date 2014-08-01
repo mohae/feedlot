@@ -24,6 +24,7 @@ import (
 func (r *rawTemplate) updatePostProcessors(new map[string]*postProcessor) {
 	// If there is nothing new, old equals merged.
 	if len(new) <= 0 || new == nil {
+		jww.TRACE.Println("rawTemplate.updatePostProcessors: new was nil Returning w/o doing anything")
 		return
 	}
 
@@ -33,21 +34,19 @@ func (r *rawTemplate) updatePostProcessors(new map[string]*postProcessor) {
 		ifaceOld[i] = o
 	}
 
-	// Convert to an interface.
+	// Do a deep copy of the new postProcessor info.
 	var ifaceNew map[string]interface{} = make(map[string]interface{}, len(new))
-	for i, n := range new {
-		ifaceNew[i] = n
-	}
+	ifaceNew = deepCopyMapStringPPostProcessor(new)
 
 	// Get the all keys from both maps
 	var keys[]string
 	keys = keysFromMaps(ifaceOld, ifaceNew)
 
-	pM := map[string]postProcessor{}
+//	pM := map[string]postProcessor{}
 	p := &postProcessor{}
 
 	for _, v := range keys {
-		p = r.PostProcessors[v]
+		p = r.PostProcessors[v].DeepCopy()
 		
 		if p == nil {
 			p = &postProcessor{templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
@@ -59,8 +58,7 @@ func (r *rawTemplate) updatePostProcessors(new map[string]*postProcessor) {
 		}
 
 		p.mergeSettings(new[v].Settings)
-//		p.mergeArrays(new[v].Arrays)
-		pM[v] = *p
+		r.PostProcessors[v] = p
 	}
 
 	return
@@ -148,3 +146,17 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]i
 
 	return p, vars, nil
 }
+
+// deepCopyMapStringPPostProcessor makes a deep copy of each builder passed and 
+// returns the copie map[string]*builder as a map[string]interface{}
+// notes: This currently only supports string slices.
+func deepCopyMapStringPPostProcessor(p map[string]*postProcessor) map[string]interface{} {
+	c := map[string]interface{}{}
+	for k, v := range p {
+		tmpP := &postProcessor{}
+		tmpP = v.DeepCopy()
+		c[k] = tmpP
+	}
+	return c
+}
+
