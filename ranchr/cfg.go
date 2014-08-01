@@ -14,7 +14,7 @@ import (
 	"sync"
 
 	"github.com/BurntSushi/toml"
-	json "github.com/mohae/customjson"
+	_ "github.com/mohae/customjson"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -67,7 +67,9 @@ func (b *build) DeepCopy() build {
 	}
 
 	for k, v := range b.Builders {
+//	jww.TRACE.Printf("\tDeepCopy\t%p\n%v\n", v, v)
 		copy.Builders[k] = v.DeepCopy()
+//	jww.TRACE.Printf("\tDeepCopy\t%p\n%v\n",copy.Builders[k], copy.Builders[k])
 	}
 
 	for k, v := range b.PostProcessors {
@@ -78,6 +80,8 @@ func (b *build) DeepCopy() build {
 		copy.Provisioners[k] = v.DeepCopy()
 	}
 
+//	jww.TRACE.Printf("\tDeepCopy Orig:\t%p\n%v\n", b, b)
+//	jww.TRACE.Printf("\tDeepCopy Copy:\t%p\n%v\n", copy, copy)
 	return *copy
 }
 
@@ -90,6 +94,16 @@ type templateSection struct {
 	Arrays map[string]interface{}
 }
 
+// templateSection.DeepCopy updates its information with new via a deep copy. 
+func (t *templateSection) DeepCopy(new templateSection) {
+	//Deep Copy of settings
+	copy(t.Settings, new.Settings)
+
+	// make a deep copy of the Arrays(map[string]interface)
+	jww.TRACE.Printf("\t\tnew.Arrays\t%p\n%v\n", new.Arrays, new.Arrays)
+	t.Arrays = deepCopyMapStringInterface(new.Arrays)
+	jww.TRACE.Printf("\t\tt.Arrays\t%p\n%v\n", t.Arrays, t.Arrays)
+}
 
 // builder represents a builder Packer template section.
 type builder struct {
@@ -98,8 +112,15 @@ type builder struct {
 
 // builder.DeepCopy copies the builder values instead of the pointers.
 func (b *builder) DeepCopy() *builder {
-	c := &builder{}
-	*c = *b
+	jww.TRACE.Println("***DEEPCOPY***")
+	var c *builder
+	c = &builder{templateSection: templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
+	c.templateSection.DeepCopy(b.templateSection)
+//	*c = *b
+	if b.templateSection.Arrays != nil {
+		jww.TRACE.Printf("\tB\t%p\n%v\n", b.templateSection.Arrays, b.templateSection.Arrays)
+		jww.TRACE.Printf("\tC\t%p\n%v\n", c.templateSection.Arrays, c.templateSection.Arrays)
+	}
 	return c
 }
 
@@ -113,18 +134,34 @@ func (b *builder) mergeSettings(new []string) {
 
 // mergeVMSettings Merge the VMSettings section of a builder. New values supercede existing ones.
 //
-func (b *builder) mergeVMSettings(new []string) {
+// question sanity....
+//      so this updated the builder, which then affects both builders
+//	how should this work?
+//      Set default template for each distro
+//		b = distro template
+//		d = default template
+//		b should deep copy d
+
+func (b *builder) mergedVMSettings(new []string) []string {
 	if new == nil {
-		return
+		return nil
 	}
-	old := interfaceToStringSlice(b.Arrays[VMSettings])
-	old = mergeSettingsSlices(old, new)
+	jww.TRACE.Println("*******************************")
+	jww.TRACE.Printf("\nVMSettings	mergeVMSettings %p:\t%s\n", b.Arrays[VMSettings], b.Arrays[VMSettings])	
+
+	var merged []string
+	old := deepCopyInterfaceToSliceString(b.Arrays[VMSettings])
+	jww.TRACE.Printf("OLD		mergeVMSettings %p:\t%s\n", old, old)
+	jww.TRACE.Printf("NEW		mergeVMSettings %p:\t%s\n", new, new)
+	merged = mergeSettingsSlices(old, new)
+	jww.TRACE.Printf("merged		mergeVMSettings %p:\t%s\n", merged, merged)
+
 	if b.Arrays == nil {
 		b.Arrays = map[string]interface{}{}
 	}
-	b.Arrays[VMSettings] = old
-}
 
+	return merged
+}
 
 // Go through all of the Settings and convert them to a map. Each setting
 // is parsed into its constituent parts. The value then goes through
@@ -160,7 +197,7 @@ func (p *postProcessor) mergeSettings(new []string) {
 	if new == nil {
 		return
 	}
-	jww.TRACE.Println("====================\n\n" + json.MarshalIndentToString(p, "", "    "))
+//	jww.TRACE.Println("====================\n\n" + json.MarshalToString(p))
 	if p.Settings == nil {
 		p.Settings = new
 	}
@@ -168,7 +205,7 @@ func (p *postProcessor) mergeSettings(new []string) {
 	// merge the keys
 
 	// go through all the keys and do the appropriate action
-	p.Settings = mergeSettingsSlices(p.Settings, new)
+//	p.Settings = mergeSettingsSlices(p.Settings, new)
 }
 
 // provisioner: type for common elements for provisioners.
@@ -189,7 +226,7 @@ func (p *provisioner) mergeSettings(new []string) {
 	if new == nil {
 		return
 	}
-	p.Settings = mergeSettingsSlices(p.Settings, new)
+//	p.Settings = mergeSettingsSlices(p.Settings, new)
 }
 
 /*
@@ -311,9 +348,7 @@ func (d *defaults) LoadOnce() error {
 		return err
 	}
 
-	jww.TRACE.Printf("defaults loaded: %v", json.MarshalIndentToString(d, "", indent))
 	d.loaded = true
-
 	return nil
 }
 
@@ -495,7 +530,6 @@ func (s *supported) LoadOnce() error {
 		return err
 	}
 
-	jww.TRACE.Printf("supported loaded: %v", json.MarshalIndentToString(s, "", indent))
 	return nil
 }
 
@@ -538,7 +572,6 @@ func (b *builds) LoadOnce() error {
 		return err
 	}
 
-	jww.TRACE.Printf("builds loaded: %v", json.MarshalIndentToString(b, "", indent))
 	return nil
 }
 
@@ -568,6 +601,5 @@ func (b *buildLists) Load() error {
 		return err
 	}
 
-	jww.TRACE.Printf("buildLists loaded: %v", json.MarshalIndentToString(b, "", indent))
 	return nil
 }

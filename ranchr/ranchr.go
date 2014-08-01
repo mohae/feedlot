@@ -163,8 +163,7 @@ func (d *distroDefaults) GetTemplate(n string) (*rawTemplate, error) {
 		return t, fmt.Errorf("distroDefaults.GetTemplate: The requested Distro, " + n + " is not supported. No template to return")
 	}
 
-	copy := newRawTemplate()
-		
+	copy := newRawTemplate()	
 	copy.PackerInf = t.PackerInf
 	copy.IODirInf = t.IODirInf
 	copy.BuildInf = t.BuildInf
@@ -177,14 +176,14 @@ func (d *distroDefaults) GetTemplate(n string) (*rawTemplate, error) {
 	copy.Release = t.Release
 	copy.varVals = t.varVals
 	copy.vars = t.vars
-	tmp := t.build.DeepCopy()
-	copy.build = tmp
+	copy.build = t.build.DeepCopy()
 
 	return copy, nil
 }
 
 // Set sets the default templates for each distro.
 func (d *distroDefaults) Set() error {
+	jww.TRACE.Println("-------- ENTERING distroDefaults.Set() --------")
 	dflts := &defaults{}
 	if err := dflts.LoadOnce(); err != nil {
 		jww.ERROR.Println(err.Error())
@@ -201,7 +200,6 @@ func (d *distroDefaults) Set() error {
 
 	// Generate the default settings for each distro.
 	for k, v := range s.Distro {
-
 		// See if the base url exists for non centos distros
 		if v.BaseURL == "" && k != "centos" {
 			err := errors.New("setDistroDefaults: " + k + " does not have its BaseURL configured.")
@@ -212,33 +210,25 @@ func (d *distroDefaults) Set() error {
 
 		// Create the struct for the default settings
 		tmp := newRawTemplate()
-
 		// First assign it all the default settings.
 		tmp.BuildInf = dflts.BuildInf
 		tmp.IODirInf = dflts.IODirInf
 		tmp.PackerInf = dflts.PackerInf
 		tmp.build = dflts.build.DeepCopy()
 		tmp.Type = k
-
+		
 		// Now update it with the distro settings.
 		tmp.BaseURL = appendSlash(v.BaseURL)
 		tmp.Arch, tmp.Image, tmp.Release = getDefaultISOInfo(v.DefImage)
-
-		// merge the Distro Settings
-		tmp.update(v)
-
-	fmt.Println("+++++++++++++++++++++++++\n")
-	fmt.Printf("t%s\t%p\n",dflts.build , dflts.build)
-	fmt.Println("+++++++++++++++++++++++++\n")
-	fmt.Printf("%s\t%p\n",tmp.build , tmp.build)
-	fmt.Println("+++++++++++++++++++++++++\n")
-
-		// assign it to the return slice
+		tmp.setDefaults(v)
 		d.Templates[k] = tmp
+		jww.TRACE.Printf("tmp\t\t\t%p:\n%v", tmp, json.MarshalIndentToString(tmp, "", "  "))
+		jww.TRACE.Printf("d.Templates[k]\t%p:\n%v", d.Templates[k], json.MarshalIndentToString(d.Templates[k], "", "  "))
+		jww.TRACE.Printf("dflts.build\t%p:\n%v", dflts.build, json.MarshalIndentToString(dflts.build, "", "  "))
 	}
 
 	distros.IsSet = true
-
+	jww.TRACE.Printf("\n\n%v\n", json.MarshalIndentToString(distros, "", indent))
 	return nil	
 }
 /*
@@ -392,6 +382,7 @@ func BuildDistro(a ArgsFilter) error {
 
 	}
 
+	fmt.Println("BuildDistro:\n" + json.MarshalToString(distros))
 	if err := buildPackerTemplateFromDistro(a); err != nil {
 		jww.ERROR.Println(err.Error())
 		return err
@@ -438,7 +429,6 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 		return err
 	}
 
-	jww.TRACE.Println(json.MarshalIndentToString(distros, "", "   "))
 	return nil
 
 	// Get the default for this distro, if one isn't found then it isn't Supported.
@@ -768,20 +758,30 @@ func mergeSlices(s1 []string, s2 []string) []string {
 // Since settings use  embedded key=value pairs, the key is extracted from each
 // value and matches are performed on the key only as the value will be
 // different if the key appears in both slices.
+// Slice structure: ptr | len | cap
+// Copying a slice means the slice structure is copied but the underlying array
+// is not copied so now you have two slices that both point to the underlying array
 func mergeSettingsSlices(s1 []string, s2 []string) []string {
-	if (s1 == nil || len(s1) <= 0) && (s2 == nil || len(s2) <= 0) {
+	l1 := len(s1)
+	l2 := len(s2)
+
+	if (l1 == 0 && l2 == 0) {
 		return nil
 	}
 
-	if s1 == nil || len(s1) <= 0 {
-		return s2
-	}
+	// Make a slice with a length equal to the sum of the two input slices.
+	merged := make([]string, l1 + l2)
 
-	if s2 == nil || len(s2) <= 0 {
-		return s1
-	}
+	// Copy the first slice.
+	i := copy(merged, s1)
 
-	ms1 := map[string]interface{}{}
+	// if nothing was copied, i == 0 , just copy the 2nd slice.
+	if i == 0 {
+		copy(merged, s2)
+		return merged
+	}
+			
+	ms1 := map[string]string{}
 	// Create a map of variables from the first slice for comparison reasons.
 	ms1 = varMapFromSlice(s1)
 
@@ -789,52 +789,55 @@ func mergeSettingsSlices(s1 []string, s2 []string) []string {
 		jww.CRITICAL.Println("Unable to create a variable map from the passed slice.")
 	}
 
-	// Make a slice with a length equal to the sum of the two input slices.
-	tempSl := make([]string, len(s1)+len(s2))
-	copy(tempSl, s1)
-	i := len(s1) - 1
-	indx := 0
-	var k string
-
+	fmt.Printf("    DDDDDDDDDDDDd     length s1=%v\ts2=%v\n", l1, l2)
 	// For each element in the second slice, get the key. If it already
 	// exists, update the existing value, otherwise add it to the merged
 	// slice
-	for _, v := range s2 {
-		k, _ = parseVar(v)
+	var indx int
+	var v, key string
+	for _, v = range s2 {
+		key, _ = parseVar(v)
 
-		if _, ok := ms1[k]; ok {
+		if _, ok := ms1[key]; ok {
 			// This key already exists. Find it and update it.
-			indx = keyIndexInVarSlice(k, tempSl)
+			indx = keyIndexInVarSlice(key, merged)
 
 			if indx < 0 {
-				jww.WARN.Println("The key, " + k + ", was not updated to '" + v + "' because it was not found in the target slice.")
+				jww.WARN.Println("The key, " + key + ", was not updated to '" + v + "' because it was not found in the target slice.")
 			} else {
-				tempSl[indx] = v
+				merged[indx] = v
+				fmt.Printf("\tmerged:\t%v\n", v)
 			}
 
 		} else {
+			// i is the index of the next element to add, a result of 
+			// i being set to the count of the items copied, which is 
+			// 1 greater than the index, or the index of the next item
+			// should it exist. Instead, it is updated after adding the
+			// new value as, after add, i points to the current element.
+			merged[i] = v
+			fmt.Printf("\tadded indx=%v:\t%v\n", i, v)
 			i++
-			tempSl[i] = v
 		}
 
 	}
 
-	// Shrink the slice back down.
-	retSl := make([]string, i+1)
-	copy(retSl, tempSl)
+	// Shrink the slice back down to == its length
+	ret := make([]string, i)
+	copy(ret, merged)
 
-	return retSl
+	return ret
 }
 
 // varMapFromSlice creates a map from the passed slice. A Rancher var string
 // contains a key=value string.
-func varMapFromSlice(vars []string) map[string]interface{} {
+func varMapFromSlice(vars []string) map[string]string {
 	if vars == nil {
 		jww.WARN.Println("Unable to create a Packer Settings map because no variables were received")
 		return nil
 	}
 
-	vmap := make(map[string]interface{})
+	vmap := make(map[string]string)
 	// Go through each element and create a map entry from it.
 	for _, variable := range vars {
 		k, v := parseVar(variable)
@@ -1208,13 +1211,14 @@ func keysFromMaps(m ...map[string]interface{}) []string {
 	return mergedKeys
 }
 
-// interfaceToStringSlice takes an interface and returns a slice of strings.
-// returns an error if interface is not a slice of strings
-func interfaceToStringSlice(v interface{}) []string {
+
+// deepCopyInterfaceToSliceString takes an interface that is a slice of strings
+// and returns a deep copy of it as a slice of strings. An error is returned if
+// the interface is not a slice of strings
+func deepCopyInterfaceToSliceString(v interface{}) []string {
 	if v == nil {
 		return nil
 	}
-
 	var sl []string
 
 	switch reflect.TypeOf(v).Kind() {
@@ -1229,6 +1233,51 @@ func interfaceToStringSlice(v interface{}) []string {
 	default:
 		return nil
 	}
-		
 	return sl
 }
+
+// deepCopyMapInterFace makes a deep copy of a map[string]interface{} and
+// returns the copy of the map[string]interface{}
+//
+// notes: This assumes that the interface{} is a []string. Adjust as needed.
+func deepCopyMapStringInterface(m map[string]interface{}) map[string]interface{} {
+	c := map[string]interface{}{}
+	var tmp  []string
+	for k, v := range m {
+		switch reflect.TypeOf(v).Kind() {
+		case reflect.Slice:
+			tmp = deepCopyInterfaceToSliceString(v)
+		}
+		c[k] = tmp
+	}
+
+	return c
+}
+
+// deepCopyMapInterFace makes a deep copy of a map[string]interface{} and
+// returns the copy of the map[string]interface{}
+//	for i, n := range new {
+//		ifaceNew[i] = n
+//	}
+
+// notes: This currently only supports string slices. Add as needed
+
+func deepCopyMapStringPBuilder(b map[string]*builder) map[string]interface{} {
+	c := map[string]interface{}{}
+	for k, v := range b {
+		tmp := []string{}
+		switch reflect.TypeOf(v.Settings).Kind() {
+		case reflect.Slice:
+			s := reflect.ValueOf(v.Settings)
+			l := s.Len()
+			tmp = make([]string, l)
+			for i := 0; i < l; i++ {
+				tmp[i] = s.Index(i).String()
+			}
+		}
+		c[k] = tmp
+	}
+	return c
+}
+
+

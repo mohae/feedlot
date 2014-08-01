@@ -216,7 +216,7 @@ func (r *rawTemplate) createBuilderVirtualBoxISO() (settings map[string]interfac
 	}
 
 	tmpVB := make([][]string, l)
-	vm_settings := interfaceToStringSlice(r.Builders[BuilderVirtualBoxISO].Arrays[VMSettings])
+	vm_settings := deepCopyInterfaceToSliceString(r.Builders[BuilderVirtualBoxISO].Arrays[VMSettings])
 	for i, v := range vm_settings {
 		k, val := parseVar(v)
 		val = r.replaceVariables(val)
@@ -370,20 +370,33 @@ func (r *rawTemplate) createBuilderVMWareISO() (settings map[string]interface{},
 func (r *rawTemplate) updateBuilders(new map[string]*builder) {
 	// If there is nothing new, old equals merged.
 	if len(new) <= 0 || new == nil {
+		jww.TRACE.Println("rawTemplate.updateBuilders: new was nil Returning w/o doing anything")
 		return
 	}
 	jww.TRACE.Println("rawTemplate.updateBuilders-new:\n" + json.MarshalIndentToString(new, "", indent))
 
-	// Convert to an interface.
+	// Deep Copy and Convert to an interface.
 	var ifaceOld map[string]interface{} = make(map[string]interface{}, len(r.Builders))
-	for i, o := range r.Builders {
+
+	for i, o := range r.Builders {	
 		ifaceOld[i] = o
 	}
+
 	// Convert to an interface.
 	var ifaceNew map[string]interface{} = make(map[string]interface{}, len(new))
-	for i, n := range new {
+
+	// deepCopy returns a map[string]interface{}
+	ifaceNew = deepCopyMapStringPBuilder(r.Builders)
+	jww.TRACE.Printf("\t***\trawTemplate.updateBuilders-ifaceOld: %p\n%s\n", ifaceOld, ifaceOld)
+	jww.TRACE.Printf("\t***\trawTemplate.updateBuilders-ifaceNew: %p\n%s\n", ifaceNew, ifaceNew)
+	jww.TRACE.Printf("\t***\trawTemplate.updateBuilders-rawTemplate: %p\n%s\n", r.Builders, r.Builders)
+/*
+
+	for
+ i, n := range new {
 		ifaceNew[i] = n
 	}
+*/
 
 	// Get all the keys from map.
 	var keys []string
@@ -397,24 +410,34 @@ func (r *rawTemplate) updateBuilders(new map[string]*builder) {
 		r.updateBuilderCommon(new[BuilderCommon])	
 	}
 
-	jww.TRACE.Println("rawTemplate.updateBuilders-postCommon:\t" + json.MarshalIndentToString(r.Builders, "", indent))
-
-	for _, v := range keys {
+	for k, v := range keys {
 		b := &builder{}
-		b = r.Builders[v]
-
-		// If the element for this key doesn't exist, skip it.
+		jww.TRACE.Println("################")
+		jww.TRACE.Printf("builder init- \t%p:\n%v\n", k, b, b)		
+		jww.TRACE.Printf("r.builder- \t%p:\n%v\n", r.Builders[v], r.Builders[v])		
+		b = r.Builders[v].DeepCopy()
+		jww.TRACE.Println("################")
+		jww.TRACE.Printf("builder copied- %v\t%p:\n%v\n", k, b, b)		
+		jww.TRACE.Printf("r.builder- \t%p:\n%v\n", r.Builders[v], r.Builders[v])		// If the element for this key doesn't exist, skip it.
+		jww.TRACE.Println("################")
 		if _, ok := new[v]; !ok {
 			continue
 		}
-
-		vm_settings = interfaceToStringSlice(new[v].Arrays[VMSettings])
+		
+		jww.TRACE.Printf("vm_settings- %v\t%p:\n%v\n", k, new[v].Arrays[VMSettings], new[v].Arrays[VMSettings])
+		jww.TRACE.Printf("new- %v\t%p:\n%v\n", k, v, v)
+		vm_settings = deepCopyInterfaceToSliceString(new[v].Arrays[VMSettings])
+		jww.TRACE.Println("ASRTTTTTTTTTTTTTTTT")
+		jww.TRACE.Printf("new[v].Arrays[VMSettings]- %v\t%p:\n%v\n", k, new[v].Arrays[VMSettings], new[v].Arrays[VMSettings])
+		jww.TRACE.Printf("vm_settings- %v\t%p:\n%v\n", k, vm_settings, vm_settings)
 		// If there is anything to merge, do so
-
 		if vm_settings != nil {
-			jww.TRACE.Println("rawTemplate.updateBuilders-build-preMerge:\t" + json.MarshalIndentToString(b, "", indent))			
-			b.mergeVMSettings(vm_settings)
-			jww.TRACE.Println("rawTemplate.updateBuilders-build-preMerge:\t" + json.MarshalIndentToString(b, "", indent))			
+			jww.TRACE.Printf("***\n")
+			jww.TRACE.Printf("%p:\t%v\n", b.Arrays[VMSettings], json.MarshalToString(b.Arrays[VMSettings]))
+				
+			b.Arrays[VMSettings] = b.mergedVMSettings(vm_settings)
+			jww.TRACE.Printf("%p:\t%v\n", b.Arrays[VMSettings], json.MarshalToString(b.Arrays[VMSettings]))
+
 			bM[v] = *b
 		}
 

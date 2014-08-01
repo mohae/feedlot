@@ -70,32 +70,6 @@ func newRawTemplate() *rawTemplate {
 	splitDate := strings.Split(date.String(), " ")
 	return &rawTemplate{date: splitDate[0], delim: os.Getenv(EnvParamDelimStart)}
 }
-//
-// ASDFJKWJETGFOJAW EJAWERTGJOAWORJGQAWJORGOJ#WQRG%$JW#A JM
-// AKGOFPRAJKETFOQAWJE$TGPFQ$TGJ Q#$TQPJ$TG#QWJGHPQJ%GYHPJQ#%YGJHP
-// ASDFJKWJETGFOJAW EJAWERTGJOAWORJGQAWJORGOJ#WQRG%$JW#A JM
-// AKGOFPRAJKETFOQAWJE$TGPFQ$TGJ Q#$TQPJ$TG#QWJGHPQJ%GYHPJQ#%YGJHP
-
-// r.setDefaultTemplate sets the current template with the passed template
-// information, which is the distro's default template. All raw templates start
-// with this.
-func (r *rawTemplate)initDistroTemplate(d *rawTemplate) {
-	r.IODirInf = d.IODirInf
-	r.PackerInf = d.PackerInf
-	r.BuildInf = d.BuildInf
-	r.Arch = d.Arch
-	r.BaseURL = d.BaseURL
-	r.Type = d.Type
-	r.Image = d.Image
-	r.Release = d.Release
-	r.BuilderTypes = d.BuilderTypes
-	r.Builders = d.Builders
-	r.PostProcessorTypes = d.PostProcessorTypes
-	r.PostProcessors = d.PostProcessors
-	r.ProvisionerTypes = d.ProvisionerTypes
-	r.Provisioners = d.Provisioners
-	return
-}
 
 // r.createPackerTemplate creates a Packer template from the rawTemplate that
 // can be marshalled to JSON.
@@ -200,12 +174,12 @@ func (r *rawTemplate) variableSection() (map[string]interface{}, error) {
 }
 
 
-// r.update takes the incoming distro settings and merges
-// them with its existing settings, which are rancher's defaults to create the
-// final default settings for each supported distribution.
-//
-func (r *rawTemplate) update(d *distro) {
-	jww.TRACE.Println("rawTemplate.update\n" + json.MarshalIndentToString(d, "", indent))
+// r.setDefaults takes the incoming distro settings and merges them with its
+// existing settings, which are set to rancher's defaults, to create the 
+// default template.
+func (r *rawTemplate) setDefaults(d *distro) {
+//	jww.TRACE.Printf("rawTemplate.setDefaults: entering using-------------\n%s\nDistro Settings:\t%s", json.MarshalToString(r), json.MarshalToString(d))
+
 	// merges Settings between an old and new template.
 	// Note: Arch, Image, and Release are not updated here as how these fields
 	// are updated depends on whether this is a build from a distribution's
@@ -228,9 +202,12 @@ func (r *rawTemplate) update(d *distro) {
 	if d.ProvisionerTypes != nil && len(d.ProvisionerTypes) > 0 {
 		r.ProvisionerTypes = d.ProvisionerTypes
 	}
+
+	jww.TRACE.Printf("+++++++++++++++++rawTemplate.setDefaults:\nupdate template builders with %#s\n", json.MarshalToString(d.Builders))
 	// merge the build portions.
 	r.updateBuilders(d.Builders)
-//	jww.TRACE.Printf("Merged Builder: %v", r.Builders)
+	jww.TRACE.Printf("+++++++++++++++++rawTemplate.setDefaults:\nupdated template builders using %#s\n", json.MarshalToString(r.Builders))
+
 	r.updatePostProcessors(d.PostProcessors)
 //	jww.TRACE.Printf("Merged PostProcessors: %v", r.PostProcessors)
 	r.updateProvisioners(d.Provisioners)
