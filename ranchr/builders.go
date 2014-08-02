@@ -368,37 +368,48 @@ func (r *rawTemplate) updateBuilders(new map[string]*builder) {
 		return
 	}
 
-	// Convert to an interface.
+	// Convert the existing Builders to interfaces.
 	var ifaceOld map[string]interface{} = make(map[string]interface{}, len(r.Builders))
-	for i, o := range r.Builders {	
-		ifaceOld[i] = o
-	}
-
-	// Do a deep copy of the new builder info.
+	ifaceOld = deepCopyMapStringPBuilder(r.Builders)
+//	for i, o := range r.Builders {	
+//		ifaceOld[i] = o
+//	}
+	// Convert the new Builders to interfaces.
 	var ifaceNew map[string]interface{} = make(map[string]interface{}, len(new))
 	ifaceNew = deepCopyMapStringPBuilder(new)
 
-	// Get all the keys from map.
+	// Make the slice as long as the slices in both builders, odds are its
+	// shorter, but this is the worst case.
 	var keys []string
-	keys = keysFromMaps(ifaceOld, ifaceNew)
 
+	// Convert the keys to a map
+	keys = mergedKeysFromMaps(ifaceOld, ifaceNew)
 	var vm_settings []string
 
-	// If there's a builder with the key BuilderCommon, merge them
+	// If there's a builder with the key BuilderCommon, merge them. This is
+	// a special case for builders only.
 	if _, ok := new[BuilderCommon]; ok {
 		r.updateBuilderCommon(new[BuilderCommon])	
 	}
 
 	b := &builder{}	
 
+	// Copy: if the key exists in the new builder only.
+	// Ignore: if the key does not exist in the new builder.
+	// Merge: if the key exists in both the new and old builder.
 	for _, v := range keys {
-		b = r.Builders[v].DeepCopy()
+		// If it doesn't exist in the old builder, add it.
+		if _, ok := r.Builders[v]; !ok {
+			r.Builders[v] = new[v].DeepCopy()
+			continue
+		}
 
 		// If the element for this key doesn't exist, skip it.
 		if _, ok := new[v]; !ok {
 			continue
 		}
 		
+		b = r.Builders[v].DeepCopy()
 		vm_settings = deepCopyInterfaceToSliceString(new[v].Arrays[VMSettings])
 
 		// If there is anything to merge, do so

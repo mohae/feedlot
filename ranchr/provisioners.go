@@ -6,12 +6,12 @@ import ()
 
 // Merges the new config with the old. The updates occur as follows:
 //
-//	* The existing configuration is used when no `new` postProcessors are
+//	* The existing configuration is used when no `new` provisioners are
 //	  specified.
-//	* When 1 or more `new` postProcessors are specified, they will replace
-//        all existing postProcessors. In this situation, if a postProcessor
-//	  exists in the `old` map but it does not exist in the `new` map, that
-//        postProcessor will be orphaned.
+//	* When 1 or more `new` provisioner are specified, they will replace all
+//	  existing provisioner. In this situation, if a provisioner exists in 
+//	  the `old` map but it does not exist in the `new` map, that 
+//	  provisioner will be orphaned.
 // If there isn't a new config, return the existing as there are no
 // overrides
 func (r *rawTemplate) updateProvisioners(new map[string]*provisioner) {
@@ -20,26 +20,41 @@ func (r *rawTemplate) updateProvisioners(new map[string]*provisioner) {
 		return
 	}
 
-	// Convert to an interface.
+	// Convert the existing provisioners to interface.
 	var ifaceOld map[string]interface{} = make(map[string]interface{}, len(r.Provisioners))
-	for i, o := range r.Provisioners {
-		ifaceOld[i] = o
-	}
+	ifaceOld = deepCopyMapStringPProvisioner(r.Provisioners)
+//	for i, o := range r.Provisioners {
+//		ifaceOld[i] = o
+//	}
 
-	// Convert to an interface.
+	// Convert the new provisioners to interface.
 	var ifaceNew map[string]interface{} = make(map[string]interface{}, len(new))
-	for i, n := range new {
-		ifaceNew[i] = n
-	}
+	ifaceNew = deepCopyMapStringPProvisioner(new)
+//	for i, n := range new {
+//		ifaceNew[i] = n
+//	}
 
 	// Get the all keys from both maps
 	var keys[]string
-	keys = keysFromMaps(ifaceOld, ifaceNew)
-
-	pM := map[string]provisioner{}
+	keys = mergedKeysFromMaps(ifaceOld, ifaceNew)
 	p := &provisioner{}
 
+	// Copy: if the key exists in the new provisioners only.
+	// Ignore: if the key does not exist in the new provisioners.
+	// Merge: if the key exists in both the new and old provisioners.
 	for _, v := range keys {
+		// If it doesn't exist in the old builder, add it.
+		if _, ok := r.Provisioners[v]; !ok {
+			r.Provisioners[v] = new[v].DeepCopy()
+			continue
+		}
+
+		// If the element for this key doesn't exist, skip it.
+		if _, ok := new[v]; !ok {
+			continue
+		}
+		
+		p = r.Provisioners[v].DeepCopy()
 		p = r.Provisioners[v]
 		
 		if p == nil {
@@ -52,10 +67,24 @@ func (r *rawTemplate) updateProvisioners(new map[string]*provisioner) {
 		}
 
 		p.mergeSettings(new[v].Settings)
-		pM[v] = *p
+//		p.mergeArrays(new[v].Arrays)
+		r.Provisioners[v] = p
 	}
 
 	return
+}
+
+// deepCopyMapStringPProvisioners makes a deep copy of each builder passed and 
+// returns the copie map[string]*provisioner as a map[string]interface{}
+// notes: This currently only supports string slices.
+func deepCopyMapStringPProvisioner(p map[string]*provisioner) map[string]interface{} {
+	c := map[string]interface{}{}
+	for k, v := range p {
+		tmpP := &provisioner{}
+		tmpP = v.DeepCopy()
+		c[k] = tmpP
+	}
+	return c
 }
 
 /*

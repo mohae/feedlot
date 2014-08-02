@@ -28,24 +28,37 @@ func (r *rawTemplate) updatePostProcessors(new map[string]*postProcessor) {
 		return
 	}
 
-	// Convert to an interface.
+	// Convert the existing postProcessors to interface.
 	var ifaceOld map[string]interface{} = make(map[string]interface{}, len(r.PostProcessors))
-	for i, o := range r.PostProcessors {
-		ifaceOld[i] = o
-	}
+	ifaceOld = deepCopyMapStringPPostProcessor(r.PostProcessors)
+//	for i, o := range r.PostProcessors {
+//		ifaceOld[i] = o
+//	}
 
-	// Do a deep copy of the new postProcessor info.
+	// Convert the new postProcessors to interfaces
 	var ifaceNew map[string]interface{} = make(map[string]interface{}, len(new))
 	ifaceNew = deepCopyMapStringPPostProcessor(new)
 
 	// Get the all keys from both maps
 	var keys[]string
-	keys = keysFromMaps(ifaceOld, ifaceNew)
-
-//	pM := map[string]postProcessor{}
+	keys = mergedKeysFromMaps(ifaceOld, ifaceNew)
 	p := &postProcessor{}
 
+	// Copy: if the key exists in the new postProcessors only.
+	// Ignore: if the key does not exist in the new postProcessors.
+	// Merge: if the key exists in both the new and old postProcessors.
 	for _, v := range keys {
+		// If it doesn't exist in the old builder, add it.
+		if _, ok := r.PostProcessors[v]; !ok {
+			r.PostProcessors[v] = new[v].DeepCopy()
+			continue
+		}
+
+		// If the element for this key doesn't exist, skip it.
+		if _, ok := new[v]; !ok {
+			continue
+		}
+		
 		p = r.PostProcessors[v].DeepCopy()
 		
 		if p == nil {
@@ -58,6 +71,7 @@ func (r *rawTemplate) updatePostProcessors(new map[string]*postProcessor) {
 		}
 
 		p.mergeSettings(new[v].Settings)
+		p.mergeArrays(new[v].Arrays)
 		r.PostProcessors[v] = p
 	}
 

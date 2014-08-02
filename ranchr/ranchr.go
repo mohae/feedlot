@@ -940,7 +940,7 @@ func getMergedProvisioners(old map[string]provisioner, new map[string]provisione
 
 	// Get the all keys from both maps
 	var keys[]string
-	keys = keysFromMaps(ifaceOld, ifaceNew)
+	keys = mergedKeysFromMaps(ifaceOld, ifaceNew)
 
 	pM := map[string]provisioner{}
 
@@ -1178,10 +1178,9 @@ func pathExists(p string) (bool, error) {
 	return false, err
 }
 
-// Takes a variadic array of maps and returns a merged key
-// types is the 'type' of the interface, e.g. 'virtualbox-iso', 'vagrant', 
-// 'shell', etc. 
-func keysFromMaps(m ...map[string]interface{}) []string {
+// mergedKeysFromMaps takes a variadic array of maps and returns a merged 
+// slice of keys for those maps. 
+func mergedKeysFromMaps(m ...map[string]interface{}) []string {
 	cnt := 0
 	types := make([][]string, len(m))
 	
@@ -1196,6 +1195,7 @@ func keysFromMaps(m ...map[string]interface{}) []string {
 		types[i] = tmpK
 	}
 
+	// Merge the slices, de-dupes keys.
 	mergedKeys := MergeSlices(types...)
 
 	return mergedKeys
@@ -1242,4 +1242,8 @@ func deepCopyMapStringInterface(m map[string]interface{}) map[string]interface{}
 	}
 
 	return c
+}
+
+func mapToMapStringInterface(m map[string]interface{}) map[string]interface{} {
+	return m
 }
