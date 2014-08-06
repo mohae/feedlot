@@ -415,7 +415,7 @@ func BuildDistro(a ArgsFilter) error {
 
 // Create Packer templates from specified build templates.
 func buildPackerTemplateFromDistro(a ArgsFilter) error {
-	var d *rawTemplate
+	var t *rawTemplate
 	var err error
 
 	if a.Distro == "" {
@@ -424,10 +424,9 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 		return err
 	}
 
-	return nil
 
 	// Get the default for this distro, if one isn't found then it isn't Supported.
-	if d, err = distros.GetTemplate(a.Distro); err != nil {
+	if t, err = distros.GetTemplate(a.Distro); err != nil {
 		err = errors.New("buildPackerTemplateFromDistro: Cannot build a packer template from passed distro: " + a.Distro + " is not Supported. Please pass a Supported distribution.")
 		jww.ERROR.Println(err.Error())
 		return err
@@ -435,32 +434,32 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 
 	// If any overrides were passed, set them.
 	if a.Arch != "" {
-		d.Arch = a.Arch
+		t.Arch = a.Arch
 	}
 
 	if a.Image != "" {
-		d.Image = a.Image
+		t.Image = a.Image
 	}
 
 	if a.Release != "" {
-		d.Release = a.Release
+		t.Release = a.Release
 	}
 
-	d.BuildName = ":type-:release-:arch-:image-rancher"
+	t.BuildName = ":type-:release-:arch-:image-rancher"
 	
-	// create the rawTemplate and set it to the distro's settings.
-	rTpl := newRawTemplate()
-	rTpl.updateBuilders(d.Builders)
+//	// make a copy of the .
+//	rTpl := newRawTemplate()
+//	rTpl.updateBuilders(d.Builders)
 	
-	return nil
 	// Since distro builds don't actually have a build name, we create one
 	// out of the args used to create it.
-	rTpl.BuildName = d.Type + "-" + d.Release + "-" + d.Arch + "-" + d.Image
+	t.BuildName = t.Type + "-" + t.Release + "-" + t.Arch + "-" + t.Image
 
+	jww.TRACE.Printf("\nbuildPackerTemplateFromDistro-template: %v\n", json.MarshalIndentToString(t, "", indent))
 	pTpl := packerTemplate{}
 
 	// Now that the raw template has been made, create a Packer template out of it
-	if pTpl, err = rTpl.createPackerTemplate(); err != nil {
+	if pTpl, err = t.createPackerTemplate(); err != nil {
 		jww.ERROR.Println(err.Error())
 		return err
 	}
@@ -482,7 +481,7 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 		return err
 	}
 */
-	jww.INFO.Println("Created Packer template and associated build directory for " + d.BuildName)
+	jww.INFO.Println("Created Packer template and associated build directory for " + t.BuildName)
 	return nil
 }
 

@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	_ "github.com/mohae/customjson"
+	json "github.com/mohae/customjson"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -52,7 +52,7 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 
 		switch bType {
 		case BuilderVMWareISO:
-//			tmpS, tmpVar, err = r.createBuilderVMWareISO()
+			tmpS, tmpVar, err = r.createBuilderVMWareISO()
 		case BuilderVMWareOVF:
 //			tmpS, tmpVar, err = r.createBuilderVMWareOVF()
 
@@ -363,6 +363,7 @@ func (r *rawTemplate) createBuilderVMWareISO() (settings map[string]interface{},
 //	  	* `guest_os_type`: This is generally set at Packer Template 
 //		  generation time by Rancher.	
 func (r *rawTemplate) updateBuilders(new map[string]*builder) {
+	fmt.Printf("Entering rawTemplate.updateBuilders with: %v\n", json.MarshalToString(new))
 	// If there is nothing new, old equals merged.
 	if len(new) <= 0 || new == nil {
 		return
@@ -435,7 +436,7 @@ func (r *rawTemplate) updateBuilders(new map[string]*builder) {
 func (r *rawTemplate) updateBuilderCommon(new *builder) {
 	// If the existing builder doesn't have a BuilderCommon section, just add it
 	if _, ok := r.Builders[BuilderCommon]; !ok {
-		r.Builders[BuilderCommon] = new
+		r.Builders[BuilderCommon] = &builder{templateSection: templateSection{Settings: new.Settings, Arrays: new.Arrays}}
 		return
 	}
 

@@ -128,24 +128,23 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]i
 	var ndx int
 	p = make([]interface{}, len(r.PostProcessorTypes))
 
-	// Generate the builders for each builder type.
+
+	// Generate the postProcessor for each postProcessor type.
 	for _, pType := range r.PostProcessorTypes {
 		jww.TRACE.Println(pType)
 		// TODO calculate the length of the two longest Settings sections
-		// and make it that length. That will prevent a panic should 
-		// there be more than 50 options. Besides its stupid, on so many 
+		// and make it that length. That will prevent a panic unless  
+		// there are more than 50 options. Besides its stupid, on so many 
 		// levels, to hard code this...which makes me...d'oh!
 		tmpVar = make([]string, 50)
 		tmpS = make(map[string]interface{})
 
 		switch pType {
 		case PostProcessorVagrant:
-			// Create the settings
-//			tmpS,  ok = p.(settingsToMap(k, r)
-
+			tmpS, tmpVar, err = r.createPostProccessorVagrant()
 		case PostProcessorVagrantCloud:
 			// Create the settings
-//			tmpS = p.settingsToMap(k, r)
+			tmpS, tmpVar, err = r.createPostProcessorVagrantCloud()
 
 		default:
 			err = errors.New("the requested post-processor, '" + pType + "', is not supported")
@@ -159,6 +158,50 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]i
 	}
 
 	return p, vars, nil
+}
+
+// createPostProcessorVagrant() creates a map of settings for Packer's Vagrant
+// post-processor. Any values that aren't supported by the Vagrant post-
+// processor are ignored.
+func (r *rawTemplate) createPostProccessorVagrant() (settings map[string]interface{}, vars []string, err error) {
+	settings = make(map[string]interface{})
+	settings["type"] = PostProcessorVagrant
+	
+	jww.TRACE.Printf("rawTemplate.createPostProcessorVagrant-rawtemplate\n")
+
+	// For each value, extract its key value pair and then process. Only 
+	// process the supported keys. Key validation isn't done here, leaving
+	// that for Packer.
+	var k, v string
+	for _, s := range r.PostProcessors[PostProcessorVagrant].Settings {
+		k, v = parseVar(s)
+		switch k {
+		case "compression_level", "output":
+			settings[s] = v
+		case "keep_input_artifact":
+			//lowercase it, just in case.
+			settings[s] = strings.ToLower(v)
+		default:
+			jww.WARN.Println("An unsupported key was encountered: " + k)
+		}
+	}
+
+	// Process the Arrays.
+	for name, val := range r.PostProcessors[PostProcessorVagrant].Arrays {
+		array := deepCopyInterfaceToSliceString(val)
+		if array != nil {
+			settings[name] = array
+		}
+		jww.TRACE.Printf("\t%v\t%v\n", name, val)
+	}
+	return settings, vars, err
+}
+
+func (r *rawTemplate) createPostProcessorVagrantCloud() (settings map[string]interface{}, vars []string, err error) {
+	settings = make(map[string]interface{})
+	settings["type"] = PostProcessorVagrantCloud
+
+	return nil, nil, err
 }
 
 // deepCopyMapStringPPostProcessor makes a deep copy of each builder passed and 
