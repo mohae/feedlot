@@ -112,7 +112,7 @@ func (p *provisioner) settingsToMap(Type string, r *rawTemplate) map[string]inte
 	return m
 }
 // r.createProvisioner creates the provisioners for a build.
-func (r *rawTemplate) createProvisioner() (p []interface{}, vars map[string]interface{}, err error) {
+func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]interface{}, err error) {
 	if r.ProvisionerTypes == nil || len(r.ProvisionerTypes) <= 0 {
 		err = fmt.Errorf("no provisioners types were configured, unable to create provisioner")
 		jww.ERROR.Println(err.Error())

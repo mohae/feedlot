@@ -76,7 +76,7 @@ func newRawTemplate() *rawTemplate {
 func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 	jww.DEBUG.Printf("Entering...")
 	var err error
-	var vars map[string]interface{}
+//	var vars map[string]interface{}
 
 	// Resolve the Rancher variables to their final values.
 	r.mergeVariables()
@@ -87,55 +87,28 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 	p.Description = r.Description
 
 	// Builders
-	iSl := make([]interface{}, len(r.Builders))
-	if p.Builders, vars, err = r.createBuilders(); err != nil {
+//	iSl := make([]interface{}, len(r.Builders))
+	if p.Builders, _, err = r.createBuilders(); err != nil {
 		jww.ERROR.Println(err.Error())
 		return p, err
 	}
 
 	// Post-Processors
-	iSl = make([]interface{}, len(r.PostProcessors))
+//	iSl = make([]interface{}, len(r.PostProcessors))
 
-	if p.PostProcessors, vars, err = r.createPostProcessors(); err != nil {
+	if p.PostProcessors, _, err = r.createPostProcessors(); err != nil {
 		jww.ERROR.Println(err.Error())
 		return p, err
 	}
 
-/*
+
 	// Provisioners
-//	i := 0
-//	iM := make(map[string]interface{})
-	iSl = make([]interface{}, len(r.Provisioners))
+//	iSl = make([]interface{}, len(r.Provisioners))
 
-	if p.Provisioners, vars, err = r.createProvisioners(); err != nil {
+	if p.Provisioners, _, err = r.createProvisioners(); err != nil {
 		jww.ERROR.Println(err.Error())
 		return p, err
 	}
-*/
-/*	for k, pr := range r.Provisioners {
-		iM, err = pr.settingsToMap(k, r)
-		if err != nil {
-			jww.ERROR.Println(err.Error())
-			return p, err
-		}
-
-		// If there are any scripts add them. Scripts are already in an array. Scripts use
-		// a map[string]interface{} structure for JSON
-		if len(pr.Scripts) > 0 {
-
-			// The variables in each script element need to be replaced.
-			for i, script := range pr.Scripts {
-				pr.Scripts[i] = r.replaceVariables(script)
-			}
-
-			iM["scripts"] = pr.Scripts
-		}
-		iSl[i] = iM
-		i++
-	}
-
-*/	p.Provisioners = iSl
-	p.Variables = vars
 
 	// Now we can create the Variable Section
 	// TODO
