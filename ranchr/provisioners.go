@@ -2,7 +2,14 @@
 // supported provisioners here.
 package ranchr
 
-import ()
+import (
+	"errors"
+	"fmt"
+	"strings"
+
+	json "github.com/mohae/customjson"
+	jww "github.com/spf13/jwalterweatherman"
+)
 
 // Merges the new config with the old. The updates occur as follows:
 //
@@ -55,7 +62,6 @@ func (r *rawTemplate) updateProvisioners(new map[string]*provisioner) {
 		}
 		
 		p = r.Provisioners[v].DeepCopy()
-		p = r.Provisioners[v]
 		
 		if p == nil {
 			p = &provisioner{templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
@@ -74,6 +80,113 @@ func (r *rawTemplate) updateProvisioners(new map[string]*provisioner) {
 	return
 }
 
+// Go through all of the Settings and convert them to a map. Each setting
+// is parsed into its constituent parts. The value then goes through
+// variable replacement to ensure that the settings are properly resolved.
+func (p *provisioner) settingsToMap(Type string, r *rawTemplate) map[string]interface{} {
+	var k string
+	var v interface{}
+	m := make(map[string]interface{}, len(p.Settings))
+	m["type"] = Type
+
+	for _, s := range p.Settings {
+		k, v = parseVar(s)
+
+		switch k {
+		// If its not set to 'true' then false. This is a case insensitive
+		// comparison.
+		case "binary":
+			if strings.ToLower(fmt.Sprint(v)) == "true" {
+				v = true
+			} else {
+				v = false
+			}
+		default:
+			v = r.replaceVariables(fmt.Sprint(v))
+		}
+
+		m[k] = v
+	}
+
+	jww.TRACE.Printf("provisioners Map: %v\n", json.MarshalIndentToString(m, "", indent))
+	return m
+}
+// r.createProvisioner creates the provisioners for a build.
+func (r *rawTemplate) createProvisioner() (p []interface{}, vars map[string]interface{}, err error) {
+	if r.ProvisionerTypes == nil || len(r.ProvisionerTypes) <= 0 {
+		err = fmt.Errorf("no provisioners types were configured, unable to create provisioner")
+		jww.ERROR.Println(err.Error())
+		return nil, nil, err
+	}
+
+	var vrbls, tmpVar []string
+	var tmpS map[string]interface{}
+	var ndx int
+	p = make([]interface{}, len(r.ProvisionerTypes))
+
+
+	// Generate the postProcessor for each postProcessor type.
+	for _, pType := range r.ProvisionerTypes {
+		jww.TRACE.Println(pType)
+		// TODO calculate the length of the two longest Settings sections
+		// and make it that length. That will prevent a panic unless  
+		// there are more than 50 options. Besides its stupid, on so many 
+		// levels, to hard code this...which makes me...d'oh!
+		tmpVar = make([]string, 50)
+		tmpS = make(map[string]interface{})
+
+		switch pType {
+		case ProvisionerShell:
+			tmpS, tmpVar, err = r.createProvisionerShell()
+
+		default:
+			err = errors.New("the requested provisioner, '" + pType + "', is not supported")
+			jww.ERROR.Println(err.Error())
+			return nil, nil, err
+		}
+
+		p[ndx] = tmpS
+		ndx++
+		vrbls = append(vrbls, tmpVar...)
+	}
+
+	return p, vars, nil
+}
+
+// createProvisionerShell() creates a map of settings for Packer's shell
+// provisioner. Any values that aren't supported by the shell provisioner are
+// ignored.
+func (r *rawTemplate) createProvisionerShell() (settings map[string]interface{}, vars []string, err error) {
+	settings = make(map[string]interface{})
+	settings["type"] = ProvisionerShell
+	
+	jww.TRACE.Printf("rawTemplate.createProvisionerShell-rawtemplate\n")
+
+	// For each value, extract its key value pair and then process. Only 
+	// process the supported keys. Key validation isn't done here, leaving
+	// that for Packer.
+	var k, v string
+	for _, s := range r.Provisioners[ProvisionerShell].Settings {
+		k, v = parseVar(s)
+		switch k {
+		case "binary", "execute_command", "inline_shebang", "remote_path", 
+			"start_retry_timeout":
+			settings[s] = v
+		default:
+			jww.WARN.Println("An unsupported key was encountered: " + k)
+		}
+	}
+
+	// Process the Arrays.
+	for name, val := range r.Provisioners[ProvisionerShell].Arrays {
+		array := deepCopyInterfaceToSliceString(val)
+		if array != nil {
+			settings[name] = array
+		}
+		jww.TRACE.Printf("\t%v\t%v\n", name, val)
+	}
+	return settings, vars, err
+}
 // deepCopyMapStringPProvisioners makes a deep copy of each builder passed and 
 // returns the copie map[string]*provisioner as a map[string]interface{}
 // notes: This currently only supports string slices.

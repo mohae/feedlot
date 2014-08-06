@@ -99,6 +99,8 @@ func (p *postProcessor) settingsToMap(Type string, r *rawTemplate) map[string]in
 		k, v = parseVar(s)
 
 		switch k {
+		// If its not set to 'true' then false. This is a case insensitive
+		// comparison.
 		case "keep_input_artifact":
 			if strings.ToLower(fmt.Sprint(v)) == "true" {
 				v = true
@@ -176,11 +178,8 @@ func (r *rawTemplate) createPostProccessorVagrant() (settings map[string]interfa
 	for _, s := range r.PostProcessors[PostProcessorVagrant].Settings {
 		k, v = parseVar(s)
 		switch k {
-		case "compression_level", "output":
+		case "compression_level", "keep_input_artifact", "output":
 			settings[s] = v
-		case "keep_input_artifact":
-			//lowercase it, just in case.
-			settings[s] = strings.ToLower(v)
 		default:
 			jww.WARN.Println("An unsupported key was encountered: " + k)
 		}
