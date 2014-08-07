@@ -109,7 +109,7 @@ var (
 )
 
 var     Builds		*builds
-var 	distros 	distroDefaults
+var 	Distros 	distroDefaults
 
 // AppConfig contains the current Rancher configuration...loaded at start-up.
 var AppConfig appConfig
@@ -223,7 +223,7 @@ func (d *distroDefaults) Set() error {
 		d.Templates[k] = tmp
 	}
 
-	distros.IsSet = true
+	Distros.IsSet = true
 	return nil	
 }
 /*
@@ -368,16 +368,16 @@ func loadBuilds() error {
 // that are to be applied to the build.
 // Returns an error or nil if successful.
 func BuildDistro(a ArgsFilter) error {
-	if !distros.IsSet {
+	if !Distros.IsSet {
 
-		if err := distros.Set(); err != nil {
+		if err := Distros.Set(); err != nil {
 			jww.ERROR.Println(err.Error())
 			return err
 		}
 
 	}
 
-	fmt.Println("BuildDistro:\n" + json.MarshalIndentToString(distros, "", indent))
+	fmt.Println("BuildDistro:\n" + json.MarshalIndentToString(Distros, "", indent))
 	if err := buildPackerTemplateFromDistro(a); err != nil {
 		jww.ERROR.Println(err.Error())
 		return err
@@ -427,7 +427,7 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 
 
 	// Get the default for this distro, if one isn't found then it isn't Supported.
-	if t, err = distros.GetTemplate(a.Distro); err != nil {
+	if t, err = Distros.GetTemplate(a.Distro); err != nil {
 		err = errors.New("buildPackerTemplateFromDistro: Cannot build a packer template from passed distro: " + a.Distro + " is not Supported. Please pass a Supported distribution.")
 		jww.ERROR.Println(err.Error())
 		return err
@@ -499,9 +499,9 @@ func BuildBuilds(buildNames ...string) (string, error) {
 	// Only load supported if it hasn't been loaded. Even though LoadSupported
 	// uses a mutex to control access to prevent race conditions, no need to
 	// call it if its already loaded.
-	if !distros.IsSet {
+	if !Distros.IsSet {
 
-		if err := distros.Set(); err != nil {
+		if err := Distros.Set(); err != nil {
 			jww.ERROR.Println(err.Error())
 			return "", err
 		}
@@ -546,15 +546,14 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 		doneCh <- err
 		return
 	}
-/*
+
 	var tpl, bld *rawTemplate
 	var ok bool
 	// Check the type and create the defaults for that type, if it doesn't already exist.
 	tpl = &rawTemplate{}
 	bld = &rawTemplate{}
-	bld, ok = supportedBuilds.Build[buildName]
 
-	if !ok {
+	if bld, ok = Builds.Build[buildName]; !ok {
 		err := errors.New("Unable to create template for the requested build, " + buildName + ". Requested Build definition was not found.")
 		jww.ERROR.Println(err.Error())
 		doneCh <- err
@@ -562,7 +561,7 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 	}
 
 	// See if the distro default exists.
-	if tpl, ok = distroDefaults[bld.Type]; !ok {
+	if tpl, ok = Distros.Templates[bld.Type]; !ok {
 		err := errors.New("Requested distribution, " + bld.Type + ", is not Supported. The Packer template for the requested build could not be created.")
 		jww.ERROR.Println(err.Error())
 		doneCh <- err
@@ -585,7 +584,7 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 	bld.BuildName = buildName
 
 	// create build template() then call create packertemplate
-	tpl.build = distroDefaults[bld.Type].build
+	tpl.build = Distros.Templates[bld.Type].build
 	tpl.updateBuildSettings(bld)
 
 	pTpl := packerTemplate{}
@@ -599,18 +598,18 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 
 	_ = pTpl
 	// Process the scripts for the Packer template.
-//	var scripts []string
-//	scripts = tpl.ScriptNames()
+	var scripts []string
+	scripts = tpl.ScriptNames()
 
 
-	if err = pTpl.TemplateToFileJSON(tpl.IODirInf, tpl.BuildInf, scripts); err != nil {
+	if err = pTpl.create(tpl.IODirInf, tpl.BuildInf, scripts); err != nil {
 		jww.ERROR.Println(err.Error())
 		doneCh <- err
 		return
 	}
 	jww.INFO.Println("Created Packer template and associated build directory for build:" + buildName + ".")
 	doneCh <- nil
-*/
+
 	return
 }
 

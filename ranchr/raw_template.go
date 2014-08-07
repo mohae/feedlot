@@ -185,13 +185,12 @@ func (r *rawTemplate) setDefaults(d *distro) {
 	return
 }
 
-/*
+
 // r.updateBuildSettings merges Settings between an old and new template. Note:
 // Arch, Image, and Release are not updated here as how these fields are 
 // updated depends on whether this is a build from a distribution's default 
 // template or from a defined build template.
 func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
-	jww.TRACE.Print(json.MarshalIndentToString(bld, "", indent))
 	r.IODirInf.update(bld.IODirInf)
 	r.PackerInf.update(bld.PackerInf)
 	r.BuildInf.update(bld.BuildInf)
@@ -201,7 +200,17 @@ func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
 		r.BuilderTypes = bld.BuilderTypes
 	}
 
-	// TODO merge the build portions.
+	// If defined, PostProcessorTypes override any prior PostProcessorTypes Settings
+	if bld.PostProcessorTypes != nil && len(bld.PostProcessorTypes) > 0 {
+		r.PostProcessorTypes = bld.PostProcessorTypes
+	}
+
+	// If defined, ProvisionerTypes override any prior ProvisionerTypes Settings
+	if bld.ProvisionerTypes != nil && len(bld.ProvisionerTypes) > 0 {
+		r.ProvisionerTypes = bld.ProvisionerTypes
+	}
+
+	// merge the build portions.
 	// Should this be broken up? No
 	// it should be calling a method so nothing is returned!
 	//
@@ -209,13 +218,13 @@ func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
 	//	update builders
 	r.updateBuilders(bld.Builders)
 	r.updatePostProcessors(bld.PostProcessors)
-//	r.updateProvisioners(bld.Provisioners)
+	r.updateProvisioners(bld.Provisioners)
 //	r.PostProcessors = getMergedPostProcessors(r.PostProcessors, bld.PostProcessors)
 //	r.Provisioners = getMergedProvisioners(r.Provisioners, bld.Provisioners)
 
 	return
 }
-*/
+
 // Get a slice of script names from the shell provisioner, if any.
 func (r *rawTemplate) ScriptNames() []string {
 	jww.DEBUG.Println("rawTemplate.ScriptNames: enter")
