@@ -1,4 +1,4 @@
-// create_provisioners.go creates the provisioners for a Packer build. Add 
+// create_provisioners.go creates the provisioners for a Packer build. Add
 // supported provisioners here.
 package ranchr
 
@@ -17,8 +17,8 @@ import (
 //	* The existing configuration is used when no `new` provisioners are
 //	  specified.
 //	* When 1 or more `new` provisioner are specified, they will replace all
-//	  existing provisioner. In this situation, if a provisioner exists in 
-//	  the `old` map but it does not exist in the `new` map, that 
+//	  existing provisioner. In this situation, if a provisioner exists in
+//	  the `old` map but it does not exist in the `new` map, that
 //	  provisioner will be orphaned.
 // If there isn't a new config, return the existing as there are no
 // overrides
@@ -31,19 +31,19 @@ func (r *rawTemplate) updateProvisioners(new map[string]*provisioner) {
 	// Convert the existing provisioners to interface.
 	var ifaceOld map[string]interface{} = make(map[string]interface{}, len(r.Provisioners))
 	ifaceOld = DeepCopyMapStringPProvisioner(r.Provisioners)
-//	for i, o := range r.Provisioners {
-//		ifaceOld[i] = o
-//	}
+	//	for i, o := range r.Provisioners {
+	//		ifaceOld[i] = o
+	//	}
 
 	// Convert the new provisioners to interface.
 	var ifaceNew map[string]interface{} = make(map[string]interface{}, len(new))
 	ifaceNew = DeepCopyMapStringPProvisioner(new)
-//	for i, n := range new {
-//		ifaceNew[i] = n
-//	}
+	//	for i, n := range new {
+	//		ifaceNew[i] = n
+	//	}
 
 	// Get the all keys from both maps
-	var keys[]string
+	var keys []string
 	keys = mergedKeysFromMaps(ifaceOld, ifaceNew)
 	p := &provisioner{}
 
@@ -61,9 +61,9 @@ func (r *rawTemplate) updateProvisioners(new map[string]*provisioner) {
 		if _, ok := new[v]; !ok {
 			continue
 		}
-		
+
 		p = r.Provisioners[v].DeepCopy()
-		
+
 		if p == nil {
 			p = &provisioner{templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
 		}
@@ -74,7 +74,7 @@ func (r *rawTemplate) updateProvisioners(new map[string]*provisioner) {
 		}
 
 		p.mergeSettings(new[v].Settings)
-//		p.mergeArrays(new[v].Arrays)
+		//		p.mergeArrays(new[v].Arrays)
 		r.Provisioners[v] = p
 	}
 
@@ -112,6 +112,7 @@ func (p *provisioner) settingsToMap(Type string, r *rawTemplate) map[string]inte
 	jww.TRACE.Printf("provisioners Map: %v\n", json.MarshalIndentToString(m, "", indent))
 	return m
 }
+
 // r.createProvisioner creates the provisioners for a build.
 func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]interface{}, err error) {
 	if r.ProvisionerTypes == nil || len(r.ProvisionerTypes) <= 0 {
@@ -125,13 +126,12 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 	var ndx int
 	p = make([]interface{}, len(r.ProvisionerTypes))
 
-
 	// Generate the postProcessor for each postProcessor type.
 	for _, pType := range r.ProvisionerTypes {
 		jww.TRACE.Println(pType)
 		// TODO calculate the length of the two longest Settings sections
-		// and make it that length. That will prevent a panic unless  
-		// there are more than 50 options. Besides its stupid, on so many 
+		// and make it that length. That will prevent a panic unless
+		// there are more than 50 options. Besides its stupid, on so many
 		// levels, to hard code this...which makes me...d'oh!
 		tmpVar = make([]string, 50)
 		tmpS = make(map[string]interface{})
@@ -163,17 +163,17 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 func (r *rawTemplate) createProvisionerShell() (settings map[string]interface{}, vars []string, err error) {
 	settings = make(map[string]interface{})
 	settings["type"] = ProvisionerShell
-	
+
 	jww.TRACE.Printf("rawTemplate.createProvisionerShell-rawtemplate\n")
 
-	// For each value, extract its key value pair and then process. Only 
+	// For each value, extract its key value pair and then process. Only
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
 	var k, v string
 	for _, s := range r.Provisioners[ProvisionerShell].Settings {
 		k, v = parseVar(s)
 		switch k {
-		case "binary", "execute_command", "inline_shebang", "remote_path", 
+		case "binary", "execute_command", "inline_shebang", "remote_path",
 			"start_retry_timeout":
 			settings[s] = v
 		default:
@@ -198,10 +198,10 @@ func (r *rawTemplate) createProvisionerShell() (settings map[string]interface{},
 func (r *rawTemplate) createProvisionerFile() (settings map[string]interface{}, vars []string, err error) {
 	settings = make(map[string]interface{})
 	settings["type"] = ProvisionerFile
-	
+
 	jww.TRACE.Printf("rawTemplate.createProvisionerFile-rawtemplate\n")
 
-	// For each value, extract its key value pair and then process. Only 
+	// For each value, extract its key value pair and then process. Only
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
 	var k, v string
@@ -226,7 +226,7 @@ func (r *rawTemplate) createProvisionerFile() (settings map[string]interface{}, 
 	return settings, vars, err
 }
 
-// deepcopy.MapStringPProvisioners makes a deep copy of each builder passed and 
+// deepcopy.MapStringPProvisioners makes a deep copy of each builder passed and
 // returns the copie map[string]*provisioner as a map[string]interface{}
 // notes: This currently only supports string slices.
 func DeepCopyMapStringPProvisioner(p map[string]*provisioner) map[string]interface{} {
@@ -256,8 +256,8 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 	for _, pType := range r.ProvisionerType {
 		jww.TRACE.Println(pType)
 		// TODO calculate the length of the two longest Settings sections
-		// and make it that length. That will prevent a panic should 
-		// there be more than 50 options. Besides its stupid, on so many 
+		// and make it that length. That will prevent a panic should
+		// there be more than 50 options. Besides its stupid, on so many
 		// levels, to hard code this...which makes me...d'oh!
 		tmpVar = make([]string, 50)
 		tmpS = make(map[string]interface{})

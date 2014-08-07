@@ -47,12 +47,12 @@ type build struct {
 // build.DeepCopy makes a deep copy of the build and returns it.
 func (b *build) DeepCopy() build {
 	copy := &build{
-		BuilderTypes: []string{},
-		Builders: map[string]*builder{}, 
+		BuilderTypes:       []string{},
+		Builders:           map[string]*builder{},
 		PostProcessorTypes: []string{},
-		PostProcessors: map[string]*postProcessor{}, 
-		ProvisionerTypes: []string{},
-		Provisioners: map[string]*provisioner{}, 
+		PostProcessors:     map[string]*postProcessor{},
+		ProvisionerTypes:   []string{},
+		Provisioners:       map[string]*provisioner{},
 	}
 
 	if b.BuilderTypes != nil || len(b.BuilderTypes) > 0 {
@@ -86,12 +86,12 @@ func (b *build) DeepCopy() build {
 type templateSection struct {
 	// Settings are string settings in "key=value" format.
 	Settings []string
-	
+
 	// Arrays are the string array settings.
 	Arrays map[string]interface{}
 }
 
-// templateSection.DeepCopy updates its information with new via a deep copy. 
+// templateSection.DeepCopy updates its information with new via a deep copy.
 func (t *templateSection) DeepCopy(new templateSection) {
 	//Deep Copy of settings
 	t.Settings = make([]string, len(new.Settings))
@@ -187,7 +187,7 @@ func (p *postProcessor) mergeSettings(new []string) {
 	if new == nil {
 		return
 	}
-//	jww.TRACE.Println("====================\n\n" + json.MarshalToString(p))
+	//	jww.TRACE.Println("====================\n\n" + json.MarshalToString(p))
 	if p.Settings == nil {
 		p.Settings = new
 		return
@@ -211,7 +211,7 @@ func (p *postProcessor) mergeArrays(m map[string]interface{}) {
 
 	// merge the keys
 	// go through all the keys and do the appropriate action
-//	p.Settings = mergeSettingsSlices(p.Settings, new)
+	//	p.Settings = mergeSettingsSlices(p.Settings, new)
 }
 
 // provisioner: type for common elements for provisioners.
@@ -367,7 +367,7 @@ func (d *defaults) LoadOnce() error {
 type BuildInf struct {
 	// Name is the name for the build. This may be an assigned value from
 	// a TOML file setting.
-	Name      string
+	Name string
 	// BuildName is the name of the build. This is either the name, as
 	// specified in the build.toml file, or a generated name for -distro
 	// flag based builds.

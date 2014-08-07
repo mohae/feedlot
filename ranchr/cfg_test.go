@@ -29,7 +29,7 @@ func TestBuilderStuff(t *testing.T) {
 				So(b.Settings, ShouldNotContain, "key2=value2")
 			})
 		})
-		
+
 		Convey("Given two vm settings slices", func() {
 			b.Arrays = map[string]interface{}{}
 			b.Arrays[VMSettings] = []string{"VMkey1=VMvalue1", "VMkey2=VMvalue2"}
@@ -78,6 +78,7 @@ func TestPostProcessorStuff(t *testing.T) {
 		})
 	})
 }
+
 /*
 	Convey("Given a provisioner or two", t, func() {
 		p := provisioner{}

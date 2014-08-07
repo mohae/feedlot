@@ -77,7 +77,7 @@ func newRawTemplate() *rawTemplate {
 func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 	jww.DEBUG.Printf("Entering...")
 	var err error
-//	var vars map[string]interface{}
+	//	var vars map[string]interface{}
 
 	// Resolve the Rancher variables to their final values.
 	r.mergeVariables()
@@ -88,23 +88,22 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 	p.Description = r.Description
 
 	// Builders
-//	iSl := make([]interface{}, len(r.Builders))
+	//	iSl := make([]interface{}, len(r.Builders))
 	if p.Builders, _, err = r.createBuilders(); err != nil {
 		jww.ERROR.Println(err.Error())
 		return p, err
 	}
 
 	// Post-Processors
-//	iSl = make([]interface{}, len(r.PostProcessors))
+	//	iSl = make([]interface{}, len(r.PostProcessors))
 
 	if p.PostProcessors, _, err = r.createPostProcessors(); err != nil {
 		jww.ERROR.Println(err.Error())
 		return p, err
 	}
 
-
 	// Provisioners
-//	iSl = make([]interface{}, len(r.Provisioners))
+	//	iSl = make([]interface{}, len(r.Provisioners))
 
 	if p.Provisioners, _, err = r.createProvisioners(); err != nil {
 		jww.ERROR.Println(err.Error())
@@ -119,9 +118,6 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 
 	return p, nil
 }
-
-
-
 
 // r.replaceVariables checks incoming string for variables and replaces them
 // with their values.
@@ -147,9 +143,8 @@ func (r *rawTemplate) variableSection() (map[string]interface{}, error) {
 	return v, nil
 }
 
-
 // r.setDefaults takes the incoming distro settings and merges them with its
-// existing settings, which are set to rancher's defaults, to create the 
+// existing settings, which are set to rancher's defaults, to create the
 // default template.
 func (r *rawTemplate) setDefaults(d *distro) {
 	// merges Settings between an old and new template.
@@ -179,16 +174,15 @@ func (r *rawTemplate) setDefaults(d *distro) {
 	r.updateBuilders(d.Builders)
 
 	r.updatePostProcessors(d.PostProcessors)
-//	jww.TRACE.Printf("Merged PostProcessors: %v", r.PostProcessors)
+	//	jww.TRACE.Printf("Merged PostProcessors: %v", r.PostProcessors)
 	r.updateProvisioners(d.Provisioners)
-//	jww.TRACE.Printf("Merged Provisioners: %v", r.Provisioners)
+	//	jww.TRACE.Printf("Merged Provisioners: %v", r.Provisioners)
 	return
 }
 
-
 // r.updateBuildSettings merges Settings between an old and new template. Note:
-// Arch, Image, and Release are not updated here as how these fields are 
-// updated depends on whether this is a build from a distribution's default 
+// Arch, Image, and Release are not updated here as how these fields are
+// updated depends on whether this is a build from a distribution's default
 // template or from a defined build template.
 func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
 	r.IODirInf.update(bld.IODirInf)
@@ -214,13 +208,13 @@ func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
 	// Should this be broken up? No
 	// it should be calling a method so nothing is returned!
 	//
-	// Plan: 
+	// Plan:
 	//	update builders
 	r.updateBuilders(bld.Builders)
 	r.updatePostProcessors(bld.PostProcessors)
 	r.updateProvisioners(bld.Provisioners)
-//	r.PostProcessors = getMergedPostProcessors(r.PostProcessors, bld.PostProcessors)
-//	r.Provisioners = getMergedProvisioners(r.Provisioners, bld.Provisioners)
+	//	r.PostProcessors = getMergedPostProcessors(r.PostProcessors, bld.PostProcessors)
+	//	r.Provisioners = getMergedProvisioners(r.Provisioners, bld.Provisioners)
 
 	return
 }

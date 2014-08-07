@@ -20,9 +20,9 @@ type packerTemplate struct {
 	Variables        map[string]interface{} `json:"variables,omitempty"`
 }
 
-// create a Packer build template based on the current configuration. The 
+// create a Packer build template based on the current configuration. The
 // template is written to the output directory and any external resources that
-// the template requires is copied there. 
+// the template requires is copied there.
 func (p *packerTemplate) create(i IODirInf, b BuildInf, scripts []string) error {
 	jww.DEBUG.Println("packerTemplate.create: enter")
 	jww.TRACE.Printf("%v/n%v/n%v", i, b, json.MarshalToString(scripts))
@@ -107,7 +107,7 @@ func copyScripts(scripts []string, src string, dest string) error {
 		jww.ERROR.Print("copyScripts: Copy of scripts for build had " + strconv.Itoa(errCnt) + " errors. There were " + strconv.Itoa(okCnt) + " scripts that were copied without error.")
 		return err
 	}
-	
-	jww.TRACE.Print("copyScripts: " + strconv.Itoa(okCnt) + " scripts were successfully copied")	
+
+	jww.TRACE.Print("copyScripts: " + strconv.Itoa(okCnt) + " scripts were successfully copied")
 	return nil
 }

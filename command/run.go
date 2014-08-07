@@ -14,7 +14,7 @@ type RunCommand struct {
 	UI cli.Ui
 }
 
-// Help prints the help text for the run sub-command. 
+// Help prints the help text for the run sub-command.
 func (c *RunCommand) Help() string {
 	helpText := `
     Usage: rancher Run <BuildList names...>

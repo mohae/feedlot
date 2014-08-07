@@ -29,7 +29,7 @@ var testProvisioners = map[string]provisioner{
 			Settings: []string{
 				"execute_command = :commands_src_dir/execute_test.command",
 			},
-			Arrays: map[string]interface{} {		
+			Arrays: map[string]interface{}{
 				"scripts": []string{
 					":scripts_dir/setup_test.sh",
 					":scripts_dir/base_test.sh",
@@ -42,7 +42,7 @@ var testProvisioners = map[string]provisioner{
 	},
 }
 
-var testDefaults = &defaults {
+var testDefaults = &defaults{
 	IODirInf: IODirInf{
 		CommandsSrcDir: ":src_dir/commands",
 		HTTPDir:        "http",
@@ -62,14 +62,14 @@ var testDefaults = &defaults {
 		Name:      ":build_name",
 	},
 	build: build{
-		BuilderTypes: []string {
+		BuilderTypes: []string{
 			"virtualbox-iso",
 			"vmware-iso",
 		},
-		Builders: map[string]builder {
+		Builders: map[string]builder{
 			"common": {
-				templateSection {
-					Settings: []string {
+				templateSection{
+					Settings: []string{
 						"boot_command = :commands_src_dir/boot_test.command",
 						"boot_wait = 5s",
 						"disk_size = 20000",
@@ -86,12 +86,12 @@ var testDefaults = &defaults {
 				},
 			},
 			"virtualbox-iso": {
-				templateSection {
-					Settings: []string {
+				templateSection{
+					Settings: []string{
 						"virtualbox_version_file = .vbox_version",
 					},
 					Arrays: map[string]interface{}{
-						"vm_settings": []string {
+						"vm_settings": []string{
 							"cpus=1",
 							"memory=1024",
 						},
@@ -99,7 +99,7 @@ var testDefaults = &defaults {
 				},
 			},
 			"vmware-iso": {
-				templateSection {
+				templateSection{
 					Settings: []string{},
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
@@ -117,14 +117,14 @@ var testDefaults = &defaults {
 		},
 		PostProcessors: map[string]postProcessor{
 			"vagrant": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"compression_level = 9",
 						"keep_input_artifact = false",
 						"output = out/rancher-packer.box",
 					},
 					Arrays: map[string]interface{}{
-						"include": []string {
+						"include": []string{
 							"include1",
 							"include2",
 						},
@@ -132,7 +132,7 @@ var testDefaults = &defaults {
 				},
 			},
 			"vagrant-cloud": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"access_token = getAValidTokenFrom-VagrantCloud.com",
 						"box_tag = foo/bar",
@@ -147,19 +147,19 @@ var testDefaults = &defaults {
 		},
 		Provisioners: map[string]provisioner{
 			"shell": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"execute_command = :commands_src_dir/execute_test.command",
 					},
 					Arrays: map[string]interface{}{
-						"except": []string {
+						"except": []string{
 							"docker",
 						},
-						"only": []string {
+						"only": []string{
 							"virtualbox-iso",
 						},
-						"scripts": []string {
- 							":scripts_dir/setup_test.sh",
+						"scripts": []string{
+							":scripts_dir/setup_test.sh",
 							":scripts_dir/vagrant_test.sh",
 							":scripts_dir/sudoers_test.sh",
 							":scripts_dir/cleanup_test.sh",
@@ -205,7 +205,7 @@ var testSupportedUbuntu = &distro{
 	build: build{
 		Builders: map[string]builder{
 			"common": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"boot_command = ../test_files/src/ubuntu/commands/boot_test.command",
 						"shutdown_command = :command_src_dir/shutdown_test.command",
@@ -213,14 +213,14 @@ var testSupportedUbuntu = &distro{
 				},
 			},
 			"virtualbox-iso": {
-				templateSection {
+				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{"memory=2048"},
 					},
 				},
 			},
 			"vmware-iso": {
-				templateSection {
+				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{"memsize=2048"},
 					},
@@ -229,7 +229,7 @@ var testSupportedUbuntu = &distro{
 		},
 		PostProcessors: map[string]postProcessor{
 			"vagrant": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"output = out/:build_name-packer.box",
 					},
@@ -238,7 +238,7 @@ var testSupportedUbuntu = &distro{
 		},
 		Provisioners: map[string]provisioner{
 			"shell": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"execute_command = :command_src_dir/execute_test.command",
 					},
@@ -259,8 +259,7 @@ var testSupportedUbuntu = &distro{
 
 var testSupportedCentOS = &distro{
 	BuildInf: BuildInf{BaseURL: ""},
-	IODirInf: IODirInf{
-	},
+	IODirInf: IODirInf{},
 	PackerInf: PackerInf{
 		MinPackerVersion: "",
 		Description:      "Test template config and Rancher options for CentOS",
@@ -313,7 +312,7 @@ var testDistroDefaultUbuntu = rawTemplate{
 		BuilderTypes: []string{"virtualbox-iso", "vmware-iso"},
 		Builders: map[string]builder{
 			"common": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"boot_command = :commands_src_dir/boot_test.command",
 						"boot_wait = 5s",
@@ -331,7 +330,7 @@ var testDistroDefaultUbuntu = rawTemplate{
 				},
 			},
 			"virtualbox-iso": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"virtualbox_version_file = .vbox_version",
 					},
@@ -344,7 +343,7 @@ var testDistroDefaultUbuntu = rawTemplate{
 				},
 			},
 			"vmware-iso": {
-				templateSection {
+				templateSection{
 					Settings: []string{},
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
@@ -356,13 +355,13 @@ var testDistroDefaultUbuntu = rawTemplate{
 				},
 			},
 		},
-		PostProcessorTypes: []string{ 
+		PostProcessorTypes: []string{
 			"vagrant",
 			"vagrant-cloud",
 		},
 		PostProcessors: map[string]postProcessor{
 			"vagrant": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"compression_level = 9",
 						"keep_input_artifact = false",
@@ -377,7 +376,7 @@ var testDistroDefaultUbuntu = rawTemplate{
 				},
 			},
 			"vagrant-cloud": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"access_token = getAValidTokenFrom-VagrantCloud.com",
 						"box_tag = foo/bar",
@@ -387,10 +386,10 @@ var testDistroDefaultUbuntu = rawTemplate{
 				},
 			},
 		},
-		ProvisionerTypes: []string{ "shell" },
+		ProvisionerTypes: []string{"shell"},
 		Provisioners: map[string]provisioner{
 			"shell": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"execute_command = :commands_src_dir/execute_test.command",
 					},
@@ -417,36 +416,36 @@ var testDistroDefaultUbuntu = rawTemplate{
 var testDistroDefaultCentOS = rawTemplate{
 	PackerInf: PackerInf{
 		MinPackerVersion: "0.4.0",
-		Description: "Test template config and Rancher options for CentOS",
+		Description:      "Test template config and Rancher options for CentOS",
 	},
 	IODirInf: IODirInf{
 		CommandsSrcDir: ":src_dir/commands",
-		HTTPDir: "http",
-		HTTPSrcDir: ":src_dir/http",
-		OutDir: "../test_files/out/:type/:build_name",
-		ScriptsDir: "scripts",
-		ScriptsSrcDir: ":src_dir/scripts",
-		SrcDir: "../test_files/src/:type",
+		HTTPDir:        "http",
+		HTTPSrcDir:     ":src_dir/http",
+		OutDir:         "../test_files/out/:type/:build_name",
+		ScriptsDir:     "scripts",
+		ScriptsSrcDir:  ":src_dir/scripts",
+		SrcDir:         "../test_files/src/:type",
 	},
 	BuildInf: BuildInf{
-		Name: ":build_name",
+		Name:      ":build_name",
 		BuildName: "",
-		BaseURL: "",
+		BaseURL:   "",
 	},
-	date:     today,
-	delim:    ":",
-	Type:     "centos",
-	Arch:     "x86_64",
-	Image:    "minimal",
-	Release:  "6",
-	varVals:  map[string]string{},
-	vars:     map[string]string{},
+	date:    today,
+	delim:   ":",
+	Type:    "centos",
+	Arch:    "x86_64",
+	Image:   "minimal",
+	Release: "6",
+	varVals: map[string]string{},
+	vars:    map[string]string{},
 	build: build{
 		BuilderTypes: []string{"virtualbox-iso", "vmware-iso"},
 		Builders: map[string]builder{
 			"common": {
-				templateSection {
-					Settings:   []string{
+				templateSection{
+					Settings: []string{
 						"boot_command = :commands_src_dir/boot_test.command",
 						"boot_wait = 5s",
 						"disk_size = 20000",
@@ -463,7 +462,7 @@ var testDistroDefaultCentOS = rawTemplate{
 				},
 			},
 			"virtualbox-iso": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"virtualbox_version_file = .vbox_version",
 					},
@@ -476,7 +475,7 @@ var testDistroDefaultCentOS = rawTemplate{
 				},
 			},
 			"vmware-iso": {
-				templateSection {
+				templateSection{
 					Settings: []string{},
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
@@ -494,7 +493,7 @@ var testDistroDefaultCentOS = rawTemplate{
 		},
 		PostProcessors: map[string]postProcessor{
 			"vagrant": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"compression_level = 9",
 						"keep_input_artifact = false",
@@ -509,7 +508,7 @@ var testDistroDefaultCentOS = rawTemplate{
 				},
 			},
 			"vagrant-cloud": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"access_token = getAValidTokenFrom-VagrantCloud.com",
 						"box_tag = foo/bar",
@@ -519,12 +518,12 @@ var testDistroDefaultCentOS = rawTemplate{
 				},
 			},
 		},
-		ProvisionerTypes: []string {
+		ProvisionerTypes: []string{
 			"shell",
 		},
 		Provisioners: map[string]provisioner{
 			"shell": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"execute_command = :commands_src_dir/execute_test.command",
 					},
@@ -535,7 +534,7 @@ var testDistroDefaultCentOS = rawTemplate{
 						"only": []string{
 							"virtualbox-iso",
 						},
-						"scripts":  []string{
+						"scripts": []string{
 							":scripts_dir/setup_test.sh",
 							":scripts_dir/vagrant_test.sh",
 							":scripts_dir/sudoers_test.sh",
@@ -562,14 +561,14 @@ var testBuildTest1 = rawTemplate{
 		},
 		Builders: map[string]builder{
 			"common": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"ssh_wait_timeout = 300m",
 					},
 				},
 			},
 			"virtualbox-iso": {
-				templateSection {
+				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
 							"memory=4096",
@@ -584,22 +583,22 @@ var testBuildTest1 = rawTemplate{
 		},
 		PostProcessors: map[string]postProcessor{
 			"vagrant": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"output = :out_dir/packer.box",
 					},
 					Arrays: map[string]interface{}{
-						"except": []string {
+						"except": []string{
 							"docker",
 						},
-						"only": []string {
+						"only": []string{
 							"virtualbox-iso",
 						},
 					},
 				},
 			},
 			"vagrant-cloud": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"access_token = getAValidTokenFrom-VagrantCloud.com",
 						"box_tag = foo/bar/baz",
@@ -608,13 +607,13 @@ var testBuildTest1 = rawTemplate{
 					},
 				},
 			},
-		},	
+		},
 		ProvisionerTypes: []string{
 			"shell",
 		},
 		Provisioners: map[string]provisioner{
 			"shell": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"execute_command = :commands_src_dir/execute_test.command",
 					},
@@ -652,14 +651,14 @@ var testBuildTest2 = rawTemplate{
 		},
 		Builders: map[string]builder{
 			"common": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"ssh_wait_timeout = 300m",
 					},
 				},
 			},
 			"virtualbox-iso": {
-				templateSection {
+				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
 							"memory=4096",
@@ -675,14 +674,14 @@ var testBuildCentOS6Salt = rawTemplate{
 	PackerInf: PackerInf{
 		Description: "Test build template for salt provisioner using CentOS6",
 	},
-	Type:    "centos",
+	Type: "centos",
 	build: build{
 		BuilderTypes: []string{
 			"virtualbox-iso",
 		},
 		Provisioners: map[string]provisioner{
 			"salt-masterless": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"local_state_tree = ~/saltstates/centos6/salt",
 						"skip_bootstrap = true",
@@ -723,7 +722,7 @@ var testMergedBuildTest1 = rawTemplate{
 		},
 		Builders: map[string]builder{
 			"common": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"boot_command = :commands_src_dir/boot_test.command",
 						"boot_wait = 5s",
@@ -739,7 +738,7 @@ var testMergedBuildTest1 = rawTemplate{
 				},
 			},
 			"virtualbox-iso": {
-				templateSection {
+				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
 							"cpus=1",
@@ -754,7 +753,7 @@ var testMergedBuildTest1 = rawTemplate{
 		},
 		PostProcessors: map[string]postProcessor{
 			"vagrant": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"keep_input_artifact = false",
 						"output = :out_dir/packer.box",
@@ -767,7 +766,7 @@ var testMergedBuildTest1 = rawTemplate{
 		},
 		Provisioners: map[string]provisioner{
 			"shell": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"execute_command = :commands_src_dir/execute_test.command",
 					},
@@ -820,7 +819,7 @@ var testMergedBuildTest2 = rawTemplate{
 		},
 		Builders: map[string]builder{
 			"common": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"boot_command = :commands_src_dir/boot_test.command",
 						"boot_wait = 5s",
@@ -836,7 +835,7 @@ var testMergedBuildTest2 = rawTemplate{
 				},
 			},
 			"virtualbox-iso": {
-				templateSection {
+				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
 							"cpus=1",
@@ -846,7 +845,7 @@ var testMergedBuildTest2 = rawTemplate{
 				},
 			},
 			"vmware-iso": {
-				templateSection {
+				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
 							"cpuid.coresPerSocket=1",
@@ -862,7 +861,7 @@ var testMergedBuildTest2 = rawTemplate{
 		},
 		PostProcessors: map[string]postProcessor{
 			"vagrant": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"keep_input_artifact = false",
 						"output = out/someComposedBoxName.box",
@@ -875,7 +874,7 @@ var testMergedBuildTest2 = rawTemplate{
 		},
 		Provisioners: map[string]provisioner{
 			"shell": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"execute_command = :commands_src_dir/execute_test.command",
 					},
@@ -923,7 +922,7 @@ var testMergedBuildCentOS6Salt = rawTemplate{
 		},
 		Builders: map[string]builder{
 			"common": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"boot_command = :commands_src_dir/boot_test.command",
 						"boot_wait = 5s",
@@ -939,7 +938,7 @@ var testMergedBuildCentOS6Salt = rawTemplate{
 				},
 			},
 			"virtualbox-iso": {
-				templateSection {
+				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
 							"cpus=1",
@@ -949,7 +948,7 @@ var testMergedBuildCentOS6Salt = rawTemplate{
 				},
 			},
 			"vmware-iso": {
-				templateSection {
+				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
 							"cpuid.coresPerSocket=1",
@@ -965,7 +964,7 @@ var testMergedBuildCentOS6Salt = rawTemplate{
 		},
 		PostProcessors: map[string]postProcessor{
 			"vagrant": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"keep_input_artifact = false",
 						"output = out/someComposedBoxName.box",
@@ -978,15 +977,15 @@ var testMergedBuildCentOS6Salt = rawTemplate{
 		},
 		Provisioners: map[string]provisioner{
 			"salt-masterless": {
-				templateSection {
-					Settings: []string {
+				templateSection{
+					Settings: []string{
 						"local_state_tree = ~/saltstates/centos6/salt",
 						"skip_bootstrap = true",
 					},
 				},
 			},
 			"shell": {
-				templateSection {
+				templateSection{
 					Settings: []string{
 						"execute_command = :commands_src_dir/execute_test.command",
 					},
@@ -1021,7 +1020,7 @@ func setCommonTestData() {
 	testDistroDefaults = map[string]rawTemplate{}
 	testDistroDefaults["ubuntu"] = testDistroDefaultUbuntu
 	testDistroDefaults["centos"] = testDistroDefaultCentOS
-	
+
 	testBuilds.Build = map[string]rawTemplate{}
 	testBuilds.Build["test1"] = testBuildTest1
 	testBuilds.Build["test2"] = testBuildTest2
@@ -1036,5 +1035,6 @@ func setCommonTestData() {
 
 	return
 }
+
 //BuildUbuntu
 //BuildCentos

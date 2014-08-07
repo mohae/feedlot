@@ -1,4 +1,4 @@
-// create_post_processors.go creates the post-processors for a Packer Build. 
+// create_post_processors.go creates the post-processors for a Packer Build.
 // Add supported post-processors here.
 package ranchr
 
@@ -32,16 +32,16 @@ func (r *rawTemplate) updatePostProcessors(new map[string]*postProcessor) {
 	// Convert the existing postProcessors to interface.
 	var ifaceOld map[string]interface{} = make(map[string]interface{}, len(r.PostProcessors))
 	ifaceOld = DeepCopyMapStringPPostProcessor(r.PostProcessors)
-//	for i, o := range r.PostProcessors {
-//		ifaceOld[i] = o
-//	}
+	//	for i, o := range r.PostProcessors {
+	//		ifaceOld[i] = o
+	//	}
 
 	// Convert the new postProcessors to interfaces
 	var ifaceNew map[string]interface{} = make(map[string]interface{}, len(new))
 	ifaceNew = DeepCopyMapStringPPostProcessor(new)
 
 	// Get the all keys from both maps
-	var keys[]string
+	var keys []string
 	keys = mergedKeysFromMaps(ifaceOld, ifaceNew)
 	p := &postProcessor{}
 
@@ -59,9 +59,9 @@ func (r *rawTemplate) updatePostProcessors(new map[string]*postProcessor) {
 		if _, ok := new[v]; !ok {
 			continue
 		}
-		
+
 		p = r.PostProcessors[v].DeepCopy()
-		
+
 		if p == nil {
 			p = &postProcessor{templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
 		}
@@ -118,6 +118,7 @@ func (p *postProcessor) settingsToMap(Type string, r *rawTemplate) map[string]in
 	jww.TRACE.Printf("post-processors Map: %v\n", json.MarshalIndentToString(m, "", indent))
 	return m
 }
+
 // r.createPostProcessors creates the PostProcessors for a build.
 func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]interface{}, err error) {
 	if r.PostProcessorTypes == nil || len(r.PostProcessorTypes) <= 0 {
@@ -131,13 +132,12 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]i
 	var ndx int
 	p = make([]interface{}, len(r.PostProcessorTypes))
 
-
 	// Generate the postProcessor for each postProcessor type.
 	for _, pType := range r.PostProcessorTypes {
 		jww.TRACE.Println(pType)
 		// TODO calculate the length of the two longest Settings sections
-		// and make it that length. That will prevent a panic unless  
-		// there are more than 50 options. Besides its stupid, on so many 
+		// and make it that length. That will prevent a panic unless
+		// there are more than 50 options. Besides its stupid, on so many
 		// levels, to hard code this...which makes me...d'oh!
 		tmpVar = make([]string, 50)
 		tmpS = make(map[string]interface{})
@@ -169,10 +169,10 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]i
 func (r *rawTemplate) createPostProccessorVagrant() (settings map[string]interface{}, vars []string, err error) {
 	settings = make(map[string]interface{})
 	settings["type"] = PostProcessorVagrant
-	
+
 	jww.TRACE.Printf("rawTemplate.createPostProcessorVagrant-rawtemplate\n")
 
-	// For each value, extract its key value pair and then process. Only 
+	// For each value, extract its key value pair and then process. Only
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
 	var k, v string
@@ -204,7 +204,7 @@ func (r *rawTemplate) createPostProcessorVagrantCloud() (settings map[string]int
 	return nil, nil, err
 }
 
-// DeepCopyMapStringPPostProcessor makes a deep copy of each builder passed and 
+// DeepCopyMapStringPPostProcessor makes a deep copy of each builder passed and
 // returns the copie map[string]*builder as a map[string]interface{}
 // notes: This currently only supports string slices.
 func DeepCopyMapStringPPostProcessor(p map[string]*postProcessor) map[string]interface{} {
@@ -216,4 +216,3 @@ func DeepCopyMapStringPPostProcessor(p map[string]*postProcessor) map[string]int
 	}
 	return c
 }
-

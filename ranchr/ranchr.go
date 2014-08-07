@@ -27,37 +27,37 @@ import (
 )
 
 var (
-	appName            = "RANCHER"
+	appName = "RANCHER"
 
 	// EnvRancerhFiile is the name of the environment variable name for Rancher's config file.
-	EnvRancherFile        = appName + "_CONFIG"
+	EnvRancherFile = appName + "_CONFIG"
 
 	// EnvBuildsFile is the name of the environment variable name for the builds file.
-	EnvBuildsFile      = appName + "_BUILDS_FILE"
+	EnvBuildsFile = appName + "_BUILDS_FILE"
 
 	// EnvBuildListsFile is the name of the environment variable name for the build lists file.
-	EnvBuildListsFile  = appName + "_BUILD_LISTS_FILE"
+	EnvBuildListsFile = appName + "_BUILD_LISTS_FILE"
 
 	// EnvDefaultsFile is the name of the environment variable name for the defaults file.
-	EnvDefaultsFile    = appName + "_DEFAULTS_FILE"
+	EnvDefaultsFile = appName + "_DEFAULTS_FILE"
 
 	// EnvSupportedFile is the name of the environment variable name for the supported file.
-	EnvSupportedFile   = appName + "_SUPPORTED_FILE"
+	EnvSupportedFile = appName + "_SUPPORTED_FILE"
 
 	// EnvParamDelimStart is the name of the environment variable name for the delimter that starts Rancher variables.
 	EnvParamDelimStart = appName + "_PARAM_DELIM_START"
 
 	// EnvLogToFile is the name of the environment variable name for whether or not Rancher logs to a file.
-	EnvLogToFile       = appName + "_LOG_TO_FILE"
+	EnvLogToFile = appName + "_LOG_TO_FILE"
 
 	// EnvLogFilename is the name of the environment variable name for the log filename, if logging to file is enabled..
-	EnvLogFilename     = appName + "_LOG_FILENAME"
+	EnvLogFilename = appName + "_LOG_FILENAME"
 
 	// EnvLogLevelFile is the name of the environment variable name for the file output's log level.
-	EnvLogLevelFile    = appName + "_LOG_LEVEL_FILE"
+	EnvLogLevelFile = appName + "_LOG_LEVEL_FILE"
 
 	// EnvLogLevelStdout is the name of the environment variable name for stdout's log level.
-	EnvLogLevelStdout  = appName + "_LOG_LEVEL_STDOUT"
+	EnvLogLevelStdout = appName + "_LOG_LEVEL_STDOUT"
 )
 
 var (
@@ -65,16 +65,16 @@ var (
 	BuilderCommon = "common"
 
 	// BuilderVirtualBoxISO is the name of the VirtualBox builder section in the toml files.
-	BuilderVirtualBoxISO   = "virtualbox-iso"
+	BuilderVirtualBoxISO = "virtualbox-iso"
 
 	// BuilderVirtualBoxOVF is the name of the VirtualBox builder section in the toml files.
-	BuilderVirtualBoxOVF  = "virtualbox-ovf"
+	BuilderVirtualBoxOVF = "virtualbox-ovf"
 
 	// BuilderVMWareISO is the name of the VirtualBox builder section in the toml files.
-	BuilderVMWareISO   = "vmware-iso"
+	BuilderVMWareISO = "vmware-iso"
 
 	// BuilderVMWareOVF is the name of the VirtualBox builder section in the toml files.
-	BuilderVMWareOVF  = "vmware-ovf"
+	BuilderVMWareOVF = "vmware-ovf"
 
 	// PostProcessorVagrant is the name of the Vagrant PostProcessor
 	PostProcessorVagrant = "vagrant"
@@ -108,8 +108,8 @@ var (
 	VMSettings = "vm_settings"
 )
 
-var     Builds		*builds
-var 	Distros 	distroDefaults
+var Builds *builds
+var Distros distroDefaults
 
 // AppConfig contains the current Rancher configuration...loaded at start-up.
 var AppConfig appConfig
@@ -128,19 +128,19 @@ type appConfig struct {
 
 // ArgsFilter has all the valid commandline flags for the build-subcommand.
 type ArgsFilter struct {
-	// Arch is a distribution specific string for the OS's target 
+	// Arch is a distribution specific string for the OS's target
 	// architecture.
-	Arch    string
+	Arch string
 
 	// Distro is the name of the distribution, this value is consistent
 	// with Packer.
-	Distro  string
+	Distro string
 
-	// Image is the type of ISO image that is to be used. This is a 
+	// Image is the type of ISO image that is to be used. This is a
 	// distribution specific value.
-	Image   string
+	Image string
 
-	// Release is the release number or string of the ISO that is to be 
+	// Release is the release number or string of the ISO that is to be
 	// used. The valid values are distribution specific.
 	Release string
 }
@@ -149,10 +149,10 @@ type ArgsFilter struct {
 // whether its been set or not.
 type distroDefaults struct {
 	Templates map[string]*rawTemplate
-	IsSet   bool
+	IsSet     bool
 }
-	
-// GetTemplate returns a deep copy of the default template for the passed 
+
+// GetTemplate returns a deep copy of the default template for the passed
 // distro name. If the distro does not exist, an error is returned.
 // TODO make the template a DeeopCopy
 func (d *distroDefaults) GetTemplate(n string) (*rawTemplate, error) {
@@ -163,7 +163,7 @@ func (d *distroDefaults) GetTemplate(n string) (*rawTemplate, error) {
 		return t, fmt.Errorf("distroDefaults.GetTemplate: The requested Distro, " + n + " is not supported. No template to return")
 	}
 
-	copy := newRawTemplate()	
+	copy := newRawTemplate()
 	copy.PackerInf = t.PackerInf
 	copy.IODirInf = t.IODirInf
 	copy.BuildInf = t.BuildInf
@@ -215,7 +215,7 @@ func (d *distroDefaults) Set() error {
 		tmp.PackerInf = dflts.PackerInf
 		tmp.build = dflts.build.DeepCopy()
 		tmp.Type = k
-		
+
 		// Now update it with the distro settings.
 		tmp.BaseURL = appendSlash(v.BaseURL)
 		tmp.Arch, tmp.Image, tmp.Release = getDefaultISOInfo(v.DefImage)
@@ -224,15 +224,16 @@ func (d *distroDefaults) Set() error {
 	}
 
 	Distros.IsSet = true
-	return nil	
+	return nil
 }
+
 /*
 // rancherBuilds holds the build definitions for rancher.
 type rancherBuilds struct {
 	Build *build
 }
 
-// 
+//
 func (r *rancherBuilds) Get(n string) build
 
 */
@@ -363,7 +364,7 @@ func loadBuilds() error {
 	return nil
 }
 
-// BuildDistro creates a build based on the target distro's defaults. The 
+// BuildDistro creates a build based on the target distro's defaults. The
 // ArgsFilter contains information on the target distro and any overrides
 // that are to be applied to the build.
 // Returns an error or nil if successful.
@@ -418,13 +419,12 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	jww.DEBUG.Println("buildPackerTemplateFromDistro: Enter")
 	var t *rawTemplate
 	var err error
-	
+
 	if a.Distro == "" {
 		err = errors.New("buildPackerTemplateFromDistro: Cannot build a packer template because no target distro information was passed.")
 		jww.ERROR.Println(err.Error())
 		return err
 	}
-
 
 	// Get the default for this distro, if one isn't found then it isn't Supported.
 	if t, err = Distros.GetTemplate(a.Distro); err != nil {
@@ -447,11 +447,11 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	}
 
 	t.BuildName = ":type-:release-:arch-:image-rancher"
-	
-//	// make a copy of the .
-//	rTpl := newRawTemplate()
-//	rTpl.updateBuilders(d.Builders)
-	
+
+	//	// make a copy of the .
+	//	rTpl := newRawTemplate()
+	//	rTpl.updateBuilders(d.Builders)
+
 	// Since distro builds don't actually have a build name, we create one
 	// out of the args used to create it.
 	t.BuildName = t.Type + "-" + t.Release + "-" + t.Arch + "-" + t.Image
@@ -464,9 +464,8 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 		jww.ERROR.Println(err.Error())
 		return err
 	}
-	
-	jww.TRACE.Printf("\tpackerTemplate:  %v\n", json.MarshalIndentToString(pTpl, "", indent))
 
+	jww.TRACE.Printf("\tpackerTemplate:  %v\n", json.MarshalIndentToString(pTpl, "", indent))
 
 	// Get the scripts for this build, if any.
 	var scripts []string
@@ -485,8 +484,8 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	return nil
 }
 
-// BuildBuilds manages the process of creating Packer Build templates out of 
-// the passed build names. All builds are done concurrently. 
+// BuildBuilds manages the process of creating Packer Build templates out of
+// the passed build names. All builds are done concurrently.
 // Returns either a message providing information about the processing of the
 // requested builds or an error.
 func BuildBuilds(buildNames ...string) (string, error) {
@@ -601,7 +600,6 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 	var scripts []string
 	scripts = tpl.ScriptNames()
 
-
 	if err = pTpl.create(tpl.IODirInf, tpl.BuildInf, scripts); err != nil {
 		jww.ERROR.Println(err.Error())
 		doneCh <- err
@@ -670,7 +668,7 @@ func commandsFromFile(name string) (commands []string, err error) {
 // same key override previous.
 func MergeSlices(s ...[]string) []string {
 	// If nothing is received return nothing
-	if (s == nil){
+	if s == nil {
 		return nil
 	}
 
@@ -682,8 +680,7 @@ func MergeSlices(s ...[]string) []string {
 	// Otherwise merge slices, starting with s1 & s2
 	var merged []string
 
-
-	for _, tmpS :=  range s {
+	for _, tmpS := range s {
 		merged = mergeSlices(merged, tmpS)
 	}
 
@@ -702,12 +699,11 @@ func mergeSlices(s1 []string, s2 []string) []string {
 		return s2
 	}
 
-
 	if s2 == nil || len(s2) == 0 {
 		return s1
 	}
 
-	tempSl := make([]string, len(s1) + len(s2))
+	tempSl := make([]string, len(s1)+len(s2))
 	copy(tempSl, s1)
 	i := len(s1) - 1
 	var found bool
@@ -757,12 +753,12 @@ func mergeSettingsSlices(s1 []string, s2 []string) []string {
 	l1 := len(s1)
 	l2 := len(s2)
 
-	if (l1 == 0 && l2 == 0) {
+	if l1 == 0 && l2 == 0 {
 		return nil
 	}
 
 	// Make a slice with a length equal to the sum of the two input slices.
-	merged := make([]string, l1 + l2)
+	merged := make([]string, l1+l2)
 
 	// Copy the first slice.
 	i := copy(merged, s1)
@@ -772,7 +768,7 @@ func mergeSettingsSlices(s1 []string, s2 []string) []string {
 		copy(merged, s2)
 		return merged
 	}
-			
+
 	ms1 := map[string]string{}
 	// Create a map of variables from the first slice for comparison reasons.
 	ms1 = varMapFromSlice(s1)
@@ -799,8 +795,8 @@ func mergeSettingsSlices(s1 []string, s2 []string) []string {
 			}
 
 		} else {
-			// i is the index of the next element to add, a result of 
-			// i being set to the count of the items copied, which is 
+			// i is the index of the next element to add, a result of
+			// i being set to the count of the items copied, which is
 			// 1 greater than the index, or the index of the next item
 			// should it exist. Instead, it is updated after adding the
 			// new value as, after add, i points to the current element.
@@ -909,8 +905,6 @@ func getDefaultISOInfo(d []string) (Arch string, Image string, Release string) {
 	return
 }
 
-
-
 // merges the new config with the old. The updates occur as follows:
 //
 //	* The existing configuration is used when no `new` provisioners are
@@ -937,7 +931,7 @@ func getMergedProvisioners(old map[string]provisioner, new map[string]provisione
 	}
 
 	// Get the all keys from both maps
-	var keys[]string
+	var keys []string
 	keys = mergedKeysFromMaps(ifaceOld, ifaceNew)
 
 	pM := map[string]provisioner{}
@@ -945,7 +939,7 @@ func getMergedProvisioners(old map[string]provisioner, new map[string]provisione
 	for _, v := range keys {
 		p := provisioner{}
 		p = old[v]
-//		p.mergeSettings(new[v].Settings)
+		//		p.mergeSettings(new[v].Settings)
 		pM[v] = p
 	}
 
@@ -1176,15 +1170,15 @@ func pathExists(p string) (bool, error) {
 	return false, err
 }
 
-// mergedKeysFromMaps takes a variadic array of maps and returns a merged 
-// slice of keys for those maps. 
+// mergedKeysFromMaps takes a variadic array of maps and returns a merged
+// slice of keys for those maps.
 func mergedKeysFromMaps(m ...map[string]interface{}) []string {
 	cnt := 0
 	types := make([][]string, len(m))
-	
+
 	// For each passed interface
-        for i, tmpM := range m {
-		cnt = 0;
+	for i, tmpM := range m {
+		cnt = 0
 		tmpK := make([]string, len(tmpM))
 		for k := range tmpM {
 			tmpK[cnt] = k
@@ -1198,4 +1192,3 @@ func mergedKeysFromMaps(m ...map[string]interface{}) []string {
 
 	return mergedKeys
 }
-

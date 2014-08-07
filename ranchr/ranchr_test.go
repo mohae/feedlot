@@ -370,7 +370,7 @@ func TestSetDistrosDefaults(t *testing.T) {
 		var err error
 		Convey("Given a defaults and supported data without the BaseUrl set", func() {
 			Convey("Should result in", func() {
-				testSupportedUbuntu.BaseURL = ""				
+				testSupportedUbuntu.BaseURL = ""
 				defaults, err = setDistrosDefaults(testDefaults, &testSupported)
 				So(err.Error(), ShouldEqual, "ubuntu does not have its BaseURL configured.")
 				So(defaults, ShouldBeNil)
@@ -447,7 +447,7 @@ func TestMergeSlices(t *testing.T) {
 		})
 
 	})
-	
+
 }
 
 func TestMergeSettingsSlices(t *testing.T) {
@@ -563,7 +563,7 @@ func TestGetMergedBuilders(t *testing.T) {
 		Convey("Given an empty new builder", func() {
 			oldB = map[string]builder{
 				"common": {
-					templateSection {
+					templateSection{
 						Settings: []string{
 							"http_directory=http",
 							"ssh_port=22",
@@ -583,7 +583,7 @@ func TestGetMergedBuilders(t *testing.T) {
 		Convey("Given an empty old builder", func() {
 			newB = map[string]builder{
 				"common": {
-					templateSection {
+					templateSection{
 						Settings: []string{
 							"checksum_type=sha256",
 							"ssh_port=222",
@@ -602,7 +602,7 @@ func TestGetMergedBuilders(t *testing.T) {
 		Convey("Given two builders", func() {
 			oldB = map[string]builder{
 				"common": {
-					templateSection {
+					templateSection{
 						Settings: []string{
 							"http_directory=http",
 							"ssh_port=22",
@@ -618,7 +618,7 @@ func TestGetMergedBuilders(t *testing.T) {
 			}
 			newB = map[string]builder{
 				"common": {
-					templateSection {
+					templateSection{
 						Settings: []string{
 							"checksum_type=sha256",
 							"ssh_port=222",
@@ -633,7 +633,7 @@ func TestGetMergedBuilders(t *testing.T) {
 			}
 			compareB = map[string]builder{
 				"common": {
-				templateSection {
+					templateSection{
 						Settings: []string{
 							"http_directory=http",
 							"ssh_port=222",
@@ -654,18 +654,18 @@ func TestGetMergedBuilders(t *testing.T) {
 		Convey("Given two builders, empty old VMsetting", func() {
 			oldB = map[string]builder{
 				"common": {
-					templateSection {
+					templateSection{
 						Settings: []string{
 							"http_directory=http",
 							"ssh_port=22",
 							"ssh_username=vagrant",
-							},
 						},
 					},
-				}
-				newB = map[string]builder{
-					"common": {
-					templateSection {
+				},
+			}
+			newB = map[string]builder{
+				"common": {
+					templateSection{
 						Settings: []string{
 							"checksum_type=sha256",
 							"ssh_port=222",
@@ -680,7 +680,7 @@ func TestGetMergedBuilders(t *testing.T) {
 			}
 			compareB = map[string]builder{
 				"common": {
-					templateSection {
+					templateSection{
 						Settings: []string{
 							"http_directory=http",
 							"ssh_port=222",
@@ -701,7 +701,7 @@ func TestGetMergedBuilders(t *testing.T) {
 		Convey("Given two builders, empty new VMsetting", func() {
 			oldB = map[string]builder{
 				"common": {
-					templateSection {
+					templateSection{
 						Settings: []string{
 							"http_directory=http",
 							"ssh_port=22",
@@ -717,7 +717,7 @@ func TestGetMergedBuilders(t *testing.T) {
 			}
 			newB = map[string]builder{
 				"common": {
-					templateSection {
+					templateSection{
 						Settings: []string{
 							"checksum_type=sha256",
 							"ssh_port=222",
@@ -727,7 +727,7 @@ func TestGetMergedBuilders(t *testing.T) {
 			}
 			compareB = map[string]builder{
 				"common": {
-					templateSection {
+					templateSection{
 						Settings: []string{
 							"http_directory=http",
 							"ssh_port=222",
@@ -748,7 +748,7 @@ func TestGetMergedBuilders(t *testing.T) {
 		Convey("Given two builders, empty old setting", func() {
 			oldB = map[string]builder{
 				"common": {
-					templateSection {
+					templateSection{
 						Arrays: map[string]interface{}{
 							"vm_settings": []string{
 								"memory=1024",
@@ -759,7 +759,7 @@ func TestGetMergedBuilders(t *testing.T) {
 			}
 			newB = map[string]builder{
 				"common": {
-					templateSection {
+					templateSection{
 						Settings: []string{
 							"checksum_type=sha256",
 							"ssh_port=222",
@@ -774,7 +774,7 @@ func TestGetMergedBuilders(t *testing.T) {
 			}
 			compareB = map[string]builder{
 				"common": {
-					templateSection {
+					templateSection{
 						Settings: []string{
 							"checksum_type=sha256",
 							"ssh_port=222",
@@ -793,7 +793,7 @@ func TestGetMergedBuilders(t *testing.T) {
 		Convey("Given two builders, empty new setting", func() {
 			oldB = map[string]builder{
 				"common": {
-					templateSection {
+					templateSection{
 						Settings: []string{
 							"http_directory=http",
 							"ssh_port=22",
@@ -809,7 +809,7 @@ func TestGetMergedBuilders(t *testing.T) {
 			}
 			newB = map[string]builder{
 				"common": {
-					templateSection {
+					templateSection{
 						Arrays: map[string]interface{}{
 							"vm_settings": []string{
 								"memory=4096",
@@ -820,7 +820,7 @@ func TestGetMergedBuilders(t *testing.T) {
 			}
 			compareB = map[string]builder{
 				"common": {
-					templateSection {
+					templateSection{
 						Settings: []string{
 							"http_directory=http",
 							"ssh_port=22",
@@ -841,7 +841,6 @@ func TestGetMergedBuilders(t *testing.T) {
 	})
 }
 
-
 func TestgetMergedPostProcessors(t *testing.T) {
 	Convey("Testing getMergedPostProcessors", t, func() {
 		var oldPP, newPP, emptyPP, mergedPP, comparePP map[string]postProcessor
@@ -852,7 +851,7 @@ func TestgetMergedPostProcessors(t *testing.T) {
 		Convey("Given an empty new postProcessor", func() {
 			oldPP = map[string]postProcessor{
 				"vagrant": {
-					templateSection {
+					templateSection{
 						Settings: []string{
 							"keep_input_artifact = false",
 							"output = :out_dir/someComposedBoxName.box",
@@ -866,7 +865,7 @@ func TestgetMergedPostProcessors(t *testing.T) {
 		Convey("Given an empty old postProcessor", func() {
 			newPP = map[string]postProcessor{
 				"vagrant": {
-					templateSection {
+					templateSection{
 						Settings: []string{
 							"keep_input_artifact = false",
 							"output = out/NewName.box",
@@ -880,7 +879,7 @@ func TestgetMergedPostProcessors(t *testing.T) {
 		Convey("Given two postProcessor", func() {
 			oldPP = map[string]postProcessor{
 				"vagrant": {
-					templateSection {
+					templateSection{
 						Settings: []string{
 							"keep_input_artifact = false",
 							"output = :out_dir/someComposedBoxName.box",
@@ -890,7 +889,7 @@ func TestgetMergedPostProcessors(t *testing.T) {
 			}
 			newPP = map[string]postProcessor{
 				"vagrant": {
-					templateSection {
+					templateSection{
 						Settings: []string{
 							"keep_input_artifact = false",
 							"output = out/NewName.box",
@@ -900,7 +899,7 @@ func TestgetMergedPostProcessors(t *testing.T) {
 			}
 			comparePP = map[string]postProcessor{
 				"vagrant": {
-					templateSection {
+					templateSection{
 						Settings: []string{
 							"keep_input_artifact = false",
 							"output = out/NewName.box",
@@ -1130,6 +1129,3 @@ func TestInterfaceToStringSlice(t *testing.T) {
 		})
 	})
 }
-
-
-

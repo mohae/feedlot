@@ -17,7 +17,7 @@ import (
 // Builders along with a slice of variables for that section builder type.
 // Some Settings are in-lined instead of adding them to the variable section.
 //
-// At this point, all of the settings 
+// At this point, all of the settings
 //
 // * update BuilderCommon with the ne, as this may be used by any of the Packer
 // builders.
@@ -37,9 +37,9 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 
 	// Set the BuilderCommon settings. Only the builder.Settings field is used
 	// for BuilderCommon as everything else is usually builder specific, even
-	// if they have common names, e.g. difference between specifying memory 
+	// if they have common names, e.g. difference between specifying memory
 	// between VMWare and VirtualBox.
-//	r.updateBuilderCommon
+	//	r.updateBuilderCommon
 
 	// Generate the builders for each builder type.
 	for _, bType := range r.BuilderTypes {
@@ -55,13 +55,13 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 		case BuilderVMWareISO:
 			tmpS, tmpVar, err = r.createBuilderVMWareISO()
 		case BuilderVMWareOVF:
-//			tmpS, tmpVar, err = r.createBuilderVMWareOVF()
+			//			tmpS, tmpVar, err = r.createBuilderVMWareOVF()
 
 		case BuilderVirtualBoxISO:
 			tmpS, tmpVar, err = r.createBuilderVirtualBoxISO()
 
 		case BuilderVirtualBoxOVF:
-//			tmpS, tmpVar, err = r.createVirtualBoxOVF()
+			//			tmpS, tmpVar, err = r.createVirtualBoxOVF()
 
 		default:
 			err = errors.New("The requested builder, '" + bType + "', is not supported by Rancher")
@@ -126,14 +126,14 @@ func (r *rawTemplate) createBuilderVirtualBoxISO() (settings map[string]interfac
 			if commands, err = commandsFromFile(v); err != nil {
 				jww.ERROR.Println(err.Error())
 				return nil, nil, err
-			} 
+			}
 
 			settings[k] = commands
 
 		case "boot_wait", "export_opts", "floppy_files", "format", "guest_additions_mode",
 			"guest_additions_path", "guest_additions_sha256", "guest_additions_url",
 			"hard_drive_interface", "http_directory", "ssh_key_path", "ssh_password",
-			"ssh_username",	"ssh_wait_timeout", "vboxmanage", "vboxmanage_post",
+			"ssh_username", "ssh_wait_timeout", "vboxmanage", "vboxmanage_post",
 			"virtualbox_version_file", "vm_name":
 			settings[k] = v
 
@@ -180,7 +180,7 @@ func (r *rawTemplate) createBuilderVirtualBoxISO() (settings map[string]interfac
 
 			}
 
-		// For the fields of int value, only set if it converts to a valid int. 
+		// For the fields of int value, only set if it converts to a valid int.
 		// Otherwise, throw an error
 		case "disk_size", "ssh_host_port_min", "ssh_host_port_max", "ssh_port":
 			// only add if its an int
@@ -196,7 +196,7 @@ func (r *rawTemplate) createBuilderVirtualBoxISO() (settings map[string]interfac
 			if commands, err = commandsFromFile(v); err != nil {
 				jww.ERROR.Println(err.Error())
 				return nil, nil, err
-			} 
+			}
 
 			// Assume it's the first element.
 			settings[k] = commands[0]
@@ -207,7 +207,7 @@ func (r *rawTemplate) createBuilderVirtualBoxISO() (settings map[string]interfac
 	// Generate Packer Variables
 	// Generate builder specific section
 	l, err := getSliceLenFromIface(r.Builders[BuilderVirtualBoxISO].Arrays[VMSettings])
-	if err != nil {	
+	if err != nil {
 		return nil, nil, err
 	}
 
@@ -253,7 +253,7 @@ func (r *rawTemplate) createBuilderVMWareISO() (settings map[string]interface{},
 			if commands, err = commandsFromFile(v); err != nil {
 				jww.ERROR.Println(err.Error())
 				return nil, nil, err
-			} 
+			}
 
 			settings[k] = commands
 
@@ -261,7 +261,7 @@ func (r *rawTemplate) createBuilderVMWareISO() (settings map[string]interface{},
 			"iso_urls", "output_directory", "remote_datastore", "remote_host", "remote_password",
 			"remote_type", "remote_username", "shutdown_timeout", "ssh_host", "ssh_key_path",
 			"ssh_password", "ssh_username", "ssh_wait_timeout", "tools_upload_flavor",
-			"tools_upload_path", "vm_name", "vmdk_name", "vmx_data", "vmx_data_post", 
+			"tools_upload_path", "vm_name", "vmdk_name", "vmx_data", "vmx_data_post",
 			"vmx_template_path":
 			settings[k] = v
 
@@ -308,7 +308,7 @@ func (r *rawTemplate) createBuilderVMWareISO() (settings map[string]interface{},
 
 			}
 
-		// For the fields of int value, only set if it converts to a valid int. 
+		// For the fields of int value, only set if it converts to a valid int.
 		// Otherwise, throw an error
 		case "disk_size", "http_port_min", "http_port_max", "ssh_host_port_min", "ssh_host_port_max",
 			"ssh_port", "vnc_port_min", "vnc_port_max":
@@ -325,7 +325,7 @@ func (r *rawTemplate) createBuilderVMWareISO() (settings map[string]interface{},
 			if commands, err = commandsFromFile(v); err != nil {
 				jww.ERROR.Println(err.Error())
 				return nil, nil, err
-			} 
+			}
 
 			// Assume it's the first element.
 			settings[k] = commands[0]
@@ -337,7 +337,7 @@ func (r *rawTemplate) createBuilderVMWareISO() (settings map[string]interface{},
 
 // rawTemplate.updateBuilders updates the rawTemplate's builders with the
 // passed new builder.
-// 
+//
 // Builder Update rules:
 // 	* If r's old builder does not have a matching builder in the new
 // 	  builder map, new, nothing is done.
@@ -345,14 +345,14 @@ func (r *rawTemplate) createBuilderVMWareISO() (settings map[string]interface{},
 //	  builder.
 //	* If the new builder does not have a matching builder in r, the new
 //	  builder is added to r's builder map.
-// 
+//
 // Settings update rules:
 //
 //	* If the setting exists in r's builder but not in new, nothing is done.
 //	  This means that deletion of settings via not having them exist in the
 //	  new builder is not supported. This is to simplify overriding
 //	  templates in the configuration files.
-//	* If the setting exists in both r's builder and new, r's builder is 
+//	* If the setting exists in both r's builder and new, r's builder is
 //	  updated with new's value.
 //	* If the setting exists in new, but not r's builder, new's setting is
 //	  added to r's builder.
@@ -361,8 +361,8 @@ func (r *rawTemplate) createBuilderVMWareISO() (settings map[string]interface{},
 //	  In most situations, Rancher will interprete an key without a value as
 //	  a deletion of that key. There are exceptions:
 //
-//	  	* `guest_os_type`: This is generally set at Packer Template 
-//		  generation time by Rancher.	
+//	  	* `guest_os_type`: This is generally set at Packer Template
+//		  generation time by Rancher.
 func (r *rawTemplate) updateBuilders(new map[string]*builder) {
 	fmt.Printf("Entering rawTemplate.updateBuilders with: %v\n", json.MarshalToString(new))
 	// If there is nothing new, old equals merged.
@@ -373,9 +373,9 @@ func (r *rawTemplate) updateBuilders(new map[string]*builder) {
 	// Convert the existing Builders to interfaces.
 	var ifaceOld map[string]interface{} = make(map[string]interface{}, len(r.Builders))
 	ifaceOld = DeepCopyMapStringPBuilder(r.Builders)
-//	for i, o := range r.Builders {	
-//		ifaceOld[i] = o
-//	}
+	//	for i, o := range r.Builders {
+	//		ifaceOld[i] = o
+	//	}
 	// Convert the new Builders to interfaces.
 	var ifaceNew map[string]interface{} = make(map[string]interface{}, len(new))
 	ifaceNew = DeepCopyMapStringPBuilder(new)
@@ -391,10 +391,10 @@ func (r *rawTemplate) updateBuilders(new map[string]*builder) {
 	// If there's a builder with the key BuilderCommon, merge them. This is
 	// a special case for builders only.
 	if _, ok := new[BuilderCommon]; ok {
-		r.updateBuilderCommon(new[BuilderCommon])	
+		r.updateBuilderCommon(new[BuilderCommon])
 	}
 
-	b := &builder{}	
+	b := &builder{}
 
 	// Copy: if the key exists in the new builder only.
 	// Ignore: if the key does not exist in the new builder.
@@ -410,19 +410,19 @@ func (r *rawTemplate) updateBuilders(new map[string]*builder) {
 		if _, ok := new[v]; !ok {
 			continue
 		}
-		
+
 		b = r.Builders[v].DeepCopy()
 		vm_settings = deepcopy.InterfaceToSliceString(new[v].Arrays[VMSettings])
 
 		// If there is anything to merge, do so
-		if vm_settings != nil {			
+		if vm_settings != nil {
 			b.Arrays[VMSettings] = vm_settings
 			r.Builders[v] = b
 		}
 
 	}
 
-	return 
+	return
 }
 
 // r.updateBuilderCommonSettings updates rawTemplate's BuilderCommon settings
@@ -430,7 +430,7 @@ func (r *rawTemplate) updateBuilders(new map[string]*builder) {
 //	* When both the existing BuilderCommon, r, and the new one, b, have the
 //	  same setting, b's value replaces r's; the new setting value replaces
 //        the existing.
-//	* When the setting in b is new, it is added to r: new settings are 
+//	* When the setting in b is new, it is added to r: new settings are
 //	  inserted into r's BuilderCommon setting list.
 //	* When r has a setting that does not exist in b, nothing is done. This
 //	  method does not delete any settings that already exist in R.
@@ -447,7 +447,7 @@ func (r *rawTemplate) updateBuilderCommon(new *builder) {
 	return
 }
 
-// DeepCopyMapStringPBuilder makes a deep copy of each builder passed and 
+// DeepCopyMapStringPBuilder makes a deep copy of each builder passed and
 // returns the copie map[string]*builder as a map[string]interface{}
 // notes: This currently only supports string slices.
 func DeepCopyMapStringPBuilder(b map[string]*builder) map[string]interface{} {
@@ -459,4 +459,3 @@ func DeepCopyMapStringPBuilder(b map[string]*builder) map[string]interface{} {
 	}
 	return c
 }
-
