@@ -476,7 +476,7 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	// the build directory and copying all files that the Packer template needs to the
 	// build directory.
 	// TODO break this call up or rename the function
-	if err := pTpl.TemplateToFileJSON(t.IODirInf, t.BuildInf, scripts); err != nil {
+	if err := pTpl.create(t.IODirInf, t.BuildInf, scripts); err != nil {
 		jww.ERROR.Println(err.Error())
 		return err
 	}

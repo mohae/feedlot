@@ -447,6 +447,47 @@ func (i *IODirInf) update(new IODirInf) {
 	return
 }
 
+// check to see if the dirinf is set
+func (i *IODirInf) check() error {
+	if i.HTTPDir == "" {
+		err := errors.New("ioDirInf.Check: HTTPDir directory not set")
+		jww.ERROR.Print(err.Error())
+		return err
+	}
+
+	if i.HTTPSrcDir == "" {
+		err := errors.New("ioDirInf.Check: HTTPSrcDir directory not set")
+		jww.ERROR.Print(err.Error())
+		return err
+	}
+
+	if i.OutDir == "" {
+		err := errors.New("ioDirInf.Check: output directory not set")
+		jww.ERROR.Print(err.Error())
+		return err
+	}
+
+	if i.SrcDir == "" {
+		err := errors.New("ioDirInf.Check: SrcDir directory not set")
+		jww.ERROR.Print(err.Error())
+		return err
+	}
+
+	if i.ScriptsDir == "" {
+		err := errors.New("ioDirInf.Check: ScriptsDir directory not set")
+		jww.ERROR.Print(err.Error())
+		return err
+	}
+
+	if i.ScriptsSrcDir == "" {
+		err := errors.New("ioDirInf.Check: ScriptsSrcDir directory not set")
+		jww.ERROR.Print(err.Error())
+		return err
+	}
+
+	return nil
+}
+
 // PackerInf is used to store information about a Packer Template. In Packer,
 // these fields are optional, put used here because they are always printed out
 // in a template as custom creation of template output hasn't been written--it
