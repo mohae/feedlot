@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	json "github.com/mohae/customjson"
+	"github.com/mohae/deepcopy"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -30,14 +31,14 @@ func (r *rawTemplate) updatePostProcessors(new map[string]*postProcessor) {
 
 	// Convert the existing postProcessors to interface.
 	var ifaceOld map[string]interface{} = make(map[string]interface{}, len(r.PostProcessors))
-	ifaceOld = deepCopyMapStringPPostProcessor(r.PostProcessors)
+	ifaceOld = DeepCopyMapStringPPostProcessor(r.PostProcessors)
 //	for i, o := range r.PostProcessors {
 //		ifaceOld[i] = o
 //	}
 
 	// Convert the new postProcessors to interfaces
 	var ifaceNew map[string]interface{} = make(map[string]interface{}, len(new))
-	ifaceNew = deepCopyMapStringPPostProcessor(new)
+	ifaceNew = DeepCopyMapStringPPostProcessor(new)
 
 	// Get the all keys from both maps
 	var keys[]string
@@ -187,7 +188,7 @@ func (r *rawTemplate) createPostProccessorVagrant() (settings map[string]interfa
 
 	// Process the Arrays.
 	for name, val := range r.PostProcessors[PostProcessorVagrant].Arrays {
-		array := deepCopyInterfaceToSliceString(val)
+		array := deepcopy.InterfaceToSliceString(val)
 		if array != nil {
 			settings[name] = array
 		}
@@ -203,10 +204,10 @@ func (r *rawTemplate) createPostProcessorVagrantCloud() (settings map[string]int
 	return nil, nil, err
 }
 
-// deepCopyMapStringPPostProcessor makes a deep copy of each builder passed and 
+// DeepCopyMapStringPPostProcessor makes a deep copy of each builder passed and 
 // returns the copie map[string]*builder as a map[string]interface{}
 // notes: This currently only supports string slices.
-func deepCopyMapStringPPostProcessor(p map[string]*postProcessor) map[string]interface{} {
+func DeepCopyMapStringPPostProcessor(p map[string]*postProcessor) map[string]interface{} {
 	c := map[string]interface{}{}
 	for k, v := range p {
 		tmpP := &postProcessor{}

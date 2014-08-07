@@ -415,7 +415,7 @@ func BuildDistro(a ArgsFilter) error {
 
 // Create Packer templates from specified build templates.
 func buildPackerTemplateFromDistro(a ArgsFilter) error {
-	jww.TRACE.Println("buildPackerTemplateFromDistro: Enter")
+	jww.DEBUG.Println("buildPackerTemplateFromDistro: Enter")
 	var t *rawTemplate
 	var err error
 	
@@ -467,22 +467,20 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	
 	jww.TRACE.Printf("\tpackerTemplate:  %v\n", json.MarshalIndentToString(pTpl, "", indent))
 
-/*
+
 	// Get the scripts for this build, if any.
 	var scripts []string
-	scripts = rTpl.ScriptNames()
+	scripts = t.ScriptNames()
 
 	// Create the JSON version of the Packer template. This also handles creation of
 	// the build directory and copying all files that the Packer template needs to the
 	// build directory.
 	// TODO break this call up or rename the function
-	jww.TRACE.Println("Distro based template built; build the template for JSON")
-
-	if err := pTpl.TemplateToFileJSON(rTpl.IODirInf, rTpl.BuildInf, scripts); err != nil {
+	if err := pTpl.TemplateToFileJSON(t.IODirInf, t.BuildInf, scripts); err != nil {
 		jww.ERROR.Println(err.Error())
 		return err
 	}
-*/
+
 	jww.INFO.Println("Created Packer template and associated build directory for " + t.BuildName)
 	return nil
 }
@@ -1202,49 +1200,3 @@ func mergedKeysFromMaps(m ...map[string]interface{}) []string {
 	return mergedKeys
 }
 
-
-// deepCopyInterfaceToSliceString takes an interface that is a slice of strings
-// and returns a deep copy of it as a slice of strings. An error is returned if
-// the interface is not a slice of strings
-func deepCopyInterfaceToSliceString(v interface{}) []string {
-	if v == nil {
-		return nil
-	}
-	var sl []string
-
-	switch reflect.TypeOf(v).Kind() {
-	case reflect.Slice:
-		s := reflect.ValueOf(v)
-		sLen := s.Len()
-
-		for i := 0; i < sLen; i++ {
-			sl = append(sl, s.Index(i).Interface().(string))
-		}
-
-	default:
-		return nil
-	}
-	return sl
-}
-
-// deepCopyMapInterFace makes a deep copy of a map[string]interface{} and
-// returns the copy of the map[string]interface{}
-//
-// notes: This assumes that the interface{} is a []string. Adjust as needed.
-func deepCopyMapStringInterface(m map[string]interface{}) map[string]interface{} {
-	c := map[string]interface{}{}
-	var tmp  []string
-	for k, v := range m {
-		switch reflect.TypeOf(v).Kind() {
-		case reflect.Slice:
-			tmp = deepCopyInterfaceToSliceString(v)
-		}
-		c[k] = tmp
-	}
-
-	return c
-}
-
-func mapToMapStringInterface(m map[string]interface{}) map[string]interface{} {
-	return m
-}

@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	json "github.com/mohae/customjson"
+	"github.com/mohae/deepcopy"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -29,14 +30,14 @@ func (r *rawTemplate) updateProvisioners(new map[string]*provisioner) {
 
 	// Convert the existing provisioners to interface.
 	var ifaceOld map[string]interface{} = make(map[string]interface{}, len(r.Provisioners))
-	ifaceOld = deepCopyMapStringPProvisioner(r.Provisioners)
+	ifaceOld = DeepCopyMapStringPProvisioner(r.Provisioners)
 //	for i, o := range r.Provisioners {
 //		ifaceOld[i] = o
 //	}
 
 	// Convert the new provisioners to interface.
 	var ifaceNew map[string]interface{} = make(map[string]interface{}, len(new))
-	ifaceNew = deepCopyMapStringPProvisioner(new)
+	ifaceNew = DeepCopyMapStringPProvisioner(new)
 //	for i, n := range new {
 //		ifaceNew[i] = n
 //	}
@@ -182,7 +183,7 @@ func (r *rawTemplate) createProvisionerShell() (settings map[string]interface{},
 
 	// Process the Arrays.
 	for name, val := range r.Provisioners[ProvisionerShell].Arrays {
-		array := deepCopyInterfaceToSliceString(val)
+		array := deepcopy.InterfaceToSliceString(val)
 		if array != nil {
 			settings[name] = array
 		}
@@ -216,7 +217,7 @@ func (r *rawTemplate) createProvisionerFile() (settings map[string]interface{}, 
 
 	// Process the Arrays.
 	for name, val := range r.Provisioners[ProvisionerFile].Arrays {
-		array := deepCopyInterfaceToSliceString(val)
+		array := deepcopy.InterfaceToSliceString(val)
 		if array != nil {
 			settings[name] = array
 		}
@@ -225,10 +226,10 @@ func (r *rawTemplate) createProvisionerFile() (settings map[string]interface{}, 
 	return settings, vars, err
 }
 
-// deepCopyMapStringPProvisioners makes a deep copy of each builder passed and 
+// deepcopy.MapStringPProvisioners makes a deep copy of each builder passed and 
 // returns the copie map[string]*provisioner as a map[string]interface{}
 // notes: This currently only supports string slices.
-func deepCopyMapStringPProvisioner(p map[string]*provisioner) map[string]interface{} {
+func DeepCopyMapStringPProvisioner(p map[string]*provisioner) map[string]interface{} {
 	c := map[string]interface{}{}
 	for k, v := range p {
 		tmpP := &provisioner{}

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	_ "github.com/mohae/customjson"
+	"github.com/mohae/deepcopy"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -217,13 +218,25 @@ func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
 */
 // Get a slice of script names from the shell provisioner, if any.
 func (r *rawTemplate) ScriptNames() []string {
-	jww.DEBUG.Println("Entering rawTemplate.ScriptNames...")
-	var s []string
-	//TODO
-/*	if len(r.Provisioners["shell"].Scripts) > 0 {
-		s = make([]string, len(r.Provisioners["shell"].Scripts))
+	jww.DEBUG.Println("rawTemplate.ScriptNames: enter")
+	scripts := "scripts"
 
-		for i, script := range r.Provisioners["shell"].Scripts {
+	// See if there is a shell provisioner
+	if _, ok := r.Provisioners[ProvisionerShell]; !ok {
+		return nil
+	}
+
+	// See if there shell provisioner array section contains scripts
+	if _, ok := r.Provisioners[ProvisionerShell].Arrays[scripts]; !ok {
+		return nil
+	}
+
+	var s []string
+	// Get the slice of scripts
+	s = deepcopy.InterfaceToSliceString(r.Provisioners[ProvisionerShell].Arrays[scripts])
+
+	if len(s) > 0 {
+		for i, script := range s {
 			//explode on "/"
 			parts := strings.Split(script, "/")
 
@@ -232,8 +245,8 @@ func (r *rawTemplate) ScriptNames() []string {
 		}
 
 	}
-*/
-	jww.DEBUG.Println("Exiting rawTemplate.ScriptNames...")
+
+	jww.DEBUG.Println("rawTemplate.ScriptNames: enter")
 	return s
 
 }

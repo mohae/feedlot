@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	json "github.com/mohae/customjson"
+	"github.com/mohae/deepcopy"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -211,7 +212,7 @@ func (r *rawTemplate) createBuilderVirtualBoxISO() (settings map[string]interfac
 	}
 
 	tmpVB := make([][]string, l)
-	vm_settings := deepCopyInterfaceToSliceString(r.Builders[BuilderVirtualBoxISO].Arrays[VMSettings])
+	vm_settings := deepcopy.InterfaceToSliceString(r.Builders[BuilderVirtualBoxISO].Arrays[VMSettings])
 	for i, v := range vm_settings {
 		k, val := parseVar(v)
 		val = r.replaceVariables(val)
@@ -371,13 +372,13 @@ func (r *rawTemplate) updateBuilders(new map[string]*builder) {
 
 	// Convert the existing Builders to interfaces.
 	var ifaceOld map[string]interface{} = make(map[string]interface{}, len(r.Builders))
-	ifaceOld = deepCopyMapStringPBuilder(r.Builders)
+	ifaceOld = DeepCopyMapStringPBuilder(r.Builders)
 //	for i, o := range r.Builders {	
 //		ifaceOld[i] = o
 //	}
 	// Convert the new Builders to interfaces.
 	var ifaceNew map[string]interface{} = make(map[string]interface{}, len(new))
-	ifaceNew = deepCopyMapStringPBuilder(new)
+	ifaceNew = DeepCopyMapStringPBuilder(new)
 
 	// Make the slice as long as the slices in both builders, odds are its
 	// shorter, but this is the worst case.
@@ -411,7 +412,7 @@ func (r *rawTemplate) updateBuilders(new map[string]*builder) {
 		}
 		
 		b = r.Builders[v].DeepCopy()
-		vm_settings = deepCopyInterfaceToSliceString(new[v].Arrays[VMSettings])
+		vm_settings = deepcopy.InterfaceToSliceString(new[v].Arrays[VMSettings])
 
 		// If there is anything to merge, do so
 		if vm_settings != nil {			
@@ -446,10 +447,10 @@ func (r *rawTemplate) updateBuilderCommon(new *builder) {
 	return
 }
 
-// deepCopyMapStringPBuilder makes a deep copy of each builder passed and 
+// DeepCopyMapStringPBuilder makes a deep copy of each builder passed and 
 // returns the copie map[string]*builder as a map[string]interface{}
 // notes: This currently only supports string slices.
-func deepCopyMapStringPBuilder(b map[string]*builder) map[string]interface{} {
+func DeepCopyMapStringPBuilder(b map[string]*builder) map[string]interface{} {
 	c := map[string]interface{}{}
 	for k, v := range b {
 		tmpB := &builder{}

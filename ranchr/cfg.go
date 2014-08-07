@@ -15,6 +15,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	_ "github.com/mohae/customjson"
+	"github.com/mohae/deepcopy"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -97,7 +98,7 @@ func (t *templateSection) DeepCopy(new templateSection) {
 	copy(t.Settings, new.Settings)
 
 	// make a deep copy of the Arrays(map[string]interface)
-	t.Arrays = deepCopyMapStringInterface(new.Arrays)
+	t.Arrays = deepcopy.MapStringInterface(new.Arrays)
 }
 
 // builder represents a builder Packer template section.
@@ -137,7 +138,7 @@ func (b *builder) mergedVMSettings(new []string) []string {
 	}
 
 	var merged []string
-	old := deepCopyInterfaceToSliceString(b.Arrays[VMSettings])
+	old := deepcopy.InterfaceToSliceString(b.Arrays[VMSettings])
 	merged = mergeSettingsSlices(old, new)
 
 	if b.Arrays == nil {
