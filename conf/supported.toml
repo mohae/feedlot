@@ -78,7 +78,7 @@
 					"virtualbox-iso",
 					"virtualbox-ovf"
 				]				
-			[distro.ubuntu.post_provisioners.file]
+			[distro.ubuntu.provisioners.file]
 				settings = [
 					"source = source/dir",
 					"destination = destination/dir"

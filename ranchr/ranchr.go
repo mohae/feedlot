@@ -85,8 +85,8 @@ var (
 	// ProvisionerAnsible is the name of the Ansible Provisioner
 	ProvisionerAnsible = "ansible-local"
 
-	// ProvisionerFileUploads is the name of the Salt Provisioner
-	ProvisionerFileUploads = "file"
+	// ProvisionerFile is the name of the File Provisioner
+	ProvisionerFile = "file"
 
 	// ProvisionerSalt is the name of the Salt Provisioner
 	ProvisionerSalt = "salt-masterless"

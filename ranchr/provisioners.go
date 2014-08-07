@@ -139,6 +139,9 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 		case ProvisionerShell:
 			tmpS, tmpVar, err = r.createProvisionerShell()
 
+		case ProvisionerFile:
+			tmpS, tmpVar, err = r.createProvisionerFile()
+
 		default:
 			err = errors.New("the requested provisioner, '" + pType + "', is not supported")
 			jww.ERROR.Println(err.Error())
@@ -187,6 +190,41 @@ func (r *rawTemplate) createProvisionerShell() (settings map[string]interface{},
 	}
 	return settings, vars, err
 }
+
+// createProvisionerFileUploads() creates a map of settings for Packer's file uploads
+// provisioner. Any values that aren't supported by the file provisioner are
+// ignored.
+func (r *rawTemplate) createProvisionerFile() (settings map[string]interface{}, vars []string, err error) {
+	settings = make(map[string]interface{})
+	settings["type"] = ProvisionerFile
+	
+	jww.TRACE.Printf("rawTemplate.createProvisionerFile-rawtemplate\n")
+
+	// For each value, extract its key value pair and then process. Only 
+	// process the supported keys. Key validation isn't done here, leaving
+	// that for Packer.
+	var k, v string
+	for _, s := range r.Provisioners[ProvisionerFile].Settings {
+		k, v = parseVar(s)
+		switch k {
+		case "source", "destination":
+			settings[s] = v
+		default:
+			jww.WARN.Println("An unsupported key was encountered: " + k)
+		}
+	}
+
+	// Process the Arrays.
+	for name, val := range r.Provisioners[ProvisionerFile].Arrays {
+		array := deepCopyInterfaceToSliceString(val)
+		if array != nil {
+			settings[name] = array
+		}
+		jww.TRACE.Printf("\t%v\t%v\n", name, val)
+	}
+	return settings, vars, err
+}
+
 // deepCopyMapStringPProvisioners makes a deep copy of each builder passed and 
 // returns the copie map[string]*provisioner as a map[string]interface{}
 // notes: This currently only supports string slices.
