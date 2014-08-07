@@ -179,7 +179,7 @@ func (r *rawTemplate) createPostProccessorVagrant() (settings map[string]interfa
 		k, v = parseVar(s)
 		switch k {
 		case "compression_level", "keep_input_artifact", "output":
-			settings[s] = v
+			settings[k] = v
 		default:
 			jww.WARN.Println("An unsupported key was encountered: " + k)
 		}

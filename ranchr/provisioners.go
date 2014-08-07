@@ -208,7 +208,7 @@ func (r *rawTemplate) createProvisionerFile() (settings map[string]interface{}, 
 		k, v = parseVar(s)
 		switch k {
 		case "source", "destination":
-			settings[s] = v
+			settings[k] = v
 		default:
 			jww.WARN.Println("An unsupported key was encountered: " + k)
 		}

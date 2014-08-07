@@ -415,9 +415,10 @@ func BuildDistro(a ArgsFilter) error {
 
 // Create Packer templates from specified build templates.
 func buildPackerTemplateFromDistro(a ArgsFilter) error {
+	jww.TRACE.Println("buildPackerTemplateFromDistro: Enter")
 	var t *rawTemplate
 	var err error
-
+	
 	if a.Distro == "" {
 		err = errors.New("buildPackerTemplateFromDistro: Cannot build a packer template because no target distro information was passed.")
 		jww.ERROR.Println(err.Error())
@@ -455,7 +456,7 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	// out of the args used to create it.
 	t.BuildName = t.Type + "-" + t.Release + "-" + t.Arch + "-" + t.Image
 
-	jww.TRACE.Printf("\nbuildPackerTemplateFromDistro-template: %v\n", json.MarshalIndentToString(t, "", indent))
+	jww.TRACE.Printf("\trawtemplate: %v\n", json.MarshalIndentToString(t, "", indent))
 	pTpl := packerTemplate{}
 
 	// Now that the raw template has been made, create a Packer template out of it
@@ -463,7 +464,8 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 		jww.ERROR.Println(err.Error())
 		return err
 	}
-	_ = pTpl
+	
+	jww.TRACE.Printf("\tpackerTemplate:  %v\n", json.MarshalIndentToString(pTpl, "", indent))
 
 /*
 	// Get the scripts for this build, if any.
