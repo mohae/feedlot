@@ -40,21 +40,21 @@ provisioner_types = [
 		"guest_os_type = ",
 		"virtualbox_version_file = .vbox_version"
 	]
-	[builders.virtualbox-iso.arrays]
-	vm_settings = [
-		"cpus=1",
-		"memory=1024"	
-	]
+		[builders.virtualbox-iso.arrays]
+		vm_settings = [
+			"cpus=1",
+			"memory=1024"	
+		]
 	[builders.vmware-iso]
 	settings = [
 		"guest_os_type = ",
 	]
-	[builders.vmware-iso.arrays]
-	vm_settings = [
-		"cpuid.coresPerSocket=1",
-		"memsize=1024",
-		"numvcpus=1"
-	]
+		[builders.vmware-iso.arrays]
+		vm_settings = [
+			"cpuid.coresPerSocket=1",
+			"memsize=1024",
+			"numvcpus=1"
+		]
 [post_processors]
 	[post_processors.vagrant]
 	settings = [
@@ -62,20 +62,20 @@ provisioner_types = [
 		"keep_input_artifact = false",
 		"output = out/vagrant/"
 	]
-	[post_processors.vagrant.arrays]
-	only = [
-		"virtualbox.iso"
-	]
+		[post_processors.vagrant.arrays]
+		only = [
+			"virtualbox.iso"
+		]
 [provisioners]
 	[provisioners.shell]
 	settings = [
 		"execute_command = :commands_src_dir/execute.command"
 	]
-	[provisioners.shell.arrays]
-	scripts = [ 
-		":scripts_dir/setup.sh",
-		":scripts_dir/vagrant.sh",
-		":scripts_dir/sudoers.sh",
-		":scripts_dir/cleanup.sh",
-	]
+		[provisioners.shell.arrays]
+		scripts = [ 
+			":scripts_dir/setup.sh",
+			":scripts_dir/vagrant.sh",
+			":scripts_dir/sudoers.sh",
+			":scripts_dir/cleanup.sh",
+		]
 

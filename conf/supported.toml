@@ -41,49 +41,47 @@
 		"shell",
 		"file"
 	]
-		[distro.ubuntu.builders]
-			[distro.ubuntu.builders.common]
-			settings = [
-				"boot_wait = 15s",
-				"headless = false"
+	[distro.ubuntu.builders]
+		[distro.ubuntu.builders.common]
+		settings = [
+			"boot_wait = 15s",
+			"headless = false"
+		]
+		[distro.ubuntu.builders.virtualbox-iso]
+			[distro.ubuntu.builders.virtualbox-iso.arrays]
+			vm_settings = [
+				"memory=2048"
 			]
-			[distro.ubuntu.builders.virtualbox-iso]
-				[distro.ubuntu.builders.virtualbox-iso.arrays]
-				vm_settings = [
-					"memory=2048"
-				]
-		[distro.ubuntu.post_processors]
-			[distro.ubuntu.post_processors.vagrant]
-				[distro.ubuntu.post_processors.vagrant.arrays]
-				only = [
-					"virtualbox-iso",
-					"virtualbox-ovf"
-				]
-			[distro.ubuntu.post_processors.vagrant-cloud]
-			settings = [
-				"access_token = youAccessContentNotInAGitRepo",
-				"box_tag = vagrantCloudAccout/boxTag",
-				"version = 0.0.1"
+	[distro.ubuntu.post_processors]
+		[distro.ubuntu.post_processors.vagrant]
+			[distro.ubuntu.post_processors.vagrant.arrays]
+			only = [
+				"virtualbox-iso",
+				"virtualbox-ovf"
 			]
-				[distro.ubuntu.post_processors.vagrant-cloud.arrays]
-				only = [
-					"virtualbox-iso",
-					"virtualbox-ovf"
-				]
-
-		[distro.ubuntu.provisioners]
-			[distro.ubuntu.provisioners.vagrant]
-				[distro.ubuntu.provisioners.vagrant.arrays]
-				only = [
-					"virtualbox-iso",
-					"virtualbox-ovf"
-				]				
-			[distro.ubuntu.provisioners.file]
-				settings = [
-					"source = source/dir",
-					"destination = destination/dir"
-				]
-
+		[distro.ubuntu.post_processors.vagrant-cloud]
+		settings = [
+			"access_token = youAccessContentNotInAGitRepo",
+			"box_tag = vagrantCloudAccout/boxTag",
+			"version = 0.0.1"
+		]
+			[distro.ubuntu.post_processors.vagrant-cloud.arrays]
+			only = [
+				"virtualbox-iso",
+				"virtualbox-ovf"
+			]
+	[distro.ubuntu.provisioners]
+		[distro.ubuntu.provisioners.shell]
+			[distro.ubuntu.provisioners.shell.arrays]
+			only = [
+				"virtualbox-iso",
+				"virtualbox-ovf"
+			]				
+		[distro.ubuntu.provisioners.file]
+			settings = [
+				"source = source/dir",
+				"destination = destination/dir"
+			]
 	
 	[distro.centos]
 	base_url = ""

@@ -16,9 +16,7 @@
        		"amd64"
        	]
        	image = [
-       		"desktop",
-       		"server",
-       		"alternate"
+       		"server"
        	]
        	release = [
        		"10.04",
@@ -32,6 +30,17 @@
        		"image = server",
        		"arch = amd64",
        	]
+	builder_types = [
+		"virtualbox-iso"
+	]
+	post_processor_types = [
+		"vagrant",
+		"vagrant-cloud"
+	]
+	provisioner_types = [
+		"shell",
+		"file"
+	]
 	[distro.ubuntu.builders]			
 		[distro.ubuntu.builders.common]
 		settings = [
@@ -53,18 +62,29 @@
 		settings = [
 			"output = out/:build_name-packer.box"
 		]
-		[distro.ubuntu.provisioners]
-			[distro.ubuntu.provisioners.shell]
-			settings = [
-				"execute_command = :command_src_dir/execute_test.command"
-			]
-			[distro.ubuntu.provisioners.shell.arrays]
+		except = [
+			"virtualbox-ovf"
+		]
+		only = [
+			"virtualbox-iso"
+		]
+	[distro.ubuntu.provisioners]
+		[distro.ubuntu.provisioners.shell]
+		settings = [
+			"execute_command = :command_src_dir/execute_test.command"
+		]
+	 		[distro.ubuntu.provisioners.shell.arrays]
 			scripts = [ 
 				":scripts_dir/setup_test.sh",
 				":scripts_dir/base_test.sh",
 				":scripts_dir/vagrant_test.sh",
 				":scripts_dir/sudoers_test.sh",
 				":scripts_dir/cleanup_test.sh"
+			]
+		[distro.ubuntu.provisioners.file]
+			settings = [
+				"source = source/dir",
+				"destination = destination/dir"
 			]
 
 	[distro.centos]
