@@ -21,7 +21,7 @@ var testBuildsFile = testDir + "conf/builds_test.toml"
 var testBuildListsFile = "../test_files/conf/build_lists_test.toml"
 var today = time.Now().Local().Format("2006-01-02")
 var testRawTemplate = newRawTemplate()
-var JSONToStringMarshaller = json.NewMarshalToString()
+var MarshalJSONToString = json.NewMarshalString()
 
 var testProvisioners = map[string]provisioner{
 	"shell": {
@@ -66,7 +66,7 @@ var testDefaults = &defaults{
 			"virtualbox-iso",
 			"vmware-iso",
 		},
-		Builders: map[string]builder{
+		Builders: map[string]*builder{
 			"common": {
 				templateSection{
 					Settings: []string{
@@ -115,7 +115,7 @@ var testDefaults = &defaults{
 			"vagrant",
 			"vagrant-cloud",
 		},
-		PostProcessors: map[string]postProcessor{
+		PostProcessors: map[string]*postProcessor{
 			"vagrant": {
 				templateSection{
 					Settings: []string{
@@ -145,7 +145,7 @@ var testDefaults = &defaults{
 		ProvisionerTypes: []string{
 			"shell",
 		},
-		Provisioners: map[string]provisioner{
+		Provisioners: map[string]*provisioner{
 			"shell": {
 				templateSection{
 					Settings: []string{
@@ -203,7 +203,7 @@ var testSupportedUbuntu = &distro{
 		"arch = amd64",
 	},
 	build: build{
-		Builders: map[string]builder{
+		Builders: map[string]*builder{
 			"common": {
 				templateSection{
 					Settings: []string{
@@ -227,7 +227,7 @@ var testSupportedUbuntu = &distro{
 				},
 			},
 		},
-		PostProcessors: map[string]postProcessor{
+		PostProcessors: map[string]*postProcessor{
 			"vagrant": {
 				templateSection{
 					Settings: []string{
@@ -236,7 +236,7 @@ var testSupportedUbuntu = &distro{
 				},
 			},
 		},
-		Provisioners: map[string]provisioner{
+		Provisioners: map[string]*provisioner{
 			"shell": {
 				templateSection{
 					Settings: []string{
@@ -310,7 +310,7 @@ var testDistroDefaultUbuntu = rawTemplate{
 	vars:    map[string]string{},
 	build: build{
 		BuilderTypes: []string{"virtualbox-iso", "vmware-iso"},
-		Builders: map[string]builder{
+		Builders: map[string]*builder{
 			"common": {
 				templateSection{
 					Settings: []string{
@@ -359,7 +359,7 @@ var testDistroDefaultUbuntu = rawTemplate{
 			"vagrant",
 			"vagrant-cloud",
 		},
-		PostProcessors: map[string]postProcessor{
+		PostProcessors: map[string]*postProcessor{
 			"vagrant": {
 				templateSection{
 					Settings: []string{
@@ -387,7 +387,7 @@ var testDistroDefaultUbuntu = rawTemplate{
 			},
 		},
 		ProvisionerTypes: []string{"shell"},
-		Provisioners: map[string]provisioner{
+		Provisioners: map[string]*provisioner{
 			"shell": {
 				templateSection{
 					Settings: []string{
@@ -442,7 +442,7 @@ var testDistroDefaultCentOS = rawTemplate{
 	vars:    map[string]string{},
 	build: build{
 		BuilderTypes: []string{"virtualbox-iso", "vmware-iso"},
-		Builders: map[string]builder{
+		Builders: map[string]*builder{
 			"common": {
 				templateSection{
 					Settings: []string{
@@ -491,7 +491,7 @@ var testDistroDefaultCentOS = rawTemplate{
 			"vagrant",
 			"vagrant-cloud",
 		},
-		PostProcessors: map[string]postProcessor{
+		PostProcessors: map[string]*postProcessor{
 			"vagrant": {
 				templateSection{
 					Settings: []string{
@@ -521,7 +521,7 @@ var testDistroDefaultCentOS = rawTemplate{
 		ProvisionerTypes: []string{
 			"shell",
 		},
-		Provisioners: map[string]provisioner{
+		Provisioners: map[string]*provisioner{
 			"shell": {
 				templateSection{
 					Settings: []string{
@@ -559,7 +559,7 @@ var testBuildTest1 = rawTemplate{
 		BuilderTypes: []string{
 			"virtualbox-iso",
 		},
-		Builders: map[string]builder{
+		Builders: map[string]*builder{
 			"common": {
 				templateSection{
 					Settings: []string{
@@ -581,7 +581,7 @@ var testBuildTest1 = rawTemplate{
 			"vagrant",
 			"vagrant-cloud",
 		},
-		PostProcessors: map[string]postProcessor{
+		PostProcessors: map[string]*postProcessor{
 			"vagrant": {
 				templateSection{
 					Settings: []string{
@@ -611,7 +611,7 @@ var testBuildTest1 = rawTemplate{
 		ProvisionerTypes: []string{
 			"shell",
 		},
-		Provisioners: map[string]provisioner{
+		Provisioners: map[string]*provisioner{
 			"shell": {
 				templateSection{
 					Settings: []string{
@@ -649,7 +649,7 @@ var testBuildTest2 = rawTemplate{
 			"virtualbox-iso",
 			"vmware-iso",
 		},
-		Builders: map[string]builder{
+		Builders: map[string]*builder{
 			"common": {
 				templateSection{
 					Settings: []string{
@@ -679,7 +679,7 @@ var testBuildCentOS6Salt = rawTemplate{
 		BuilderTypes: []string{
 			"virtualbox-iso",
 		},
-		Provisioners: map[string]provisioner{
+		Provisioners: map[string]*provisioner{
 			"salt-masterless": {
 				templateSection{
 					Settings: []string{
@@ -720,7 +720,7 @@ var testMergedBuildTest1 = rawTemplate{
 			"virtualbox-iso",
 			"vmware-iso",
 		},
-		Builders: map[string]builder{
+		Builders: map[string]*builder{
 			"common": {
 				templateSection{
 					Settings: []string{
@@ -751,7 +751,7 @@ var testMergedBuildTest1 = rawTemplate{
 		PostProcessorTypes: []string{
 			"vagrant",
 		},
-		PostProcessors: map[string]postProcessor{
+		PostProcessors: map[string]*postProcessor{
 			"vagrant": {
 				templateSection{
 					Settings: []string{
@@ -764,7 +764,7 @@ var testMergedBuildTest1 = rawTemplate{
 		ProvisionerTypes: []string{
 			"shell",
 		},
-		Provisioners: map[string]provisioner{
+		Provisioners: map[string]*provisioner{
 			"shell": {
 				templateSection{
 					Settings: []string{
@@ -817,7 +817,7 @@ var testMergedBuildTest2 = rawTemplate{
 			"virtualbox-iso",
 			"vmware-iso",
 		},
-		Builders: map[string]builder{
+		Builders: map[string]*builder{
 			"common": {
 				templateSection{
 					Settings: []string{
@@ -859,7 +859,7 @@ var testMergedBuildTest2 = rawTemplate{
 		PostProcessorTypes: []string{
 			"vagrant",
 		},
-		PostProcessors: map[string]postProcessor{
+		PostProcessors: map[string]*postProcessor{
 			"vagrant": {
 				templateSection{
 					Settings: []string{
@@ -872,7 +872,7 @@ var testMergedBuildTest2 = rawTemplate{
 		ProvisionerTypes: []string{
 			"shell",
 		},
-		Provisioners: map[string]provisioner{
+		Provisioners: map[string]*provisioner{
 			"shell": {
 				templateSection{
 					Settings: []string{
@@ -920,7 +920,7 @@ var testMergedBuildCentOS6Salt = rawTemplate{
 		BuilderTypes: []string{
 			"virtualbox-iso",
 		},
-		Builders: map[string]builder{
+		Builders: map[string]*builder{
 			"common": {
 				templateSection{
 					Settings: []string{
@@ -962,7 +962,7 @@ var testMergedBuildCentOS6Salt = rawTemplate{
 		PostProcessorTypes: []string{
 			"vagrant",
 		},
-		PostProcessors: map[string]postProcessor{
+		PostProcessors: map[string]*postProcessor{
 			"vagrant": {
 				templateSection{
 					Settings: []string{
@@ -975,7 +975,7 @@ var testMergedBuildCentOS6Salt = rawTemplate{
 		ProvisionerTypes: []string{
 			"shell",
 		},
-		Provisioners: map[string]provisioner{
+		Provisioners: map[string]*provisioner{
 			"salt-masterless": {
 				templateSection{
 					Settings: []string{

@@ -208,8 +208,8 @@ func TestSupported(t *testing.T) {
 				So(s.loaded, ShouldEqual, true)
 				// Set this because, for some reason it isn't set in testing >.>
 				testSupported.Distro["ubuntu"].BaseURL = "http://releases.ubuntu.com/"
-				So(JSONToStringMarshaller.GetIndented(s.Distro["ubuntu"]), ShouldEqual, JSONToStringMarshaller.GetIndented(testSupported.Distro["ubuntu"]))
-				So(JSONToStringMarshaller.GetIndented(s.Distro["centos"]), ShouldEqual, JSONToStringMarshaller.GetIndented(testSupported.Distro["centos"]))
+				So(MarshalJSONToString.GetIndented(s.Distro["ubuntu"]), ShouldEqual, MarshalJSONToString.GetIndented(testSupported.Distro["ubuntu"]))
+				So(MarshalJSONToString.GetIndented(s.Distro["centos"]), ShouldEqual, MarshalJSONToString.GetIndented(testSupported.Distro["centos"]))
 			})
 		})
 	})
@@ -233,8 +233,8 @@ func TestBuildsStuff(t *testing.T) {
 				os.Setenv(EnvBuildsFile, "../test_files/conf/builds_test.toml")
 				b.LoadOnce()
 				So(b.loaded, ShouldEqual, true)
-				So(JSONToStringMarshaller.GetIndented(b.Build["test1"]), ShouldEqual, JSONToStringMarshaller.GetIndented(testBuilds.Build["test1"]))
-				So(JSONToStringMarshaller.GetIndented(b.Build["test2"]), ShouldEqual, JSONToStringMarshaller.GetIndented(testBuilds.Build["test2"]))
+				So(MarshalJSONToString.GetIndented(b.Build["test1"]), ShouldEqual, MarshalJSONToString.GetIndented(testBuilds.Build["test1"]))
+				So(MarshalJSONToString.GetIndented(b.Build["test2"]), ShouldEqual, MarshalJSONToString.GetIndented(testBuilds.Build["test2"]))
 			})
 		})
 		Convey("Given an empty build filename", func() {

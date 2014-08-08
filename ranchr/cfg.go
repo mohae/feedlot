@@ -132,7 +132,7 @@ func (b *builder) mergeSettings(new []string) {
 //		d = default template
 //		b should deep copy d
 
-func (b *builder) mergedVMSettings(new []string) []string {
+func (b *builder) mergeVMSettings(new []string) []string {
 	if new == nil {
 		return nil
 	}
