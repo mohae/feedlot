@@ -1,11 +1,6 @@
-// Copyright 2014 Joel Scoble. All Rights Reserved.
+// Contains structs and methods for Rancher's configuration files.
 //
-// This Source Code Form is subject to the terms of the Mozilla Public
-// License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-// Package ranchr implements the creation of Packer templates from Rancher
-// build definitions.
+// With the exception of rancher.cfg, the configuration files use TOML.
 package ranchr
 
 import (
@@ -14,12 +9,12 @@ import (
 	"sync"
 
 	"github.com/BurntSushi/toml"
-	_ "github.com/mohae/customjson"
 	"github.com/mohae/deepcopy"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
-// Contains most of the information for Packer templates within a Rancher Build.
+// build holds most of the data needed to generate a Packer template. A build
+// generically models Packer build templates.
 type build struct {
 	// Targeted builders: the values are consistent with Packer's, e.g.
 	// `virtualbox.iso` is used for VirtualBox.
@@ -82,7 +77,8 @@ func (b *build) DeepCopy() build {
 	return *copy
 }
 
-// templateSection is used as an embedded type.
+// templateSection is used as an embedded type. All Packer build template 
+// sections settings can be modeled with these elements.
 type templateSection struct {
 	// Settings are string settings in "key=value" format.
 	Settings []string
@@ -148,9 +144,10 @@ func (b *builder) mergedVMSettings(new []string) []string {
 	return merged
 }
 
-// Go through all of the Settings and convert them to a map. Each setting
-// is parsed into its constituent parts. The value then goes through
-// variable replacement to ensure that the settings are properly resolved.
+// settingsToMap converts the Settings section, which is a []string of embedded
+// key:value pairs in the form of: 'key=value'. First, the key:value pair is
+// extracted from each setting. Then variable replacement is performed on each
+// value so that the final, runtime value is created.
 func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 	var k, v string
 	m := make(map[string]interface{})
@@ -164,12 +161,12 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 	return m
 }
 
-// Type for handling the post-processor section of the configs.
+// postProcessor: type for handling the post-processor section of the configs.
 type postProcessor struct {
 	templateSection
 }
 
-// postProcessor.DeepCopy copies the postProcessor values instead of the pointers.
+// DeepCopy copies the postProcessor values instead of the pointers.
 func (p *postProcessor) DeepCopy() *postProcessor {
 	if p == nil {
 		return nil
@@ -181,13 +178,13 @@ func (p *postProcessor) DeepCopy() *postProcessor {
 	return c
 }
 
-// postProcessor.mergeSettings  merges the settings section of a post-processor
-// with the passed slice of settings. New values supercede existing ones.
+// mergeSettings  merges the settings section of a post-processor with the
+// passed slice of settings. New values supercede existing ones.
 func (p *postProcessor) mergeSettings(new []string) {
 	if new == nil {
 		return
 	}
-	//	jww.TRACE.Println("====================\n\n" + json.MarshalToString(p))
+
 	if p.Settings == nil {
 		p.Settings = new
 		return
@@ -198,8 +195,8 @@ func (p *postProcessor) mergeSettings(new []string) {
 	p.Settings = mergeSettingsSlices(p.Settings, new)
 }
 
-// postProcessor.mergeArrays  merges the settings section of a post-processor
-// with the passed slice of settings. New values supercede existing ones.
+// mergeArrays merges the settings section of a post-processor with the passed
+// slice of settings. New values supercede existing ones.
 func (p *postProcessor) mergeArrays(m map[string]interface{}) {
 	if m == nil {
 		return
@@ -209,7 +206,7 @@ func (p *postProcessor) mergeArrays(m map[string]interface{}) {
 		p.Arrays = m
 	}
 
-	// merge the keys
+	// TODO merge the keys
 	// go through all the keys and do the appropriate action
 	//	p.Settings = mergeSettingsSlices(p.Settings, new)
 }
@@ -219,7 +216,7 @@ type provisioner struct {
 	templateSection
 }
 
-// postProcessor.DeepCopy copies the postProcessor values instead of the pointers.
+// DeepCopy copies the provisioner values instead of the pointers.
 func (p *provisioner) DeepCopy() *provisioner {
 	var c *provisioner
 	c = &provisioner{templateSection: templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
@@ -227,8 +224,8 @@ func (p *provisioner) DeepCopy() *provisioner {
 	return c
 }
 
-// provisioner.mergeSettings  merges the settings section of a provisioner
-// with the passed slice of settings. New values supercede existing ones.
+// mergeSettings  merges the settings section of a provisioner with the passed
+// slice of settings. New values supercede existing ones.
 func (p *provisioner) mergeSettings(new []string) {
 	if new == nil {
 		return
@@ -328,10 +325,10 @@ type defaults struct {
 	loaded bool
 }
 
-// Ensures that the default configs get loaded once. Uses a mutex to prevent
-// race conditions as there can be concurrent processing of Packer templates.
-// When loaded, it sets the loaded boolean so that it only needs to be called
-// when it hasn't been loaded.
+// LoadOnce ensures that the default configs get loaded once. Uses a mutex to 
+// prevent race conditions as there can be concurrent processing of Packer 
+// templates. When loaded, it sets the loaded boolean so that it only needs to
+// be called when it hasn't been loaded.
 func (d *defaults) LoadOnce() error {
 	var err error
 
@@ -368,13 +365,23 @@ type BuildInf struct {
 	// Name is the name for the build. This may be an assigned value from
 	// a TOML file setting.
 	Name string
+
 	// BuildName is the name of the build. This is either the name, as
 	// specified in the build.toml file, or a generated name for -distro
 	// flag based builds.
 	BuildName string `toml:"build_name"`
+
+	// TODO redo Ubuntu so that it supports custom urls.
+	// BaseURL's usage is distro dependent:
+	//	Ubuntu: url for Ubuntu's release server-it is not allowed to be
+	//		empty.
+	//	CentOS: by default, this is empty. If it is populated, its value
+	//		is used instead of the randomly generated mirror url. 
 	BaseURL   string `toml:"base_url"`
 }
 
+// update update's the current values with the passed, if the passed value is
+// not an empty string.
 func (i *BuildInf) update(new BuildInf) {
 	if new.Name != "" {
 		i.Name = new.Name
@@ -415,6 +422,8 @@ type IODirInf struct {
 	SrcDir string `toml:"src_dir"`
 }
 
+
+// update updates IODirInf with the passed values, when they exist.
 func (i *IODirInf) update(new IODirInf) {
 	if new.CommandsSrcDir != "" {
 		i.CommandsSrcDir = appendSlash(new.CommandsSrcDir)
@@ -592,10 +601,10 @@ type builds struct {
 	loaded bool
 }
 
-// Ensures that the build information only get loaded once. Uses a mutex to
-// prevent race conditions as there can be concurrent processing of Packer
-// templates. When loaded, it sets the loaded boolean so that it only needs to
-// be called when it hasn't been loaded.
+// LoadOnce ensures that the build information only get loaded once. Uses a 
+// mutex to prevent race conditions as there can be concurrent processing of 
+// Packer templates. When loaded, it sets the loaded boolean so that it only
+// needs to be called when it hasn't been loaded.
 func (b *builds) LoadOnce() error {
 	var err error
 
@@ -627,17 +636,17 @@ func (b *builds) LoadOnce() error {
 	return nil
 }
 
-// Contains lists of builds.
+// buildLists contains lists of builds.
 type buildLists struct {
 	List map[string]list
 }
 
-// A list contains 1 or more builds.
+// list is a slice of 1 or more named builds.
 type list struct {
 	Builds []string
 }
 
-// This is a normal load, no mutex, as this is only called once.
+// Load loads the buildLists from its respective TOML file.
 func (b *buildLists) Load() error {
 	// Load the build lists.
 	name := os.Getenv(EnvBuildListsFile)

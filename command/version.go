@@ -1,3 +1,4 @@
+// version.go handles the version sub-command.
 package command
 
 import (

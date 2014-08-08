@@ -1,6 +1,8 @@
+// raw_template.go contains the definition for rawTemplate and its methods.
 package ranchr
 
 import (
+	"errors"
 	"os"
 	"strings"
 	"time"
@@ -11,7 +13,7 @@ import (
 )
 
 // rawTemplate holds all the information for a Rancher template. This is used
-// to generate the Packer Build.
+// to populate the packerTemplate.
 type rawTemplate struct {
 	PackerInf
 	IODirInf
@@ -63,7 +65,7 @@ type rawTemplate struct {
 	build
 }
 
-// mewRawTemplate returns a rawTemplate with current date in ISO 8601 format.
+// newRawTemplate returns a rawTemplate with current date in ISO 8601 format.
 // This should be called when a rawTemplate with the current date is desired.
 func newRawTemplate() *rawTemplate {
 	// Set the date, formatted to ISO 8601
@@ -88,23 +90,18 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 	p.Description = r.Description
 
 	// Builders
-	//	iSl := make([]interface{}, len(r.Builders))
 	if p.Builders, _, err = r.createBuilders(); err != nil {
 		jww.ERROR.Println(err.Error())
 		return p, err
 	}
 
 	// Post-Processors
-	//	iSl = make([]interface{}, len(r.PostProcessors))
-
 	if p.PostProcessors, _, err = r.createPostProcessors(); err != nil {
 		jww.ERROR.Println(err.Error())
 		return p, err
 	}
 
 	// Provisioners
-	//	iSl = make([]interface{}, len(r.Provisioners))
-
 	if p.Provisioners, _, err = r.createProvisioners(); err != nil {
 		jww.ERROR.Println(err.Error())
 		return p, err
@@ -172,11 +169,8 @@ func (r *rawTemplate) setDefaults(d *distro) {
 
 	// merge the build portions.
 	r.updateBuilders(d.Builders)
-
 	r.updatePostProcessors(d.PostProcessors)
-	//	jww.TRACE.Printf("Merged PostProcessors: %v", r.PostProcessors)
 	r.updateProvisioners(d.Provisioners)
-	//	jww.TRACE.Printf("Merged Provisioners: %v", r.Provisioners)
 	return
 }
 
@@ -204,17 +198,9 @@ func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
 		r.ProvisionerTypes = bld.ProvisionerTypes
 	}
 
-	// merge the build portions.
-	// Should this be broken up? No
-	// it should be calling a method so nothing is returned!
-	//
-	// Plan:
-	//	update builders
 	r.updateBuilders(bld.Builders)
 	r.updatePostProcessors(bld.PostProcessors)
 	r.updateProvisioners(bld.Provisioners)
-	//	r.PostProcessors = getMergedPostProcessors(r.PostProcessors, bld.PostProcessors)
-	//	r.Provisioners = getMergedProvisioners(r.Provisioners, bld.Provisioners)
 
 	return
 }
@@ -222,6 +208,7 @@ func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
 // Get a slice of script names from the shell provisioner, if any.
 func (r *rawTemplate) ScriptNames() []string {
 	jww.DEBUG.Println("rawTemplate.ScriptNames: enter")
+
 	scripts := "scripts"
 
 	// See if there is a shell provisioner
@@ -254,15 +241,11 @@ func (r *rawTemplate) ScriptNames() []string {
 
 }
 
-// Set the src_dir and out_dir, in case there are variables embedded in them.
+// r.mergeVariables merges  
 // These can be embedded in other dynamic variables so they need to be resolved
 // first to avoid a mutation issue. Only Rancher static variables can be used
 // in these two Settings.
 func (r *rawTemplate) mergeVariables() {
-	// check src_dir and out_dir first:
-	// TODO: replace this mess with something cleaner/resilient because this
-	// is ugly and poorly written code...My Bad :(
-
 	// Get the delim and set the replacement map, resolve name information
 	r.varVals = map[string]string{r.delim + "type": r.Type, r.delim + "release": r.Release, r.delim + "arch": r.Arch, r.delim + "image": r.Image, r.delim + "date": r.date, r.delim + "build_name": r.BuildName}
 
@@ -270,14 +253,12 @@ func (r *rawTemplate) mergeVariables() {
 
 	// Src and Outdir are next, since they can be embedded too
 	r.varVals[r.delim+"name"] = r.Name
-
 	r.SrcDir = trimSuffix(r.replaceVariables(r.SrcDir), "/")
 	r.OutDir = trimSuffix(r.replaceVariables(r.OutDir), "/")
 
 	// Commands and scripts dir need to be resolved next
 	r.varVals[r.delim+"out_dir"] = r.OutDir
 	r.varVals[r.delim+"src_dir"] = r.SrcDir
-
 	r.CommandsSrcDir = trimSuffix(r.replaceVariables(r.CommandsSrcDir), "/")
 	r.HTTPDir = trimSuffix(r.replaceVariables(r.HTTPDir), "/")
 	r.HTTPSrcDir = trimSuffix(r.replaceVariables(r.HTTPSrcDir), "/")
@@ -299,12 +280,12 @@ func (r *rawTemplate) mergeVariables() {
 	r.CommandsSrcDir = trimSuffix(r.replaceVariables(r.CommandsSrcDir), "/")
 	r.HTTPDir = trimSuffix(r.replaceVariables(r.HTTPDir), "/")
 	r.HTTPSrcDir = trimSuffix(r.replaceVariables(r.HTTPSrcDir), "/")
-	r.OutDir = trimSuffix(r.replaceVariables(r.OutDir), "/")
 	r.ScriptsDir = trimSuffix(r.replaceVariables(r.ScriptsDir), "/")
 	r.ScriptsSrcDir = trimSuffix(r.replaceVariables(r.ScriptsSrcDir), "/")
-	r.SrcDir = trimSuffix(r.replaceVariables(r.SrcDir), "/")
 }
 
+// ISOInfo resolves the ISO information for this build based on the build
+// information. 
 func (r *rawTemplate) ISOInfo(builderType string, settings []string) error {
 	jww.TRACE.Printf("Entering rawTemplate.ISOInfo")
 	var k, v, checksumType string
@@ -315,8 +296,12 @@ func (r *rawTemplate) ISOInfo(builderType string, settings []string) error {
 		k, v = parseVar(s)
 
 		switch k {
-		case "iso_checksum_type":
+		case isoChecksumType:
 			checksumType = v
+		default:
+			err = errors.New("rawTemplate.ISOInfo: the " + isoChecksumType + "iso_checksum_type was not set.")
+			jww.ERROR.Println("rawTemplate.ISOInfo: " + err.Error())
+			return err
 		}
 	}
 
@@ -327,7 +312,7 @@ func (r *rawTemplate) ISOInfo(builderType string, settings []string) error {
 
 		r.osType, err = r.releaseISO.(*ubuntu).getOSType(builderType)
 		if err != nil {
-			jww.ERROR.Println(err.Error())
+			jww.ERROR.Println("rawTemplate.ISOInfo: " + err.Error())
 			return err
 		}
 
@@ -337,7 +322,7 @@ func (r *rawTemplate) ISOInfo(builderType string, settings []string) error {
 
 		r.osType, err = r.releaseISO.(*centOS).getOSType(builderType)
 		if err != nil {
-			jww.ERROR.Println(err.Error())
+			jww.ERROR.Println("rawTemplate.ISOInfo: " + err.Error())
 			return err
 		}
 

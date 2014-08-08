@@ -1,4 +1,4 @@
-// builders.go contains all of the builder related functionality for
+// raw_template_builders.go contains all of the builder related functionality for
 // rawTemplates. Any new builders should be added here.
 package ranchr
 

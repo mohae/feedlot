@@ -1,3 +1,4 @@
+// packer.go contains the definition for packerTemplate along with its methods.
 package ranchr
 
 import (
@@ -11,6 +12,8 @@ import (
 	jww "github.com/spf13/jwalterweatherman"
 )
 
+// A packerTemplate contains the final definition for a Packer build template.
+// This is what is marshalled to JSON.
 type packerTemplate struct {
 	Description      string                 `json:"description"`
 	MinPackerVersion string                 `json:"min_packer_version"`
@@ -86,6 +89,7 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, scripts []string) error 
 	return nil
 }
 
+// copyScripts copies the passed scripts from the source to the destination.
 func copyScripts(scripts []string, src string, dest string) error {
 	var errCnt, okCnt int
 	var wB int64
