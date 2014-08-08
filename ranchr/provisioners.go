@@ -1,4 +1,4 @@
-// raw_template_provisioners.go creates the provisioners for a Packer build. Add
+// create_provisioners.go creates the provisioners for a Packer build. Add
 // supported provisioners here.
 package ranchr
 

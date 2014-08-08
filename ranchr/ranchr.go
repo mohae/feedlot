@@ -26,7 +26,6 @@ import (
 	jww "github.com/spf13/jwalterweatherman"
 )
 
-// Environment Variables
 var (
 	appName = "RANCHER"
 
@@ -61,7 +60,6 @@ var (
 	EnvLogLevelStdout = appName + "_LOG_LEVEL_STDOUT"
 )
 
-// Packer Constants
 var (
 	// BuilderCommon is the name of the common builder section in the toml files.
 	BuilderCommon = "common"
@@ -102,16 +100,12 @@ var (
 	ProvisionerShellScripts = ProvisionerShell
 )
 
-// misc.
 var (
 	// indent: default indent to use for marshal stuff
 	indent = "    "
 
-	// VMSetting is the constant for builders with vm-settings
+	//VMSetting is the constant for builders with vm-settings
 	VMSettings = "vm_settings"
-
-	// isoChecksumType is the constant for its respective setting.
-	isoChecksumType = "iso_checksum_type"
 )
 
 var Builds *builds

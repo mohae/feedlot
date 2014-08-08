@@ -1,4 +1,3 @@
-// run.go handles the 'run' sub-command.
 package command
 
 import (

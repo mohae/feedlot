@@ -1,5 +1,3 @@
-// release: all functionality needed to retrieve release information and its 
-// ISO info.
 package ranchr
 
 import (
@@ -39,43 +37,29 @@ type iso struct {
 	isoURL string
 }
 
-// releaser should be implemented by any supported distro struct.
 type releaser interface {
 	SetISOInfo() error
 	setChecksum() error
 	setISOURL() error
 }
 
-// release information. Usage of Release and ReleaseFull, along with what
+// Release information. Usage of Release and ReleaseFull, along with what
 // constitutes valid values, are distro dependent.
 type release struct {
-	// iso information
 	iso
-
-	// Architecture that the release is targeting.
 	Arch        string
-
-	// Distro name that the release is targeting
 	Distro      string
-
-	// Image that the release is targeting.
 	Image       string
-
-	// Release that release is being targeted. The structure of this depends
-	// on the supported distro. 
 	Release     string
-
-	// The full release string, if applicable. Usage depends on the supported
-	// distro.
 	ReleaseFull string
 }
 
-// ubuntu wraps release for ubuntu specific implementations of releaser.
+// An Ubuntu specific wrapper to release
 type ubuntu struct {
 	release
 }
 
-// SetISOInfo sets the ISO information for a Packer template.
+// Sets the ISO information for a Packer template.
 func (u *ubuntu) SetISOInfo() error {
 	// Set the ISO name.
 	u.setName()
@@ -92,7 +76,7 @@ func (u *ubuntu) SetISOInfo() error {
 	return nil
 }
 
-// setChecksum retrieves the checksum for the iso.
+// Set the checksum value for the iso.
 func (u *ubuntu) setChecksum() error {
 	// Don't check for ReleaseFull existence since Release will also resolve
 	// for Ubuntu dl directories.
@@ -113,7 +97,6 @@ func (u *ubuntu) setChecksum() error {
 	return nil
 }
 
-// setISOURL sets the url of the iso image for the build.
 func (u *ubuntu) setISOURL() error {
 	// Its ok to use Release in the directory path because Release will resolve
 	// correctly, at the directory level, for Ubuntu.
@@ -198,7 +181,6 @@ func (u *ubuntu) findChecksum(page string) (string, error) {
 	return u.Checksum, nil
 }
 
-// setName set's the name of the iso image that the build will use.
 func (u *ubuntu) setName() {
 	// ReleaseFull is set on LTS, otherwise just set it equal to the Release.
 	if u.ReleaseFull == "" {
@@ -248,7 +230,7 @@ func (c *centOS) isoRedirectURL() string {
 	return fmt.Sprintf("http://isoredirect.centos.org/centos/%s/isos/%s/", c.Release, c.Arch)
 }
 
-// SetISOInfo sets iso information for a Packer template.
+// Sets the ISO information for a Packer template.
 func (c *centOS) SetISOInfo() error {
 	jww.TRACE.Printf("Current state: %+v", c)
 
@@ -471,7 +453,6 @@ func (c *centOS) randomISOURL() (string, error) {
 	return url, nil
 }
 
-// findChecksum finds the checksum for the iso image on the web page.
 func (c *centOS) findChecksum(page string) (string, error) {
 	// Finds the line in the incoming string with the isoName requested,
 	// strips out the checksum and returns it. This is for CentOS checksums
@@ -502,14 +483,13 @@ func (c *centOS) findChecksum(page string) (string, error) {
 	return checksum, nil
 }
 
-// setName sets the name of the ISO.
+// Set the name of the ISO.
 func (c *centOS) setName() {
 	c.Name = "CentOS-" + c.ReleaseFull + "-" + c.Arch + "-" + c.Image + ".iso"
 	return
 }
 
-// getStringFromURL is kind of like `wget`; returns a string from the results
-// of getting the url.
+// Kind of like `wget`; return a string from the passed URL.
 func getStringFromURL(url string) (string, error) {
 	// Get the URL resource
 	res, err := http.Get(url)

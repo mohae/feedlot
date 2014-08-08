@@ -1,4 +1,4 @@
-// raw_template_post_processors.go creates the post-processors for a Packer Build.
+// create_post_processors.go creates the post-processors for a Packer Build.
 // Add supported post-processors here.
 package ranchr
 
