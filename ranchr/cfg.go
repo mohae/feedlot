@@ -148,22 +148,6 @@ func (b *builder) mergeVMSettings(new []string) []string {
 	return merged
 }
 
-// Go through all of the Settings and convert them to a map. Each setting
-// is parsed into its constituent parts. The value then goes through
-// variable replacement to ensure that the settings are properly resolved.
-func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
-	var k, v string
-	m := make(map[string]interface{})
-
-	for _, s := range b.Settings {
-		k, v = parseVar(s)
-		v = r.replaceVariables(v)
-		m[k] = v
-	}
-
-	return m
-}
-
 // Type for handling the post-processor section of the configs.
 type postProcessor struct {
 	templateSection
@@ -187,7 +171,7 @@ func (p *postProcessor) mergeSettings(new []string) {
 	if new == nil {
 		return
 	}
-	//	jww.TRACE.Println("====================\n\n" + json.MarshalToString(p))
+
 	if p.Settings == nil {
 		p.Settings = new
 		return

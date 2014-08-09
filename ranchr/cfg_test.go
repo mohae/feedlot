@@ -35,12 +35,12 @@ func TestBuilderStuff(t *testing.T) {
 			b.Arrays[VMSettings] = []string{"VMkey1=VMvalue1", "VMkey2=VMvalue2"}
 			newVMSettings := []string{"VMkey1=VMvalue11", "VMkey3=VMvalue3"}
 			mergedVMSettings := []string{"VMkey1=VMvalue11", "VMkey2=VMvalue2", "VMkey3=VMvalue3"}
-			b.mergeVMSettings(newVMSettings)
+			merged := b.mergeVMSettings(newVMSettings)
 			Convey("They should be merged", func() {
-				So(b.Arrays[VMSettings], ShouldResemble, mergedVMSettings)
-				So(b.Arrays[VMSettings], ShouldContain, "VMkey1=VMvalue11")
-				So(b.Arrays[VMSettings], ShouldContain, "VMkey2=VMvalue2")
-				So(b.Arrays[VMSettings], ShouldNotContain, "VMkey1=VMvalue1")
+				So(merged, ShouldResemble, mergedVMSettings)
+				So(merged, ShouldContain, "VMkey1=VMvalue11")
+				So(merged, ShouldContain, "VMkey2=VMvalue2")
+				So(merged, ShouldNotContain, "VMkey1=VMvalue1")
 			})
 		})
 
@@ -58,7 +58,6 @@ func TestPostProcessorStuff(t *testing.T) {
 	Convey("Given a postProcessor or two", t, func() {
 		pp := postProcessor{}
 		pp.Settings = []string{"key1=value1", "key2=value2"}
-		rawTpl := &rawTemplate{}
 		newSettings := []string{"key1=value1", "key2=value22", "key3=value3"}
 		Convey("Given two settings slices", func() {
 			pp.mergeSettings(newSettings)
@@ -69,21 +68,13 @@ func TestPostProcessorStuff(t *testing.T) {
 				So(pp.Settings, ShouldNotContain, "key2=value2")
 			})
 		})
-
-		Convey("transform settings to map should result in", func() {
-			res := pp.settingsToMap("vagrant", rawTpl)
-			Convey("Should result in a map[string]interface{}", func() {
-				So(res, ShouldResemble, map[string]interface{}{"type": "vagrant", "key1": "value1", "key2": "value2"})
-			})
-		})
 	})
 }
 
-/*
+func TestProvisionerStuff(t *testing.T) {
 	Convey("Given a provisioner or two", t, func() {
 		p := provisioner{}
 		p.Settings = []string{"key1=value1", "key2=value2"}
-		rawTpl := &rawTemplate{}
 		newSettings := []string{"key1=value1", "key2=value22", "key3=value3"}
 		Convey("Given two settings slices", func() {
 			p.mergeSettings(newSettings)
@@ -95,62 +86,10 @@ func TestPostProcessorStuff(t *testing.T) {
 			})
 		})
 
-		Convey("transform settingns map should result in", func() {
-			res, err := p.settingsToMap("shell", rawTpl)
-			Convey("Should not error", func() {
-				So(err, ShouldBeNil)
-			})
-			Convey("Should result in a map[string]interface{}", func() {
-				So(res, ShouldResemble, map[string]interface{}{"type": "shell", "key1": "value1", "key2": "value2"})
-			})
-		})
-
-
-
-		Convey("transform settings map with an invalid command file name embedded should result in", func() {
-			p := provisioner{}
-			p.Settings = []string{"key1=value1", "execute_command=../test_files/commands/execute.command"}
-			res, err := p.settingsToMap("shell", rawTpl)
-			Convey("Should result in an error", func() {
-				So(err.Error(), ShouldEqual, "open ../test_files/commands/execute.command: no such file or directory")
-			})
-			Convey("Should result in a map[string]interface{}", func() {
-				So(res, ShouldBeNil)
-			})
-		})
-
-*/
-/*
-		Convey("transform settings map with an invalid command file name embedded should result in", func() {
-			p := provisioner{}
-			p.Settings = []string{"key1=value1", "execute_command=../test_files/src/ubuntu/commands/execute_test.command"}
-			res, err := p.settingsToMap("shell", rawTpl)
-			Convey("Should not error", func() {
-				So(err, ShouldBeNil)
-			})
-			Convey("Should result in a map[string]interface{}", func() {
-				So(res, ShouldResemble, map[string]interface{}{"type": "shell", "key1": "value1",
-					"execute_command": "\"echo 'vagrant'|sudo -S sh '{{.Path}}'\""})
-			})
-		})
-
-
-
-		Convey("given a slice with new script names, ", func() {
-			p := provisioner{}
-			p.Scripts = []string{"script1", "script2"}
-			script := []string{"script3", "script4"}
-			p.setScripts(script)
-			Convey("Should result in the slice being replaced", func() {
-				So(p.Scripts, ShouldResemble, []string{"script3", "script4"})
-			})
-		})
-
 	})
 
 }
-*/
-/*
+
 func TestDefaults(t *testing.T) {
 	tmpEnvDefaultsFile := os.Getenv(EnvDefaultsFile)
 	Convey("Given a defaults struct", t, func() {
@@ -174,18 +113,18 @@ func TestDefaults(t *testing.T) {
 				So(d.PackerInf, ShouldResemble, testDefaults.PackerInf)
 				So(d.BuildInf, ShouldResemble, testDefaults.BuildInf)
 				So(d.build.BuilderTypes, ShouldResemble, testDefaults.build.BuilderTypes)
-				So(d.build.Builders[BuilderVirtualBoxISO], ShouldResemble, testDefaults.build.Builders[BuilderVirtualBoxISO])
+				So(MarshalJSONToString.Get(d.build.Builders[BuilderVirtualBoxISO]), ShouldEqual, MarshalJSONToString.Get(testDefaults.build.Builders[BuilderVirtualBoxISO]))
 				So(d.build.PostProcessorTypes, ShouldResemble, testDefaults.build.PostProcessorTypes)
-				So(d.build.PostProcessors[PostProcessorVagrant], ShouldResemble, testDefaults.build.PostProcessors[PostProcessorVagrant])
-				So(d.build.PostProcessors[PostProcessorVagrantCloud], ShouldResemble, testDefaults.build.PostProcessors[PostProcessorVagrantCloud])
+				So(MarshalJSONToString.Get(d.build.PostProcessors[PostProcessorVagrant]), ShouldEqual, MarshalJSONToString.Get(testDefaults.build.PostProcessors[PostProcessorVagrant]))
+				So(MarshalJSONToString.Get(d.build.PostProcessors[PostProcessorVagrantCloud]), ShouldEqual, MarshalJSONToString.Get(testDefaults.build.PostProcessors[PostProcessorVagrantCloud]))
 				So(d.build.ProvisionerTypes, ShouldResemble, testDefaults.build.ProvisionerTypes)
-				So(d.build.Provisioners[ProvisionerShell], ShouldResemble, testDefaults.build.Provisioners[ProvisionerShell])
+				So(MarshalJSONToString.Get(d.build.Provisioners[ProvisionerShell]), ShouldEqual, MarshalJSONToString.Get(testDefaults.build.Provisioners[ProvisionerShell]))
 			})
 		})
 	})
 	_ = os.Setenv(EnvDefaultsFile, tmpEnvDefaultsFile)
 }
-*/
+
 func TestSupported(t *testing.T) {
 	tmpEnv := os.Getenv(EnvSupportedFile)
 

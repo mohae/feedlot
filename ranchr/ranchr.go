@@ -154,7 +154,6 @@ type distroDefaults struct {
 
 // GetTemplate returns a deep copy of the default template for the passed
 // distro name. If the distro does not exist, an error is returned.
-// TODO make the template a DeeopCopy
 func (d *distroDefaults) GetTemplate(n string) (*rawTemplate, error) {
 	var t *rawTemplate
 	var ok bool
@@ -474,7 +473,6 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	// Create the JSON version of the Packer template. This also handles creation of
 	// the build directory and copying all files that the Packer template needs to the
 	// build directory.
-	// TODO break this call up or rename the function
 	if err := pTpl.create(t.IODirInf, t.BuildInf, scripts); err != nil {
 		jww.ERROR.Println(err.Error())
 		return err

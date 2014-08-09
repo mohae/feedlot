@@ -23,7 +23,7 @@ var today = time.Now().Local().Format("2006-01-02")
 var testRawTemplate = newRawTemplate()
 var MarshalJSONToString = json.NewMarshalString()
 
-var testProvisioners = map[string]provisioner{
+var testProvisioners = map[string]*provisioner{
 	"shell": {
 		templateSection{
 			Settings: []string{
@@ -124,9 +124,8 @@ var testDefaults = &defaults{
 						"output = out/rancher-packer.box",
 					},
 					Arrays: map[string]interface{}{
-						"include": []string{
-							"include1",
-							"include2",
+						"only": []string{
+							"virtualbox-iso",
 						},
 					},
 				},
@@ -186,9 +185,7 @@ var testSupportedUbuntu = &distro{
 		"amd64",
 	},
 	Image: []string{
-		"desktop",
 		"server",
-		"alternate",
 	},
 	Release: []string{
 		"10.04",
@@ -203,6 +200,9 @@ var testSupportedUbuntu = &distro{
 		"arch = amd64",
 	},
 	build: build{
+		BuilderTypes: []string{
+			"virtualbox-iso",
+		},
 		Builders: map[string]*builder{
 			"common": {
 				templateSection{
@@ -227,6 +227,10 @@ var testSupportedUbuntu = &distro{
 				},
 			},
 		},
+		PostProcessorTypes: []string{
+			"vagrant",
+			"vagrant-cloud",
+		},
 		PostProcessors: map[string]*postProcessor{
 			"vagrant": {
 				templateSection{
@@ -235,6 +239,10 @@ var testSupportedUbuntu = &distro{
 					},
 				},
 			},
+		},
+		ProvisionerTypes: []string{
+			"shell",
+			"file",
 		},
 		Provisioners: map[string]*provisioner{
 			"shell": {
@@ -253,6 +261,15 @@ var testSupportedUbuntu = &distro{
 					},
 				},
 			},
+			"file": {
+				templateSection{
+					Settings: []string{
+						"source = source/dir",
+						"destination = destination/dir",
+					},
+				},
+			},
+
 		},
 	},
 }
@@ -284,7 +301,7 @@ var testSupportedCentOS = &distro{
 }
 
 //var testRawPackerTemplate =
-var testDistroDefaultUbuntu = rawTemplate{
+var testDistroDefaultUbuntu = &rawTemplate{
 	PackerInf: PackerInf{MinPackerVersion: "0.4.0", Description: "Test supported distribution template"},
 	IODirInf: IODirInf{
 		CommandsSrcDir: ":src_dir/commands",
@@ -413,7 +430,7 @@ var testDistroDefaultUbuntu = rawTemplate{
 	},
 }
 
-var testDistroDefaultCentOS = rawTemplate{
+var testDistroDefaultCentOS = &rawTemplate{
 	PackerInf: PackerInf{
 		MinPackerVersion: "0.4.0",
 		Description:      "Test template config and Rancher options for CentOS",
@@ -547,7 +564,7 @@ var testDistroDefaultCentOS = rawTemplate{
 	},
 }
 
-var testBuildTest1 = rawTemplate{
+var testBuildTest1 = &rawTemplate{
 	PackerInf: PackerInf{
 		Description: "Test build template #1",
 	},
@@ -636,7 +653,7 @@ var testBuildTest1 = rawTemplate{
 	},
 }
 
-var testBuildTest2 = rawTemplate{
+var testBuildTest2 = &rawTemplate{
 	PackerInf: PackerInf{
 		Description: "Test build template #2: causes an error",
 	},
@@ -670,7 +687,7 @@ var testBuildTest2 = rawTemplate{
 	},
 }
 
-var testBuildCentOS6Salt = rawTemplate{
+var testBuildCentOS6Salt = &rawTemplate{
 	PackerInf: PackerInf{
 		Description: "Test build template for salt provisioner using CentOS6",
 	},
@@ -692,7 +709,7 @@ var testBuildCentOS6Salt = rawTemplate{
 	},
 }
 
-var testMergedBuildTest1 = rawTemplate{
+var testMergedBuildTest1 = &rawTemplate{
 	IODirInf: IODirInf{
 		CommandsSrcDir: ":src_dir/commands",
 		HTTPDir:        "http",
@@ -789,7 +806,7 @@ var testMergedBuildTest1 = rawTemplate{
 	},
 }
 
-var testMergedBuildTest2 = rawTemplate{
+var testMergedBuildTest2 = &rawTemplate{
 	IODirInf: IODirInf{
 		CommandsSrcDir: ":src_dir/commands",
 		HTTPDir:        "http",
@@ -893,7 +910,7 @@ var testMergedBuildTest2 = rawTemplate{
 	},
 }
 
-var testMergedBuildCentOS6Salt = rawTemplate{
+var testMergedBuildCentOS6Salt = &rawTemplate{
 	IODirInf: IODirInf{
 		CommandsSrcDir: ":src_dir/commands",
 		HTTPDir:        "http",
@@ -1005,9 +1022,10 @@ var testMergedBuildCentOS6Salt = rawTemplate{
 }
 
 var testSupported supported
-var testMergedBuilds, testDistroDefaults map[string]rawTemplate
+var testMergedBuilds map[string]*rawTemplate
 var testBuilds builds
 var testDataSet bool
+var testDistroDefaults distroDefaults
 
 func setCommonTestData() {
 	if testDataSet {
@@ -1017,16 +1035,16 @@ func setCommonTestData() {
 	testSupported.Distro["ubuntu"] = testSupportedUbuntu
 	testSupported.Distro["centos"] = testSupportedCentOS
 
-	testDistroDefaults = map[string]rawTemplate{}
-	testDistroDefaults["ubuntu"] = testDistroDefaultUbuntu
-	testDistroDefaults["centos"] = testDistroDefaultCentOS
+	testDistroDefaults = distroDefaults{Templates: map[string]*rawTemplate{}, IsSet: true}
+	testDistroDefaults.Templates["ubuntu"] = testDistroDefaultUbuntu
+	testDistroDefaults.Templates["centos"] = testDistroDefaultCentOS
 
-	testBuilds.Build = map[string]rawTemplate{}
+	testBuilds.Build = map[string]*rawTemplate{}
 	testBuilds.Build["test1"] = testBuildTest1
 	testBuilds.Build["test2"] = testBuildTest2
 	testBuilds.Build["test-centos6-salt"] = testBuildCentOS6Salt
 
-	testMergedBuilds = map[string]rawTemplate{}
+	testMergedBuilds = map[string]*rawTemplate{}
 	testMergedBuilds["test1"] = testMergedBuildTest1
 	testMergedBuilds["test2"] = testMergedBuildTest2
 	testMergedBuilds["test-centos6-salt"] = testMergedBuildCentOS6Salt

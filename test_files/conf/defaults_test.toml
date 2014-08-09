@@ -62,7 +62,7 @@ provisioner_types = [
 	]
 		[post_processors.vagrant.arrays]
 		only = [
-			"virtualbox.iso"
+			"virtualbox-iso"
 		]		
 			
 	[post_processors.vagrant-cloud]

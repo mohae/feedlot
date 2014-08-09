@@ -77,28 +77,22 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 	return bldrs, vars, nil
 }
 
-/*
-// r.createBuilderVMWareISO generates the settings for a vmware-iso builder.
-func (r *rawTemplate) createBuilderVMWareISO() (settings map[string]interface{}, vars []string, err error) {
-	// Generate the common Settings and their vars
-	if tmpS, tmpVar, err = r.commonVMSettings(bType, r.Builders[BuilderCommon].Settings, r.Builders[bType].Settings); err != nil {
-		jww.ERROR.Println(err.Error())
-		return nil, nil, err
+
+// Go through all of the Settings and convert them to a map. Each setting
+// is parsed into its constituent parts. The value then goes through
+// variable replacement to ensure that the settings are properly resolved.
+func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
+	var k, v string
+	m := make(map[string]interface{})
+
+	for _, s := range b.Settings {
+		k, v = parseVar(s)
+		v = r.replaceVariables(v)
+		m[k] = v
 	}
 
-	tmpS["type"] = bType
-
-	// Generate builder specific section
-	tmpvm := make(map[string]string, len(r.Builders[bType].Arrays[VMSettings]))
-
-	for i, v = range r.Builders[bType].Arrays[VMSettings] {
-		k, val = parseVar(v)
-		val = r.replaceVariables(val)
-		tmpvm[k] = val
-		tmpS["vmx_data"] = tmpvm
-	}
+	return m
 }
-*/
 
 // r.createBuilderVirtualboxISO generates the settings for a vmware-iso builder.
 func (r *rawTemplate) createBuilderVirtualBoxISO() (settings map[string]interface{}, vars []string, err error) {
@@ -231,8 +225,33 @@ func (r *rawTemplate) createBuilderVirtualBoxISO() (settings map[string]interfac
 /*
 vmx
 */
+
+/*
 // r.createBuilderVMWareISO generates the settings for a vmware-iso builder.
 func (r *rawTemplate) createBuilderVMWareISO() (settings map[string]interface{}, vars []string, err error) {
+	// Generate the common Settings and their vars
+	if tmpS, tmpVar, err = r.commonVMSettings(bType, r.Builders[BuilderCommon].Settings, r.Builders[bType].Settings); err != nil {
+		jww.ERROR.Println(err.Error())
+		return nil, nil, err
+	}
+
+	tmpS["type"] = bType
+
+	// Generate builder specific section
+	tmpvm := make(map[string]string, len(r.Builders[bType].Arrays[VMSettings]))
+
+	for i, v = range r.Builders[bType].Arrays[VMSettings] {
+		k, val = parseVar(v)
+		val = r.replaceVariables(val)
+		tmpvm[k] = val
+		tmpS["vmx_data"] = tmpvm
+	}
+}
+*/
+// r.createBuilderVMWareISO generates the settings for a vmware-iso builder.
+func (r *rawTemplate) createBuilderVMWareISO() (settings map[string]interface{}, vars []string, err error) {
+	settings = make(map[string]interface{})
+
 	// Each create function is responsible for setting its own type.
 	settings["type"] = BuilderVMWareISO
 

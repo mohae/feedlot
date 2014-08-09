@@ -22,22 +22,10 @@ func TestNewRawTemplate(t *testing.T) {
 	})
 }
 
-// TODO ShouldNotResemble vs ShouldResemble DeepEqual issue
-func TestCreateDistroTemplate(t *testing.T) {
-	Convey("Given a distro default template", t, func() {
-		Convey("A distro template should be created", func() {
-			r := rawTemplate{}
-			r.createDistroTemplate(testDistroDefaults["ubuntu"])
-			So(r, ShouldNotResemble, testDistroDefaults["ubuntu"])
-		})
-	})
-}
-
-/*
 func TestCreatePackerTemplate(t *testing.T) {
 	Convey("Given a template", t, func() {
-		r := rawTemplate{}
-		r = testDistroDefaults["ubuntu"]
+		r := &rawTemplate{}
+		r = testDistroDefaults.Templates["ubuntu"]
 		Convey("Calling rawTemplate.CreatePackerTemplate() should result in", func() {
 			var pTpl packerTemplate
 			var err error
@@ -47,11 +35,11 @@ func TestCreatePackerTemplate(t *testing.T) {
 		})
 	})
 }
-*/
+
 func TestCreateBuilders(t *testing.T) {
 	Convey("Given a template", t, func() {
-		r := rawTemplate{}
-		r = testDistroDefaults["ubuntu"]
+		r := &rawTemplate{}
+		r = testDistroDefaults.Templates["ubuntu"]
 		var bldrs []interface{}
 		var vars map[string]interface{}
 		var err error
@@ -67,14 +55,14 @@ func TestCreateBuilders(t *testing.T) {
 			Convey("Given an unsupported Builder Types", func() {
 				r.BuilderTypes[0] = "unsupported"
 				bldrs, vars, err = r.createBuilders()
-				So(err.Error(), ShouldEqual, "the requested builder, 'unsupported', is not supported")
+				So(err.Error(), ShouldEqual, "The requested builder, 'unsupported', is not supported by Rancher")
 				So(vars, ShouldBeNil)
 				So(bldrs, ShouldBeNil)
 			})
 			Convey("Given no Builder Types", func() {
 				r.BuilderTypes = nil
 				bldrs, vars, err = r.createBuilders()
-				So(err.Error(), ShouldEqual, "no builder types were configured, unable to create builders")
+				So(err.Error(), ShouldEqual, "rawTemplate.createBuilders: no builder types were configured, unable to create builders")
 				So(vars, ShouldBeNil)
 				So(bldrs, ShouldBeNil)
 			})
@@ -118,107 +106,9 @@ func TestReplaceVariables(t *testing.T) {
 	})
 }
 
-/*
-// TODO check shouldnotresemble...ShouldResemble would end up with diffs which were just out
-// of order map elements, not the result that should occur.
-func TestCommonVMSettings(t *testing.T) {
-	Convey("Given a template", t, func() {
-		r := rawTemplate{}
-		r = testDistroDefaults["ubuntu"]
-		Convey("Given an invalid type ", func() {
-			r.Type = "unknown"
-			old := []string{
-				"boot_command = :commands_dir/boot.command",
-				"boot_wait = 5s",
-				"disk_size = 20000",
-				"http_directory = http",
-				"iso_checksum_type = sha256",
-				"shutdown_command = :commands_dir/shutdown.command",
-				"ssh_password = vagrant",
-				"ssh_port = 22",
-				"ssh_username = vagrant",
-				"ssh_wait_timeout = 240m",
-			}
-			new := []string{
-				"ssh_port = 222",
-				"ssh_wait_timeout = 300m",
-			}
-
-		Convey("merging the setting should result in", func() {
-				var settings map[string]interface{}
-				var vars []string
-				var err error
-				settings, vars, err = r.commonVMSettings("common", old, new)
-				So(err.Error(), ShouldEqual, "open :commands_dir/boot.command: no such file or directory")
-				So(settings, ShouldBeNil)
-				So(vars, ShouldBeNil)
-			})
-		})
-	})
-
-}
-*/
-
-// TODO ShouldNotResemble vs ShouldResemble DeepEqual issue
-func TestMergeBuildSettings(t *testing.T) {
-	Convey("Testing merging 2 build settings", t, func() {
-		Convey("Given an existing Build configuration", func() {
-			r := rawTemplate{}
-			r = testDistroDefaults["ubuntu"]
-			Convey("Merging the build should result in an updated template", func() {
-				r.mergeBuildSettings(testBuilds.Build["test1"])
-				So(r, ShouldNotResemble, testMergedBuilds["test1"])
-			})
-		})
-	})
-}
-
-func TestMergeDistroSettings(t *testing.T) {
-	Convey("Given an existing distro setting", t, func() {
-		r := testDistroDefaults["ubuntu"]
-		Convey("And some new settings", func() {
-			d := testSupported.Distro["ubuntu"]
-			Convey("Merging the two", func() {
-				r.mergeDistroSettings(d)
-				So(r, ShouldResemble, testDistroDefaults["ubuntu"])
-			})
-			Convey("Merging the two with a builderType", func() {
-				d.BuilderTypes = []string{"virtualbox-iso", "vmware-iso"}
-				expected := testDistroDefaults["ubuntu"]
-				expected.BuilderTypes = d.BuilderTypes
-				r.mergeDistroSettings(d)
-				So(r, ShouldResemble, expected)
-			})
-		})
-	})
-}
-
-/*
-func TestScriptNames(t *testing.T) {
-	Convey("Testing getting a slice of script names from the shell provisioner", t, func() {
-		Convey("Given a shell provisioner", func() {
-			var scripts []string
-			r := rawTemplate{}
-			r.Provisioners = testShellProvisioners1
-			Convey("Calling rawTemplate.ScriptNames() should return a slice", func() {
-				scripts = r.ScriptNames()
-				So(scripts, ShouldNotBeNil)
-				So(scripts, ShouldContain, "base_test.sh")
-				So(scripts, ShouldContain, "setup_test.sh")
-				So(scripts, ShouldContain, "vagrant_test.sh")
-				So(scripts, ShouldContain, "cleanup_test.sh")
-				So(scripts, ShouldContain, "zerodisk_test.sh")
-				So(scripts, ShouldNotContain, "")
-				So(scripts, ShouldNotContain, "zsetup.sh")
-			})
-		})
-	})
-}
-*/
-
 func TestMergeVariables(t *testing.T) {
 	Convey("Given a raw template", t, func() {
-		r := testDistroDefaults["ubuntu"]
+		r := testDistroDefaults.Templates["ubuntu"]
 		Convey("Merging the variables", func() {
 			r.mergeVariables()
 			So(r.CommandsSrcDir, ShouldEqual, "../test_files/src/ubuntu/commands")
