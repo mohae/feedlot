@@ -33,8 +33,6 @@ var pr = &provisioner{
 	},
 }
 
-var rpr = newRawTemplate()
-
 func TestProvisionersSettingsToMap(t *testing.T) {
 	Convey("Given a provisioner and a raw template", t, func() {
 		Convey("transform settingns map should result in", func() {
