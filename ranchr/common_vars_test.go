@@ -344,6 +344,7 @@ var testDistroDefaultUbuntu = &rawTemplate{
 						"ssh_username = vagrant",
 						"ssh_wait_timeout = 240m",
 					},
+					Arrays: map[string]interface{}{},
 				},
 			},
 			"virtualbox-iso": {

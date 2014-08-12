@@ -1,5 +1,5 @@
-// builders.go contains all of the builder related functionality for
-// rawTemplates. Any new builders should be added here.
+// raw_template_builders.go contains all of the builder related functionality
+// for rawTemplates. Any new builders should be added here.
 package ranchr
 
 import (
@@ -94,7 +94,7 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 	return m
 }
 
-// r.createBuilderVirtualboxISO generates the settings for a vmware-iso builder.
+// r.createBuilderVirtualboxISO generates the settings for a virtualbox-iso builder.
 func (r *rawTemplate) createBuilderVirtualBoxISO() (settings map[string]interface{}, vars []string, err error) {
 	settings = make(map[string]interface{})
 
@@ -351,6 +351,17 @@ func (r *rawTemplate) createBuilderVMWareISO() (settings map[string]interface{},
 
 		}
 	}
+
+	// Generate builder specific section
+	tmpVB := map[string]string{}
+	vm_settings := deepcopy.InterfaceToSliceString(r.Builders[BuilderVirtualBoxISO].Arrays[VMSettings])
+	for _, v := range vm_settings {
+		k, val := parseVar(v)
+		val = r.replaceVariables(val)
+		tmpVB[k] = val
+	}
+
+	settings["vmx_data"] = tmpVB
 	return settings, nil, nil
 }
 
