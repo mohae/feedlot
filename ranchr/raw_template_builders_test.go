@@ -128,7 +128,6 @@ var vbB = &builder{
 		},
 	},
 }
-var r = newRawTemplate()
 
 func TestCreateBuilderVirtualboxISO(t *testing.T) {
 	Convey("Given a raw template with a VirtualboxISO builder", t, func() {
@@ -180,10 +179,10 @@ func TestCreateBuilderVMWareISO(t *testing.T) {
 	})
 }
 
-func TestSettingsToMap(t *testing.T) {
+func TestRawTemplateBuildersSettingsToMap(t *testing.T) {
 	Convey("Given a builder and a raw template", t, func() {
 		Convey("Converting the Settings slice to a map", func() {
-			settings := vbB.settingsToMap(r)
+			settings := vbB.settingsToMap(rawTpl)
 			Convey("Should result in a map containing", func() {
 				So(settings["boot_wait"], ShouldEqual, "5s")
 				So(settings["disk_size"], ShouldEqual, "2000")

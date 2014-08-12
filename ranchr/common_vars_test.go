@@ -1027,6 +1027,7 @@ var testMergedBuilds map[string]*rawTemplate
 var testBuilds builds
 var testDataSet bool
 var testDistroDefaults distroDefaults
+var rawTpl = newRawTemplate()
 
 func setCommonTestData() {
 	if testDataSet {
