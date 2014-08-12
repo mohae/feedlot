@@ -101,6 +101,26 @@ func (t *templateSection) DeepCopy(new templateSection) {
 	t.Arrays = deepcopy.MapStringInterface(new.Arrays)
 }
 
+// mergeArrays merges the arrays section of a template builder
+func (t *templateSection) mergeArrays(old map[string]interface{}, new map[string]interface) map[string]interface{} {
+	if old == nil && new == nil {
+		return nil
+	}
+	
+	if old == nil {
+		return new
+	}
+
+	if new == nil {
+		return old
+	}
+
+	// both are populated, merge them.
+	merged := map[string]interface{}{}
+	
+
+	return merged	
+}
 // builder represents a builder Packer template section.
 type builder struct {
 	templateSection
@@ -169,24 +189,13 @@ func (p *postProcessor) mergeSettings(new []string) {
 	}
 
 	// merge the keys
-	// go through all the keys and do the appropriate action
 	p.Settings = mergeSettingsSlices(p.Settings, new)
 }
 
-// postProcessor.mergeArrays  merges the settings section of a post-processor
-// with the passed slice of settings. New values supercede existing ones.
+// postProcessor.mergeArrays wraps templateSection.mergeArrays
 func (p *postProcessor) mergeArrays(m map[string]interface{}) {
-	if m == nil {
-		return
-	}
-
-	if p.Arrays == nil {
-		p.Arrays = m
-	}
-
-	// merge the keys
-	// go through all the keys and do the appropriate action
-	//	p.Settings = mergeSettingsSlices(p.Settings, new)
+	// merge the arrays:
+	p.Arrays = templateSection.mergeArrays(p.Arrays, m)
 }
 
 // provisioner: type for common elements for provisioners.

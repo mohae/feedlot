@@ -66,11 +66,6 @@ func (r *rawTemplate) updatePostProcessors(new map[string]*postProcessor) {
 			p = &postProcessor{templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
 		}
 
-		// If the element for this key doesn't exist, skip it.
-		if _, ok := new[v]; !ok {
-			continue
-		}
-
 		p.mergeSettings(new[v].Settings)
 		p.mergeArrays(new[v].Arrays)
 		r.PostProcessors[v] = p
