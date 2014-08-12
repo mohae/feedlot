@@ -123,15 +123,6 @@ func (b *builder) mergeSettings(new []string) {
 }
 
 // mergeVMSettings Merge the VMSettings section of a builder. New values supercede existing ones.
-//
-// question sanity....
-//      so this updated the builder, which then affects both builders
-//	how should this work?
-//      Set default template for each distro
-//		b = distro template
-//		d = default template
-//		b should deep copy d
-
 func (b *builder) mergeVMSettings(new []string) []string {
 	if new == nil {
 		return nil
