@@ -13,30 +13,52 @@ func init() {
 	setCommonTestData()
 }
 
-func TestBuilderStuff(t *testing.T) {
-	Convey("Given a builder, or two", t, func() {
+func TesMergeSettings(t *testing.T) {
+	Convey("Given a builder with settings", t, func() {
 		b := builder{}
 		b.Settings = []string{"key1=value1", "key2=value2", "key3=value3"}
-		newSettings := []string{"key4=value4", "key2=value22"}
-
-		Convey("Given two settings slices", func() {
-			b.mergeSettings(newSettings)
-			Convey("Merging them should result in", func() {
+		Convey("Merging a nil slice", func() {
+			b.mergeSettings(nil)
+			Convey("Should result in no changes", func() {
 				So(b.Settings, ShouldContain, "key1=value1")
-				So(b.Settings, ShouldContain, "key2=value22")
+				So(b.Settings, ShouldContain, "key2=value2")
 				So(b.Settings, ShouldContain, "key3=value3")
-				So(b.Settings, ShouldContain, "key4=value4")
-				So(b.Settings, ShouldNotContain, "key2=value2")
 			})
 		})
 
-		Convey("Given two vm settings slices", func() {
-			b.Arrays = map[string]interface{}{}
-			b.Arrays[VMSettings] = []string{"VMkey1=VMvalue1", "VMkey2=VMvalue2"}
+		Convey("Given a slice of new settings", func() {
+			newSettings := []string{"key4=value4", "key2=value22"}
+			Convey("Merging the new slice", func() {
+				b.mergeSettings(newSettings)
+				Convey("Should result in", func() {
+					So(b.Settings, ShouldContain, "key1=value1")
+					So(b.Settings, ShouldContain, "key2=value22")
+					So(b.Settings, ShouldContain, "key3=value3")
+					So(b.Settings, ShouldContain, "key4=value4")
+					So(b.Settings, ShouldNotContain, "key2=value2")
+				})
+			})
+		})
+	})
+}
+
+func TestMergeVMSettings(t *testing.T) {
+	Convey("Given a builder with vm settings", t, func() {
+		b := builder{}
+		b.Arrays = map[string]interface{}{}
+		b.Arrays[VMSettings] = []string{"VMkey1=VMvalue1", "VMkey2=VMvalue2"}
+		Convey("merging the slice with a nil slice", func() {
+			merged := b.mergeVMSettings(nil)
+			Convey("should result in nil", func() {
+				So(merged, ShouldBeNil)
+			})
+		})
+
+		Convey("merging the slice with a populated slice", func() {
 			newVMSettings := []string{"VMkey1=VMvalue11", "VMkey3=VMvalue3"}
 			mergedVMSettings := []string{"VMkey1=VMvalue11", "VMkey2=VMvalue2", "VMkey3=VMvalue3"}
 			merged := b.mergeVMSettings(newVMSettings)
-			Convey("They should be merged", func() {
+			Convey("Shouuld result in a merged slice", func() {
 				So(merged, ShouldResemble, mergedVMSettings)
 				So(merged, ShouldContain, "VMkey1=VMvalue11")
 				So(merged, ShouldContain, "VMkey2=VMvalue2")
@@ -45,10 +67,13 @@ func TestBuilderStuff(t *testing.T) {
 		})
 
 		Convey("Given a builder settings", func() {
+			b.Settings = []string{"key1=value1", "key2=value2", "key3=value3"}
 			rawTpl := &rawTemplate{}
-			res := b.settingsToMap(rawTpl)
-			Convey("They should be turned into a map[string]interface", func() {
-				So(res, ShouldResemble, map[string]interface{}{"key1": "value1", "key2": "value2", "key3": "value3"})
+			Convey("Making a map from the settings", func() {
+				res := b.settingsToMap(rawTpl)
+				Convey("Should result in a map[string]interface of the values", func() {
+					So(res, ShouldResemble, map[string]interface{}{"key1": "value1", "key2": "value2", "key3": "value3"})
+				})
 			})
 		})
 	})
