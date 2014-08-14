@@ -238,6 +238,12 @@ func (p *provisioner) mergeSettings(new []string) {
 	p.Settings = mergeSettingsSlices(p.Settings, new)
 }
 
+// provisioner.mergeArrays wraps templateSection.mergeArrays
+func (p *provisioner) mergeArrays(m map[string]interface{}) {
+	// merge the arrays:
+	p.Arrays = p.templateSection.mergeArrays(p.Arrays, m)
+}
+
 /*
 // Go through all of the Settings and convert them to a map. Each setting is
 // parsed into its constituent parts. The value then goes through variable
