@@ -478,8 +478,9 @@ func (r *rawTemplate) updateBuilderCommon(new *builder) {
 }
 
 // DeepCopyMapStringPBuilder makes a deep copy of each builder passed and
-// returns the copie map[string]*builder as a map[string]interface{}
-// notes: This currently only supports string slices.
+// returns the copy map[string]*builder as a map[string]interface{}
+// notes: 
+//	P means pointer
 func DeepCopyMapStringPBuilder(b map[string]*builder) map[string]interface{} {
 	c := map[string]interface{}{}
 	for k, v := range b {
