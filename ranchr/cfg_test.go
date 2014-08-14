@@ -13,6 +13,92 @@ func init() {
 	setCommonTestData()
 }
 
+func TestTemplateSectionMergeArrays(t *testing.T) {
+	Convey("Given a templateSection", t, func() {
+		t := &templateSection{}
+		Convey("Merging two nil Array elements", func() {
+			merged := t.mergeArrays(nil, nil)
+			Convey("Should result in nil", func() {
+				So(merged, ShouldBeNil)
+			})
+		})
+		old := map[string]interface{}{
+			"type": "shell",
+			"execute_command": "echo 'vagrant'|sudo -S sh '{{.Path}}'",
+			"override": map[string]interface{}{
+				"virtualbox-iso": map[string]interface{}{
+					"scripts": []string{
+						"scripts/base.sh",
+						"scripts/vagrant.sh",
+						"scripts/virtualbox.sh",
+						"scripts/cleanup.sh",
+					},
+				},
+			},
+		}
+
+		new := map[string]interface{}{
+			"type": "shell",
+			"override": map[string]interface{}{
+				"vmware-iso": map[string]interface{}{
+					"scripts": []string{
+						"scripts/base.sh",
+						"scripts/vagrant.sh",
+						"scripts/virtualbox.sh",
+						"scripts/cleanup.sh",
+					},
+				},
+			},
+		}
+
+		newold := map[string]interface{}{
+			"type": "shell",
+			"execute_command": "echo 'vagrant'|sudo -S sh '{{.Path}}'",
+			"override": map[string]interface{}{
+				"vmware-iso": map[string]interface{}{
+					"scripts": []string{
+						"scripts/base.sh",
+						"scripts/vagrant.sh",
+						"scripts/virtualbox.sh",
+						"scripts/cleanup.sh",
+					},
+				},
+			},
+		}
+
+		Convey("Merging an existing Array element with nil", func() {
+			merged := t.mergeArrays(old, nil) 
+			Convey("Should not result in nil", func() {
+				So(merged, ShouldNotBeNil)
+			})
+			Convey("Should resemble old", func() {
+				So(MarshalJSONToString.Get(merged), ShouldEqual, MarshalJSONToString.Get(old))
+			})
+		})
+		
+		Convey("Merging an existing nil Array element with new values", func() {
+			merged := t.mergeArrays(nil, new) 
+			Convey("Should not result in nil", func() {
+				So(merged, ShouldNotBeNil)
+			})
+			Convey("Should resemble new", func() {
+				So(MarshalJSONToString.Get(merged), ShouldEqual, MarshalJSONToString.Get(new))
+
+			})
+		})
+		Convey("Merging an existing nil Array element with new values", func() {
+			merged := t.mergeArrays(old, new) 
+			Convey("Should not result in nil", func() {
+				So(merged, ShouldNotBeNil)
+			})
+			Convey("Should result in the Arrays being merged", func() {
+				So(MarshalJSONToString.Get(merged), ShouldEqual, MarshalJSONToString.Get(newold))
+			})
+		})
+
+	})
+}
+
 func TesMergeSettings(t *testing.T) {
 	Convey("Given a builder with settings", t, func() {
 		b := builder{}
@@ -79,7 +165,7 @@ func TestMergeVMSettings(t *testing.T) {
 	})
 }
 
-func TestPostProcessorStuff(t *testing.T) {
+func TestPostProcessorMergeSettings(t *testing.T) {
 	Convey("Given a postProcessor or two", t, func() {
 		pp := postProcessor{}
 		pp.Settings = []string{"key1=value1", "key2=value2"}
@@ -95,6 +181,7 @@ func TestPostProcessorStuff(t *testing.T) {
 		})
 	})
 }
+
 
 func TestProvisionerStuff(t *testing.T) {
 	Convey("Given a provisioner or two", t, func() {

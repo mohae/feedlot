@@ -1161,6 +1161,38 @@ func TestSubString(t *testing.T) {
 		})
 	})
 }
+
+func TestMergedKeysFromMaps(t *testing.T) {
+	Convey("Given a map or maps", t, func() {
+		map1 := map[string]interface{}{
+			"key1": "value1",
+			"key2": "value2",
+			"key3": []string{
+				"element1",
+				"element2",
+			},
+		}
+		Convey("merging the keys of a single map", func() {
+			keys := mergedKeysFromMaps(map1)
+			Convey("Should result in a slice of map keys", func() {
+				expected := []string{"key1", "key2", "key3"}
+				So(keys, ShouldResemble, expected)
+			})
+		})
+		map2 := map[string]interface{}{
+			"key1": "another value",
+			"key4": "value4",
+		}
+		Convey("merging the keys of two maps", func() {
+			keys := mergedKeysFromMaps(map1, map2)
+			Convey("Should result in a slice of merged map keys", func() {
+				expected := []string{"key1", "key2", "key3", "key4"}
+				So(keys, ShouldResemble, expected)
+			})
+		})
+	})
+}
+	
 /*
 func TestInterfaceToStringSlice(t *testing.T) {
 	Convey("Testing interfaceToStringSlice", t, func() {

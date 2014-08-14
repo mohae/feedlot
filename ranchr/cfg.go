@@ -102,7 +102,7 @@ func (t *templateSection) DeepCopy(new templateSection) {
 }
 
 // mergeArrays merges the arrays section of a template builder
-func (t *templateSection) mergeArrays(old map[string]interface{}, new map[string]interface) map[string]interface{} {
+func (t *templateSection) mergeArrays(old map[string]interface{}, new map[string]interface{}) map[string]interface{} {
 	if old == nil && new == nil {
 		return nil
 	}
@@ -118,6 +118,21 @@ func (t *templateSection) mergeArrays(old map[string]interface{}, new map[string
 	// both are populated, merge them.
 	merged := map[string]interface{}{}
 	
+	// Get the all keys from both maps
+	var keys []string
+	keys = mergedKeysFromMaps(old, new)
+
+	// Process using the keys.
+	for _, v := range keys {
+		// If the element for this key doesn't exist in new, add old.
+		if _, ok := new[v]; !ok {
+			merged[v] = old[v]
+			continue
+		}
+
+		// Otherwise use the new value
+		merged[v] = new[v]
+	}
 
 	return merged	
 }
@@ -195,7 +210,7 @@ func (p *postProcessor) mergeSettings(new []string) {
 // postProcessor.mergeArrays wraps templateSection.mergeArrays
 func (p *postProcessor) mergeArrays(m map[string]interface{}) {
 	// merge the arrays:
-	p.Arrays = templateSection.mergeArrays(p.Arrays, m)
+	p.Arrays = p.templateSection.mergeArrays(p.Arrays, m)
 }
 
 // provisioner: type for common elements for provisioners.
