@@ -181,10 +181,6 @@ type postProcessor struct {
 
 // postProcessor.DeepCopy copies the postProcessor values instead of the pointers.
 func (p *postProcessor) DeepCopy() *postProcessor {
-	if p == nil {
-		return nil
-	}
-
 	var c *postProcessor
 	c = &postProcessor{templateSection: templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
 	c.templateSection.DeepCopy(p.templateSection)
