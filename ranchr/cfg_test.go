@@ -169,6 +169,13 @@ func TestPostProcessorMergeSettings(t *testing.T) {
 	Convey("Given a postProcessor or two", t, func() {
 		pp := postProcessor{}
 		pp.Settings = []string{"key1=value1", "key2=value2"}
+		Convey("Merging a nil slice", func() {
+			pp.mergeSettings(nil)
+			Convey("Should result in no change", func() {
+				So(pp.Settings, ShouldContain, "key1=value1")
+				So(pp.Settings, ShouldContain, "key2=value2")
+			})	
+		})
 		newSettings := []string{"key1=value1", "key2=value22", "key3=value3"}
 		Convey("Given two settings slices", func() {
 			pp.mergeSettings(newSettings)
@@ -179,14 +186,31 @@ func TestPostProcessorMergeSettings(t *testing.T) {
 				So(pp.Settings, ShouldNotContain, "key2=value2")
 			})
 		})
+		Convey("Given a postProcessor with a nil settings", func() {
+			post := postProcessor{}
+			Convey("Merging a slice", func() {
+				post.mergeSettings(newSettings)
+				Convey("Should result in post.Settings == new", func() {
+					So(post.Settings, ShouldContain, "key1=value1")
+					So(post.Settings, ShouldContain, "key2=value22")
+					So(post.Settings, ShouldContain, "key3=value3")
+				})
+			})
+		})
 	})
 }
 
-
-func TestProvisionerStuff(t *testing.T) {
+func TestProvisionerMergeSettings(t *testing.T) {
 	Convey("Given a provisioner or two", t, func() {
 		p := provisioner{}
 		p.Settings = []string{"key1=value1", "key2=value2"}
+		Convey("Merging a nil slice", func() {
+			p.mergeSettings(nil)
+			Convey("Should result in no change", func() {
+				So(p.Settings, ShouldContain, "key1=value1")
+				So(p.Settings, ShouldContain, "key2=value2")
+			})	
+		})
 		newSettings := []string{"key1=value1", "key2=value22", "key3=value3"}
 		Convey("Given two settings slices", func() {
 			p.mergeSettings(newSettings)
@@ -197,9 +221,18 @@ func TestProvisionerStuff(t *testing.T) {
 				So(p.Settings, ShouldNotContain, "key2=value2")
 			})
 		})
-
+		Convey("Given a provisioner with a nil settings", func() {
+			pr := provisioner{}
+			Convey("Merging a slice", func() {
+				pr.mergeSettings(newSettings)
+				Convey("Should result in pr.Settings == new", func() {
+					So(pr.Settings, ShouldContain, "key1=value1")
+					So(pr.Settings, ShouldContain, "key2=value22")
+					So(pr.Settings, ShouldContain, "key3=value3")
+				})
+			})
+		})
 	})
-
 }
 
 func TestDefaults(t *testing.T) {

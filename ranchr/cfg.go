@@ -222,40 +222,22 @@ func (p *provisioner) DeepCopy() *provisioner {
 	return c
 }
 
-// provisioner.mergeSettings  merges the settings section of a provisioner
+// provisioner.mergeSettings  merges the settings section of a post-processor
 // with the passed slice of settings. New values supercede existing ones.
 func (p *provisioner) mergeSettings(new []string) {
 	if new == nil {
 		return
 	}
+
 	if p.Settings == nil {
 		p.Settings = new
 		return
 	}
+
+	// merge the keys
 	p.Settings = mergeSettingsSlices(p.Settings, new)
 }
 
-/*
-// provisioner.mergeArrays merges the passed map with the existing Arrays.
-// depending on the array element, the merge may either be an update or a
-// replacement of existing, e.g. some Arrays, like only and except replace
-// any existing value instead of updating it.
-//
-// TODO figure out how to represent an unsetting of an existing element, i.e
-// if p has Array["except"] and that element is missing from new, the existing
-// Array["except"] will not be deleted. Another way to represent an unsetting
-// needs to be done.
-func (p *provisioner) mergeSettings(new map[string]interface{}) {
-	if new == nil {
-		return
-	}
-
-	// merge the keys
-
-	// go through all the keys and do the appropriate action
-//	p.Settings = mergeSettingsSlices(p.Settings, new)
-}
-*/
 /*
 // Go through all of the Settings and convert them to a map. Each setting is
 // parsed into its constituent parts. The value then goes through variable
