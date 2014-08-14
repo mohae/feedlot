@@ -112,6 +112,116 @@ var builderTest = &rawTemplate{
 	},
 }
 
+var builderOrig = map[string]*builder{
+	"common": {
+		templateSection{
+			Settings: []string{
+				"boot_command = ../test_files/src/ubuntu/commands/boot_test.command",
+				"boot_wait = 5s",
+				"disk_size = 20000",
+				"http_directory = http",
+				"iso_checksum_type = sha256",
+				"shutdown_command = ../test_files/src/ubuntu/commands/shutdown_test.command",
+				"ssh_password = vagrant",
+				"ssh_port = 22",
+				"ssh_username = vagrant",
+				"ssh_wait_timeout = 300m",
+			},
+		},
+	},
+	"virtualbox-iso": {
+		templateSection{
+			Arrays: map[string]interface{}{
+				"vm_settings": []string{
+					"cpus=1",
+					"memory=4096",
+				},
+			},
+		},
+	},
+	"vmware-iso": {
+		templateSection{
+			Arrays: map[string]interface{}{
+				"vm_settings": []string{
+					"cpuid.coresPerSocket=1",
+					"memsize=1024",
+					"numvcpus=1",
+				},
+			},
+		},
+	},
+}
+
+var builderNew = map[string]*builder{
+	"common": {
+		templateSection{
+			Settings: []string{
+				"boot_command = ../test_files/src/ubuntu/commands/boot_test.command",
+				"boot_wait = 15s",
+				"disk_size = 20000",
+				"http_directory = http",
+				"iso_checksum_type = sha256",
+				"shutdown_command = ../test_files/src/ubuntu/commands/shutdown_test.command",
+				"ssh_password = vagrant",
+				"ssh_port = 22",
+				"ssh_username = vagrant",
+				"ssh_wait_timeout = 240m",
+			},
+		},
+	},
+	"virtualbox-iso": {
+		templateSection{
+			Arrays: map[string]interface{}{
+				"vm_settings": []string{
+					"cpus=1",
+					"memory=2048",
+				},
+			},
+		},
+	},
+}
+
+var builderMerged = map[string]*builder{
+	"common": {
+		templateSection{
+			Settings: []string{
+				"boot_command = ../test_files/src/ubuntu/commands/boot_test.command",
+				"boot_wait = 15s",
+				"disk_size = 20000",
+				"http_directory = http",
+				"iso_checksum_type = sha256",
+				"shutdown_command = ../test_files/src/ubuntu/commands/shutdown_test.command",
+				"ssh_password = vagrant",
+				"ssh_port = 22",
+				"ssh_username = vagrant",
+				"ssh_wait_timeout = 240m",
+			},
+		},
+	},
+	"virtualbox-iso": {
+		templateSection{
+			Settings: []string{},
+			Arrays: map[string]interface{}{
+				"vm_settings": []string{
+					"cpus=1",
+					"memory=2048",
+				},
+			},
+		},
+	},
+	"vmware-iso": {
+		templateSection{
+			Arrays: map[string]interface{}{
+				"vm_settings": []string{
+					"cpuid.coresPerSocket=1",
+					"memsize=1024",
+					"numvcpus=1",
+				},
+			},
+		},
+	},
+}
+
 var vbB = &builder{
 	templateSection{
 		Settings: []string{
@@ -174,6 +284,34 @@ func TestCreateBuilderVMWareISO(t *testing.T) {
 				So(settings["ssh_username"], ShouldEqual, "vagrant")	
 				So(settings["type"], ShouldEqual, "vmware-iso")
 				So(MarshalJSONToString.Get(settings["vmx_data"]), ShouldEqual, "{\"cpus\":\"1\",\"memory\":\"4096\"}")	
+			})
+		})
+	})
+}
+
+func TestRawTemplateUpdatebuilders(t *testing.T) {
+	Convey("Given a rawTemplate", t, func() {
+		Convey("updating builders with a nil map", func() {
+			builderTest.updateBuilders(nil)
+			Convey("Should result in no changes", func() {
+				So(MarshalJSONToString.Get(builderTest.Builders), ShouldEqual, MarshalJSONToString.Get(builderOrig))
+			})
+		})
+		Convey("updating builders with another builder", func() {
+			builderTest.updateBuilders(builderNew)
+			Convey("Should result in an updated builder", func() {
+				So(MarshalJSONToString.Get(builderTest.Builders), ShouldEqual, MarshalJSONToString.Get(builderMerged))
+			})
+		})
+	})
+}
+
+func TestRawTemplateUpdateBuildercommon(t *testing.T) {
+	Convey("Given a rawTemplate", t, func() {
+		Convey("updating the common builder", func() {
+			builderTest.updateBuilderCommon(builderNew["common"])
+			Convey("Should result in an common builder", func() {
+				So(MarshalJSONToString.Get(builderTest.Builders["common"]), ShouldEqual, MarshalJSONToString.Get(builderMerged["common"]))
 			})
 		})
 	})
