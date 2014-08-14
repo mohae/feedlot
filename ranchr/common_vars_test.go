@@ -522,6 +522,10 @@ var testDistroDefaultCentOS = &rawTemplate{
 							"include1",
 							"include2",
 						},
+						"only": []string{
+							"virtualbox-iso",
+						},
+
 					},
 				},
 			},
