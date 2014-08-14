@@ -50,7 +50,7 @@ var ppOrig = map[string]*postProcessor{
 				"no_release = true",
 				"version = 1.0.1",
 			},
-//			Arrays: map[string]interface{}{},
+			Arrays: map[string]interface{}{},
 		},
 	},
 }
