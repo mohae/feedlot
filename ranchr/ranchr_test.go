@@ -1175,8 +1175,10 @@ func TestMergedKeysFromMaps(t *testing.T) {
 		Convey("merging the keys of a single map", func() {
 			keys := mergedKeysFromMaps(map1)
 			Convey("Should result in a slice of map keys", func() {
-				expected := []string{"key1", "key2", "key3"}
-				So(MarshalJSONToString.Get(keys), ShouldEqual, MarshalJSONToString.Get(expected))
+				So(keys, ShouldContain, "key1")
+				So(keys, ShouldContain, "key2")
+				So(keys, ShouldContain, "key3")
+				So(keys, ShouldNotContain, "key4")
 			})
 		})
 		map2 := map[string]interface{}{
@@ -1186,8 +1188,11 @@ func TestMergedKeysFromMaps(t *testing.T) {
 		Convey("merging the keys of two maps", func() {
 			keys := mergedKeysFromMaps(map1, map2)
 			Convey("Should result in a slice of merged map keys", func() {
-				expected := []string{"key1", "key2", "key3", "key4"}
-				So(MarshalJSONToString.Get(keys), ShouldEqual, MarshalJSONToString.Get(expected))
+				So(keys, ShouldContain, "key1")
+				So(keys, ShouldContain, "key2")
+				So(keys, ShouldContain, "key3")
+				So(keys, ShouldContain, "key4")
+				So(keys, ShouldNotContain, "")
 			})
 		})
 	})

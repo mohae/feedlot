@@ -537,6 +537,7 @@ var testDistroDefaultCentOS = &rawTemplate{
 						"no_release = true",
 						"version = 1.0.1",
 					},
+					Arrays: map[string]interface{}{},
 				},
 			},
 		},

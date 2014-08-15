@@ -111,6 +111,7 @@ var ppMerged = map[string]*postProcessor{
 				"no_release = true",
 				"version = 1.0.1",
 			},
+			Arrays: map[string]interface{}{},
 		},
 	},
 }
@@ -123,7 +124,7 @@ func TestRawTemplateUpdatePostProcessors(t *testing.T) {
 				So(MarshalJSONToString.Get(testDistroDefaults.Templates["centos"].PostProcessors), ShouldEqual, MarshalJSONToString.Get(ppOrig))
 			})
 		})
-		Convey("Updateing PostProcessors with new values", func() {
+		Convey("Updating PostProcessors with new values", func() {
 			testDistroDefaults.Templates["centos"].updatePostProcessors(ppNew)
 			Convey("Should result in no changes", func() {
 				So(MarshalJSONToString.Get(testDistroDefaults.Templates["centos"].PostProcessors), ShouldEqual, MarshalJSONToString.Get(ppMerged))

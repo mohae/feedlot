@@ -198,7 +198,6 @@ var prNew = map[string]*provisioner{
 	"shell": &provisioner{
 		templateSection{
 			Settings: []string{
-				"type = shell",
 			},
 			Arrays: map[string]interface{}{
 				"only": []string{
@@ -262,13 +261,13 @@ var prMerged = map[string]*provisioner{
 func TestRawTemplateUpdateProvisioners(t *testing.T) {
 	Convey("Given a template", t, func() {
 		Convey("Updating Provisioners with nil", func() {
-			testDistroDefaults.Templates["centos"].updateProvisioners(nil)
+			testRawTemplateProvisioner.updateProvisioners(nil)
 			Convey("Should result in no changes", func() {
 				So(MarshalJSONToString.Get(testRawTemplateProvisioner.Provisioners), ShouldEqual, MarshalJSONToString.Get(prOrig))
 			})
 		})
 		Convey("Updating Provisioners with new values", func() {
-			testDistroDefaults.Templates["centos"].updateProvisioners(prNew)
+			testRawTemplateProvisioner.updateProvisioners(prNew)
 			Convey("Should result in no changes", func() {
 				So(MarshalJSONToString.GetIndented(testRawTemplateProvisioner.Provisioners), ShouldEqual, MarshalJSONToString.GetIndented(prMerged))
 			})
@@ -299,7 +298,7 @@ func TestRawTemplateCreateProvisioners(t *testing.T) {
 				So(err, ShouldBeNil)
 			})
 			Convey("Should result in Provisioners", func() {
-				So(MarshalJSONToString.Get(prov), ShouldEqual, "[{\"compression_level\":\"8\",\"include\":[\"include1\",\"include2\"],\"keep_input_artifact\":\"true\",\"only\":[\"virtualbox-iso\"],\"output\":\"out/rancher-packer.box\",\"type\":\"vagrant\"},null]")
+				So(MarshalJSONToString.Get(prov), ShouldEqual, "[{\"except\":[\"docker\"],\"execute_command = :commands_src_dir/execute_test.command\":\":commands_src_dir/execute_test.command\",\"only\":[\"vmware-iso\"],\"scripts\":[\":scripts_dir/setup_test.sh\",\":scripts_dir/vagrant_test.sh\",\":scripts_dir/sudoers_test.sh\",\":scripts_dir/cleanup_test.sh\"],\"type\":\"shell\"}]")
 			})
 		})
 	})

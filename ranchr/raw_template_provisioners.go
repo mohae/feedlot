@@ -31,16 +31,10 @@ func (r *rawTemplate) updateProvisioners(new map[string]*provisioner) {
 	// Convert the existing provisioners to interface.
 	var ifaceOld map[string]interface{} = make(map[string]interface{}, len(r.Provisioners))
 	ifaceOld = DeepCopyMapStringPProvisioner(r.Provisioners)
-	//	for i, o := range r.Provisioners {
-	//		ifaceOld[i] = o
-	//	}
 
 	// Convert the new provisioners to interface.
 	var ifaceNew map[string]interface{} = make(map[string]interface{}, len(new))
 	ifaceNew = DeepCopyMapStringPProvisioner(new)
-	//	for i, n := range new {
-	//		ifaceNew[i] = n
-	//	}
 
 	// Get the all keys from both maps
 	var keys []string
@@ -68,13 +62,8 @@ func (r *rawTemplate) updateProvisioners(new map[string]*provisioner) {
 			p = &provisioner{templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
 		}
 
-		// If the element for this key doesn't exist, skip it.
-		if _, ok := new[v]; !ok {
-			continue
-		}
-
 		p.mergeSettings(new[v].Settings)
-		//		p.mergeArrays(new[v].Arrays)
+		p.mergeArrays(new[v].Arrays)
 		r.Provisioners[v] = p
 	}
 
