@@ -1176,7 +1176,7 @@ func TestMergedKeysFromMaps(t *testing.T) {
 			keys := mergedKeysFromMaps(map1)
 			Convey("Should result in a slice of map keys", func() {
 				expected := []string{"key1", "key2", "key3"}
-				So(keys, ShouldResemble, expected)
+				So(MarshalJSONToString.Get(keys), ShouldEqual, MarshalJSONToString.Get(expected))
 			})
 		})
 		map2 := map[string]interface{}{
@@ -1187,24 +1187,9 @@ func TestMergedKeysFromMaps(t *testing.T) {
 			keys := mergedKeysFromMaps(map1, map2)
 			Convey("Should result in a slice of merged map keys", func() {
 				expected := []string{"key1", "key2", "key3", "key4"}
-				So(keys, ShouldResemble, expected)
+				So(MarshalJSONToString.Get(keys), ShouldEqual, MarshalJSONToString.Get(expected))
 			})
 		})
 	})
 }
 	
-/*
-func TestInterfaceToStringSlice(t *testing.T) {
-	Convey("Testing interfaceToStringSlice", t, func() {
-		slice1 := []string{"apples=1", "bananas=a bunch", "oranges=3"}
-		Convey("Given a nil", func() {
-			res := interfaceToStringSlice(nil)
-			So(res, ShouldBeNil)
-		})
-		Convey("Given a slice interface", func() {
-			res := interfaceToStringSlice(slice1)
-			So(res, ShouldResemble, slice1)
-		})
-	})
-}
-*/
