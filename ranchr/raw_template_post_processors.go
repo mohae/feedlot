@@ -183,7 +183,7 @@ func (r *rawTemplate) createPostProccessorVagrant() (settings map[string]interfa
 
 	// Process the Arrays.
 	for name, val := range r.PostProcessors[PostProcessorVagrant].Arrays {
-		array := deepcopy.InterfaceToSliceString(val)
+		array := deepcopy.InterfaceToSliceStrings(val)
 		if array != nil {
 			settings[name] = array
 		}

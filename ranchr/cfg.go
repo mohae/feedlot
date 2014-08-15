@@ -164,7 +164,7 @@ func (b *builder) mergeVMSettings(new []string) []string {
 	}
 
 	var merged []string
-	old := deepcopy.InterfaceToSliceString(b.Arrays[VMSettings])
+	old := deepcopy.InterfaceToSliceStrings(b.Arrays[VMSettings])
 	merged = mergeSettingsSlices(old, new)
 
 	if b.Arrays == nil {

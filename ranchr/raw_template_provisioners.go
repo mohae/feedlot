@@ -183,7 +183,7 @@ func (r *rawTemplate) createProvisionerShell() (settings map[string]interface{},
 
 	// Process the Arrays.
 	for name, val := range r.Provisioners[ProvisionerShell].Arrays {
-		array := deepcopy.InterfaceToSliceString(val)
+		array := deepcopy.InterfaceToSliceStrings(val)
 		if array != nil {
 			settings[name] = array
 		}
@@ -217,7 +217,7 @@ func (r *rawTemplate) createProvisionerFile() (settings map[string]interface{}, 
 
 	// Process the Arrays.
 	for name, val := range r.Provisioners[ProvisionerFile].Arrays {
-		array := deepcopy.InterfaceToSliceString(val)
+		array := deepcopy.InterfaceToSliceStrings(val)
 		if array != nil {
 			settings[name] = array
 		}

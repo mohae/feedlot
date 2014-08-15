@@ -206,7 +206,7 @@ func (r *rawTemplate) createBuilderVirtualBoxISO() (settings map[string]interfac
 	}
 
 	tmpVB := make([][]string, l)
-	vm_settings := deepcopy.InterfaceToSliceString(r.Builders[BuilderVirtualBoxISO].Arrays[VMSettings])
+	vm_settings := deepcopy.InterfaceToSliceStrings(r.Builders[BuilderVirtualBoxISO].Arrays[VMSettings])
 	for i, v := range vm_settings {
 		k, val := parseVar(v)
 		val = r.replaceVariables(val)
@@ -354,7 +354,7 @@ func (r *rawTemplate) createBuilderVMWareISO() (settings map[string]interface{},
 
 	// Generate builder specific section
 	tmpVB := map[string]string{}
-	vm_settings := deepcopy.InterfaceToSliceString(r.Builders[BuilderVirtualBoxISO].Arrays[VMSettings])
+	vm_settings := deepcopy.InterfaceToSliceStrings(r.Builders[BuilderVirtualBoxISO].Arrays[VMSettings])
 	for _, v := range vm_settings {
 		k, val := parseVar(v)
 		val = r.replaceVariables(val)
@@ -442,7 +442,7 @@ func (r *rawTemplate) updateBuilders(new map[string]*builder) {
 		}
 
 		b = r.Builders[v].DeepCopy()
-		vm_settings = deepcopy.InterfaceToSliceString(new[v].Arrays[VMSettings])
+		vm_settings = deepcopy.InterfaceToSliceStrings(new[v].Arrays[VMSettings])
 
 		// If there is anything to merge, do so
 		if vm_settings != nil {

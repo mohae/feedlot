@@ -236,7 +236,7 @@ func (r *rawTemplate) ScriptNames() []string {
 
 	var s []string
 	// Get the slice of scripts
-	s = deepcopy.InterfaceToSliceString(r.Provisioners[ProvisionerShell].Arrays[scripts])
+	s = deepcopy.InterfaceToSliceStrings(r.Provisioners[ProvisionerShell].Arrays[scripts])
 
 	if len(s) > 0 {
 		for i, script := range s {
