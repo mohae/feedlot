@@ -23,10 +23,6 @@ type rawTemplate struct {
 	// the builder specific string for the template's OS and Arch
 	osType string
 
-	// Convenience for distros that need ChecksumType for more than finding
-	// the ISO checksum, e.g. CentOS.
-	ChecksumType string
-
 	// Current date in ISO 8601
 	date string
 
@@ -305,6 +301,8 @@ func (r *rawTemplate) mergeVariables() {
 	r.SrcDir = trimSuffix(r.replaceVariables(r.SrcDir), "/")
 }
 
+// ISOInfo sets the ISO info for the template's supported distro type. This
+// also sets the builder specific string, when applicable.
 func (r *rawTemplate) ISOInfo(builderType string, settings []string) error {
 	jww.TRACE.Printf("Entering rawTemplate.ISOInfo")
 	var k, v, checksumType string

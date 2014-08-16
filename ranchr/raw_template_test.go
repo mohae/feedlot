@@ -437,14 +437,28 @@ func TestBuildInf(t *testing.T) {
 func TestRawTemplateISOInfo(t *testing.T) {
 	Convey("Given an ubuntu raw template", t, func() {
 		Convey("Setting the ISOIfno", func() {
-			err := testDistroDefaultUbuntu.ISOInfo("virtualbox-iso", []string{"iso_checksum_type = sha256"})
+			err := testDistroDefaultUbuntu.ISOInfo("virtualbox-iso", []string{"iso_checksum_type = sha256", "http_directory=http"})
 			Convey("Should not result in an error", func() {
 				So(err, ShouldBeNil)
 			})
 			Convey("Should result in the ISO info being set", func() {
 				So(testDistroDefaultUbuntu.BaseURL, ShouldEqual, "http://releases.ubuntu.org/")
-				So(testDistroDefaultUbuntu.releaseISO, ShouldEqual, "")
-				So(testDistroDefaultUbuntu.Name, ShouldEqual, "ubuntu-12.04-server-amd64.iso")
+				So(testDistroDefaultUbuntu.releaseISO.(*ubuntu).ChecksumType, ShouldEqual, "sha256")
+				So(testDistroDefaultUbuntu.releaseISO.(*ubuntu).Name, ShouldEqual, "ubuntu-12.04-server-amd64.iso")
+			})
+		})
+	})
+
+	Convey("Given a centos raw template", t, func() {
+		Convey("Setting the ISOIfno", func() {
+			err := testDistroDefaultCentOS.ISOInfo("virtualbox-iso", []string{"iso_checksum_type = sha256", "http_directory=http"})
+			Convey("Should not result in an error", func() {
+				So(err, ShouldBeNil)
+			})
+			Convey("Should result in the ISO info being set", func() {
+				So(testDistroDefaultCentOS.BaseURL, ShouldEqual, "")
+				So(testDistroDefaultCentOS.releaseISO.(*centOS).ChecksumType, ShouldEqual, "sha256")
+				So(testDistroDefaultCentOS.releaseISO.(*centOS).Name, ShouldEqual, "CentOS-6.5-x86_64-minimal.iso")
 			})
 		})
 	})
