@@ -342,4 +342,3 @@ func (r *rawTemplate) ISOInfo(builderType string, settings []string) error {
 	}
 	return nil
 }
-

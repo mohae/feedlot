@@ -35,7 +35,7 @@ func TestDistroDefaultsGetTemplate(t *testing.T) {
 			r, err = testDistroDefaults.GetTemplate("ubuntu")
 			_ = err
 			Convey("Should result in an error", func() {
-//				So(err.Error(), ShouldEqual, "distroDefaults.GetTemplate: The requested Distro, invalid is not supported. No template to return")
+				//				So(err.Error(), ShouldEqual, "distroDefaults.GetTemplate: The requested Distro, invalid is not supported. No template to return")
 				So(r.PackerInf, ShouldResemble, testDistroDefaults.Templates["ubuntu"].PackerInf)
 				So(r.IODirInf, ShouldResemble, testDistroDefaults.Templates["ubuntu"].IODirInf)
 				So(r.BuildInf, ShouldResemble, testDistroDefaults.Templates["ubuntu"].BuildInf)
@@ -51,7 +51,6 @@ func TestDistroDefaultsGetTemplate(t *testing.T) {
 
 	})
 }
-
 
 func TestSetEnv(t *testing.T) {
 	// Preserve current state.
@@ -1197,4 +1196,3 @@ func TestMergedKeysFromMaps(t *testing.T) {
 		})
 	})
 }
-	

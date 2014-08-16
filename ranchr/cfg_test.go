@@ -23,7 +23,7 @@ func TestTemplateSectionMergeArrays(t *testing.T) {
 			})
 		})
 		old := map[string]interface{}{
-			"type": "shell",
+			"type":            "shell",
 			"execute_command": "echo 'vagrant'|sudo -S sh '{{.Path}}'",
 			"override": map[string]interface{}{
 				"virtualbox-iso": map[string]interface{}{
@@ -52,7 +52,7 @@ func TestTemplateSectionMergeArrays(t *testing.T) {
 		}
 
 		newold := map[string]interface{}{
-			"type": "shell",
+			"type":            "shell",
 			"execute_command": "echo 'vagrant'|sudo -S sh '{{.Path}}'",
 			"override": map[string]interface{}{
 				"vmware-iso": map[string]interface{}{
@@ -67,7 +67,7 @@ func TestTemplateSectionMergeArrays(t *testing.T) {
 		}
 
 		Convey("Merging an existing Array element with nil", func() {
-			merged := t.mergeArrays(old, nil) 
+			merged := t.mergeArrays(old, nil)
 			Convey("Should not result in nil", func() {
 				So(merged, ShouldNotBeNil)
 			})
@@ -75,9 +75,9 @@ func TestTemplateSectionMergeArrays(t *testing.T) {
 				So(MarshalJSONToString.Get(merged), ShouldEqual, MarshalJSONToString.Get(old))
 			})
 		})
-		
+
 		Convey("Merging an existing nil Array element with new values", func() {
-			merged := t.mergeArrays(nil, new) 
+			merged := t.mergeArrays(nil, new)
 			Convey("Should not result in nil", func() {
 				So(merged, ShouldNotBeNil)
 			})
@@ -87,7 +87,7 @@ func TestTemplateSectionMergeArrays(t *testing.T) {
 			})
 		})
 		Convey("Merging an existing nil Array element with new values", func() {
-			merged := t.mergeArrays(old, new) 
+			merged := t.mergeArrays(old, new)
 			Convey("Should not result in nil", func() {
 				So(merged, ShouldNotBeNil)
 			})
@@ -174,7 +174,7 @@ func TestPostProcessorMergeSettings(t *testing.T) {
 			Convey("Should result in no change", func() {
 				So(pp.Settings, ShouldContain, "key1=value1")
 				So(pp.Settings, ShouldContain, "key2=value2")
-			})	
+			})
 		})
 		newSettings := []string{"key1=value1", "key2=value22", "key3=value3"}
 		Convey("Given two settings slices", func() {
@@ -209,7 +209,7 @@ func TestProvisionerMergeSettings(t *testing.T) {
 			Convey("Should result in no change", func() {
 				So(p.Settings, ShouldContain, "key1=value1")
 				So(p.Settings, ShouldContain, "key2=value2")
-			})	
+			})
 		})
 		newSettings := []string{"key1=value1", "key2=value22", "key3=value3"}
 		Convey("Given two settings slices", func() {

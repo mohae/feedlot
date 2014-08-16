@@ -77,7 +77,6 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 	return bldrs, vars, nil
 }
 
-
 // Go through all of the Settings and convert them to a map. Each setting
 // is parsed into its constituent parts. The value then goes through
 // variable replacement to ensure that the settings are properly resolved.
@@ -483,7 +482,7 @@ func (r *rawTemplate) updateBuilderCommon(new *builder) {
 
 // DeepCopyMapStringPBuilder makes a deep copy of each builder passed and
 // returns the copy map[string]*builder as a map[string]interface{}
-// notes: 
+// notes:
 //	P means pointer
 func DeepCopyMapStringPBuilder(b map[string]*builder) map[string]interface{} {
 	c := map[string]interface{}{}

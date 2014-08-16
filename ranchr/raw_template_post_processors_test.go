@@ -130,7 +130,7 @@ func TestRawTemplateUpdatePostProcessors(t *testing.T) {
 				So(MarshalJSONToString.Get(testDistroDefaults.Templates["centos"].PostProcessors), ShouldEqual, MarshalJSONToString.Get(ppMerged))
 			})
 		})
-	
+
 	})
 }
 
@@ -166,7 +166,7 @@ func TestDeepCopyMapStringPPostProcessor(t *testing.T) {
 		Convey("Doing a deep copy of it", func() {
 			copy := DeepCopyMapStringPPostProcessor(ppOrig)
 			Convey("Should result in a copy", func() {
-				So(MarshalJSONToString.Get(copy), ShouldEqual,MarshalJSONToString.Get(ppOrig))
+				So(MarshalJSONToString.Get(copy), ShouldEqual, MarshalJSONToString.Get(ppOrig))
 			})
 		})
 	})

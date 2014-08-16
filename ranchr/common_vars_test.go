@@ -269,7 +269,6 @@ var testSupportedUbuntu = &distro{
 					},
 				},
 			},
-
 		},
 	},
 }
@@ -525,7 +524,6 @@ var testDistroDefaultCentOS = &rawTemplate{
 						"only": []string{
 							"virtualbox-iso",
 						},
-
 					},
 				},
 			},

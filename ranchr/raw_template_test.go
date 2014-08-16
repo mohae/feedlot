@@ -7,7 +7,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-var updatedBuilders =   map[string]*builder{
+var updatedBuilders = map[string]*builder{
 	"common": {
 		templateSection{
 			Settings: []string{
@@ -26,7 +26,6 @@ var updatedBuilders =   map[string]*builder{
 		},
 	},
 }
-
 
 func init() {
 	setCommonTestData()

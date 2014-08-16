@@ -101,7 +101,6 @@ var testRawTemplateProvisioner = &rawTemplate{
 						"only": []string{
 							"virtualbox-iso",
 						},
-
 					},
 				},
 			},
@@ -249,7 +248,6 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 						"only": []string{
 							"virtualbox-iso",
 						},
-
 					},
 				},
 			},
@@ -365,8 +363,7 @@ var prOrig = map[string]*provisioner{
 var prNew = map[string]*provisioner{
 	"shell": &provisioner{
 		templateSection{
-			Settings: []string{
-			},
+			Settings: []string{},
 			Arrays: map[string]interface{}{
 				"only": []string{
 					"vmware-iso",
@@ -451,7 +448,7 @@ func TestRawTemplateUpdateProvisioners(t *testing.T) {
 				So(MarshalJSONToString.GetIndented(testRawTemplateProvisioner.Provisioners), ShouldEqual, MarshalJSONToString.GetIndented(prMerged))
 			})
 		})
-	
+
 	})
 }
 
@@ -460,7 +457,7 @@ func TestProvisionersSettingsToMap(t *testing.T) {
 		Convey("transform settingns map should result in", func() {
 			res := pr.settingsToMap("shell", rawTpl)
 			Convey("Should result in a map[string]interface{}", func() {
-				So(res, ShouldResemble, map[string]interface{}{"type":"shell","execute_command": "echo 'vagrant' | sudo -S sh '{{.Path}}'"})
+				So(res, ShouldResemble, map[string]interface{}{"type": "shell", "execute_command": "echo 'vagrant' | sudo -S sh '{{.Path}}'"})
 			})
 		})
 	})
@@ -476,11 +473,9 @@ func TestRawTemplateCreateProvisioners(t *testing.T) {
 				So(err, ShouldBeNil)
 			})
 			Convey("Should result in Provisioners", func() {
-//				So(MarshalJSONToString.GetIndented(testRawTemplateProvisioner.Provisioners), ShouldEqual, MarshalJSONToString.GetIndented(prov))
+				//				So(MarshalJSONToString.GetIndented(testRawTemplateProvisioner.Provisioners), ShouldEqual, MarshalJSONToString.GetIndented(prov))
 				So(MarshalJSONToString.Get(prov), ShouldEqual, prCreatedString)
 			})
 		})
 	})
 }
-
-

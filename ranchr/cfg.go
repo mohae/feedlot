@@ -106,7 +106,7 @@ func (t *templateSection) mergeArrays(old map[string]interface{}, new map[string
 	if old == nil && new == nil {
 		return nil
 	}
-	
+
 	if old == nil {
 		return new
 	}
@@ -117,7 +117,7 @@ func (t *templateSection) mergeArrays(old map[string]interface{}, new map[string
 
 	// both are populated, merge them.
 	merged := map[string]interface{}{}
-	
+
 	// Get the all keys from both maps
 	var keys []string
 	keys = mergedKeysFromMaps(old, new)
@@ -134,8 +134,9 @@ func (t *templateSection) mergeArrays(old map[string]interface{}, new map[string
 		merged[v] = new[v]
 	}
 
-	return merged	
+	return merged
 }
+
 // builder represents a builder Packer template section.
 type builder struct {
 	templateSection
