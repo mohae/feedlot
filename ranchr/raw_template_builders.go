@@ -465,6 +465,10 @@ func (r *rawTemplate) updateBuilders(new map[string]*builder) {
 //	* When r has a setting that does not exist in b, nothing is done. This
 //	  method does not delete any settings that already exist in R.
 func (r *rawTemplate) updateBuilderCommon(new *builder) {
+	if r.Builders == nil {
+		r.Builders = map[string]*builder{}
+	}
+
 	// If the existing builder doesn't have a BuilderCommon section, just add it
 	if _, ok := r.Builders[BuilderCommon]; !ok {
 		r.Builders[BuilderCommon] = &builder{templateSection: templateSection{Settings: new.Settings, Arrays: new.Arrays}}

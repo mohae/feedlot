@@ -758,10 +758,12 @@ var testMergedBuildTest1 = &rawTemplate{
 						"ssh_username = vagrant",
 						"ssh_wait_timeout = 300m",
 					},
+					Arrays: map[string]interface{}{},
 				},
 			},
 			"virtualbox-iso": {
 				templateSection{
+					Settings: []string{""},
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
 							"cpus=1",
@@ -781,6 +783,7 @@ var testMergedBuildTest1 = &rawTemplate{
 						"keep_input_artifact = false",
 						"output = :out_dir/packer.box",
 					},
+					Arrays: map[string]interface{}{},
 				},
 			},
 		},

@@ -7,6 +7,27 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+var updatedBuilders =   map[string]*builder{
+	"common": {
+		templateSection{
+			Settings: []string{
+				"ssh_wait_timeout = 300m",
+			},
+		},
+	},
+	"virtualbox-iso": {
+		templateSection{
+			Settings: []string{},
+			Arrays: map[string]interface{}{
+				"vm_settings": []string{
+					"memory=4096",
+				},
+			},
+		},
+	},
+}
+
+
 func init() {
 	setCommonTestData()
 }
@@ -101,6 +122,81 @@ func TestReplaceVariables(t *testing.T) {
 			Convey("Given another string", func() {
 				s := r.replaceVariables("../test_files/out/:type")
 				So(s, ShouldEqual, "../test_files/out/ubuntu")
+			})
+		})
+	})
+}
+
+func TestRawTemplateVariableSection(t *testing.T) {
+	Convey("Given a RawTemplate variable section", t, func() {
+		r := newRawTemplate()
+		Convey("rawTemplate.variable section", func() {
+			res, err := r.variableSection()
+			Convey("Should not error", func() {
+				So(err, ShouldBeNil)
+			})
+			Convey("the variable section should be empty", func() {
+				So(res, ShouldResemble, map[string]interface{}{})
+			})
+		})
+	})
+}
+
+func TestRawTemplateSetDefaults(t *testing.T) {
+	Convey("Given a raw template", t, func() {
+		r := newRawTemplate()
+		Convey("setting the distro defaults", func() {
+			r.setDefaults(testSupported.Distro["centos"])
+			Convey("should result in setting that match the defaults", func() {
+				So(r.IODirInf, ShouldResemble, testSupported.Distro["centos"].IODirInf)
+				So(r.PackerInf, ShouldResemble, testSupported.Distro["centos"].PackerInf)
+				So(r.BuildInf, ShouldResemble, testSupported.Distro["centos"].BuildInf)
+				So(r.BuilderTypes, ShouldResemble, testSupported.Distro["centos"].BuilderTypes)
+				So(r.PostProcessorTypes, ShouldResemble, testSupported.Distro["centos"].PostProcessorTypes)
+				So(r.ProvisionerTypes, ShouldResemble, testSupported.Distro["centos"].ProvisionerTypes)
+				So(r.Builders, ShouldResemble, testSupported.Distro["centos"].Builders)
+				So(r.PostProcessors, ShouldResemble, testSupported.Distro["centos"].PostProcessors)
+				So(r.Provisioners, ShouldResemble, testSupported.Distro["centos"].Provisioners)
+			})
+		})
+	})
+}
+
+func TestRawTemplateUpdateBuildSettings(t *testing.T) {
+	Convey("Given a raw template with defaults set", t, func() {
+		r := newRawTemplate()
+		r.setDefaults(testSupported.Distro["centos"])
+		Convey("updating the build settings", func() {
+			r.updateBuildSettings(testBuilds.Build["test1"])
+			Convey("should result in updated build settings", func() {
+				So(r.IODirInf, ShouldResemble, testSupported.Distro["centos"].IODirInf)
+				So(r.PackerInf, ShouldResemble, testBuilds.Build["test1"].PackerInf)
+				So(r.BuildInf, ShouldResemble, testSupported.Distro["centos"].BuildInf)
+				So(r.BuilderTypes, ShouldResemble, testBuilds.Build["test1"].BuilderTypes)
+				So(r.PostProcessorTypes, ShouldResemble, testBuilds.Build["test1"].PostProcessorTypes)
+				So(r.ProvisionerTypes, ShouldResemble, testBuilds.Build["test1"].ProvisionerTypes)
+				So(MarshalJSONToString.Get(r.Builders), ShouldResemble, MarshalJSONToString.Get(updatedBuilders))
+				So(MarshalJSONToString.Get(r.PostProcessors), ShouldResemble, MarshalJSONToString.Get(testBuilds.Build["test1"].PostProcessors))
+				So(MarshalJSONToString.Get(r.Provisioners), ShouldResemble, MarshalJSONToString.Get(testBuilds.Build["test1"].Provisioners))
+			})
+		})
+	})
+}
+
+func TestRawTemplatescriptNames(t *testing.T) {
+	Convey("Given a raw template with a shell provisioner", t, func() {
+		r := testDistroDefaults.Templates["ubuntu"]
+		Convey("getting the script names", func() {
+			scripts := r.ScriptNames()
+			Convey("Scripts should not be nil", func() {
+				So(scripts, ShouldNotBeNil)
+			})
+			Convey("should result in a slice of script names", func() {
+				So(scripts, ShouldContain, "setup_test.sh")
+				So(scripts, ShouldContain, "vagrant_test.sh")
+				So(scripts, ShouldContain, "sudoers_test.sh")
+				So(scripts, ShouldContain, "cleanup_test.sh")
+				So(scripts, ShouldNotContain, "setup.sh")
 			})
 		})
 	})

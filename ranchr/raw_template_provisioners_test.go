@@ -118,6 +118,7 @@ var testRawTemplateProvisioner = &rawTemplate{
 		},
 		ProvisionerTypes: []string{
 			"shell",
+			"file",
 		},
 		Provisioners: map[string]*provisioner{
 			"shell": {
@@ -141,9 +142,167 @@ var testRawTemplateProvisioner = &rawTemplate{
 					},
 				},
 			},
+			"file": {
+				templateSection{
+					Settings: []string{
+						"source = src/",
+						"destination = dst/",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
 		},
 	},
 }
+
+var testRawTemplateProvisionersAll = &rawTemplate{
+	PackerInf: PackerInf{
+		MinPackerVersion: "0.4.0",
+		Description:      "Test template config and Rancher options for CentOS",
+	},
+	IODirInf: IODirInf{
+		CommandsSrcDir: ":src_dir/commands",
+		HTTPDir:        "http",
+		HTTPSrcDir:     ":src_dir/http",
+		OutDir:         "../test_files/out/:type/:build_name",
+		ScriptsDir:     "scripts",
+		ScriptsSrcDir:  ":src_dir/scripts",
+		SrcDir:         "../test_files/src/:type",
+	},
+	BuildInf: BuildInf{
+		Name:      ":build_name",
+		BuildName: "",
+		BaseURL:   "",
+	},
+	date:    today,
+	delim:   ":",
+	Type:    "centos",
+	Arch:    "x86_64",
+	Image:   "minimal",
+	Release: "6",
+	varVals: map[string]string{},
+	vars:    map[string]string{},
+	build: build{
+		BuilderTypes: []string{"virtualbox-iso", "vmware-iso"},
+		Builders: map[string]*builder{
+			"common": {
+				templateSection{
+					Settings: []string{
+						"boot_command = :commands_src_dir/boot_test.command",
+						"boot_wait = 5s",
+						"disk_size = 20000",
+						"guest_os_type = ",
+						"headless = true",
+						"http_directory = http",
+						"iso_checksum_type = sha256",
+						"shutdown_command = :commands_src_dir/shutdown_test.command",
+						"ssh_password = vagrant",
+						"ssh_port = 22",
+						"ssh_username = vagrant",
+						"ssh_wait_timeout = 240m",
+					},
+				},
+			},
+			"virtualbox-iso": {
+				templateSection{
+					Settings: []string{
+						"virtualbox_version_file = .vbox_version",
+					},
+					Arrays: map[string]interface{}{
+						"vm_settings": []string{
+							"cpus=1",
+							"memory=1024",
+						},
+					},
+				},
+			},
+			"vmware-iso": {
+				templateSection{
+					Settings: []string{},
+					Arrays: map[string]interface{}{
+						"vm_settings": []string{
+							"cpuid.coresPerSocket=1",
+							"memsize=1024",
+							"numvcpus=1",
+						},
+					},
+				},
+			},
+		},
+		PostProcessorTypes: []string{
+			"vagrant",
+			"vagrant-cloud",
+		},
+		PostProcessors: map[string]*postProcessor{
+			"vagrant": {
+				templateSection{
+					Settings: []string{
+						"compression_level = 9",
+						"keep_input_artifact = false",
+						"output = out/rancher-packer.box",
+					},
+					Arrays: map[string]interface{}{
+						"include": []string{
+							"include1",
+							"include2",
+						},
+						"only": []string{
+							"virtualbox-iso",
+						},
+
+					},
+				},
+			},
+			"vagrant-cloud": {
+				templateSection{
+					Settings: []string{
+						"access_token = getAValidTokenFrom-VagrantCloud.com",
+						"box_tag = foo/bar",
+						"no_release = true",
+						"version = 1.0.1",
+					},
+				},
+			},
+		},
+		ProvisionerTypes: []string{
+			"shell",
+			"file",
+		},
+		Provisioners: map[string]*provisioner{
+			"shell": {
+				templateSection{
+					Settings: []string{
+						"execute_command = :commands_src_dir/execute_test.command",
+					},
+					Arrays: map[string]interface{}{
+						"except": []string{
+							"docker",
+						},
+						"only": []string{
+							"virtualbox-iso",
+						},
+						"scripts": []string{
+							":scripts_dir/setup_test.sh",
+							":scripts_dir/vagrant_test.sh",
+							":scripts_dir/sudoers_test.sh",
+							":scripts_dir/cleanup_test.sh",
+						},
+					},
+				},
+			},
+			"file": {
+				templateSection{
+					Settings: []string{
+						"source = src/",
+						"destination = dst/",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
+		},
+	},
+}
+
 var pr = &provisioner{
 	templateSection{
 		Settings: []string{
@@ -190,6 +349,15 @@ var prOrig = map[string]*provisioner{
 					":scripts_dir/cleanup_test.sh",
 				},
 			},
+		},
+	},
+	"file": {
+		templateSection{
+			Settings: []string{
+				"source = src/",
+				"destination = dst/",
+			},
+			Arrays: map[string]interface{}{},
 		},
 	},
 }
@@ -256,7 +424,18 @@ var prMerged = map[string]*provisioner{
 			},
 		},
 	},
+	"file": {
+		templateSection{
+			Settings: []string{
+				"source = src/",
+				"destination = dst/",
+			},
+			Arrays: map[string]interface{}{},
+		},
+	},
 }
+
+var prCreatedString = "[{\"except\":[\"docker\"],\"execute_command = :commands_src_dir/execute_test.command\":\":commands_src_dir/execute_test.command\",\"only\":[\"virtualbox-iso\"],\"scripts\":[\":scripts_dir/setup_test.sh\",\":scripts_dir/vagrant_test.sh\",\":scripts_dir/sudoers_test.sh\",\":scripts_dir/cleanup_test.sh\"],\"type\":\"shell\"},{\"destination\":\"dst/\",\"source\":\"src/\",\"type\":\"file\"}]"
 
 func TestRawTemplateUpdateProvisioners(t *testing.T) {
 	Convey("Given a template", t, func() {
@@ -276,7 +455,6 @@ func TestRawTemplateUpdateProvisioners(t *testing.T) {
 	})
 }
 
-
 func TestProvisionersSettingsToMap(t *testing.T) {
 	Convey("Given a provisioner and a raw template", t, func() {
 		Convey("transform settingns map should result in", func() {
@@ -293,12 +471,13 @@ func TestRawTemplateCreateProvisioners(t *testing.T) {
 		var prov interface{}
 		var err error
 		Convey("Creating Provisioners", func() {
-			prov, _, err = testRawTemplateProvisioner.createProvisioners()
+			prov, _, err = testRawTemplateProvisionersAll.createProvisioners()
 			Convey("Should not error", func() {
 				So(err, ShouldBeNil)
 			})
 			Convey("Should result in Provisioners", func() {
-				So(MarshalJSONToString.Get(prov), ShouldEqual, "[{\"except\":[\"docker\"],\"execute_command = :commands_src_dir/execute_test.command\":\":commands_src_dir/execute_test.command\",\"only\":[\"vmware-iso\"],\"scripts\":[\":scripts_dir/setup_test.sh\",\":scripts_dir/vagrant_test.sh\",\":scripts_dir/sudoers_test.sh\",\":scripts_dir/cleanup_test.sh\"],\"type\":\"shell\"}]")
+//				So(MarshalJSONToString.GetIndented(testRawTemplateProvisioner.Provisioners), ShouldEqual, MarshalJSONToString.GetIndented(prov))
+				So(MarshalJSONToString.Get(prov), ShouldEqual, prCreatedString)
 			})
 		})
 	})

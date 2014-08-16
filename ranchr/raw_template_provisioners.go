@@ -41,6 +41,10 @@ func (r *rawTemplate) updateProvisioners(new map[string]*provisioner) {
 	keys = mergedKeysFromMaps(ifaceOld, ifaceNew)
 	p := &provisioner{}
 
+	if r.Provisioners == nil {
+		r.Provisioners = map[string]*provisioner{}
+	}
+
 	// Copy: if the key exists in the new provisioners only.
 	// Ignore: if the key does not exist in the new provisioners.
 	// Merge: if the key exists in both the new and old provisioners.

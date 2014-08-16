@@ -45,6 +45,10 @@ func (r *rawTemplate) updatePostProcessors(new map[string]*postProcessor) {
 	keys = mergedKeysFromMaps(ifaceOld, ifaceNew)
 	p := &postProcessor{}
 
+	if r.PostProcessors == nil {
+		r.PostProcessors = map[string]*postProcessor{}
+	}
+
 	// Copy: if the key exists in the new postProcessors only.
 	// Ignore: if the key does not exist in the new postProcessors.
 	// Merge: if the key exists in both the new and old postProcessors.
