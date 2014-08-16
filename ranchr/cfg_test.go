@@ -99,7 +99,7 @@ func TestTemplateSectionMergeArrays(t *testing.T) {
 	})
 }
 
-func TesMergeSettings(t *testing.T) {
+func TestBuilderMergeSettings(t *testing.T) {
 	Convey("Given a builder with settings", t, func() {
 		b := builder{}
 		b.Settings = []string{"key1=value1", "key2=value2", "key3=value3"}

@@ -61,6 +61,14 @@ var (
 )
 
 var (
+	//SupportedUbuntu is the name of the ubuntu supported distro.
+	SupportedUbuntu = "ubuntu"
+
+	//SupportedCentOS is the name of the centOS supported distro.
+	SupportedCentOS = "centos"
+)
+
+var (
 	// BuilderCommon is the name of the common builder section in the toml files.
 	BuilderCommon = "common"
 

@@ -183,7 +183,7 @@ func TestRawTemplateUpdateBuildSettings(t *testing.T) {
 	})
 }
 
-func TestRawTemplatescriptNames(t *testing.T) {
+func TestRawTemplateScriptNames(t *testing.T) {
 	Convey("Given a raw template with a shell provisioner", t, func() {
 		r := testDistroDefaults.Templates["ubuntu"]
 		Convey("getting the script names", func() {
@@ -429,6 +429,22 @@ func TestBuildInf(t *testing.T) {
 				oldBuildInf.update(newBuildInf)
 				So(oldBuildInf.Name, ShouldEqual, "Name")
 				So(oldBuildInf.BuildName, ShouldEqual, "BuildName")
+			})
+		})
+	})
+}
+
+func TestRawTemplateISOInfo(t *testing.T) {
+	Convey("Given an ubuntu raw template", t, func() {
+		Convey("Setting the ISOIfno", func() {
+			err := testDistroDefaultUbuntu.ISOInfo("virtualbox-iso", []string{"iso_checksum_type = sha256"})
+			Convey("Should not result in an error", func() {
+				So(err, ShouldBeNil)
+			})
+			Convey("Should result in the ISO info being set", func() {
+				So(testDistroDefaultUbuntu.BaseURL, ShouldEqual, "http://releases.ubuntu.org/")
+				So(testDistroDefaultUbuntu.releaseISO, ShouldEqual, "")
+				So(testDistroDefaultUbuntu.Name, ShouldEqual, "ubuntu-12.04-server-amd64.iso")
 			})
 		})
 	})

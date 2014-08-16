@@ -321,7 +321,7 @@ func (r *rawTemplate) ISOInfo(builderType string, settings []string) error {
 	}
 
 	switch r.Type {
-	case "ubuntu":
+	case SupportedUbuntu:
 		r.releaseISO = &ubuntu{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: checksumType}, Arch: r.Arch, Distro: r.Type, Image: r.Image, Release: r.Release}}
 		r.releaseISO.SetISOInfo()
 
@@ -331,7 +331,7 @@ func (r *rawTemplate) ISOInfo(builderType string, settings []string) error {
 			return err
 		}
 
-	case "centos":
+	case SupportedCentOS:
 		r.releaseISO = &centOS{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: checksumType}, Arch: r.Arch, Distro: r.Type, Image: r.Image, Release: r.Release}}
 		r.releaseISO.SetISOInfo()
 
@@ -344,3 +344,4 @@ func (r *rawTemplate) ISOInfo(builderType string, settings []string) error {
 	}
 	return nil
 }
+
