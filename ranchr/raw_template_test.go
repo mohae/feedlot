@@ -27,6 +27,62 @@ var updatedBuilders = map[string]*builder{
 	},
 }
 
+var comparePostProcessors =  map[string]*postProcessor{
+	"vagrant": {
+		templateSection{
+			Settings: []string{
+				"output = :out_dir/packer.box",
+			},
+			Arrays: map[string]interface{}{
+				"except": []string{
+					"docker",
+				},
+				"only": []string{
+					"virtualbox-iso",
+				},
+			},
+		},
+	},
+	"vagrant-cloud": {
+		templateSection{
+			Settings: []string{
+				"access_token = getAValidTokenFrom-VagrantCloud.com",
+				"box_tag = foo/bar/baz",
+				"no_release = false",
+				"version = 1.0.2",
+			},
+		},
+	},
+}
+var compareProvisioners = map[string]*postProcessor{
+	"vagrant": {
+		templateSection{
+			Settings: []string{
+				"output = :out_dir/packer.box",
+			},
+			Arrays: map[string]interface{}{
+				"except": []string{
+					"docker",
+				},
+				"only": []string{
+					"virtualbox-iso",
+				},
+			},
+		},
+	},
+	"vagrant-cloud": {
+		templateSection{
+			Settings: []string{
+				"access_token = getAValidTokenFrom-VagrantCloud.com",
+				"box_tag = foo/bar/baz",
+				"no_release = false",
+				"version = 1.0.2",
+			},
+			Arrays: map[string]interface{}{},
+		},
+	},
+}
+
 func init() {
 	setCommonTestData()
 }
@@ -175,8 +231,8 @@ func TestRawTemplateUpdateBuildSettings(t *testing.T) {
 				So(r.PostProcessorTypes, ShouldResemble, testBuilds.Build["test1"].PostProcessorTypes)
 				So(r.ProvisionerTypes, ShouldResemble, testBuilds.Build["test1"].ProvisionerTypes)
 				So(MarshalJSONToString.Get(r.Builders), ShouldResemble, MarshalJSONToString.Get(updatedBuilders))
-				So(MarshalJSONToString.Get(r.PostProcessors), ShouldResemble, MarshalJSONToString.Get(testBuilds.Build["test1"].PostProcessors))
-				So(MarshalJSONToString.Get(r.Provisioners), ShouldResemble, MarshalJSONToString.Get(testBuilds.Build["test1"].Provisioners))
+				So(MarshalJSONToString.Get(r.PostProcessors), ShouldResemble, MarshalJSONToString.Get(comparePostProcessors))
+				So(MarshalJSONToString.Get(r.Provisioners), ShouldResemble, MarshalJSONToString.Get(compareProvisioners))
 			})
 		})
 	})

@@ -187,11 +187,11 @@ func (r *rawTemplate) createPostProccessorVagrant() (settings map[string]interfa
 
 	// Process the Arrays.
 	for name, val := range r.PostProcessors[PostProcessorVagrant].Arrays {
-		array := deepcopy.InterfaceToSliceStrings(val)
+		jww.TRACE.Printf("Arrays:\t%v\t%v\n\n", name, val)
+		array := deepcopy.Iface(val)
 		if array != nil {
 			settings[name] = array
 		}
-		jww.TRACE.Printf("\t%v\t%v\n", name, val)
 	}
 	return settings, vars, err
 }

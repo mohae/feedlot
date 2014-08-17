@@ -3,6 +3,7 @@ package ranchr
 import (
 	"os"
 	"strings"
+	"reflect"
 	"time"
 
 	_ "github.com/mohae/customjson"
@@ -230,10 +231,10 @@ func (r *rawTemplate) ScriptNames() []string {
 		return nil
 	}
 
-	var s []string
 	// Get the slice of scripts
-	s = deepcopy.InterfaceToSliceStrings(r.Provisioners[ProvisionerShell].Arrays[scripts])
-
+	typ := reflect.TypeOf(r.Provisioners[ProvisionerShell].Arrays[scripts])
+	jww.TRACE.Println("\t", typ)
+	s := deepcopy.Iface(r.Provisioners[ProvisionerShell].Arrays[scripts]).([]string)
 	if len(s) > 0 {
 		for i, script := range s {
 			//explode on "/"
@@ -244,8 +245,7 @@ func (r *rawTemplate) ScriptNames() []string {
 		}
 
 	}
-
-	jww.DEBUG.Println("rawTemplate.ScriptNames: enter")
+	jww.DEBUG.Println("rawTemplate.ScriptNames: exit")
 	return s
 
 }

@@ -5,6 +5,7 @@ package ranchr
 import (
 	"errors"
 	"fmt"
+	_ "reflect"
 	"strings"
 
 	json "github.com/mohae/customjson"
@@ -176,7 +177,7 @@ func (r *rawTemplate) createProvisionerShell() (settings map[string]interface{},
 
 	// Process the Arrays.
 	for name, val := range r.Provisioners[ProvisionerShell].Arrays {
-		array := deepcopy.InterfaceToSliceStrings(val)
+		array := deepcopy.Iface(val)
 		if array != nil {
 			settings[name] = array
 		}

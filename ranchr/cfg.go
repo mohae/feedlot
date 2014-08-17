@@ -98,7 +98,7 @@ func (t *templateSection) DeepCopy(new templateSection) {
 	copy(t.Settings, new.Settings)
 
 	// make a deep copy of the Arrays(map[string]interface)
-	t.Arrays = deepcopy.MapStringInterface(new.Arrays)
+	t.Arrays = deepcopy.Iface(new.Arrays).(map[string]interface{})
 }
 
 // mergeArrays merges the arrays section of a template builder

@@ -155,7 +155,7 @@ func TestRawTemplateCreatePostProcessors(t *testing.T) {
 				So(err, ShouldBeNil)
 			})
 			Convey("Should result in postProcessors", func() {
-				So(MarshalJSONToString.Get(pp), ShouldEqual, "[{\"compression_level\":\"8\",\"include\":[\"include1\",\"include2\"],\"keep_input_artifact\":\"true\",\"only\":[\"virtualbox-iso\"],\"output\":\"out/rancher-packer.box\",\"type\":\"vagrant\"},null]")
+				So(MarshalJSONToString.Get(pp), ShouldEqual, "[{\"compression_level\":\"8\",\"include\":[\"include1\",\"include2\"],\"keep_input_artifact\":\"true\",\"only\":[\"virtualbox-iso\"],\"output\":\"out/rancher-packer.box\",\"override\":{\"virtualbox\":{\"output\":\"overridden-virtualbox.box\"},\"vmware-iso\":{\"output\":\"overridden-vmware.box\"}},\"type\":\"vagrant\"},null]")
 			})
 		})
 	})

@@ -620,6 +620,10 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 // getSliceLenFromIface takes an interface that's assumed to be a slice and
 // returns its length. If it is not a slice, an error is returned.
 func getSliceLenFromIface(v interface{}) (int, error) {
+	if v == nil {
+		return 0, nil
+	}
+
 	switch reflect.TypeOf(v).Kind() {
 	case reflect.Slice:
 		sl := reflect.ValueOf(v)

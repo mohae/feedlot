@@ -5,6 +5,7 @@ package ranchr
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -205,9 +206,12 @@ func (r *rawTemplate) createBuilderVirtualBoxISO() (settings map[string]interfac
 	}
 
 	tmpVB := make([][]string, l)
-	vm_settings := deepcopy.InterfaceToSliceStrings(r.Builders[BuilderVirtualBoxISO].Arrays[VMSettings])
+	vm_settings := deepcopy.Iface(r.Builders[BuilderVirtualBoxISO].Arrays[VMSettings]).([]string)
 	for i, v := range vm_settings {
-		k, val := parseVar(v)
+		_ = i
+		vo := reflect.ValueOf(v)
+		jww.TRACE.Printf("TTYT%v\t%v\n", vo, vo.Kind(), vo.Type())
+		k, val := parseVar(vo.Interface().(string))
 		val = r.replaceVariables(val)
 		tmpVB[i] = make([]string, 4)
 		tmpVB[i][0] = "modifyvm"

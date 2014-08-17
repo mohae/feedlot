@@ -62,6 +62,13 @@
 					"virtualbox-iso"
 				]
 
+        [build.centos6]
+		type = "centos"
+		description = "Centos 6 w virtualbox only"
+		builder_types = [
+			"virtualbox-iso"
+		]
+
         [build.centos6-salt]
 		type = "centos"
 		description = "Centos 6 with salt provisioning"
