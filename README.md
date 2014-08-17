@@ -7,15 +7,27 @@ rancher
 
 Ranchers supply products to packers to process and package. Rancher creates Packer templates for Packer to process and generate artifacts. Ok, a bit of a stretch, but it's the best I could come up with.
 
-As it stands, this is a mvp with support for only VirtualBox and VMWare buiilders, the shell provisioner, and vagrant post-processor. Overrides are not supported for provisioners and post-processors. 
+Rancher has default settings for Packer template generation. Each supported distribution has its own settings which are applied to created the distribution's defaultu template settings. 
 
-Packer templates are generated from either the default Packer settings for a supported distro or from a Rancher build template. Rancher saves the results of a build to an directory of the same name within the output directory. This includes the .json file, referenced script files, and a configuration file for unattended installs of the distribution.
+Custom Packer templates can be specified via Rancher builds. A build is a named specification for a Packer template. Rancher saves the results of a build to a directory of the same name within Rancher's output directory. This includes the .json file, referenced script files, and a configuration file for unattended installs of the distribution.
 
 If the output directory for a given build already contains artifacts, Rancher will archive the target directory and save it as a .tgz using the directory name and the current date and time in a slightly modified ISO 8601 format, the `:` are stripped from the time in the filename. The old artifacts will then be deleted so that Rancher can ensure that the output from the current build will have a clean directory to write to.
 
-Currently Supported Distros:
+### Supported Distro
     * ubuntu
     * centos
+
+### Supported Builders
+    * vmware-iso
+    * virtualbox-iso
+
+### Supported Post-processors
+    * vagrant
+    * vagrant cloud
+
+### Supported Provisioners 
+    * file
+    * shell
 
 ##Running Rancher##
 Build a Packer template for CentOS using the distro defaults:
@@ -28,11 +40,11 @@ Build a Packer template for Ubuntu using the distro defaults with an image overr
 
 Build a Packer template from a named build:
 
-	rancher build 1404-go
+	rancher build centos6
 
 Build a Packer template for Ubuntu using the distro defaults and from more than one named build:
 	
-	rancher build -distro=centos -arch=i386 1404-go 6-lamp
+	rancher build -distro=centos -arch=i386 1404-dev centos6
 
 ##`rancher.cfg` and Environment Variables##
 The `rancher.cfg` file is the default core configuration file for Rancher. It contains the default locations for all of the TOML files that Rancher uses. Environment variables are supported. Rancher will first check to see if the environment variable is set. If it is empty, the relevant `rancher.cfg` setting will be used.
