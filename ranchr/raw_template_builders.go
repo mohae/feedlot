@@ -205,22 +205,36 @@ func (r *rawTemplate) createBuilderVirtualBoxISO() (settings map[string]interfac
 		return nil, nil, err
 	}
 
-	tmpVB := make([][]string, l)
-	vm_settings := deepcopy.Iface(r.Builders[BuilderVirtualBoxISO].Arrays[VMSettings]).([]string)
-	for i, v := range vm_settings {
-		_ = i
-		vo := reflect.ValueOf(v)
-		jww.TRACE.Printf("TTYT%v\t%v\n", vo, vo.Kind(), vo.Type())
-		k, val := parseVar(vo.Interface().(string))
-		val = r.replaceVariables(val)
-		tmpVB[i] = make([]string, 4)
-		tmpVB[i][0] = "modifyvm"
-		tmpVB[i][1] = "{{.Name}}"
-		tmpVB[i][2] = "--" + k
-		tmpVB[i][3] = val
-	}
+	if l > 0 {
+		tmpVB := make([][]string, l)
+	
+		tmp := reflect.ValueOf(r.Builders[BuilderVirtualBoxISO].Arrays[VMSettings])
+		jww.TRACE.Printf("%v\n", tmp)
+	
+		var vm_settings interface{}
 
-	settings["vboxmanage"] = tmpVB
+		switch tmp.Type() {
+		case TypeOfSliceInterfaces:
+			vm_settings = deepcopy.Iface(r.Builders[BuilderVirtualBoxISO].Arrays[VMSettings]).([]interface{})
+		case TypeOfSliceStrings:
+			vm_settings = deepcopy.Iface(r.Builders[BuilderVirtualBoxISO].Arrays[VMSettings]).([]string)
+		}		
+
+		for i, v := range vm_settings.([]string) {
+			_ = i
+			vo := reflect.ValueOf(v)
+			jww.TRACE.Printf("TTYT%v\t%v\n", vo, vo.Kind(), vo.Type())
+			k, val := parseVar(vo.Interface().(string))
+			val = r.replaceVariables(val)
+			tmpVB[i] = make([]string, 4)
+			tmpVB[i][0] = "modifyvm"
+			tmpVB[i][1] = "{{.Name}}"
+			tmpVB[i][2] = "--" + k
+			tmpVB[i][3] = val
+		}
+
+		settings["vboxmanage"] = tmpVB
+	}
 
 	return settings, nil, nil
 }

@@ -114,6 +114,9 @@ var (
 
 	//VMSetting is the constant for builders with vm-settings
 	VMSettings = "vm_settings"
+
+	TypeOfSliceInterfaces = reflect.TypeOf([]interface{}(nil))
+	TypeOfSliceStrings = reflect.TypeOf([]string(nil))
 )
 
 var Builds *builds
