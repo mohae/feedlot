@@ -234,20 +234,27 @@ func (r *rawTemplate) ScriptNames() []string {
 	// Get the slice of scripts
 	typ := reflect.TypeOf(r.Provisioners[ProvisionerShell].Arrays[scripts])
 	jww.TRACE.Println("\t", typ)
-	s := deepcopy.Iface(r.Provisioners[ProvisionerShell].Arrays[scripts]).([]interface{})
-	if len(s) > 0 {
-		for i, script := range s {
-			//explode on "/"
-			parts := strings.Split(script.(string), "/")
 
-			// the last element is the script name
-			s[i] = parts[len(parts)-1]
-		}
+//	var s []interface{}
+	
+//	switch typ {
+//	case TypeOfSliceInterfaces:
+		s := deepcopy.Iface(r.Provisioners[ProvisionerShell].Arrays[scripts])//.([]interface{})
+//	case TypeOfSliceStrings:
+//		s = deepcopy.Iface(r.Provisioners[ProvisionerShell].Arrays[scripts]).([]string)
+//	}
 
+	tmp := s.([]string)
+	for i, script := range tmp {
+		//explode on "/"
+		parts := strings.Split(script, "/")
+		// the last element is the script name
+		tmp[i] = parts[len(parts)-1]
 	}
+
 	jww.DEBUG.Println("rawTemplate.ScriptNames: exit")
-	st := deepcopy.InterfaceToSliceStrings(s)
-	return st
+//	st := deepcopy.InterfaceToSliceStrings(s)
+	return tmp
 
 }
 

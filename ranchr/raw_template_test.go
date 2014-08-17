@@ -56,13 +56,18 @@ var comparePostProcessors =  map[string]*postProcessor{
 	},
 }
 
-var compareProvisioners = map[string]*postProcessor{
-	"vagrant": {
+var compareProvisioners = map[string]*provisioner{
+	"shell": {
 		templateSection{
 			Settings: []string{
-				"output = :out_dir/packer.box",
+				"execute_command = :commands_src_dir/execute_test.command",
 			},
 			Arrays: map[string]interface{}{
+				"scripts": []string{
+					":scripts_dir/setup_test.sh",
+					":scripts_dir/vagrant_test.sh",
+					":scripts_dir/cleanup_test.sh",
+				},
 				"except": []string{
 					"docker",
 				},
@@ -70,17 +75,6 @@ var compareProvisioners = map[string]*postProcessor{
 					"virtualbox-iso",
 				},
 			},
-		},
-	},
-	"vagrant-cloud": {
-		templateSection{
-			Settings: []string{
-				"access_token = getAValidTokenFrom-VagrantCloud.com",
-				"box_tag = foo/bar/baz",
-				"no_release = false",
-				"version = 1.0.2",
-			},
-			Arrays: map[string]interface{}{},
 		},
 	},
 }
