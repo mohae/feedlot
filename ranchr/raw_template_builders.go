@@ -219,9 +219,10 @@ func (r *rawTemplate) createBuilderVirtualBoxISO() (settings map[string]interfac
 		case TypeOfSliceStrings:
 			vm_settings = deepcopy.Iface(r.Builders[BuilderVirtualBoxISO].Arrays[VMSettings]).([]string)
 		}		
+	
+		vms := deepcopy.InterfaceToSliceStrings(vm_settings)
 
-		for i, v := range vm_settings.([]string) {
-			_ = i
+		for i, v := range vms {
 			vo := reflect.ValueOf(v)
 			jww.TRACE.Printf("TTYT%v\t%v\n", vo, vo.Kind(), vo.Type())
 			k, val := parseVar(vo.Interface().(string))
