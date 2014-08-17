@@ -51,9 +51,11 @@ var comparePostProcessors =  map[string]*postProcessor{
 				"no_release = false",
 				"version = 1.0.2",
 			},
+			Arrays: map[string]interface{}{},
 		},
 	},
 }
+
 var compareProvisioners = map[string]*postProcessor{
 	"vagrant": {
 		templateSection{
