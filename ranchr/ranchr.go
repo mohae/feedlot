@@ -115,7 +115,7 @@ var (
 	BuilderVMWareISO = "vmware-iso"
 
 	// BuilderVMWareVMX is the name of the VMWare VMX builder section in the toml files.
-	BuilderVMWareOVF = "vmware-vmx"
+	BuilderVMWareVMX = "vmware-vmx"
 
 	// PostProcessorVagrant is the name of the Vagrant PostProcessor
 	PostProcessorVagrant = "vagrant"
@@ -144,8 +144,8 @@ var (
 	// ProvisionerAnsible is the name of the puppet-server Provisioner
 	ProvisionerPuppetServer = "puppet-server"
 
-	// ProvisionerSalt is the name of the Salt Masterless Provisioner
-	ProvisionerSalt = "salt-masterless"
+	// ProvisionerSaltMasterless is the name of the Salt Masterless Provisioner
+	ProvisionerSaltMasterless = "salt-masterless"
 
 	// ProvisionerShell is the name of the Shell Provisioner
 	ProvisionerShell = "shell"

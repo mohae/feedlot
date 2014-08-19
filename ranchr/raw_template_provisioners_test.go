@@ -267,6 +267,31 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 			"file",
 		},
 		Provisioners: map[string]*provisioner{
+			"ansible-local": {
+				templateSection{
+					Settings: []string{
+						"playbook_file= :src_dir/ansible/playbook_file",
+						"command =  :commands_src_dir/ansible_test.command",
+						"inventory_file = :src_dir/ansible/inventory_file",
+						"playbook_dir = :src_dir/ansible/playbooks",
+						"staging_directory = staging/directory",
+					},
+					Arrays: map[string]interface{}{
+						"extra_arguments": []string{
+							"arg1",
+							"arg2",
+						},
+						"playbook_paths": []string{
+							"path1",
+							"path2",
+						},
+						"role_paths": []string{
+							"rolepath1",
+							"rolepath2",
+						},
+					},
+				},
+			},
 			"shell": {
 				templateSection{
 					Settings: []string{

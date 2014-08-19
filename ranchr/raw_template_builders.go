@@ -55,7 +55,7 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 		switch bType {
 		case BuilderVMWareISO:
 			tmpS, tmpVar, err = r.createBuilderVMWareISO()
-		case BuilderVMWareOVF:
+		case BuilderVMWareVMX:
 			//			tmpS, tmpVar, err = r.createBuilderVMWareOVF()
 
 		case BuilderVirtualBoxISO:
