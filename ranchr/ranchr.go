@@ -72,31 +72,79 @@ var (
 	// BuilderCommon is the name of the common builder section in the toml files.
 	BuilderCommon = "common"
 
-	// BuilderVirtualBoxISO is the name of the VirtualBox builder section in the toml files.
+	// BuilderAmazonEBS is the name of the Amazon EBS builder section in the toml files.
+	BuilderAmazonEBS = "amazon-ebs"
+
+	// BuilderAmazonInstance is the name of the Amazon instance builder section in the toml files.
+	BuilderAmazonInstance = "amazon-instance"
+
+	// BuilderAmazonChroot is the name of the Amazon chroot builder section in the toml files.
+	BuilderAmazonChroot = "amazon-chroot"
+
+	// BuilderDigitalOcean is the name of the Digital Ocean section in the toml files.
+	BuilderDigitalOcean = "digitalocean"
+
+	// BuilderDocker is the name of the Docker builder section in the toml files.
+	BuilderDocker = "docker"
+
+	// BuilderGoogleCompute is the name of the Google Compute builder section in the toml files.
+	BuilderGoogleCompute = "googlecompute"
+
+	// BuilderNull is the name of the Null builder section in the toml files.
+	BuilderNull = "null"
+
+	// BuilderOpenstack is the name of the Openstack builder section in the toml files.
+	BuilderOpenstack = "openstack"
+
+	// BuilderParallelsISO is the name of the Parallels ISO builder section in the toml files.
+	BuilderParallelsISO = "parallels-iso"
+
+	// BuilderParallelsPVM is the name of the Parallels PVM builder section in the toml files.
+	BuilderParallelsPVM = "parallels-pvm"
+
+	// BuilderQEMU is the name of the QEMU builder section in the toml files.
+	BuilderQEMU = "qemu"
+
+	// BuilderVirtualBoxISO is the name of the VirtualBox ISO builder section in the toml files.
 	BuilderVirtualBoxISO = "virtualbox-iso"
 
-	// BuilderVirtualBoxOVF is the name of the VirtualBox builder section in the toml files.
+	// BuilderVirtualBoxOVF is the name of the VirtualBox OVF builder section in the toml files.
 	BuilderVirtualBoxOVF = "virtualbox-ovf"
 
-	// BuilderVMWareISO is the name of the VirtualBox builder section in the toml files.
+	// BuilderVMWareISO is the name of the VMWare ISO builder section in the toml files.
 	BuilderVMWareISO = "vmware-iso"
 
-	// BuilderVMWareOVF is the name of the VirtualBox builder section in the toml files.
-	BuilderVMWareOVF = "vmware-ovf"
+	// BuilderVMWareVMX is the name of the VMWare VMX builder section in the toml files.
+	BuilderVMWareOVF = "vmware-vmx"
 
 	// PostProcessorVagrant is the name of the Vagrant PostProcessor
 	PostProcessorVagrant = "vagrant"
 
-	// PostProcessorVagrant is the name of the Vagrant PostProcessor
+	// PostProcessorVagrant is the name of the Vagrant CloudPostProcessor
 	PostProcessorVagrantCloud = "vagrant-cloud"
 
-	// ProvisionerAnsible is the name of the Ansible Provisioner
-	ProvisionerAnsible = "ansible-local"
+	// PostProcessorVSphere is the name of the VSphere PostProcessor
+	PostProcessorVSphere = "vsphere"
+
+	// ProvisionerAnsibleLocal is the name of the Ansible Provisioner
+	ProvisionerAnsibleLocal = "ansible-local"
+
+	// ProvisionerChefClient is the name of the Chef Client Provisioner
+	ProvisionerChefClient = "chef-client"
+
+	// ProvisionerChefSolo is the name of the Chef Solo Provisioner
+	ProvisionerChefSolo = "chef-solo"
 
 	// ProvisionerFile is the name of the File Provisioner
 	ProvisionerFile = "file"
 
-	// ProvisionerSalt is the name of the Salt Provisioner
+	// ProvisionerPuppetMasterless is the name of the puppet-client Provisioner
+	ProvisionerPuppetClient = "puppet-client"
+
+	// ProvisionerAnsible is the name of the puppet-server Provisioner
+	ProvisionerPuppetServer = "puppet-server"
+
+	// ProvisionerSalt is the name of the Salt Masterless Provisioner
 	ProvisionerSalt = "salt-masterless"
 
 	// ProvisionerShell is the name of the Shell Provisioner
