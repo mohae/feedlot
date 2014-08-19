@@ -53,16 +53,33 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 		tmpS = make(map[string]interface{})
 
 		switch bType {
+		case BuilderAmazonEBS, BuilderAmazonInstance, BuilderAmazonChroot:
+
+		case BuilderDigitalOcean:
+
+		case BuilderDocker:
+
+		case BuilderGoogleCompute:
+
+		case BuilderNull:
+
+		case BuilderOpenstack:
+
+		case BuilderParallelsISO, BuilderParallelsPVM:
+
+		case BuilderQEMU:
+
 		case BuilderVMWareISO:
 			tmpS, tmpVar, err = r.createBuilderVMWareISO()
+
 		case BuilderVMWareVMX:
-			//			tmpS, tmpVar, err = r.createBuilderVMWareOVF()
+			tmpS, tmpVar, err = r.createBuilderVMWareVMX()
 
 		case BuilderVirtualBoxISO:
 			tmpS, tmpVar, err = r.createBuilderVirtualBoxISO()
 
 		case BuilderVirtualBoxOVF:
-			//			tmpS, tmpVar, err = r.createVirtualBoxOVF()
+//			tmpS, tmpVar, err = r.createVirtualBoxOVF()
 
 		default:
 			err = errors.New("The requested builder, '" + bType + "', is not supported by Rancher")
@@ -373,6 +390,77 @@ func (r *rawTemplate) createBuilderVMWareISO() (settings map[string]interface{},
 	// Generate builder specific section
 	tmpVB := map[string]string{}
 	vm_settings := deepcopy.InterfaceToSliceStrings(r.Builders[BuilderVirtualBoxISO].Arrays[VMSettings])
+	for _, v := range vm_settings {
+		k, val := parseVar(v)
+		val = r.replaceVariables(val)
+		tmpVB[k] = val
+	}
+
+	settings["vmx_data"] = tmpVB
+	return settings, nil, nil
+}
+
+// r.createBuilderVMWareISO generates the settings for a vmware-iso builder.
+func (r *rawTemplate) createBuilderVMWareVMX() (settings map[string]interface{}, vars []string, err error) {
+	settings = make(map[string]interface{})
+
+	// Each create function is responsible for setting its own type.
+	settings["type"] = BuilderVMWareVMX
+
+	// Merge the settings between common and this builders.
+	mergedSlice := mergeSettingsSlices(r.Builders[BuilderCommon].Settings, r.Builders[BuilderVMWareVMX].Settings)
+
+	// Go through each element in the slice, only take the ones that matter
+	// to this builder.
+	for _, s := range mergedSlice {
+		// var tmp interface{}
+		k, v := parseVar(s)
+		v = r.replaceVariables(v)
+		switch k {
+		case "source_path", "ssh_username", "fusion_app_path", "output_directory", "shutdown_timeout", "ssh_key_path", "ssh_password", "ssh_wait_timeout", "vm_name":
+			settings[k] = v
+
+		case "guest_os_type":
+			if v == "" {
+				settings[k] = v
+			} else {
+				settings[k] = r.osType
+			}
+
+		case "headless", "skip_compaction", "ssh_skip_request_pty":
+			if strings.ToLower(v) == "true" {
+				settings[k] = true
+			} else {
+				settings[k] = false
+			}
+
+		// For the fields of int value, only set if it converts to a valid int.
+		// Otherwise, throw an error
+		case "ssh_port":
+			// only add if its an int
+			if _, err := strconv.Atoi(v); err != nil {
+				return nil, nil, errors.New("rawTemplate.createBuilderVMWareVMX: An error occurred while trying to set " + k + "'s value, '" + v + "': " + err.Error())
+			}
+			settings[k] = v
+
+		case "shutdown_command":
+			//If it ends in .command, replace it with the command from the filepath
+			var commands []string
+
+			if commands, err = commandsFromFile(v); err != nil {
+				jww.ERROR.Println(err.Error())
+				return nil, nil, err
+			}
+
+			// Assume it's the first element.
+			settings[k] = commands[0]
+
+		}
+	}
+
+	// Generate builder specific section
+	tmpVB := map[string]string{}
+	vm_settings := deepcopy.InterfaceToSliceStrings(r.Builders[BuilderVMWareVMX].Arrays[VMSettings])
 	for _, v := range vm_settings {
 		k, val := parseVar(v)
 		val = r.replaceVariables(val)
