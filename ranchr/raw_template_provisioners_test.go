@@ -292,6 +292,18 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 					},
 				},
 			},
+			"salt-masterless": {
+				templateSection{
+					Settings: []string{
+						"bootstrap_args = args",
+						"local_pillar_roots=/srv/pillar/",
+						"local_state_tree=/srv/salt/",
+						"minion_config=minion",
+						"skip_bootstrap=false",
+						"temp_config_dir=/tmp",
+					},
+				},
+			},
 			"shell": {
 				templateSection{
 					Settings: []string{

@@ -141,6 +141,7 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 			tmpS, tmpVar, err = r.createProvisionerAnsibleLocal()
 
 		case ProvisionerSaltMasterless:
+			tmpS, tmpVar, err = r.createProvisionerSaltMasterless()
 
 		case ProvisionerChefClient:
 
@@ -196,6 +197,33 @@ func (r *rawTemplate) createProvisionerAnsibleLocal() (settings map[string]inter
 		}
 		jww.TRACE.Printf("\t%v\t%v\n", name, val)
 	}
+	return settings, vars, err
+}
+
+// createProvisionerSaltMasterless() creates a map of settings for Packer's 
+// ansible provisioner. Any values that aren't supported by the file 
+// provisioner are ignored.
+func (r *rawTemplate) createProvisionerSaltMasterless() (settings map[string]interface{}, vars []string, err error) {
+	settings = make(map[string]interface{})
+	settings["type"] = ProvisionerSaltMasterless
+
+	jww.TRACE.Printf("rawTemplate.createProvisionerAnsibleLocal-rawtemplate\n")
+
+	// For each value, extract its key value pair and then process. Only
+	// process the supported keys. Key validation isn't done here, leaving
+	// that for Packer.
+	var k, v string
+	for _, s := range r.Provisioners[ProvisionerSaltMasterless].Settings {
+		k, v = parseVar(s)
+		switch k {
+		case "bootstrap_args", "local_pillar_roots", "local_state_tree", "minion_config", "skip_bootstrap", "temp_config_dir":
+			settings[k] = v
+		default:
+			jww.WARN.Println("An unsupported " + ProvisionerSaltMasterless + " key was encountered: " + k)
+		}
+	}
+
+	// salt-masterless does not have any arrays to support
 	return settings, vars, err
 }
 
