@@ -13,20 +13,26 @@ Custom Packer templates can be specified via Rancher builds. A build is a named 
 
 If the output directory for a given build already contains artifacts, Rancher will archive the target directory and save it as a .tgz using the directory name and the current date and time in a slightly modified ISO 8601 format, the `:` are stripped from the time in the filename. The old artifacts will then be deleted so that Rancher can ensure that the output from the current build will have a clean directory to write to.
 
+_There may be bugs in any of the following. The ones with __needs testing__ definitely need to be verified prior to using. Please report any  issues_
+
 ### Supported Distro
     * ubuntu
     * centos
 
 ### Supported Builders
     * vmware-iso
+    * vmware-vmx __needs testing__
     * virtualbox-iso
+    * virtualbox-ovf __needs testing__
 
 ### Supported Post-processors
     * vagrant
     * vagrant cloud
 
 ### Supported Provisioners 
+    * ansible-local __needs testing__
     * file
+    * salt-masterless __needs testing__
     * shell
 
 ##Running Rancher##
@@ -87,7 +93,7 @@ Builds are used in conjunction with the `build` command or are added to `buildli
 `buildlists.toml` defines named lists of builds. These name lists are used in conjunction with the `rancher buildlists buildlistNames...` command. If you often find that the `build` sub-command is used with mupltiple build names, a buildlist might be useful instead. 
 
 ##Rancher Commands##
-Rancher uses mitchellh's cli package, with support for the `build` and `buildlists` custom commands, along with the standard `version` and `help` commands.
+Rancher uses mitchellh's cli package, with support for the `build` and `run` custom commands, along with the standard `version` and `help` commands.
 
 ###`build`###
 `rancher build <flags> buildNames...`
@@ -101,12 +107,12 @@ Supported Flags:
 
 If the `-distro` flag is passed, a build based on the default setting for the distro will be created. The additional flags allow for runtime overrides of the distro defaults for the target ISO. This flag can be used in conjunction with named builds. If both the -distro flag is passed along with a space separated list of one or more named builds are passed to the `build` sub-command, both the default Packer template for the distro and all of the Packer templates for the passed build names will be created.
 
-###`buildlists`###
-`rancher buildlists buildlistName...`
+###`run`###
+`rancher run buildlist...`
 
-Generate the Packer templates for all of the builds listed within the passed buildlists. No flags are supported.
+Generate the Packer templates for all of the builds listed within the passed buildlists; buildlists is variadic. No flags are supported.
 
 ##Notes:##
  * Fully commented example toml files not created.
  * Docs needed
-
+ * Check Wiki for more info.
