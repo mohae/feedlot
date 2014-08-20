@@ -56,8 +56,10 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 		case BuilderAmazonEBS, BuilderAmazonInstance, BuilderAmazonChroot:
 
 		case BuilderDigitalOcean:
+			tmpS, tmpVar, err = r.createBuilderDigitalOcean()
 
 		case BuilderDocker:
+			tmpS, tmpVar, err = r.createBuilderDocker()
 
 		case BuilderGoogleCompute:
 
@@ -540,6 +542,73 @@ func (r *rawTemplate) createBuilderVMWareVMX() (settings map[string]interface{},
 	}
 
 	settings["vmx_data"] = tmpVB
+	return settings, nil, nil
+}
+
+// r.createBuilderDigitalOcean generates the settings for a digital ocean builder.
+// The deprecated image_id,  region_id, and size_id are not supported.
+func (r *rawTemplate) createBuilderDigitalOcean() (settings map[string]interface{}, vars []string, err error) {
+	settings = make(map[string]interface{})
+
+	// Each create function is responsible for setting its own type.
+	settings["type"] = BuilderDigitalOcean
+
+	// Merge the settings between common and this builders.
+	mergedSlice := mergeSettingsSlices(r.Builders[BuilderCommon].Settings, r.Builders[BuilderDigitalOcean].Settings)
+
+	// Go through each element in the slice, only take the ones that matter
+	// to this builder.
+	// TODO look at snapshot name handling--it should be unique, e.g. timestamp
+	for _, s := range mergedSlice {
+		// var tmp interface{}
+		k, v := parseVar(s)
+		v = r.replaceVariables(v)
+		switch k {
+		case "api_key", "clien_id", "droplet_name", "image", "region", "size", "snapshot_name", "ssh_port", "ssh_timeout", "ssh_username", "state_timeout":
+			settings[k] = v
+		}
+	}
+
+	return settings, nil, nil
+}
+
+// r.createBuilderDocker generates the settings for a docker builder.
+func (r *rawTemplate) createBuilderDocker() (settings map[string]interface{}, vars []string, err error) {
+	settings = make(map[string]interface{})
+
+	// Each create function is responsible for setting its own type.
+	settings["type"] = BuilderDocker
+
+	// Merge the settings between common and this builders.
+	mergedSlice := mergeSettingsSlices(r.Builders[BuilderCommon].Settings, r.Builders[BuilderDocker].Settings)
+
+	// Go through each element in the slice, only take the ones that matter
+	// to this builder.
+	for _, s := range mergedSlice {
+		// var tmp interface{}
+		k, v := parseVar(s)
+		v = r.replaceVariables(v)
+		switch k {
+		case "export_path", "image_id":
+			settings[k] = v
+
+		case "pull":
+			if strings.ToLower(v) == "true" {
+				settings[k] = true
+			} else {
+				settings[k] = false
+			}
+		}
+	}
+
+	// Process the Arrays.
+	for name, val := range r.Builders[BuilderDocker].Arrays {
+		array := deepcopy.InterfaceToSliceStrings(val)
+		if array != nil {
+			settings[name] = array
+		}
+	}
+
 	return settings, nil, nil
 }
 
