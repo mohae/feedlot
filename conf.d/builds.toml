@@ -61,6 +61,15 @@
 				only = [
 					"virtualbox-iso"
 				]
+				scripts = [ 
+					":scripts_dir/setup.sh",
+					":scripts_dir/sudoers.sh",
+					":scripts_dir/vagrant.sh",
+					":scripts_dir/dev_stuff.sh",
+					":scripts_dir/customize.sh",
+					":scripts_dir/cleanup.sh",
+				]
+
 
         [build.centos6]
 		type = "centos"

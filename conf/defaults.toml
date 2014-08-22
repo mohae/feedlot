@@ -34,10 +34,12 @@ provisioner_types = [
 		"ssh_port = 22",
 		"ssh_username = vagrant",
 		"ssh_wait_timeout = 240m",
+		"vm_name = :build_name",
 	]
 	[builders.virtualbox-iso]
 	settings = [
 		"guest_os_type = ",
+		"guest_additions_path": "VBoxGuestAdditions_{{ .Version }}.iso",
 		"virtualbox_version_file = .vbox_version"
 	]
 		[builders.virtualbox-iso.arrays]
@@ -48,6 +50,7 @@ provisioner_types = [
 	[builders.vmware-iso]
 	settings = [
 		"guest_os_type = ",
+		"tools_upload_flavor = linux"
 	]
 		[builders.vmware-iso.arrays]
 		vm_settings = [
@@ -60,7 +63,7 @@ provisioner_types = [
 	settings = [
 		"compression_level = 9",
 		"keep_input_artifact = false",
-		"output = out/vagrant/"
+		"output =  :out_dir/box/:build_name.box"
 	]
 		[post_processors.vagrant.arrays]
 		only = [
