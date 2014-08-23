@@ -38,10 +38,10 @@
 			"shell"
 		]
 		[build.1404-dev.builders]
-			[build.1404-dev.builders.virtualbox-iso.arrays]
-			vm_settings = [
-				"memory=4096"
-			]
+				[build.1404-dev.builders.virtualbox-iso.arrays]
+				vm_settings = [
+					"memory=4096"
+				]
 
 		[build.1404-dev.post_processors]
 			[build.1404-dev.post_processors.vagrant]

@@ -39,7 +39,7 @@ provisioner_types = [
 	[builders.virtualbox-iso]
 	settings = [
 		"guest_os_type = ",
-		"guest_additions_path": "VBoxGuestAdditions_{{ .Version }}.iso",
+		"guest_additions_pat = VBoxGuestAdditions_{{ .Version }}.iso",
 		"virtualbox_version_file = .vbox_version"
 	]
 		[builders.virtualbox-iso.arrays]
