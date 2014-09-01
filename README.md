@@ -1,6 +1,8 @@
 rancher
 =======
 
+__Under development, not completely functional__
+
 >I am rarely happier than when spending entire day programming my computer to perform automatically a task that it would otherwise take me a good ten seconds to do by hand
 > 
 >   -Douglas Adams, _Last chance to See_
