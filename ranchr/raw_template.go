@@ -314,7 +314,7 @@ func (r *rawTemplate) mergeVariables() {
 
 // ISOInfo sets the ISO info for the template's supported distro type. This
 // also sets the builder specific string, when applicable.
-func (r *rawTemplate) ISOInfo(builderType string, settings []string) error {
+func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 	jww.TRACE.Printf("Entering rawTemplate.ISOInfo")
 	var k, v, checksumType string
 	var err error
@@ -334,7 +334,7 @@ func (r *rawTemplate) ISOInfo(builderType string, settings []string) error {
 		r.releaseISO = &ubuntu{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: checksumType}, Arch: r.Arch, Distro: r.Distro.String(), Image: r.Image, Release: r.Release}}
 		r.releaseISO.SetISOInfo()
 
-		r.osType, err = r.releaseISO.(*ubuntu).getOSType(builderType)
+		r.osType, err = r.releaseISO.(*ubuntu).getOSType(builderType.String())
 		if err != nil {
 			jww.ERROR.Println(err.Error())
 			return err
@@ -344,7 +344,7 @@ func (r *rawTemplate) ISOInfo(builderType string, settings []string) error {
 		r.releaseISO = &centOS{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: checksumType}, Arch: r.Arch, Distro: r.Distro.String(), Image: r.Image, Release: r.Release}}
 		r.releaseISO.SetISOInfo()
 
-		r.osType, err = r.releaseISO.(*centOS).getOSType(builderType)
+		r.osType, err = r.releaseISO.(*centOS).getOSType(builderType.String())
 		if err != nil {
 			jww.ERROR.Println(err.Error())
 			return err

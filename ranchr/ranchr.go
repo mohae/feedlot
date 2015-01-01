@@ -28,7 +28,7 @@ import (
 
 // supported distros
 const (
-	Unsupported Distro = iota
+	UnsupportedDistro Distro = iota
 	Ubuntu
 	CentOS
 )
@@ -36,7 +36,7 @@ const (
 type Distro int
 
 var distros = [...]string{
-	"unsupported",
+	"unsupported distro",
 	"centos",
 	"ubuntu",
 }
@@ -53,67 +53,107 @@ func DistroFromString(s string) Distro {
 	case "ubuntu":
 		return Ubuntu
 	}
-	return Unsupported
+	return UnsupportedDistro
+}
+
+// Builder constants
+const (
+	UnsupportedBuilder Builder = iota
+	CommonBuilder
+	AmazonChroot
+	AmazonEBS
+	AmazonInstance
+	DigitalOcean
+	Docker
+	GoogleCompute
+	NullBuilder
+	Openstack
+	ParallelsISO
+	ParallelsPVM
+	QEMU
+	VirtualBoxISO
+	VirtualBoxOVF
+	VMWareISO
+	VMWareVMX
+)
+
+type Builder int
+
+var builders = [...]string{
+	"unsupported Builder",
+	"common",          // BuilderCommon is the name of the common builder section in the toml files.
+	"amazon-chroot",   // BuilderAmazonChroot is the name of the Amazon chroot builder section in the toml files.
+	"amazon-ebs",      // BuilderAmazonEBS is the name of the Amazon EBS builder section in the toml files.
+	"amazon-instance", // BuilderAmazonInstance is the name of the Amazon instance builder section in the toml files.
+	"digitalocean",    // BuilderDigitalOcean is the name of the Digital Ocean section in the toml files.
+	"docker",          // BuilderDocker is the name of the Docker builder section in the toml files.
+	"googlecompute",   // BuilderGoogleCompute is the name of the Google Compute builder section in the toml files.
+	"null",            // BuilderNull is the name of the Null builder section in the toml files.
+	"openstack",       // BuilderOpenstack is the name of the Openstack builder section in the toml files.
+	"parallels-iso",   // BuilderParallelsISO is the name of the Parallels ISO builder section in the toml files.
+	"parallels-pvm",   // BuilderParallelsPVM is the name of the Parallels PVM builder section in the toml files.
+	"qemu",            // BuilderQEMU is the name of the QEMU builder section in the toml files.
+	"virtualbox-iso",  // BuilderVirtualBoxISO is the name of the VirtualBox ISO builder section in the toml files.
+	"virtualbox-ovf",  // BuilderVirtualBoxOVF is the name of the VirtualBox OVF builder section in the toml files.
+	"vmware-iso",      // BuilderVMWareISO is the name of the VMWare ISO builder section in the toml files.
+	"vmware-vmx",      // BuilderVMWareVMX is the name of the VMWare VMX builder section in the toml files.
+}
+
+func (b Builder) String() string { return builders[b] }
+
+// BuilderFromString returns the builder constant for the passed string or
+// unsupported. All incoming strings are normalized to lowercase.
+func BuilderFromString(s string) Builder {
+	s = strings.ToLower(s)
+	switch s {
+	case "common":
+		return CommonBuilder
+	case "amazon-chroot":
+		return AmazonChroot
+	case "amazon-ebs":
+		return AmazonEBS
+	case "amazon-instance":
+		return AmazonInstance
+	case "digitalocean":
+		return DigitalOcean
+	case "docker":
+		return Docker
+	case "googlecompute":
+		return GoogleCompute
+	case "null":
+		return NullBuilder
+	case "openstack":
+		return Openstack
+	case "parallels-iso":
+		return ParallelsISO
+	case "parallels-pvm":
+		return ParallelsPVM
+	case "qemu":
+		return QEMU
+	case "virtualbox-iso":
+		return VirtualBoxISO
+	case "virtualbox-ovf":
+		return VirtualBoxOVF
+	case "vmware-iso":
+		return VMWareISO
+	case "vmware-vmx":
+		return VMWareVMX
+	}
+	return UnsupportedBuilder
 }
 
 var (
-	// BuilderCommon is the name of the common builder section in the toml files.
-	BuilderCommon = "common"
-
-	// BuilderAmazonEBS is the name of the Amazon EBS builder section in the toml files.
-	BuilderAmazonEBS = "amazon-ebs"
-
-	// BuilderAmazonInstance is the name of the Amazon instance builder section in the toml files.
-	BuilderAmazonInstance = "amazon-instance"
-
-	// BuilderAmazonChroot is the name of the Amazon chroot builder section in the toml files.
-	BuilderAmazonChroot = "amazon-chroot"
-
-	// BuilderDigitalOcean is the name of the Digital Ocean section in the toml files.
-	BuilderDigitalOcean = "digitalocean"
-
-	// BuilderDocker is the name of the Docker builder section in the toml files.
-	BuilderDocker = "docker"
-
-	// BuilderGoogleCompute is the name of the Google Compute builder section in the toml files.
-	BuilderGoogleCompute = "googlecompute"
-
-	// BuilderNull is the name of the Null builder section in the toml files.
-	BuilderNull = "null"
-
-	// BuilderOpenstack is the name of the Openstack builder section in the toml files.
-	BuilderOpenstack = "openstack"
-
-	// BuilderParallelsISO is the name of the Parallels ISO builder section in the toml files.
-	BuilderParallelsISO = "parallels-iso"
-
-	// BuilderParallelsPVM is the name of the Parallels PVM builder section in the toml files.
-	BuilderParallelsPVM = "parallels-pvm"
-
-	// BuilderQEMU is the name of the QEMU builder section in the toml files.
-	BuilderQEMU = "qemu"
-
-	// BuilderVirtualBoxISO is the name of the VirtualBox ISO builder section in the toml files.
-	BuilderVirtualBoxISO = "virtualbox-iso"
-
-	// BuilderVirtualBoxOVF is the name of the VirtualBox OVF builder section in the toml files.
-	BuilderVirtualBoxOVF = "virtualbox-ovf"
-
-	// BuilderVMWareISO is the name of the VMWare ISO builder section in the toml files.
-	BuilderVMWareISO = "vmware-iso"
-
-	// BuilderVMWareVMX is the name of the VMWare VMX builder section in the toml files.
-	BuilderVMWareVMX = "vmware-vmx"
-
-	// PostProcessorVagrant is the name of the Vagrant PostProcessor
-	PostProcessorVagrant = "vagrant"
-
-	// PostProcessorVagrant is the name of the Vagrant CloudPostProcessor
+	PostProcessorVagrant      = "vagrant"
 	PostProcessorVagrantCloud = "vagrant-cloud"
+	PostProcessorVSphere      = "vsphere"
+)
 
-	// PostProcessorVSphere is the name of the VSphere PostProcessor
-	PostProcessorVSphere = "vsphere"
-
+/*
+	"vagrant"	// PostProcessorVagrant is the name of the Vagrant PostProcessor
+	"vagrant-cloud"	// PostProcessorVagrant is the name of the Vagrant CloudPostProcessor
+	"vsphere"	// PostProcessorVSphere is the name of the VSphere PostProcessor
+*/
+var (
 	// ProvisionerAnsibleLocal is the name of the Ansible Provisioner
 	ProvisionerAnsibleLocal = "ansible-local"
 
