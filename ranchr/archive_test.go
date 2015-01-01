@@ -96,7 +96,7 @@ func TestPriorBuild(t *testing.T) {
 	tW.Close()
 
 	// Remove any tarballs that may be created
-	files, _ := ioutil.ReadDir("../test_files/out")
+	files, _ = ioutil.ReadDir("../test_files/out")
 	var ext string
 	for _, file := range files {
 		if !file.IsDir() {

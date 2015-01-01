@@ -174,19 +174,19 @@ func (r *rawTemplate) createBuilderVirtualBoxISO() (settings map[string]interfac
 				}
 			}
 
-			switch r.Type {
+			switch r.Distro {
 
-			case "ubuntu":
+			case Ubuntu:
 				settings["iso_url"] = r.releaseISO.(*ubuntu).isoURL
 				settings["iso_checksum"] = r.releaseISO.(*ubuntu).Checksum
 				settings["iso_checksum_type"] = r.releaseISO.(*ubuntu).ChecksumType
 
-			case "centos":
+			case CentOS:
 				settings["iso_url"] = r.releaseISO.(*centOS).isoURL
 				settings["iso_checksum"] = r.releaseISO.(*centOS).Checksum
 				settings["iso_checksum_type"] = r.releaseISO.(*centOS).ChecksumType
 
-			case "default":
+			default:
 				err = errors.New("rawTemplate.createBuilderVirtualBoxISO: " + k + " is not a supported builder type")
 				jww.ERROR.Println(err.Error())
 				return nil, nil, err
@@ -226,10 +226,10 @@ func (r *rawTemplate) createBuilderVirtualBoxISO() (settings map[string]interfac
 
 	if l > 0 {
 		tmpVB := make([][]string, l)
-	
+
 		tmp := reflect.ValueOf(r.Builders[BuilderVirtualBoxISO].Arrays[VMSettings])
 		jww.TRACE.Printf("%v\n", tmp)
-	
+
 		var vm_settings interface{}
 
 		switch tmp.Type() {
@@ -237,8 +237,8 @@ func (r *rawTemplate) createBuilderVirtualBoxISO() (settings map[string]interfac
 			vm_settings = deepcopy.Iface(r.Builders[BuilderVirtualBoxISO].Arrays[VMSettings]).([]interface{})
 		case TypeOfSliceStrings:
 			vm_settings = deepcopy.Iface(r.Builders[BuilderVirtualBoxISO].Arrays[VMSettings]).([]string)
-		}		
-	
+		}
+
 		vms := deepcopy.InterfaceToSliceStrings(vm_settings)
 
 		for i, v := range vms {
@@ -324,10 +324,10 @@ func (r *rawTemplate) createBuilderVirtualBoxOVF() (settings map[string]interfac
 
 	if l > 0 {
 		tmpVB := make([][]string, l)
-	
+
 		tmp := reflect.ValueOf(r.Builders[BuilderVirtualBoxOVF].Arrays[VMSettings])
 		jww.TRACE.Printf("%v\n", tmp)
-	
+
 		var vm_settings interface{}
 
 		switch tmp.Type() {
@@ -335,8 +335,8 @@ func (r *rawTemplate) createBuilderVirtualBoxOVF() (settings map[string]interfac
 			vm_settings = deepcopy.Iface(r.Builders[BuilderVirtualBoxOVF].Arrays[VMSettings]).([]interface{})
 		case TypeOfSliceStrings:
 			vm_settings = deepcopy.Iface(r.Builders[BuilderVirtualBoxOVF].Arrays[VMSettings]).([]string)
-		}		
-	
+		}
+
 		vms := deepcopy.InterfaceToSliceStrings(vm_settings)
 
 		for i, v := range vms {
@@ -417,19 +417,19 @@ func (r *rawTemplate) createBuilderVMWareISO() (settings map[string]interface{},
 				}
 			}
 
-			switch r.Type {
+			switch r.Distro {
 
-			case "ubuntu":
+			case Ubuntu:
 				settings["iso_url"] = r.releaseISO.(*ubuntu).isoURL
 				settings["iso_checksum"] = r.releaseISO.(*ubuntu).Checksum
 				settings["iso_checksum_type"] = r.releaseISO.(*ubuntu).ChecksumType
 
-			case "centos":
+			case CentOS:
 				settings["iso_url"] = r.releaseISO.(*centOS).isoURL
 				settings["iso_checksum"] = r.releaseISO.(*centOS).Checksum
 				settings["iso_checksum_type"] = r.releaseISO.(*centOS).ChecksumType
 
-			case "default":
+			default:
 				err = errors.New("rawTemplate.createBuilderVirtualBoxISO: " + k + " is not a supported builder type")
 				jww.ERROR.Println(err.Error())
 				return nil, nil, err

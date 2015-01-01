@@ -26,45 +26,35 @@ import (
 	jww "github.com/spf13/jwalterweatherman"
 )
 
-var (
-	// EnvRancherFile is the name of the environment variable name for Rancher's config file.
-	EnvRancherFile = "RANCHER_CONFIG"
-
-	// EnvBuildsFile is the name of the environment variable name for the builds file.
-	EnvBuildsFile = "RANCHER_BUILDS_FILE"
-
-	// EnvBuildListsFile is the name of the environment variable name for the build lists file.
-	EnvBuildListsFile = "RANCHER_BUILD_LISTS_FILE"
-
-	// EnvDefaultsFile is the name of the environment variable name for the defaults file.
-	EnvDefaultsFile = "RANCHER_DEFAULTS_FILE"
-
-	// EnvSupportedFile is the name of the environment variable name for the supported file.
-	EnvSupportedFile = "RANCHER_SUPPORTED_FILE"
-
-	// EnvParamDelimStart is the name of the environment variable name for the delimter that starts Rancher variables.
-	EnvParamDelimStart = "RANCHER_PARAM_DELIM_START"
-
-	// EnvLogToFile is the name of the environment variable name for whether or not Rancher logs to a file.
-	EnvLogToFile = "RANCHER_LOG_TO_FILE"
-
-	// EnvLogFilename is the name of the environment variable name for the log filename, if logging to file is enabled..
-	EnvLogFilename = "RANCHER_LOG_FILENAME"
-
-	// EnvLogLevelFile is the name of the environment variable name for the file output's log level.
-	EnvLogLevelFile = "RANCHER_LOG_LEVEL_FILE"
-
-	// EnvLogLevelStdout is the name of the environment variable name for stdout's log level.
-	EnvLogLevelStdout = "RANCHER_LOG_LEVEL_STDOUT"
+// supported distros
+const (
+	Unsupported Distro = iota
+	Ubuntu
+	CentOS
 )
 
-var (
-	//Ubuntu is the name of the ubuntu supported distro.
-	Ubuntu = "ubuntu"
+type Distro int
 
-	//CentOS is the name of the centOS supported distro.
-	CentOS = "centos"
-)
+var distros = [...]string{
+	"unsupported",
+	"centos",
+	"ubuntu",
+}
+
+func (d Distro) String() string { return distros[d] }
+
+// DistroFromString returns the Distro constant for the passed string or unsupported.
+// All incoming strings are normalized to lowercase.
+func DistroFromString(s string) Distro {
+	s = strings.ToLower(s)
+	switch s {
+	case "centos":
+		return CentOS
+	case "ubuntu":
+		return Ubuntu
+	}
+	return Unsupported
+}
 
 var (
 	// BuilderCommon is the name of the common builder section in the toml files.
@@ -155,6 +145,38 @@ var (
 )
 
 var (
+	// EnvRancherFile is the name of the environment variable name for Rancher's config file.
+	EnvRancherFile = "RANCHER_CONFIG"
+
+	// EnvBuildsFile is the name of the environment variable name for the builds file.
+	EnvBuildsFile = "RANCHER_BUILDS_FILE"
+
+	// EnvBuildListsFile is the name of the environment variable name for the build lists file.
+	EnvBuildListsFile = "RANCHER_BUILD_LISTS_FILE"
+
+	// EnvDefaultsFile is the name of the environment variable name for the defaults file.
+	EnvDefaultsFile = "RANCHER_DEFAULTS_FILE"
+
+	// EnvSupportedFile is the name of the environment variable name for the supported file.
+	EnvSupportedFile = "RANCHER_SUPPORTED_FILE"
+
+	// EnvParamDelimStart is the name of the environment variable name for the delimter that starts Rancher variables.
+	EnvParamDelimStart = "RANCHER_PARAM_DELIM_START"
+
+	// EnvLogToFile is the name of the environment variable name for whether or not Rancher logs to a file.
+	EnvLogToFile = "RANCHER_LOG_TO_FILE"
+
+	// EnvLogFilename is the name of the environment variable name for the log filename, if logging to file is enabled..
+	EnvLogFilename = "RANCHER_LOG_FILENAME"
+
+	// EnvLogLevelFile is the name of the environment variable name for the file output's log level.
+	EnvLogLevelFile = "RANCHER_LOG_LEVEL_FILE"
+
+	// EnvLogLevelStdout is the name of the environment variable name for stdout's log level.
+	EnvLogLevelStdout = "RANCHER_LOG_LEVEL_STDOUT"
+)
+
+var (
 	// indent: default indent to use for marshal stuff
 	indent = "    "
 
@@ -166,7 +188,7 @@ var (
 )
 
 var Builds *builds
-var Distros distroDefaults
+var DistroDefaults distroDefaults
 
 // AppConfig contains the current Rancher configuration...loaded at start-up.
 var AppConfig appConfig
@@ -205,7 +227,7 @@ type ArgsFilter struct {
 // distroDefaults contains the defaults for all supported distros and a flag
 // whether its been set or not.
 type distroDefaults struct {
-	Templates map[string]*rawTemplate
+	Templates map[Distro]*rawTemplate
 	IsSet     bool
 }
 
@@ -215,26 +237,26 @@ func (d *distroDefaults) GetTemplate(n string) (*rawTemplate, error) {
 	var t *rawTemplate
 	var ok bool
 
-	if t, ok = d.Templates[n]; !ok {
-		return t, fmt.Errorf("distroDefaults.GetTemplate: The requested Distro, " + n + " is not supported. No template to return")
+	if t, ok = d.Templates[DistroFromString(n)]; !ok {
+		return t, fmt.Errorf("unsupported distro: %s", n)
 	}
 
-	copy := newRawTemplate()
-	copy.PackerInf = t.PackerInf
-	copy.IODirInf = t.IODirInf
-	copy.BuildInf = t.BuildInf
-	copy.releaseISO = t.releaseISO
-	copy.date = t.date
-	copy.delim = t.delim
-	copy.Type = t.Type
-	copy.Arch = t.Arch
-	copy.Image = t.Image
-	copy.Release = t.Release
-	copy.varVals = t.varVals
-	copy.vars = t.vars
-	copy.build = t.build.DeepCopy()
+	Copy := newRawTemplate()
+	Copy.PackerInf = t.PackerInf
+	Copy.IODirInf = t.IODirInf
+	Copy.BuildInf = t.BuildInf
+	Copy.releaseISO = t.releaseISO
+	Copy.date = t.date
+	Copy.delim = t.delim
+	Copy.Distro = t.Distro
+	Copy.Arch = t.Arch
+	Copy.Image = t.Image
+	Copy.Release = t.Release
+	Copy.varVals = t.varVals
+	Copy.vars = t.vars
+	Copy.build = t.build.DeepCopy()
 
-	return copy, nil
+	return Copy, nil
 }
 
 // Set sets the default templates for each distro.
@@ -251,13 +273,13 @@ func (d *distroDefaults) Set() error {
 		return err
 	}
 
-	d.Templates = map[string]*rawTemplate{}
+	d.Templates = map[Distro]*rawTemplate{}
 
 	// Generate the default settings for each distro.
 	for k, v := range s.Distro {
 		// See if the base url exists for non centos distros
-		if v.BaseURL == "" && k != "centos" {
-			err := errors.New("setDistroDefaults: " + k + " does not have its BaseURL configured.")
+		if v.BaseURL == "" && k != CentOS {
+			err := fmt.Errorf("%s requires a BaseURL, non provided.", k.String())
 			jww.CRITICAL.Println(err.Error())
 			return err
 
@@ -270,7 +292,7 @@ func (d *distroDefaults) Set() error {
 		tmp.IODirInf = dflts.IODirInf
 		tmp.PackerInf = dflts.PackerInf
 		tmp.build = dflts.build.DeepCopy()
-		tmp.Type = k
+		tmp.Distro = k
 
 		// Now update it with the distro settings.
 		tmp.BaseURL = appendSlash(v.BaseURL)
@@ -279,7 +301,7 @@ func (d *distroDefaults) Set() error {
 		d.Templates[k] = tmp
 	}
 
-	Distros.IsSet = true
+	DistroDefaults.IsSet = true
 	return nil
 }
 
@@ -425,16 +447,16 @@ func loadBuilds() error {
 // that are to be applied to the build.
 // Returns an error or nil if successful.
 func BuildDistro(a ArgsFilter) error {
-	if !Distros.IsSet {
+	if !DistroDefaults.IsSet {
 
-		if err := Distros.Set(); err != nil {
+		if err := DistroDefaults.Set(); err != nil {
 			jww.ERROR.Println(err.Error())
 			return err
 		}
 
 	}
 
-	fmt.Println("BuildDistro:\n" + json.MarshalIndentToString(Distros, "", indent))
+	fmt.Println("BuildDistro:\n" + json.MarshalIndentToString(DistroDefaults, "", indent))
 	if err := buildPackerTemplateFromDistro(a); err != nil {
 		jww.ERROR.Println(err.Error())
 		return err
@@ -483,7 +505,7 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	}
 
 	// Get the default for this distro, if one isn't found then it isn't Supported.
-	if t, err = Distros.GetTemplate(a.Distro); err != nil {
+	if t, err = DistroDefaults.GetTemplate(a.Distro); err != nil {
 		err = errors.New("buildPackerTemplateFromDistro: Cannot build a packer template from passed distro: " + a.Distro + " is not Supported. Please pass a Supported distribution.")
 		jww.ERROR.Println(err.Error())
 		return err
@@ -510,7 +532,7 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 
 	// Since distro builds don't actually have a build name, we create one
 	// out of the args used to create it.
-	t.BuildName = t.Type + "-" + t.Release + "-" + t.Arch + "-" + t.Image
+	t.BuildName = fmt.Sprintf("%s-%s-%s-%s", t.Distro.String(), t.Release, t.Arch, t.Image)
 
 	jww.TRACE.Printf("\trawtemplate: %v\n", json.MarshalIndentToString(t, "", indent))
 	pTpl := packerTemplate{}
@@ -553,9 +575,9 @@ func BuildBuilds(buildNames ...string) (string, error) {
 	// Only load supported if it hasn't been loaded. Even though LoadSupported
 	// uses a mutex to control access to prevent race conditions, no need to
 	// call it if its already loaded.
-	if !Distros.IsSet {
+	if !DistroDefaults.IsSet {
 
-		if err := Distros.Set(); err != nil {
+		if err := DistroDefaults.Set(); err != nil {
 			jww.ERROR.Println(err.Error())
 			return "", err
 		}
@@ -615,9 +637,9 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 	}
 
 	// See if the distro default exists.
-	if tpl, ok = Distros.Templates[bld.Type]; !ok {
-		err := errors.New("Requested distribution, " + bld.Type + ", is not Supported. The Packer template for the requested build could not be created.")
-		jww.ERROR.Println(err.Error())
+	if tpl, ok = DistroDefaults.Templates[bld.Distro]; !ok {
+		err := fmt.Errorf("unsupported distro: %s", bld.Distro.String())
+		jww.ERROR.Println(err)
 		doneCh <- err
 		return
 	}
@@ -638,7 +660,7 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 	bld.BuildName = buildName
 
 	// create build template() then call create packertemplate
-	tpl.build = Distros.Templates[bld.Type].build
+	tpl.build = DistroDefaults.Templates[bld.Distro].build
 	tpl.updateBuildSettings(bld)
 
 	pTpl := packerTemplate{}

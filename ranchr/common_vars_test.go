@@ -318,7 +318,7 @@ var testDistroDefaultUbuntu = &rawTemplate{
 	},
 	date:    today,
 	delim:   ":",
-	Type:    "ubuntu",
+	Distro:  Ubuntu,
 	Arch:    "amd64",
 	Image:   "server",
 	Release: "12.04",
@@ -451,7 +451,7 @@ var testDistroDefaultCentOS = &rawTemplate{
 	},
 	date:    today,
 	delim:   ":",
-	Type:    "centos",
+	Distro:  CentOS,
 	Arch:    "x86_64",
 	Image:   "minimal",
 	Release: "6",
@@ -572,7 +572,7 @@ var testBuildTest1 = &rawTemplate{
 	PackerInf: PackerInf{
 		Description: "Test build template #1",
 	},
-	Type:    "ubuntu",
+	Distro:  Ubuntu,
 	Arch:    "amd64",
 	Image:   "server",
 	Release: "1204",
@@ -661,7 +661,7 @@ var testBuildTest2 = &rawTemplate{
 	PackerInf: PackerInf{
 		Description: "Test build template #2: causes an error",
 	},
-	Type:    "ubuntuu",
+	Distro:  Unsupported,
 	Arch:    "amd64",
 	Image:   "desktop",
 	Release: "1204",
@@ -695,7 +695,7 @@ var testBuildCentOS6Salt = &rawTemplate{
 	PackerInf: PackerInf{
 		Description: "Test build template for salt provisioner using CentOS6",
 	},
-	Type: "centos",
+	Distro: CentOS,
 	build: build{
 		BuilderTypes: []string{
 			"virtualbox-iso",
@@ -732,7 +732,7 @@ var testMergedBuildTest1 = &rawTemplate{
 		BuildName: "",
 		BaseURL:   "http://releases.ubuntu.com/",
 	},
-	Type:    "ubuntu",
+	Distro:  Ubuntu,
 	Arch:    "amd64",
 	Image:   "server",
 	Release: "12.04",
@@ -832,7 +832,7 @@ var testMergedBuildTest2 = &rawTemplate{
 		BuildName: "",
 		BaseURL:   "http://releases.ubuntu.com/",
 	},
-	Type:    "ubuntu",
+	Distro:  Ubuntu,
 	Arch:    "amd64",
 	Image:   "desktop",
 	Release: "12.04",
@@ -936,7 +936,7 @@ var testMergedBuildCentOS6Salt = &rawTemplate{
 		BuildName: "",
 		BaseURL:   "",
 	},
-	Type:    "centos",
+	Distro:  CentOS,
 	Arch:    "x86_64",
 	Image:   "minimal",
 	Release: "6",
@@ -1039,13 +1039,13 @@ func setCommonTestData() {
 	if testDataSet {
 		return
 	}
-	testSupported.Distro = map[string]*distro{}
-	testSupported.Distro["ubuntu"] = testSupportedUbuntu
-	testSupported.Distro["centos"] = testSupportedCentOS
+	testSupported.Distro = map[Distro]*distro{}
+	testSupported.Distro[Ubuntu] = testSupportedUbuntu
+	testSupported.Distro[CentOS] = testSupportedCentOS
 
-	testDistroDefaults = distroDefaults{Templates: map[string]*rawTemplate{}, IsSet: true}
-	testDistroDefaults.Templates["ubuntu"] = testDistroDefaultUbuntu
-	testDistroDefaults.Templates["centos"] = testDistroDefaultCentOS
+	testDistroDefaults = distroDefaults{Templates: map[Distro]*rawTemplate{}, IsSet: true}
+	testDistroDefaults.Templates[Ubuntu] = testDistroDefaultUbuntu
+	testDistroDefaults.Templates[CentOS] = testDistroDefaultCentOS
 
 	testBuilds.Build = map[string]*rawTemplate{}
 	testBuilds.Build["test1"] = testBuildTest1
