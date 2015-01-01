@@ -3,7 +3,6 @@
 package ranchr
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -121,8 +120,8 @@ func (p *postProcessor) settingsToMap(Type string, r *rawTemplate) map[string]in
 // r.createPostProcessors creates the PostProcessors for a build.
 func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]interface{}, err error) {
 	if r.PostProcessorTypes == nil || len(r.PostProcessorTypes) <= 0 {
-		err = fmt.Errorf("no post-processors types were configured, unable to create post-processors")
-		jww.ERROR.Println(err.Error())
+		err = fmt.Errorf("unable to create post-processors: none specified")
+		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 
@@ -140,17 +139,17 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]i
 		// levels, to hard code this...which makes me...d'oh!
 		tmpVar = make([]string, 50)
 		tmpS = make(map[string]interface{})
-
-		switch pType {
-		case PostProcessorVagrant:
-			tmpS, tmpVar, err = r.createPostProccessorVagrant()
-		case PostProcessorVagrantCloud:
+		typ := PostProcessorFromString(pType)
+		switch typ {
+		case Vagrant:
+			tmpS, tmpVar, err = r.createVagrant()
+		case VagrantCloud:
 			// Create the settings
-			tmpS, tmpVar, err = r.createPostProcessorVagrantCloud()
+			tmpS, tmpVar, err = r.createVagrantCloud()
 
 		default:
-			err = errors.New("the requested post-processor, '" + pType + "', is not supported")
-			jww.ERROR.Println(err.Error())
+			err = fmt.Errorf("%s is not supported", pType)
+			jww.ERROR.Println(err)
 			return nil, nil, err
 		}
 
@@ -162,12 +161,11 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]i
 	return p, vars, nil
 }
 
-// createPostProcessorVagrant() creates a map of settings for Packer's Vagrant
-// post-processor. Any values that aren't supported by the Vagrant post-
-// processor are ignored.
-func (r *rawTemplate) createPostProccessorVagrant() (settings map[string]interface{}, vars []string, err error) {
+// createVagrant() creates a map of settings for Packer's Vagrant post-processor.
+// Any values that aren't supported by the Vagrant post-processor are ignored.
+func (r *rawTemplate) createVagrant() (settings map[string]interface{}, vars []string, err error) {
 	settings = make(map[string]interface{})
-	settings["type"] = PostProcessorVagrant
+	settings["type"] = Vagrant
 
 	jww.TRACE.Printf("rawTemplate.createPostProcessorVagrant-rawtemplate\n")
 
@@ -175,7 +173,7 @@ func (r *rawTemplate) createPostProccessorVagrant() (settings map[string]interfa
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
 	var k, v string
-	for _, s := range r.PostProcessors[PostProcessorVagrant].Settings {
+	for _, s := range r.PostProcessors[Vagrant.String()].Settings {
 		k, v = parseVar(s)
 		switch k {
 		case "compression_level", "keep_input_artifact", "output":
@@ -186,7 +184,7 @@ func (r *rawTemplate) createPostProccessorVagrant() (settings map[string]interfa
 	}
 
 	// Process the Arrays.
-	for name, val := range r.PostProcessors[PostProcessorVagrant].Arrays {
+	for name, val := range r.PostProcessors[Vagrant.String()].Arrays {
 		jww.TRACE.Printf("Arrays:\t%v\t%v\n\n", name, val)
 		array := deepcopy.Iface(val)
 		if array != nil {
@@ -196,9 +194,9 @@ func (r *rawTemplate) createPostProccessorVagrant() (settings map[string]interfa
 	return settings, vars, err
 }
 
-func (r *rawTemplate) createPostProcessorVagrantCloud() (settings map[string]interface{}, vars []string, err error) {
+func (r *rawTemplate) createVagrantCloud() (settings map[string]interface{}, vars []string, err error) {
 	settings = make(map[string]interface{})
-	settings["type"] = PostProcessorVagrantCloud
+	settings["type"] = VagrantCloud
 
 	return nil, nil, err
 }

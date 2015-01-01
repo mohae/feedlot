@@ -142,17 +142,39 @@ func BuilderFromString(s string) Builder {
 	return UnsupportedBuilder
 }
 
-var (
-	PostProcessorVagrant      = "vagrant"
-	PostProcessorVagrantCloud = "vagrant-cloud"
-	PostProcessorVSphere      = "vsphere"
+const (
+	UnsupportedPostProcessor PostProcessor = iota
+	Vagrant
+	VagrantCloud
+	VSphere
 )
 
-/*
-	"vagrant"	// PostProcessorVagrant is the name of the Vagrant PostProcessor
-	"vagrant-cloud"	// PostProcessorVagrant is the name of the Vagrant CloudPostProcessor
-	"vsphere"	// PostProcessorVSphere is the name of the VSphere PostProcessor
-*/
+type PostProcessor int
+
+var postProcessors = [...]string{
+	"unsupported post-processor",
+	"vagrant",       // PostProcessorVagrant is the name of the Vagrant PostProcessor
+	"vagrant-cloud", // PostProcessorVagrant is the name of the Vagrant CloudPostProcessor
+	"vsphere",       // PostProcessorVSphere is the name of the VSphere PostProcessor
+}
+
+func (p PostProcessor) String() string { return postProcessors[p] }
+
+// PostProcessorFromString returns the PostProcessor constant for the passed
+// string, or unsupported. All incoming strings are normalized to lowercase.
+func PostProcessorFromString(s string) PostProcessor {
+	s = strings.ToLower(s)
+	switch s {
+	case "vagrant":
+		return Vagrant
+	case "vagrant-cloud":
+		return VagrantCloud
+	case "vsphere":
+		return VSphere
+	}
+	return UnsupportedPostProcessor
+}
+
 var (
 	// ProvisionerAnsibleLocal is the name of the Ansible Provisioner
 	ProvisionerAnsibleLocal = "ansible-local"
