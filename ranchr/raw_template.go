@@ -2,8 +2,8 @@ package ranchr
 
 import (
 	"os"
-	"strings"
 	"reflect"
+	"strings"
 	"time"
 
 	_ "github.com/mohae/customjson"
@@ -231,22 +231,22 @@ func (r *rawTemplate) ScriptNames() []string {
 		return nil
 	}
 
-//	tmp := reflect.ValueOf(r.Provisioners[ProvisionerShell].Arrays[scripts])
+	//	tmp := reflect.ValueOf(r.Provisioners[ProvisionerShell].Arrays[scripts])
 
-//	var s interface{}
+	//	var s interface{}
 	scrpts := deepcopy.InterfaceToSliceStrings(r.Provisioners[ProvisionerShell].Arrays[scripts])
-/*	switch tmp.Type() {
-	case TypeOfSliceInterfaces:
-		s = deepcopy.Iface(r.Provisioners[ProvisionerShell].Arrays[scripts]).([]interface{})
-		names = make([]string, len(s.([]interface{})))
-	case TypeOfSliceStrings:
-		s = deepcopy.Iface(r.Provisioners[ProvisionerShell].Arrays[scripts]).([]string)
-		names = make([]string, len(s.([]string)))
-	}
+	/*	switch tmp.Type() {
+		case TypeOfSliceInterfaces:
+			s = deepcopy.Iface(r.Provisioners[ProvisionerShell].Arrays[scripts]).([]interface{})
+			names = make([]string, len(s.([]interface{})))
+		case TypeOfSliceStrings:
+			s = deepcopy.Iface(r.Provisioners[ProvisionerShell].Arrays[scripts]).([]string)
+			names = make([]string, len(s.([]string)))
+		}
 
-*/
+	*/
 	names := make([]string, len(scrpts))
-	
+
 	for i, script := range scrpts {
 		//explode on "/"
 		so := reflect.ValueOf(script)
@@ -256,7 +256,7 @@ func (r *rawTemplate) ScriptNames() []string {
 	}
 
 	jww.DEBUG.Println("rawTemplate.ScriptNames: exit")
-//	st := deepcopy.InterfaceToSliceStrings(s)
+	//	st := deepcopy.InterfaceToSliceStrings(s)
 	return names
 
 }
@@ -330,7 +330,7 @@ func (r *rawTemplate) ISOInfo(builderType string, settings []string) error {
 	}
 
 	switch r.Type {
-	case SupportedUbuntu:
+	case Ubuntu:
 		r.releaseISO = &ubuntu{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: checksumType}, Arch: r.Arch, Distro: r.Type, Image: r.Image, Release: r.Release}}
 		r.releaseISO.SetISOInfo()
 
@@ -340,7 +340,7 @@ func (r *rawTemplate) ISOInfo(builderType string, settings []string) error {
 			return err
 		}
 
-	case SupportedCentOS:
+	case CentOS:
 		r.releaseISO = &centOS{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: checksumType}, Arch: r.Arch, Distro: r.Type, Image: r.Image, Release: r.Release}}
 		r.releaseISO.SetISOInfo()
 

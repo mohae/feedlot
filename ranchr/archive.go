@@ -2,7 +2,7 @@ package ranchr
 
 import (
 	"compress/gzip"
-	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path"
@@ -60,20 +60,20 @@ func (d *directory) DirWalk(dirPath string) error {
 	exists, err := pathExists(dirPath)
 
 	if err != nil {
-		jww.ERROR.Println(err.Error())
+		jww.ERROR.Println(err)
 		return err
 	}
 
 	if !exists {
-		err = errors.New("Unable to create a list of directory contents because the received path, " + dirPath + ", does not exist")
-		jww.ERROR.Println(err.Error())
+		err = fmt.Errorf("%s does not exist", dirPath)
+		jww.ERROR.Println(err)
 		return err
 	}
 
 	fullPath, err := filepath.Abs(dirPath)
 
 	if err != nil {
-		jww.ERROR.Println(err.Error())
+		jww.ERROR.Println(err)
 		return err
 	}
 
@@ -95,13 +95,13 @@ func (d *directory) addFilename(root string, p string, fi os.FileInfo, err error
 	var exists bool
 	exists, err = pathExists(p)
 	if err != nil {
-		jww.ERROR.Println(err.Error())
+		jww.ERROR.Println(err)
 		return err
 	}
 
 	if !exists {
-		err = errors.New("The passed filename, " + p + ", does not exist.")
-		jww.ERROR.Println(err.Error())
+		err = fmt.Errorf("%s does not exist.", p)
+		jww.ERROR.Println(err)
 		return err
 	}
 
@@ -109,7 +109,7 @@ func (d *directory) addFilename(root string, p string, fi os.FileInfo, err error
 	rel, err := filepath.Rel(root, p)
 
 	if err != nil {
-		jww.ERROR.Println(err.Error())
+		jww.ERROR.Println(err)
 		return err
 	}
 
@@ -131,7 +131,7 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 	file, err := os.Open(filename)
 
 	if err != nil {
-		jww.ERROR.Println(err.Error())
+		jww.ERROR.Println(err)
 		return err
 	}
 	defer file.Close()
@@ -139,7 +139,7 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 	var fileStat os.FileInfo
 
 	if fileStat, err = file.Stat(); err != nil {
-		jww.ERROR.Println(err.Error())
+		jww.ERROR.Println(err)
 		return err
 	}
 
@@ -158,13 +158,13 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 
 	// Write the file header to the tarball.
 	if err := tW.WriteHeader(tarHeader); err != nil {
-		jww.ERROR.Println(err.Error())
+		jww.ERROR.Println(err)
 		return err
 	}
 
 	// Add the file to the tarball.
 	if _, err := io.Copy(tW, file); err != nil {
-		jww.ERROR.Println(err.Error())
+		jww.ERROR.Println(err)
 		return err
 	}
 
@@ -183,19 +183,19 @@ func (a *Archive) priorBuild(p string, t string) error {
 			return nil
 		}
 
-		jww.ERROR.Println(err.Error())
+		jww.ERROR.Println(err)
 		return err
 	}
 
 	// Archive the old artifacts.
 	if err := a.archivePriorBuild(p, t); err != nil {
-		jww.ERROR.Println(err.Error())
+		jww.ERROR.Println(err)
 		return err
 	}
 
 	// Delete the old artifacts.
 	if err := a.deletePriorBuild(p); err != nil {
-		jww.ERROR.Println(err.Error())
+		jww.ERROR.Println(err)
 		return err
 	}
 
@@ -207,7 +207,7 @@ func (a *Archive) archivePriorBuild(p string, t string) error {
 
 	// Get a list of directory contents
 	if err := a.DirWalk(p); err != nil {
-		jww.ERROR.Println(err.Error())
+		jww.ERROR.Println(err)
 		return err
 	}
 
@@ -231,7 +231,7 @@ func (a *Archive) archivePriorBuild(p string, t string) error {
 	tBall, err := os.Create(tarBallName)
 
 	if err != nil {
-		jww.CRITICAL.Println(err.Error())
+		jww.CRITICAL.Println(err)
 		return err
 	}
 	// Close the file with error handling
@@ -256,7 +256,7 @@ func (a *Archive) archivePriorBuild(p string, t string) error {
 
 	for i, f = range a.Files {
 		if err := a.addFile(tW, appendSlash(relPath)+f.p); err != nil {
-			jww.CRITICAL.Println(err.Error())
+			jww.CRITICAL.Println(err)
 			return err
 		}
 	}

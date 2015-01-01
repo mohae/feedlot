@@ -5,7 +5,7 @@ package main
 import (
 	"os"
 
-	"github.com/mitchellh/cli"
+	"github.com/mohae/cli"
 	"github.com/mohae/rancher/command"
 )
 
@@ -23,14 +23,6 @@ func init() {
 		"run": func() (cli.Command, error) {
 			return &command.RunCommand{
 				UI: ui,
-			}, nil
-		},
-		"version": func() (cli.Command, error) {
-			return &command.VersionCommand{
-				Revision:          GitCommit,
-				Version:           Version,
-				VersionPrerelease: VersionPrerelease,
-				UI:                ui,
 			}, nil
 		},
 	}

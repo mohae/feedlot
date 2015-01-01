@@ -27,45 +27,43 @@ import (
 )
 
 var (
-	appName = "RANCHER"
-
-	// EnvRancerhFiile is the name of the environment variable name for Rancher's config file.
-	EnvRancherFile = appName + "_CONFIG"
+	// EnvRancherFile is the name of the environment variable name for Rancher's config file.
+	EnvRancherFile = "RANCHER_CONFIG"
 
 	// EnvBuildsFile is the name of the environment variable name for the builds file.
-	EnvBuildsFile = appName + "_BUILDS_FILE"
+	EnvBuildsFile = "RANCHER_BUILDS_FILE"
 
 	// EnvBuildListsFile is the name of the environment variable name for the build lists file.
-	EnvBuildListsFile = appName + "_BUILD_LISTS_FILE"
+	EnvBuildListsFile = "RANCHER_BUILD_LISTS_FILE"
 
 	// EnvDefaultsFile is the name of the environment variable name for the defaults file.
-	EnvDefaultsFile = appName + "_DEFAULTS_FILE"
+	EnvDefaultsFile = "RANCHER_DEFAULTS_FILE"
 
 	// EnvSupportedFile is the name of the environment variable name for the supported file.
-	EnvSupportedFile = appName + "_SUPPORTED_FILE"
+	EnvSupportedFile = "RANCHER_SUPPORTED_FILE"
 
 	// EnvParamDelimStart is the name of the environment variable name for the delimter that starts Rancher variables.
-	EnvParamDelimStart = appName + "_PARAM_DELIM_START"
+	EnvParamDelimStart = "RANCHER_PARAM_DELIM_START"
 
 	// EnvLogToFile is the name of the environment variable name for whether or not Rancher logs to a file.
-	EnvLogToFile = appName + "_LOG_TO_FILE"
+	EnvLogToFile = "RANCHER_LOG_TO_FILE"
 
 	// EnvLogFilename is the name of the environment variable name for the log filename, if logging to file is enabled..
-	EnvLogFilename = appName + "_LOG_FILENAME"
+	EnvLogFilename = "RANCHER_LOG_FILENAME"
 
 	// EnvLogLevelFile is the name of the environment variable name for the file output's log level.
-	EnvLogLevelFile = appName + "_LOG_LEVEL_FILE"
+	EnvLogLevelFile = "RANCHER_LOG_LEVEL_FILE"
 
 	// EnvLogLevelStdout is the name of the environment variable name for stdout's log level.
-	EnvLogLevelStdout = appName + "_LOG_LEVEL_STDOUT"
+	EnvLogLevelStdout = "RANCHER_LOG_LEVEL_STDOUT"
 )
 
 var (
-	//SupportedUbuntu is the name of the ubuntu supported distro.
-	SupportedUbuntu = "ubuntu"
+	//Ubuntu is the name of the ubuntu supported distro.
+	Ubuntu = "ubuntu"
 
-	//SupportedCentOS is the name of the centOS supported distro.
-	SupportedCentOS = "centos"
+	//CentOS is the name of the centOS supported distro.
+	CentOS = "centos"
 )
 
 var (
@@ -164,7 +162,7 @@ var (
 	VMSettings = "vm_settings"
 
 	TypeOfSliceInterfaces = reflect.TypeOf([]interface{}(nil))
-	TypeOfSliceStrings = reflect.TypeOf([]string(nil))
+	TypeOfSliceStrings    = reflect.TypeOf([]string(nil))
 )
 
 var Builds *builds
