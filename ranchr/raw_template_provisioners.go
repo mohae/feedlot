@@ -3,6 +3,7 @@
 package ranchr
 
 import (
+	"errors"
 	"fmt"
 	_ "reflect"
 	"strings"
@@ -31,47 +32,39 @@ func (r *rawTemplate) updateProvisioners(new map[string]*provisioner) {
 	// Convert the existing provisioners to interface.
 	var ifaceOld map[string]interface{} = make(map[string]interface{}, len(r.Provisioners))
 	ifaceOld = DeepCopyMapStringPProvisioner(r.Provisioners)
-
 	// Convert the new provisioners to interface.
 	var ifaceNew map[string]interface{} = make(map[string]interface{}, len(new))
 	ifaceNew = DeepCopyMapStringPProvisioner(new)
-
 	// Get the all keys from both maps
 	var keys []string
 	keys = mergedKeysFromMaps(ifaceOld, ifaceNew)
 	p := &provisioner{}
-
 	if r.Provisioners == nil {
 		r.Provisioners = map[string]*provisioner{}
 	}
-
 	// Copy: if the key exists in the new provisioners only.
 	// Ignore: if the key does not exist in the new provisioners.
 	// Merge: if the key exists in both the new and old provisioners.
 	for _, v := range keys {
 		// If it doesn't exist in the old builder, add it.
-		if _, ok := r.Provisioners[v]; !ok {
+		_, ok := r.Provisioners[v]
+		if !ok {
 			r.Provisioners[v] = new[v].DeepCopy()
 			continue
 		}
-
 		// If the element for this key doesn't exist, skip it.
-		if _, ok := new[v]; !ok {
+		_, ok = new[v]
+		if !ok {
 			continue
 		}
-
 		p = r.Provisioners[v].DeepCopy()
-
 		if p == nil {
 			p = &provisioner{templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
 		}
-
 		p.mergeSettings(new[v].Settings)
 		p.mergeArrays(new[v].Arrays)
 		r.Provisioners[v] = p
 	}
-
-	return
 }
 
 // Go through all of the Settings and convert them to a map. Each setting
@@ -82,7 +75,6 @@ func (p *provisioner) settingsToMap(Type string, r *rawTemplate) map[string]inte
 	var v interface{}
 	m := make(map[string]interface{}, len(p.Settings))
 	m["type"] = Type
-
 	for _, s := range p.Settings {
 		k, v = parseVar(s)
 
@@ -109,8 +101,8 @@ func (p *provisioner) settingsToMap(Type string, r *rawTemplate) map[string]inte
 // r.createProvisioner creates the provisioners for a build.
 func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]interface{}, err error) {
 	if r.ProvisionerTypes == nil || len(r.ProvisionerTypes) <= 0 {
-		err = fmt.Errorf("no provisioners types were configured, unable to create provisioner")
-		jww.ERROR.Println(err.Error())
+		err = errors.New("unable to create provisioners: none specified")
+		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 
@@ -118,7 +110,6 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 	var tmpS map[string]interface{}
 	var ndx int
 	p = make([]interface{}, len(r.ProvisionerTypes))
-
 	// Generate the postProcessor for each postProcessor type.
 	for _, pType := range r.ProvisionerTypes {
 		jww.TRACE.Println(pType)
@@ -132,13 +123,10 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 		switch typ {
 		case Shell:
 			tmpS, tmpVar, err = r.createShellProvisioner()
-
 		case File:
 			tmpS, tmpVar, err = r.createFileProvisioner()
-
 		case AnsibleLocal:
 			tmpS, tmpVar, err = r.createAnsibleLocalProvisioner()
-
 		case SaltMasterless:
 			tmpS, tmpVar, err = r.createSaltMasterlessProvisioner()
 			/*
@@ -156,12 +144,10 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 			jww.ERROR.Println(err)
 			return nil, nil, err
 		}
-
 		p[ndx] = tmpS
 		ndx++
 		vrbls = append(vrbls, tmpVar...)
 	}
-
 	return p, vars, nil
 }
 
@@ -223,7 +209,7 @@ func (r *rawTemplate) createSaltMasterlessProvisioner() (settings map[string]int
 	}
 
 	// salt-masterless does not have any arrays to support
-	return settings, vars, err
+	return settings, vars, nil
 }
 
 // createShellProvisioner() creates a map of settings for Packer's shell
@@ -258,7 +244,7 @@ func (r *rawTemplate) createShellProvisioner() (settings map[string]interface{},
 		}
 		jww.TRACE.Printf("\t%v\t%v\n", name, val)
 	}
-	return settings, vars, err
+	return settings, vars, nil
 }
 
 // createFileProvisioner() creates a map of settings for Packer's file uploads
@@ -292,7 +278,7 @@ func (r *rawTemplate) createFileProvisioner() (settings map[string]interface{}, 
 		}
 		jww.TRACE.Printf("\t%v\t%v\n", name, val)
 	}
-	return settings, vars, err
+	return settings, vars, nil
 }
 
 // deepcopy.MapStringPProvisioners makes a deep copy of each builder passed and

@@ -10,6 +10,7 @@ package ranchr
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"sync"
 
@@ -24,22 +25,17 @@ type build struct {
 	// Targeted builders: the values are consistent with Packer's, e.g.
 	// `virtualbox.iso` is used for VirtualBox.
 	BuilderTypes []string `toml:"builder_types"`
-
 	// A map of builder configuration. There should always be a `common`
 	// builder, which has settings common to both VMWare and VirtualBox.
 	Builders map[string]*builder `toml:"builders"`
-
 	// Targeted post-processors: the values are consistent with Packer's, e.g.
 	// `vagrant` is used for Vagrant.
 	PostProcessorTypes []string `toml:"post_processor_types"`
-
 	// A map of post-processor configurations.
 	PostProcessors map[string]*postProcessor `toml:"post_processors"`
-
 	// Targeted provisioners: the values are consistent with Packer's, e.g.
 	// `shell` is used for shell.
 	ProvisionerTypes []string `toml:"provisioner_types"`
-
 	// A map of provisioner configurations.
 	Provisioners map[string]*provisioner `toml:"provisioners"`
 }
@@ -54,31 +50,24 @@ func (b *build) DeepCopy() build {
 		ProvisionerTypes:   []string{},
 		Provisioners:       map[string]*provisioner{},
 	}
-
 	if b.BuilderTypes != nil || len(b.BuilderTypes) > 0 {
 		copy.BuilderTypes = b.BuilderTypes
 	}
-
 	if b.PostProcessorTypes != nil || len(b.PostProcessorTypes) > 0 {
 		copy.PostProcessorTypes = b.PostProcessorTypes
 	}
-
 	if b.ProvisionerTypes != nil || len(b.ProvisionerTypes) > 0 {
 		copy.ProvisionerTypes = b.ProvisionerTypes
 	}
-
 	for k, v := range b.Builders {
 		copy.Builders[k] = v.DeepCopy()
 	}
-
 	for k, v := range b.PostProcessors {
 		copy.PostProcessors[k] = v.DeepCopy()
 	}
-
 	for k, v := range b.Provisioners {
 		copy.Provisioners[k] = v.DeepCopy()
 	}
-
 	return *copy
 }
 
@@ -86,7 +75,6 @@ func (b *build) DeepCopy() build {
 type templateSection struct {
 	// Settings are string settings in "key=value" format.
 	Settings []string
-
 	// Arrays are the string array settings.
 	Arrays map[string]interface{}
 }
@@ -96,7 +84,6 @@ func (t *templateSection) DeepCopy(new templateSection) {
 	//Deep Copy of settings
 	t.Settings = make([]string, len(new.Settings))
 	copy(t.Settings, new.Settings)
-
 	// make a deep copy of the Arrays(map[string]interface)
 	t.Arrays = deepcopy.Iface(new.Arrays).(map[string]interface{})
 }
@@ -106,22 +93,17 @@ func (t *templateSection) mergeArrays(old map[string]interface{}, new map[string
 	if old == nil && new == nil {
 		return nil
 	}
-
 	if old == nil {
 		return new
 	}
-
 	if new == nil {
 		return old
 	}
-
 	// both are populated, merge them.
 	merged := map[string]interface{}{}
-
 	// Get the all keys from both maps
 	var keys []string
 	keys = mergedKeysFromMaps(old, new)
-
 	// Process using the keys.
 	for _, v := range keys {
 		// If the element for this key doesn't exist in new, add old.
@@ -129,11 +111,9 @@ func (t *templateSection) mergeArrays(old map[string]interface{}, new map[string
 			merged[v] = old[v]
 			continue
 		}
-
 		// Otherwise use the new value
 		merged[v] = new[v]
 	}
-
 	return merged
 }
 
@@ -163,15 +143,12 @@ func (b *builder) mergeVMSettings(new []string) []string {
 	if new == nil {
 		return nil
 	}
-
 	var merged []string
 	old := deepcopy.InterfaceToSliceStrings(b.Arrays[VMSettings])
 	merged = mergeSettingsSlices(old, new)
-
 	if b.Arrays == nil {
 		b.Arrays = map[string]interface{}{}
 	}
-
 	return merged
 }
 
@@ -194,12 +171,10 @@ func (p *postProcessor) mergeSettings(new []string) {
 	if new == nil {
 		return
 	}
-
 	if p.Settings == nil {
 		p.Settings = new
 		return
 	}
-
 	// merge the keys
 	p.Settings = mergeSettingsSlices(p.Settings, new)
 }
@@ -229,12 +204,10 @@ func (p *provisioner) mergeSettings(new []string) {
 	if new == nil {
 		return
 	}
-
 	if p.Settings == nil {
 		p.Settings = new
 		return
 	}
-
 	// merge the keys
 	p.Settings = mergeSettingsSlices(p.Settings, new)
 }
@@ -318,31 +291,21 @@ type defaults struct {
 // when it hasn't been loaded.
 func (d *defaults) LoadOnce() error {
 	var err error
-
 	loadFunc := func() {
 		name := os.Getenv(EnvDefaultsFile)
-
 		if name == "" {
-			err = errors.New("could not retrieve the default Settings because the " + EnvDefaultsFile + " environment variable was not set. Either set it or check your rancher.cfg setting")
+			err = fmt.Errorf("unable to retrieve the default settings: %q was not set; check your 'rancher.cfg'")
+			jww.CRITICAL.Print(err)
+			return
+		}
+		_, err = toml.DecodeFile(name, d)
+		if err != nil {
 			jww.CRITICAL.Print(err.Error())
 			return
 		}
-
-		if _, err = toml.DecodeFile(name, d); err != nil {
-			jww.CRITICAL.Print(err.Error())
-			return
-		}
-
 		return
 	}
-
 	d.load.Do(loadFunc)
-
-	// Don't need to log this as the loadFunc logged already logged it
-	if err != nil {
-		return err
-	}
-
 	d.loaded = true
 	return nil
 }
@@ -363,12 +326,9 @@ func (i *BuildInf) update(new BuildInf) {
 	if new.Name != "" {
 		i.Name = new.Name
 	}
-
 	if new.BuildName != "" {
 		i.BuildName = new.BuildName
 	}
-
-	return
 }
 
 // IODirInf is used to store information about where Rancher can find and put
@@ -378,23 +338,17 @@ func (i *BuildInf) update(new BuildInf) {
 type IODirInf struct {
 	// The directory in which the command files are located
 	CommandsSrcDir string `toml:"commands_src_dir"`
-
 	// The directory that will be used for the HTTP setting.
 	HTTPDir string `toml:"http_dir"`
-
 	// The directory that is the source for files to be copied to the HTTP
 	// directory, HTTPDir
 	HTTPSrcDir string `toml:"http_src_dir"`
-
 	// The directory that the output artifacts will be written to.
 	OutDir string `toml:"out_dir"`
-
 	// The directory that scripts for the Packer template will be copied to.
 	ScriptsDir string `toml:"scripts_dir"`
-
 	// The directory that contains the scripts that will be copied.
 	ScriptsSrcDir string `toml:"scripts_src_dir"`
-
 	// The directory that contains the source files for this build.
 	SrcDir string `toml:"src_dir"`
 }
@@ -403,72 +357,58 @@ func (i *IODirInf) update(new IODirInf) {
 	if new.CommandsSrcDir != "" {
 		i.CommandsSrcDir = appendSlash(new.CommandsSrcDir)
 	}
-
 	if new.HTTPDir != "" {
 		i.HTTPDir = appendSlash(new.HTTPDir)
 	}
-
 	if new.HTTPSrcDir != "" {
 		i.HTTPSrcDir = appendSlash(new.HTTPSrcDir)
 	}
-
 	if new.OutDir != "" {
 		i.OutDir = appendSlash(new.OutDir)
 	}
-
 	if new.ScriptsDir != "" {
 		i.ScriptsDir = appendSlash(new.ScriptsDir)
 	}
-
 	if new.ScriptsSrcDir != "" {
 		i.ScriptsSrcDir = appendSlash(new.ScriptsSrcDir)
 	}
-
 	if new.SrcDir != "" {
 		i.SrcDir = appendSlash(new.SrcDir)
 	}
-
-	return
 }
 
 // check to see if the dirinf is set
 func (i *IODirInf) check() error {
 	if i.HTTPDir == "" {
-		err := errors.New("ioDirInf.Check: HTTPDir directory not set")
-		jww.ERROR.Print(err.Error())
+		err := errors.New("HTTPDir directory not set")
+		jww.ERROR.Print(err)
 		return err
 	}
-
 	if i.HTTPSrcDir == "" {
-		err := errors.New("ioDirInf.Check: HTTPSrcDir directory not set")
-		jww.ERROR.Print(err.Error())
+		err := errors.New("HTTPSrcDir directory not set")
+		jww.ERROR.Print(err)
 		return err
 	}
-
 	if i.OutDir == "" {
-		err := errors.New("ioDirInf.Check: output directory not set")
-		jww.ERROR.Print(err.Error())
+		err := errors.New("output directory not set")
+		jww.ERROR.Print(err)
 		return err
 	}
-
 	if i.SrcDir == "" {
-		err := errors.New("ioDirInf.Check: SrcDir directory not set")
-		jww.ERROR.Print(err.Error())
+		err := errors.New("SrcDir directory not set")
+		jww.ERROR.Print(err)
 		return err
 	}
-
 	if i.ScriptsDir == "" {
-		err := errors.New("ioDirInf.Check: ScriptsDir directory not set")
+		err := errors.New("ScriptsDir directory not set")
 		jww.ERROR.Print(err.Error())
 		return err
 	}
-
 	if i.ScriptsSrcDir == "" {
-		err := errors.New("ioDirInf.Check: ScriptsSrcDir directory not set")
+		err := errors.New("ScriptsSrcDir directory not set")
 		jww.ERROR.Print(err.Error())
 		return err
 	}
-
 	return nil
 }
 
@@ -485,12 +425,9 @@ func (i *PackerInf) update(new PackerInf) {
 	if new.MinPackerVersion != "" {
 		i.MinPackerVersion = new.MinPackerVersion
 	}
-
 	if new.Description != "" {
 		i.Description = new.Description
 	}
-
-	return
 }
 
 // Struct to hold the details of supported distros. From this information a
@@ -503,23 +440,18 @@ type distro struct {
 	IODirInf
 	PackerInf
 	BuildInf
-
 	// The supported Architectures, which can differ per distro. The labels can also
 	// differ, e.g. amd64 and x86_64.
 	Arch []string `toml:"Arch"`
-
 	// Supported iso Images, e.g. server, minimal, etc.
 	Image []string `toml:"Image"`
-
 	// Supported Releases: the supported Releases are the Releases available for
 	// download from that distribution's download page. Archived and unsupported
 	// Releases are not used.
 	Release []string `toml:"Release"`
-
 	// The default Image configuration for this distribution. This usually consists of
 	// things like Release, Architecture, Image type, etc.
 	DefImage []string `toml:"default_Image"`
-
 	// The configurations needed to generate the default settings for a build for this
 	// distribution.
 	build
@@ -539,33 +471,23 @@ type supported struct {
 // Packer templates. When loaded, it sets the loaded boolean so that it only
 // needs to be called when it hasn't been loaded.
 func (s *supported) LoadOnce() error {
-	var err error
-
 	loadFunc := func() {
 		name := os.Getenv(EnvSupportedFile)
-
 		if name == "" {
-			err = errors.New("could not retrieve the Supported information because the " + EnvSupportedFile + " environment variable was not set. Either set it or check your rancher.cfg setting")
-			jww.CRITICAL.Print(err.Error())
+			err := fmt.Errorf("%s not set, unable to retrieve the Supported information", EnvSupportedFile)
+			jww.CRITICAL.Print(err)
 			return
 		}
-
-		if _, err = toml.DecodeFile(name, &s); err != nil {
-			jww.CRITICAL.Print(err.Error())
+		_, err := toml.DecodeFile(name, &s)
+		if err != nil {
+			jww.CRITICAL.Print(err)
 			return
 		}
-
 		s.loaded = true
 		return
 	}
 
 	s.load.Do(loadFunc)
-
-	// Don't need to log the error as loadFunc already did it.
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -582,32 +504,22 @@ type builds struct {
 // be called when it hasn't been loaded.
 func (b *builds) LoadOnce() error {
 	var err error
-
 	loadFunc := func() {
 		name := os.Getenv(EnvBuildsFile)
-
 		if name == "" {
-			err = errors.New("could not retrieve the Builds configurations because the " + EnvBuildsFile + " environment variable was not set. Either set it or check your rancher.cfg setting")
-			jww.CRITICAL.Print(err.Error())
+			err = fmt.Errorf("%s not set, unable to retrieve the Build configurations", EnvBuildsFile)
+			jww.CRITICAL.Print(err)
 			return
 		}
-
-		if _, err = toml.DecodeFile(name, &b); err != nil {
-			jww.CRITICAL.Print(err.Error())
+		_, err = toml.DecodeFile(name, &b)
+		if err != nil {
+			jww.CRITICAL.Print(err)
 			return
 		}
-
 		b.loaded = true
 		return
 	}
-
 	b.load.Do(loadFunc)
-
-	// Don't need to log the error as loadFunc already handled that.
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -625,17 +537,14 @@ type list struct {
 func (b *buildLists) Load() error {
 	// Load the build lists.
 	name := os.Getenv(EnvBuildListsFile)
-
 	if name == "" {
-		err := errors.New("could not retrieve the BuildLists file because the " + EnvBuildListsFile + " environment variable was not set. Either set it or check your rancher.cfg setting")
-		jww.ERROR.Print(err.Error())
+		err := fmt.Errorf("%s not set, unable to retrieve the BuildLists file", EnvBuildListsFile)
+		jww.ERROR.Print(err)
 		return err
 	}
-
 	if _, err := toml.DecodeFile(name, &b); err != nil {
-		jww.ERROR.Print(err.Error())
+		jww.ERROR.Print(err)
 		return err
 	}
-
 	return nil
 }

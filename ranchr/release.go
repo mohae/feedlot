@@ -83,14 +83,16 @@ func (u *ubuntu) setChecksum() error {
 	var page string
 	var err error
 
-	if page, err = getStringFromURL(appendSlash(u.BaseURL) + appendSlash(u.Release) + strings.ToUpper(u.ChecksumType) + "SUMS"); err != nil {
-		jww.ERROR.Println(err.Error())
+	page, err = getStringFromURL(appendSlash(u.BaseURL) + appendSlash(u.Release) + strings.ToUpper(u.ChecksumType) + "SUMS")
+	if err != nil {
+		jww.ERROR.Println(err)
 		return err
 	}
 
 	// Now that we have a page...we need to find the checksum and set it
-	if u.Checksum, err = u.findChecksum(page); err != nil {
-		jww.ERROR.Println(err.Error())
+	u.Checksum, err = u.findChecksum(page)
+	if err != nil {
+		jww.ERROR.Println(err)
 		return err
 	}
 
@@ -121,8 +123,8 @@ func (u *ubuntu) setISOURL() error {
 //	if the first one fails to find a match.
 func (u *ubuntu) findChecksum(page string) (string, error) {
 	if page == "" {
-		err := errors.New("the string passed to ubuntu.findChecksum(isoName string) was empty; unable to process request")
-		jww.ERROR.Println(err.Error())
+		err := fmt.Errorf("page to parse was empty; unable to process request for %s", u.Name)
+		jww.ERROR.Println(err)
 		return "", err
 	}
 
@@ -135,8 +137,8 @@ func (u *ubuntu) findChecksum(page string) (string, error) {
 		pos = strings.Index(page, ".iso")
 
 		if pos < 0 {
-			err := errors.New("Unable to find ISO information while looking for the release string on the Ubuntu checksums page.")
-			jww.ERROR.Println(err.Error())
+			err := errors.New("unable to find ISO information while looking for the release string on the Ubuntu checksums page.")
+			jww.ERROR.Println(err)
 			return "", err
 		}
 
@@ -146,8 +148,8 @@ func (u *ubuntu) findChecksum(page string) (string, error) {
 		// 3 is just an arbitrarily small number as there should always
 		// be more than 3 elements in the split slice.
 		if len(tmpSl) < 3 {
-			err := errors.New("Unable to parse release information on the Ubuntu checksum page.")
-			jww.ERROR.Println(err.Error())
+			err := fmt.Errorf("unable to parse release information for %s", u.Name)
+			jww.ERROR.Println(err)
 			return "", err
 		}
 
@@ -156,7 +158,7 @@ func (u *ubuntu) findChecksum(page string) (string, error) {
 		pos = strings.Index(page, u.Name)
 
 		if pos < 0 {
-			err := errors.New("Unable to retrieve checksum while looking for " + u.Name + " on the Ubuntu checksums page.")
+			err := fmt.Errorf("unable to find %s's checksum", u.Name)
 			jww.ERROR.Println(err.Error())
 			return "", err
 		}
@@ -181,14 +183,13 @@ func (u *ubuntu) findChecksum(page string) (string, error) {
 	return u.Checksum, nil
 }
 
+// setName() sets the name of the iso for the release specified.
 func (u *ubuntu) setName() {
 	// ReleaseFull is set on LTS, otherwise just set it equal to the Release.
 	if u.ReleaseFull == "" {
 		u.ReleaseFull = u.Release
 	}
-	u.Name = "ubuntu-" + u.ReleaseFull + "-" + u.Image + "-" + u.Arch + ".iso"
-
-	return
+	u.Name = fmt.Sprintf("ubuntu-%s-%s-%s.iso", u.ReleaseFull, u.Image, u.Arch)
 }
 
 // getOSType returns the OSType string for the provided builder. The OS Type
@@ -196,27 +197,24 @@ func (u *ubuntu) setName() {
 func (u *ubuntu) getOSType(buildType string) (string, error) {
 	switch buildType {
 	case "vmware-iso":
-
 		switch u.Arch {
 		case "amd64":
 			return "ubuntu-64", nil
 		case "i386":
 			return "ubuntu-32", nil
 		}
-
 	case "virtualbox-iso":
-
 		switch u.Arch {
 		case "amd64":
 			return "Ubuntu_64", nil
 		case "i386":
 			return "Ubuntu_32", nil
 		}
-
 	}
 
 	// Shouldn't get here unless the buildType passed is an unsupported one.
-	err := fmt.Errorf("ubuntu.getOSType: the builder '%s' is not supported", buildType)
+	err := fmt.Errorf("%s does not support the %s builder", u.Distro, buildType)
+	jww.ERROR.Println(err)
 	return "", err
 }
 
@@ -235,14 +233,14 @@ func (c *centOS) SetISOInfo() error {
 	jww.TRACE.Printf("Current state: %+v", c)
 
 	if c.Arch == "" {
-		err := errors.New("Arch was empty, unable to continue")
-		jww.ERROR.Println(err.Error())
+		err := fmt.Errorf("arch for %s was empty, unable to continue", c.Name)
+		jww.ERROR.Println(err)
 		return err
 	}
 
 	if c.Release == "" {
-		err := errors.New("Release was empty, unable to continue")
-		jww.ERROR.Println(err.Error())
+		err := fmt.Errorf("release for %s was empty, unable to continue", c.Name)
+		jww.ERROR.Println(err)
 		return err
 	}
 
@@ -250,7 +248,7 @@ func (c *centOS) SetISOInfo() error {
 	// respectively. Make sure they are both set properly.
 	err := c.setReleaseInfo()
 	if err != nil {
-		jww.ERROR.Println(err.Error())
+		jww.ERROR.Println(err)
 		return err
 	}
 
@@ -258,13 +256,13 @@ func (c *centOS) SetISOInfo() error {
 
 	err = c.setISOURL()
 	if err != nil {
-		jww.ERROR.Println(err.Error())
+		jww.ERROR.Println(err)
 		return err
 	}
 
 	// Set the Checksum information for the ISO image.
 	if err := c.setChecksum(); err != nil {
-		jww.ERROR.Printf("%+v", err)
+		jww.ERROR.Println(err)
 		return err
 	}
 
@@ -286,7 +284,7 @@ func (c *centOS) setReleaseInfo() error {
 	// will give us that information.
 	err := c.setReleaseNumber()
 	if err != nil {
-		jww.ERROR.Println(err.Error())
+		jww.ERROR.Println(err)
 		return err
 	}
 
@@ -344,7 +342,7 @@ func (c *centOS) getOSType(buildType string) (string, error) {
 	}
 
 	// Shouldn't get here unless the buildType passed is an unsupported one.
-	err := fmt.Errorf("centOS.getOSType: the builder '%s' is not supported", buildType)
+	err := fmt.Errorf("%s does not support the %s builder", c.Distro, buildType)
 	return "", err
 }
 

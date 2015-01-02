@@ -27,7 +27,8 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, scripts []string) error 
 	jww.DEBUG.Println("packerTemplate.create: enter")
 	jww.TRACE.Printf("%v/n%v/n%v", i, b, json.MarshalToString(scripts))
 
-	if err := i.check(); err != nil {
+	err := i.check()
+	if err != nil {
 		jww.ERROR.Println("packerTemplate.create: " + err.Error())
 		return err
 	}
@@ -35,8 +36,8 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, scripts []string) error 
 	// priorBuild handles both the archiving and deletion of the prior build, if it exists, i.e.
 	// if the build's output path exists.
 	a := Archive{}
-
-	if err := a.priorBuild(appendSlash(i.OutDir), "gzip"); err != nil {
+	err = a.priorBuild(appendSlash(i.OutDir), "gzip")
+	if err != nil {
 		jww.ERROR.Print("packerTemplate.create: " + err.Error())
 		return err
 	}
@@ -44,13 +45,13 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, scripts []string) error 
 	// TODO This needs to be handled better...this is too long for most builds but if there are situations
 	// where there is a large archive this is not long enough.
 	time.Sleep(time.Millisecond * 2000)
-
-	if err := copyScripts(scripts, i.ScriptsSrcDir, appendSlash(i.OutDir)+i.ScriptsDir); err != nil {
+	err = copyScripts(scripts, i.ScriptsSrcDir, appendSlash(i.OutDir)+i.ScriptsDir)
+	if err != nil {
 		jww.ERROR.Println("packerTemplate.create: " + err.Error())
 		return err
 	}
-
-	if err := copyDirContent(i.HTTPSrcDir, appendSlash(i.OutDir)+i.HTTPDir); err != nil {
+	err = copyDirContent(i.HTTPSrcDir, appendSlash(i.OutDir)+i.HTTPDir)
+	if err != nil {
 		jww.ERROR.Print("packerTemplate.create: " + err.Error())
 		return err
 	}
@@ -90,24 +91,20 @@ func copyScripts(scripts []string, src string, dest string) error {
 	var errCnt, okCnt int
 	var wB int64
 	var err error
-
 	for _, script := range scripts {
-
-		if wB, err = copyFile(script, src, dest); err != nil {
+		wB, err = copyFile(script, src, dest)
+		if err != nil {
 			jww.ERROR.Print("copyScripts: " + err.Error())
 			errCnt++
-		} else {
-			jww.TRACE.Print("copyScripts: " + strconv.FormatInt(wB, 10) + " Bytes were copied from " + src + " to " + dest)
-			okCnt++
+			continue
 		}
-
+		jww.TRACE.Print("copyScripts: " + strconv.FormatInt(wB, 10) + " Bytes were copied from " + src + " to " + dest)
+		okCnt++
 	}
-
 	if errCnt > 0 {
 		jww.ERROR.Print("copyScripts: Copy of scripts for build had " + strconv.Itoa(errCnt) + " errors. There were " + strconv.Itoa(okCnt) + " scripts that were copied without error.")
 		return err
 	}
-
 	jww.TRACE.Print("copyScripts: " + strconv.Itoa(okCnt) + " scripts were successfully copied")
 	return nil
 }

@@ -86,24 +86,25 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 
 	// Builders
 	//	iSl := make([]interface{}, len(r.Builders))
-	if p.Builders, _, err = r.createBuilders(); err != nil {
-		jww.ERROR.Println(err.Error())
+	p.Builders, _, err = r.createBuilders()
+	if err != nil {
+		jww.ERROR.Println(err)
 		return p, err
 	}
 
 	// Post-Processors
 	//	iSl = make([]interface{}, len(r.PostProcessors))
-
-	if p.PostProcessors, _, err = r.createPostProcessors(); err != nil {
-		jww.ERROR.Println(err.Error())
+	p.PostProcessors, _, err = r.createPostProcessors()
+	if err != nil {
+		jww.ERROR.Println(err)
 		return p, err
 	}
 
 	// Provisioners
 	//	iSl = make([]interface{}, len(r.Provisioners))
-
-	if p.Provisioners, _, err = r.createProvisioners(); err != nil {
-		jww.ERROR.Println(err.Error())
+	p.Provisioners, _, err = r.createProvisioners()
+	if err != nil {
+		jww.ERROR.Println(err)
 		return p, err
 	}
 
@@ -202,18 +203,9 @@ func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
 	}
 
 	// merge the build portions.
-	// Should this be broken up? No
-	// it should be calling a method so nothing is returned!
-	//
-	// Plan:
-	//	update builders
 	r.updateBuilders(bld.Builders)
 	r.updatePostProcessors(bld.PostProcessors)
 	r.updateProvisioners(bld.Provisioners)
-	//	r.PostProcessors = getMergedPostProcessors(r.PostProcessors, bld.PostProcessors)
-	//	r.Provisioners = getMergedProvisioners(r.Provisioners, bld.Provisioners)
-
-	return
 }
 
 // Get a slice of script names from the shell provisioner, if any.
@@ -222,12 +214,14 @@ func (r *rawTemplate) ScriptNames() []string {
 	scripts := "scripts"
 
 	// See if there is a shell provisioner
-	if _, ok := r.Provisioners[Shell.String()]; !ok {
+	_, ok := r.Provisioners[Shell.String()]
+	if !ok {
 		return nil
 	}
 
 	// See if there shell provisioner array section contains scripts
-	if _, ok := r.Provisioners[Shell.String()].Arrays[scripts]; !ok {
+	_, ok = r.Provisioners[Shell.String()].Arrays[scripts]
+	if !ok {
 		return nil
 	}
 
@@ -247,9 +241,9 @@ func (r *rawTemplate) ScriptNames() []string {
 	*/
 	names := make([]string, len(scrpts))
 
-	for i, script := range scrpts {
+	for i, scrpt := range scrpts {
 		//explode on "/"
-		so := reflect.ValueOf(script)
+		so := reflect.ValueOf(scrpt)
 		parts := strings.Split(so.Interface().(string), "/")
 		// the last element is the script name
 		names[i] = parts[len(parts)-1]
@@ -258,7 +252,6 @@ func (r *rawTemplate) ScriptNames() []string {
 	jww.DEBUG.Println("rawTemplate.ScriptNames: exit")
 	//	st := deepcopy.InterfaceToSliceStrings(s)
 	return names
-
 }
 
 // Set the src_dir and out_dir, in case there are variables embedded in them.
@@ -333,23 +326,19 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 	case Ubuntu:
 		r.releaseISO = &ubuntu{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: checksumType}, Arch: r.Arch, Distro: r.Distro.String(), Image: r.Image, Release: r.Release}}
 		r.releaseISO.SetISOInfo()
-
 		r.osType, err = r.releaseISO.(*ubuntu).getOSType(builderType.String())
 		if err != nil {
-			jww.ERROR.Println(err.Error())
+			jww.ERROR.Println(err)
 			return err
 		}
-
 	case CentOS:
 		r.releaseISO = &centOS{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: checksumType}, Arch: r.Arch, Distro: r.Distro.String(), Image: r.Image, Release: r.Release}}
 		r.releaseISO.SetISOInfo()
-
 		r.osType, err = r.releaseISO.(*centOS).getOSType(builderType.String())
 		if err != nil {
-			jww.ERROR.Println(err.Error())
+			jww.ERROR.Println(err)
 			return err
 		}
-
 	}
 	return nil
 }

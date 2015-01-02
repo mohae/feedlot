@@ -19,13 +19,10 @@ var timeFormat = "2006-01-02T150405Z0700"
 type Archive struct {
 	// Path to the target directory for the archive output.
 	OutDir string
-
 	// Name of the archive.
 	Name string
-
 	// Compression type to be used.
 	Type string
-
 	// List of files to add to the archive.
 	directory
 }
@@ -40,7 +37,6 @@ type directory struct {
 type file struct {
 	// The file's path
 	p string
-
 	// The file's FileInfo
 	info os.FileInfo
 }
@@ -55,33 +51,26 @@ func (d *directory) DirWalk(dirPath string) error {
 		jww.WARN.Println("No path information was received.")
 		return nil
 	}
-
 	// See if the path exists
 	exists, err := pathExists(dirPath)
-
 	if err != nil {
 		jww.ERROR.Println(err)
 		return err
 	}
-
 	if !exists {
 		err = fmt.Errorf("%s does not exist", dirPath)
 		jww.ERROR.Println(err)
 		return err
 	}
-
 	fullPath, err := filepath.Abs(dirPath)
-
 	if err != nil {
 		jww.ERROR.Println(err)
 		return err
 	}
-
 	// Set up the call back function.
 	callback := func(p string, fi os.FileInfo, err error) error {
 		return d.addFilename(fullPath, p, fi, err)
 	}
-
 	// Walk the tree.
 	return filepath.Walk(fullPath, callback)
 }
@@ -98,26 +87,21 @@ func (d *directory) addFilename(root string, p string, fi os.FileInfo, err error
 		jww.ERROR.Println(err)
 		return err
 	}
-
 	if !exists {
 		err = fmt.Errorf("%s does not exist.", p)
 		jww.ERROR.Println(err)
 		return err
 	}
-
 	// Get the relative information.
 	rel, err := filepath.Rel(root, p)
-
 	if err != nil {
 		jww.ERROR.Println(err)
 		return err
 	}
-
 	if rel == "." {
 		jww.TRACE.Println("Don't add the relative root")
 		return nil
 	}
-
 	// Add the file information.
 	d.Files = append(d.Files, file{p: rel, info: fi})
 	jww.TRACE.Printf("END relative: %v\tabs: %v", rel, p)
@@ -129,15 +113,12 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 	// This preserves mode and modification.
 	// TODO check ownership/permissions
 	file, err := os.Open(filename)
-
 	if err != nil {
 		jww.ERROR.Println(err)
 		return err
 	}
 	defer file.Close()
-
 	var fileStat os.FileInfo
-
 	if fileStat, err = file.Stat(); err != nil {
 		jww.ERROR.Println(err)
 		return err
@@ -155,19 +136,18 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 	tarHeader.Size = fileStat.Size()
 	tarHeader.Mode = int64(fileStat.Mode())
 	tarHeader.ModTime = fileStat.ModTime()
-
 	// Write the file header to the tarball.
-	if err := tW.WriteHeader(tarHeader); err != nil {
+	err = tW.WriteHeader(tarHeader)
+	if err != nil {
 		jww.ERROR.Println(err)
 		return err
 	}
-
 	// Add the file to the tarball.
-	if _, err := io.Copy(tW, file); err != nil {
+	_, err = io.Copy(tW, file)
+	if err != nil {
 		jww.ERROR.Println(err)
 		return err
 	}
-
 	return nil
 }
 
@@ -176,29 +156,27 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 // to the new build.
 func (a *Archive) priorBuild(p string, t string) error {
 	// See if src exists, if it doesn't then don't do anything
-	if _, err := os.Stat(p); err != nil {
-
+	_, err := os.Stat(p)
+	if err != nil {
 		if os.IsNotExist(err) {
 			jww.TRACE.Println("processing of prior build run not needed because " + p + " does not exist")
 			return nil
 		}
-
 		jww.ERROR.Println(err)
 		return err
 	}
-
 	// Archive the old artifacts.
-	if err := a.archivePriorBuild(p, t); err != nil {
+	err = a.archivePriorBuild(p, t)
+	if err != nil {
 		jww.ERROR.Println(err)
 		return err
 	}
-
 	// Delete the old artifacts.
-	if err := a.deletePriorBuild(p); err != nil {
+	err = a.deletePriorBuild(p)
+	if err != nil {
 		jww.ERROR.Println(err)
 		return err
 	}
-
 	return nil
 }
 
@@ -206,7 +184,8 @@ func (a *Archive) archivePriorBuild(p string, t string) error {
 	jww.TRACE.Println("Creating tarball from "+p+" using ", t)
 
 	// Get a list of directory contents
-	if err := a.DirWalk(p); err != nil {
+	err := a.DirWalk(p)
+	if err != nil {
 		jww.ERROR.Println(err)
 		return err
 	}
@@ -220,7 +199,6 @@ func (a *Archive) archivePriorBuild(p string, t string) error {
 	// Get the current date and time in a slightly modifie ISO 8601 format:
 	// the colons are stripped from the time.
 	nowF := formattedNow()
-
 	// Get the relative path so that it can be added to the tarball name.
 	relPath := path.Dir(p)
 	// The tarball's name is the directory name + current time + extensions.
@@ -229,15 +207,15 @@ func (a *Archive) archivePriorBuild(p string, t string) error {
 
 	// Create the new archive file.
 	tBall, err := os.Create(tarBallName)
-
 	if err != nil {
 		jww.CRITICAL.Println(err)
 		return err
 	}
 	// Close the file with error handling
 	defer func() {
-		if cerr := tBall.Close(); cerr != nil && err == nil {
-			jww.ERROR.Print(cerr.Error())
+		cerr := tBall.Close()
+		if cerr != nil && err == nil {
+			jww.ERROR.Print(cerr)
 			err = cerr
 		}
 	}()
@@ -245,24 +223,20 @@ func (a *Archive) archivePriorBuild(p string, t string) error {
 	// The tarball gets compressed with gzip
 	gw := gzip.NewWriter(tBall)
 	defer gw.Close()
-
 	// Create the tar writer.
 	tW := tar.NewWriter(gw)
 	defer tW.Close()
-
 	// Go through each file in the path and add it to the archive
 	var i int
 	var f file
-
 	for i, f = range a.Files {
-		if err := a.addFile(tW, appendSlash(relPath)+f.p); err != nil {
+		err := a.addFile(tW, appendSlash(relPath)+f.p)
+		if err != nil {
 			jww.CRITICAL.Println(err)
 			return err
 		}
 	}
-
 	jww.DEBUG.Printf("Exiting priorBuild. %v files were added to the archive.", i)
-
 	return nil
 }
 

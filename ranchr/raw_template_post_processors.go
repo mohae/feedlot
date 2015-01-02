@@ -3,6 +3,7 @@
 package ranchr
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -53,28 +54,24 @@ func (r *rawTemplate) updatePostProcessors(new map[string]*postProcessor) {
 	// Merge: if the key exists in both the new and old postProcessors.
 	for _, v := range keys {
 		// If it doesn't exist in the old builder, add it.
-		if _, ok := r.PostProcessors[v]; !ok {
+		_, ok := r.PostProcessors[v]
+		if !ok {
 			r.PostProcessors[v] = new[v].DeepCopy()
 			continue
 		}
-
 		// If the element for this key doesn't exist, skip it.
-		if _, ok := new[v]; !ok {
+		_, ok = new[v]
+		if !ok {
 			continue
 		}
-
 		p = r.PostProcessors[v].DeepCopy()
-
 		if p == nil {
 			p = &postProcessor{templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
 		}
-
 		p.mergeSettings(new[v].Settings)
 		p.mergeArrays(new[v].Arrays)
 		r.PostProcessors[v] = p
 	}
-
-	return
 }
 
 /*
@@ -96,10 +93,10 @@ func (p *postProcessor) settingsToMap(Type string, r *rawTemplate) map[string]in
 
 	for _, s := range p.Settings {
 		k, v = parseVar(s)
-
 		switch k {
 		// If its not set to 'true' then false. This is a case insensitive
 		// comparison.
+		// TODO why am I using fmt.Sprint(v) here?
 		case "keep_input_artifact":
 			if strings.ToLower(fmt.Sprint(v)) == "true" {
 				v = true
@@ -109,10 +106,8 @@ func (p *postProcessor) settingsToMap(Type string, r *rawTemplate) map[string]in
 		default:
 			v = r.replaceVariables(fmt.Sprint(v))
 		}
-
 		m[k] = v
 	}
-
 	jww.TRACE.Printf("post-processors Map: %v\n", json.MarshalIndentToString(m, "", indent))
 	return m
 }
@@ -120,11 +115,10 @@ func (p *postProcessor) settingsToMap(Type string, r *rawTemplate) map[string]in
 // r.createPostProcessors creates the PostProcessors for a build.
 func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]interface{}, err error) {
 	if r.PostProcessorTypes == nil || len(r.PostProcessorTypes) <= 0 {
-		err = fmt.Errorf("unable to create post-processors: none specified")
+		err = errors.New("unable to create post-processors: none specified")
 		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
-
 	var vrbls, tmpVar []string
 	var tmpS map[string]interface{}
 	var ndx int
@@ -146,18 +140,15 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]i
 		case VagrantCloud:
 			// Create the settings
 			tmpS, tmpVar, err = r.createVagrantCloud()
-
 		default:
 			err = fmt.Errorf("%s is not supported", pType)
 			jww.ERROR.Println(err)
 			return nil, nil, err
 		}
-
 		p[ndx] = tmpS
 		ndx++
 		vrbls = append(vrbls, tmpVar...)
 	}
-
 	return p, vars, nil
 }
 
@@ -182,7 +173,6 @@ func (r *rawTemplate) createVagrant() (settings map[string]interface{}, vars []s
 			jww.WARN.Println("An unsupported key was encountered: " + k)
 		}
 	}
-
 	// Process the Arrays.
 	for name, val := range r.PostProcessors[Vagrant.String()].Arrays {
 		jww.TRACE.Printf("Arrays:\t%v\t%v\n\n", name, val)
@@ -191,14 +181,13 @@ func (r *rawTemplate) createVagrant() (settings map[string]interface{}, vars []s
 			settings[name] = array
 		}
 	}
-	return settings, vars, err
+	return settings, vars, nil
 }
 
 func (r *rawTemplate) createVagrantCloud() (settings map[string]interface{}, vars []string, err error) {
 	settings = make(map[string]interface{})
 	settings["type"] = VagrantCloud
-
-	return nil, nil, err
+	return nil, nil, nil
 }
 
 // DeepCopyMapStringPPostProcessor makes a deep copy of each builder passed and
