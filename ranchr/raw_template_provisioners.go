@@ -3,7 +3,6 @@
 package ranchr
 
 import (
-	"errors"
 	"fmt"
 	_ "reflect"
 	"strings"
@@ -129,32 +128,32 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 		// levels, to hard code this...which makes me...d'oh!
 		tmpVar = make([]string, 50)
 		tmpS = make(map[string]interface{})
+		typ := ProvisionerFromString(pType)
+		switch typ {
+		case Shell:
+			tmpS, tmpVar, err = r.createShellProvisioner()
 
-		switch pType {
-		case ProvisionerShell:
-			tmpS, tmpVar, err = r.createProvisionerShell()
+		case File:
+			tmpS, tmpVar, err = r.createFileProvisioner()
 
-		case ProvisionerFile:
-			tmpS, tmpVar, err = r.createProvisionerFile()
+		case AnsibleLocal:
+			tmpS, tmpVar, err = r.createAnsibleLocalProvisioner()
 
-		case ProvisionerAnsibleLocal:
-			tmpS, tmpVar, err = r.createProvisionerAnsibleLocal()
-
-		case ProvisionerSaltMasterless:
-			tmpS, tmpVar, err = r.createProvisionerSaltMasterless()
-
-		case ProvisionerChefClient:
-
-		case ProvisionerChefSolo:
-
-		case ProvisionerPuppetClient:
-
-		case ProvisionerPuppetServer:
-
-
+		case SaltMasterless:
+			tmpS, tmpVar, err = r.createSaltMasterlessProvisioner()
+			/*
+				case ChefClient:
+					// not implemented
+				case ChefSolo:
+					// not implemented
+				case PuppetClient:
+					// not implemented
+				case PuppetServer:
+					// not implemented
+			*/
 		default:
-			err = errors.New("the requested provisioner, '" + pType + "', is not supported")
-			jww.ERROR.Println(err.Error())
+			err = fmt.Errorf("%s provisioner is not supported", pType)
+			jww.ERROR.Println(err)
 			return nil, nil, err
 		}
 
@@ -166,31 +165,31 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 	return p, vars, nil
 }
 
-// createProvisionerAnsibleLocal() creates a map of settings for Packer's 
-// ansible provisioner. Any values that aren't supported by the file 
+// createAnsibleLocalProvisioner() creates a map of settings for Packer's
+// ansible provisioner. Any values that aren't supported by the file
 // provisioner are ignored.
-func (r *rawTemplate) createProvisionerAnsibleLocal() (settings map[string]interface{}, vars []string, err error) {
+func (r *rawTemplate) createAnsibleLocalProvisioner() (settings map[string]interface{}, vars []string, err error) {
 	settings = make(map[string]interface{})
-	settings["type"] = ProvisionerAnsibleLocal
+	settings["type"] = AnsibleLocal.String()
 
-	jww.TRACE.Printf("rawTemplate.createProvisionerAnsibleLocal-rawtemplate\n")
+	jww.TRACE.Printf("rawTemplate.createAnsibleLocalProvisioner-rawtemplate\n")
 
 	// For each value, extract its key value pair and then process. Only
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
 	var k, v string
-	for _, s := range r.Provisioners[ProvisionerAnsibleLocal].Settings {
+	for _, s := range r.Provisioners[AnsibleLocal.String()].Settings {
 		k, v = parseVar(s)
 		switch k {
 		case "playbook_file", "command", "inventory_file", "playbook_dir", "staging_directory":
 			settings[k] = v
 		default:
-			jww.WARN.Println("An unsupported " + ProvisionerAnsibleLocal + " key was encountered: " + k)
+			jww.WARN.Println("An unsupported " + AnsibleLocal.String() + " key was encountered: " + k)
 		}
 	}
 
 	// Process the Arrays.
-	for name, val := range r.Provisioners[ProvisionerAnsibleLocal].Arrays {
+	for name, val := range r.Provisioners[AnsibleLocal.String()].Arrays {
 		array := deepcopy.InterfaceToSliceStrings(val)
 		if array != nil {
 			settings[name] = array
@@ -200,12 +199,12 @@ func (r *rawTemplate) createProvisionerAnsibleLocal() (settings map[string]inter
 	return settings, vars, err
 }
 
-// createProvisionerSaltMasterless() creates a map of settings for Packer's 
-// ansible provisioner. Any values that aren't supported by the file 
+// createSaltMasterlessProvisioner() creates a map of settings for Packer's
+// ansible provisioner. Any values that aren't supported by the file
 // provisioner are ignored.
-func (r *rawTemplate) createProvisionerSaltMasterless() (settings map[string]interface{}, vars []string, err error) {
+func (r *rawTemplate) createSaltMasterlessProvisioner() (settings map[string]interface{}, vars []string, err error) {
 	settings = make(map[string]interface{})
-	settings["type"] = ProvisionerSaltMasterless
+	settings["type"] = SaltMasterless.String()
 
 	jww.TRACE.Printf("rawTemplate.createProvisionerAnsibleLocal-rawtemplate\n")
 
@@ -213,13 +212,13 @@ func (r *rawTemplate) createProvisionerSaltMasterless() (settings map[string]int
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
 	var k, v string
-	for _, s := range r.Provisioners[ProvisionerSaltMasterless].Settings {
+	for _, s := range r.Provisioners[SaltMasterless.String()].Settings {
 		k, v = parseVar(s)
 		switch k {
 		case "bootstrap_args", "local_pillar_roots", "local_state_tree", "minion_config", "skip_bootstrap", "temp_config_dir":
 			settings[k] = v
 		default:
-			jww.WARN.Println("An unsupported " + ProvisionerSaltMasterless + " key was encountered: " + k)
+			jww.WARN.Println("An unsupported " + SaltMasterless.String() + " key was encountered: " + k)
 		}
 	}
 
@@ -227,12 +226,12 @@ func (r *rawTemplate) createProvisionerSaltMasterless() (settings map[string]int
 	return settings, vars, err
 }
 
-// createProvisionerShell() creates a map of settings for Packer's shell
+// createShellProvisioner() creates a map of settings for Packer's shell
 // provisioner. Any values that aren't supported by the shell provisioner are
 // ignored.
-func (r *rawTemplate) createProvisionerShell() (settings map[string]interface{}, vars []string, err error) {
+func (r *rawTemplate) createShellProvisioner() (settings map[string]interface{}, vars []string, err error) {
 	settings = make(map[string]interface{})
-	settings["type"] = ProvisionerShell
+	settings["type"] = Shell.String()
 
 	jww.TRACE.Printf("rawTemplate.createProvisionerShell-rawtemplate\n")
 
@@ -240,19 +239,19 @@ func (r *rawTemplate) createProvisionerShell() (settings map[string]interface{},
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
 	var k, v string
-	for _, s := range r.Provisioners[ProvisionerShell].Settings {
+	for _, s := range r.Provisioners[Shell.String()].Settings {
 		k, v = parseVar(s)
 		switch k {
 		case "binary", "execute_command", "inline_shebang", "remote_path",
 			"start_retry_timeout":
 			settings[s] = v
 		default:
-			jww.WARN.Println("An unsupported " + ProvisionerShell + " key was encountered: " + k)
+			jww.WARN.Println("An unsupported " + Shell.String() + " key was encountered: " + k)
 		}
 	}
 
 	// Process the Arrays.
-	for name, val := range r.Provisioners[ProvisionerShell].Arrays {
+	for name, val := range r.Provisioners[Shell.String()].Arrays {
 		array := deepcopy.Iface(val)
 		if array != nil {
 			settings[name] = array
@@ -262,12 +261,12 @@ func (r *rawTemplate) createProvisionerShell() (settings map[string]interface{},
 	return settings, vars, err
 }
 
-// createProvisionerFileUploads() creates a map of settings for Packer's file uploads
+// createFileProvisioner() creates a map of settings for Packer's file uploads
 // provisioner. Any values that aren't supported by the file provisioner are
 // ignored.
-func (r *rawTemplate) createProvisionerFile() (settings map[string]interface{}, vars []string, err error) {
+func (r *rawTemplate) createFileProvisioner() (settings map[string]interface{}, vars []string, err error) {
 	settings = make(map[string]interface{})
-	settings["type"] = ProvisionerFile
+	settings["type"] = File.String()
 
 	jww.TRACE.Printf("rawTemplate.createProvisionerFile-rawtemplate\n")
 
@@ -275,18 +274,18 @@ func (r *rawTemplate) createProvisionerFile() (settings map[string]interface{}, 
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
 	var k, v string
-	for _, s := range r.Provisioners[ProvisionerFile].Settings {
+	for _, s := range r.Provisioners[File.String()].Settings {
 		k, v = parseVar(s)
 		switch k {
 		case "source", "destination":
 			settings[k] = v
 		default:
-			jww.WARN.Println("An unsupported " + ProvisionerFile + " key was encountered: " + k)
+			jww.WARN.Println("An unsupported " + File.String() + " key was encountered: " + k)
 		}
 	}
 
 	// Process the Arrays.
-	for name, val := range r.Provisioners[ProvisionerFile].Arrays {
+	for name, val := range r.Provisioners[File.String()].Arrays {
 		array := deepcopy.InterfaceToSliceStrings(val)
 		if array != nil {
 			settings[name] = array

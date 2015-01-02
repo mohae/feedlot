@@ -175,36 +175,62 @@ func PostProcessorFromString(s string) PostProcessor {
 	return UnsupportedPostProcessor
 }
 
-var (
-	// ProvisionerAnsibleLocal is the name of the Ansible Provisioner
-	ProvisionerAnsibleLocal = "ansible-local"
-
-	// ProvisionerChefClient is the name of the Chef Client Provisioner
-	ProvisionerChefClient = "chef-client"
-
-	// ProvisionerChefSolo is the name of the Chef Solo Provisioner
-	ProvisionerChefSolo = "chef-solo"
-
-	// ProvisionerFile is the name of the File Provisioner
-	ProvisionerFile = "file"
-
-	// ProvisionerPuppetMasterless is the name of the puppet-client Provisioner
-	ProvisionerPuppetClient = "puppet-client"
-
-	// ProvisionerAnsible is the name of the puppet-server Provisioner
-	ProvisionerPuppetServer = "puppet-server"
-
-	// ProvisionerSaltMasterless is the name of the Salt Masterless Provisioner
-	ProvisionerSaltMasterless = "salt-masterless"
-
-	// ProvisionerShell is the name of the Shell Provisioner
-	ProvisionerShell = "shell"
-
-	// ProvisionerShellScripts is an alias for the Shell provisioner as the
-	// Shell provisioner is technically the Shell Script provisioner, in
-	// the Packer documentation
-	ProvisionerShellScripts = ProvisionerShell
+const (
+	UnsupportedProvisioner Provisioner = iota
+	AnsibleLocal
+	ChefClient
+	ChefSolo
+	File
+	PuppetClient
+	PuppetServer
+	SaltMasterless
+	Shell
+	ShellScripts
 )
+
+type Provisioner int
+
+var provisioners = [...]string{
+	"ansible-local",   // AnsibleLocal is the name of the Ansible Provisioner
+	"chef-client",     // ChefClient is the name of the Chef Client Provisioner
+	"chef-solo",       // ChefSolo is the name of the Chef Solo Provisioner
+	"file",            // File is the name of the File Provisioner
+	"puppet-client",   // PuppetClient is the name of the puppet-client Provisioner
+	"puppet-server",   // PuppetServer is the name of the puppet-server Provisioner
+	"salt-masterless", // SaltMasterless is the name of the Salt Masterless Provisioner
+	"shell",           // Shell is the name of the Shell Provisioner
+	"shell-scripts",   // ShellScripts is an alias for the Shell provisioner as the Shell provisioner
+	// is technically the Shell Script provisioner, in the Packer documentation.
+}
+
+func (p Provisioner) String() string { return provisioners[p] }
+
+// ProvisionerFromString returns the Provisioner constant for the passed string or
+// unsupporte. All incoming strings are normalized to lowercase
+func ProvisionerFromString(s string) Provisioner {
+	s = strings.ToLower(s)
+	switch s {
+	case "ansible-local":
+		return AnsibleLocal
+	case "chef-client":
+		return ChefClient
+	case "cher-solo":
+		return ChefSolo
+	case "file":
+		return File
+	case "puppet-client":
+		return PuppetClient
+	case "puppet-server":
+		return PuppetServer
+	case "salt-masterless":
+		return SaltMasterless
+	case "shell":
+		return Shell
+	case "shell-scripts":
+		return ShellScripts
+	}
+	return UnsupportedProvisioner
+}
 
 var (
 	// EnvRancherFile is the name of the environment variable name for Rancher's config file.

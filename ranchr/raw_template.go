@@ -222,19 +222,19 @@ func (r *rawTemplate) ScriptNames() []string {
 	scripts := "scripts"
 
 	// See if there is a shell provisioner
-	if _, ok := r.Provisioners[ProvisionerShell]; !ok {
+	if _, ok := r.Provisioners[Shell.String()]; !ok {
 		return nil
 	}
 
 	// See if there shell provisioner array section contains scripts
-	if _, ok := r.Provisioners[ProvisionerShell].Arrays[scripts]; !ok {
+	if _, ok := r.Provisioners[Shell.String()].Arrays[scripts]; !ok {
 		return nil
 	}
 
 	//	tmp := reflect.ValueOf(r.Provisioners[ProvisionerShell].Arrays[scripts])
 
 	//	var s interface{}
-	scrpts := deepcopy.InterfaceToSliceStrings(r.Provisioners[ProvisionerShell].Arrays[scripts])
+	scrpts := deepcopy.InterfaceToSliceStrings(r.Provisioners[Shell.String()].Arrays[scripts])
 	/*	switch tmp.Type() {
 		case TypeOfSliceInterfaces:
 			s = deepcopy.Iface(r.Provisioners[ProvisionerShell].Arrays[scripts]).([]interface{})
