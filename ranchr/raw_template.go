@@ -34,7 +34,7 @@ type rawTemplate struct {
 	// The distro that this template targets. The type must be a supported
 	// type, i.e. defined in supported.toml. The values for type are
 	// consistent with Packer values.
-	Distro
+	Distro string
 
 	// The architecture for the ISO image, this is either 32bit or 64bit,
 	// with the actual values being dependent on the operating system and
@@ -260,11 +260,9 @@ func (r *rawTemplate) ScriptNames() []string {
 // in these two Settings.
 func (r *rawTemplate) mergeVariables() {
 	// check src_dir and out_dir first:
-	// TODO: replace this mess with something cleaner/resilient because this
-	// is ugly and poorly written code...My Bad :(
 
 	// Get the delim and set the replacement map, resolve name information
-	r.varVals = map[string]string{r.delim + "type": r.Distro.String(), r.delim + "release": r.Release, r.delim + "arch": r.Arch, r.delim + "image": r.Image, r.delim + "date": r.date, r.delim + "build_name": r.BuildName}
+	r.varVals = map[string]string{r.delim + "type": r.Distro, r.delim + "release": r.Release, r.delim + "arch": r.Arch, r.delim + "image": r.Image, r.delim + "date": r.date, r.delim + "build_name": r.BuildName}
 
 	r.Name = r.replaceVariables(r.Name)
 
@@ -323,16 +321,16 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 	}
 
 	switch r.Distro {
-	case Ubuntu:
-		r.releaseISO = &ubuntu{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: checksumType}, Arch: r.Arch, Distro: r.Distro.String(), Image: r.Image, Release: r.Release}}
+	case "ubuntu":
+		r.releaseISO = &ubuntu{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: checksumType}, Arch: r.Arch, Distro: r.Distro, Image: r.Image, Release: r.Release}}
 		r.releaseISO.SetISOInfo()
 		r.osType, err = r.releaseISO.(*ubuntu).getOSType(builderType.String())
 		if err != nil {
 			jww.ERROR.Println(err)
 			return err
 		}
-	case CentOS:
-		r.releaseISO = &centOS{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: checksumType}, Arch: r.Arch, Distro: r.Distro.String(), Image: r.Image, Release: r.Release}}
+	case "centos":
+		r.releaseISO = &centOS{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: checksumType}, Arch: r.Arch, Distro: r.Distro, Image: r.Image, Release: r.Release}}
 		r.releaseISO.SetISOInfo()
 		r.osType, err = r.releaseISO.(*centOS).getOSType(builderType.String())
 		if err != nil {

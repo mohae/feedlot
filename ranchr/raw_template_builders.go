@@ -157,16 +157,16 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 				}
 			}
 			switch r.Distro {
-			case Ubuntu:
+			case "ubuntu":
 				settings["iso_url"] = r.releaseISO.(*ubuntu).isoURL
 				settings["iso_checksum"] = r.releaseISO.(*ubuntu).Checksum
 				settings["iso_checksum_type"] = r.releaseISO.(*ubuntu).ChecksumType
-			case CentOS:
+			case "centos":
 				settings["iso_url"] = r.releaseISO.(*centOS).isoURL
 				settings["iso_checksum"] = r.releaseISO.(*centOS).Checksum
 				settings["iso_checksum_type"] = r.releaseISO.(*centOS).ChecksumType
 			default:
-				err = fmt.Errorf("%q is not a supported Distro", r.Distro.String())
+				err = fmt.Errorf("%q is not a supported Distro", r.Distro)
 				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
@@ -378,16 +378,16 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 				}
 			}
 			switch r.Distro {
-			case Ubuntu:
+			case "ubuntu":
 				settings["iso_url"] = r.releaseISO.(*ubuntu).isoURL
 				settings["iso_checksum"] = r.releaseISO.(*ubuntu).Checksum
 				settings["iso_checksum_type"] = r.releaseISO.(*ubuntu).ChecksumType
-			case CentOS:
+			case "centos":
 				settings["iso_url"] = r.releaseISO.(*centOS).isoURL
 				settings["iso_checksum"] = r.releaseISO.(*centOS).Checksum
 				settings["iso_checksum_type"] = r.releaseISO.(*centOS).ChecksumType
 			default:
-				err = fmt.Errorf("%q is not a supported Distro", r.Distro.String())
+				err = fmt.Errorf("%q is not a supported Distro", r.Distro)
 				jww.ERROR.Println(err)
 				return nil, nil, err
 			}

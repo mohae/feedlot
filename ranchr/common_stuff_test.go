@@ -6,13 +6,23 @@ import (
 	json "github.com/mohae/customjson"
 )
 
+// Simple funcs to help handle testing returned stuff
+func stringSliceContains(sl []string, val string) bool {
+	for _, v := range sl {
+		if v == val {
+			return true
+		}
+	}
+	return false
+}
+
 // Variables that are used in various tests, so they aren't scattered every-
 // where. If a variable is only used locally, then it will not appear here--
 // or that is the hope, but some of the various struct setup for GoConvey
 // will be here too...which means that mostly the old table driven test data
 // will remain in the same file.
 // I know lack of locality, but I'm tired of 1000+ line tests with mostly var
-// setup.
+// setup. And yes, there are var setup locally in tests...
 var testDir = "../test_files/"
 var testRancherCfg = testDir + "rancher_test.cfg"
 var testDefaultsFile = testDir + "conf/defaults_test.toml"
@@ -318,7 +328,7 @@ var testDistroDefaultUbuntu = &rawTemplate{
 	},
 	date:    today,
 	delim:   ":",
-	Distro:  Ubuntu,
+	Distro:  "ubuntu",
 	Arch:    "amd64",
 	Image:   "server",
 	Release: "12.04",
@@ -451,7 +461,7 @@ var testDistroDefaultCentOS = &rawTemplate{
 	},
 	date:    today,
 	delim:   ":",
-	Distro:  CentOS,
+	Distro:  "centos",
 	Arch:    "x86_64",
 	Image:   "minimal",
 	Release: "6",
@@ -572,7 +582,7 @@ var testBuildTest1 = &rawTemplate{
 	PackerInf: PackerInf{
 		Description: "Test build template #1",
 	},
-	Distro:  Ubuntu,
+	Distro:  "ubuntu",
 	Arch:    "amd64",
 	Image:   "server",
 	Release: "1204",
@@ -661,7 +671,7 @@ var testBuildTest2 = &rawTemplate{
 	PackerInf: PackerInf{
 		Description: "Test build template #2: causes an error",
 	},
-	Distro:  Unsupported,
+	Distro:  "ubuntuu",
 	Arch:    "amd64",
 	Image:   "desktop",
 	Release: "1204",
@@ -695,7 +705,7 @@ var testBuildCentOS6Salt = &rawTemplate{
 	PackerInf: PackerInf{
 		Description: "Test build template for salt provisioner using CentOS6",
 	},
-	Distro: CentOS,
+	Distro: "centos",
 	build: build{
 		BuilderTypes: []string{
 			"virtualbox-iso",
@@ -732,7 +742,7 @@ var testMergedBuildTest1 = &rawTemplate{
 		BuildName: "",
 		BaseURL:   "http://releases.ubuntu.com/",
 	},
-	Distro:  Ubuntu,
+	Distro:  "ubuntu",
 	Arch:    "amd64",
 	Image:   "server",
 	Release: "12.04",
@@ -832,7 +842,7 @@ var testMergedBuildTest2 = &rawTemplate{
 		BuildName: "",
 		BaseURL:   "http://releases.ubuntu.com/",
 	},
-	Distro:  Ubuntu,
+	Distro:  "ubuntu",
 	Arch:    "amd64",
 	Image:   "desktop",
 	Release: "12.04",
@@ -917,7 +927,7 @@ var testMergedBuildTest2 = &rawTemplate{
 	},
 }
 
-var testMergedBuildCentOS6Salt = &rawTemplate{
+var testMergedBuildCentos6Salt = &rawTemplate{
 	IODirInf: IODirInf{
 		CommandsSrcDir: ":src_dir/commands",
 		HTTPDir:        "http",
@@ -929,14 +939,14 @@ var testMergedBuildCentOS6Salt = &rawTemplate{
 	},
 	PackerInf: PackerInf{
 		MinPackerVersion: "",
-		Description:      "Test build template for salt provisioner using CentOS6",
+		Description:      "Test build template for salt provisioner using Centos6",
 	},
 	BuildInf: BuildInf{
 		Name:      ":type-:release-:image-:arch",
 		BuildName: "",
 		BaseURL:   "",
 	},
-	Distro:  CentOS,
+	Distro:  "centos",
 	Arch:    "x86_64",
 	Image:   "minimal",
 	Release: "6",
@@ -1039,9 +1049,9 @@ func setCommonTestData() {
 	if testDataSet {
 		return
 	}
-	testSupported.Distro = map[Distro]*distro{}
-	testSupported.Distro[Ubuntu] = testSupportedUbuntu
-	testSupported.Distro[CentOS] = testSupportedCentOS
+	testSupported.Distro = map[string]*distro{}
+	testSupported.Distro[Ubuntu.String()] = testSupportedUbuntu
+	testSupported.Distro[CentOS.String()] = testSupportedCentOS
 
 	testDistroDefaults = distroDefaults{Templates: map[Distro]*rawTemplate{}, IsSet: true}
 	testDistroDefaults.Templates[Ubuntu] = testDistroDefaultUbuntu
@@ -1055,12 +1065,12 @@ func setCommonTestData() {
 	testMergedBuilds = map[string]*rawTemplate{}
 	testMergedBuilds["test1"] = testMergedBuildTest1
 	testMergedBuilds["test2"] = testMergedBuildTest2
-	testMergedBuilds["test-centos6-salt"] = testMergedBuildCentOS6Salt
+	testMergedBuilds["test-centos6-salt"] = testMergedBuildCentos6Salt
 
 	testDataSet = true
 
 	return
 }
 
-//BuildUbuntu
+//Build"ubuntu"
 //BuildCentos

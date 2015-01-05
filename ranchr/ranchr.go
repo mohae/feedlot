@@ -29,8 +29,8 @@ import (
 // supported distros
 const (
 	UnsupportedDistro Distro = iota
-	Ubuntu
 	CentOS
+	Ubuntu
 )
 
 type Distro int
@@ -350,8 +350,8 @@ func (d *distroDefaults) Set() error {
 	// Generate the default settings for each distro.
 	for k, v := range s.Distro {
 		// See if the base url exists for non centos distros
-		if v.BaseURL == "" && k != CentOS {
-			err := fmt.Errorf("%s requires a BaseURL, non provided.", k.String())
+		if v.BaseURL == "" && k != CentOS.String() {
+			err := fmt.Errorf("%s requires a BaseURL, non provided.", k)
 			jww.CRITICAL.Println(err.Error())
 			return err
 
@@ -368,7 +368,7 @@ func (d *distroDefaults) Set() error {
 		tmp.BaseURL = appendSlash(v.BaseURL)
 		tmp.Arch, tmp.Image, tmp.Release = getDefaultISOInfo(v.DefImage)
 		tmp.setDefaults(v)
-		d.Templates[k] = tmp
+		d.Templates[DistroFromString(k)] = tmp
 	}
 	DistroDefaults.IsSet = true
 	return nil
@@ -566,7 +566,7 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 
 	// Since distro builds don't actually have a build name, we create one
 	// out of the args used to create it.
-	t.BuildName = fmt.Sprintf("%s-%s-%s-%s", t.Distro.String(), t.Release, t.Arch, t.Image)
+	t.BuildName = fmt.Sprintf("%s-%s-%s-%s", t.Distro, t.Release, t.Arch, t.Image)
 	jww.TRACE.Printf("\trawtemplate: %v\n", json.MarshalIndentToString(t, "", indent))
 	pTpl := packerTemplate{}
 	// Now that the raw template has been made, create a Packer template out of it
@@ -658,8 +658,8 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 		return
 	}
 	// See if the distro default exists.
-	if tpl, ok = DistroDefaults.Templates[bld.Distro]; !ok {
-		err := fmt.Errorf("unsupported distro: %s", bld.Distro.String())
+	if tpl, ok = DistroDefaults.Templates[DistroFromString(bld.Distro)]; !ok {
+		err := fmt.Errorf("unsupported distro: %s", bld.Distro)
 		jww.ERROR.Println(err)
 		doneCh <- err
 		return
@@ -676,7 +676,7 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 	}
 	bld.BuildName = buildName
 	// create build template() then call create packertemplate
-	tpl.build = DistroDefaults.Templates[bld.Distro].build
+	tpl.build = DistroDefaults.Templates[DistroFromString(bld.Distro)].build
 	tpl.updateBuildSettings(bld)
 	pTpl := packerTemplate{}
 	var err error

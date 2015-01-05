@@ -4,7 +4,7 @@
 # build configuration with the Rancher and distro defaults.
 [build] 
 	[build.test1]
-		type = "ubuntu"
+		distro = "ubuntu"
 		description = "Test build template #1"
 		arch = "amd64"
 		image = "server"
@@ -59,7 +59,7 @@
 					":scripts_dir/cleanup_test.sh"
 				]
 	[build.test2]
-		type = "ubuntuu"
+		distro = "ubuntuu"
 		description = "Test build template #2: causes an error"
 		arch = "amd64"
 		image = "desktop"

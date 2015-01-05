@@ -461,7 +461,7 @@ type distro struct {
 // the supported. file, in addition to adding the code to support it to the
 // application.
 type supported struct {
-	Distro map[Distro]*distro
+	Distro map[string]*distro
 	load   sync.Once
 	loaded bool
 }
@@ -476,7 +476,6 @@ func (s *supported) LoadOnce() error {
 		if name == "" {
 			err := fmt.Errorf("%s not set, unable to retrieve the Supported information", EnvSupportedFile)
 			jww.CRITICAL.Print(err)
-			return
 		}
 		_, err := toml.DecodeFile(name, &s)
 		if err != nil {
@@ -488,6 +487,9 @@ func (s *supported) LoadOnce() error {
 	}
 
 	s.load.Do(loadFunc)
+	if !s.loaded {
+		return fmt.Errorf("an error occurred while loading the Supported information, please check the log")
+	}
 	return nil
 }
 
