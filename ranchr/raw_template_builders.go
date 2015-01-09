@@ -108,7 +108,7 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, vars []string, err error) {
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
-	settings["type"] = VirtualBoxISO
+	settings["type"] = VirtualBoxISO.String()
 	// Merge the settings between common and this builders.
 	mergedSlice := mergeSettingsSlices(r.Builders[CommonBuilder.String()].Settings, r.Builders[VirtualBoxISO.String()].Settings)
 
@@ -239,7 +239,7 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, va
 	settings = make(map[string]interface{})
 
 	// Each create function is responsible for setting its own type.
-	settings["type"] = VirtualBoxOVF
+	settings["type"] = VirtualBoxOVF.String()
 
 	// Merge the settings between common and this builders.
 	mergedSlice := mergeSettingsSlices(r.Builders[CommonBuilder.String()].Settings, r.Builders[VirtualBoxOVF.String()].Settings)
@@ -329,7 +329,7 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, va
 func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars []string, err error) {
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
-	settings["type"] = VMWareISO
+	settings["type"] = VMWareISO.String()
 	// Merge the settings between common and this builders.
 	mergedSlice := mergeSettingsSlices(r.Builders[CommonBuilder.String()].Settings, r.Builders[VMWareISO.String()].Settings)
 
@@ -432,7 +432,7 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, vars []string, err error) {
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
-	settings["type"] = VMWareVMX
+	settings["type"] = VMWareVMX.String()
 	// Merge the settings between common and this builders.
 	mergedSlice := mergeSettingsSlices(r.Builders[CommonBuilder.String()].Settings, r.Builders[VMWareVMX.String()].Settings)
 	// Go through each element in the slice, only take the ones that matter

@@ -45,7 +45,7 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, scripts []string) error 
 	// TODO This needs to be handled better...this is too long for most builds but if there are situations
 	// where there is a large archive this is not long enough.
 	time.Sleep(time.Millisecond * 2000)
-	err = copyScripts(scripts, i.ScriptsSrcDir, appendSlash(i.OutDir)+i.ScriptsDir)
+	err = copyFiles(scripts, i.ScriptsSrcDir, appendSlash(i.OutDir)+i.ScriptsDir)
 	if err != nil {
 		jww.ERROR.Println("packerTemplate.create: " + err.Error())
 		return err
@@ -87,24 +87,24 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, scripts []string) error 
 	return nil
 }
 
-func copyScripts(scripts []string, src string, dest string) error {
+func copyFiles(files []string, src string, dest string) error {
 	var errCnt, okCnt int
 	var wB int64
 	var err error
-	for _, script := range scripts {
-		wB, err = copyFile(script, src, dest)
+	for _, file := range files {
+		wB, err = copyFile(file, src, dest)
 		if err != nil {
-			jww.ERROR.Print("copyScripts: " + err.Error())
+			jww.ERROR.Print(err)
 			errCnt++
 			continue
 		}
-		jww.TRACE.Print("copyScripts: " + strconv.FormatInt(wB, 10) + " Bytes were copied from " + src + " to " + dest)
+		jww.TRACE.Print("copyFiles: " + strconv.FormatInt(wB, 10) + " Bytes were copied from " + src + " to " + dest)
 		okCnt++
 	}
 	if errCnt > 0 {
-		jww.ERROR.Print("copyScripts: Copy of scripts for build had " + strconv.Itoa(errCnt) + " errors. There were " + strconv.Itoa(okCnt) + " scripts that were copied without error.")
+		jww.ERROR.Print("copy of files for build had " + strconv.Itoa(errCnt) + " errors. There were " + strconv.Itoa(okCnt) + " files that were copied without error.")
 		return err
 	}
-	jww.TRACE.Print("copyScripts: " + strconv.Itoa(okCnt) + " scripts were successfully copied")
+	jww.TRACE.Print("copyFiles: " + strconv.Itoa(okCnt) + " files were successfully copied")
 	return nil
 }
