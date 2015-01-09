@@ -132,7 +132,6 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]i
 		ndx++
 		vrbls = append(vrbls, tmpVar...)
 	}
-	jww.TRACE.Printf("%d post processors")
 	return p, vars, nil
 }
 
