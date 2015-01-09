@@ -771,7 +771,7 @@ func TestVarMapFromSlice(t *testing.T) {
 
 	res = varMapFromSlice(nil)
 	if res != nil {
-		t.Error("Expected res to be nil, had %+v", res)
+		t.Errorf("Expected res to be nil, got %v", res)
 	}
 
 	sl := []string{"key1=value1", "key2=value2"}
@@ -1383,7 +1383,7 @@ func TestCopyDirContent(t *testing.T) {
 	os.MkdirAll(tmpDir+"test", os.FileMode(0766))
 	err = copyDirContent("../test_files/conf", tmpDir)
 	if err != nil {
-		t.Errorf("expected no error, got %d", err.Error())
+		t.Errorf("expected no error, got %q", err.Error())
 	}
 
 	err = copyDirContent("../test_files/buildbuild", tmpDir)

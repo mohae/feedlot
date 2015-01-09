@@ -628,8 +628,8 @@ func BuildBuilds(buildNames ...string) (string, error) {
 	for i := 0; i < nBuilds; i++ {
 		err := <-doneCh
 		if err != nil {
-			return "", err
 			errorCount++
+			return "", err
 		} else {
 			builtCount++
 		}

@@ -475,7 +475,7 @@ func TestCreateBuilderVMWareISO(t *testing.T) {
 	//	t.Errorf("Expected \"[[\"modifyvm\" \"{{.Name}}\" \"--cpus\" \"1\"] [\"modifyvm\" \"{{.Name}}\" \"--memory\" \"4096\"]]\", got %q", settings["vboxmanage"])
 	//}
 	if MarshalJSONToString.Get(settings["vmx_data"]) != "{\"cpus\":\"1\",\"memory\":\"4096\"}" {
-		t.Errorf("{\"cpus\":\"1\",\"memory\":\"4096\"}", MarshalJSONToString.Get(settings["vmx_data"]))
+		t.Errorf("Expected \"{\"cpus\":\"1\",\"memory\":\"4096\"}\", got %q", MarshalJSONToString.Get(settings["vmx_data"]))
 	}
 
 	settings, _, err = testBuilderCentOS.createVMWareISO()
