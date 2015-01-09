@@ -81,22 +81,22 @@ type Builder int
 
 var builders = [...]string{
 	"unsupported Builder",
-	"common",          // BuilderCommon is the name of the common builder section in the toml files.
-	"amazon-chroot",   // BuilderAmazonChroot is the name of the Amazon chroot builder section in the toml files.
-	"amazon-ebs",      // BuilderAmazonEBS is the name of the Amazon EBS builder section in the toml files.
-	"amazon-instance", // BuilderAmazonInstance is the name of the Amazon instance builder section in the toml files.
-	"digitalocean",    // BuilderDigitalOcean is the name of the Digital Ocean section in the toml files.
-	"docker",          // BuilderDocker is the name of the Docker builder section in the toml files.
-	"googlecompute",   // BuilderGoogleCompute is the name of the Google Compute builder section in the toml files.
-	"null",            // BuilderNull is the name of the Null builder section in the toml files.
-	"openstack",       // BuilderOpenstack is the name of the Openstack builder section in the toml files.
-	"parallels-iso",   // BuilderParallelsISO is the name of the Parallels ISO builder section in the toml files.
-	"parallels-pvm",   // BuilderParallelsPVM is the name of the Parallels PVM builder section in the toml files.
-	"qemu",            // BuilderQEMU is the name of the QEMU builder section in the toml files.
-	"virtualbox-iso",  // BuilderVirtualBoxISO is the name of the VirtualBox ISO builder section in the toml files.
-	"virtualbox-ovf",  // BuilderVirtualBoxOVF is the name of the VirtualBox OVF builder section in the toml files.
-	"vmware-iso",      // BuilderVMWareISO is the name of the VMWare ISO builder section in the toml files.
-	"vmware-vmx",      // BuilderVMWareVMX is the name of the VMWare VMX builder section in the toml files.
+	"common",          // Common is the name of the common builder section in the toml files.
+	"amazon-chroot",   // AmazonChroot is the name of the Amazon chroot builder section in the toml files.
+	"amazon-ebs",      // AmazonEBS is the name of the Amazon EBS builder section in the toml files.
+	"amazon-instance", // AmazonInstance is the name of the Amazon instance builder section in the toml files.
+	"digitalocean",    // DigitalOcean is the name of the Digital Ocean section in the toml files.
+	"docker",          // Docker is the name of the Docker builder section in the toml files.
+	"googlecompute",   // GoogleCompute is the name of the Google Compute builder section in the toml files.
+	"null",            // Null is the name of the Null builder section in the toml files.
+	"openstack",       // Openstack is the name of the Openstack builder section in the toml files.
+	"parallels-iso",   // ParallelsISO is the name of the Parallels ISO builder section in the toml files.
+	"parallels-pvm",   // ParallelsPVM is the name of the Parallels PVM builder section in the toml files.
+	"qemu",            // QEMU is the name of the QEMU builder section in the toml files.
+	"virtualbox-iso",  // VirtualBoxISO is the name of the VirtualBox ISO builder section in the toml files.
+	"virtualbox-ovf",  // VirtualBoxOVF is the name of the VirtualBox OVF builder section in the toml files.
+	"vmware-iso",      // VMWareISO is the name of the VMWare ISO builder section in the toml files.
+	"vmware-vmx",      // VMWareVMX is the name of the VMWare VMX builder section in the toml files.
 }
 
 func (b Builder) String() string { return builders[b] }
@@ -191,6 +191,7 @@ const (
 type Provisioner int
 
 var provisioners = [...]string{
+	"unsupported provisioner",
 	"ansible-local",   // AnsibleLocal is the name of the Ansible Provisioner
 	"chef-client",     // ChefClient is the name of the Chef Client Provisioner
 	"chef-solo",       // ChefSolo is the name of the Chef Solo Provisioner
@@ -853,7 +854,7 @@ func mergeSettingsSlices(s1 []string, s2 []string) []string {
 		key, _ = parseVar(v)
 		if _, ok := ms1[key]; ok {
 			// This key already exists. Find it and update it.
-			indx = keyIndexInVarSlice(key, merged)
+			indx = indexOfKeyInVarSlice(key, merged)
 			if indx < 0 {
 				jww.WARN.Println(fmt.Sprintf("%q, was not updated to %q because it was not found in the target", key, v))
 			} else {
@@ -912,10 +913,10 @@ func parseVar(s string) (k string, v string) {
 	return k, v
 }
 
-// Searches for the passed key in the slice and returns its index if found, or
-// -1 if not found; 0 is a valid index on a slice. The string to seArch is in
-// the form of 'key=value'.
-func keyIndexInVarSlice(key string, sl []string) int {
+// indexOfKeyInVarSlice searches for the passed key in the slice and returns its
+// index if found, or -1 if not found; 0 is a valid index on a slice. The string
+// to search is in the form of 'key=value'.
+func indexOfKeyInVarSlice(key string, sl []string) int {
 	//Go through the slice and find the matching key
 	for i, s := range sl {
 		k, _ := parseVar(s)
@@ -1017,17 +1018,17 @@ func trimSuffix(s string, suffix string) string {
 // returns either the number of bytes written or an error.
 func copyFile(file string, srcDir string, destDir string) (written int64, err error) {
 	if srcDir == "" {
-		err = errors.New("copyFile: no source directory received")
+		err = errors.New("no source directory received")
 		jww.ERROR.Println(err)
 		return 0, err
 	}
 	if destDir == "" {
-		err = errors.New("copyFile: no destination directory received")
+		err = errors.New("no destination directory received")
 		jww.ERROR.Println(err)
 		return 0, err
 	}
 	if file == "" {
-		err = errors.New("copyFile: no filename received")
+		err = errors.New("no filename received")
 		jww.ERROR.Println(err)
 		return 0, err
 	}

@@ -120,13 +120,14 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 // r.replaceVariables checks incoming string for variables and replaces them
 // with their values.
 func (r *rawTemplate) replaceVariables(s string) string {
-	//see if the delim is in the string
+	//see if the delim is in the string, if not, nothing to replace
 	if strings.Index(s, r.delim) < 0 {
 		return s
 	}
 
 	// Go through each variable and replace as applicable.
 	for vName, vVal := range r.varVals {
+		//	jww.CRITICAL.Printf("name: %s\tval: %v", vName, vVal)
 		s = strings.Replace(s, vName, vVal, -1)
 	}
 
@@ -262,7 +263,7 @@ func (r *rawTemplate) mergeVariables() {
 	// check src_dir and out_dir first:
 
 	// Get the delim and set the replacement map, resolve name information
-	r.varVals = map[string]string{r.delim + "type": r.Distro, r.delim + "release": r.Release, r.delim + "arch": r.Arch, r.delim + "image": r.Image, r.delim + "date": r.date, r.delim + "build_name": r.BuildName}
+	r.varVals = map[string]string{r.delim + "distro": r.Distro, r.delim + "release": r.Release, r.delim + "arch": r.Arch, r.delim + "image": r.Image, r.delim + "date": r.date, r.delim + "build_name": r.BuildName}
 
 	r.Name = r.replaceVariables(r.Name)
 

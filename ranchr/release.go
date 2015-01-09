@@ -1,6 +1,7 @@
 package ranchr
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -137,7 +138,7 @@ func (u *ubuntu) findChecksum(page string) (string, error) {
 		pos = strings.Index(page, ".iso")
 
 		if pos < 0 {
-			err := errors.New("unable to find ISO information while looking for the release string on the Ubuntu checksums page.")
+			err := errors.New("unable to find ISO information while looking for the release string on the Ubuntu checksums page")
 			jww.ERROR.Println(err)
 			return "", err
 		}
@@ -166,7 +167,7 @@ func (u *ubuntu) findChecksum(page string) (string, error) {
 
 	// Safety check...should never occur, but sanity check it anyways.
 	if len(page) < pos-2 {
-		err := errors.New("Unable to retrieve checksum information for " + u.Name)
+		err := errors.New("unable to retrieve checksum information for " + u.Name)
 		jww.ERROR.Println(err.Error())
 		return "", err
 	}
@@ -189,7 +190,16 @@ func (u *ubuntu) setName() {
 	if u.ReleaseFull == "" {
 		u.ReleaseFull = u.Release
 	}
-	u.Name = fmt.Sprintf("ubuntu-%s-%s-%s.iso", u.ReleaseFull, u.Image, u.Arch)
+	var buff bytes.Buffer
+	buff.WriteString("ubuntu-")
+	buff.WriteString(u.ReleaseFull)
+	buff.WriteString("-")
+	buff.WriteString(u.Image)
+	buff.WriteString("-")
+	buff.WriteString(u.Arch)
+	buff.WriteString(".iso")
+	u.Name = buff.String()
+	return
 }
 
 // getOSType returns the OSType string for the provided builder. The OS Type
@@ -225,7 +235,13 @@ type centOS struct {
 
 // isoRedirectURL returns the currect url for the desired version and architecture.
 func (c *centOS) isoRedirectURL() string {
-	return fmt.Sprintf("http://isoredirect.centos.org/centos/%s/isos/%s/", c.Release, c.Arch)
+	var buff bytes.Buffer
+	buff.WriteString("http://isoredirect.centos.org/centos/")
+	buff.WriteString(c.Release)
+	buff.WriteString("/isos/")
+	buff.WriteString(c.Arch)
+	buff.WriteString("/")
+	return buff.String()
 }
 
 // Sets the ISO information for a Packer template.
@@ -276,7 +292,8 @@ func (c *centOS) setReleaseInfo() error {
 	version := strings.Split(c.Release, ".")
 	// If this was a release string, it will have two parts.
 	if len(version) > 1 {
-		c.Release = version[0]
+		c.ReleaseFull = c.Release // Set release full with the release number
+		c.Release = version[0]    // not sure why I did it this way, revisit
 		return nil
 	}
 
@@ -287,7 +304,6 @@ func (c *centOS) setReleaseInfo() error {
 		jww.ERROR.Println(err)
 		return err
 	}
-
 	return nil
 }
 
@@ -296,24 +312,25 @@ func (c *centOS) setReleaseInfo() error {
 func (c *centOS) setReleaseNumber() error {
 	var page string
 	var err error
-
-	mirrorURL := fmt.Sprintf("http://mirrorlist.centos.org/?release=%s&arch=%s&repo=os", c.Release, c.Arch)
+	var buff bytes.Buffer
+	buff.WriteString("http://mirrorlist.centos.org/?release=")
+	buff.WriteString(c.Release)
+	buff.WriteString("&arch=")
+	buff.WriteString(c.Arch)
+	buff.WriteString("&repo=os")
+	mirrorURL := buff.String()
 
 	if page, err = getStringFromURL(mirrorURL); err != nil {
 		jww.ERROR.Println(err.Error())
 		return err
 	}
-
 	// Could just parse the string, but breaking it up is simpler.
 	lines := strings.Split(page, "\n")
-
 	// Each line is an URL, split the first one to make it easier to get the version.
 	urlParts := strings.Split(lines[0], "/")
-
 	// The release is 3rd from last.
 	c.ReleaseFull = urlParts[len(urlParts)-4]
 	jww.TRACE.Println(c.ReleaseFull)
-
 	return nil
 }
 
@@ -322,25 +339,20 @@ func (c *centOS) setReleaseNumber() error {
 func (c *centOS) getOSType(buildType string) (string, error) {
 	switch buildType {
 	case "vmware-iso":
-
 		switch c.Arch {
 		case "x86_64":
 			return "centos-64", nil
 		case "x386":
 			return "centos-32", nil
 		}
-
 	case "virtualbox-iso":
-
 		switch c.Arch {
 		case "x86_64":
 			return "RedHat_64", nil
 		case "x386":
 			return "RedHat_32", nil
 		}
-
 	}
-
 	// Shouldn't get here unless the buildType passed is an unsupported one.
 	err := fmt.Errorf("%s does not support the %s builder", c.Distro, buildType)
 	return "", err
@@ -349,31 +361,24 @@ func (c *centOS) getOSType(buildType string) (string, error) {
 // setChecksum finds the URL for the checksum page for the current mirror,
 // retrieves the page, and finds the checksum for the release ISO.
 func (c *centOS) setChecksum() error {
-	var page string
-	var err error
-
 	if c.ChecksumType == "" {
 		err := errors.New("Checksum Type not set")
 		jww.ERROR.Println(err.Error())
 		return err
 	}
-
 	url := c.checksumURL()
 	jww.TRACE.Println("URL:", url)
-
-	if page, err = getStringFromURL(url); err != nil {
+	page, err := getStringFromURL(url)
+	if err != nil {
 		jww.ERROR.Println(err.Error())
 		return err
 	}
-
 	jww.TRACE.Print(page)
 	// Now that we have a page...we need to find the checksum and set it
-
 	if c.Checksum, err = c.findChecksum(page); err != nil {
 		jww.ERROR.Println(err.Error())
 		return err
 	}
-
 	jww.TRACE.Println(c.Checksum)
 	return nil
 }
@@ -381,15 +386,28 @@ func (c *centOS) setChecksum() error {
 // checksumURL returns the url of the checksum page for the ISO.
 func (c *centOS) checksumURL() string {
 	// The base url is the same as the ISO's so strip the name and add the checksum page.
-	url := trimSuffix(c.isoURL, c.Name) + strings.ToLower(c.ChecksumType) + "sum.txt"
-	return url
+	var buff bytes.Buffer
+	buff.WriteString(trimSuffix(c.isoURL, c.Name))
+	buff.WriteString(strings.ToLower(c.ChecksumType))
+	buff.WriteString("sum.txt")
+	return buff.String()
 }
 
 // setISOURL sets the url of the ISO. If the BaseURL is set, that is used. If it
 // isn't set, a isoredirect url for the ISO will be randomly selected and used.
 func (c *centOS) setISOURL() error {
 	if c.BaseURL != "" {
-		c.isoURL = c.BaseURL + c.Name
+		var buff bytes.Buffer
+		buff.WriteString(c.BaseURL)
+		if !strings.HasSuffix(c.BaseURL, "/") {
+			buff.WriteString("/")
+		}
+		buff.WriteString(c.ReleaseFull)
+		buff.WriteString("/isos/")
+		buff.WriteString(c.Arch)
+		buff.WriteString("/")
+		buff.WriteString(c.Name)
+		c.isoURL = buff.String()
 		jww.TRACE.Println(c.isoURL)
 		return nil
 	}
@@ -445,6 +463,9 @@ func (c *centOS) randomISOURL() (string, error) {
 	}
 	f(doc)
 
+	if len(isoURLs) < 1 {
+		return "", fmt.Errorf("no valid iso URLs were found")
+	}
 	// Randomly choose from the slice.
 	url := trimSuffix(isoURLs[rand.Intn(len(isoURLs)-1)], "\n") + c.Name
 	jww.TRACE.Println("ISO url: ", url)
@@ -467,7 +488,7 @@ func (c *centOS) findChecksum(page string) (string, error) {
 	pos := strings.Index(page, c.Name)
 
 	if pos < 0 {
-		err := errors.New("Unable to find ISO information while looking for the release string on the CentOS checksums page.")
+		err := errors.New("unable to find ISO information while looking for the release string on the CentOS checksums page")
 		jww.ERROR.Println(err.Error())
 		return "", err
 	}
@@ -483,12 +504,21 @@ func (c *centOS) findChecksum(page string) (string, error) {
 
 // Set the name of the ISO.
 func (c *centOS) setName() {
-	c.Name = "CentOS-" + c.ReleaseFull + "-" + c.Arch + "-" + c.Image + ".iso"
+	var buff bytes.Buffer
+	buff.WriteString("CentOS-")
+	buff.WriteString(c.ReleaseFull)
+	buff.WriteString("-")
+	buff.WriteString(c.Arch)
+	buff.WriteString("-")
+	buff.WriteString(c.Image)
+	buff.WriteString(".iso")
+	c.Name = buff.String()
 	return
 }
 
-// Kind of like `wget`; return a string from the passed URL.
+// getStringFromURL returns the response body for the passed url as a string.
 func getStringFromURL(url string) (string, error) {
+	jww.ERROR.Println(url)
 	// Get the URL resource
 	res, err := http.Get(url)
 	if err != nil {
