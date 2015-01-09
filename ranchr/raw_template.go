@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	_ "github.com/mohae/customjson"
 	"github.com/mohae/deepcopy"
 	jww "github.com/spf13/jwalterweatherman"
 )

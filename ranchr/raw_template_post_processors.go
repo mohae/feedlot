@@ -1,5 +1,3 @@
-// create_post_processors.go creates the post-processors for a Packer Build.
-// Add supported post-processors here.
 package ranchr
 
 import (
@@ -27,10 +25,10 @@ func (r *rawTemplate) updatePostProcessors(new map[string]*postProcessor) {
 		return
 	}
 	// Convert the existing postProcessors to interface.
-	var ifaceOld map[string]interface{} = make(map[string]interface{}, len(r.PostProcessors))
+	var ifaceOld = make(map[string]interface{}, len(r.PostProcessors))
 	ifaceOld = DeepCopyMapStringPPostProcessor(r.PostProcessors)
 	// Convert the new postProcessors to interfaces
-	var ifaceNew map[string]interface{} = make(map[string]interface{}, len(new))
+	var ifaceNew = make(map[string]interface{}, len(new))
 	ifaceNew = DeepCopyMapStringPPostProcessor(new)
 	// Get the all keys from both maps
 	var keys []string

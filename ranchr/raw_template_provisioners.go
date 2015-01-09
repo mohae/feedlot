@@ -1,11 +1,8 @@
-// create_provisioners.go creates the provisioners for a Packer build. Add
-// supported provisioners here.
 package ranchr
 
 import (
 	"errors"
 	"fmt"
-	_ "reflect"
 	"strings"
 
 	"github.com/mohae/deepcopy"
@@ -28,10 +25,10 @@ func (r *rawTemplate) updateProvisioners(new map[string]*provisioner) {
 		return
 	}
 	// Convert the existing provisioners to interface.
-	var ifaceOld map[string]interface{} = make(map[string]interface{}, len(r.Provisioners))
+	var ifaceOld = make(map[string]interface{}, len(r.Provisioners))
 	ifaceOld = DeepCopyMapStringPProvisioner(r.Provisioners)
 	// Convert the new provisioners to interface.
-	var ifaceNew map[string]interface{} = make(map[string]interface{}, len(new))
+	var ifaceNew = make(map[string]interface{}, len(new))
 	ifaceNew = DeepCopyMapStringPProvisioner(new)
 	// Get the all keys from both maps
 	var keys []string
@@ -255,7 +252,7 @@ func (r *rawTemplate) createFileProvisioner() (settings map[string]interface{}, 
 	return settings, vars, nil
 }
 
-// MapStringPProvisioners makes a deep copy of each builder passed and
+// DeepCopyMapStringPProvisioner makes a deep copy of each builder passed and
 // returns the copie map[string]*provisioner as a map[string]interface{}
 // notes: This currently only supports string slices.
 func DeepCopyMapStringPProvisioner(p map[string]*provisioner) map[string]interface{} {

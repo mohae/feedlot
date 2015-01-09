@@ -86,7 +86,7 @@ func (d *directory) addFilename(root string, p string, fi os.FileInfo, err error
 		return err
 	}
 	if !exists {
-		err = fmt.Errorf("%s does not exist.", p)
+		err = fmt.Errorf("%s does not exist", p)
 		jww.ERROR.Println(err)
 		return err
 	}

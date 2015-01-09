@@ -1,7 +1,6 @@
 package ranchr
 
 import (
-	_ "errors"
 	"io"
 	"os"
 	"strconv"

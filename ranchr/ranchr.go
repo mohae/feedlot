@@ -32,6 +32,7 @@ const (
 	Ubuntu
 )
 
+// Distro is the distribution type
 type Distro int
 
 var distros = [...]string{
@@ -76,6 +77,7 @@ const (
 	VMWareVMX
 )
 
+// Builder is a Packer supported builder.
 type Builder int
 
 var builders = [...]string{
@@ -141,6 +143,7 @@ func BuilderFromString(s string) Builder {
 	return UnsupportedBuilder
 }
 
+// PostProcessor constants
 const (
 	UnsupportedPostProcessor PostProcessor = iota
 	Vagrant
@@ -148,6 +151,7 @@ const (
 	VSphere
 )
 
+// PostProcessor is a Packer supported post-processor.
 type PostProcessor int
 
 var postProcessors = [...]string{
@@ -174,6 +178,7 @@ func PostProcessorFromString(s string) PostProcessor {
 	return UnsupportedPostProcessor
 }
 
+// Provisioner constants
 const (
 	UnsupportedProvisioner Provisioner = iota
 	AnsibleLocal
@@ -187,6 +192,7 @@ const (
 	ShellScripts
 )
 
+// Provisioner is a packer supported provisioner
 type Provisioner int
 
 var provisioners = [...]string{
@@ -199,8 +205,7 @@ var provisioners = [...]string{
 	"puppet-server",   // PuppetServer is the name of the puppet-server Provisioner
 	"salt-masterless", // SaltMasterless is the name of the Salt Masterless Provisioner
 	"shell",           // Shell is the name of the Shell Provisioner
-	"shell-scripts",   // ShellScripts is an alias for the Shell provisioner as the Shell provisioner
-	// is technically the Shell Script provisioner, in the Packer documentation.
+	"shell-scripts",   // ShellScripts is an alias for the Shell provisioner
 }
 
 func (p Provisioner) String() string { return provisioners[p] }
@@ -232,7 +237,8 @@ func ProvisionerFromString(s string) Provisioner {
 	return UnsupportedProvisioner
 }
 
-var (
+// Environment variable name constants
+const (
 	// EnvRancherFile is the name of the environment variable name for Rancher's config file.
 	EnvRancherFile = "RANCHER_CONFIG"
 	// EnvBuildsFile is the name of the environment variable name for the builds file.
@@ -258,13 +264,16 @@ var (
 var (
 	// indent: default indent to use for marshal stuff
 	indent = "    "
-	//VMSetting is the constant for builders with vm-settings
+	//VMSettings is the constant for builders with vm-settings
 	VMSettings            = "vm_settings"
-	TypeOfSliceInterfaces = reflect.TypeOf([]interface{}(nil))
-	TypeOfSliceStrings    = reflect.TypeOf([]string(nil))
+	typeOfSliceInterfaces = reflect.TypeOf([]interface{}(nil))
+	typeOfSliceStrings    = reflect.TypeOf([]string(nil))
 )
 
+// Defined builds
 var Builds *builds
+
+// Defaults for each supported distribution
 var DistroDefaults distroDefaults
 
 // AppConfig contains the current Rancher configuration...loaded at start-up.
@@ -351,7 +360,7 @@ func (d *distroDefaults) Set() error {
 	for k, v := range s.Distro {
 		// See if the base url exists for non centos distros
 		if v.BaseURL == "" && k != CentOS.String() {
-			err := fmt.Errorf("%s requires a BaseURL, non provided.", k)
+			err := fmt.Errorf("%s requires a BaseURL, none provided", k)
 			jww.CRITICAL.Println(err.Error())
 			return err
 
@@ -534,7 +543,7 @@ func BuildDistro(a ArgsFilter) error {
 func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	var t *rawTemplate
 	if a.Distro == "" {
-		err := errors.New("cannot build a packer template because no target distro information was passed.")
+		err := errors.New("cannot build a packer template because no target distro information was passed")
 		jww.ERROR.Println(err)
 		return err
 	}
@@ -956,12 +965,12 @@ func getMergedProvisioners(old map[string]provisioner, new map[string]provisione
 		return old
 	}
 	// Convert to an interface.
-	var ifaceOld map[string]interface{} = make(map[string]interface{}, len(old))
+	var ifaceOld = make(map[string]interface{}, len(old))
 	for i, o := range old {
 		ifaceOld[i] = o
 	}
 	// Convert to an interface.
-	var ifaceNew map[string]interface{} = make(map[string]interface{}, len(new))
+	var ifaceNew = make(map[string]interface{}, len(new))
 	for i, n := range new {
 		ifaceNew[i] = n
 	}

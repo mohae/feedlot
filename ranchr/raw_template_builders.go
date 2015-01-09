@@ -1,5 +1,3 @@
-// raw_template_builders.go contains all of the builder related functionality
-// for rawTemplates. Any new builders should be added here.
 package ranchr
 
 import (
@@ -196,14 +194,14 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 	if l > 0 {
 		tmpVB := make([][]string, l)
 		tmp := reflect.ValueOf(r.Builders[VirtualBoxISO.String()].Arrays[VMSettings])
-		var vm_settings interface{}
+		var vmSettings interface{}
 		switch tmp.Type() {
-		case TypeOfSliceInterfaces:
-			vm_settings = deepcopy.Iface(r.Builders[VirtualBoxISO.String()].Arrays[VMSettings]).([]interface{})
-		case TypeOfSliceStrings:
-			vm_settings = deepcopy.Iface(r.Builders[VirtualBoxISO.String()].Arrays[VMSettings]).([]string)
+		case typeOfSliceInterfaces:
+			vmSettings = deepcopy.Iface(r.Builders[VirtualBoxISO.String()].Arrays[VMSettings]).([]interface{})
+		case typeOfSliceStrings:
+			vmSettings = deepcopy.Iface(r.Builders[VirtualBoxISO.String()].Arrays[VMSettings]).([]string)
 		}
-		vms := deepcopy.InterfaceToSliceStrings(vm_settings)
+		vms := deepcopy.InterfaceToSliceStrings(vmSettings)
 		for i, v := range vms {
 			vo := reflect.ValueOf(v)
 			k, val := parseVar(vo.Interface().(string))
@@ -278,14 +276,14 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, va
 	if l > 0 {
 		tmpVB := make([][]string, l)
 		tmp := reflect.ValueOf(r.Builders[VirtualBoxOVF.String()].Arrays[VMSettings])
-		var vm_settings interface{}
+		var vmSettings interface{}
 		switch tmp.Type() {
-		case TypeOfSliceInterfaces:
-			vm_settings = deepcopy.Iface(r.Builders[VirtualBoxOVF.String()].Arrays[VMSettings]).([]interface{})
-		case TypeOfSliceStrings:
-			vm_settings = deepcopy.Iface(r.Builders[VirtualBoxOVF.String()].Arrays[VMSettings]).([]string)
+		case typeOfSliceInterfaces:
+			vmSettings = deepcopy.Iface(r.Builders[VirtualBoxOVF.String()].Arrays[VMSettings]).([]interface{})
+		case typeOfSliceStrings:
+			vmSettings = deepcopy.Iface(r.Builders[VirtualBoxOVF.String()].Arrays[VMSettings]).([]string)
 		}
-		vms := deepcopy.InterfaceToSliceStrings(vm_settings)
+		vms := deepcopy.InterfaceToSliceStrings(vmSettings)
 		for i, v := range vms {
 			vo := reflect.ValueOf(v)
 			k, val := parseVar(vo.Interface().(string))
@@ -393,8 +391,8 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 
 	// Generate builder specific section
 	tmpVB := map[string]string{}
-	vm_settings := deepcopy.InterfaceToSliceStrings(r.Builders[VirtualBoxISO.String()].Arrays[VMSettings])
-	for _, v := range vm_settings {
+	vmSettings := deepcopy.InterfaceToSliceStrings(r.Builders[VirtualBoxISO.String()].Arrays[VMSettings])
+	for _, v := range vmSettings {
 		k, val := parseVar(v)
 		val = r.replaceVariables(val)
 		tmpVB[k] = val
@@ -456,8 +454,8 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, vars [
 	}
 	// Generate builder specific section
 	tmpVB := map[string]string{}
-	vm_settings := deepcopy.InterfaceToSliceStrings(r.Builders[VMWareVMX.String()].Arrays[VMSettings])
-	for _, v := range vm_settings {
+	vmSettings := deepcopy.InterfaceToSliceStrings(r.Builders[VMWareVMX.String()].Arrays[VMSettings])
+	for _, v := range vmSettings {
 		k, val := parseVar(v)
 		val = r.replaceVariables(val)
 		tmpVB[k] = val
@@ -557,20 +555,20 @@ func (r *rawTemplate) updateBuilders(new map[string]*builder) {
 		return
 	}
 	// Convert the existing Builders to interfaces.
-	var ifaceOld map[string]interface{} = make(map[string]interface{}, len(r.Builders))
+	var ifaceOld = make(map[string]interface{}, len(r.Builders))
 	ifaceOld = DeepCopyMapStringPBuilder(r.Builders)
 	//	for i, o := range r.Builders {
 	//		ifaceOld[i] = o
 	//	}
 	// Convert the new Builders to interfaces.
-	var ifaceNew map[string]interface{} = make(map[string]interface{}, len(new))
+	var ifaceNew = make(map[string]interface{}, len(new))
 	ifaceNew = DeepCopyMapStringPBuilder(new)
 	// Make the slice as long as the slices in both builders, odds are its
 	// shorter, but this is the worst case.
 	var keys []string
 	// Convert the keys to a map
 	keys = mergedKeysFromMaps(ifaceOld, ifaceNew)
-	var vm_settings []string
+	var vmSettings []string
 	// If there's a builder with the key CommonBuilder, merge them. This is
 	// a special case for builders only.
 	_, ok := new[CommonBuilder.String()]
@@ -593,10 +591,10 @@ func (r *rawTemplate) updateBuilders(new map[string]*builder) {
 			continue
 		}
 		b = r.Builders[v].DeepCopy()
-		vm_settings = deepcopy.InterfaceToSliceStrings(new[v].Arrays[VMSettings])
+		vmSettings = deepcopy.InterfaceToSliceStrings(new[v].Arrays[VMSettings])
 		// If there is anything to merge, do so
-		if vm_settings != nil {
-			b.Arrays[VMSettings] = vm_settings
+		if vmSettings != nil {
+			b.Arrays[VMSettings] = vmSettings
 			r.Builders[v] = b
 		}
 	}
