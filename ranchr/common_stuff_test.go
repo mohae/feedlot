@@ -22,7 +22,7 @@ func stringSliceContains(sl []string, val string) bool {
 // will be here too...which means that mostly the old table driven test data
 // will remain in the same file.
 // I know lack of locality, but I'm tired of 1000+ line tests with mostly var
-// setup. And yes, there are var setup locally in tests...
+// setup. And yes, there are var setup locally in tests...that's a TODO
 var testDir = "../test_files/"
 var testRancherCfg = testDir + "rancher_test.cfg"
 var testDefaultsFile = testDir + "conf/defaults_test.toml"

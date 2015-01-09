@@ -300,7 +300,7 @@ func (d *defaults) LoadOnce() error {
 		}
 		_, err = toml.DecodeFile(name, d)
 		if err != nil {
-			jww.CRITICAL.Print(err.Error())
+			jww.CRITICAL.Print(err)
 			return
 		}
 		return
@@ -485,7 +485,6 @@ func (s *supported) LoadOnce() error {
 		s.loaded = true
 		return
 	}
-
 	s.load.Do(loadFunc)
 	if !s.loaded {
 		return fmt.Errorf("an error occurred while loading the Supported information, please check the log")

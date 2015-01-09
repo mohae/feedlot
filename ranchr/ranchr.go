@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
-	json "github.com/mohae/customjson"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -506,7 +505,6 @@ func BuildDistro(a ArgsFilter) error {
 			return err
 		}
 	}
-	fmt.Println("BuildDistro:\n" + json.MarshalIndentToString(DistroDefaults, "", indent))
 	err := buildPackerTemplateFromDistro(a)
 	if err != nil {
 		jww.ERROR.Println(err)
@@ -528,14 +526,12 @@ func BuildDistro(a ArgsFilter) error {
 		}
 		argString += "Release=" + a.Release
 	}
-	jww.INFO.Printf("BuildDistro: Packer template built for %v using: %s", a.Distro, argString)
 	return nil
 
 }
 
 // Create Packer templates from specified build templates.
 func buildPackerTemplateFromDistro(a ArgsFilter) error {
-	jww.DEBUG.Println("buildPackerTemplateFromDistro: Enter")
 	var t *rawTemplate
 	if a.Distro == "" {
 		err := errors.New("cannot build a packer template because no target distro information was passed.")
@@ -568,7 +564,6 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	// Since distro builds don't actually have a build name, we create one
 	// out of the args used to create it.
 	t.BuildName = fmt.Sprintf("%s-%s-%s-%s", t.Distro, t.Release, t.Arch, t.Image)
-	jww.TRACE.Printf("\trawtemplate: %v\n", json.MarshalIndentToString(t, "", indent))
 	pTpl := packerTemplate{}
 	// Now that the raw template has been made, create a Packer template out of it
 	pTpl, err = t.createPackerTemplate()
@@ -576,9 +571,6 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 		jww.ERROR.Println(err)
 		return err
 	}
-
-	jww.TRACE.Printf("\tpackerTemplate:  %v\n", json.MarshalIndentToString(pTpl, "", indent))
-
 	// Get the scripts for this build, if any.
 	var scripts []string
 	scripts = t.ScriptNames()
@@ -590,7 +582,6 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 		jww.ERROR.Println(err)
 		return err
 	}
-	jww.INFO.Println("Created Packer template and associated build directory for " + t.BuildName)
 	return nil
 }
 
@@ -604,7 +595,6 @@ func BuildBuilds(buildNames ...string) (string, error) {
 		jww.ERROR.Println(err)
 		return "", err
 	}
-
 	// Only load supported if it hasn't been loaded. Even though LoadSupported
 	// uses a mutex to control access to prevent race conditions, no need to
 	// call it if its already loaded.
@@ -697,9 +687,7 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 		doneCh <- err
 		return
 	}
-	jww.INFO.Println("Created Packer template and associated build directory for build:" + buildName + ".")
 	doneCh <- nil
-
 	return
 }
 
@@ -709,13 +697,11 @@ func getSliceLenFromIface(v interface{}) (int, error) {
 	if v == nil {
 		return 0, nil
 	}
-
 	switch reflect.TypeOf(v).Kind() {
 	case reflect.Slice:
 		sl := reflect.ValueOf(v)
 		return sl.Len(), nil
 	}
-
 	return 0, fmt.Errorf("err: getSliceLenFromIface expected a slice, go" + reflect.TypeOf(v).Kind().String())
 }
 
@@ -868,7 +854,6 @@ func mergeSettingsSlices(s1 []string, s2 []string) []string {
 		// should it exist. Instead, it is updated after adding the
 		// new value as, after add, i points to the current element.
 		merged[i] = v
-		fmt.Printf("\tadded indx=%v:\t%v\n", i, v)
 		i++
 	}
 	// Shrink the slice back down to == its length
@@ -1077,7 +1062,7 @@ func copyDirContent(srcDir string, destDir string) error {
 	}
 	if !exists {
 		err = fmt.Errorf("nothing copied: the source, %s, does not exist", srcDir)
-		jww.INFO.Println(err)
+		jww.ERROR.Println(err)
 		return err
 	}
 	dir := Archive{}
@@ -1113,7 +1098,6 @@ func copyDirContent(srcDir string, destDir string) error {
 
 // deleteDirContent deletes the contents of a directory.
 func deleteDirContent(dir string) error {
-	jww.DEBUG.Printf("dir: %s", dir)
 	var dirs []string
 	// see if the directory exists first, actually any error results in the
 	// same handling so just return on any error instead of doing an
@@ -1127,13 +1111,10 @@ func deleteDirContent(dir string) error {
 	}
 	dirInf := directory{}
 	dirInf.DirWalk(dir)
-	jww.TRACE.Printf("dirIng: %+v", dirInf)
 	dir = appendSlash(dir)
 	for _, file := range dirInf.Files {
-		jww.TRACE.Printf("process: %v", dir+file.p)
 		if file.info.IsDir() {
 			dirs = append(dirs, dir+file.p)
-			jww.TRACE.Printf("added directory: %v", dir+file.p)
 			continue
 		}
 		err := os.Remove(dir + file.p)
@@ -1141,12 +1122,10 @@ func deleteDirContent(dir string) error {
 			jww.ERROR.Println(err)
 			return err
 		}
-		jww.TRACE.Printf("deleted: %v", dir+file.p)
 	}
 	// all the files should now be deleted so its safe to delete the directories
 	// do this in reverse order
 	for i := len(dirs) - 1; i >= 0; i-- {
-		jww.TRACE.Printf("process directory: %v", dirs[i])
 		err = os.Remove(dirs[i])
 		if err != nil {
 			jww.ERROR.Println(err)

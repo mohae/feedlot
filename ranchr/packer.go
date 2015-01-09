@@ -24,15 +24,11 @@ type packerTemplate struct {
 // template is written to the output directory and any external resources that
 // the template requires is copied there.
 func (p *packerTemplate) create(i IODirInf, b BuildInf, scripts []string) error {
-	jww.DEBUG.Println("packerTemplate.create: enter")
-	jww.TRACE.Printf("%v/n%v/n%v", i, b, json.MarshalToString(scripts))
-
 	err := i.check()
 	if err != nil {
 		jww.ERROR.Println("packerTemplate.create: " + err.Error())
 		return err
 	}
-
 	// priorBuild handles both the archiving and deletion of the prior build, if it exists, i.e.
 	// if the build's output path exists.
 	a := Archive{}
@@ -41,7 +37,6 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, scripts []string) error 
 		jww.ERROR.Print("packerTemplate.create: " + err.Error())
 		return err
 	}
-
 	// TODO This needs to be handled better...this is too long for most builds but if there are situations
 	// where there is a large archive this is not long enough.
 	time.Sleep(time.Millisecond * 2000)
@@ -55,14 +50,12 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, scripts []string) error 
 		jww.ERROR.Print("packerTemplate.create: " + err.Error())
 		return err
 	}
-
 	// Write it out as JSON
 	tplJSON, err := json.MarshalIndent(p, "", "\t")
 	if err != nil {
 		jww.ERROR.Print("packerTemplate.create: " + err.Error())
 		return err
 	}
-
 	f, err := os.Create(appendSlash(i.OutDir) + b.Name + ".json")
 	if err != nil {
 		jww.ERROR.Print("packerTemplate.create: " + err.Error())
@@ -75,36 +68,29 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, scripts []string) error 
 			err = cerr
 		}
 	}()
-
 	_, err = io.WriteString(f, string(tplJSON[:]))
 	if err != nil {
 		jww.ERROR.Print("packerTemplate.create: " + err.Error())
 		return err
 	}
-
-	jww.TRACE.Print("Packer template directory, JSON, and contents were created and copied for " + b.BuildName)
-	jww.DEBUG.Println("packerTemplate.create: exit")
 	return nil
 }
 
 func copyFiles(files []string, src string, dest string) error {
 	var errCnt, okCnt int
-	var wB int64
 	var err error
 	for _, file := range files {
-		wB, err = copyFile(file, src, dest)
+		_, err = copyFile(file, src, dest)
 		if err != nil {
 			jww.ERROR.Print(err)
 			errCnt++
 			continue
 		}
-		jww.TRACE.Print("copyFiles: " + strconv.FormatInt(wB, 10) + " Bytes were copied from " + src + " to " + dest)
 		okCnt++
 	}
 	if errCnt > 0 {
 		jww.ERROR.Print("copy of files for build had " + strconv.Itoa(errCnt) + " errors. There were " + strconv.Itoa(okCnt) + " files that were copied without error.")
 		return err
 	}
-	jww.TRACE.Print("copyFiles: " + strconv.Itoa(okCnt) + " files were successfully copied")
 	return nil
 }

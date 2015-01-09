@@ -24,16 +24,12 @@ type iso struct {
 	// The BaseURL for download url formation. Usage of this is distro
 	// specific.
 	BaseURL string
-
 	// The actual checksum for the ISO file that this struct represents.
 	Checksum string
-
 	// The type of the Checksum.
 	ChecksumType string
-
 	// Name of the ISO.
 	Name string
-
 	// The URL of the ISO
 	isoURL string
 }
@@ -64,16 +60,13 @@ type ubuntu struct {
 func (u *ubuntu) SetISOInfo() error {
 	// Set the ISO name.
 	u.setName()
-
 	// Set the Checksum information for this ISO.
 	if err := u.setChecksum(); err != nil {
 		jww.ERROR.Println(err)
 		return err
 	}
-
 	// Set the URL for the ISO image.
 	u.setISOURL()
-
 	return nil
 }
 
@@ -83,20 +76,17 @@ func (u *ubuntu) setChecksum() error {
 	// for Ubuntu dl directories.
 	var page string
 	var err error
-
 	page, err = getStringFromURL(appendSlash(u.BaseURL) + appendSlash(u.Release) + strings.ToUpper(u.ChecksumType) + "SUMS")
 	if err != nil {
 		jww.ERROR.Println(err)
 		return err
 	}
-
 	// Now that we have a page...we need to find the checksum and set it
 	u.Checksum, err = u.findChecksum(page)
 	if err != nil {
 		jww.ERROR.Println(err)
 		return err
 	}
-
 	return nil
 }
 
@@ -104,7 +94,6 @@ func (u *ubuntu) setISOURL() error {
 	// Its ok to use Release in the directory path because Release will resolve
 	// correctly, at the directory level, for Ubuntu.
 	u.isoURL = appendSlash(u.BaseURL) + appendSlash(u.Release) + u.Name
-
 	// This never errors so return nil...error is needed for other
 	// implementations of the interface.
 	return nil
@@ -128,7 +117,6 @@ func (u *ubuntu) findChecksum(page string) (string, error) {
 		jww.ERROR.Println(err)
 		return "", err
 	}
-
 	pos := strings.Index(page, u.Name)
 	if pos <= 0 {
 		// if it wasn't found, there's a chance that there's an extension on the release number
@@ -136,16 +124,13 @@ func (u *ubuntu) findChecksum(page string) (string, error) {
 		// For this look for a line  that contains .iso.
 		// Substring the release string and explode it on '-'. Update isoName
 		pos = strings.Index(page, ".iso")
-
 		if pos < 0 {
 			err := errors.New("unable to find ISO information while looking for the release string on the Ubuntu checksums page")
 			jww.ERROR.Println(err)
 			return "", err
 		}
-
 		tmpRel := page[:pos]
 		tmpSl := strings.Split(tmpRel, "-")
-
 		// 3 is just an arbitrarily small number as there should always
 		// be more than 3 elements in the split slice.
 		if len(tmpSl) < 3 {
@@ -153,25 +138,21 @@ func (u *ubuntu) findChecksum(page string) (string, error) {
 			jww.ERROR.Println(err)
 			return "", err
 		}
-
 		u.ReleaseFull = tmpSl[1]
 		u.setName()
 		pos = strings.Index(page, u.Name)
-
 		if pos < 0 {
 			err := fmt.Errorf("unable to find %s's checksum", u.Name)
 			jww.ERROR.Println(err.Error())
 			return "", err
 		}
 	}
-
 	// Safety check...should never occur, but sanity check it anyways.
 	if len(page) < pos-2 {
 		err := errors.New("unable to retrieve checksum information for " + u.Name)
 		jww.ERROR.Println(err.Error())
 		return "", err
 	}
-
 	// Get the checksum string. If the substring request goes beyond the
 	// variable boundary, be safe and make the request equal to the length
 	// of the string.
@@ -180,7 +161,6 @@ func (u *ubuntu) findChecksum(page string) (string, error) {
 	} else {
 		u.Checksum = page[pos-66 : pos-2]
 	}
-
 	return u.Checksum, nil
 }
 
@@ -221,7 +201,6 @@ func (u *ubuntu) getOSType(buildType string) (string, error) {
 			return "Ubuntu_32", nil
 		}
 	}
-
 	// Shouldn't get here unless the buildType passed is an unsupported one.
 	err := fmt.Errorf("%s does not support the %s builder", u.Distro, buildType)
 	jww.ERROR.Println(err)
@@ -246,20 +225,16 @@ func (c *centOS) isoRedirectURL() string {
 
 // Sets the ISO information for a Packer template.
 func (c *centOS) SetISOInfo() error {
-	jww.TRACE.Printf("Current state: %+v", c)
-
 	if c.Arch == "" {
 		err := fmt.Errorf("arch for %s was empty, unable to continue", c.Name)
 		jww.ERROR.Println(err)
 		return err
 	}
-
 	if c.Release == "" {
 		err := fmt.Errorf("release for %s was empty, unable to continue", c.Name)
 		jww.ERROR.Println(err)
 		return err
 	}
-
 	// Make sure that the version and release are set, Release and FullRelease
 	// respectively. Make sure they are both set properly.
 	err := c.setReleaseInfo()
@@ -267,21 +242,17 @@ func (c *centOS) SetISOInfo() error {
 		jww.ERROR.Println(err)
 		return err
 	}
-
 	c.setName()
-
 	err = c.setISOURL()
 	if err != nil {
 		jww.ERROR.Println(err)
 		return err
 	}
-
 	// Set the Checksum information for the ISO image.
 	if err := c.setChecksum(); err != nil {
 		jww.ERROR.Println(err)
 		return err
 	}
-
 	return nil
 }
 
@@ -296,7 +267,6 @@ func (c *centOS) setReleaseInfo() error {
 		c.Release = version[0]    // not sure why I did it this way, revisit
 		return nil
 	}
-
 	// Otherwise, figure out what the current release is. The mirrorlist
 	// will give us that information.
 	err := c.setReleaseNumber()
@@ -319,7 +289,6 @@ func (c *centOS) setReleaseNumber() error {
 	buff.WriteString(c.Arch)
 	buff.WriteString("&repo=os")
 	mirrorURL := buff.String()
-
 	if page, err = getStringFromURL(mirrorURL); err != nil {
 		jww.ERROR.Println(err.Error())
 		return err
@@ -330,7 +299,6 @@ func (c *centOS) setReleaseNumber() error {
 	urlParts := strings.Split(lines[0], "/")
 	// The release is 3rd from last.
 	c.ReleaseFull = urlParts[len(urlParts)-4]
-	jww.TRACE.Println(c.ReleaseFull)
 	return nil
 }
 
@@ -367,19 +335,16 @@ func (c *centOS) setChecksum() error {
 		return err
 	}
 	url := c.checksumURL()
-	jww.TRACE.Println("URL:", url)
 	page, err := getStringFromURL(url)
 	if err != nil {
 		jww.ERROR.Println(err.Error())
 		return err
 	}
-	jww.TRACE.Print(page)
 	// Now that we have a page...we need to find the checksum and set it
 	if c.Checksum, err = c.findChecksum(page); err != nil {
 		jww.ERROR.Println(err.Error())
 		return err
 	}
-	jww.TRACE.Println(c.Checksum)
 	return nil
 }
 
@@ -408,41 +373,32 @@ func (c *centOS) setISOURL() error {
 		buff.WriteString("/")
 		buff.WriteString(c.Name)
 		c.isoURL = buff.String()
-		jww.TRACE.Println(c.isoURL)
 		return nil
 	}
-
 	var err error
 	c.isoURL, err = c.randomISOURL()
 	if err != nil {
 		jww.ERROR.Println(err.Error())
 		return err
 	}
-
 	return nil
 }
 
 // randomISOURL gets a random url for the current ISO.
 func (c *centOS) randomISOURL() (string, error) {
 	redirectURL := c.isoRedirectURL()
-	jww.TRACE.Printf("redirectURL: %s", redirectURL)
 	page, err := getStringFromURL(redirectURL)
 	if err != nil {
 		jww.ERROR.Println(err.Error())
 		return "", err
 	}
-	jww.TRACE.Print(page)
-
 	doc, err := html.Parse(strings.NewReader(page))
 	if err != nil {
-
 		jww.ERROR.Println(err.Error())
 		return "", err
 	}
-
 	var f func(*html.Node)
 	var isoURLs []string
-
 	f = func(n *html.Node) {
 		if n.Type == html.ElementNode && n.Data == "a" {
 			for _, a := range n.Attr {
@@ -462,13 +418,11 @@ func (c *centOS) randomISOURL() (string, error) {
 		return
 	}
 	f(doc)
-
 	if len(isoURLs) < 1 {
 		return "", fmt.Errorf("no valid iso URLs were found")
 	}
 	// Randomly choose from the slice.
 	url := trimSuffix(isoURLs[rand.Intn(len(isoURLs)-1)], "\n") + c.Name
-	jww.TRACE.Println("ISO url: ", url)
 	return url, nil
 }
 
@@ -484,21 +438,16 @@ func (c *centOS) findChecksum(page string) (string, error) {
 		jww.ERROR.Println(err.Error())
 		return "", err
 	}
-
 	pos := strings.Index(page, c.Name)
-
 	if pos < 0 {
 		err := errors.New("unable to find ISO information while looking for the release string on the CentOS checksums page")
 		jww.ERROR.Println(err.Error())
 		return "", err
 	}
-
 	tmpRel := page[:pos]
 	tmpSl := strings.Split(tmpRel, "\n")
 	// The checksum we want is the last element in the array
 	checksum := strings.TrimSpace(tmpSl[len(tmpSl)-1])
-
-	jww.TRACE.Println("Checksum: " + checksum)
 	return checksum, nil
 }
 
@@ -518,24 +467,20 @@ func (c *centOS) setName() {
 
 // getStringFromURL returns the response body for the passed url as a string.
 func getStringFromURL(url string) (string, error) {
-	jww.ERROR.Println(url)
 	// Get the URL resource
 	res, err := http.Get(url)
 	if err != nil {
 		jww.ERROR.Println(err)
 		return "", err
 	}
-
 	// Close the response body--its idiomatic to defer it right away
 	defer res.Body.Close()
-
 	// Read the resoponse body into page
 	page, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		jww.ERROR.Print(err)
 		return "", err
 	}
-
 	//convert the page to a string and return it
 	return string(page), nil
 }

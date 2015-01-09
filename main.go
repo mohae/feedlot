@@ -27,18 +27,13 @@ func realMain() int {
 	// runMain parses the Flag for glog, sets up CLI stuff for the supported
 	// subcommands and runs Rancher.
 	var err error
-
 	if err = ranchr.SetEnv(); err != nil {
 		fmt.Println("An error while processing Rancher Environment variables: ", err.Error())
 		return -1
 	}
-
 	// Logging setup
 	ranchr.SetLogging()
-
-	jww.INFO.Printf("Rancher starting with args: %v", os.Args[:])
 	args := os.Args[1:]
-
 	cli := &cli.CLI{
 		Name:     "rancher",
 		Version:  Version,
@@ -46,13 +41,10 @@ func realMain() int {
 		Commands: Commands,
 		HelpFunc: cli.BasicHelpFunc("rancher"),
 	}
-
 	exitCode, err := cli.Run()
 	if err != nil {
 		jww.ERROR.Printf("Rancher encountered an error: %s\n", err.Error())
 
 	}
-
-	jww.INFO.Printf("Rancher exiting with an exit code of %v", exitCode)
 	return exitCode
 }

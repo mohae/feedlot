@@ -78,8 +78,6 @@ func (d *directory) DirWalk(dirPath string) error {
 // Add the current file information to the file slice.
 func (d *directory) addFilename(root string, p string, fi os.FileInfo, err error) error {
 	// Add a file to the slice of files for which an archive will be created.
-	jww.TRACE.Printf("BEGIN:  root: %v, path: %v, fi: %+v", root, p, fi)
-
 	// See if the path exists
 	var exists bool
 	exists, err = pathExists(p)
@@ -99,12 +97,10 @@ func (d *directory) addFilename(root string, p string, fi os.FileInfo, err error
 		return err
 	}
 	if rel == "." {
-		jww.TRACE.Println("Don't add the relative root")
 		return nil
 	}
 	// Add the file information.
 	d.Files = append(d.Files, file{p: rel, info: fi})
-	jww.TRACE.Printf("END relative: %v\tabs: %v", rel, p)
 	return nil
 }
 
@@ -123,21 +119,19 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 		jww.ERROR.Println(err)
 		return err
 	}
-
 	// Don't add directories--they result in tar header errors.
 	fileMode := fileStat.Mode()
 	if fileMode.IsDir() {
 		return nil
 	}
-
 	// Create the tar header stuff.
-	tarHeader := new(tar.Header)
-	tarHeader.Name = filename
-	tarHeader.Size = fileStat.Size()
-	tarHeader.Mode = int64(fileStat.Mode())
-	tarHeader.ModTime = fileStat.ModTime()
+	tH := new(tar.Header)
+	tH.Name = filename
+	tH.Size = fileStat.Size()
+	tH.Mode = int64(fileStat.Mode())
+	tH.ModTime = fileStat.ModTime()
 	// Write the file header to the tarball.
-	err = tW.WriteHeader(tarHeader)
+	err = tW.WriteHeader(tH)
 	if err != nil {
 		jww.ERROR.Println(err)
 		return err
@@ -181,32 +175,25 @@ func (a *Archive) priorBuild(p string, t string) error {
 }
 
 func (a *Archive) archivePriorBuild(p string, t string) error {
-	jww.TRACE.Println("Creating tarball from "+p+" using ", t)
-
 	// Get a list of directory contents
 	err := a.DirWalk(p)
 	if err != nil {
 		jww.ERROR.Println(err)
 		return err
 	}
-
 	if len(a.Files) <= 1 {
 		// This isn't a real error, just log it and return a non-error state.
-		jww.DEBUG.Println("No prior builds to archive.")
 		return nil
 	}
-
 	// Get the current date and time in a slightly modifie ISO 8601 format:
 	// the colons are stripped from the time.
 	nowF := formattedNow()
 	// Get the relative path so that it can be added to the tarball name.
 	relPath := path.Dir(p)
 	// The tarball's name is the directory name + current time + extensions.
-	tarBallName := relPath + a.Name + "-" + nowF + ".tar.gz"
-	jww.TRACE.Printf("The files within %v will be archived and saved as %v.", p, tarBallName)
-
+	tBName := fmt.Sprintf("%s%s-%s.tar.gz", relPath, a.Name, nowF)
 	// Create the new archive file.
-	tBall, err := os.Create(tarBallName)
+	tBall, err := os.Create(tBName)
 	if err != nil {
 		jww.CRITICAL.Println(err)
 		return err
@@ -219,7 +206,6 @@ func (a *Archive) archivePriorBuild(p string, t string) error {
 			err = cerr
 		}
 	}()
-
 	// The tarball gets compressed with gzip
 	gw := gzip.NewWriter(tBall)
 	defer gw.Close()
@@ -227,16 +213,13 @@ func (a *Archive) archivePriorBuild(p string, t string) error {
 	tW := tar.NewWriter(gw)
 	defer tW.Close()
 	// Go through each file in the path and add it to the archive
-	var i int
-	var f file
-	for i, f = range a.Files {
+	for _, f := range a.Files {
 		err := a.addFile(tW, appendSlash(relPath)+f.p)
 		if err != nil {
 			jww.CRITICAL.Println(err)
 			return err
 		}
 	}
-	jww.DEBUG.Printf("Exiting priorBuild. %v files were added to the archive.", i)
 	return nil
 }
 

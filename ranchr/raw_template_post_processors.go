@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"strings"
 
-	json "github.com/mohae/customjson"
 	"github.com/mohae/deepcopy"
 	jww "github.com/spf13/jwalterweatherman"
 )
@@ -25,30 +24,21 @@ import (
 func (r *rawTemplate) updatePostProcessors(new map[string]*postProcessor) {
 	// If there is nothing new, old equals merged.
 	if len(new) <= 0 || new == nil {
-		jww.TRACE.Println("rawTemplate.updatePostProcessors: new was nil Returning w/o doing anything")
 		return
 	}
-
 	// Convert the existing postProcessors to interface.
 	var ifaceOld map[string]interface{} = make(map[string]interface{}, len(r.PostProcessors))
 	ifaceOld = DeepCopyMapStringPPostProcessor(r.PostProcessors)
-	//	for i, o := range r.PostProcessors {
-	//		ifaceOld[i] = o
-	//	}
-
 	// Convert the new postProcessors to interfaces
 	var ifaceNew map[string]interface{} = make(map[string]interface{}, len(new))
 	ifaceNew = DeepCopyMapStringPPostProcessor(new)
-
 	// Get the all keys from both maps
 	var keys []string
 	keys = mergedKeysFromMaps(ifaceOld, ifaceNew)
 	p := &postProcessor{}
-
 	if r.PostProcessors == nil {
 		r.PostProcessors = map[string]*postProcessor{}
 	}
-
 	// Copy: if the key exists in the new postProcessors only.
 	// Ignore: if the key does not exist in the new postProcessors.
 	// Merge: if the key exists in both the new and old postProcessors.
@@ -90,7 +80,6 @@ func (p *postProcessor) settingsToMap(Type string, r *rawTemplate) map[string]in
 	var v interface{}
 	m := make(map[string]interface{}, len(p.Settings))
 	m["type"] = Type
-
 	for _, s := range p.Settings {
 		k, v = parseVar(s)
 		switch k {
@@ -108,7 +97,6 @@ func (p *postProcessor) settingsToMap(Type string, r *rawTemplate) map[string]in
 		}
 		m[k] = v
 	}
-	jww.TRACE.Printf("post-processors Map: %v\n", json.MarshalIndentToString(m, "", indent))
 	return m
 }
 
@@ -123,10 +111,8 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]i
 	var tmpS map[string]interface{}
 	var ndx int
 	p = make([]interface{}, len(r.PostProcessorTypes))
-
 	// Generate the postProcessor for each postProcessor type.
 	for _, pType := range r.PostProcessorTypes {
-		jww.TRACE.Println(pType)
 		// TODO calculate the length of the two longest Settings sections
 		// and make it that length. That will prevent a panic unless
 		// there are more than 50 options. Besides its stupid, on so many
@@ -156,10 +142,7 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]i
 // Any values that aren't supported by the Vagrant post-processor are ignored.
 func (r *rawTemplate) createVagrant() (settings map[string]interface{}, vars []string, err error) {
 	settings = make(map[string]interface{})
-	settings["type"] = Vagrant
-
-	jww.TRACE.Printf("rawTemplate.createPostProcessorVagrant-rawtemplate\n")
-
+	settings["type"] = Vagrant.String()
 	// For each value, extract its key value pair and then process. Only
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
@@ -175,7 +158,6 @@ func (r *rawTemplate) createVagrant() (settings map[string]interface{}, vars []s
 	}
 	// Process the Arrays.
 	for name, val := range r.PostProcessors[Vagrant.String()].Arrays {
-		jww.TRACE.Printf("Arrays:\t%v\t%v\n\n", name, val)
 		array := deepcopy.Iface(val)
 		if array != nil {
 			settings[name] = array
@@ -186,7 +168,7 @@ func (r *rawTemplate) createVagrant() (settings map[string]interface{}, vars []s
 
 func (r *rawTemplate) createVagrantCloud() (settings map[string]interface{}, vars []string, err error) {
 	settings = make(map[string]interface{})
-	settings["type"] = VagrantCloud
+	settings["type"] = VagrantCloud.String()
 	return nil, nil, nil
 }
 

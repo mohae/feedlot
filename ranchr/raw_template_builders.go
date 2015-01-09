@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	json "github.com/mohae/customjson"
 	"github.com/mohae/deepcopy"
 	jww "github.com/spf13/jwalterweatherman"
 )
@@ -22,29 +21,24 @@ import (
 // * update CommonBuilder with the ne, as this may be used by any of the Packer
 // builders.
 // * For each Builder in the template, create it's Packer Template version
-//
 func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]interface{}, err error) {
 	if r.BuilderTypes == nil || len(r.BuilderTypes) <= 0 {
 		err = fmt.Errorf("unable to create builders: none specified")
 		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
-
 	var vrbls, tmpVar []string
 	var tmpS map[string]interface{}
 	var ndx int
 	bldrs = make([]interface{}, len(r.BuilderTypes))
-
 	// Set the CommonBuilder settings. Only the builder.Settings field is used
 	// for CommonBuilder as everything else is usually builder specific, even
 	// if they have common names, e.g. difference between specifying memory
 	// between VMWare and VirtualBox.
 	//	r.updateCommonBuilder
-
+	//
 	// Generate the builders for each builder type.
 	for _, bType := range r.BuilderTypes {
-		jww.TRACE.Println(bType)
-
 		// TODO calculate the length of the two longest Settings and VMSettings sections and make it
 		// that length. That will prevent a panic should there be more than 50 options. Besides its
 		// stupid, on so many levels, to hard code this...which makes me...d'oh!
@@ -81,12 +75,10 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 			jww.ERROR.Println(err)
 			return nil, nil, err
 		}
-
 		bldrs[ndx] = tmpS
 		ndx++
 		vrbls = append(vrbls, tmpVar...)
 	}
-
 	return bldrs, vars, nil
 }
 
@@ -111,7 +103,6 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 	settings["type"] = VirtualBoxISO.String()
 	// Merge the settings between common and this builders.
 	mergedSlice := mergeSettingsSlices(r.Builders[CommonBuilder.String()].Settings, r.Builders[VirtualBoxISO.String()].Settings)
-
 	var k, v string
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
@@ -177,7 +168,7 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 			_, err := strconv.Atoi(v)
 			if err != nil {
 				err = fmt.Errorf("VirtualBoxISO: An error occurred while trying to set %q to %q: %s ", k, v, err)
-				fmt.Println(err)
+				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
 			settings[k] = v
@@ -205,22 +196,16 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 	if l > 0 {
 		tmpVB := make([][]string, l)
 		tmp := reflect.ValueOf(r.Builders[VirtualBoxISO.String()].Arrays[VMSettings])
-		jww.TRACE.Printf("%v\n", tmp)
-
 		var vm_settings interface{}
-
 		switch tmp.Type() {
 		case TypeOfSliceInterfaces:
 			vm_settings = deepcopy.Iface(r.Builders[VirtualBoxISO.String()].Arrays[VMSettings]).([]interface{})
 		case TypeOfSliceStrings:
 			vm_settings = deepcopy.Iface(r.Builders[VirtualBoxISO.String()].Arrays[VMSettings]).([]string)
 		}
-
 		vms := deepcopy.InterfaceToSliceStrings(vm_settings)
-
 		for i, v := range vms {
 			vo := reflect.ValueOf(v)
-			jww.TRACE.Printf("TTYT%v\t%v\n", vo, vo.Kind(), vo.Type())
 			k, val := parseVar(vo.Interface().(string))
 			val = r.replaceVariables(val)
 			tmpVB[i] = make([]string, 4)
@@ -237,13 +222,10 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 // createVirtualBoxOVF generates the settings for a virtualbox-iso builder.
 func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, vars []string, err error) {
 	settings = make(map[string]interface{})
-
 	// Each create function is responsible for setting its own type.
 	settings["type"] = VirtualBoxOVF.String()
-
 	// Merge the settings between common and this builders.
 	mergedSlice := mergeSettingsSlices(r.Builders[CommonBuilder.String()].Settings, r.Builders[VirtualBoxOVF.String()].Settings)
-
 	var k, v string
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
@@ -286,7 +268,6 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, va
 			settings[k] = commands[0]
 		}
 	}
-
 	// Generate Packer Variables
 	// Generate builder specific section
 	l, err := getSliceLenFromIface(r.Builders[VirtualBoxOVF.String()].Arrays[VMSettings])
@@ -294,14 +275,10 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, va
 		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
-
 	if l > 0 {
 		tmpVB := make([][]string, l)
 		tmp := reflect.ValueOf(r.Builders[VirtualBoxOVF.String()].Arrays[VMSettings])
-		jww.TRACE.Printf("%v\n", tmp)
-
 		var vm_settings interface{}
-
 		switch tmp.Type() {
 		case TypeOfSliceInterfaces:
 			vm_settings = deepcopy.Iface(r.Builders[VirtualBoxOVF.String()].Arrays[VMSettings]).([]interface{})
@@ -311,7 +288,6 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, va
 		vms := deepcopy.InterfaceToSliceStrings(vm_settings)
 		for i, v := range vms {
 			vo := reflect.ValueOf(v)
-			jww.TRACE.Printf("TTYT%v\t%v\n", vo, vo.Kind(), vo.Type())
 			k, val := parseVar(vo.Interface().(string))
 			val = r.replaceVariables(val)
 			tmpVB[i] = make([]string, 4)
@@ -332,7 +308,6 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 	settings["type"] = VMWareISO.String()
 	// Merge the settings between common and this builders.
 	mergedSlice := mergeSettingsSlices(r.Builders[CommonBuilder.String()].Settings, r.Builders[VMWareISO.String()].Settings)
-
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
 	for _, s := range mergedSlice {
@@ -479,7 +454,6 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, vars [
 			settings[k] = commands[0]
 		}
 	}
-
 	// Generate builder specific section
 	tmpVB := map[string]string{}
 	vm_settings := deepcopy.InterfaceToSliceStrings(r.Builders[VMWareVMX.String()].Arrays[VMSettings])
@@ -578,7 +552,6 @@ func (r *rawTemplate) createDocker() (settings map[string]interface{}, vars []st
 //	  	* `guest_os_type`: This is generally set at Packer Template
 //		  generation time by Rancher.
 func (r *rawTemplate) updateBuilders(new map[string]*builder) {
-	fmt.Printf("Entering rawTemplate.updateBuilders with: %v\n", json.MarshalToString(new))
 	// If there is nothing new, old equals merged.
 	if len(new) <= 0 || new == nil {
 		return
@@ -604,9 +577,7 @@ func (r *rawTemplate) updateBuilders(new map[string]*builder) {
 	if ok {
 		r.updateCommonBuilder(new[CommonBuilder.String()])
 	}
-
 	b := &builder{}
-
 	// Copy: if the key exists in the new builder only.
 	// Ignore: if the key does not exist in the new builder.
 	// Merge: if the key exists in both the new and old builder.
@@ -616,7 +587,6 @@ func (r *rawTemplate) updateBuilders(new map[string]*builder) {
 			r.Builders[v] = new[v].DeepCopy()
 			continue
 		}
-
 		// If the element for this key doesn't exist, skip it.
 		_, ok := new[v]
 		if !ok {

@@ -8,7 +8,6 @@ import (
 	_ "reflect"
 	"strings"
 
-	json "github.com/mohae/customjson"
 	"github.com/mohae/deepcopy"
 	jww "github.com/spf13/jwalterweatherman"
 )
@@ -28,7 +27,6 @@ func (r *rawTemplate) updateProvisioners(new map[string]*provisioner) {
 	if len(new) <= 0 || new == nil {
 		return
 	}
-
 	// Convert the existing provisioners to interface.
 	var ifaceOld map[string]interface{} = make(map[string]interface{}, len(r.Provisioners))
 	ifaceOld = DeepCopyMapStringPProvisioner(r.Provisioners)
@@ -77,7 +75,6 @@ func (p *provisioner) settingsToMap(Type string, r *rawTemplate) map[string]inte
 	m["type"] = Type
 	for _, s := range p.Settings {
 		k, v = parseVar(s)
-
 		switch k {
 		// If its not set to 'true' then false. This is a case insensitive
 		// comparison.
@@ -90,11 +87,8 @@ func (p *provisioner) settingsToMap(Type string, r *rawTemplate) map[string]inte
 		default:
 			v = r.replaceVariables(fmt.Sprint(v))
 		}
-
 		m[k] = v
 	}
-
-	jww.TRACE.Printf("provisioners Map: %v\n", json.MarshalIndentToString(m, "", indent))
 	return m
 }
 
@@ -105,14 +99,12 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
-
 	var vrbls, tmpVar []string
 	var tmpS map[string]interface{}
 	var ndx int
 	p = make([]interface{}, len(r.ProvisionerTypes))
 	// Generate the postProcessor for each postProcessor type.
 	for _, pType := range r.ProvisionerTypes {
-		jww.TRACE.Println(pType)
 		// TODO calculate the length of the two longest Settings sections
 		// and make it that length. That will prevent a panic unless
 		// there are more than 50 options. Besides its stupid, on so many
@@ -157,9 +149,6 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 func (r *rawTemplate) createAnsibleLocalProvisioner() (settings map[string]interface{}, vars []string, err error) {
 	settings = make(map[string]interface{})
 	settings["type"] = AnsibleLocal.String()
-
-	jww.TRACE.Printf("rawTemplate.createAnsibleLocalProvisioner-rawtemplate\n")
-
 	// For each value, extract its key value pair and then process. Only
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
@@ -170,17 +159,15 @@ func (r *rawTemplate) createAnsibleLocalProvisioner() (settings map[string]inter
 		case "playbook_file", "command", "inventory_file", "playbook_dir", "staging_directory":
 			settings[k] = v
 		default:
-			jww.WARN.Println("An unsupported " + AnsibleLocal.String() + " key was encountered: " + k)
+			jww.WARN.Println("unsupported " + AnsibleLocal.String() + " key was encountered: " + k)
 		}
 	}
-
 	// Process the Arrays.
 	for name, val := range r.Provisioners[AnsibleLocal.String()].Arrays {
 		array := deepcopy.InterfaceToSliceStrings(val)
 		if array != nil {
 			settings[name] = array
 		}
-		jww.TRACE.Printf("\t%v\t%v\n", name, val)
 	}
 	return settings, vars, err
 }
@@ -191,9 +178,6 @@ func (r *rawTemplate) createAnsibleLocalProvisioner() (settings map[string]inter
 func (r *rawTemplate) createSaltMasterlessProvisioner() (settings map[string]interface{}, vars []string, err error) {
 	settings = make(map[string]interface{})
 	settings["type"] = SaltMasterless.String()
-
-	jww.TRACE.Printf("rawTemplate.createProvisionerAnsibleLocal-rawtemplate\n")
-
 	// For each value, extract its key value pair and then process. Only
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
@@ -204,10 +188,9 @@ func (r *rawTemplate) createSaltMasterlessProvisioner() (settings map[string]int
 		case "bootstrap_args", "local_pillar_roots", "local_state_tree", "minion_config", "skip_bootstrap", "temp_config_dir":
 			settings[k] = v
 		default:
-			jww.WARN.Println("An unsupported " + SaltMasterless.String() + " key was encountered: " + k)
+			jww.WARN.Println("unsupported " + SaltMasterless.String() + " key was encountered: " + k)
 		}
 	}
-
 	// salt-masterless does not have any arrays to support
 	return settings, vars, nil
 }
@@ -218,9 +201,6 @@ func (r *rawTemplate) createSaltMasterlessProvisioner() (settings map[string]int
 func (r *rawTemplate) createShellProvisioner() (settings map[string]interface{}, vars []string, err error) {
 	settings = make(map[string]interface{})
 	settings["type"] = Shell.String()
-
-	jww.TRACE.Printf("rawTemplate.createProvisionerShell-rawtemplate\n")
-
 	// For each value, extract its key value pair and then process. Only
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
@@ -232,7 +212,7 @@ func (r *rawTemplate) createShellProvisioner() (settings map[string]interface{},
 			"start_retry_timeout":
 			settings[s] = v
 		default:
-			jww.WARN.Println("An unsupported " + Shell.String() + " key was encountered: " + k)
+			jww.WARN.Println("unsupported " + Shell.String() + " key was encountered: " + k)
 		}
 	}
 
@@ -242,7 +222,6 @@ func (r *rawTemplate) createShellProvisioner() (settings map[string]interface{},
 		if array != nil {
 			settings[name] = array
 		}
-		jww.TRACE.Printf("\t%v\t%v\n", name, val)
 	}
 	return settings, vars, nil
 }
@@ -253,9 +232,6 @@ func (r *rawTemplate) createShellProvisioner() (settings map[string]interface{},
 func (r *rawTemplate) createFileProvisioner() (settings map[string]interface{}, vars []string, err error) {
 	settings = make(map[string]interface{})
 	settings["type"] = File.String()
-
-	jww.TRACE.Printf("rawTemplate.createProvisionerFile-rawtemplate\n")
-
 	// For each value, extract its key value pair and then process. Only
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
@@ -266,22 +242,20 @@ func (r *rawTemplate) createFileProvisioner() (settings map[string]interface{}, 
 		case "source", "destination":
 			settings[k] = v
 		default:
-			jww.WARN.Println("An unsupported " + File.String() + " key was encountered: " + k)
+			jww.WARN.Println("unsupported " + File.String() + " key was encountered: " + k)
 		}
 	}
-
 	// Process the Arrays.
 	for name, val := range r.Provisioners[File.String()].Arrays {
 		array := deepcopy.InterfaceToSliceStrings(val)
 		if array != nil {
 			settings[name] = array
 		}
-		jww.TRACE.Printf("\t%v\t%v\n", name, val)
 	}
 	return settings, vars, nil
 }
 
-// deepcopy.MapStringPProvisioners makes a deep copy of each builder passed and
+// MapStringPProvisioners makes a deep copy of each builder passed and
 // returns the copie map[string]*provisioner as a map[string]interface{}
 // notes: This currently only supports string slices.
 func DeepCopyMapStringPProvisioner(p map[string]*provisioner) map[string]interface{} {
