@@ -4,7 +4,7 @@
 # build configuration with the Rancher and distro defaults.
 [build] 
 	[build.1204-amd64-server]
-		type = "ubuntu"
+		distro = "ubuntu"
 		description = "ubuntu LTS 1204 amd64 server build, minimal install"
 		arch = "amd64"
 		image = "server"
@@ -23,7 +23,7 @@
 			]
 
 	[build.1404-dev]
-		type = "ubuntu"
+		distro = "ubuntu"
 		description = "ubuntu LTS 1404 amd64 desktop build, minimal install w go"
 	        arch = "amd64"
 	        release = "14.04"
@@ -72,14 +72,14 @@
 
 
         [build.centos6]
-		type = "centos"
+		distro = "centos"
 		description = "Centos 6 w virtualbox only"
 		builder_types = [
 			"virtualbox-iso"
 		]
 
         [build.centos6-salt]
-		type = "centos"
+		distro = "centos"
 		description = "Centos 6 with salt provisioning"
 		builder_types = [
 			"virtualbox-iso"
@@ -94,7 +94,7 @@
 			
 
 	[build.centos6-ansible]
-		type = "centos"
+		distro = "centos"
 		description = "Centos6 with ansible provisioning"
 		builder_types = [
 			"virtualbox-iso"
@@ -115,7 +115,7 @@
 			]
 
 	[build.centos6-chef-solo]
-		type = "centos"
+		distro = "centos"
 		description = "CentOS6 with chef-solo provisioning"
 		builder_types = [
 			"virtualbox-iso"
