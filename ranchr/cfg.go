@@ -9,7 +9,6 @@
 package ranchr
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"sync"
@@ -379,32 +378,32 @@ func (i *IODirInf) update(new IODirInf) {
 // check to see if the dirinf is set
 func (i *IODirInf) check() error {
 	if i.HTTPDir == "" {
-		err := errors.New("HTTPDir directory not set")
+		err := fmt.Errorf("HTTPDir directory not set")
 		jww.ERROR.Print(err)
 		return err
 	}
 	if i.HTTPSrcDir == "" {
-		err := errors.New("HTTPSrcDir directory not set")
+		err := fmt.Errorf("HTTPSrcDir directory not set")
 		jww.ERROR.Print(err)
 		return err
 	}
 	if i.OutDir == "" {
-		err := errors.New("output directory not set")
+		err := fmt.Errorf("output directory not set")
 		jww.ERROR.Print(err)
 		return err
 	}
 	if i.SrcDir == "" {
-		err := errors.New("SrcDir directory not set")
+		err := fmt.Errorf("SrcDir directory not set")
 		jww.ERROR.Print(err)
 		return err
 	}
 	if i.ScriptsDir == "" {
-		err := errors.New("ScriptsDir directory not set")
+		err := fmt.Errorf("ScriptsDir directory not set")
 		jww.ERROR.Print(err.Error())
 		return err
 	}
 	if i.ScriptsSrcDir == "" {
-		err := errors.New("ScriptsSrcDir directory not set")
+		err := fmt.Errorf("ScriptsSrcDir directory not set")
 		jww.ERROR.Print(err.Error())
 		return err
 	}

@@ -57,33 +57,28 @@ Options:
 // Run runs the build sub-command, handling all passed args and flags.
 func (c *BuildCommand) Run(args []string) int {
 	var distroFilter, archFilter, imageFilter, releaseFilter, logDirFilter string
-
 	// Declare the command flag set and their values.
 	cmdFlags := flag.NewFlagSet("build", flag.ContinueOnError)
-
 	cmdFlags.Usage = func() {
 		c.UI.Output(c.Help())
 	}
-
 	cmdFlags.StringVar(&distroFilter, "distro", "", "distro filter")
 	cmdFlags.StringVar(&archFilter, "arch", "", "arch filter")
 	cmdFlags.StringVar(&imageFilter, "image", "", "image filter")
 	cmdFlags.StringVar(&releaseFilter, "release", "", "release filter")
 	cmdFlags.StringVar(&logDirFilter, "log_dir", "", "log directory")
-
 	// Parse the passed args for flags.
 	if err := cmdFlags.Parse(args); err != nil {
 		c.UI.Error(fmt.Sprintf("Parse of command-line arguments failed: %s", err))
 		return 1
 	}
-
 	// Remaining flags are build names
 	buildArgs := cmdFlags.Args()
-
 	// If the distro option was passed, create the Packer template from distro defaults
 	if distroFilter != "" {
 		args := ranchr.ArgsFilter{Arch: archFilter, Distro: distroFilter, Image: imageFilter, Release: releaseFilter}
-		if err := ranchr.BuildDistro(args); err != nil {
+		err := ranchr.BuildDistro(args)
+		if err != nil {
 			c.UI.Output(err.Error())
 			return 1
 		}
@@ -93,7 +88,8 @@ func (c *BuildCommand) Run(args []string) int {
 	if len(buildArgs) > 0 {
 		var message string
 		var err error
-		if message, err = ranchr.BuildBuilds(buildArgs...); err != nil {
+		message, err = ranchr.BuildBuilds(buildArgs...)
+		if err != nil {
 			c.UI.Error(err.Error())
 			return 1
 		}

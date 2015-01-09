@@ -47,17 +47,6 @@ provisioner_types = [
 			"cpus=1",
 			"memory=1024"	
 		]
-	[builders.vmware-iso]
-	settings = [
-		"guest_os_type = ",
-		"tools_upload_flavor = linux"
-	]
-		[builders.vmware-iso.arrays]
-		vm_settings = [
-			"cpuid.coresPerSocket=1",
-			"memsize=1024",
-			"numvcpus=1"
-		]
 [post_processors]
 	[post_processors.vagrant]
 	settings = [

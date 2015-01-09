@@ -2,7 +2,6 @@ package ranchr
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -125,7 +124,7 @@ func (u *ubuntu) findChecksum(page string) (string, error) {
 		// Substring the release string and explode it on '-'. Update isoName
 		pos = strings.Index(page, ".iso")
 		if pos < 0 {
-			err := errors.New("unable to find ISO information while looking for the release string on the Ubuntu checksums page")
+			err := fmt.Errorf("unable to find ISO information while looking for the release string on the Ubuntu checksums page")
 			jww.ERROR.Println(err)
 			return "", err
 		}
@@ -143,14 +142,14 @@ func (u *ubuntu) findChecksum(page string) (string, error) {
 		pos = strings.Index(page, u.Name)
 		if pos < 0 {
 			err := fmt.Errorf("unable to find %s's checksum", u.Name)
-			jww.ERROR.Println(err.Error())
+			jww.ERROR.Println(err)
 			return "", err
 		}
 	}
 	// Safety check...should never occur, but sanity check it anyways.
 	if len(page) < pos-2 {
-		err := errors.New("unable to retrieve checksum information for " + u.Name)
-		jww.ERROR.Println(err.Error())
+		err := fmt.Errorf("unable to retrieve checksum information for %s", u.Name)
+		jww.ERROR.Println(err)
 		return "", err
 	}
 	// Get the checksum string. If the substring request goes beyond the
@@ -289,8 +288,9 @@ func (c *centOS) setReleaseNumber() error {
 	buff.WriteString(c.Arch)
 	buff.WriteString("&repo=os")
 	mirrorURL := buff.String()
-	if page, err = getStringFromURL(mirrorURL); err != nil {
-		jww.ERROR.Println(err.Error())
+	page, err = getStringFromURL(mirrorURL)
+	if err != nil {
+		jww.ERROR.Println(err)
 		return err
 	}
 	// Could just parse the string, but breaking it up is simpler.
@@ -330,19 +330,20 @@ func (c *centOS) getOSType(buildType string) (string, error) {
 // retrieves the page, and finds the checksum for the release ISO.
 func (c *centOS) setChecksum() error {
 	if c.ChecksumType == "" {
-		err := errors.New("Checksum Type not set")
-		jww.ERROR.Println(err.Error())
+		err := fmt.Errorf("Checksum Type not set")
+		jww.ERROR.Println(err)
 		return err
 	}
 	url := c.checksumURL()
 	page, err := getStringFromURL(url)
 	if err != nil {
-		jww.ERROR.Println(err.Error())
+		jww.ERROR.Println(err)
 		return err
 	}
 	// Now that we have a page...we need to find the checksum and set it
-	if c.Checksum, err = c.findChecksum(page); err != nil {
-		jww.ERROR.Println(err.Error())
+	c.Checksum, err = c.findChecksum(page)
+	if err != nil {
+		jww.ERROR.Println(err)
 		return err
 	}
 	return nil
@@ -378,7 +379,7 @@ func (c *centOS) setISOURL() error {
 	var err error
 	c.isoURL, err = c.randomISOURL()
 	if err != nil {
-		jww.ERROR.Println(err.Error())
+		jww.ERROR.Println(err)
 		return err
 	}
 	return nil
@@ -389,12 +390,12 @@ func (c *centOS) randomISOURL() (string, error) {
 	redirectURL := c.isoRedirectURL()
 	page, err := getStringFromURL(redirectURL)
 	if err != nil {
-		jww.ERROR.Println(err.Error())
+		jww.ERROR.Println(err)
 		return "", err
 	}
 	doc, err := html.Parse(strings.NewReader(page))
 	if err != nil {
-		jww.ERROR.Println(err.Error())
+		jww.ERROR.Println(err)
 		return "", err
 	}
 	var f func(*html.Node)
@@ -434,14 +435,14 @@ func (c *centOS) findChecksum(page string) (string, error) {
 	// Notes: \n separate lines and two space separate the checksum and image name
 	//      since this is plain text processing we don't worry about runes
 	if page == "" {
-		err := errors.New("the string passed to centOS.findChecksum(s string) was empty; unable to process request")
-		jww.ERROR.Println(err.Error())
+		err := fmt.Errorf("the string passed to centOS.findChecksum(s string) was empty; unable to process request")
+		jww.ERROR.Println(err)
 		return "", err
 	}
 	pos := strings.Index(page, c.Name)
 	if pos < 0 {
-		err := errors.New("unable to find ISO information while looking for the release string on the CentOS checksums page")
-		jww.ERROR.Println(err.Error())
+		err := fmt.Errorf("unable to find ISO information while looking for the release string on the CentOS checksums page")
+		jww.ERROR.Println(err)
 		return "", err
 	}
 	tmpRel := page[:pos]

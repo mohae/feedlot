@@ -13,7 +13,6 @@ package ranchr
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -351,7 +350,8 @@ func (d *distroDefaults) Set() error {
 		return err
 	}
 	s := &supported{}
-	if err := s.LoadOnce(); err != nil {
+	err = s.LoadOnce()
+	if err != nil {
 		jww.ERROR.Println(err)
 		return err
 	}
@@ -360,8 +360,8 @@ func (d *distroDefaults) Set() error {
 	for k, v := range s.Distro {
 		// See if the base url exists for non centos distros
 		if v.BaseURL == "" && k != CentOS.String() {
-			err := fmt.Errorf("%s requires a BaseURL, none provided", k)
-			jww.CRITICAL.Println(err.Error())
+			err = fmt.Errorf("%s requires a BaseURL, none provided", k)
+			jww.CRITICAL.Println(err)
 			return err
 
 		}
@@ -543,7 +543,7 @@ func BuildDistro(a ArgsFilter) error {
 func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	var t *rawTemplate
 	if a.Distro == "" {
-		err := errors.New("cannot build a packer template because no target distro information was passed")
+		err := fmt.Errorf("cannot build a packer template because no target distro information was passed")
 		jww.ERROR.Println(err)
 		return err
 	}
@@ -551,7 +551,7 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	t, err := DistroDefaults.GetTemplate(a.Distro)
 	if err != nil {
 		err = fmt.Errorf("%s is not a supported distro; unable to build a packer template for it", a.Distro)
-		jww.ERROR.Println(err.Error())
+		jww.ERROR.Println(err)
 		return err
 	}
 	// If any overrides were passed, set them.
@@ -600,7 +600,7 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 // requested builds or an error.
 func BuildBuilds(buildNames ...string) (string, error) {
 	if buildNames[0] == "" {
-		err := errors.New("Nothing to build. No build name was passed")
+		err := fmt.Errorf("Nothing to build. No build name was passed")
 		jww.ERROR.Println(err)
 		return "", err
 	}
@@ -641,7 +641,7 @@ func BuildBuilds(buildNames ...string) (string, error) {
 // artifacts for the passed build.
 func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 	if buildName == "" {
-		err := errors.New("unable to build Packer Template: no build name was passed")
+		err := fmt.Errorf("unable to build Packer Template: no build name was passed")
 		jww.ERROR.Println(err)
 		doneCh <- err
 		return
@@ -651,14 +651,16 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 	// Check the type and create the defaults for that type, if it doesn't already exist.
 	tpl = &rawTemplate{}
 	bld = &rawTemplate{}
-	if bld, ok = Builds.Build[buildName]; !ok {
+	bld, ok = Builds.Build[buildName]
+	if !ok {
 		err := fmt.Errorf("unable to build Packer Template: %q is not a valid build name", buildName)
 		jww.ERROR.Println(err)
 		doneCh <- err
 		return
 	}
 	// See if the distro default exists.
-	if tpl, ok = DistroDefaults.Templates[DistroFromString(bld.Distro)]; !ok {
+	tpl, ok = DistroDefaults.Templates[DistroFromString(bld.Distro)]
+	if !ok {
 		err := fmt.Errorf("unsupported distro: %s", bld.Distro)
 		jww.ERROR.Println(err)
 		doneCh <- err
@@ -719,7 +721,7 @@ func getSliceLenFromIface(v interface{}) (int, error) {
 // Returns error if an error occurs with the file.
 func commandsFromFile(name string) (commands []string, err error) {
 	if name == "" {
-		err = errors.New("the passed Command filename was empty")
+		err = fmt.Errorf("the passed Command filename was empty")
 		jww.ERROR.Println(err)
 		return commands, err
 	}
@@ -851,7 +853,7 @@ func mergeSettingsSlices(s1 []string, s2 []string) []string {
 			// This key already exists. Find it and update it.
 			indx = indexOfKeyInVarSlice(key, merged)
 			if indx < 0 {
-				jww.WARN.Println(fmt.Sprintf("%q, was not updated to %q because it was not found in the target", key, v))
+				jww.WARN.Printf("%q, was not updated to %q because it was not found in the target", key, v)
 			} else {
 				merged[indx] = v
 			}
@@ -1012,17 +1014,17 @@ func trimSuffix(s string, suffix string) string {
 // returns either the number of bytes written or an error.
 func copyFile(file string, srcDir string, destDir string) (written int64, err error) {
 	if srcDir == "" {
-		err = errors.New("no source directory received")
+		err = fmt.Errorf("no source directory received")
 		jww.ERROR.Println(err)
 		return 0, err
 	}
 	if destDir == "" {
-		err = errors.New("no destination directory received")
+		err = fmt.Errorf("no destination directory received")
 		jww.ERROR.Println(err)
 		return 0, err
 	}
 	if file == "" {
-		err = errors.New("no filename received")
+		err = fmt.Errorf("no filename received")
 		jww.ERROR.Println(err)
 		return 0, err
 	}

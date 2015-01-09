@@ -115,7 +115,8 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 	}
 	defer file.Close()
 	var fileStat os.FileInfo
-	if fileStat, err = file.Stat(); err != nil {
+	fileStat, err = file.Stat()
+	if err != nil {
 		jww.ERROR.Println(err)
 		return err
 	}
@@ -153,7 +154,7 @@ func (a *Archive) priorBuild(p string, t string) error {
 	_, err := os.Stat(p)
 	if err != nil {
 		if os.IsNotExist(err) {
-			jww.TRACE.Println("processing of prior build run not needed because " + p + " does not exist")
+			jww.TRACE.Printf("processing of prior build run not needed because %s does not exist", p)
 			return nil
 		}
 		jww.ERROR.Println(err)
@@ -214,7 +215,7 @@ func (a *Archive) archivePriorBuild(p string, t string) error {
 	defer tW.Close()
 	// Go through each file in the path and add it to the archive
 	for _, f := range a.Files {
-		err := a.addFile(tW, appendSlash(relPath)+f.p)
+		err := a.addFile(tW, filepath.Join(relPath, f.p))
 		if err != nil {
 			jww.CRITICAL.Println(err)
 			return err

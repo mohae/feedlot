@@ -1,9 +1,9 @@
 package ranchr
 
 import (
+	"fmt"
 	"io"
 	"os"
-	"strconv"
 	"time"
 
 	json "github.com/mohae/customjson"
@@ -25,7 +25,7 @@ type packerTemplate struct {
 func (p *packerTemplate) create(i IODirInf, b BuildInf, scripts []string) error {
 	err := i.check()
 	if err != nil {
-		jww.ERROR.Println("packerTemplate.create: " + err.Error())
+		jww.ERROR.Println(err)
 		return err
 	}
 	// priorBuild handles both the archiving and deletion of the prior build, if it exists, i.e.
@@ -33,7 +33,7 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, scripts []string) error 
 	a := Archive{}
 	err = a.priorBuild(appendSlash(i.OutDir), "gzip")
 	if err != nil {
-		jww.ERROR.Print("packerTemplate.create: " + err.Error())
+		jww.ERROR.Print(err)
 		return err
 	}
 	// TODO This needs to be handled better...this is too long for most builds but if there are situations
@@ -41,35 +41,35 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, scripts []string) error 
 	time.Sleep(time.Millisecond * 2000)
 	err = copyFiles(scripts, i.ScriptsSrcDir, appendSlash(i.OutDir)+i.ScriptsDir)
 	if err != nil {
-		jww.ERROR.Println("packerTemplate.create: " + err.Error())
+		jww.ERROR.Println(err)
 		return err
 	}
 	err = copyDirContent(i.HTTPSrcDir, appendSlash(i.OutDir)+i.HTTPDir)
 	if err != nil {
-		jww.ERROR.Print("packerTemplate.create: " + err.Error())
+		jww.ERROR.Print(err)
 		return err
 	}
 	// Write it out as JSON
 	tplJSON, err := json.MarshalIndent(p, "", "\t")
 	if err != nil {
-		jww.ERROR.Print("packerTemplate.create: " + err.Error())
+		jww.ERROR.Print(err)
 		return err
 	}
-	f, err := os.Create(appendSlash(i.OutDir) + b.Name + ".json")
+	f, err := os.Create(appendSlash(i.OutDir) + fmt.Sprintf("%s.json", b.Name))
 	if err != nil {
-		jww.ERROR.Print("packerTemplate.create: " + err.Error())
+		jww.ERROR.Print(err)
 		return err
 	}
 	// Close the file with error handling
 	defer func() {
 		if cerr := f.Close(); cerr != nil && err == nil {
-			jww.ERROR.Print("packerTemplate.create: " + cerr.Error())
+			jww.ERROR.Print(err)
 			err = cerr
 		}
 	}()
 	_, err = io.WriteString(f, string(tplJSON[:]))
 	if err != nil {
-		jww.ERROR.Print("packerTemplate.create: " + err.Error())
+		jww.ERROR.Print(err)
 		return err
 	}
 	return nil
@@ -88,7 +88,7 @@ func copyFiles(files []string, src string, dest string) error {
 		okCnt++
 	}
 	if errCnt > 0 {
-		jww.ERROR.Print("copy of files for build had " + strconv.Itoa(errCnt) + " errors. There were " + strconv.Itoa(okCnt) + " files that were copied without error.")
+		jww.ERROR.Print(fmt.Sprintf("copy of files for build had %d errors. There were %d files that were copied without error.", errCnt, okCnt))
 		return err
 	}
 	return nil

@@ -26,9 +26,9 @@ func main() {
 func realMain() int {
 	// runMain parses the Flag for glog, sets up CLI stuff for the supported
 	// subcommands and runs Rancher.
-	var err error
-	if err = ranchr.SetEnv(); err != nil {
-		fmt.Println("An error while processing Rancher Environment variables: ", err.Error())
+	err := ranchr.SetEnv()
+	if err != nil {
+		fmt.Printf("An error while processing Rancher Environment variables: %s\n", err)
 		return -1
 	}
 	// Logging setup
@@ -43,7 +43,7 @@ func realMain() int {
 	}
 	exitCode, err := cli.Run()
 	if err != nil {
-		jww.ERROR.Printf("Rancher encountered an error: %s\n", err.Error())
+		jww.ERROR.Printf("Rancher encountered an error: %s\n", err)
 
 	}
 	return exitCode

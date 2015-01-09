@@ -1,7 +1,6 @@
 package ranchr
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -101,7 +100,7 @@ func (p *postProcessor) settingsToMap(Type string, r *rawTemplate) map[string]in
 // r.createPostProcessors creates the PostProcessors for a build.
 func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]interface{}, err error) {
 	if r.PostProcessorTypes == nil || len(r.PostProcessorTypes) <= 0 {
-		err = errors.New("unable to create post-processors: none specified")
+		err = fmt.Errorf("unable to create post-processors: none specified")
 		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
@@ -133,6 +132,7 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]i
 		ndx++
 		vrbls = append(vrbls, tmpVar...)
 	}
+	jww.TRACE.Printf("%d post processors")
 	return p, vars, nil
 }
 

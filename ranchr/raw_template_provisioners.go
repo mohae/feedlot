@@ -1,7 +1,6 @@
 package ranchr
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -92,7 +91,7 @@ func (p *provisioner) settingsToMap(Type string, r *rawTemplate) map[string]inte
 // r.createProvisioner creates the provisioners for a build.
 func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]interface{}, err error) {
 	if r.ProvisionerTypes == nil || len(r.ProvisionerTypes) <= 0 {
-		err = errors.New("unable to create provisioners: none specified")
+		err = fmt.Errorf("unable to create provisioners: none specified")
 		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
@@ -212,7 +211,6 @@ func (r *rawTemplate) createShellProvisioner() (settings map[string]interface{},
 			jww.WARN.Println("unsupported " + Shell.String() + " key was encountered: " + k)
 		}
 	}
-
 	// Process the Arrays.
 	for name, val := range r.Provisioners[Shell.String()].Arrays {
 		array := deepcopy.Iface(val)
@@ -239,7 +237,7 @@ func (r *rawTemplate) createFileProvisioner() (settings map[string]interface{}, 
 		case "source", "destination":
 			settings[k] = v
 		default:
-			jww.WARN.Println("unsupported " + File.String() + " key was encountered: " + k)
+			jww.WARN.Printf("unsupported %s key was encountered: %q", File.String(), k)
 		}
 	}
 	// Process the Arrays.

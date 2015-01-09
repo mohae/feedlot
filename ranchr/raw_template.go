@@ -105,14 +105,6 @@ func (r *rawTemplate) replaceVariables(s string) string {
 	return s
 }
 
-// r.variableSection generates the variable section. This doesn't do anything
-// at the moment.
-func (r *rawTemplate) variableSection() (map[string]interface{}, error) {
-	var v map[string]interface{}
-	v = make(map[string]interface{})
-	return v, nil
-}
-
 // r.setDefaults takes the incoming distro settings and merges them with its
 // existing settings, which are set to rancher's defaults, to create the
 // default template.
