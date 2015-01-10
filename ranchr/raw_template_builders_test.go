@@ -2,10 +2,7 @@
 package ranchr
 
 import (
-	"strconv"
 	"testing"
-
-	_ "github.com/mohae/deepcopy"
 )
 
 var testBuilderUbuntu = &rawTemplate{
@@ -382,13 +379,9 @@ func TestCreateBuilderVirtualboxISO(t *testing.T) {
 	if settings["ssh_username"] != "vagrant" {
 		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_username"])
 	}
-	i, _ := strconv.Atoi(MarshalJSONToString.Get(settings["type"]))
-	if builders[i] != "virtualbox-iso" {
-		t.Errorf("Expected \"virtualbox-iso\", got %q", builders[i])
+	if settings["type"] != "virtualbox-iso" {
+		t.Errorf("Expected \"virtualbox-iso\", got %q", settings["type"])
 	}
-	//if settings["vboxmanage"] != "[[\"modifyvm\" \"{{.Name}}\" \"--cpus\" \"1\"] [\"modifyvm\" \"{{.Name}}\" \"--memory\" \"4096\"]]" {
-	//	t.Errorf("Expected \"[[\"modifyvm\" \"{{.Name}}\" \"--cpus\" \"1\"] [\"modifyvm\" \"{{.Name}}\" \"--memory\" \"4096\"]]\", got %q", settings["vboxmanage"])
-	//}
 	if MarshalJSONToString.Get(settings["vboxmanage"]) != "[[\"modifyvm\",\"{{.Name}}\",\"--cpus\",\"1\"],[\"modifyvm\",\"{{.Name}}\",\"--memory\",\"4096\"]]" {
 		t.Errorf("Expected \"[[\"modifyvm\",\"{{.Name}}\",\"--cpus\",\"1\"],[\"modifyvm\",\"{{.Name}}\",\"--memory\",\"4096\"]]\", got %q", MarshalJSONToString.Get(settings["vboxmanage"]))
 	}
@@ -424,9 +417,8 @@ func TestCreateBuilderVirtualboxISO(t *testing.T) {
 	if settings["ssh_username"] != "vagrant" {
 		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_username"])
 	}
-	i, _ = strconv.Atoi(MarshalJSONToString.Get(settings["type"]))
-	if builders[i] != "virtualbox-iso" {
-		t.Errorf("Expected \"virtualbox-iso\", got %q", builders[i])
+	if settings["type"] != "virtualbox-iso" {
+		t.Errorf("Expected \"virtualbox-iso\", got %q", settings["type"])
 	}
 	//if settings["vboxmanage"] != "[[\"modifyvm\" \"{{.Name}}\" \"--cpus\" \"1\"] [\"modifyvm\" \"{{.Name}}\" \"--memory\" \"4096\"]]" {
 	//	t.Errorf("Expected \"[[\"modifyvm\" \"{{.Name}}\" \"--cpus\" \"1\"] [\"modifyvm\" \"{{.Name}}\" \"--memory\" \"4096\"]]\", got %q", settings["vboxmanage"])
@@ -467,15 +459,12 @@ func TestCreateBuilderVMWareISO(t *testing.T) {
 	if settings["ssh_username"] != "vagrant" {
 		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_username"])
 	}
-	i, _ := strconv.Atoi(MarshalJSONToString.Get(settings["type"]))
-	if builders[i] != "vmware-iso" {
-		t.Errorf("Expected \"vmware-iso\", got %q", builders[i])
+	if settings["type"] != "vmware-iso" {
+		t.Errorf("Expected \"vmware-iso\", got %q", settings["type"])
 	}
-	//if settings["vboxmanage"] != "[[\"modifyvm\" \"{{.Name}}\" \"--cpus\" \"1\"] [\"modifyvm\" \"{{.Name}}\" \"--memory\" \"4096\"]]" {
-	//	t.Errorf("Expected \"[[\"modifyvm\" \"{{.Name}}\" \"--cpus\" \"1\"] [\"modifyvm\" \"{{.Name}}\" \"--memory\" \"4096\"]]\", got %q", settings["vboxmanage"])
-	//}
-	if MarshalJSONToString.Get(settings["vmx_data"]) != "{\"cpus\":\"1\",\"memory\":\"4096\"}" {
-		t.Errorf("Expected \"{\"cpus\":\"1\",\"memory\":\"4096\"}\", got %q", MarshalJSONToString.Get(settings["vmx_data"]))
+	expected := map[string]string{"cpus": "1", "memory": "4096"}
+	if MarshalJSONToString.Get(settings["vmx_data"]) != MarshalJSONToString.Get(expected) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings["vmx_data"]))
 	}
 
 	settings, _, err = testBuilderCentOS.createVMWareISO()
@@ -506,9 +495,8 @@ func TestCreateBuilderVMWareISO(t *testing.T) {
 	if settings["ssh_username"] != "vagrant" {
 		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_username"])
 	}
-	i, _ = strconv.Atoi(MarshalJSONToString.Get(settings["type"]))
-	if builders[i] != "vmware-iso" {
-		t.Errorf("Expected \"vmware-iso\", got %q", builders[i])
+	if settings["type"] != "vmware-iso" {
+		t.Errorf("Expected \"vmware-iso\", got %q", settings["type"])
 	}
 
 	//if MarshalJSONToString.Get(settings["vmx_data"]) != "\"cpus\":\"1\",\"memory\":\"4096\"" {

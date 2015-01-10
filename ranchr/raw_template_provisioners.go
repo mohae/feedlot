@@ -143,6 +143,10 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 // ansible provisioner. Any values that aren't supported by the file
 // provisioner are ignored.
 func (r *rawTemplate) createAnsibleLocalProvisioner() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[AnsibleLocal.String()]
+	if !ok {
+		err = fmt.Errorf("no configuration for %q found", AnsibleLocal.String())
+	}
 	settings = make(map[string]interface{})
 	settings["type"] = AnsibleLocal.String()
 	// For each value, extract its key value pair and then process. Only
@@ -172,6 +176,10 @@ func (r *rawTemplate) createAnsibleLocalProvisioner() (settings map[string]inter
 // ansible provisioner. Any values that aren't supported by the file
 // provisioner are ignored.
 func (r *rawTemplate) createSaltMasterlessProvisioner() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[SaltMasterless.String()]
+	if !ok {
+		err = fmt.Errorf("no configuration for %q found", SaltMasterless.String())
+	}
 	settings = make(map[string]interface{})
 	settings["type"] = SaltMasterless.String()
 	// For each value, extract its key value pair and then process. Only
@@ -195,6 +203,10 @@ func (r *rawTemplate) createSaltMasterlessProvisioner() (settings map[string]int
 // provisioner. Any values that aren't supported by the shell provisioner are
 // ignored.
 func (r *rawTemplate) createShellProvisioner() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[Shell.String()]
+	if !ok {
+		err = fmt.Errorf("no configuration for %q found", Shell.String())
+	}
 	settings = make(map[string]interface{})
 	settings["type"] = Shell.String()
 	// For each value, extract its key value pair and then process. Only
@@ -225,6 +237,10 @@ func (r *rawTemplate) createShellProvisioner() (settings map[string]interface{},
 // provisioner. Any values that aren't supported by the file provisioner are
 // ignored.
 func (r *rawTemplate) createFileProvisioner() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[File.String()]
+	if !ok {
+		err = fmt.Errorf("no configuration for %q found", File.String())
+	}
 	settings = make(map[string]interface{})
 	settings["type"] = File.String()
 	// For each value, extract its key value pair and then process. Only

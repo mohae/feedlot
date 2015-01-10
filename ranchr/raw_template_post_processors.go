@@ -138,6 +138,12 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]i
 // createVagrant() creates a map of settings for Packer's Vagrant post-processor.
 // Any values that aren't supported by the Vagrant post-processor are ignored.
 func (r *rawTemplate) createVagrant() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.PostProcessors[Vagrant.String()]
+	if !ok {
+		err = fmt.Errorf("no configuration found for %q", Vagrant.String())
+		jww.ERROR.Println(err)
+		return nil, nil, err
+	}
 	settings = make(map[string]interface{})
 	settings["type"] = Vagrant.String()
 	// For each value, extract its key value pair and then process. Only
@@ -150,7 +156,7 @@ func (r *rawTemplate) createVagrant() (settings map[string]interface{}, vars []s
 		case "compression_level", "keep_input_artifact", "output":
 			settings[k] = v
 		default:
-			jww.WARN.Println("An unsupported key was encountered: " + k)
+			jww.WARN.Printf("unsupported key %q: ", k)
 		}
 	}
 	// Process the Arrays.
@@ -164,8 +170,23 @@ func (r *rawTemplate) createVagrant() (settings map[string]interface{}, vars []s
 }
 
 func (r *rawTemplate) createVagrantCloud() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.PostProcessors[VagrantCloud.String()]
+	if !ok {
+		err = fmt.Errorf("no configuration found for %q", VagrantCloud.String())
+		jww.ERROR.Println(err)
+		return nil, nil, err
+	}
 	settings = make(map[string]interface{})
 	settings["type"] = VagrantCloud.String()
+	for _, s := range r.PostProcessors[Vagrant.String()].Settings {
+		k, v := parseVar(s)
+		switch k {
+		case "access_token", "box_tag", "version", "no_release", "vagrant_cloud_url", "version_description", "box_download_url":
+			settings[k] = v
+		default:
+			jww.WARN.Printf("unsupported key: %q", k)
+		}
+	}
 	return nil, nil, nil
 }
 

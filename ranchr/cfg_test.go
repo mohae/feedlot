@@ -274,33 +274,52 @@ func TestProvisionerMergeSettings(t *testing.T) {
 	}
 }
 
-/*
 func TestDefaults(t *testing.T) {
 	tmpEnvDefaultsFile := os.Getenv(EnvDefaultsFile)
 	d := defaults{}
 	os.Setenv(EnvDefaultsFile, "")
 	err := d.LoadOnce()
-	So(err.Error(), ShouldEqual, "could not retrieve the default Settings because the RANCHER_DEFAULTS_FILE environment variable was not set. Either set it or check your rancher.cfg setting")
-	So(d.MinPackerVersion, ShouldEqual, "")
+	if err == nil {
+		t.Error("Expected an error, got nil")
+	} else {
+		if err.Error() != "could not retrieve the default Settings because the RANCHER_DEFAULTS_FILE environment variable was not set. Either set it or check your rancher.cfg setting" {
+			t.Errorf("Expected \"could not retrieve the default Settings because the RANCHER_DEFAULTS_FILE environment variable was not set. Either set it or check your rancher.cfg setting\", got %q", err.Error())
+		} else {
+			if d.MinPackerVersion != "" {
+				t.Errorf("Expected \"\", got %q", d.MinPackerVersion)
+			}
+		}
+	}
 
 	os.Setenv(EnvDefaultsFile, "../test_files/conf/defaults_test.toml")
 	os.Setenv(EnvRancherFile, "../test_files/rancher.cfg")
-	d := defaults{}
-	err := d.LoadOnce()
-	So(err, ShouldBeNil)
-	So(d.IODirInf, ShouldResemble, testDefaults.IODirInf)
-	So(d.PackerInf, ShouldResemble, testDefaults.PackerInf)
-	So(d.BuildInf, ShouldResemble, testDefaults.BuildInf)
-	So(d.build.BuilderTypes, ShouldResemble, testDefaults.build.BuilderTypes)
-	So(MarshalJSONToString.Get(d.build.Builders[BuilderVirtualBoxISO]), ShouldEqual, MarshalJSONToString.Get(testDefaults.build.Builders[BuilderVirtualBoxISO]))
-	So(d.build.PostProcessorTypes, ShouldResemble, testDefaults.build.PostProcessorTypes)
-	So(MarshalJSONToString.Get(d.build.PostProcessors[PostProcessorVagrant]), ShouldEqual, MarshalJSONToString.Get(testDefaults.build.PostProcessors[PostProcessorVagrant]))
-	So(MarshalJSONToString.Get(d.build.PostProcessors[PostProcessorVagrantCloud]), ShouldEqual, MarshalJSONToString.Get(testDefaults.build.PostProcessors[PostProcessorVagrantCloud]))
-	So(d.build.ProvisionerTypes, ShouldResemble, testDefaults.build.ProvisionerTypes)
-	So(MarshalJSONToString.Get(d.build.Provisioners[ProvisionerShell]), ShouldEqual, MarshalJSONToString.Get(testDefaults.build.Provisioners[ProvisionerShell]))
+	d = defaults{}
+	err = d.LoadOnce()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	} else {
+		if MarshalJSONToString.Get(d) != MarshalJSONToString.Get(testDefaults) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testDefaults), MarshalJSONToString.Get(d))
+		}
+		/*
+			if MarshalJSONToString.Get(d.IODirInf) != MarshalJSONToString.Get(testDefaults.IODirInf) {
+				t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testDefaults.IODirInf), MarshalJSONToString.Get(d.IODirInf))
+			}
+			/*
+				So(d.PackerInf, ShouldResemble, testDefaults.PackerInf)
+				So(d.BuildInf, ShouldResemble, testDefaults.BuildInf)
+				So(d.build.BuilderTypes, ShouldResemble, testDefaults.build.BuilderTypes)
+			/
+			So(MarshalJSONToString.Get(d.build.Builders[BuilderVirtualBoxISO]) != MarshalJSONToString.Get(testDefaults.build.Builders[BuilderVirtualBoxISO]))
+			So(d.build.PostProcessorTypes != testDefaults.build.PostProcessorTypes)
+			So(MarshalJSONToString.Get(d.build.PostProcessors[PostProcessorVagrant]) != MarshalJSONToString.Get(testDefaults.build.PostProcessors[PostProcessorVagrant]))
+			So(MarshalJSONToString.Get(d.build.PostProcessors[PostProcessorVagrantCloud])  MarshalJSONToString.Get(testDefaults.build.PostProcessors[PostProcessorVagrantCloud]))
+			So(d.build.ProvisionerTypes, ShouldResemble, testDefaults.build.ProvisionerTypes)
+			So(MarshalJSONToString.Get(d.build.Provisioners[ProvisionerShell]), ShouldEqual, MarshalJSONToString.Get(testDefaults.build.Provisioners[ProvisionerShell]))
+		*/
+	}
 	_ = os.Setenv(EnvDefaultsFile, tmpEnvDefaultsFile)
 }
-*/
 
 func TestSupported(t *testing.T) {
 	tmpEnv := os.Getenv(EnvSupportedFile)

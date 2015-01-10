@@ -96,6 +96,10 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 
 // createVirtualBoxISO generates the settings for a virtualbox-iso builder.
 func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[VirtualBoxISO.String()]
+	if !ok {
+		err = fmt.Errorf("no configuration for %q found", VirtualBoxISO.String())
+	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
 	settings["type"] = VirtualBoxISO.String()
@@ -219,6 +223,10 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 
 // createVirtualBoxOVF generates the settings for a virtualbox-iso builder.
 func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[VirtualBoxOVF.String()]
+	if !ok {
+		err = fmt.Errorf("no configuration for %q found", VirtualBoxOVF.String())
+	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
 	settings["type"] = VirtualBoxOVF.String()
@@ -301,6 +309,10 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, va
 
 // createVMWareISO generates the settings for a vmware-iso builder.
 func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[VMWareISO.String()]
+	if !ok {
+		err = fmt.Errorf("no configuration for %q found", VMWareISO.String())
+	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
 	settings["type"] = VMWareISO.String()
@@ -403,6 +415,10 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 
 // createVMWareVMX generates the settings for a vmware-vmx builder.
 func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[VMWareVMX.String()]
+	if !ok {
+		err = fmt.Errorf("no configuration for %q found", VMWareVMX.String())
+	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
 	settings["type"] = VMWareVMX.String()
@@ -467,6 +483,10 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, vars [
 // createDigitalOcean generates the settings for a digital ocean builder.
 // The deprecated image_id,  region_id, and size_id are not supported.
 func (r *rawTemplate) createDigitalOcean() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[DigitalOcean.String()]
+	if !ok {
+		err = fmt.Errorf("no configuration for %q found", DigitalOcean.String())
+	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
 	settings["type"] = DigitalOcean
@@ -489,6 +509,10 @@ func (r *rawTemplate) createDigitalOcean() (settings map[string]interface{}, var
 
 // createDocker generates the settings for a docker builder.
 func (r *rawTemplate) createDocker() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[Docker.String()]
+	if !ok {
+		err = fmt.Errorf("no configuration for %q found", Docker.String())
+	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
 	settings["type"] = Docker

@@ -140,9 +140,20 @@ func TestRawTemplateCreatePostProcessors(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
-		// type 1 == vagrant
-		if MarshalJSONToString.Get(pp) != "[{\"compression_level\":\"8\",\"include\":[\"include1\",\"include2\"],\"keep_input_artifact\":\"true\",\"only\":[\"virtualbox-iso\"],\"output\":\"out/rancher-packer.box\",\"override\":{\"virtualbox\":{\"output\":\"overridden-virtualbox.box\"},\"vmware-iso\":{\"output\":\"overridden-vmware.box\"}},\"type\":1},null]" {
-			t.Errorf("Expected \"[{\"compression_level\":\"8\",\"include\":[\"include1\",\"include2\"],\"keep_input_artifact\":\"true\",\"only\":[\"virtualbox-iso\"],\"output\":\"out/rancher-packer.box\",\"override\":{\"virtualbox\":{\"output\":\"overridden-virtualbox.box\"},\"vmware-iso\":{\"output\":\"overridden-vmware.box\"}},\"type\":1},null]\", got %q", MarshalJSONToString.Get(pp))
+		expected := map[string]interface{}{
+			"compression_level":   "8",
+			"include":             []string{"include1", "include2"},
+			"keep_input_artifact": "true",
+			"only":                []string{"virtualbox-iso"},
+			"output":              "out/rancher-packer.box",
+			"override": map[string]interface{}{
+				"virtualbox": map[string]interface{}{"output": "overridden-virtualbox.box"},
+				"vmware-iso": map[string]interface{}{"output": "overridden-vmware.box"},
+			},
+			"type": "vagrant",
+		}
+		if MarshalJSONToString.Get(pp) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(pp))
 		}
 	}
 }

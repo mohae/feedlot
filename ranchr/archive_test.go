@@ -36,9 +36,12 @@ func TestAddFilename(t *testing.T) {
 
 	tst = Archive{}
 	err = tst.addFilename("", "../test_files/src/ubuntu/scripts/dne_test_file.sh", nil, nil)
-	if assert.NotNil(t, err) {
-		assert.Equal(t, "../test_files/src/ubuntu/scripts/dne_test_file.sh does not exist.", err.Error())
-		assert.Empty(t, tst.Files)
+	if err == nil {
+		t.Error("Expected an error, got nil")
+	} else {
+		if "../test_files/src/ubuntu/scripts/dne_test_file.sh does not exist" != err.Error() {
+			t.Errorf("Expected \"../test_files/src/ubuntu/scripts/dne_test_file.sh does not exist\", got %q", err.Error())
+		}
 	}
 }
 

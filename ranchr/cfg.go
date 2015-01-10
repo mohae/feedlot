@@ -305,7 +305,7 @@ func (d *defaults) LoadOnce() error {
 	}
 	d.load.Do(loadFunc)
 	d.loaded = true
-	return nil
+	return err
 }
 
 // BuildInf is a container for information about a specific build.

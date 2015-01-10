@@ -386,7 +386,7 @@ func TestCentOSGetOSType(t *testing.T) {
 func TestCentOSSetChecksum(t *testing.T) {
 	c := newTestCentOS()
 	c.setReleaseInfo()
-	c.SetISOInfo()
+	//	c.SetISOInfo()
 	err := c.setChecksum()
 	if err == nil {
 		t.Error("Expected error to not be nil, it was")
@@ -417,16 +417,6 @@ func TestCentOSSetChecksum(t *testing.T) {
 	} else {
 		if c.Checksum != "5458f357e8a55e3a866dd856896c7e0ac88e7f9220a3dd74c58a3b0acede8e4d" {
 			t.Errorf("Expected \"5458f357e8a55e3a866dd856896c7e0ac88e7f9220a3dd74c58a3b0acede8e4d\", got %q", c.Checksum)
-		}
-	}
-	c.Name = "aslk"
-	c.SetISOInfo()
-	err = c.setChecksum()
-	if err == nil {
-		t.Error("Expected error to not be nil, it was")
-	} else {
-		if err.Error() != "unable to find ISO information while looking for the release string on the CentOS checksums page" {
-			t.Errorf("Expected \"unable to find ISO information while looking for the release string on the CentOS checksums page\",got %q", err.Error())
 		}
 	}
 }
