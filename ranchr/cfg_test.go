@@ -282,8 +282,8 @@ func TestDefaults(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, got nil")
 	} else {
-		if err.Error() != "unable to retrieve the default settings: %q was not set; check your \"rancher.cfg\"" {
-			t.Errorf("Expected \"unable to retrieve the default settings: %q was not set; check your \"rancher.cfg\"\", got %q", err.Error())
+		if err.Error() != "an error occurred while loading the default settings; check the log for more information" {
+			t.Errorf("Expected \"an error occurred while loading the default settings; check the log for more information\", got %q", err.Error())
 		} else {
 			if d.MinPackerVersion != "" {
 				t.Errorf("Expected \"\", got %q", d.MinPackerVersion)

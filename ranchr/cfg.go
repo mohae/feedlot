@@ -288,24 +288,26 @@ type defaults struct {
 // When loaded, it sets the loaded boolean so that it only needs to be called
 // when it hasn't been loaded.
 func (d *defaults) LoadOnce() error {
-	var err error
 	loadFunc := func() {
 		name := os.Getenv(EnvDefaultsFile)
 		if name == "" {
-			err = fmt.Errorf("unable to retrieve the default settings: %q was not set; check your \"rancher.cfg\"", EnvBuildsFile)
+			err := fmt.Errorf("unable to retrieve the default settings: %q was not set; check your \"rancher.cfg\"", EnvBuildsFile)
 			jww.CRITICAL.Print(err)
 			return
 		}
-		_, err = toml.DecodeFile(name, d)
+		_, err := toml.DecodeFile(name, d)
 		if err != nil {
 			jww.CRITICAL.Print(err)
 			return
 		}
+		d.loaded = true
 		return
 	}
 	d.load.Do(loadFunc)
-	d.loaded = true
-	return err
+	if !d.loaded {
+		return fmt.Errorf("an error occurred while loading the default settings; check the log for more information")
+	}
+	return nil
 }
 
 // BuildInf is a container for information about a specific build.
