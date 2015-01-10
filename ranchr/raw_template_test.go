@@ -180,18 +180,6 @@ func TestReplaceVariables(t *testing.T) {
 	}
 }
 
-func TestRawTemplateVariableSection(t *testing.T) {
-	r := newRawTemplate()
-	res, err := r.variableSection()
-	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
-	} else {
-		if len(res) != 0 {
-			t.Errorf("Expected an empty map, got %+v", res)
-		}
-	}
-}
-
 /*
 func TestRawTemplateSetDefaults(t *testing.T) {
 	Convey("Given a raw template", t, func() {
