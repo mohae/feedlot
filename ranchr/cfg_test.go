@@ -282,8 +282,8 @@ func TestDefaults(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, got nil")
 	} else {
-		if err.Error() != "an error occurred while loading the default settings; check the log for more information" {
-			t.Errorf("Expected \"an error occurred while loading the default settings; check the log for more information\", got %q", err.Error())
+		if err.Error() != "unable to retrieve the default settings: \"RANCHER_BUILDS_FILE\" was not set; check your \"rancher.cfg\"" {
+			t.Errorf("Expected \"unable to retrieve the default settings: \"RANCHER_BUILDS_FILE\" was not set; check your \"rancher.cfg\"\", got %q", err.Error())
 		} else {
 			if d.MinPackerVersion != "" {
 				t.Errorf("Expected \"\", got %q", d.MinPackerVersion)
@@ -301,22 +301,6 @@ func TestDefaults(t *testing.T) {
 		if MarshalJSONToString.Get(d) != MarshalJSONToString.Get(testDefaults) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testDefaults), MarshalJSONToString.Get(d))
 		}
-		/*
-			if MarshalJSONToString.Get(d.IODirInf) != MarshalJSONToString.Get(testDefaults.IODirInf) {
-				t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testDefaults.IODirInf), MarshalJSONToString.Get(d.IODirInf))
-			}
-			/*
-				So(d.PackerInf, ShouldResemble, testDefaults.PackerInf)
-				So(d.BuildInf, ShouldResemble, testDefaults.BuildInf)
-				So(d.build.BuilderTypes, ShouldResemble, testDefaults.build.BuilderTypes)
-			/
-			So(MarshalJSONToString.Get(d.build.Builders[BuilderVirtualBoxISO]) != MarshalJSONToString.Get(testDefaults.build.Builders[BuilderVirtualBoxISO]))
-			So(d.build.PostProcessorTypes != testDefaults.build.PostProcessorTypes)
-			So(MarshalJSONToString.Get(d.build.PostProcessors[PostProcessorVagrant]) != MarshalJSONToString.Get(testDefaults.build.PostProcessors[PostProcessorVagrant]))
-			So(MarshalJSONToString.Get(d.build.PostProcessors[PostProcessorVagrantCloud])  MarshalJSONToString.Get(testDefaults.build.PostProcessors[PostProcessorVagrantCloud]))
-			So(d.build.ProvisionerTypes, ShouldResemble, testDefaults.build.ProvisionerTypes)
-			So(MarshalJSONToString.Get(d.build.Provisioners[ProvisionerShell]), ShouldEqual, MarshalJSONToString.Get(testDefaults.build.Provisioners[ProvisionerShell]))
-		*/
 	}
 	_ = os.Setenv(EnvDefaultsFile, tmpEnvDefaultsFile)
 }
@@ -329,8 +313,8 @@ func TestSupported(t *testing.T) {
 	if err == nil {
 		t.Errorf("expected error, none occurred")
 	} else {
-		if err.Error() != "an error occurred while loading the Supported information, please check the log" {
-			t.Errorf("expected \"an error occurred while loading the Supported information, please check the log\" got %q", err.Error())
+		if err.Error() != "open : no such file or directory" {
+			t.Errorf("expected \"open : no such file or directory\" got %q", err.Error())
 		}
 		if s.loaded {
 			t.Errorf("expected Supported info not to be loaded, but it was")
@@ -346,11 +330,11 @@ func TestSupported(t *testing.T) {
 		if !s.loaded {
 			t.Errorf("expected the Supported info to be loaded, but it wasn't")
 		} else {
-			if MarshalJSONToString.GetIndented(s.Distro[Ubuntu.String()]) != MarshalJSONToString.GetIndented(testSupported.Distro[Ubuntu.String()]) {
-				t.Errorf("expected %q, got %q", MarshalJSONToString.GetIndented(testSupported.Distro[Ubuntu.String()]), MarshalJSONToString.GetIndented(s.Distro[Ubuntu.String()]))
+			if MarshalJSONToString.Get(s.Distro[Ubuntu.String()]) != MarshalJSONToString.Get(testSupported.Distro[Ubuntu.String()]) {
+				t.Errorf("expected %q, got %q", MarshalJSONToString.Get(testSupported.Distro[Ubuntu.String()]), MarshalJSONToString.Get(s.Distro[Ubuntu.String()]))
 			}
-			if MarshalJSONToString.GetIndented(s.Distro[CentOS.String()]) != MarshalJSONToString.GetIndented(testSupported.Distro[CentOS.String()]) {
-				t.Errorf("expected %q, got %q", MarshalJSONToString.GetIndented(testSupported.Distro[CentOS.String()]), MarshalJSONToString.GetIndented(s.Distro[CentOS.String()]))
+			if MarshalJSONToString.Get(s.Distro[CentOS.String()]) != MarshalJSONToString.Get(testSupported.Distro[CentOS.String()]) {
+				t.Errorf("expected %q, got %q", MarshalJSONToString.Get(testSupported.Distro[CentOS.String()]), MarshalJSONToString.Get(s.Distro[CentOS.String()]))
 			}
 		}
 	}
@@ -362,30 +346,29 @@ func TestSupported(t *testing.T) {
 func TestBuildsStuff(t *testing.T) {
 	b := builds{}
 	tmpEnv := os.Getenv(EnvBuildsFile)
-	/*
-		os.Setenv(EnvBuildsFile, "")
-		b.LoadOnce()
-		if b.loaded == true {
-			t.Errorf("expected Build's loaded flag to be false, but it was")
-		}
-
-		os.Setenv(EnvBuildsFile, "../test_files/notthere.toml")
-		b.LoadOnce()
-		if b.loaded == true {
-			t.Errorf("expected Build's loaded flag to be false, but it was")
-		}
-	*/
-	os.Setenv(EnvBuildsFile, "../test_files/conf/builds_test.toml")
+	os.Setenv(EnvBuildsFile, "")
 	b.LoadOnce()
-	//	t.Errorf("%+v", b)
+	if b.loaded == true {
+		t.Errorf("expected Build's loaded flag to be false, but it was")
+	}
+
+	os.Setenv(EnvBuildsFile, "../test_files/notthere.toml")
+	b.LoadOnce()
+	if b.loaded == true {
+		t.Errorf("expected Build's loaded flag to be false, but it was")
+	}
+
+	os.Setenv(EnvBuildsFile, "../test_files/conf/builds_test.toml")
+	b = builds{}
+	b.LoadOnce()
 	if b.loaded == false {
 		t.Errorf("expected Build info to be loaded, but it wasn't")
 	} else {
-		if MarshalJSONToString.GetIndented(testBuilds.Build["test1"]) != MarshalJSONToString.GetIndented(b.Build["test1"]) {
-			t.Errorf("expected %q, got %q", MarshalJSONToString.GetIndented(testBuilds.Build["test1"]), MarshalJSONToString.GetIndented(b.Build["test1"]))
+		if MarshalJSONToString.Get(testBuilds.Build["test1"]) != MarshalJSONToString.Get(b.Build["test1"]) {
+			t.Errorf("expected %q, got %q", MarshalJSONToString.Get(testBuilds.Build["test1"]), MarshalJSONToString.Get(b.Build["test1"]))
 		}
-		if MarshalJSONToString.GetIndented(testBuilds.Build["test2"]) != MarshalJSONToString.GetIndented(b.Build["test2"]) {
-			t.Errorf("expected %q, got %q", MarshalJSONToString.GetIndented(testBuilds.Build["test2"]), MarshalJSONToString.GetIndented(b.Build["test2"]))
+		if MarshalJSONToString.Get(testBuilds.Build["test2"]) != MarshalJSONToString.Get(b.Build["test2"]) {
+			t.Errorf("expected %q, got %q", MarshalJSONToString.Get(testBuilds.Build["test2"]), MarshalJSONToString.Get(b.Build["test2"]))
 		}
 	}
 

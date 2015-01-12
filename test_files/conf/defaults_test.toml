@@ -5,10 +5,10 @@ name = ":build_name"
 commands_src_dir = ":src_dir/commands"
 http_dir = "http"
 http_src_dir = ":src_dir/http"
-out_dir = "../test_files/out/:type/:build_name"
+out_dir = "../test_files/out/:distro/:build_name"
 scripts_dir = "scripts"
 scripts_src_dir = ":src_dir/scripts"
-src_dir = "../test_files/src/:type"
+src_dir = "../test_files/src/:distro"
 min_packer_version = "0.4.0"
 builder_types = [
     "virtualbox-iso",

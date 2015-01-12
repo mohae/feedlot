@@ -81,69 +81,146 @@ func init() {
 	setCommonTestData()
 }
 
-/*
 func TestNewRawTemplate(t *testing.T) {
-	Convey("Testing NewRawTemplate", t, func() {
-		Convey("Given a request for a newRawTemplate()", func() {
-			rawTpl := newRawTemplate()
-			Convey("The raw template should equal--we don't test the date because it is always changeing", func() {
-				if rawTpl, ShouldResemble, testRawTemplate)
-			})
-		})
-	})
+	rawTpl := newRawTemplate()
+	if MarshalJSONToString.Get(rawTpl) != MarshalJSONToString.Get(testRawTemplate) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testRawTemplate), MarshalJSONToString.Get(rawTpl))
+	}
 }
 
-func TestCreatePackerTemplate(t *testing.T) {
-	Convey("Given a template", t, func() {
-		r := &rawTemplate{}
-		r = testDistroDefaults.Templates[Ubuntu]
-		Convey("Calling rawTemplate.CreatePackerTemplate() should result in", func() {
-			var pTpl packerTemplate
-			var err error
-			pTpl, err = r.createPackerTemplate()
-			if err, ShouldBeNil)
-			if pTpl, ShouldNotResemble, r)
-		})
-	})
-}
-*/
-
-/*
 func TestCreateBuilders(t *testing.T) {
-	Convey("Given a template", t, func() {
-		r := &rawTemplate{}
-		r = testDistroDefaults.Templates[Ubuntu]
-		var bldrs []interface{}
-		var vars map[string]interface{}
-		var err error
-		Convey("Given a call to createBuilders", func() {
-			Convey("Given a valid Builder Type", func() {
-				//first merge the variables so that create builders will work
-				r.mergeVariables()
-				bldrs, vars, err = r.createBuilders()
-				if err, ShouldBeNil)
-				if vars, ShouldBeNil)
-				if bldrs, ShouldNotResemble, r)
-			})
-			Convey("Given an unsupported Builder Types", func() {
-				r.BuilderTypes[0] = "unsupported"
-				bldrs, vars, err = r.createBuilders()
-				if err.Error() != "The requested builder, 'unsupported', is not supported by Rancher")
-				if vars, ShouldBeNil)
-				if bldrs, ShouldBeNil)
-			})
-			Convey("Given no Builder Types", func() {
-				r.BuilderTypes = nil
-				bldrs, vars, err = r.createBuilders()
-				if err.Error() != "rawTemplate.createBuilders: no builder types were configured, unable to create builders")
-				if vars, ShouldBeNil)
-				if bldrs, ShouldBeNil)
-			})
+	r := &rawTemplate{}
+	r = testDistroDefaults.Templates[Ubuntu]
+	var bldrs []interface{}
+	var err error
+	/*
+		merged := []interface{}{
+			map[string]interface{}{
+				"boot_command": []string{
+					"<esc><wait>",
+					"<esc><wait>",
+					"<enter><wait>",
+					" /install/vmlinuz<wait>",
+					" auto<wait>",
+					" console-setup/ask_detect=false<wait>",
+					" console-setup/layoutcode=us<wait>",
+					" console-setup/modelcode=pc105<wait>",
+					" debconf/frontend=noninteractive<wait>",
+					" debian-installer=en_US<wait>",
+					" fb=false<wait>",
+					" initrd=/install/initrd.gz<wait> ",
+					" kbd-chooser/method=us<wait>",
+					" keyboard-configuration/layout=USA<wait>",
+					" keyboard-configuration/variant=USA<wait>",
+					" locale=en_US<wait>",
+					" netcfg/get_hostname=ubuntu-1204<wait>",
+					" netcfg/get_domain=vagrantup.com<wait>",
+					" noapic<wait>",
+					" preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg<wait>",
+					" -- <wait>",
+					" <enter><wait>",
+				},
+				"boot_wait":               "5s",
+				"guest_os_type":           "ssh_password:vagrant",
+				"ssh_wait_timeout":        "240m",
+				"disk_size":               20000,
+				"iso_url":                 "",
+				"iso_checksum":            "",
+				"type":                    "virtualbox-iso",
+				"http_directory":          "http",
+				"iso_checksum_type":       "sha256",
+				"shutdown_command":        "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
+				"ssh_port":                22,
+				"virtualbox_version_file": ".vbox_version",
+				"vboxmanage": []interface{}{
+					[]string{"modifyvm", "{{.Name}}", "--cpus 1"},
+					[]string{"modifyvm", "{{.Name}}", "--memory 1024"},
+				},
+				"headless":     true,
+				"ssh_username": "vagrant",
+			},
+			map[string]interface{}{
+				"guest_os_type":    "",
+				"ssh_password":     "vagrant",
+				"ssh_wait_timeout": "240m",
+				"boot_command": []string{
+					"<esc><wait>",
+					"<esc><wait>",
+					"<enter><wait>",
+					"/install/vmlinuz<wait>",
+					" auto<wait>",
+					" console-setup/ask_detect=false<wait>",
+					" console-setup/layoutcode=us<wait>",
+					" console-setup/modelcode=pc105<wait>",
+					" debconf/frontend=noninteractive<wait>",
+					" debian-installer=en_US<wait>",
+					" fb=false<wait>",
+					" initrd=/install/initrd.gz<wait>",
+					" kbd-chooser/method=us<wait>",
+					" keyboard-configuration/layout=USA<wait>",
+					" keyboard-configuration/variant=USA<wait>",
+					" locale=en_US<wait>",
+					" netcfg/get_hostname=ubuntu-1204<wait>",
+					" netcfg/get_domain=vagrantup.com<wait>",
+					" noapic<wait> ",
+					" preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg<wait>",
+					" -- <wait> <enter><wait>",
+				},
+				"boot_wait":         "5s",
+				"iso_checksum":      "",
+				"disk_size":         20000,
+				"iso_url":           "",
+				"iso_checksum_type": "sha256",
+				"shutdown_command":  "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
+				"ssh_port":          22,
+				"vmx_data": map[string]interface{}{
+					"cpus":   1,
+					"memory": 1024,
+				},
+				"type":           "vmware-iso",
+				"http_directory": "http",
+				"headless":       true,
+				"ssh_username":   "vagrant",
+			},
+		}
+	*/
+	//first merge the variables so that create builders will work
+	r.mergeVariables()
+	bldrs, _, err = r.createBuilders()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	}
+	/*else {
+		if MarshalJSONToString.Get(bldrs[0]) != MarshalJSONToString.Get(merged[0]) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(merged[0]), MarshalJSONToString.Get(bldrs[0]))
+		}
+		if MarshalJSONToString.Get(bldrs[1]) != MarshalJSONToString.Get(merged[1]) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(merged[1]), MarshalJSONToString.Get(bldrs[1]))
+		}
+	}
+	*/
+	_ = bldrs
 
-		})
-	})
+	r.BuilderTypes[0] = "unsupported"
+	bldrs, _, err = r.createBuilders()
+	if err == nil {
+		t.Error("Expected an error, got nil")
+	} else {
+		if err.Error() != "Builder, \"unsupported\", is not supported by Rancher" {
+			t.Errorf("Expected \"tBuilder, \"unsupported\", is not supported by Rancher\"), got %q", err.Error())
+		}
+	}
+
+	r.BuilderTypes = nil
+	bldrs, _, err = r.createBuilders()
+	if err == nil {
+		t.Error("Expected an error, got nil")
+	} else {
+		if err.Error() != "unable to create builders: none specified" {
+			t.Errorf("Expected \"unable to create builders: none specified\"), got %q", err.Error())
+		}
+	}
 }
-*/
 
 func TestReplaceVariables(t *testing.T) {
 	r := newRawTemplate()
@@ -180,48 +257,38 @@ func TestReplaceVariables(t *testing.T) {
 	}
 }
 
-/*
-func TestRawTemplateSetDefaults(t *testing.T) {
-	Convey("Given a raw template", t, func() {
-		r := newRawTemplate()
-		Convey("setting the distro defaults", func() {
-			r.setDefaults(testSupported.Distro["centos"])
-			Convey("should result in setting that match the defaults", func() {
-				if r.IODirInf, ShouldResemble, testSupported.Distro["centos"].IODirInf)
-				if r.PackerInf, ShouldResemble, testSupported.Distro["centos"].PackerInf)
-				if r.BuildInf, ShouldResemble, testSupported.Distro["centos"].BuildInf)
-				if r.BuilderTypes, ShouldResemble, testSupported.Distro["centos"].BuilderTypes)
-				if r.PostProcessorTypes, ShouldResemble, testSupported.Distro["centos"].PostProcessorTypes)
-				if r.ProvisionerTypes, ShouldResemble, testSupported.Distro["centos"].ProvisionerTypes)
-				if r.Builders, ShouldResemble, testSupported.Distro["centos"].Builders)
-				if r.PostProcessors, ShouldResemble, testSupported.Distro["centos"].PostProcessors)
-				if r.Provisioners, ShouldResemble, testSupported.Distro["centos"].Provisioners)
-			})
-		})
-	})
-}
-
 func TestRawTemplateUpdateBuildSettings(t *testing.T) {
-	Convey("Given a raw template with defaults set", t, func() {
-		r := newRawTemplate()
-		r.setDefaults(testSupported.Distro["centos"])
-		Convey("updating the build settings", func() {
-			r.updateBuildSettings(testBuilds.Build["test1"])
-			Convey("should result in updated build settings", func() {
-				if r.IODirInf, ShouldResemble, testSupported.Distro["centos"].IODirInf)
-				if r.PackerInf, ShouldResemble, testBuilds.Build["test1"].PackerInf)
-				if r.BuildInf, ShouldResemble, testSupported.Distro["centos"].BuildInf)
-				if r.BuilderTypes, ShouldResemble, testBuilds.Build["test1"].BuilderTypes)
-				if r.PostProcessorTypes, ShouldResemble, testBuilds.Build["test1"].PostProcessorTypes)
-				if r.ProvisionerTypes, ShouldResemble, testBuilds.Build["test1"].ProvisionerTypes)
-				if MarshalJSONToString.Get(r.Builders), ShouldResemble, MarshalJSONToString.Get(updatedBuilders))
-				if MarshalJSONToString.Get(r.PostProcessors), ShouldResemble, MarshalJSONToString.Get(comparePostProcessors))
-				if MarshalJSONToString.Get(r.Provisioners), ShouldResemble, MarshalJSONToString.Get(compareProvisioners))
-			})
-		})
-	})
+	r := newRawTemplate()
+	r.setDefaults(testSupported.Distro["centos"])
+	r.updateBuildSettings(testBuilds.Build["test1"])
+	if MarshalJSONToString.Get(r.IODirInf) != MarshalJSONToString.Get(testSupported.Distro["centos"].IODirInf) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupported.Distro["centos"].IODirInf), MarshalJSONToString.Get(r.IODirInf))
+	}
+	if MarshalJSONToString.Get(r.PackerInf) != MarshalJSONToString.Get(testBuilds.Build["test1"].PackerInf) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupported.Distro["test1"].PackerInf), MarshalJSONToString.Get(r.PackerInf))
+	}
+	if MarshalJSONToString.Get(r.BuildInf) != MarshalJSONToString.Get(testSupported.Distro["centos"].BuildInf) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupported.Distro["centos"].BuildInf), MarshalJSONToString.Get(r.BuildInf))
+	}
+	if MarshalJSONToString.Get(r.BuilderTypes) != MarshalJSONToString.Get(testBuilds.Build["test1"].BuilderTypes) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupported.Distro["test1"].BuilderTypes), MarshalJSONToString.Get(r.BuilderTypes))
+	}
+	if MarshalJSONToString.Get(r.PostProcessorTypes) != MarshalJSONToString.Get(testBuilds.Build["test1"].PostProcessorTypes) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupported.Distro["test1"].PostProcessorTypes), MarshalJSONToString.Get(r.PostProcessorTypes))
+	}
+	if MarshalJSONToString.Get(r.ProvisionerTypes) != MarshalJSONToString.Get(testBuilds.Build["test1"].ProvisionerTypes) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupported.Distro["test1"].ProvisionerTypes), MarshalJSONToString.Get(r.ProvisionerTypes))
+	}
+	if MarshalJSONToString.Get(r.Builders) != MarshalJSONToString.Get(updatedBuilders) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(updatedBuilders), MarshalJSONToString.Get(r.Builders))
+	}
+	if MarshalJSONToString.Get(r.PostProcessors) != MarshalJSONToString.Get(comparePostProcessors) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(comparePostProcessors), MarshalJSONToString.Get(r.PostProcessors))
+	}
+	if MarshalJSONToString.Get(r.Provisioners) != MarshalJSONToString.Get(compareProvisioners) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(compareProvisioners), MarshalJSONToString.Get(r.Provisioners))
+	}
 }
-*/
 
 func TestRawTemplateScriptNames(t *testing.T) {
 	r := testDistroDefaults.Templates[Ubuntu]

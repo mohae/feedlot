@@ -192,7 +192,14 @@ func (r *rawTemplate) ScriptNames() []string {
 func (r *rawTemplate) mergeVariables() {
 	// check src_dir and out_dir first:
 	// Get the delim and set the replacement map, resolve name information
-	r.varVals = map[string]string{r.delim + "distro": r.Distro, r.delim + "release": r.Release, r.delim + "arch": r.Arch, r.delim + "image": r.Image, r.delim + "date": r.date, r.delim + "build_name": r.BuildName}
+	r.varVals = map[string]string{
+		r.delim + "distro":     r.Distro,
+		r.delim + "release":    r.Release,
+		r.delim + "arch":       r.Arch,
+		r.delim + "image":      r.Image,
+		r.delim + "date":       r.date,
+		r.delim + "build_name": r.BuildName,
+	}
 	r.Name = r.replaceVariables(r.Name)
 	// Src and Outdir are next, since they can be embedded too
 	r.varVals[r.delim+"name"] = r.Name
@@ -241,7 +248,18 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 	}
 	switch r.Distro {
 	case "ubuntu":
-		r.releaseISO = &ubuntu{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: checksumType}, Arch: r.Arch, Distro: r.Distro, Image: r.Image, Release: r.Release}}
+		r.releaseISO = &ubuntu{
+			release: release{
+				iso: iso{
+					BaseURL:      r.BaseURL,
+					ChecksumType: checksumType,
+				},
+				Arch:    r.Arch,
+				Distro:  r.Distro,
+				Image:   r.Image,
+				Release: r.Release,
+			},
+		}
 		r.releaseISO.SetISOInfo()
 		r.osType, err = r.releaseISO.(*ubuntu).getOSType(builderType.String())
 		if err != nil {
@@ -249,7 +267,18 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 			return err
 		}
 	case "centos":
-		r.releaseISO = &centOS{release: release{iso: iso{BaseURL: r.BaseURL, ChecksumType: checksumType}, Arch: r.Arch, Distro: r.Distro, Image: r.Image, Release: r.Release}}
+		r.releaseISO = &centOS{
+			release: release{
+				iso: iso{
+					BaseURL:      r.BaseURL,
+					ChecksumType: checksumType,
+				},
+				Arch:    r.Arch,
+				Distro:  r.Distro,
+				Image:   r.Image,
+				Release: r.Release,
+			},
+		}
 		r.releaseISO.SetISOInfo()
 		r.osType, err = r.releaseISO.(*centOS).getOSType(builderType.String())
 		if err != nil {

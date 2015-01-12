@@ -558,7 +558,7 @@ func TestRawTemplateBuildersSettingsToMap(t *testing.T) {
 
 func TestDeepCopyMapStringPBuilder(t *testing.T) {
 	cpy := DeepCopyMapStringPBuilder(testDistroDefaults.Templates[Ubuntu].Builders)
-	if MarshalJSONToString.GetIndented(cpy["common"]) != MarshalJSONToString.GetIndented(testDistroDefaults.Templates[Ubuntu].Builders["common"]) {
-		t.Errorf("Expected %q, got %q", MarshalJSONToString.GetIndented(testDistroDefaults.Templates[Ubuntu].Builders["common"]), MarshalJSONToString.GetIndented(cpy["common"]))
+	if MarshalJSONToString.Get(cpy["common"]) != MarshalJSONToString.Get(testDistroDefaults.Templates[Ubuntu].Builders["common"]) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testDistroDefaults.Templates[Ubuntu].Builders["common"]), MarshalJSONToString.Get(cpy["common"]))
 	}
 }

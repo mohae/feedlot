@@ -519,6 +519,7 @@ func BuildDistro(a ArgsFilter) error {
 		jww.ERROR.Println(err)
 		return err
 	}
+	// TODO: what does this argString processing do, or supposed to do? and document it this time!
 	argString := ""
 	if a.Arch != "" {
 		argString += "Arch=" + a.Arch
@@ -550,7 +551,6 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	// Get the default for this distro, if one isn't found then it isn't Supported.
 	t, err := DistroDefaults.GetTemplate(a.Distro)
 	if err != nil {
-		err = fmt.Errorf("%s is not a supported distro; unable to build a packer template for it", a.Distro)
 		jww.ERROR.Println(err)
 		return err
 	}

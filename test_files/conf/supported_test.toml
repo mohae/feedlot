@@ -35,7 +35,6 @@
 	]
 	post_processor_types = [
 		"vagrant",
-		"vagrant-cloud"
 	]
 	provisioner_types = [
 		"shell",

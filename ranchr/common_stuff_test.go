@@ -28,7 +28,7 @@ var testRancherCfg = testDir + "rancher_test.cfg"
 var testDefaultsFile = testDir + "conf/defaults_test.toml"
 var testSupportedFile = testDir + "conf/supported_test.toml"
 var testBuildsFile = testDir + "conf/builds_test.toml"
-var testBuildListsFile = "../test_files/conf/build_lists_test.toml"
+var testBuildListsFile = testDir + "conf/build_lists_test.toml"
 var today = time.Now().Local().Format("2006-01-02")
 var testRawTemplate = newRawTemplate()
 var MarshalJSONToString = json.NewMarshalString()
@@ -57,7 +57,7 @@ var testDefaults = &defaults{
 		CommandsSrcDir: ":src_dir/commands",
 		HTTPDir:        "http",
 		HTTPSrcDir:     ":src_dir/http",
-		OutDir:         "../test_files/out/:type/:build_name",
+		OutDir:         "../test_files/out/:distro/:build_name",
 		ScriptsDir:     "scripts",
 		ScriptsSrcDir:  ":src_dir/scripts",
 		SrcDir:         "../test_files/src/:distro",
@@ -110,7 +110,6 @@ var testDefaults = &defaults{
 			},
 			"vmware-iso": {
 				templateSection{
-					Settings: []string{},
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
 							"cpuid.coresPerSocket=1",
@@ -239,7 +238,6 @@ var testSupportedUbuntu = &distro{
 		},
 		PostProcessorTypes: []string{
 			"vagrant",
-			"vagrant-cloud",
 		},
 		PostProcessors: map[string]*postProcessor{
 			"vagrant": {
@@ -410,6 +408,7 @@ var testDistroDefaultUbuntu = &rawTemplate{
 						"no_release = true",
 						"version = 1.0.1",
 					},
+					Arrays: map[string]interface{}{},
 				},
 			},
 		},
@@ -486,6 +485,7 @@ var testDistroDefaultCentOS = &rawTemplate{
 						"ssh_username = vagrant",
 						"ssh_wait_timeout = 240m",
 					},
+					Arrays: map[string]interface{}{},
 				},
 			},
 			"virtualbox-iso": {
@@ -717,6 +717,7 @@ var testBuildCentOS6Salt = &rawTemplate{
 						"local_state_tree = ~/saltstates/centos6/salt",
 						"skip_bootstrap = true",
 					},
+					Arrays: map[string]interface{}{},
 				},
 			},
 		},
@@ -791,7 +792,6 @@ var testMergedBuildTest1 = &rawTemplate{
 						"keep_input_artifact = false",
 						"output = :out_dir/packer.box",
 					},
-					Arrays: map[string]interface{}{},
 				},
 			},
 		},
@@ -866,10 +866,12 @@ var testMergedBuildTest2 = &rawTemplate{
 						"ssh_username = vagrant",
 						"ssh_wait_timeout = 300m",
 					},
+					Arrays: map[string]interface{}{},
 				},
 			},
 			"virtualbox-iso": {
 				templateSection{
+					Settings: []string{},
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
 							"cpus=1",
@@ -900,6 +902,7 @@ var testMergedBuildTest2 = &rawTemplate{
 						"keep_input_artifact = false",
 						"output = out/someComposedBoxName.box",
 					},
+					Arrays: map[string]interface{}{},
 				},
 			},
 		},
@@ -969,10 +972,12 @@ var testMergedBuildCentos6Salt = &rawTemplate{
 						"ssh_username = vagrant",
 						"ssh_wait_timeout = 300m",
 					},
+					Arrays: map[string]interface{}{},
 				},
 			},
 			"virtualbox-iso": {
 				templateSection{
+					Settings: []string{},
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
 							"cpus=1",
@@ -983,6 +988,7 @@ var testMergedBuildCentos6Salt = &rawTemplate{
 			},
 			"vmware-iso": {
 				templateSection{
+					Settings: []string{},
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
 							"cpuid.coresPerSocket=1",
@@ -1003,6 +1009,7 @@ var testMergedBuildCentos6Salt = &rawTemplate{
 						"keep_input_artifact = false",
 						"output = out/someComposedBoxName.box",
 					},
+					Arrays: map[string]interface{}{},
 				},
 			},
 		},
@@ -1016,6 +1023,7 @@ var testMergedBuildCentos6Salt = &rawTemplate{
 						"local_state_tree = ~/saltstates/centos6/salt",
 						"skip_bootstrap = true",
 					},
+					Arrays: map[string]interface{}{},
 				},
 			},
 			"shell": {

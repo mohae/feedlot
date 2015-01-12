@@ -281,6 +281,7 @@ type defaults struct {
 	build
 	load   sync.Once
 	loaded bool
+	err    string
 }
 
 // Ensures that the default configs get loaded once. Uses a mutex to prevent
@@ -291,12 +292,13 @@ func (d *defaults) LoadOnce() error {
 	loadFunc := func() {
 		name := os.Getenv(EnvDefaultsFile)
 		if name == "" {
-			err := fmt.Errorf("unable to retrieve the default settings: %q was not set; check your \"rancher.cfg\"", EnvBuildsFile)
-			jww.CRITICAL.Print(err)
+			d.err = fmt.Sprintf("unable to retrieve the default settings: %q was not set; check your \"rancher.cfg\"", EnvBuildsFile)
+			jww.CRITICAL.Print(d.err)
 			return
 		}
 		_, err := toml.DecodeFile(name, d)
 		if err != nil {
+			d.err = err.Error()
 			jww.CRITICAL.Print(err)
 			return
 		}
@@ -304,8 +306,8 @@ func (d *defaults) LoadOnce() error {
 		return
 	}
 	d.load.Do(loadFunc)
-	if !d.loaded {
-		return fmt.Errorf("an error occurred while loading the default settings; check the log for more information")
+	if d.err != "" {
+		return fmt.Errorf(d.err)
 	}
 	return nil
 }
@@ -464,6 +466,7 @@ type supported struct {
 	Distro map[string]*distro
 	load   sync.Once
 	loaded bool
+	err    string
 }
 
 // Ensures that the supported distro information only get loaded once. Uses a
@@ -474,11 +477,12 @@ func (s *supported) LoadOnce() error {
 	loadFunc := func() {
 		name := os.Getenv(EnvSupportedFile)
 		if name == "" {
-			err := fmt.Errorf("%s not set, unable to retrieve the Supported information", EnvSupportedFile)
-			jww.CRITICAL.Print(err)
+			s.err = fmt.Sprintf("%s not set, unable to retrieve the Supported information", EnvSupportedFile)
+			jww.CRITICAL.Print(s.err)
 		}
 		_, err := toml.DecodeFile(name, &s)
 		if err != nil {
+			s.err = err.Error()
 			jww.CRITICAL.Print(err)
 			return
 		}
@@ -486,8 +490,8 @@ func (s *supported) LoadOnce() error {
 		return
 	}
 	s.load.Do(loadFunc)
-	if !s.loaded {
-		return fmt.Errorf("an error occurred while loading the Supported information, please check the log")
+	if s.err != "" {
+		return fmt.Errorf(s.err)
 	}
 	return nil
 }
@@ -497,6 +501,7 @@ type builds struct {
 	Build  map[string]*rawTemplate
 	load   sync.Once
 	loaded bool
+	err    string
 }
 
 // Ensures that the build information only get loaded once. Uses a mutex to
@@ -508,19 +513,23 @@ func (b *builds) LoadOnce() error {
 	loadFunc := func() {
 		name := os.Getenv(EnvBuildsFile)
 		if name == "" {
-			err = fmt.Errorf("%s not set, unable to retrieve the Build configurations", EnvBuildsFile)
+			b.err = fmt.Sprintf("%s not set, unable to retrieve the Build configurations", EnvBuildsFile)
 			jww.CRITICAL.Print(err)
 			return
 		}
 		_, err = toml.DecodeFile(name, &b)
 		if err != nil {
 			jww.CRITICAL.Print(err)
+			b.err = err.Error()
 			return
 		}
 		b.loaded = true
 		return
 	}
 	b.load.Do(loadFunc)
+	if b.err != "" {
+		return fmt.Errorf(b.err)
+	}
 	return nil
 }
 

@@ -13,28 +13,31 @@ func init() {
 	setCommonTestData()
 }
 
-/*
 func TestDistroDefaultsGetTemplate(t *testing.T) {
 	var err error
 	var emptyRawTemplate *rawTemplate
 	r := &rawTemplate{}
 	r, err = testDistroDefaults.GetTemplate("invalid")
-	So(err.Error(), ShouldEqual, "distroDefaults.GetTemplate: The requested Distro, invalid is not supported. No template to return")
-	So(r, ShouldResemble, emptyRawTemplate)
+	if err == nil {
+		t.Error("expected \"unsupported distro: invalid\", got nil")
+	} else {
+		if err.Error() != "unsupported distro: invalid" {
+			t.Errorf("unsupported distro: invalid, got %q", err.Error())
+		}
+		if MarshalJSONToString.Get(r) != MarshalJSONToString.Get(emptyRawTemplate) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(emptyRawTemplate), MarshalJSONToString.Get(r))
+		}
+	}
 
 	r, err = testDistroDefaults.GetTemplate("ubuntu")
-	So(err.Error(), ShouldEqual, "distroDefaults.GetTemplate: The requested Distro, invalid is not supported. No template to return")
-	So(r.PackerInf, ShouldResemble, testDistroDefaults.Templates["ubuntu"].PackerInf)
-	So(r.IODirInf, ShouldResemble, testDistroDefaults.Templates["ubuntu"].IODirInf)
-	So(r.BuildInf, ShouldResemble, testDistroDefaults.Templates["ubuntu"].BuildInf)
-	So(r.BuilderTypes, ShouldResemble, testDistroDefaults.Templates["ubuntu"].BuilderTypes)
-	So(r.PostProcessorTypes, ShouldResemble, testDistroDefaults.Templates["ubuntu"].PostProcessorTypes)
-	So(r.ProvisionerTypes, ShouldResemble, testDistroDefaults.Templates["ubuntu"].ProvisionerTypes)
-	So(r.Builders["virtualbox-iso"], ShouldResemble, testDistroDefaults.Templates["ubuntu"].Builders["virtualbox-iso"])
-	So(r.PostProcessors["vagrant"], ShouldResemble, testDistroDefaults.Templates["ubuntu"].PostProcessors["vagrant"])
-	So(r.Provisioners["shell"], ShouldResemble, testDistroDefaults.Templates["ubuntu"].Provisioners["shell"])
+	if err != nil {
+		t.Errorf("Expected no error, got %q", err.Error())
+	} else {
+		if MarshalJSONToString.Get(r) != MarshalJSONToString.Get(testDistroDefaults.Templates[Ubuntu]) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testDistroDefaults.Templates[Ubuntu]), MarshalJSONToString.Get(r))
+		}
+	}
 }
-*/
 
 func TestSetEnv(t *testing.T) {
 	// Preserve current state.
@@ -126,109 +129,35 @@ func TestSetEnv(t *testing.T) {
 	os.Setenv(EnvSupportedFile, tmpSupportedFile)
 }
 
-/*
-func TestdistrosInf(t *testing.T) {
-	var err error
-	dd := map[string]rawTemplate{}
-	s := &supported{}
-	tmpEnvDefaultsFile := os.Getenv(EnvDefaultsFile)
-	tmpEnvSupportedFile := os.Getenv(EnvSupportedFile)
-
-	Convey("Given a request for supported and default distro information", t, func() {
-		Convey("Given that the EnvDefaultsFile is not set", func() {
-			os.Setenv(EnvDefaultsFile, "")
-			Convey("A call to distrosInf() should result in", func() {
-				s, dd, err = distrosInf()
-				So(err.Error(), ShouldEqual, "could not retrieve the default Settings file because the RANCHER_DEFAULTS_FILE environment variable was not set. Either set it or check your rancher.cfg setting")
-				So(s, ShouldResemble, supported{})
-				So(dd, ShouldBeNil)
-			})
-		})
-		Convey("Given that the EnvDefaultsFile is set but the EnvSupportedFile is not set", func() {
-			os.Setenv(EnvDefaultsFile, testDefaultsFile)
-			os.Setenv(EnvSupportedFile, "")
-			Convey("A call to distrosInf() should result in", func() {
-				s, dd, err = distrosInf()
-				So(err.Error(), ShouldEqual, "could not retrieve the supported information because the RANCHER_SUPPORTED_FILE environment variable was not set. Either set it or check your rancher.cfg setting")
-				So(s, ShouldResemble, supported{})
-				So(s, ShouldResemble, supported{})
-				So(dd, ShouldBeNil)
-			})
-		})
-		Convey("Given that the EnvDefaultsFile and the EnvSupportedFile are set", func() {
-			os.Setenv(EnvDefaultsFile, testDefaultsFile)
-			os.Setenv(EnvSupportedFile, testSupportedFile)
-			Convey("A call to distrosInf() should result in", func() {
-				s, dd, err = distrosInf()
-				So(err, ShouldBeNil)
-				So(s, ShouldResemble, testSupported)
-				//TODO ShouldResemble comes back as false when diff shows no difference
-				// probably a minor data structure difference that isn't shown in ui as
-				// type information isn't displayed. fix
-				So(dd, ShouldNotResemble, testDistroDefaults)
-			})
-		})
-	})
-	os.Setenv(EnvDefaultsFile, tmpEnvDefaultsFile)
-	os.Setenv(EnvSupportedFile, tmpEnvSupportedFile)
-}
-*/
-
-/*
-// TODO add check of results other than error state
-func TestLoadBuilds(t *testing.T) {
-	tmpEnvBuildsFile := os.Getenv(EnvBuildsFile)
-	tmpEnvDefaultsFile := os.Getenv(EnvDefaultsFile)
-	tmpEnvSupportedFile := os.Getenv(EnvSupportedFile)
-
-	os.Setenv(EnvDefaultsFile, "")
-	err := loadSupported()
-	if err == nil {
-		t.Error("Expected an error, none received")
-	} else {
-		if err.Error() != "could not retrieve the default Settings because the RANCHER_DEFAULTS_FILE environment variable was not set. Either set it or check your rancher.cfg setting" {
-			t.Errorf("Expected \"could not retrieve the default Settings because the RANCHER_DEFAULTS_FILE environment variable was not set. Either set it or check your rancher.cfg setting\", got %q", err.Error())
-		}
-	}
-
-	os.Setenv(EnvBuildsFile, "")
-	os.Setenv(EnvDefaultsFile, "../test_files/conf/defaults_test.toml")
-	os.Setenv(EnvSupportedFile, "../test_files/conf/supported_test.toml")
-	err := loadSupported()
-	if err == nil {
-		t.Error("Expected an error, none received")
-	} else {
-		if err.Error() != "could not retrieve the Builds configurations because the RANCHER_BUILDS_FILE environment variable was not set. Either set it or check your rancher.cfg setting" {
-			t.Errorf("Expected \"could not retrieve the Builds configurations because the RANCHER_BUILDS_FILE environment variable was not set. Either set it or check your rancher.cfg setting\", got %q", err.Error())
-		}
-
-
-	os.Setenv(EnvBuildsFile, "../test_files/conf/builds_test.toml")
-	os.Setenv(EnvDefaultsFile, "../test_files/conf/defaults_test.toml")
-	os.Setenv(EnvSupportedFile, "../test_files/conf/supported_test.toml")
-	err := loadSupported()
-	if err != nil {
-		t.Errorf("Expected no error, got %q", err.Error())
-	}
-
-	os.Setenv(EnvBuildsFile, tmpEnvBuildsFile)
-	os.Setenv(EnvDefaultsFile, tmpEnvDefaultsFile)
-	os.Setenv(EnvSupportedFile, tmpEnvSupportedFile)
-}
-*/
-/*
 // TODO add check of results other than error state and fix
 func TestBuildDistro(t *testing.T) {
-	Convey("given an ArgsFilter", t, func() {
-		aFilter := ArgsFilter{Arch: "amd64", Distro: "ubuntu", Image: "server", Release: "14.04"}
-		Convey("Calling BuildDistro", func() {
-			err := BuildDistro(aFilter)
-			So(err, ShouldBeNil)
-			_ = err
-		})
-	})
+	tmpEnvRancherFile := os.Getenv(EnvRancherFile)
+	tmpEnvBuildsFile := os.Getenv(EnvBuildsFile)
+	tmpEnvDefaultsFile := os.Getenv(EnvDefaultsFile)
+	tmpEnvParamDelimStart := os.Getenv(EnvParamDelimStart)
+	tmpEnvSupportedFile := os.Getenv(EnvSupportedFile)
+	os.Setenv(EnvRancherFile, testRancherCfg)
+	os.Setenv(EnvBuildsFile, testBuildsFile)
+	os.Setenv(EnvDefaultsFile, testDefaultsFile)
+	os.Setenv(EnvParamDelimStart, ":")
+	os.Setenv(EnvSupportedFile, testSupportedFile)
+
+	err := DistroDefaults.Set()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	}
+	aFilter := ArgsFilter{Arch: "amd64", Distro: "ubuntu", Image: "server", Release: "14.04"}
+	err = BuildDistro(aFilter)
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	}
+
+	os.Setenv(EnvRancherFile, tmpEnvRancherFile)
+	os.Setenv(EnvBuildsFile, tmpEnvBuildsFile)
+	os.Setenv(EnvDefaultsFile, tmpEnvDefaultsFile)
+	os.Setenv(EnvParamDelimStart, tmpEnvParamDelimStart)
+	os.Setenv(EnvSupportedFile, tmpEnvSupportedFile)
 }
-*/
 
 func TestbuildPackerTemplateFromDistros(t *testing.T) {
 	a := ArgsFilter{}
@@ -278,6 +207,7 @@ func TestbuildPackerTemplateFromDistros(t *testing.T) {
 }
 
 /*
+TODO: rewrite this test to work with refactored code
 func TestBuildBuilds(t *testing.T) {
 	tmpEnvRancherFile := os.Getenv(EnvRancherFile)
 	tmpEnvBuildsFile := os.Getenv(EnvBuildsFile)
@@ -489,33 +419,6 @@ func TestCommandsFromFile(t *testing.T) {
 		}
 	}
 }
-
-/*
-func TestSetDistrosDefaults(t *testing.T) {
-	Convey("Testing setDistrosDefaults", t, func() {
-		var defaults map[string]rawTemplate
-		var err error
-		Convey("Given a defaults and supported data without the BaseUrl set", func() {
-			Convey("Should result in", func() {
-				testSupportedUbuntu.BaseURL = ""
-				defaults, err = setDistrosDefaults(testDefaults, &testSupported)
-				So(err.Error(), ShouldEqual, "ubuntu does not have its BaseURL configured.")
-				So(defaults, ShouldBeNil)
-			})
-		})
-		Convey("Given a defaults and supported data", func() {
-			Convey("Should result in", func() {
-				testSupportedUbuntu.BaseURL = "http://releases.ubuntu.org/"
-				defaults, err = setDistrosDefaults(testDefaults, &testSupported)
-				So(err, ShouldBeNil)
-				// TODO ShouldResemble issue
-				So(JSONToStringMarshaller.GetIndented(defaults), ShouldEqual, JSONToStringMarshaller.GetIndented(testDistroDefaults))
-			})
-		})
-
-	})
-}
-*/
 
 func TestMergeSlices(t *testing.T) {
 	// The private implementation only merges two slices at a time.
@@ -857,444 +760,6 @@ func TestGetDefaultISOInfo(t *testing.T) {
 		t.Errorf("Expected \"14.04\", got %q", release)
 	}
 }
-
-/*
-func TestGetMergedBuilders(t *testing.T) {
-	Convey("Testing getMergedBuilders", t, func() {
-		var oldB, newB, emptyB, mergedB, compareB map[string]builder
-		Convey("Given two empty builders", func() {
-			mergedB = getMergedBuilders(oldB, newB)
-			So(mergedB, ShouldResemble, emptyB)
-		})
-		Convey("Given an empty new builder", func() {
-			oldB = map[string]builder{
-				"common": {
-					templateSection{
-						Settings: []string{
-							"http_directory=http",
-							"ssh_port=22",
-							"ssh_username=vagrant",
-						},
-						Arrays: map[string]interface{}{
-							"vm_settings": []string{
-								"memory=1024",
-							},
-						},
-					},
-				},
-			}
-			mergedB = getMergedBuilders(oldB, newB)
-			So(mergedB, ShouldResemble, oldB)
-		})
-		Convey("Given an empty old builder", func() {
-			newB = map[string]builder{
-				"common": {
-					templateSection{
-						Settings: []string{
-							"checksum_type=sha256",
-							"ssh_port=222",
-						},
-						Arrays: map[string]interface{}{
-							"vm_settings": []string{
-								"memory=4096",
-							},
-						},
-					},
-				},
-			}
-			mergedB = getMergedBuilders(oldB, newB)
-			So(mergedB, ShouldResemble, newB)
-		})
-		Convey("Given two builders", func() {
-			oldB = map[string]builder{
-				"common": {
-					templateSection{
-						Settings: []string{
-							"http_directory=http",
-							"ssh_port=22",
-							"ssh_username=vagrant",
-						},
-						Arrays: map[string]interface{}{
-							"vm_settings": []string{
-								"memory=1024",
-							},
-						},
-					},
-				},
-			}
-			newB = map[string]builder{
-				"common": {
-					templateSection{
-						Settings: []string{
-							"checksum_type=sha256",
-							"ssh_port=222",
-						},
-						Arrays: map[string]interface{}{
-							"vm_settings": []string{
-								"memory=4096",
-							},
-						},
-					},
-				},
-			}
-			compareB = map[string]builder{
-				"common": {
-					templateSection{
-						Settings: []string{
-							"http_directory=http",
-							"ssh_port=222",
-							"ssh_username=vagrant",
-							"checksum_type=sha256",
-						},
-						Arrays: map[string]interface{}{
-							"vm_settings": []string{
-								"memory=4096",
-							},
-						},
-					},
-				},
-			}
-			mergedB = getMergedBuilders(oldB, newB)
-			So(mergedB, ShouldResemble, compareB)
-		})
-		Convey("Given two builders, empty old VMsetting", func() {
-			oldB = map[string]builder{
-				"common": {
-					templateSection{
-						Settings: []string{
-							"http_directory=http",
-							"ssh_port=22",
-							"ssh_username=vagrant",
-						},
-					},
-				},
-			}
-			newB = map[string]builder{
-				"common": {
-					templateSection{
-						Settings: []string{
-							"checksum_type=sha256",
-							"ssh_port=222",
-						},
-						Arrays: map[string]interface{}{
-							"vm_settings": []string{
-								"memory=4096",
-							},
-						},
-					},
-				},
-			}
-			compareB = map[string]builder{
-				"common": {
-					templateSection{
-						Settings: []string{
-							"http_directory=http",
-							"ssh_port=222",
-							"ssh_username=vagrant",
-							"checksum_type=sha256",
-						},
-						Arrays: map[string]interface{}{
-							"vm_settings": []string{
-								"memory=4096",
-							},
-						},
-					},
-				},
-			}
-			mergedB = getMergedBuilders(oldB, newB)
-			So(mergedB, ShouldResemble, compareB)
-		})
-		Convey("Given two builders, empty new VMsetting", func() {
-			oldB = map[string]builder{
-				"common": {
-					templateSection{
-						Settings: []string{
-							"http_directory=http",
-							"ssh_port=22",
-							"ssh_username=vagrant",
-						},
-						Arrays: map[string]interface{}{
-							"vm_settings": []string{
-								"memory=1024",
-							},
-						},
-					},
-				},
-			}
-			newB = map[string]builder{
-				"common": {
-					templateSection{
-						Settings: []string{
-							"checksum_type=sha256",
-							"ssh_port=222",
-						},
-					},
-				},
-			}
-			compareB = map[string]builder{
-				"common": {
-					templateSection{
-						Settings: []string{
-							"http_directory=http",
-							"ssh_port=222",
-							"ssh_username=vagrant",
-							"checksum_type=sha256",
-						},
-						Arrays: map[string]interface{}{
-							"vm_settings": []string{
-								"memory=1024",
-							},
-						},
-					},
-				},
-			}
-			mergedB = getMergedBuilders(oldB, newB)
-			So(mergedB, ShouldResemble, compareB)
-		})
-		Convey("Given two builders, empty old setting", func() {
-			oldB = map[string]builder{
-				"common": {
-					templateSection{
-						Arrays: map[string]interface{}{
-							"vm_settings": []string{
-								"memory=1024",
-							},
-						},
-					},
-				},
-			}
-			newB = map[string]builder{
-				"common": {
-					templateSection{
-						Settings: []string{
-							"checksum_type=sha256",
-							"ssh_port=222",
-						},
-						Arrays: map[string]interface{}{
-							"vm_settings": []string{
-								"memory=4096",
-							},
-						},
-					},
-				},
-			}
-			compareB = map[string]builder{
-				"common": {
-					templateSection{
-						Settings: []string{
-							"checksum_type=sha256",
-							"ssh_port=222",
-						},
-						Arrays: map[string]interface{}{
-							"vm_settings": []string{
-								"memory=4096",
-							},
-						},
-					},
-				},
-			}
-			mergedB = getMergedBuilders(oldB, newB)
-			So(mergedB, ShouldResemble, compareB)
-		})
-		Convey("Given two builders, empty new setting", func() {
-			oldB = map[string]builder{
-				"common": {
-					templateSection{
-						Settings: []string{
-							"http_directory=http",
-							"ssh_port=22",
-							"ssh_username=vagrant",
-						},
-						Arrays: map[string]interface{}{
-							"vm_settings": []string{
-								"memory=1024",
-							},
-						},
-					},
-				},
-			}
-			newB = map[string]builder{
-				"common": {
-					templateSection{
-						Arrays: map[string]interface{}{
-							"vm_settings": []string{
-								"memory=4096",
-							},
-						},
-					},
-				},
-			}
-			compareB = map[string]builder{
-				"common": {
-					templateSection{
-						Settings: []string{
-							"http_directory=http",
-							"ssh_port=22",
-							"ssh_username=vagrant",
-						},
-						Arrays: map[string]interface{}{
-							"vm_settings": []string{
-								"memory=4096",
-							},
-						},
-					},
-				},
-			}
-			mergedB = getMergedBuilders(oldB, newB)
-			So(mergedB, ShouldResemble, compareB)
-		})
-
-	})
-}
-*/
-/*
-func TestgetMergedPostProcessors(t *testing.T) {
-	Convey("Testing getMergedPostProcessors", t, func() {
-		var oldPP, newPP, emptyPP, mergedPP, comparePP map[string]postProcessor
-		Convey("Given two empty postProcessor", func() {
-			mergedPP = getMergedPostProcessors(oldPP, newPP)
-			So(mergedPP, ShouldResemble, emptyPP)
-		})
-		Convey("Given an empty new postProcessor", func() {
-			oldPP = map[string]postProcessor{
-				"vagrant": {
-					templateSection{
-						Settings: []string{
-							"keep_input_artifact = false",
-							"output = :out_dir/someComposedBoxName.box",
-						},
-					},
-				},
-			}
-			mergedPP = getMergedPostProcessors(oldPP, newPP)
-			So(mergedPP, ShouldResemble, oldPP)
-		})
-		Convey("Given an empty old postProcessor", func() {
-			newPP = map[string]postProcessor{
-				"vagrant": {
-					templateSection{
-						Settings: []string{
-							"keep_input_artifact = false",
-							"output = out/NewName.box",
-						},
-					},
-				},
-			}
-			mergedPP = getMergedPostProcessors(oldPP, newPP)
-			So(mergedPP, ShouldResemble, newPP)
-		})
-		Convey("Given two postProcessor", func() {
-			oldPP = map[string]postProcessor{
-				"vagrant": {
-					templateSection{
-						Settings: []string{
-							"keep_input_artifact = false",
-							"output = :out_dir/someComposedBoxName.box",
-						},
-					},
-				},
-			}
-			newPP = map[string]postProcessor{
-				"vagrant": {
-					templateSection{
-						Settings: []string{
-							"keep_input_artifact = false",
-							"output = out/NewName.box",
-						},
-					},
-				},
-			}
-			comparePP = map[string]postProcessor{
-				"vagrant": {
-					templateSection{
-						Settings: []string{
-							"keep_input_artifact = false",
-							"output = out/NewName.box",
-						},
-					},
-				},
-			}
-			mergedPP = getMergedPostProcessors(oldPP, newPP)
-			So(mergedPP, ShouldResemble, comparePP)
-		})
-	})
-
-}
-*/
-/*
-func TestGetMergedprovisioner(t *testing.T) {
-	Convey("Testing getMergedprovisioner", t, func() {
-		var oldP, newP, emptyP, mergedP, compareP map[string]provisioner
-		Convey("Given two empty provisioner", func() {
-			mergedP = getMergedprovisioner(oldP, newP)
-			// TODO ShouldResemble issue
-			So(mergedP, ShouldNotResemble, emptyP)
-		})
-		Convey("Given an empty new provisioner", func() {
-			oldP = map[string]provisioner{
-				"shell": {
-					Settings: []string{"execute_command = :commands_dir/execute.command"},
-					Scripts: []string{
-						":scripts_dir/setup.sh",
-						":scripts_dir/base.sh",
-						":scripts_dir/vagrant.sh",
-						":scripts_dir/cleanup.sh",
-						":scripts_dir/zerodisk.sh",
-					},
-				}}
-			mergedP = getMergedprovisioner(oldP, newP)
-			So(mergedP, ShouldResemble, oldP)
-		})
-		Convey("Given two provisioner", func() {
-			oldP = map[string]provisioner{
-				"shell": {
-					Settings: []string{"execute_command = :commands_dir/execute.command"},
-					Scripts: []string{
-						":scripts_dir/setup.sh",
-						":scripts_dir/base.sh",
-						":scripts_dir/vagrant.sh",
-						":scripts_dir/cleanup.sh",
-						":scripts_dir/zerodisk.sh",
-					},
-				}}
-			newP = map[string]provisioner{
-				"shell": {
-					Scripts: []string{
-						"scripts/setup.sh",
-						"scripts/vagrant.sh",
-						"scripts/zerodisk.sh",
-					},
-				}}
-			compareP = map[string]provisioner{
-				"shell": {
-					Settings: []string{"execute_command = :commands_dir/execute.command"},
-					Scripts: []string{
-						"scripts/setup.sh",
-						"scripts/vagrant.sh",
-						"scripts/zerodisk.sh",
-					},
-				}}
-			mergedP = getMergedprovisioner(oldP, newP)
-			So(mergedP, ShouldResemble, compareP)
-		})
-		oldP = map[string]provisioner{}
-		Convey("Given an empty old provisioner", func() {
-			newP = map[string]provisioner{
-				"shell": {
-					Scripts: []string{
-						"scripts/setup.sh",
-						"scripts/vagrant.sh",
-						"scripts/zerodisk.sh",
-					},
-				}}
-			mergedP = getMergedprovisioner(oldP, newP)
-			So(mergedP, ShouldResemble, newP)
-		})
-
-	})
-
-}*
-*/
 
 func TestAppendSlash(t *testing.T) {
 	s := appendSlash("")
