@@ -60,14 +60,10 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 
 			//		case QEMU:
 
-		case VMWareISO:
-			tmpS, tmpVar, err = r.createVMWareISO()
-		case VMWareVMX:
-			tmpS, tmpVar, err = r.createVMWareVMX()
-		case VirtualBoxISO:
-			tmpS, tmpVar, err = r.createVirtualBoxISO()
-		case VirtualBoxOVF:
-			tmpS, tmpVar, err = r.createVirtualBoxOVF()
+		case VirtualBox:
+			tmpS, tmpVar, err = r.createVirtualBox()
+		case VMWare:
+			tmpS, tmpVar, err = r.createVMWare()
 		default:
 			err = fmt.Errorf("Builder, %q, is not supported by Rancher", bType)
 			jww.ERROR.Println(err)
@@ -94,17 +90,17 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 	return m
 }
 
-// createVirtualBoxISO generates the settings for a virtualbox-iso builder.
-func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, vars []string, err error) {
-	_, ok := r.Provisioners[VirtualBoxISO.String()]
+// createVirtualBox generates the settings for a virtualbox builder.
+func (r *rawTemplate) createVirtualBox() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[VirtualBox.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration for %q found", VirtualBoxISO.String())
+		err = fmt.Errorf("no configuration for %q found", VirtualBox.String())
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
-	settings["type"] = VirtualBoxISO.String()
+	settings["type"] = VirtualBox.String()
 	// Merge the settings between common and this builders.
-	mergedSlice := mergeSettingsSlices(r.Builders[CommonBuilder.String()].Settings, r.Builders[VirtualBoxISO.String()].Settings)
+	mergedSlice := mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[VirtualBox.String()].Settings)
 	var k, v string
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
@@ -143,7 +139,7 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 		case "iso_checksum_type":
 			// First set the ISO info for the desired release, if it's not already set
 			if r.osType == "" {
-				err = r.ISOInfo(VirtualBoxISO, mergedSlice)
+				err = r.ISOInfo(VirtualBox, mergedSlice)
 				if err != nil {
 					jww.ERROR.Println(err)
 					return nil, nil, err
@@ -189,7 +185,7 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 
 	// Generate Packer Variables
 	// Generate builder specific section
-	l, err := getSliceLenFromIface(r.Builders[VirtualBoxISO.String()].Arrays[VMSettings])
+	l, err := getSliceLenFromIface(r.Builders[VirtualBox.String()].Arrays[VMSettings])
 	if err != nil {
 		jww.ERROR.Println(err)
 		return nil, nil, err
@@ -197,13 +193,13 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 
 	if l > 0 {
 		tmpVB := make([][]string, l)
-		tmp := reflect.ValueOf(r.Builders[VirtualBoxISO.String()].Arrays[VMSettings])
+		tmp := reflect.ValueOf(r.Builders[VirtualBox.String()].Arrays[VMSettings])
 		var vmSettings interface{}
 		switch tmp.Type() {
 		case typeOfSliceInterfaces:
-			vmSettings = deepcopy.Iface(r.Builders[VirtualBoxISO.String()].Arrays[VMSettings]).([]interface{})
+			vmSettings = deepcopy.Iface(r.Builders[VirtualBox.String()].Arrays[VMSettings]).([]interface{})
 		case typeOfSliceStrings:
-			vmSettings = deepcopy.Iface(r.Builders[VirtualBoxISO.String()].Arrays[VMSettings]).([]string)
+			vmSettings = deepcopy.Iface(r.Builders[VirtualBox.String()].Arrays[VMSettings]).([]string)
 		}
 		vms := deepcopy.InterfaceToSliceStrings(vmSettings)
 		for i, v := range vms {
@@ -221,103 +217,17 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 	return settings, nil, nil
 }
 
-// createVirtualBoxOVF generates the settings for a virtualbox-iso builder.
-func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, vars []string, err error) {
-	_, ok := r.Provisioners[VirtualBoxOVF.String()]
+// createVMWare generates the settings for a vmware-iso builder.
+func (r *rawTemplate) createVMWare() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[VMWare.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration for %q found", VirtualBoxOVF.String())
+		err = fmt.Errorf("no configuration for %q found", VMWare.String())
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
-	settings["type"] = VirtualBoxOVF.String()
+	settings["type"] = VMWare.String()
 	// Merge the settings between common and this builders.
-	mergedSlice := mergeSettingsSlices(r.Builders[CommonBuilder.String()].Settings, r.Builders[VirtualBoxOVF.String()].Settings)
-	var k, v string
-	// Go through each element in the slice, only take the ones that matter
-	// to this builder.
-	for _, s := range mergedSlice {
-		// var tmp interface{}
-		k, v = parseVar(s)
-		v = r.replaceVariables(v)
-		switch k {
-		case "source_path", "ssh_username", "format", "guest_additions_mode",
-			"guest_additions_path", "guest_additions_sha256", "guest_additions_url",
-			"import_opts", "output_directory", "shutdown_timeout", "ssh_key_path",
-			"ssh_password", "ssh_wait_timeout", "virtualbox_version_file", "vm_name":
-			settings[k] = v
-		case "headless":
-			if strings.ToLower(v) == "true" {
-				settings[k] = true
-			} else {
-				settings[k] = false
-			}
-		// For the fields of int value, only set if it converts to a valid int.
-		// Otherwise, throw an error
-		case "ssh_host_port_min", "ssh_host_port_max", "ssh_port":
-			// only add if its an int
-			_, err := strconv.Atoi(v)
-			if err != nil {
-				err = fmt.Errorf("VirtualBoxISO error while trying to set %q to %q: %s", k, v, err)
-				jww.ERROR.Println(err)
-				return nil, nil, err
-			}
-			settings[k] = v
-		case "shutdown_command":
-			//If it ends in .command, replace it with the command from the filepath
-			var commands []string
-			commands, err = commandsFromFile(v)
-			if err != nil {
-				jww.ERROR.Println(err)
-				return nil, nil, err
-			}
-			// Assume it's the first element.
-			settings[k] = commands[0]
-		}
-	}
-	// Generate Packer Variables
-	// Generate builder specific section
-	l, err := getSliceLenFromIface(r.Builders[VirtualBoxOVF.String()].Arrays[VMSettings])
-	if err != nil {
-		jww.ERROR.Println(err)
-		return nil, nil, err
-	}
-	if l > 0 {
-		tmpVB := make([][]string, l)
-		tmp := reflect.ValueOf(r.Builders[VirtualBoxOVF.String()].Arrays[VMSettings])
-		var vmSettings interface{}
-		switch tmp.Type() {
-		case typeOfSliceInterfaces:
-			vmSettings = deepcopy.Iface(r.Builders[VirtualBoxOVF.String()].Arrays[VMSettings]).([]interface{})
-		case typeOfSliceStrings:
-			vmSettings = deepcopy.Iface(r.Builders[VirtualBoxOVF.String()].Arrays[VMSettings]).([]string)
-		}
-		vms := deepcopy.InterfaceToSliceStrings(vmSettings)
-		for i, v := range vms {
-			vo := reflect.ValueOf(v)
-			k, val := parseVar(vo.Interface().(string))
-			val = r.replaceVariables(val)
-			tmpVB[i] = make([]string, 4)
-			tmpVB[i][0] = "modifyvm"
-			tmpVB[i][1] = "{{.Name}}"
-			tmpVB[i][2] = "--" + k
-			tmpVB[i][3] = val
-		}
-		settings["vboxmanage"] = tmpVB
-	}
-	return settings, nil, nil
-}
-
-// createVMWareISO generates the settings for a vmware-iso builder.
-func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars []string, err error) {
-	_, ok := r.Provisioners[VMWareISO.String()]
-	if !ok {
-		err = fmt.Errorf("no configuration for %q found", VMWareISO.String())
-	}
-	settings = make(map[string]interface{})
-	// Each create function is responsible for setting its own type.
-	settings["type"] = VMWareISO.String()
-	// Merge the settings between common and this builders.
-	mergedSlice := mergeSettingsSlices(r.Builders[CommonBuilder.String()].Settings, r.Builders[VMWareISO.String()].Settings)
+	mergedSlice := mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[VMWare.String()].Settings)
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
 	for _, s := range mergedSlice {
@@ -356,7 +266,7 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 		case "iso_checksum_type":
 			// First set the ISO info for the desired release, if it's not already set
 			if r.osType == "" {
-				err = r.ISOInfo(VMWareISO, mergedSlice)
+				err = r.ISOInfo(VMWare, mergedSlice)
 				if err != nil {
 					jww.ERROR.Println(err)
 					return nil, nil, err
@@ -403,74 +313,7 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 
 	// Generate builder specific section
 	tmpVB := map[string]string{}
-	vmSettings := deepcopy.InterfaceToSliceStrings(r.Builders[VirtualBoxISO.String()].Arrays[VMSettings])
-	for _, v := range vmSettings {
-		k, val := parseVar(v)
-		val = r.replaceVariables(val)
-		tmpVB[k] = val
-	}
-	settings["vmx_data"] = tmpVB
-	return settings, nil, nil
-}
-
-// createVMWareVMX generates the settings for a vmware-vmx builder.
-func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, vars []string, err error) {
-	_, ok := r.Provisioners[VMWareVMX.String()]
-	if !ok {
-		err = fmt.Errorf("no configuration for %q found", VMWareVMX.String())
-	}
-	settings = make(map[string]interface{})
-	// Each create function is responsible for setting its own type.
-	settings["type"] = VMWareVMX.String()
-	// Merge the settings between common and this builders.
-	mergedSlice := mergeSettingsSlices(r.Builders[CommonBuilder.String()].Settings, r.Builders[VMWareVMX.String()].Settings)
-	// Go through each element in the slice, only take the ones that matter
-	// to this builder.
-	for _, s := range mergedSlice {
-		// var tmp interface{}
-		k, v := parseVar(s)
-		v = r.replaceVariables(v)
-		switch k {
-		case "source_path", "ssh_username", "fusion_app_path", "output_directory", "shutdown_timeout", "ssh_key_path", "ssh_password", "ssh_wait_timeout", "vm_name":
-			settings[k] = v
-		case "guest_os_type":
-			if v == "" {
-				settings[k] = v
-			} else {
-				settings[k] = r.osType
-			}
-		case "headless", "skip_compaction", "ssh_skip_request_pty":
-			if strings.ToLower(v) == "true" {
-				settings[k] = true
-			} else {
-				settings[k] = false
-			}
-		// For the fields of int value, only set if it converts to a valid int.
-		// Otherwise, throw an error
-		case "ssh_port":
-			// only add if its an int
-			_, err := strconv.Atoi(v)
-			if err != nil {
-				err = fmt.Errorf("VMWareVMX error while trying to set %q to %q: %s", k, v, err)
-				jww.ERROR.Println(err)
-				return nil, nil, err
-			}
-			settings[k] = v
-		case "shutdown_command":
-			//If it ends in .command, replace it with the command from the filepath
-			var commands []string
-			commands, err = commandsFromFile(v)
-			if err != nil {
-				jww.ERROR.Println(err)
-				return nil, nil, err
-			}
-			// Assume it's the first element.
-			settings[k] = commands[0]
-		}
-	}
-	// Generate builder specific section
-	tmpVB := map[string]string{}
-	vmSettings := deepcopy.InterfaceToSliceStrings(r.Builders[VMWareVMX.String()].Arrays[VMSettings])
+	vmSettings := deepcopy.InterfaceToSliceStrings(r.Builders[VirtualBox.String()].Arrays[VMSettings])
 	for _, v := range vmSettings {
 		k, val := parseVar(v)
 		val = r.replaceVariables(val)
@@ -491,7 +334,7 @@ func (r *rawTemplate) createDigitalOcean() (settings map[string]interface{}, var
 	// Each create function is responsible for setting its own type.
 	settings["type"] = DigitalOcean
 	// Merge the settings between common and this builders.
-	mergedSlice := mergeSettingsSlices(r.Builders[CommonBuilder.String()].Settings, r.Builders[DigitalOcean.String()].Settings)
+	mergedSlice := mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[DigitalOcean.String()].Settings)
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
 	// TODO look at snapshot name handling--it should be unique, e.g. timestamp
@@ -517,7 +360,7 @@ func (r *rawTemplate) createDocker() (settings map[string]interface{}, vars []st
 	// Each create function is responsible for setting its own type.
 	settings["type"] = Docker
 	// Merge the settings between common and this builders.
-	mergedSlice := mergeSettingsSlices(r.Builders[CommonBuilder.String()].Settings, r.Builders[Docker.String()].Settings)
+	mergedSlice := mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[Docker.String()].Settings)
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
 	for _, s := range mergedSlice {
@@ -595,9 +438,9 @@ func (r *rawTemplate) updateBuilders(new map[string]*builder) {
 	var vmSettings []string
 	// If there's a builder with the key CommonBuilder, merge them. This is
 	// a special case for builders only.
-	_, ok := new[CommonBuilder.String()]
+	_, ok := new[Common.String()]
 	if ok {
-		r.updateCommonBuilder(new[CommonBuilder.String()])
+		r.updateCommon(new[Common.String()])
 	}
 	b := &builder{}
 	// Copy: if the key exists in the new builder only.
@@ -625,27 +468,27 @@ func (r *rawTemplate) updateBuilders(new map[string]*builder) {
 	return
 }
 
-// updateCommonBuilder updates rawTemplate's CommonBuilder settings
+// updateCommon updates rawTemplate's common builder settings
 // Update rules:
-//	* When both the existing CommonBuilder, r, and the new one, b, have the
+//	* When both the existing common builder, r, and the new one, b, have the
 //	  same setting, b's value replaces r's; the new setting value replaces
 //        the existing.
 //	* When the setting in b is new, it is added to r: new settings are
 //	  inserted into r's CommonBuilder setting list.
 //	* When r has a setting that does not exist in b, nothing is done. This
 //	  method does not delete any settings that already exist in R.
-func (r *rawTemplate) updateCommonBuilder(new *builder) {
+func (r *rawTemplate) updateCommon(new *builder) {
 	if r.Builders == nil {
 		r.Builders = map[string]*builder{}
 	}
 	// If the existing builder doesn't have a CommonBuilder section, just add it
-	_, ok := r.Builders[CommonBuilder.String()]
+	_, ok := r.Builders[Common.String()]
 	if !ok {
-		r.Builders[CommonBuilder.String()] = &builder{templateSection: templateSection{Settings: new.Settings, Arrays: new.Arrays}}
+		r.Builders[Common.String()] = &builder{templateSection: templateSection{Settings: new.Settings, Arrays: new.Arrays}}
 		return
 	}
 	// Otherwise merge the two
-	r.Builders[CommonBuilder.String()].mergeSettings(new.Settings)
+	r.Builders[Common.String()].mergeSettings(new.Settings)
 	return
 }
 

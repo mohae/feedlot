@@ -58,22 +58,18 @@ func DistroFromString(s string) Distro {
 // Builder constants
 const (
 	UnsupportedBuilder Builder = iota
-	CommonBuilder
-	AmazonChroot
-	AmazonEBS
-	AmazonInstance
+	Common
+	Custom
+	AmazonEC2
 	DigitalOcean
 	Docker
-	GoogleCompute
-	NullBuilder
+	GoogleComputeEngine
+	Null
 	Openstack
-	ParallelsISO
-	ParallelsPVM
+	Parallels
 	QEMU
-	VirtualBoxISO
-	VirtualBoxOVF
-	VMWareISO
-	VMWareVMX
+	VirtualBox
+	VMWare
 )
 
 // Builder is a Packer supported builder.
@@ -81,22 +77,18 @@ type Builder int
 
 var builders = [...]string{
 	"unsupported Builder",
-	"common",          // Common is the name of the common builder section in the toml files.
-	"amazon-chroot",   // AmazonChroot is the name of the Amazon chroot builder section in the toml files.
-	"amazon-ebs",      // AmazonEBS is the name of the Amazon EBS builder section in the toml files.
-	"amazon-instance", // AmazonInstance is the name of the Amazon instance builder section in the toml files.
-	"digitalocean",    // DigitalOcean is the name of the Digital Ocean section in the toml files.
-	"docker",          // Docker is the name of the Docker builder section in the toml files.
-	"googlecompute",   // GoogleCompute is the name of the Google Compute builder section in the toml files.
-	"null",            // Null is the name of the Null builder section in the toml files.
-	"openstack",       // Openstack is the name of the Openstack builder section in the toml files.
-	"parallels-iso",   // ParallelsISO is the name of the Parallels ISO builder section in the toml files.
-	"parallels-pvm",   // ParallelsPVM is the name of the Parallels PVM builder section in the toml files.
-	"qemu",            // QEMU is the name of the QEMU builder section in the toml files.
-	"virtualbox-iso",  // VirtualBoxISO is the name of the VirtualBox ISO builder section in the toml files.
-	"virtualbox-ovf",  // VirtualBoxOVF is the name of the VirtualBox OVF builder section in the toml files.
-	"vmware-iso",      // VMWareISO is the name of the VMWare ISO builder section in the toml files.
-	"vmware-vmx",      // VMWareVMX is the name of the VMWare VMX builder section in the toml files.
+	"common",                // Common is the name of the common builder
+	"custom",                // custom is the name of the custom builder
+	"amazon-ec2",            // AmazonEC2 is the name of the Amazon EC2 builder, aka AMI
+	"digitalocean",          // DigitalOcean is the name of the Digital Ocean builder
+	"docker",                // Docker is the name of the Docker builder
+	"google-compute-engine", // GoogleComputeEngine is the name of the Google Compute Engine builder
+	"null",                  // Null is the name of the Null
+	"openstack",             // Openstack is the name of the Openstack
+	"parallels",             // Parallels is the name of the Parallels builder
+	"qemu",                  // QEMU is the name of the QEMU builder
+	"virtualbox",            // VirtualBox is the name of the VirtualBox builder
+	"vmware",                // VMWare is the name of the VMWare builder
 }
 
 func (b Builder) String() string { return builders[b] }
@@ -107,37 +99,27 @@ func BuilderFromString(s string) Builder {
 	s = strings.ToLower(s)
 	switch s {
 	case "common":
-		return CommonBuilder
-	case "amazon-chroot":
-		return AmazonChroot
-	case "amazon-ebs":
-		return AmazonEBS
-	case "amazon-instance":
-		return AmazonInstance
+		return Common
+	case "custom":
+		return Custom
+	case "amazon-ec2":
+		return AmazonEC2
 	case "digitalocean":
 		return DigitalOcean
-	case "docker":
-		return Docker
-	case "googlecompute":
-		return GoogleCompute
+	case "google-compute-engine":
+		return GoogleComputeEngine
 	case "null":
-		return NullBuilder
+		return Null
 	case "openstack":
 		return Openstack
-	case "parallels-iso":
-		return ParallelsISO
-	case "parallels-pvm":
-		return ParallelsPVM
+	case "parallels":
+		return Parallels
 	case "qemu":
 		return QEMU
-	case "virtualbox-iso":
-		return VirtualBoxISO
-	case "virtualbox-ovf":
-		return VirtualBoxOVF
-	case "vmware-iso":
-		return VMWareISO
-	case "vmware-vmx":
-		return VMWareVMX
+	case "virtualbox":
+		return VirtualBox
+	case "vmware":
+		return VMWare
 	}
 	return UnsupportedBuilder
 }
@@ -145,6 +127,11 @@ func BuilderFromString(s string) Builder {
 // PostProcessor constants
 const (
 	UnsupportedPostProcessor PostProcessor = iota
+	Compress
+	DockerImport
+	DockerPush
+	DockerSave
+	DockerTag
 	Vagrant
 	VagrantCloud
 	VSphere
@@ -155,9 +142,14 @@ type PostProcessor int
 
 var postProcessors = [...]string{
 	"unsupported post-processor",
-	"vagrant",       // PostProcessorVagrant is the name of the Vagrant PostProcessor
-	"vagrant-cloud", // PostProcessorVagrant is the name of the Vagrant CloudPostProcessor
-	"vsphere",       // PostProcessorVSphere is the name of the VSphere PostProcessor
+	"compress",      // Compress is the name of the compress PostProcessor
+	"docker-import", // DockerImport is the name of the DockerImport PostProcessor
+	"docker-push",   // DockerPush is the name of the DockerPush PostProcessor
+	"docker-save",   // DockerSave is the name of the DockerSave PostProcessor
+	"docker-tag",    // DockerTag is the name of the DockerTag PostProcessor
+	"vagrant",       // Vagrant is the name of the Vagrant PostProcessor
+	"vagrant-cloud", // Vagrant is the name of the Vagrant CloudPostProcessor
+	"vsphere",       // VSphere is the name of the VSphere PostProcessor
 }
 
 func (p PostProcessor) String() string { return postProcessors[p] }
@@ -167,6 +159,16 @@ func (p PostProcessor) String() string { return postProcessors[p] }
 func PostProcessorFromString(s string) PostProcessor {
 	s = strings.ToLower(s)
 	switch s {
+	case "compress":
+		return Compress
+	case "docker-import":
+		return DockerImport
+	case "docker-push":
+		return DockerPush
+	case "docker-save":
+		return DockerSave
+	case "docker-tag":
+		return DockerTag
 	case "vagrant":
 		return Vagrant
 	case "vagrant-cloud":
@@ -180,14 +182,13 @@ func PostProcessorFromString(s string) PostProcessor {
 // Provisioner constants
 const (
 	UnsupportedProvisioner Provisioner = iota
-	AnsibleLocal
+	Ansible
 	ChefClient
 	ChefSolo
-	File
-	PuppetClient
+	FileUploads
+	PuppetMasterless
 	PuppetServer
-	SaltMasterless
-	Shell
+	Salt
 	ShellScripts
 )
 
@@ -196,15 +197,14 @@ type Provisioner int
 
 var provisioners = [...]string{
 	"unsupported provisioner",
-	"ansible-local",   // AnsibleLocal is the name of the Ansible Provisioner
-	"chef-client",     // ChefClient is the name of the Chef Client Provisioner
-	"chef-solo",       // ChefSolo is the name of the Chef Solo Provisioner
-	"file",            // File is the name of the File Provisioner
-	"puppet-client",   // PuppetClient is the name of the puppet-client Provisioner
-	"puppet-server",   // PuppetServer is the name of the puppet-server Provisioner
-	"salt-masterless", // SaltMasterless is the name of the Salt Masterless Provisioner
-	"shell",           // Shell is the name of the Shell Provisioner
-	"shell-scripts",   // ShellScripts is an alias for the Shell provisioner
+	"ansible",           //ansible is the name of the Ansible Provisioner
+	"chef-client",       //chef-client is the name of the ChefClient Provisioner
+	"chef-solo",         //chef-solo is the name of the ChefSolo Provisioner
+	"file-uploads",      //file-uploads is the name of the FileUploads Provisioner
+	"puppet-masterless", //puppet-masterless is the name of the PuppetMasterless Provisioner
+	"puppet-server",     // puppet-server is the name of the PuppetServer Provisioner
+	"salt",              //salt is the name of the Salt Provisioner
+	"shell-scripts",     // ShellScripts is an alias for the Shell provisioner
 }
 
 func (p Provisioner) String() string { return provisioners[p] }
@@ -214,22 +214,20 @@ func (p Provisioner) String() string { return provisioners[p] }
 func ProvisionerFromString(s string) Provisioner {
 	s = strings.ToLower(s)
 	switch s {
-	case "ansible-local":
-		return AnsibleLocal
+	case "ansible":
+		return Ansible
 	case "chef-client":
 		return ChefClient
-	case "cher-solo":
+	case "chef-solo":
 		return ChefSolo
-	case "file":
-		return File
-	case "puppet-client":
-		return PuppetClient
+	case "file-uploads":
+		return FileUploads
+	case "puppet-masterless":
+		return PuppetMasterless
 	case "puppet-server":
 		return PuppetServer
 	case "salt-masterless":
-		return SaltMasterless
-	case "shell":
-		return Shell
+		return Salt
 	case "shell-scripts":
 		return ShellScripts
 	}

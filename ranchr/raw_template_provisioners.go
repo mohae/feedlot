@@ -109,14 +109,14 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 		tmpS = make(map[string]interface{})
 		typ := ProvisionerFromString(pType)
 		switch typ {
-		case Shell:
-			tmpS, tmpVar, err = r.createShellProvisioner()
-		case File:
-			tmpS, tmpVar, err = r.createFileProvisioner()
-		case AnsibleLocal:
-			tmpS, tmpVar, err = r.createAnsibleLocalProvisioner()
-		case SaltMasterless:
-			tmpS, tmpVar, err = r.createSaltMasterlessProvisioner()
+		case Ansible:
+			tmpS, tmpVar, err = r.createAnsible()
+		case FileUploads:
+			tmpS, tmpVar, err = r.createFileUploads()
+		case Salt:
+			tmpS, tmpVar, err = r.createSalt()
+		case ShellScripts:
+			tmpS, tmpVar, err = r.createShellScripts()
 			/*
 				case ChefClient:
 					// not implemented
@@ -139,31 +139,31 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 	return p, vars, nil
 }
 
-// createAnsibleLocalProvisioner() creates a map of settings for Packer's
+// createAnsible() creates a map of settings for Packer's
 // ansible provisioner. Any values that aren't supported by the file
 // provisioner are ignored.
-func (r *rawTemplate) createAnsibleLocalProvisioner() (settings map[string]interface{}, vars []string, err error) {
-	_, ok := r.Provisioners[AnsibleLocal.String()]
+func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[Ansible.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration for %q found", AnsibleLocal.String())
+		err = fmt.Errorf("no configuration for %q found", Ansible.String())
 	}
 	settings = make(map[string]interface{})
-	settings["type"] = AnsibleLocal.String()
+	settings["type"] = Ansible.String()
 	// For each value, extract its key value pair and then process. Only
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
 	var k, v string
-	for _, s := range r.Provisioners[AnsibleLocal.String()].Settings {
+	for _, s := range r.Provisioners[Ansible.String()].Settings {
 		k, v = parseVar(s)
 		switch k {
 		case "playbook_file", "command", "inventory_file", "playbook_dir", "staging_directory":
 			settings[k] = v
 		default:
-			jww.WARN.Println("unsupported " + AnsibleLocal.String() + " key was encountered: " + k)
+			jww.WARN.Println("unsupported " + Ansible.String() + " key was encountered: " + k)
 		}
 	}
 	// Process the Arrays.
-	for name, val := range r.Provisioners[AnsibleLocal.String()].Arrays {
+	for name, val := range r.Provisioners[Ansible.String()].Arrays {
 		array := deepcopy.InterfaceToSliceStrings(val)
 		if array != nil {
 			settings[name] = array
@@ -172,59 +172,59 @@ func (r *rawTemplate) createAnsibleLocalProvisioner() (settings map[string]inter
 	return settings, vars, err
 }
 
-// createSaltMasterlessProvisioner() creates a map of settings for Packer's
+// createSalt() creates a map of settings for Packer's
 // ansible provisioner. Any values that aren't supported by the file
 // provisioner are ignored.
-func (r *rawTemplate) createSaltMasterlessProvisioner() (settings map[string]interface{}, vars []string, err error) {
-	_, ok := r.Provisioners[SaltMasterless.String()]
+func (r *rawTemplate) createSalt() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[Salt.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration for %q found", SaltMasterless.String())
+		err = fmt.Errorf("no configuration for %q found", Salt.String())
 	}
 	settings = make(map[string]interface{})
-	settings["type"] = SaltMasterless.String()
+	settings["type"] = Salt.String()
 	// For each value, extract its key value pair and then process. Only
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
 	var k, v string
-	for _, s := range r.Provisioners[SaltMasterless.String()].Settings {
+	for _, s := range r.Provisioners[Salt.String()].Settings {
 		k, v = parseVar(s)
 		switch k {
 		case "bootstrap_args", "local_pillar_roots", "local_state_tree", "minion_config", "skip_bootstrap", "temp_config_dir":
 			settings[k] = v
 		default:
-			jww.WARN.Println("unsupported " + SaltMasterless.String() + " key was encountered: " + k)
+			jww.WARN.Println("unsupported " + Salt.String() + " key was encountered: " + k)
 		}
 	}
 	// salt-masterless does not have any arrays to support
 	return settings, vars, nil
 }
 
-// createShellProvisioner() creates a map of settings for Packer's shell
+// createShellScripts() creates a map of settings for Packer's shell
 // provisioner. Any values that aren't supported by the shell provisioner are
 // ignored.
-func (r *rawTemplate) createShellProvisioner() (settings map[string]interface{}, vars []string, err error) {
-	_, ok := r.Provisioners[Shell.String()]
+func (r *rawTemplate) createShellScripts() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[ShellScripts.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration for %q found", Shell.String())
+		err = fmt.Errorf("no configuration for %q found", ShellScripts.String())
 	}
 	settings = make(map[string]interface{})
-	settings["type"] = Shell.String()
+	settings["type"] = ShellScripts.String()
 	// For each value, extract its key value pair and then process. Only
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
 	var k, v string
-	for _, s := range r.Provisioners[Shell.String()].Settings {
+	for _, s := range r.Provisioners[ShellScripts.String()].Settings {
 		k, v = parseVar(s)
 		switch k {
 		case "binary", "execute_command", "inline_shebang", "remote_path",
 			"start_retry_timeout":
 			settings[s] = v
 		default:
-			jww.WARN.Println("unsupported " + Shell.String() + " key was encountered: " + k)
+			jww.WARN.Println("unsupported " + ShellScripts.String() + " key was encountered: " + k)
 		}
 	}
 	// Process the Arrays.
-	for name, val := range r.Provisioners[Shell.String()].Arrays {
+	for name, val := range r.Provisioners[ShellScripts.String()].Arrays {
 		array := deepcopy.Iface(val)
 		if array != nil {
 			settings[name] = array
@@ -233,31 +233,31 @@ func (r *rawTemplate) createShellProvisioner() (settings map[string]interface{},
 	return settings, vars, nil
 }
 
-// createFileProvisioner() creates a map of settings for Packer's file uploads
+// createFileUploads() creates a map of settings for Packer's file uploads
 // provisioner. Any values that aren't supported by the file provisioner are
 // ignored.
-func (r *rawTemplate) createFileProvisioner() (settings map[string]interface{}, vars []string, err error) {
-	_, ok := r.Provisioners[File.String()]
+func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[FileUploads.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration for %q found", File.String())
+		err = fmt.Errorf("no configuration for %q found", FileUploads.String())
 	}
 	settings = make(map[string]interface{})
-	settings["type"] = File.String()
+	settings["type"] = FileUploads.String()
 	// For each value, extract its key value pair and then process. Only
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
 	var k, v string
-	for _, s := range r.Provisioners[File.String()].Settings {
+	for _, s := range r.Provisioners[FileUploads.String()].Settings {
 		k, v = parseVar(s)
 		switch k {
 		case "source", "destination":
 			settings[k] = v
 		default:
-			jww.WARN.Printf("unsupported %s key was encountered: %q", File.String(), k)
+			jww.WARN.Printf("unsupported %s key was encountered: %q", FileUploads.String(), k)
 		}
 	}
 	// Process the Arrays.
-	for name, val := range r.Provisioners[File.String()].Arrays {
+	for name, val := range r.Provisioners[FileUploads.String()].Arrays {
 		array := deepcopy.InterfaceToSliceStrings(val)
 		if array != nil {
 			settings[name] = array
