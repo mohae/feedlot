@@ -344,7 +344,7 @@ func (r *rawTemplate) createDigitalOcean() (settings map[string]interface{}, var
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
-		case "api_key", "clien_id", "droplet_name", "image", "region", "size", "snapshot_name", "ssh_port", "ssh_timeout", "ssh_username", "state_timeout":
+		case "api_key", "api_token", "api_url", "client_id", "droplet_name", "image", "private_networking", "region", "size", "snapshot_name", "ssh_port", "ssh_timeout", "ssh_username", "state_timeout":
 			settings[k] = v
 		}
 	}
