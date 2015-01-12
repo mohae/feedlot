@@ -61,10 +61,14 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 
 			//		case QEMU:
 
-		case VirtualBox:
-			tmpS, tmpVar, err = r.createVirtualBox()
-		case VMWare:
-			tmpS, tmpVar, err = r.createVMWare()
+		case VMWareISO:	
+			tmpS, tmpVar, err = r.createVMWareISO()
+		case VMWareVMX:
+			tmpS, tmpVar, err = r.createVMWareVMX()
+		case VirtualBoxISO:		
+			tmpS, tmpVar, err = r.createVirtualBoxISO()		
+		case VirtualBoxOVF:		
+			tmpS, tmpVar, err = r.createVirtualBoxOVF()
 		default:
 			err = fmt.Errorf("Builder, %q, is not supported by Rancher", bType)
 			jww.ERROR.Println(err)
@@ -91,17 +95,17 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 	return m
 }
 
-// createVirtualBox generates the settings for a virtualbox builder.
-func (r *rawTemplate) createVirtualBox() (settings map[string]interface{}, vars []string, err error) {
-	_, ok := r.Provisioners[VirtualBox.String()]
+// createVirtualBoxISO generates the settings for a virtualbox builder.
+func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[VirtualBoxISO.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration for %q found", VirtualBox.String())
+		err = fmt.Errorf("no configuration for %q found", VirtualBoxISO.String())
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
-	settings["type"] = VirtualBox.String()
+	settings["type"] = VirtualBoxISO.String()
 	// Merge the settings between common and this builders.
-	mergedSlice := mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[VirtualBox.String()].Settings)
+	mergedSlice := mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[VirtualBoxISO.String()].Settings)
 	var k, v string
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
@@ -140,7 +144,7 @@ func (r *rawTemplate) createVirtualBox() (settings map[string]interface{}, vars 
 		case "iso_checksum_type":
 			// First set the ISO info for the desired release, if it's not already set
 			if r.osType == "" {
-				err = r.ISOInfo(VirtualBox, mergedSlice)
+				err = r.ISOInfo(VirtualBoxISO, mergedSlice)
 				if err != nil {
 					jww.ERROR.Println(err)
 					return nil, nil, err
@@ -186,7 +190,7 @@ func (r *rawTemplate) createVirtualBox() (settings map[string]interface{}, vars 
 
 	// Generate Packer Variables
 	// Generate builder specific section
-	l, err := getSliceLenFromIface(r.Builders[VirtualBox.String()].Arrays[VMSettings])
+	l, err := getSliceLenFromIface(r.Builders[VirtualBoxISO.String()].Arrays[VMSettings])
 	if err != nil {
 		jww.ERROR.Println(err)
 		return nil, nil, err
@@ -194,13 +198,13 @@ func (r *rawTemplate) createVirtualBox() (settings map[string]interface{}, vars 
 
 	if l > 0 {
 		tmpVB := make([][]string, l)
-		tmp := reflect.ValueOf(r.Builders[VirtualBox.String()].Arrays[VMSettings])
+		tmp := reflect.ValueOf(r.Builders[VirtualBoxISO.String()].Arrays[VMSettings])
 		var vmSettings interface{}
 		switch tmp.Type() {
 		case typeOfSliceInterfaces:
-			vmSettings = deepcopy.Iface(r.Builders[VirtualBox.String()].Arrays[VMSettings]).([]interface{})
+			vmSettings = deepcopy.Iface(r.Builders[VirtualBoxISO.String()].Arrays[VMSettings]).([]interface{})
 		case typeOfSliceStrings:
-			vmSettings = deepcopy.Iface(r.Builders[VirtualBox.String()].Arrays[VMSettings]).([]string)
+			vmSettings = deepcopy.Iface(r.Builders[VirtualBoxISO.String()].Arrays[VMSettings]).([]string)
 		}
 		vms := deepcopy.InterfaceToSliceStrings(vmSettings)
 		for i, v := range vms {
@@ -216,6 +220,92 @@ func (r *rawTemplate) createVirtualBox() (settings map[string]interface{}, vars 
 		settings["vboxmanage"] = tmpVB
 	}
 	return settings, nil, nil
+}
+
+// createVirtualBoxOVF generates the settings for a virtualbox-iso builder.
+func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[VirtualBoxOVF.String()]
+	if !ok {
+		err = fmt.Errorf("no configuration for %q found", VirtualBoxOVF.String())
+ 	}		 	}
+ 	settings = make(map[string]interface{})
+	// Each create function is responsible for setting its own type.
+	settings["type"] = VirtualBoxOVF.String()
+	// Merge the settings between common and this builders.
+	mergedSlice := mergeSettingsSlices(r.Builders[CommonBuilder.String()].Settings, r.Builders[VirtualBoxOVF.String()].Settings)
+	var k, v string		
+	// Go through each element in the slice, only take the ones that matter		
+	// to this builder.		
+	for _, s := range mergedSlice {		
+		// var tmp interface{}		
+		k, v = parseVar(s)		
+		v = r.replaceVariables(v)		
+		switch k {		
+		case "source_path", "ssh_username", "format", "guest_additions_mode",		
+			"guest_additions_path", "guest_additions_sha256", "guest_additions_url",		
+			"import_opts", "output_directory", "shutdown_timeout", "ssh_key_path",		
+			"ssh_password", "ssh_wait_timeout", "virtualbox_version_file", "vm_name":		
+			settings[k] = v		
+		case "headless":		
+			if strings.ToLower(v) == "true" {		
+				settings[k] = true		
+			} else {		
+				settings[k] = false		
+			}		
+		// For the fields of int value, only set if it converts to a valid int.		
+		// Otherwise, throw an error		
+		case "ssh_host_port_min", "ssh_host_port_max", "ssh_port":		
+			// only add if its an int		
+			_, err := strconv.Atoi(v)		
+			if err != nil {		
+				err = fmt.Errorf("VirtualBoxOVF error while trying to set %q to %q: %s", k, v, err)		
+				jww.ERROR.Println(err)		
+				return nil, nil, err		
+			}		
+			settings[k] = v		
+		case "shutdown_command":		
+			//If it ends in .command, replace it with the command from the filepath		
+			var commands []string		
+			commands, err = commandsFromFile(v)		
+			if err != nil {		
+				jww.ERROR.Println(err)		
+				return nil, nil, err		
+			}		
+			// Assume it's the first element.		
+			settings[k] = commands[0]		
+		}		
+	}		
+	// Generate Packer Variables		
+	// Generate builder specific section		
+	l, err := getSliceLenFromIface(r.Builders[VirtualBoxOVF.String()].Arrays[VMSettings])		
+	if err != nil {		
+		jww.ERROR.Println(err)		
+		return nil, nil, err		
+	}		
+	if l > 0 {		
+		tmpVB := make([][]string, l)		
+		tmp := reflect.ValueOf(r.Builders[VirtualBoxOVF.String()].Arrays[VMSettings])		
+		var vmSettings interface{}		
+		switch tmp.Type() {		
+		case typeOfSliceInterfaces:		
+			vmSettings = deepcopy.Iface(r.Builders[VirtualBoxOVF.String()].Arrays[VMSettings]).([]interface{})		
+		case typeOfSliceStrings:		
+			vmSettings = deepcopy.Iface(r.Builders[VirtualBoxOVF.String()].Arrays[VMSettings]).([]string)		
+		}		
+		vms := deepcopy.InterfaceToSliceStrings(vmSettings)		
+		for i, v := range vms {		
+			vo := reflect.ValueOf(v)		
+			k, val := parseVar(vo.Interface().(string))		
+			val = r.replaceVariables(val)		
+			tmpVB[i] = make([]string, 4)		
+			tmpVB[i][0] = "modifyvm"		
+			tmpVB[i][1] = "{{.Name}}"		
+			tmpVB[i][2] = "--" + k		
+			tmpVB[i][3] = val		
+		}		
+		settings["vboxmanage"] = tmpVB		
+	}		
+	return settings, nil, nil		
 }
 
 // createVMWare generates the settings for a vmware-iso builder.
