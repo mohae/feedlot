@@ -292,13 +292,13 @@ func (r *rawTemplate) createVMWare() (settings map[string]interface{}, vars []st
 		case "disk_size", "http_port_min", "http_port_max", "ssh_host_port_min", "ssh_host_port_max",
 			"ssh_port", "vnc_port_min", "vnc_port_max":
 			// only add if its an int
-			_, err := strconv.Atoi(v)
+			i, err := strconv.Atoi(v)
 			if err != nil {
 				err = fmt.Errorf("An error occurred while trying to set %s to %s: %s", k, v, err)
 				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
-			settings[k] = v
+			settings[k] = i
 		case "shutdown_command":
 			//If it ends in .command, replace it with the command from the filepath
 			var commands []string
@@ -344,8 +344,18 @@ func (r *rawTemplate) createDigitalOcean() (settings map[string]interface{}, var
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
-		case "api_key", "api_token", "api_url", "client_id", "droplet_name", "image", "private_networking", "region", "size", "snapshot_name", "ssh_port", "ssh_timeout", "ssh_username", "state_timeout":
+		case "api_key", "api_token", "api_url", "client_id", "droplet_name", "image",  "region", "size", "snapshot_name", "ssh_username", "state_timeout":
 			settings[k] = v
+		case "private_networking":
+			settings[k] _ := strconv.ParseBool(v) // ignore ok because !ok will result in b being false, i.e. all non-true values are evaluated to false
+		case "ssh_port", "ssh_timeout":
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				err = fmt.Errorf("An error occurred while trying to set %s to %s: %s", k, v, err)
+				jww.ERROR.Println(err)
+				return nil, nil, err
+			}
+			settings[k] = i
 		}
 	}
 	return settings, nil, nil
