@@ -10,14 +10,14 @@
 		image = "server"
 		release = "12.04"
 		builder_types = [
-			"virtualbox-iso"
+			"virtualbox"
 		]
 		[build.1204-amd64-server.builders]
 			[build.1204-amd64-server.builders.common]
 			settings = [
 				"ssh_wait_timeout = 300m"
 			]
-			[build.1204-amd64-server.builders.virtualbox-iso.arrays]
+			[build.1204-amd64-server.builders.virtualbox.arrays]
 			vm_settings = [
 				"memory=4096"
 			]
@@ -29,16 +29,16 @@
 	        release = "14.04"
 	        image = "server"
 	        builder_types = [
-			"virtualbox-iso"
+			"virtualbox"
 		]
 		post_processor_types = [
 			"vagrant"
 		]
 		provisioner_types = [
-			"shell"
+			"shell-scripts"
 		]
 		[build.1404-dev.builders]
-				[build.1404-dev.builders.virtualbox-iso.arrays]
+				[build.1404-dev.builders.virtualbox.arrays]
 				vm_settings = [
 					"memory=4096"
 				]
@@ -50,16 +50,16 @@
 					"docker"
 				]
 				only = [
-					"virtualbox-iso"
+					"virtualbox"
 				]
 		[build.1404-dev.provisioners]
-			[build.1404-dev.provisioners.shell]
-				[build.1404-dev.provisioners.arrays]
+			[build.1404-dev.provisioners.shell-scripts]
+				[build.1404-dev.provisioners.shell-scripts.arrays]
 				except = [
 					"docker"
 				]
 				only = [
-					"virtualbox-iso"
+					"virtualbox"
 				]
 				scripts = [ 
 					":scripts_dir/setup.sh",
@@ -75,19 +75,19 @@
 		distro = "centos"
 		description = "Centos 6 w virtualbox only"
 		builder_types = [
-			"virtualbox-iso"
+			"virtualbox"
 		]
 
         [build.centos6-salt]
 		distro = "centos"
 		description = "Centos 6 with salt provisioning"
 		builder_types = [
-			"virtualbox-iso"
+			"virtualbox"
 		]
 		provisioner_types = [
-			"salt-masterless"
+			"salt"
 		]
-		[build.centos6-salt.provisioner.salt-masterless]
+		[build.centos6-salt.provisioner.salt]
 			settings = [
 				"local_state_tree = ~/saltstack/centos6/salt"
 			]
@@ -97,18 +97,18 @@
 		distro = "centos"
 		description = "Centos6 with ansible provisioning"
 		builder_types = [
-			"virtualbox-iso"
+			"virtualbox"
 		]
 		provisioner_types = [
-			"ansible-local"
+			"ansible"
 		]
-		[build.centos6-ansible.provisioner.ansible-local]
+		[build.centos6-ansible.provisioner.ansible]
 			settings = [
 				"command = ansible-playbook-command-override",
 				"inventory_file = playbook-inventory.yaml",
 				"playbook_file = local.yaml"
 			]
-			[build.centos6-ansible.provisioner.ansible-local.arrays]
+			[build.centos6-ansible.provisioner.ansible.arrays]
 			extra_arguments = [
 				"arg1",
 				"arg2"
@@ -118,7 +118,7 @@
 		distro = "centos"
 		description = "CentOS6 with chef-solo provisioning"
 		builder_types = [
-			"virtualbox-iso"
+			"virtualbox"
 		]
 		provisioner_types = [
 			"chef-solo"

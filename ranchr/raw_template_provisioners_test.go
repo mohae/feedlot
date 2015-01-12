@@ -33,7 +33,7 @@ var testRawTemplateProvisioner = &rawTemplate{
 	varVals: map[string]string{},
 	vars:    map[string]string{},
 	build: build{
-		BuilderTypes: []string{"virtualbox-iso", "vmware-iso"},
+		BuilderTypes: []string{"virtualbox", "vmware"},
 		Builders: map[string]*builder{
 			"common": {
 				templateSection{
@@ -53,7 +53,7 @@ var testRawTemplateProvisioner = &rawTemplate{
 					},
 				},
 			},
-			"virtualbox-iso": {
+			"virtualbox": {
 				templateSection{
 					Settings: []string{
 						"virtualbox_version_file = .vbox_version",
@@ -66,7 +66,7 @@ var testRawTemplateProvisioner = &rawTemplate{
 					},
 				},
 			},
-			"vmware-iso": {
+			"vmware": {
 				templateSection{
 					Settings: []string{},
 					Arrays: map[string]interface{}{
@@ -97,7 +97,7 @@ var testRawTemplateProvisioner = &rawTemplate{
 							"include2",
 						},
 						"only": []string{
-							"virtualbox-iso",
+							"virtualbox",
 						},
 					},
 				},
@@ -114,11 +114,11 @@ var testRawTemplateProvisioner = &rawTemplate{
 			},
 		},
 		ProvisionerTypes: []string{
-			"shell",
-			"file",
+			"shell-scripts",
+			"file-uploads",
 		},
 		Provisioners: map[string]*provisioner{
-			"shell": {
+			"shell-scripts": {
 				templateSection{
 					Settings: []string{
 						"execute_command = :commands_src_dir/execute_test.command",
@@ -128,7 +128,7 @@ var testRawTemplateProvisioner = &rawTemplate{
 							"docker",
 						},
 						"only": []string{
-							"virtualbox-iso",
+							"virtualbox",
 						},
 						"scripts": []string{
 							":scripts_dir/setup_test.sh",
@@ -139,7 +139,7 @@ var testRawTemplateProvisioner = &rawTemplate{
 					},
 				},
 			},
-			"file": {
+			"file-uploads": {
 				templateSection{
 					Settings: []string{
 						"source = src/",
@@ -180,7 +180,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 	varVals: map[string]string{},
 	vars:    map[string]string{},
 	build: build{
-		BuilderTypes: []string{"virtualbox-iso", "vmware-iso"},
+		BuilderTypes: []string{"virtualbox", "vmware"},
 		Builders: map[string]*builder{
 			"common": {
 				templateSection{
@@ -200,7 +200,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 					},
 				},
 			},
-			"virtualbox-iso": {
+			"virtualbox": {
 				templateSection{
 					Settings: []string{
 						"virtualbox_version_file = .vbox_version",
@@ -213,7 +213,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 					},
 				},
 			},
-			"vmware-iso": {
+			"vmware": {
 				templateSection{
 					Settings: []string{},
 					Arrays: map[string]interface{}{
@@ -244,7 +244,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 							"include2",
 						},
 						"only": []string{
-							"virtualbox-iso",
+							"virtualbox",
 						},
 					},
 				},
@@ -261,13 +261,13 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 			},
 		},
 		ProvisionerTypes: []string{
-			"ansible-local",
-			"salt-masterless",
-			"shell",
-			"file",
+			"ansible",
+			"salt",
+			"shell-scripts",
+			"file-uploads",
 		},
 		Provisioners: map[string]*provisioner{
-			"ansible-local": {
+			"ansible": {
 				templateSection{
 					Settings: []string{
 						"playbook_file= :src_dir/ansible/playbook_file",
@@ -292,7 +292,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 					},
 				},
 			},
-			"salt-masterless": {
+			"salt": {
 				templateSection{
 					Settings: []string{
 						"bootstrap_args = args",
@@ -304,7 +304,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 					},
 				},
 			},
-			"shell": {
+			"shell-scripts": {
 				templateSection{
 					Settings: []string{
 						"execute_command = :commands_src_dir/execute_test.command",
@@ -314,7 +314,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 							"docker",
 						},
 						"only": []string{
-							"virtualbox-iso",
+							"virtualbox",
 						},
 						"scripts": []string{
 							":scripts_dir/setup_test.sh",
@@ -325,7 +325,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 					},
 				},
 			},
-			"file": {
+			"file-uploads": {
 				templateSection{
 					Settings: []string{
 						"source = src/",
@@ -346,7 +346,7 @@ var pr = &provisioner{
 		},
 		Arrays: map[string]interface{}{
 			"override": map[string]interface{}{
-				"virtualbox-iso": map[string]interface{}{
+				"virtualbox": map[string]interface{}{
 					"scripts": []string{
 						"scripts/base.sh",
 						"scripts/vagrant.sh",
@@ -365,7 +365,7 @@ var pr = &provisioner{
 }
 
 var prOrig = map[string]*provisioner{
-	"shell": &provisioner{
+	"shell-scripts": &provisioner{
 		templateSection{
 			Settings: []string{
 				"execute_command = :commands_src_dir/execute_test.command",
@@ -375,7 +375,7 @@ var prOrig = map[string]*provisioner{
 					"docker",
 				},
 				"only": []string{
-					"virtualbox-iso",
+					"virtualbox",
 				},
 				"scripts": []string{
 					":scripts_dir/setup_test.sh",
@@ -386,7 +386,7 @@ var prOrig = map[string]*provisioner{
 			},
 		},
 	},
-	"file": {
+	"file-uploads": {
 		templateSection{
 			Settings: []string{
 				"source = src/",
@@ -398,15 +398,15 @@ var prOrig = map[string]*provisioner{
 }
 
 var prNew = map[string]*provisioner{
-	"shell": &provisioner{
+	"shell-scripts": &provisioner{
 		templateSection{
 			Settings: []string{},
 			Arrays: map[string]interface{}{
 				"only": []string{
-					"vmware-iso",
+					"vmware",
 				},
 				"override": map[string]interface{}{
-					"vmware-iso": map[string]interface{}{
+					"vmware": map[string]interface{}{
 						"scripts": []string{
 							":scripts_dir/setup_test.sh",
 							":scripts_dir/vagrant_test.sh",
@@ -427,7 +427,7 @@ var prNew = map[string]*provisioner{
 }
 
 var prMerged = map[string]*provisioner{
-	"shell": &provisioner{
+	"shell-scripts": &provisioner{
 		templateSection{
 			Settings: []string{
 				"execute_command = :commands_src_dir/execute_test.command",
@@ -437,10 +437,10 @@ var prMerged = map[string]*provisioner{
 					"docker",
 				},
 				"only": []string{
-					"vmware-iso",
+					"vmware",
 				},
 				"override": map[string]interface{}{
-					"vmware-iso": map[string]interface{}{
+					"vmware": map[string]interface{}{
 						"scripts": []string{
 							":scripts_dir/setup_test.sh",
 							":scripts_dir/vagrant_test.sh",
@@ -458,7 +458,7 @@ var prMerged = map[string]*provisioner{
 			},
 		},
 	},
-	"file": {
+	"file-uploads": {
 		templateSection{
 			Settings: []string{
 				"source = src/",
@@ -496,7 +496,7 @@ func TestProvisionersSettingsToMap(t *testing.T) {
 	}
 }
 
-var prCreatedString = "[{\"command\":\":commands_src_dir/ansible_test.command\",\"extra_arguments\":[\"arg1\",\"arg2\"],\"inventory_file\":\":src_dir/ansible/inventory_file\",\"playbook_dir\":\":src_dir/ansible/playbooks\",\"playbook_file\":\":src_dir/ansible/playbook_file\",\"playbook_paths\":[\"path1\",\"path2\"],\"role_paths\":[\"rolepath1\",\"rolepath2\"],\"staging_directory\":\"staging/directory\",\"type\":\"ansible-local\"},{\"bootstrap_args\":\"args\",\"local_pillar_roots\":\"/srv/pillar/\",\"local_state_tree\":\"/srv/salt/\",\"minion_config\":\"minion\",\"skip_bootstrap\":\"false\",\"temp_config_dir\":\"/tmp\",\"type\":\"salt-masterless\"},{\"except\":[\"docker\"],\"execute_command = :commands_src_dir/execute_test.command\":\":commands_src_dir/execute_test.command\",\"only\":[\"virtualbox-iso\"],\"scripts\":[\":scripts_dir/setup_test.sh\",\":scripts_dir/vagrant_test.sh\",\":scripts_dir/sudoers_test.sh\",\":scripts_dir/cleanup_test.sh\"],\"type\":\"shell\"},{\"destination\":\"dst/\",\"source\":\"src/\",\"type\":\"file\"}]"
+var prCreatedString = "[{\"command\":\":commands_src_dir/ansible_test.command\",\"extra_arguments\":[\"arg1\",\"arg2\"],\"inventory_file\":\":src_dir/ansible/inventory_file\",\"playbook_dir\":\":src_dir/ansible/playbooks\",\"playbook_file\":\":src_dir/ansible/playbook_file\",\"playbook_paths\":[\"path1\",\"path2\"],\"role_paths\":[\"rolepath1\",\"rolepath2\"],\"staging_directory\":\"staging/directory\",\"type\":\"ansible\"},{\"bootstrap_args\":\"args\",\"local_pillar_roots\":\"/srv/pillar/\",\"local_state_tree\":\"/srv/salt/\",\"minion_config\":\"minion\",\"skip_bootstrap\":\"false\",\"temp_config_dir\":\"/tmp\",\"type\":\"salt\"},{\"except\":[\"docker\"],\"execute_command = :commands_src_dir/execute_test.command\":\":commands_src_dir/execute_test.command\",\"only\":[\"virtualbox\"],\"scripts\":[\":scripts_dir/setup_test.sh\",\":scripts_dir/vagrant_test.sh\",\":scripts_dir/sudoers_test.sh\",\":scripts_dir/cleanup_test.sh\"],\"type\":\"shell-scripts\"},{\"destination\":\"dst/\",\"source\":\"src/\",\"type\":\"file-uploads\"}]"
 
 func TestRawTemplateCreateProvisioners(t *testing.T) {
 	prov, _, err := testRawTemplateProvisionersAll.createProvisioners()

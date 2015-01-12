@@ -226,7 +226,7 @@ func ProvisionerFromString(s string) Provisioner {
 		return PuppetMasterless
 	case "puppet-server":
 		return PuppetServer
-	case "salt-masterless":
+	case "salt":
 		return Salt
 	case "shell-scripts":
 		return ShellScripts
@@ -438,7 +438,6 @@ func SetEnv() error {
 			return err
 		}
 	}
-
 	tmp = os.Getenv(EnvLogToFile)
 	if tmp == "" {
 		err = os.Setenv(EnvLogToFile, strconv.FormatBool(AppConfig.LogToFile))

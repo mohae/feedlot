@@ -30,8 +30,8 @@ var testBuilderUbuntu = &rawTemplate{
 	Release: "12.04",
 	build: build{
 		BuilderTypes: []string{
-			"virtualbox-iso",
-			"vmware-iso",
+			"virtualbox",
+			"vmware",
 		},
 		Builders: map[string]*builder{
 			"common": {
@@ -50,7 +50,7 @@ var testBuilderUbuntu = &rawTemplate{
 					},
 				},
 			},
-			"virtualbox-iso": {
+			"virtualbox": {
 				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
@@ -60,7 +60,7 @@ var testBuilderUbuntu = &rawTemplate{
 					},
 				},
 			},
-			"vmware-iso": {
+			"vmware": {
 				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
@@ -86,10 +86,10 @@ var testBuilderUbuntu = &rawTemplate{
 			},
 		},
 		ProvisionerTypes: []string{
-			"shell",
+			"shell-scripts",
 		},
 		Provisioners: map[string]*provisioner{
-			"shell": {
+			"shell-scripts": {
 				templateSection{
 					Settings: []string{
 						"execute_command = ../test_files/src/ubuntu/commands/execute_test.command",
@@ -134,8 +134,8 @@ var testBuilderCentOS = &rawTemplate{
 	Release: "6",
 	build: build{
 		BuilderTypes: []string{
-			"virtualbox-iso",
-			"vmware-iso",
+			"virtualbox",
+			"vmware",
 		},
 		Builders: map[string]*builder{
 			"common": {
@@ -154,7 +154,7 @@ var testBuilderCentOS = &rawTemplate{
 					},
 				},
 			},
-			"virtualbox-iso": {
+			"virtualbox": {
 				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
@@ -164,7 +164,7 @@ var testBuilderCentOS = &rawTemplate{
 					},
 				},
 			},
-			"vmware-iso": {
+			"vmware": {
 				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
@@ -190,10 +190,11 @@ var testBuilderCentOS = &rawTemplate{
 			},
 		},
 		ProvisionerTypes: []string{
-			"shell",
+			"shell-scripts",
+			"salt",
 		},
 		Provisioners: map[string]*provisioner{
-			"salt-masterless": {
+			"salt": {
 				templateSection{
 					Settings: []string{
 						"local_state_tree = ~/saltstates/centos6/salt",
@@ -201,7 +202,7 @@ var testBuilderCentOS = &rawTemplate{
 					},
 				},
 			},
-			"shell": {
+			"shell-scripts": {
 				templateSection{
 					Settings: []string{
 						"execute_command = ../test_files/src/centos/commands/execute_test.command",
@@ -238,7 +239,7 @@ var builderOrig = map[string]*builder{
 			},
 		},
 	},
-	"virtualbox-iso": {
+	"virtualbox": {
 		templateSection{
 			Arrays: map[string]interface{}{
 				"vm_settings": []string{
@@ -248,7 +249,7 @@ var builderOrig = map[string]*builder{
 			},
 		},
 	},
-	"vmware-iso": {
+	"vmware": {
 		templateSection{
 			Arrays: map[string]interface{}{
 				"vm_settings": []string{
@@ -278,7 +279,7 @@ var builderNew = map[string]*builder{
 			},
 		},
 	},
-	"virtualbox-iso": {
+	"virtualbox": {
 		templateSection{
 			Arrays: map[string]interface{}{
 				"vm_settings": []string{
@@ -307,7 +308,7 @@ var builderMerged = map[string]*builder{
 			},
 		},
 	},
-	"virtualbox-iso": {
+	"virtualbox": {
 		templateSection{
 			Settings: []string{},
 			Arrays: map[string]interface{}{
@@ -318,7 +319,7 @@ var builderMerged = map[string]*builder{
 			},
 		},
 	},
-	"vmware-iso": {
+	"vmware": {
 		templateSection{
 			Arrays: map[string]interface{}{
 				"vm_settings": []string{
@@ -348,10 +349,10 @@ var vbB = &builder{
 	},
 }
 
-func TestCreateBuilderVirtualboxISO(t *testing.T) {
+func TestCreateBuilderVirtualbox(t *testing.T) {
 	var settings map[string]interface{}
 	var err error
-	settings, _, err = testBuilderUbuntu.createVirtualBoxISO()
+	settings, _, err = testBuilderUbuntu.createVirtualBox()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	}
@@ -379,14 +380,14 @@ func TestCreateBuilderVirtualboxISO(t *testing.T) {
 	if settings["ssh_username"] != "vagrant" {
 		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_username"])
 	}
-	if settings["type"] != "virtualbox-iso" {
-		t.Errorf("Expected \"virtualbox-iso\", got %q", settings["type"])
+	if settings["type"] != "virtualbox" {
+		t.Errorf("Expected \"virtualbox\", got %q", settings["type"])
 	}
 	if MarshalJSONToString.Get(settings["vboxmanage"]) != "[[\"modifyvm\",\"{{.Name}}\",\"--cpus\",\"1\"],[\"modifyvm\",\"{{.Name}}\",\"--memory\",\"4096\"]]" {
 		t.Errorf("Expected \"[[\"modifyvm\",\"{{.Name}}\",\"--cpus\",\"1\"],[\"modifyvm\",\"{{.Name}}\",\"--memory\",\"4096\"]]\", got %q", MarshalJSONToString.Get(settings["vboxmanage"]))
 	}
 
-	settings, _, err = testBuilderCentOS.createVirtualBoxISO()
+	settings, _, err = testBuilderCentOS.createVirtualBox()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	}
@@ -417,21 +418,18 @@ func TestCreateBuilderVirtualboxISO(t *testing.T) {
 	if settings["ssh_username"] != "vagrant" {
 		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_username"])
 	}
-	if settings["type"] != "virtualbox-iso" {
-		t.Errorf("Expected \"virtualbox-iso\", got %q", settings["type"])
+	if settings["type"] != "virtualbox" {
+		t.Errorf("Expected \"virtualbox\", got %q", settings["type"])
 	}
-	//if settings["vboxmanage"] != "[[\"modifyvm\" \"{{.Name}}\" \"--cpus\" \"1\"] [\"modifyvm\" \"{{.Name}}\" \"--memory\" \"4096\"]]" {
-	//	t.Errorf("Expected \"[[\"modifyvm\" \"{{.Name}}\" \"--cpus\" \"1\"] [\"modifyvm\" \"{{.Name}}\" \"--memory\" \"4096\"]]\", got %q", settings["vboxmanage"])
-	//}
 	if MarshalJSONToString.Get(settings["vboxmanage"]) != "[[\"modifyvm\",\"{{.Name}}\",\"--cpus\",\"1\"],[\"modifyvm\",\"{{.Name}}\",\"--memory\",\"4096\"]]" {
 		t.Errorf("Expected \"[[\"modifyvm\",\"{{.Name}}\",\"--cpus\",\"1\"],[\"modifyvm\",\"{{.Name}}\",\"--memory\",\"4096\"]]\", got %q", MarshalJSONToString.Get(settings["vboxmanage"]))
 	}
 }
 
-func TestCreateBuilderVMWareISO(t *testing.T) {
+func TestCreateBuilderVMWare(t *testing.T) {
 	var settings map[string]interface{}
 	var err error
-	settings, _, err = testBuilderUbuntu.createVMWareISO()
+	settings, _, err = testBuilderUbuntu.createVMWare()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	}
@@ -459,15 +457,15 @@ func TestCreateBuilderVMWareISO(t *testing.T) {
 	if settings["ssh_username"] != "vagrant" {
 		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_username"])
 	}
-	if settings["type"] != "vmware-iso" {
-		t.Errorf("Expected \"vmware-iso\", got %q", settings["type"])
+	if settings["type"] != "vmware" {
+		t.Errorf("Expected \"vmware\", got %q", settings["type"])
 	}
 	expected := map[string]string{"cpus": "1", "memory": "4096"}
 	if MarshalJSONToString.Get(settings["vmx_data"]) != MarshalJSONToString.Get(expected) {
 		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings["vmx_data"]))
 	}
 
-	settings, _, err = testBuilderCentOS.createVMWareISO()
+	settings, _, err = testBuilderCentOS.createVMWare()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	}
@@ -495,13 +493,10 @@ func TestCreateBuilderVMWareISO(t *testing.T) {
 	if settings["ssh_username"] != "vagrant" {
 		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_username"])
 	}
-	if settings["type"] != "vmware-iso" {
-		t.Errorf("Expected \"vmware-iso\", got %q", settings["type"])
+	if settings["type"] != "vmware" {
+		t.Errorf("Expected \"vmware\", got %q", settings["type"])
 	}
 
-	//if MarshalJSONToString.Get(settings["vmx_data"]) != "\"cpus\":\"1\",\"memory\":\"4096\"" {
-	//	t.Errorf("{\"cpus\":\"1\",\"memory\":\"4096\"}", MarshalJSONToString.Get(settings["vmx_data"]))
-	//}
 	vmx := settings["vmx_data"].(map[string]string)
 	cpus, ok := vmx["cpus"]
 	if !ok {
@@ -534,7 +529,7 @@ func TestRawTemplateUpdatebuilders(t *testing.T) {
 }
 
 func TestRawTemplateUpdateBuildercommon(t *testing.T) {
-	testBuilderUbuntu.updateCommonBuilder(builderNew["common"])
+	testBuilderUbuntu.updateCommon(builderNew["common"])
 	if MarshalJSONToString.Get(testBuilderUbuntu.Builders["common"]) != MarshalJSONToString.Get(builderMerged["common"]) {
 		t.Errorf("expected %q, got %q", MarshalJSONToString.Get(builderMerged["common"]), MarshalJSONToString.Get(testBuilderUbuntu.Builders["common"]))
 	}

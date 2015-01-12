@@ -11,15 +11,15 @@ scripts_src_dir = ":src_dir/scripts"
 src_dir = "../test_files/src/:distro"
 min_packer_version = "0.4.0"
 builder_types = [
-    "virtualbox-iso",
-    "vmware-iso"
+    "virtualbox",
+    "vmware"
 ]
 post_processor_types = [
 	"vagrant",
 	"vagrant-cloud"
 ]
 provisioner_types = [
-	"shell"
+	"shell-scripts"
 ]
 [builders]
 	[builders.common]
@@ -37,17 +37,17 @@ provisioner_types = [
 		"ssh_username = vagrant",
 		"ssh_wait_timeout = 240m"
 	]
-	[builders.virtualbox-iso]
+	[builders.virtualbox]
 	settings = [
 		"virtualbox_version_file = .vbox_version"
 	]
-		[builders.virtualbox-iso.arrays]
+		[builders.virtualbox.arrays]
 		vm_settings = [
 			"cpus=1",
 			"memory=1024"	
 		]
-	[builders.vmware-iso]
-		[builders.vmware-iso.arrays]
+	[builders.vmware]
+		[builders.vmware.arrays]
 		vm_settings = [
 			"cpuid.coresPerSocket=1",
 			"memsize=1024",
@@ -62,7 +62,7 @@ provisioner_types = [
 	]
 		[post_processors.vagrant.arrays]
 		only = [
-			"virtualbox-iso"
+			"virtualbox"
 		]		
 			
 	[post_processors.vagrant-cloud]
@@ -73,16 +73,16 @@ provisioner_types = [
 		"version = 1.0.1"
 	]
 [provisioners]
-	[provisioners.shell]
+	[provisioners.shell-scripts]
 	settings = [
 		"execute_command = :commands_src_dir/execute_test.command"
 	]
-		[provisioners.shell.arrays]
+		[provisioners.shell-scripts.arrays]
 		except = [
 			"docker"
 		]
 		only = [
-			"virtualbox-iso"
+			"virtualbox"
 		]
 		scripts = [ 
 			":scripts_dir/setup_test.sh",

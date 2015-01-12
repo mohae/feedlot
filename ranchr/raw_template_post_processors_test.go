@@ -35,7 +35,7 @@ var ppOrig = map[string]*postProcessor{
 					"include2",
 				},
 				"only": []string{
-					"virtualbox-iso",
+					"virtualbox",
 				},
 			},
 		},
@@ -65,7 +65,7 @@ var ppNew = map[string]*postProcessor{
 					"virtualbox": map[string]interface{}{
 						"output": "overridden-virtualbox.box",
 					},
-					"vmware-iso": map[string]interface{}{
+					"vmware": map[string]interface{}{
 						"output": "overridden-vmware.box",
 					},
 				},
@@ -88,13 +88,13 @@ var ppMerged = map[string]*postProcessor{
 					"include2",
 				},
 				"only": []string{
-					"virtualbox-iso",
+					"virtualbox",
 				},
 				"override": map[string]interface{}{
 					"virtualbox": map[string]interface{}{
 						"output": "overridden-virtualbox.box",
 					},
-					"vmware-iso": map[string]interface{}{
+					"vmware": map[string]interface{}{
 						"output": "overridden-vmware.box",
 					},
 				},
@@ -145,11 +145,11 @@ func TestRawTemplateCreatePostProcessors(t *testing.T) {
 				"compression_level":   "8",
 				"include":             []string{"include1", "include2"},
 				"keep_input_artifact": "true",
-				"only":                []string{"virtualbox-iso"},
+				"only":                []string{"virtualbox"},
 				"output":              "out/rancher-packer.box",
 				"override": map[string]interface{}{
 					"virtualbox": map[string]interface{}{"output": "overridden-virtualbox.box"},
-					"vmware-iso": map[string]interface{}{"output": "overridden-vmware.box"},
+					"vmware":     map[string]interface{}{"output": "overridden-vmware.box"},
 				},
 				"type": "vagrant",
 			},

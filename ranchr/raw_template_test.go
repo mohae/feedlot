@@ -13,7 +13,7 @@ var updatedBuilders = map[string]*builder{
 			},
 		},
 	},
-	"virtualbox-iso": {
+	"virtualbox": {
 		templateSection{
 			Settings: []string{},
 			Arrays: map[string]interface{}{
@@ -36,7 +36,7 @@ var comparePostProcessors = map[string]*postProcessor{
 					"docker",
 				},
 				"only": []string{
-					"virtualbox-iso",
+					"virtualbox",
 				},
 			},
 		},
@@ -55,7 +55,7 @@ var comparePostProcessors = map[string]*postProcessor{
 }
 
 var compareProvisioners = map[string]*provisioner{
-	"shell": {
+	"shell-scripts": {
 		templateSection{
 			Settings: []string{
 				"execute_command = :commands_src_dir/execute_test.command",
@@ -70,7 +70,7 @@ var compareProvisioners = map[string]*provisioner{
 					"docker",
 				},
 				"only": []string{
-					"virtualbox-iso",
+					"virtualbox",
 				},
 			},
 		},
@@ -589,7 +589,7 @@ func TestBuildInf(t *testing.T) {
 }
 
 func TestRawTemplateISOInfo(t *testing.T) {
-	err := testDistroDefaultUbuntu.ISOInfo(VirtualBoxISO, []string{"iso_checksum_type = sha256", "http_directory=http"})
+	err := testDistroDefaultUbuntu.ISOInfo(VirtualBox, []string{"iso_checksum_type = sha256", "http_directory=http"})
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
@@ -604,7 +604,7 @@ func TestRawTemplateISOInfo(t *testing.T) {
 		}
 	}
 
-	err = testDistroDefaultCentOS.ISOInfo(VirtualBoxISO, []string{"iso_checksum_type = sha256", "http_directory=http"})
+	err = testDistroDefaultCentOS.ISOInfo(VirtualBox, []string{"iso_checksum_type = sha256", "http_directory=http"})
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {

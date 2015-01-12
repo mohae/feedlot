@@ -10,22 +10,22 @@
 		image = "server"
 		release = "1204"
 		builder_types = [
-			"virtualbox-iso"
+			"virtualbox"
 		]
 		post_processor_types = [
 			"vagrant",
 			"vagrant-cloud"
 		]
 		provisioner_types = [
-			"shell"
+			"shell-scripts"
 		]
 		[build.test1.builders]
 			[build.test1.builders.common]
 			settings = [
 				"ssh_wait_timeout = 300m"
 			]
-			[build.test1.builders.virtualbox-iso]
-				[build.test1.builders.virtualbox-iso.arrays]
+			[build.test1.builders.virtualbox]
+				[build.test1.builders.virtualbox.arrays]
 				vm_settings = [
 					"memory=4096"
 				]
@@ -36,7 +36,7 @@
 			]
 				[build.test1.post_processors.vagrant.arrays]
 				except = ["docker"]
-				only = ["virtualbox-iso"]
+				only = ["virtualbox"]
 
 			[build.test1.post_processors.vagrant-cloud]
 			settings = [
@@ -46,13 +46,13 @@
 				"version = 1.0.2"
 			]
 		[build.test1.provisioners]
-			[build.test1.provisioners.shell]
+			[build.test1.provisioners.shell-scripts]
 			settings = [
 				"execute_command = :commands_src_dir/execute_test.command"
 			]
-				[build.test1.provisioners.shell.arrays]
+				[build.test1.provisioners.shell-scripts.arrays]
 				except = ["docker"]
-				only = ["virtualbox-iso"]
+				only = ["virtualbox"]
 				scripts = [
 					":scripts_dir/setup_test.sh",
 					":scripts_dir/vagrant_test.sh",
@@ -65,16 +65,16 @@
 		image = "desktop"
 		release = "1204"
 		builder_types = [
-			"virtualbox-iso",
-			"vmware-iso"
+			"virtualbox",
+			"vmware"
 		]
 		[build.test2.builders]
 			[build.test2.builders.common]
 				settings = [
 					"ssh_wait_timeout = 300m"
 				]
-			[build.test2.builders.virtualbox-iso]
-				[build.test2.builders.virtualbox-iso.arrays]
+			[build.test2.builders.virtualbox]
+				[build.test2.builders.virtualbox.arrays]
 				vm_settings = [
 					"memory=4096"
 				]
@@ -83,14 +83,14 @@
 		type = "centos"
 		description = "Test build template for salt provisioner using CentOS6"
 		builder_types = [
-			"virtualbox-iso"
+			"virtualbox"
 		]
 		provisioner_types = [
-			"shell",
-			"salt-masterless"
+			"shell-scripts",
+			"salt"
 		]
 		[build.centos6-salt.provisioner]
-			[build.centos6-salt.provisioner.salt-masterless]
+			[build.centos6-salt.provisioner.salt]
 				settings = [
 					"local_state_tree = ~/saltstates/centos6/salt",
 					"skip_bootstrap = true"

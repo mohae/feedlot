@@ -316,7 +316,6 @@ func TestbuildPackerTemplateFromNamedBuild(t *testing.T) {
 }
 
 func TestCommandsFromFile(t *testing.T) {
-	//	bootCommand := []string{"\"\", \"\", \"\", \"/install/vmlinuz\", \" auto\", \" console-setup/ask_detect=false\", \" console-setup/layoutcode=us\", \" console-setup/modelcode=pc105\", \" debconf/frontend=noninteractive\", \" debian-installer=en_US\", \" fb=false\", \" initrd=/install/initrd.gz\", \" kbd-chooser/method=us\", \" keyboard-configuration/layout=USA\", \" keyboard-configuration/variant=USA\", \" locale=en_US\", \" netcfg/get_hostname=ubuntu-1204\", \" netcfg/get_domain=vagrantup.com\", \" noapic\", \" preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg\", \" -- \", \"\""}
 	var commands []string
 	var err error
 
@@ -838,7 +837,7 @@ func TestCopyFile(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected no error, got %q", err.Error())
 	}
-	if wB != 2531 {
+	if wB != 2501 {
 		t.Errorf("Expected 2531 bytes written, %d were written", wB)
 	}
 }

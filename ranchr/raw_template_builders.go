@@ -43,6 +43,7 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 		tmpVar = make([]string, 50)
 		tmpS = make(map[string]interface{})
 		typ := BuilderFromString(bType)
+		jww.TRACE.Println(typ)
 		switch typ {
 		//		case AmazonEBS, AmazonInstance, AmazonChroot:
 		// not implemented

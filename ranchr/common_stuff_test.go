@@ -34,7 +34,7 @@ var testRawTemplate = newRawTemplate()
 var MarshalJSONToString = json.NewMarshalString()
 
 var testProvisioners = map[string]*provisioner{
-	"shell": {
+	"shell-scripts": {
 		templateSection{
 			Settings: []string{
 				"execute_command = :commands_src_dir/execute_test.command",
@@ -73,8 +73,8 @@ var testDefaults = &defaults{
 	},
 	build: build{
 		BuilderTypes: []string{
-			"virtualbox-iso",
-			"vmware-iso",
+			"virtualbox",
+			"vmware",
 		},
 		Builders: map[string]*builder{
 			"common": {
@@ -95,7 +95,7 @@ var testDefaults = &defaults{
 					},
 				},
 			},
-			"virtualbox-iso": {
+			"virtualbox": {
 				templateSection{
 					Settings: []string{
 						"virtualbox_version_file = .vbox_version",
@@ -108,7 +108,7 @@ var testDefaults = &defaults{
 					},
 				},
 			},
-			"vmware-iso": {
+			"vmware": {
 				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
@@ -134,7 +134,7 @@ var testDefaults = &defaults{
 					},
 					Arrays: map[string]interface{}{
 						"only": []string{
-							"virtualbox-iso",
+							"virtualbox",
 						},
 					},
 				},
@@ -151,10 +151,10 @@ var testDefaults = &defaults{
 			},
 		},
 		ProvisionerTypes: []string{
-			"shell",
+			"shell-scripts",
 		},
 		Provisioners: map[string]*provisioner{
-			"shell": {
+			"shell-scripts": {
 				templateSection{
 					Settings: []string{
 						"execute_command = :commands_src_dir/execute_test.command",
@@ -164,7 +164,7 @@ var testDefaults = &defaults{
 							"docker",
 						},
 						"only": []string{
-							"virtualbox-iso",
+							"virtualbox",
 						},
 						"scripts": []string{
 							":scripts_dir/setup_test.sh",
@@ -210,7 +210,8 @@ var testSupportedUbuntu = &distro{
 	},
 	build: build{
 		BuilderTypes: []string{
-			"virtualbox-iso",
+			"virtualbox",
+			"vmware",
 		},
 		Builders: map[string]*builder{
 			"common": {
@@ -221,14 +222,14 @@ var testSupportedUbuntu = &distro{
 					},
 				},
 			},
-			"virtualbox-iso": {
+			"virtualbox": {
 				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{"memory=2048"},
 					},
 				},
 			},
-			"vmware-iso": {
+			"vmware": {
 				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{"memsize=2048"},
@@ -249,11 +250,11 @@ var testSupportedUbuntu = &distro{
 			},
 		},
 		ProvisionerTypes: []string{
-			"shell",
-			"file",
+			"shell-scripts",
+			"file-uploads",
 		},
 		Provisioners: map[string]*provisioner{
-			"shell": {
+			"shell-scripts": {
 				templateSection{
 					Settings: []string{
 						"execute_command = :command_src_dir/execute_test.command",
@@ -269,7 +270,7 @@ var testSupportedUbuntu = &distro{
 					},
 				},
 			},
-			"file": {
+			"file-uploads": {
 				templateSection{
 					Settings: []string{
 						"source = source/dir",
@@ -333,7 +334,7 @@ var testDistroDefaultUbuntu = &rawTemplate{
 	varVals: map[string]string{},
 	vars:    map[string]string{},
 	build: build{
-		BuilderTypes: []string{"virtualbox-iso", "vmware-iso"},
+		BuilderTypes: []string{"virtualbox", "vmware"},
 		Builders: map[string]*builder{
 			"common": {
 				templateSection{
@@ -354,7 +355,7 @@ var testDistroDefaultUbuntu = &rawTemplate{
 					Arrays: map[string]interface{}{},
 				},
 			},
-			"virtualbox-iso": {
+			"virtualbox": {
 				templateSection{
 					Settings: []string{
 						"virtualbox_version_file = .vbox_version",
@@ -367,7 +368,7 @@ var testDistroDefaultUbuntu = &rawTemplate{
 					},
 				},
 			},
-			"vmware-iso": {
+			"vmware": {
 				templateSection{
 					Settings: []string{},
 					Arrays: map[string]interface{}{
@@ -412,9 +413,9 @@ var testDistroDefaultUbuntu = &rawTemplate{
 				},
 			},
 		},
-		ProvisionerTypes: []string{"shell"},
+		ProvisionerTypes: []string{"shell-scripts"},
 		Provisioners: map[string]*provisioner{
-			"shell": {
+			"shell-scripts": {
 				templateSection{
 					Settings: []string{
 						"execute_command = :commands_src_dir/execute_test.command",
@@ -424,7 +425,7 @@ var testDistroDefaultUbuntu = &rawTemplate{
 							"docker",
 						},
 						"only": []string{
-							"virtualbox-iso",
+							"virtualbox",
 						},
 						"scripts": []string{
 							":scripts_dir/setup_test.sh",
@@ -467,7 +468,7 @@ var testDistroDefaultCentOS = &rawTemplate{
 	varVals: map[string]string{},
 	vars:    map[string]string{},
 	build: build{
-		BuilderTypes: []string{"virtualbox-iso", "vmware-iso"},
+		BuilderTypes: []string{"virtualbox", "vmware"},
 		Builders: map[string]*builder{
 			"common": {
 				templateSection{
@@ -488,7 +489,7 @@ var testDistroDefaultCentOS = &rawTemplate{
 					Arrays: map[string]interface{}{},
 				},
 			},
-			"virtualbox-iso": {
+			"virtualbox": {
 				templateSection{
 					Settings: []string{
 						"virtualbox_version_file = .vbox_version",
@@ -501,7 +502,7 @@ var testDistroDefaultCentOS = &rawTemplate{
 					},
 				},
 			},
-			"vmware-iso": {
+			"vmware": {
 				templateSection{
 					Settings: []string{},
 					Arrays: map[string]interface{}{
@@ -532,7 +533,7 @@ var testDistroDefaultCentOS = &rawTemplate{
 							"include2",
 						},
 						"only": []string{
-							"virtualbox-iso",
+							"virtualbox",
 						},
 					},
 				},
@@ -550,10 +551,10 @@ var testDistroDefaultCentOS = &rawTemplate{
 			},
 		},
 		ProvisionerTypes: []string{
-			"shell",
+			"shell-scripts",
 		},
 		Provisioners: map[string]*provisioner{
-			"shell": {
+			"shell-scripts": {
 				templateSection{
 					Settings: []string{
 						"execute_command = :commands_src_dir/execute_test.command",
@@ -563,7 +564,7 @@ var testDistroDefaultCentOS = &rawTemplate{
 							"docker",
 						},
 						"only": []string{
-							"virtualbox-iso",
+							"virtualbox",
 						},
 						"scripts": []string{
 							":scripts_dir/setup_test.sh",
@@ -588,7 +589,7 @@ var testBuildTest1 = &rawTemplate{
 	Release: "1204",
 	build: build{
 		BuilderTypes: []string{
-			"virtualbox-iso",
+			"virtualbox",
 		},
 		Builders: map[string]*builder{
 			"common": {
@@ -598,7 +599,7 @@ var testBuildTest1 = &rawTemplate{
 					},
 				},
 			},
-			"virtualbox-iso": {
+			"virtualbox": {
 				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
@@ -623,7 +624,7 @@ var testBuildTest1 = &rawTemplate{
 							"docker",
 						},
 						"only": []string{
-							"virtualbox-iso",
+							"virtualbox",
 						},
 					},
 				},
@@ -640,10 +641,10 @@ var testBuildTest1 = &rawTemplate{
 			},
 		},
 		ProvisionerTypes: []string{
-			"shell",
+			"shell-scripts",
 		},
 		Provisioners: map[string]*provisioner{
-			"shell": {
+			"shell-scripts": {
 				templateSection{
 					Settings: []string{
 						"execute_command = :commands_src_dir/execute_test.command",
@@ -658,7 +659,7 @@ var testBuildTest1 = &rawTemplate{
 							"docker",
 						},
 						"only": []string{
-							"virtualbox-iso",
+							"virtualbox",
 						},
 					},
 				},
@@ -677,8 +678,8 @@ var testBuildTest2 = &rawTemplate{
 	Release: "1204",
 	build: build{
 		BuilderTypes: []string{
-			"virtualbox-iso",
-			"vmware-iso",
+			"virtualbox",
+			"vmware",
 		},
 		Builders: map[string]*builder{
 			"common": {
@@ -688,7 +689,7 @@ var testBuildTest2 = &rawTemplate{
 					},
 				},
 			},
-			"virtualbox-iso": {
+			"virtualbox": {
 				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
@@ -708,7 +709,7 @@ var testBuildCentOS6Salt = &rawTemplate{
 	Distro: "centos",
 	build: build{
 		BuilderTypes: []string{
-			"virtualbox-iso",
+			"virtualbox",
 		},
 		Provisioners: map[string]*provisioner{
 			"salt-masterless": {
@@ -749,8 +750,8 @@ var testMergedBuildTest1 = &rawTemplate{
 	Release: "12.04",
 	build: build{
 		BuilderTypes: []string{
-			"virtualbox-iso",
-			"vmware-iso",
+			"virtualbox",
+			"vmware",
 		},
 		Builders: map[string]*builder{
 			"common": {
@@ -770,7 +771,7 @@ var testMergedBuildTest1 = &rawTemplate{
 					Arrays: map[string]interface{}{},
 				},
 			},
-			"virtualbox-iso": {
+			"virtualbox": {
 				templateSection{
 					Settings: []string{""},
 					Arrays: map[string]interface{}{
@@ -796,10 +797,10 @@ var testMergedBuildTest1 = &rawTemplate{
 			},
 		},
 		ProvisionerTypes: []string{
-			"shell",
+			"shell-scripts",
 		},
 		Provisioners: map[string]*provisioner{
-			"shell": {
+			"shell-scripts": {
 				templateSection{
 					Settings: []string{
 						"execute_command = :commands_src_dir/execute_test.command",
@@ -814,7 +815,7 @@ var testMergedBuildTest1 = &rawTemplate{
 							"docker",
 						},
 						"only": []string{
-							"virtualbox-iso",
+							"virtualbox",
 						},
 					},
 				},
@@ -848,8 +849,8 @@ var testMergedBuildTest2 = &rawTemplate{
 	Release: "12.04",
 	build: build{
 		BuilderTypes: []string{
-			"virtualbox-iso",
-			"vmware-iso",
+			"virtualbox",
+			"vmware",
 		},
 		Builders: map[string]*builder{
 			"common": {
@@ -869,7 +870,7 @@ var testMergedBuildTest2 = &rawTemplate{
 					Arrays: map[string]interface{}{},
 				},
 			},
-			"virtualbox-iso": {
+			"virtualbox": {
 				templateSection{
 					Settings: []string{},
 					Arrays: map[string]interface{}{
@@ -880,7 +881,7 @@ var testMergedBuildTest2 = &rawTemplate{
 					},
 				},
 			},
-			"vmware-iso": {
+			"vmware": {
 				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
@@ -907,10 +908,10 @@ var testMergedBuildTest2 = &rawTemplate{
 			},
 		},
 		ProvisionerTypes: []string{
-			"shell",
+			"shell-scripts",
 		},
 		Provisioners: map[string]*provisioner{
-			"shell": {
+			"shell-scripts": {
 				templateSection{
 					Settings: []string{
 						"execute_command = :commands_src_dir/execute_test.command",
@@ -955,7 +956,7 @@ var testMergedBuildCentos6Salt = &rawTemplate{
 	Release: "6",
 	build: build{
 		BuilderTypes: []string{
-			"virtualbox-iso",
+			"virtualbox",
 		},
 		Builders: map[string]*builder{
 			"common": {
@@ -975,7 +976,7 @@ var testMergedBuildCentos6Salt = &rawTemplate{
 					Arrays: map[string]interface{}{},
 				},
 			},
-			"virtualbox-iso": {
+			"virtualbox": {
 				templateSection{
 					Settings: []string{},
 					Arrays: map[string]interface{}{
@@ -986,7 +987,7 @@ var testMergedBuildCentos6Salt = &rawTemplate{
 					},
 				},
 			},
-			"vmware-iso": {
+			"vmware": {
 				templateSection{
 					Settings: []string{},
 					Arrays: map[string]interface{}{
@@ -1014,10 +1015,11 @@ var testMergedBuildCentos6Salt = &rawTemplate{
 			},
 		},
 		ProvisionerTypes: []string{
-			"shell",
+			"shell-scripts",
+			"salt",
 		},
 		Provisioners: map[string]*provisioner{
-			"salt-masterless": {
+			"salt": {
 				templateSection{
 					Settings: []string{
 						"local_state_tree = ~/saltstates/centos6/salt",
@@ -1026,7 +1028,7 @@ var testMergedBuildCentos6Salt = &rawTemplate{
 					Arrays: map[string]interface{}{},
 				},
 			},
-			"shell": {
+			"shell-scripts": {
 				templateSection{
 					Settings: []string{
 						"execute_command = :commands_src_dir/execute_test.command",
@@ -1079,6 +1081,3 @@ func setCommonTestData() {
 
 	return
 }
-
-//Build"ubuntu"
-//BuildCentos

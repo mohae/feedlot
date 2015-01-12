@@ -31,14 +31,15 @@
        		"arch = amd64",
        	]
 	builder_types = [
-		"virtualbox-iso"
+		"virtualbox",
+		"vmware"
 	]
 	post_processor_types = [
 		"vagrant",
 	]
 	provisioner_types = [
-		"shell",
-		"file"
+		"shell-scripts",
+		"file-uploads"
 	]
 	[distro.ubuntu.builders]			
 		[distro.ubuntu.builders.common]
@@ -46,13 +47,13 @@
 		    	"boot_command = ../test_files/src/ubuntu/commands/boot_test.command",
 	    		"shutdown_command = :command_src_dir/shutdown_test.command"
 		]
-		[distro.ubuntu.builders.virtualbox-iso]
-			[distro.ubuntu.builders.virtualbox-iso.arrays]
+		[distro.ubuntu.builders.virtualbox]
+			[distro.ubuntu.builders.virtualbox.arrays]
 			vm_settings = [
 				"memory=2048"
 			]
-		[distro.ubuntu.builders.vmware-iso]
-			[distro.ubuntu.builders.vmware-iso.arrays]
+		[distro.ubuntu.builders.vmware]
+			[distro.ubuntu.builders.vmware.arrays]
 			vm_settings = [
 				"memsize=2048"
 			]
@@ -61,18 +62,15 @@
 		settings = [
 			"output = out/:build_name-packer.box"
 		]
-		except = [
-			"virtualbox-ovf"
-		]
 		only = [
-			"virtualbox-iso"
+			"virtualbox"
 		]
 	[distro.ubuntu.provisioners]
-		[distro.ubuntu.provisioners.shell]
+		[distro.ubuntu.provisioners.shell-scripts]
 		settings = [
 			"execute_command = :command_src_dir/execute_test.command"
 		]
-	 		[distro.ubuntu.provisioners.shell.arrays]
+	 		[distro.ubuntu.provisioners.shell-scripts.arrays]
 			scripts = [ 
 				":scripts_dir/setup_test.sh",
 				":scripts_dir/base_test.sh",
@@ -80,7 +78,7 @@
 				":scripts_dir/sudoers_test.sh",
 				":scripts_dir/cleanup_test.sh"
 			]
-		[distro.ubuntu.provisioners.file]
+		[distro.ubuntu.provisioners.file-uploads]
 			settings = [
 				"source = source/dir",
 				"destination = destination/dir"

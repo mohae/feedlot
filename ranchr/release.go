@@ -185,14 +185,14 @@ func (u *ubuntu) setName() {
 // varies by distro, arch, and builder.
 func (u *ubuntu) getOSType(buildType string) (string, error) {
 	switch buildType {
-	case "vmware-iso":
+	case "vmware":
 		switch u.Arch {
 		case "amd64":
 			return "ubuntu-64", nil
 		case "i386":
 			return "ubuntu-32", nil
 		}
-	case "virtualbox-iso":
+	case "virtualbox":
 		switch u.Arch {
 		case "amd64":
 			return "Ubuntu_64", nil
@@ -306,14 +306,14 @@ func (c *centOS) setReleaseNumber() error {
 // varies by distro, arch, and builder.
 func (c *centOS) getOSType(buildType string) (string, error) {
 	switch buildType {
-	case "vmware-iso":
+	case "vmware":
 		switch c.Arch {
 		case "x86_64":
 			return "centos-64", nil
 		case "x386":
 			return "centos-32", nil
 		}
-	case "virtualbox-iso":
+	case "virtualbox":
 		switch c.Arch {
 		case "x86_64":
 			return "RedHat_64", nil
