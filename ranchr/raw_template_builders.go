@@ -379,14 +379,29 @@ func (r *rawTemplate) createDocker() (settings map[string]interface{}, vars []st
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
-		case "export_path", "image_id":
+		case "export_path", "image", "login_email", "login_username", "login_password", "login_server":
 			settings[k] = v
-		case "pull":
-			if strings.ToLower(v) == "true" {
-				settings[k] = true
-			} else {
-				settings[k] = false
+		case "commit", "login", "pull":
+			settings[k] _ := strconv.ParseBool(v) // ignore ok because !ok will result in b being false, i.e. all non-true values are evaluated to false
+		case "ssh_port", "ssh_timeout":
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				err = fmt.Errorf("An error occurred while trying to set %s to %s: %s", k, v, err)
+				jww.ERROR.Println(err)
+				return nil, nil, err
 			}
+			settings[k] = i
+		case "run_command":
+			//If it ends in .command, replace it with the command from the filepath
+			var commands []string
+			commands, err = commandsFromFile(v)
+			if err != nil {
+				jww.ERROR.Println(err)
+				return nil, nil, err
+			}
+			// Assume it's the first element.
+			settings[k] = commands[0]
+		}
 		}
 	}
 	// Process the Arrays.
