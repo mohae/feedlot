@@ -2,6 +2,7 @@ package ranchr
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/mohae/deepcopy"
@@ -139,9 +140,23 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 	return p, vars, nil
 }
 
-// createAnsible() creates a map of settings for Packer's
-// ansible provisioner. Any values that aren't supported by the file
-// provisioner are ignored.
+// createAnsible() creates a map of settings for Packer's ansible-local
+// provisioner. Any values that aren't supported by the file provisioner are
+// ignored. For more information, refer to
+// https://packer.io/docs/provisioners/ansible-local.html
+//
+// Required configuration options:
+//   playbook_file		// string
+// Optional configuration options:
+//   command			// string
+//   extra_arguments	// array of strings
+//   inventory_file		// string
+//   group_vars			// string
+//   host_vars			// string
+//   playbook_dir		// string
+//   playbook_paths		// array of strings
+//   role_paths			// array of strings
+//   staging_directory	// string
 func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.Provisioners[Ansible.String()]
 	if !ok {
@@ -156,7 +171,7 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []s
 	for _, s := range r.Provisioners[Ansible.String()].Settings {
 		k, v = parseVar(s)
 		switch k {
-		case "playbook_file", "command", "inventory_file", "playbook_dir", "staging_directory":
+		case "playbook_file", "command", "group_vars", "host_vars", "staging_directory":
 			settings[k] = v
 		default:
 			jww.WARN.Println("unsupported " + Ansible.String() + " key was encountered: " + k)
@@ -172,9 +187,19 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []s
 	return settings, vars, err
 }
 
-// createSalt() creates a map of settings for Packer's
-// ansible provisioner. Any values that aren't supported by the file
-// provisioner are ignored.
+// createSalt() creates a map of settings for Packer's salt-masterless
+// provisioner. Any values that aren't supported by the salt-masterless
+// provisioner are ignored. For more information, refer to
+// https://packer.io/docs/provisioners/salt-masterless.html
+//
+// Required configuration options:
+//   local_state_tree		// string
+// Optional configuration options
+//   bootstrap_args			// string
+//   local_pillar_roots		// string
+//   minion_config			// string
+//   skip_bootstrap			// boolean
+//   temp_config_dir			// string
 func (r *rawTemplate) createSalt() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.Provisioners[Salt.String()]
 	if !ok {
@@ -189,8 +214,10 @@ func (r *rawTemplate) createSalt() (settings map[string]interface{}, vars []stri
 	for _, s := range r.Provisioners[Salt.String()].Settings {
 		k, v = parseVar(s)
 		switch k {
-		case "bootstrap_args", "local_pillar_roots", "local_state_tree", "minion_config", "skip_bootstrap", "temp_config_dir":
+		case "bootstrap_args", "local_pillar_roots", "local_state_tree", "minion_config", "temp_config_dir":
 			settings[k] = v
+		case "skip_bootstrap":
+			settings[k], _ = strconv.ParseBool(v)
 		default:
 			jww.WARN.Println("unsupported " + Salt.String() + " key was encountered: " + k)
 		}
@@ -201,7 +228,21 @@ func (r *rawTemplate) createSalt() (settings map[string]interface{}, vars []stri
 
 // createShellScripts() creates a map of settings for Packer's shell
 // provisioner. Any values that aren't supported by the shell provisioner are
-// ignored.
+// ignored. For more information, refer to
+// https://packer.io/docs/provisioners/shell.html
+//
+// Of the "inline", "script", and "scripts" options, only "scripts" is
+// currently supported.
+//
+// Required configuration options:
+//   scripts				// array of strings
+// Optional confinguration parameters:
+//   binary					// boolean
+//   environment_vars		// array of strings
+//   execute_command		// string
+//   inline_shebang			// string
+//   remote_path			// string
+//   start_retry_timeout	// string
 func (r *rawTemplate) createShellScripts() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.Provisioners[ShellScripts.String()]
 	if !ok {
@@ -216,9 +257,10 @@ func (r *rawTemplate) createShellScripts() (settings map[string]interface{}, var
 	for _, s := range r.Provisioners[ShellScripts.String()].Settings {
 		k, v = parseVar(s)
 		switch k {
-		case "binary", "execute_command", "inline_shebang", "remote_path",
-			"start_retry_timeout":
+		case "execute_command", "inline_shebang", "remote_path", "start_retry_timeout":
 			settings[s] = v
+		case "binary":
+			settings[k], _ = strconv.ParseBool(v)
 		default:
 			jww.WARN.Println("unsupported " + ShellScripts.String() + " key was encountered: " + k)
 		}
@@ -235,7 +277,12 @@ func (r *rawTemplate) createShellScripts() (settings map[string]interface{}, var
 
 // createFileUploads() creates a map of settings for Packer's file uploads
 // provisioner. Any values that aren't supported by the file provisioner are
-// ignored.
+// ignored. For more information, refer to
+// https://packer.io/docs/provisioners/file.html
+//
+//	Required configuration options:
+//   destination	// string
+//   source			// string
 func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.Provisioners[FileUploads.String()]
 	if !ok {

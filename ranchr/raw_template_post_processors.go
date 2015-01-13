@@ -2,6 +2,7 @@ package ranchr
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/mohae/deepcopy"
@@ -61,14 +62,6 @@ func (r *rawTemplate) updatePostProcessors(new map[string]*postProcessor) {
 	}
 }
 
-/*
-// Merge the settings section of a post-processor. New values supercede
-// existing ones.
-func (r *rawTemplate) updateProcessorSettings(new []string) {
-	r.updateProcessors(= mergeSettingsSlices(p.Settings, new)
-}
-*/
-
 // Go through all of the Settings and convert them to a map. Each setting
 // is parsed into its constituent parts. The value then goes through
 // variable replacement to ensure that the settings are properly resolved.
@@ -118,6 +111,8 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]i
 		tmpS = make(map[string]interface{})
 		typ := PostProcessorFromString(pType)
 		switch typ {
+		case Compress:
+			tmpS, tmpVar, err = r.createCompress()
 		case Vagrant:
 			tmpS, tmpVar, err = r.createVagrant()
 		case VagrantCloud:
@@ -135,8 +130,57 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]i
 	return p, vars, nil
 }
 
-// createVagrant() creates a map of settings for Packer's Vagrant post-processor.
-// Any values that aren't supported by the Vagrant post-processor are ignored.
+// createCompress() creates a map of settings for Packer's Compress
+// post-processor.  Any values that aren't supported by the Compress
+// post-processor are ignored. For more information refer to
+// https://packer.io/docs/post-processors/compress.html
+//
+// Rerquied configuration options:
+//		output	// string
+func (r *rawTemplate) createCompress() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.PostProcessors[Compress.String()]
+	if !ok {
+		err = fmt.Errorf("no configuration found for %q", Compress.String())
+		jww.ERROR.Println(err)
+		return nil, nil, err
+	}
+	settings = make(map[string]interface{})
+	settings["type"] = Compress.String()
+	// For each value, extract its key value pair and then process. Only
+	// process the supported keys. Key validation isn't done here, leaving
+	// that for Packer.
+	var k, v string
+	for _, s := range r.PostProcessors[Compress.String()].Settings {
+		k, v = parseVar(s)
+		switch k {
+		case "output":
+			settings[k] = v
+		default:
+			jww.WARN.Printf("unsupported key %q: ", k)
+		}
+	}
+	return settings, vars, nil
+}
+
+// createVagrant() creates a map of settings for Packer's Vagrant
+// post-processor.  Any values that aren't supported by the Vagrant
+// post-processor are ignored. For more information refer to
+// https://packer.io/docs/post-processors/vagrant.html.
+//
+// Configuration options:
+//   compression_level		// integer
+//   include				// array of strings
+//   keep_input_artifact	// boolean
+//   output					// string
+//   vagrantfile_template	// string
+// Provider-Specific Overrides:
+//   override				// specifies overrides by provider name
+//   Available override provider names:
+//     aws
+//     digitalocean
+//     parallels
+//     virtualbox
+//     vmware
 func (r *rawTemplate) createVagrant() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.PostProcessors[Vagrant.String()]
 	if !ok {
@@ -153,8 +197,12 @@ func (r *rawTemplate) createVagrant() (settings map[string]interface{}, vars []s
 	for _, s := range r.PostProcessors[Vagrant.String()].Settings {
 		k, v = parseVar(s)
 		switch k {
-		case "compression_level", "keep_input_artifact", "output":
+		case "output", "vagrantfile_tempate":
 			settings[k] = v
+		case "keep_input_artifact":
+			settings[k], _ = strconv.ParseBool(v)
+		case "compression_level":
+			settings[k] = strconv.Atoi(v)
 		default:
 			jww.WARN.Printf("unsupported key %q: ", k)
 		}
@@ -169,6 +217,20 @@ func (r *rawTemplate) createVagrant() (settings map[string]interface{}, vars []s
 	return settings, vars, nil
 }
 
+// createVagrantCloud() creates a map of settings for Packer's Vagrant-Cloud
+// post-processor.  Any values that aren't supported by the Vagrant-Cloud
+// post-processor are ignored. For more information refer to
+// https://packer.io/docs/post-processors/vagrant-cloud.html
+//
+// Required configuration options:
+//   access_token			// string
+//   box_tag				// string
+//   version				// string
+// Optional configuration options
+//   no_release				// string
+//   vagrant_cloud_url		// string
+//   version_description	// string
+//   box_download_url		// string
 func (r *rawTemplate) createVagrantCloud() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.PostProcessors[VagrantCloud.String()]
 	if !ok {
