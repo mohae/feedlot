@@ -21,11 +21,11 @@ func TestTemplateSectionMergeArrays(t *testing.T) {
 		"type":            "shell-scripts",
 		"execute_command": "echo 'vagrant'|sudo -S sh '{{.Path}}'",
 		"override": map[string]interface{}{
-			"virtualbox": map[string]interface{}{
+			"virtualbox-iso": map[string]interface{}{
 				"scripts": []string{
 					"scripts/base.sh",
 					"scripts/vagrant.sh",
-					"scripts/virtualbox.sh",
+					"scripts/vmware.sh",
 					"scripts/cleanup.sh",
 				},
 			},
@@ -35,11 +35,11 @@ func TestTemplateSectionMergeArrays(t *testing.T) {
 	nw := map[string]interface{}{
 		"type": "shell-scripts",
 		"override": map[string]interface{}{
-			"vmware": map[string]interface{}{
+			"vmware-iso": map[string]interface{}{
 				"scripts": []string{
 					"scripts/base.sh",
 					"scripts/vagrant.sh",
-					"scripts/virtualbox.sh",
+					"scripts/vmware.sh",
 					"scripts/cleanup.sh",
 				},
 			},
@@ -50,11 +50,11 @@ func TestTemplateSectionMergeArrays(t *testing.T) {
 		"type":            "shell-scripts",
 		"execute_command": "echo 'vagrant'|sudo -S sh '{{.Path}}'",
 		"override": map[string]interface{}{
-			"vmware": map[string]interface{}{
+			"vmware-iso": map[string]interface{}{
 				"scripts": []string{
 					"scripts/base.sh",
 					"scripts/vagrant.sh",
-					"scripts/virtualbox.sh",
+					"scripts/vmware.sh",
 					"scripts/cleanup.sh",
 				},
 			},

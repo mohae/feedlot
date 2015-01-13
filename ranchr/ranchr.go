@@ -68,8 +68,10 @@ const (
 	Openstack
 	Parallels
 	QEMU
-	VirtualBox
-	VMWare
+	VirtualBoxISO
+	VirtualBoxOVF
+	VMWareISO
+	VMWareVMX
 )
 
 // Builder is a Packer supported builder.
@@ -87,8 +89,10 @@ var builders = [...]string{
 	"openstack",             // Openstack is the name of the Openstack
 	"parallels",             // Parallels is the name of the Parallels builder
 	"qemu",                  // QEMU is the name of the QEMU builder
-	"virtualbox",            // VirtualBox is the name of the VirtualBox builder
-	"vmware",                // VMWare is the name of the VMWare builder
+	"virtualbox-iso",        // VirtualBoxISO is the name of the VirtualBox ISO builder
+	"virtualbox-ovf",        // VirtualBoxOVF is the name of the VirtualBox OVF builder
+	"vmware-iso",            // VMWareISO is the name of the VMWare ISO builder
+	"vmware-vmx",            // VMWareVMX is the name of the VMWare VMX builder
 }
 
 func (b Builder) String() string { return builders[b] }
@@ -116,10 +120,14 @@ func BuilderFromString(s string) Builder {
 		return Parallels
 	case "qemu":
 		return QEMU
-	case "virtualbox":
-		return VirtualBox
-	case "vmware":
-		return VMWare
+	case "virtualbox-iso":
+		return VirtualBoxISO
+	case "virtualbox-ovf":
+		return VirtualBoxOVF
+	case "vmware-iso":
+		return VMWareISO
+	case "vmware-vmx":
+		return VMWareVMX
 	}
 	return UnsupportedBuilder
 }

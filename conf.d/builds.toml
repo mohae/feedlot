@@ -10,14 +10,14 @@
 		image = "server"
 		release = "12.04"
 		builder_types = [
-			"virtualbox"
+			"virtualbox-iso"
 		]
 		[build.1204-amd64-server.builders]
 			[build.1204-amd64-server.builders.common]
 			settings = [
 				"ssh_wait_timeout = 300m"
 			]
-			[build.1204-amd64-server.builders.virtualbox.arrays]
+			[build.1204-amd64-server.builders.virtualbox-iso.arrays]
 			vm_settings = [
 				"memory=4096"
 			]
@@ -29,7 +29,7 @@
 	        release = "14.04"
 	        image = "server"
 	        builder_types = [
-			"virtualbox"
+			"virtualbox-iso"
 		]
 		post_processor_types = [
 			"vagrant"
@@ -38,7 +38,7 @@
 			"shell-scripts"
 		]
 		[build.1404-dev.builders]
-				[build.1404-dev.builders.virtualbox.arrays]
+				[build.1404-dev.builders.virtualbox-iso.arrays]
 				vm_settings = [
 					"memory=4096"
 				]
@@ -50,7 +50,7 @@
 					"docker"
 				]
 				only = [
-					"virtualbox"
+					"virtualbox-iso"
 				]
 		[build.1404-dev.provisioners]
 			[build.1404-dev.provisioners.shell-scripts]
@@ -59,7 +59,7 @@
 					"docker"
 				]
 				only = [
-					"virtualbox"
+					"virtualbox-iso"
 				]
 				scripts = [ 
 					":scripts_dir/setup.sh",
@@ -73,16 +73,16 @@
 
         [build.centos6]
 		distro = "centos"
-		description = "Centos 6 w virtualbox only"
+		description = "Centos 6 w virtualbox-iso only"
 		builder_types = [
-			"virtualbox"
+			"virtualbox-iso"
 		]
 
         [build.centos6-salt]
 		distro = "centos"
 		description = "Centos 6 with salt provisioning"
 		builder_types = [
-			"virtualbox"
+			"virtualbox-iso"
 		]
 		provisioner_types = [
 			"salt"
@@ -97,7 +97,7 @@
 		distro = "centos"
 		description = "Centos6 with ansible provisioning"
 		builder_types = [
-			"virtualbox"
+			"virtualbox-iso"
 		]
 		provisioner_types = [
 			"ansible"
@@ -109,16 +109,16 @@
 				"playbook_file = local.yaml"
 			]
 			[build.centos6-ansible.provisioner.ansible.arrays]
-			extra_arguments = [
-				"arg1",
-				"arg2"
-			]
+				extra_arguments = [
+					"arg1",
+					"arg2"
+				]
 
 	[build.centos6-chef-solo]
 		distro = "centos"
 		description = "CentOS6 with chef-solo provisioning"
 		builder_types = [
-			"virtualbox"
+			"virtualbox-iso"
 		]
 		provisioner_types = [
 			"chef-solo"

@@ -13,8 +13,8 @@ var pp = &postProcessor{
 		},
 		Arrays: map[string]interface{}{
 			"override": map[string]interface{}{
-				"virtualbox": map[string]interface{}{
-					"output": "overridden-virtualbox.box",
+				"virtualbox-iso": map[string]interface{}{
+					"output": "overridden-virtualbox-iso.box",
 				},
 			},
 		},
@@ -35,7 +35,7 @@ var ppOrig = map[string]*postProcessor{
 					"include2",
 				},
 				"only": []string{
-					"virtualbox",
+					"virtualbox-iso",
 				},
 			},
 		},
@@ -62,10 +62,10 @@ var ppNew = map[string]*postProcessor{
 			},
 			Arrays: map[string]interface{}{
 				"override": map[string]interface{}{
-					"virtualbox": map[string]interface{}{
+					"virtualbox-iso": map[string]interface{}{
 						"output": "overridden-virtualbox.box",
 					},
-					"vmware": map[string]interface{}{
+					"vmware-iso": map[string]interface{}{
 						"output": "overridden-vmware.box",
 					},
 				},
@@ -88,13 +88,13 @@ var ppMerged = map[string]*postProcessor{
 					"include2",
 				},
 				"only": []string{
-					"virtualbox",
+					"virtualbox-iso",
 				},
 				"override": map[string]interface{}{
-					"virtualbox": map[string]interface{}{
+					"virtualbox-iso": map[string]interface{}{
 						"output": "overridden-virtualbox.box",
 					},
-					"vmware": map[string]interface{}{
+					"vmware-iso": map[string]interface{}{
 						"output": "overridden-vmware.box",
 					},
 				},
@@ -145,11 +145,11 @@ func TestRawTemplateCreatePostProcessors(t *testing.T) {
 				"compression_level":   "8",
 				"include":             []string{"include1", "include2"},
 				"keep_input_artifact": "true",
-				"only":                []string{"virtualbox"},
+				"only":                []string{"virtualbox-iso"},
 				"output":              "out/rancher-packer.box",
 				"override": map[string]interface{}{
-					"virtualbox": map[string]interface{}{"output": "overridden-virtualbox.box"},
-					"vmware":     map[string]interface{}{"output": "overridden-vmware.box"},
+					"virtualbox-iso": map[string]interface{}{"output": "overridden-virtualbox.box"},
+					"vmware-iso":     map[string]interface{}{"output": "overridden-vmware.box"},
 				},
 				"type": "vagrant",
 			},

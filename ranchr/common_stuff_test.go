@@ -73,8 +73,8 @@ var testDefaults = &defaults{
 	},
 	build: build{
 		BuilderTypes: []string{
-			"virtualbox",
-			"vmware",
+			"virtualbox-iso",
+			"vmware-iso",
 		},
 		Builders: map[string]*builder{
 			"common": {
@@ -95,7 +95,7 @@ var testDefaults = &defaults{
 					},
 				},
 			},
-			"virtualbox": {
+			"virtualbox-iso": {
 				templateSection{
 					Settings: []string{
 						"virtualbox_version_file = .vbox_version",
@@ -108,7 +108,7 @@ var testDefaults = &defaults{
 					},
 				},
 			},
-			"vmware": {
+			"vmware-iso": {
 				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
@@ -134,7 +134,7 @@ var testDefaults = &defaults{
 					},
 					Arrays: map[string]interface{}{
 						"only": []string{
-							"virtualbox",
+							"virtualbox-iso",
 						},
 					},
 				},
@@ -164,7 +164,7 @@ var testDefaults = &defaults{
 							"docker",
 						},
 						"only": []string{
-							"virtualbox",
+							"virtualbox-iso",
 						},
 						"scripts": []string{
 							":scripts_dir/setup_test.sh",
@@ -210,8 +210,8 @@ var testSupportedUbuntu = &distro{
 	},
 	build: build{
 		BuilderTypes: []string{
-			"virtualbox",
-			"vmware",
+			"virtualbox-iso",
+			"vmware-iso",
 		},
 		Builders: map[string]*builder{
 			"common": {
@@ -222,14 +222,14 @@ var testSupportedUbuntu = &distro{
 					},
 				},
 			},
-			"virtualbox": {
+			"virtualbox-iso": {
 				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{"memory=2048"},
 					},
 				},
 			},
-			"vmware": {
+			"vmware-iso": {
 				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{"memsize=2048"},
@@ -334,7 +334,7 @@ var testDistroDefaultUbuntu = &rawTemplate{
 	varVals: map[string]string{},
 	vars:    map[string]string{},
 	build: build{
-		BuilderTypes: []string{"virtualbox", "vmware"},
+		BuilderTypes: []string{"virtualbox-iso", "vmware-iso"},
 		Builders: map[string]*builder{
 			"common": {
 				templateSection{
@@ -355,7 +355,7 @@ var testDistroDefaultUbuntu = &rawTemplate{
 					Arrays: map[string]interface{}{},
 				},
 			},
-			"virtualbox": {
+			"virtualbox-iso": {
 				templateSection{
 					Settings: []string{
 						"virtualbox_version_file = .vbox_version",
@@ -368,7 +368,7 @@ var testDistroDefaultUbuntu = &rawTemplate{
 					},
 				},
 			},
-			"vmware": {
+			"vmware-iso": {
 				templateSection{
 					Settings: []string{},
 					Arrays: map[string]interface{}{
@@ -425,7 +425,7 @@ var testDistroDefaultUbuntu = &rawTemplate{
 							"docker",
 						},
 						"only": []string{
-							"virtualbox",
+							"virtualbox-iso",
 						},
 						"scripts": []string{
 							":scripts_dir/setup_test.sh",
@@ -468,7 +468,7 @@ var testDistroDefaultCentOS = &rawTemplate{
 	varVals: map[string]string{},
 	vars:    map[string]string{},
 	build: build{
-		BuilderTypes: []string{"virtualbox", "vmware"},
+		BuilderTypes: []string{"virtualbox-iso", "vmware-iso"},
 		Builders: map[string]*builder{
 			"common": {
 				templateSection{
@@ -489,7 +489,7 @@ var testDistroDefaultCentOS = &rawTemplate{
 					Arrays: map[string]interface{}{},
 				},
 			},
-			"virtualbox": {
+			"virtualbox-iso": {
 				templateSection{
 					Settings: []string{
 						"virtualbox_version_file = .vbox_version",
@@ -502,7 +502,7 @@ var testDistroDefaultCentOS = &rawTemplate{
 					},
 				},
 			},
-			"vmware": {
+			"vmware-iso": {
 				templateSection{
 					Settings: []string{},
 					Arrays: map[string]interface{}{
@@ -533,7 +533,7 @@ var testDistroDefaultCentOS = &rawTemplate{
 							"include2",
 						},
 						"only": []string{
-							"virtualbox",
+							"virtualbox-iso",
 						},
 					},
 				},
@@ -564,7 +564,7 @@ var testDistroDefaultCentOS = &rawTemplate{
 							"docker",
 						},
 						"only": []string{
-							"virtualbox",
+							"virtualbox-iso",
 						},
 						"scripts": []string{
 							":scripts_dir/setup_test.sh",
@@ -589,7 +589,7 @@ var testBuildTest1 = &rawTemplate{
 	Release: "1204",
 	build: build{
 		BuilderTypes: []string{
-			"virtualbox",
+			"virtualbox-iso",
 		},
 		Builders: map[string]*builder{
 			"common": {
@@ -599,7 +599,7 @@ var testBuildTest1 = &rawTemplate{
 					},
 				},
 			},
-			"virtualbox": {
+			"virtualbox-iso": {
 				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
@@ -624,7 +624,7 @@ var testBuildTest1 = &rawTemplate{
 							"docker",
 						},
 						"only": []string{
-							"virtualbox",
+							"virtualbox-iso",
 						},
 					},
 				},
@@ -659,7 +659,7 @@ var testBuildTest1 = &rawTemplate{
 							"docker",
 						},
 						"only": []string{
-							"virtualbox",
+							"virtualbox-iso",
 						},
 					},
 				},
@@ -678,8 +678,8 @@ var testBuildTest2 = &rawTemplate{
 	Release: "1204",
 	build: build{
 		BuilderTypes: []string{
-			"virtualbox",
-			"vmware",
+			"virtualbox-iso",
+			"vmware-iso",
 		},
 		Builders: map[string]*builder{
 			"common": {
@@ -689,7 +689,7 @@ var testBuildTest2 = &rawTemplate{
 					},
 				},
 			},
-			"virtualbox": {
+			"virtualbox-iso": {
 				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
@@ -709,7 +709,7 @@ var testBuildCentOS6Salt = &rawTemplate{
 	Distro: "centos",
 	build: build{
 		BuilderTypes: []string{
-			"virtualbox",
+			"virtualbox-iso",
 		},
 		Provisioners: map[string]*provisioner{
 			"salt-masterless": {
@@ -750,8 +750,8 @@ var testMergedBuildTest1 = &rawTemplate{
 	Release: "12.04",
 	build: build{
 		BuilderTypes: []string{
-			"virtualbox",
-			"vmware",
+			"virtualbox-iso",
+			"vmware-iso",
 		},
 		Builders: map[string]*builder{
 			"common": {
@@ -771,7 +771,7 @@ var testMergedBuildTest1 = &rawTemplate{
 					Arrays: map[string]interface{}{},
 				},
 			},
-			"virtualbox": {
+			"virtualbox-iso": {
 				templateSection{
 					Settings: []string{""},
 					Arrays: map[string]interface{}{
@@ -815,7 +815,7 @@ var testMergedBuildTest1 = &rawTemplate{
 							"docker",
 						},
 						"only": []string{
-							"virtualbox",
+							"virtualbox-iso",
 						},
 					},
 				},
@@ -849,8 +849,8 @@ var testMergedBuildTest2 = &rawTemplate{
 	Release: "12.04",
 	build: build{
 		BuilderTypes: []string{
-			"virtualbox",
-			"vmware",
+			"virtualbox-iso",
+			"vmware-iso",
 		},
 		Builders: map[string]*builder{
 			"common": {
@@ -870,7 +870,7 @@ var testMergedBuildTest2 = &rawTemplate{
 					Arrays: map[string]interface{}{},
 				},
 			},
-			"virtualbox": {
+			"virtualbox-iso": {
 				templateSection{
 					Settings: []string{},
 					Arrays: map[string]interface{}{
@@ -881,7 +881,7 @@ var testMergedBuildTest2 = &rawTemplate{
 					},
 				},
 			},
-			"vmware": {
+			"vmware-iso": {
 				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
@@ -956,7 +956,7 @@ var testMergedBuildCentos6Salt = &rawTemplate{
 	Release: "6",
 	build: build{
 		BuilderTypes: []string{
-			"virtualbox",
+			"virtualbox-iso",
 		},
 		Builders: map[string]*builder{
 			"common": {
@@ -976,7 +976,7 @@ var testMergedBuildCentos6Salt = &rawTemplate{
 					Arrays: map[string]interface{}{},
 				},
 			},
-			"virtualbox": {
+			"virtualbox-iso": {
 				templateSection{
 					Settings: []string{},
 					Arrays: map[string]interface{}{
@@ -987,7 +987,7 @@ var testMergedBuildCentos6Salt = &rawTemplate{
 					},
 				},
 			},
-			"vmware": {
+			"vmware-iso": {
 				templateSection{
 					Settings: []string{},
 					Arrays: map[string]interface{}{

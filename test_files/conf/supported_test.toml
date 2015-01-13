@@ -31,8 +31,8 @@
        		"arch = amd64",
        	]
 	builder_types = [
-		"virtualbox",
-		"vmware"
+		"virtualbox-iso",
+		"vmware-iso"
 	]
 	post_processor_types = [
 		"vagrant",
@@ -43,41 +43,41 @@
 	]
 	[distro.ubuntu.builders]			
 		[distro.ubuntu.builders.common]
-		settings = [
-		    	"boot_command = ../test_files/src/ubuntu/commands/boot_test.command",
-	    		"shutdown_command = :command_src_dir/shutdown_test.command"
-		]
-		[distro.ubuntu.builders.virtualbox]
-			[distro.ubuntu.builders.virtualbox.arrays]
-			vm_settings = [
-				"memory=2048"
+			settings = [
+			    	"boot_command = ../test_files/src/ubuntu/commands/boot_test.command",
+		    		"shutdown_command = :command_src_dir/shutdown_test.command"
 			]
-		[distro.ubuntu.builders.vmware]
-			[distro.ubuntu.builders.vmware.arrays]
-			vm_settings = [
-				"memsize=2048"
-			]
+		[distro.ubuntu.builders.virtualbox-iso]
+			[distro.ubuntu.builders.virtualbox-iso.arrays]
+				vm_settings = [
+					"memory=2048"
+				]
+		[distro.ubuntu.builders.vmware-iso]
+			[distro.ubuntu.builders.vmware-iso.arrays]
+				vm_settings = [
+					"memsize=2048"
+				]
 	[distro.ubuntu.post_processors]
 		[distro.ubuntu.post_processors.vagrant]
-		settings = [
-			"output = out/:build_name-packer.box"
-		]
-		only = [
-			"virtualbox"
-		]
+			settings = [
+				"output = out/:build_name-packer.box"
+			]
+			only = [
+				"virtualbox-iso"
+			]
 	[distro.ubuntu.provisioners]
 		[distro.ubuntu.provisioners.shell-scripts]
-		settings = [
-			"execute_command = :command_src_dir/execute_test.command"
-		]
-	 		[distro.ubuntu.provisioners.shell-scripts.arrays]
-			scripts = [ 
-				":scripts_dir/setup_test.sh",
-				":scripts_dir/base_test.sh",
-				":scripts_dir/vagrant_test.sh",
-				":scripts_dir/sudoers_test.sh",
-				":scripts_dir/cleanup_test.sh"
+			settings = [
+				"execute_command = :command_src_dir/execute_test.command"
 			]
+	 		[distro.ubuntu.provisioners.shell-scripts.arrays]
+				scripts = [ 
+					":scripts_dir/setup_test.sh",
+					":scripts_dir/base_test.sh",
+					":scripts_dir/vagrant_test.sh",
+					":scripts_dir/sudoers_test.sh",
+					":scripts_dir/cleanup_test.sh"
+				]
 		[distro.ubuntu.provisioners.file-uploads]
 			settings = [
 				"source = source/dir",

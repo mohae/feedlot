@@ -13,7 +13,7 @@ var updatedBuilders = map[string]*builder{
 			},
 		},
 	},
-	"virtualbox": {
+	"virtualbox-iso": {
 		templateSection{
 			Settings: []string{},
 			Arrays: map[string]interface{}{
@@ -36,7 +36,7 @@ var comparePostProcessors = map[string]*postProcessor{
 					"docker",
 				},
 				"only": []string{
-					"virtualbox",
+					"virtualbox-iso",
 				},
 			},
 		},
@@ -70,7 +70,7 @@ var compareProvisioners = map[string]*provisioner{
 					"docker",
 				},
 				"only": []string{
-					"virtualbox",
+					"virtualbox-iso",
 				},
 			},
 		},
@@ -126,12 +126,12 @@ func TestCreateBuilders(t *testing.T) {
 				"disk_size":               20000,
 				"iso_url":                 "",
 				"iso_checksum":            "",
-				"type":                    "virtualbox-iso",
+				"type":                    "virtualbox-iso-iso",
 				"http_directory":          "http",
 				"iso_checksum_type":       "sha256",
 				"shutdown_command":        "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
 				"ssh_port":                22,
-				"virtualbox_version_file": ".vbox_version",
+				"virtualbox-iso_version_file": ".vbox_version",
 				"vboxmanage": []interface{}{
 					[]string{"modifyvm", "{{.Name}}", "--cpus 1"},
 					[]string{"modifyvm", "{{.Name}}", "--memory 1024"},
@@ -177,7 +177,7 @@ func TestCreateBuilders(t *testing.T) {
 					"cpus":   1,
 					"memory": 1024,
 				},
-				"type":           "vmware-iso",
+				"type":           "vmware-iso-iso",
 				"http_directory": "http",
 				"headless":       true,
 				"ssh_username":   "vagrant",
@@ -589,7 +589,7 @@ func TestBuildInf(t *testing.T) {
 }
 
 func TestRawTemplateISOInfo(t *testing.T) {
-	err := testDistroDefaultUbuntu.ISOInfo(VirtualBox, []string{"iso_checksum_type = sha256", "http_directory=http"})
+	err := testDistroDefaultUbuntu.ISOInfo(VirtualBoxISO, []string{"iso_checksum_type = sha256", "http_directory=http"})
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
@@ -604,7 +604,7 @@ func TestRawTemplateISOInfo(t *testing.T) {
 		}
 	}
 
-	err = testDistroDefaultCentOS.ISOInfo(VirtualBox, []string{"iso_checksum_type = sha256", "http_directory=http"})
+	err = testDistroDefaultCentOS.ISOInfo(VirtualBoxOVF, []string{"iso_checksum_type = sha256", "http_directory=http"})
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {

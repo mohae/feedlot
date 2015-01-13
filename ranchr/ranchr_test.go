@@ -837,8 +837,8 @@ func TestCopyFile(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected no error, got %q", err.Error())
 	}
-	if wB != 2501 {
-		t.Errorf("Expected 2531 bytes written, %d were written", wB)
+	if wB != 2571 {
+		t.Errorf("Expected 2571 bytes written, %d were written", wB)
 	}
 }
 

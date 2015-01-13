@@ -11,7 +11,7 @@ scripts_dir = "scripts"
 scripts_src_dir = ":src_dir/:scripts_dir"
 min_packer_version = "0.4.0"
 builder_types = [
-    "virtualbox",
+    "virtualbox-iso",
 ]
 post_processor_types = [
 	"vagrant"
@@ -35,13 +35,13 @@ provisioner_types = [
 		"ssh_wait_timeout = 240m",
 		"vm_name = :build_name",
 	]
-	[builders.virtualbox]
+	[builders.virtualbox-iso]
 	settings = [
 		"guest_os_type = ",
 		"guest_additions_pat = VBoxGuestAdditions_{{ .Version }}.iso",
 		"virtualbox_version_file = .vbox_version"
 	]
-		[builders.virtualbox.arrays]
+		[builders.virtualbox-iso.arrays]
 		vm_settings = [
 			"cpus=1",
 			"memory=1024"	

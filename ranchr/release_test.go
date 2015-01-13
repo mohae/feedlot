@@ -163,7 +163,7 @@ fbe7f159337551cc5ce9f0ff72acefef567f3dcd30750425287588c554978501 *ubuntu-12.04.4
 
 func TestUbuntuGetOSType(t *testing.T) {
 	u := ubuntu{release{Arch: "amd64"}}
-	buildType := "vmware"
+	buildType := "vmware-iso"
 	res, err := u.getOSType(buildType)
 	if err != nil {
 		t.Errorf("Expected no error, got %q", err.Error())
@@ -173,7 +173,7 @@ func TestUbuntuGetOSType(t *testing.T) {
 		}
 	}
 
-	buildType = "virtualbox"
+	buildType = "virtualbox-iso"
 	res, err = u.getOSType(buildType)
 	if err != nil {
 		t.Errorf("Expected no error, got %q", err.Error())
@@ -184,7 +184,7 @@ func TestUbuntuGetOSType(t *testing.T) {
 	}
 
 	u = ubuntu{release{Arch: "i386"}}
-	buildType = "vmware"
+	buildType = "vmware-iso"
 	res, err = u.getOSType(buildType)
 	if err != nil {
 		t.Errorf("Expected no error, got %q", err.Error())
@@ -194,7 +194,7 @@ func TestUbuntuGetOSType(t *testing.T) {
 		}
 	}
 
-	buildType = "virtualbox"
+	buildType = "virtualbox-iso"
 	res, err = u.getOSType(buildType)
 	if err != nil {
 		t.Errorf("Expected no error, got %q", err.Error())
@@ -331,7 +331,7 @@ func TestCentOSSetName(t *testing.T) {
 
 func TestCentOSGetOSType(t *testing.T) {
 	c := centOS{release{Arch: "x86_64"}}
-	buildType := "vmware"
+	buildType := "vmware-iso"
 	res, err := c.getOSType(buildType)
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
@@ -341,7 +341,7 @@ func TestCentOSGetOSType(t *testing.T) {
 		}
 	}
 
-	buildType = "virtualbox"
+	buildType = "virtualbox-iso"
 	res, err = c.getOSType(buildType)
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
@@ -352,7 +352,7 @@ func TestCentOSGetOSType(t *testing.T) {
 	}
 
 	c = centOS{release{Arch: "x386"}}
-	buildType = "vmware"
+	buildType = "vmware-iso"
 	res, err = c.getOSType(buildType)
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
@@ -362,7 +362,7 @@ func TestCentOSGetOSType(t *testing.T) {
 		}
 	}
 
-	buildType = "virtualbox"
+	buildType = "virtualbox-iso"
 	res, err = c.getOSType(buildType)
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
-	"strings"
 
 	"github.com/mohae/deepcopy"
 	jww "github.com/spf13/jwalterweatherman"
@@ -43,7 +42,6 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 		tmpVar = make([]string, 50)
 		tmpS = make(map[string]interface{})
 		typ := BuilderFromString(bType)
-		jww.TRACE.Println(typ)
 		switch typ {
 		//		case AmazonEBS, AmazonInstance, AmazonChroot:
 		// not implemented
@@ -61,13 +59,13 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 
 			//		case QEMU:
 
-		case VMWareISO:	
+		case VMWareISO:
 			tmpS, tmpVar, err = r.createVMWareISO()
 		case VMWareVMX:
 			tmpS, tmpVar, err = r.createVMWareVMX()
-		case VirtualBoxISO:		
-			tmpS, tmpVar, err = r.createVirtualBoxISO()		
-		case VirtualBoxOVF:		
+		case VirtualBoxISO:
+			tmpS, tmpVar, err = r.createVirtualBoxISO()
+		case VirtualBoxOVF:
 			tmpS, tmpVar, err = r.createVirtualBoxOVF()
 		default:
 			err = fmt.Errorf("Builder, %q, is not supported by Rancher", bType)
@@ -136,11 +134,7 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 				settings[k] = r.osType
 			}
 		case "headless":
-			if strings.ToLower(v) == "true" {
-				settings[k] = true
-			} else {
-				settings[k] = false
-			}
+			settings[k], _ = strconv.ParseBool(v)
 		case "iso_checksum_type":
 			// First set the ISO info for the desired release, if it's not already set
 			if r.osType == "" {
@@ -168,13 +162,13 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 		// Otherwise, throw an error
 		case "disk_size", "ssh_host_port_min", "ssh_host_port_max", "ssh_port":
 			// only add if its an int
-			_, err := strconv.Atoi(v)
+			i, err := strconv.Atoi(v)
 			if err != nil {
 				err = fmt.Errorf("VirtualBoxISO: An error occurred while trying to set %q to %q: %s ", k, v, err)
 				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
-			settings[k] = v
+			settings[k] = i
 		case "shutdown_command":
 			//If it ends in .command, replace it with the command from the filepath
 			var commands []string
@@ -227,98 +221,93 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, va
 	_, ok := r.Provisioners[VirtualBoxOVF.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration for %q found", VirtualBoxOVF.String())
- 	}		 	}
- 	settings = make(map[string]interface{})
-	// Each create function is responsible for setting its own type.
-	settings["type"] = VirtualBoxOVF.String()
-	// Merge the settings between common and this builders.
-	mergedSlice := mergeSettingsSlices(r.Builders[CommonBuilder.String()].Settings, r.Builders[VirtualBoxOVF.String()].Settings)
-	var k, v string		
-	// Go through each element in the slice, only take the ones that matter		
-	// to this builder.		
-	for _, s := range mergedSlice {		
-		// var tmp interface{}		
-		k, v = parseVar(s)		
-		v = r.replaceVariables(v)		
-		switch k {		
-		case "source_path", "ssh_username", "format", "guest_additions_mode",		
-			"guest_additions_path", "guest_additions_sha256", "guest_additions_url",		
-			"import_opts", "output_directory", "shutdown_timeout", "ssh_key_path",		
-			"ssh_password", "ssh_wait_timeout", "virtualbox_version_file", "vm_name":		
-			settings[k] = v		
-		case "headless":		
-			if strings.ToLower(v) == "true" {		
-				settings[k] = true		
-			} else {		
-				settings[k] = false		
-			}		
-		// For the fields of int value, only set if it converts to a valid int.		
-		// Otherwise, throw an error		
-		case "ssh_host_port_min", "ssh_host_port_max", "ssh_port":		
-			// only add if its an int		
-			_, err := strconv.Atoi(v)		
-			if err != nil {		
-				err = fmt.Errorf("VirtualBoxOVF error while trying to set %q to %q: %s", k, v, err)		
-				jww.ERROR.Println(err)		
-				return nil, nil, err		
-			}		
-			settings[k] = v		
-		case "shutdown_command":		
-			//If it ends in .command, replace it with the command from the filepath		
-			var commands []string		
-			commands, err = commandsFromFile(v)		
-			if err != nil {		
-				jww.ERROR.Println(err)		
-				return nil, nil, err		
-			}		
-			// Assume it's the first element.		
-			settings[k] = commands[0]		
-		}		
-	}		
-	// Generate Packer Variables		
-	// Generate builder specific section		
-	l, err := getSliceLenFromIface(r.Builders[VirtualBoxOVF.String()].Arrays[VMSettings])		
-	if err != nil {		
-		jww.ERROR.Println(err)		
-		return nil, nil, err		
-	}		
-	if l > 0 {		
-		tmpVB := make([][]string, l)		
-		tmp := reflect.ValueOf(r.Builders[VirtualBoxOVF.String()].Arrays[VMSettings])		
-		var vmSettings interface{}		
-		switch tmp.Type() {		
-		case typeOfSliceInterfaces:		
-			vmSettings = deepcopy.Iface(r.Builders[VirtualBoxOVF.String()].Arrays[VMSettings]).([]interface{})		
-		case typeOfSliceStrings:		
-			vmSettings = deepcopy.Iface(r.Builders[VirtualBoxOVF.String()].Arrays[VMSettings]).([]string)		
-		}		
-		vms := deepcopy.InterfaceToSliceStrings(vmSettings)		
-		for i, v := range vms {		
-			vo := reflect.ValueOf(v)		
-			k, val := parseVar(vo.Interface().(string))		
-			val = r.replaceVariables(val)		
-			tmpVB[i] = make([]string, 4)		
-			tmpVB[i][0] = "modifyvm"		
-			tmpVB[i][1] = "{{.Name}}"		
-			tmpVB[i][2] = "--" + k		
-			tmpVB[i][3] = val		
-		}		
-		settings["vboxmanage"] = tmpVB		
-	}		
-	return settings, nil, nil		
-}
-
-// createVMWare generates the settings for a vmware-iso builder.
-func (r *rawTemplate) createVMWare() (settings map[string]interface{}, vars []string, err error) {
-	_, ok := r.Provisioners[VMWare.String()]
-	if !ok {
-		err = fmt.Errorf("no configuration for %q found", VMWare.String())
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
-	settings["type"] = VMWare.String()
+	settings["type"] = VirtualBoxOVF.String()
 	// Merge the settings between common and this builders.
-	mergedSlice := mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[VMWare.String()].Settings)
+	mergedSlice := mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[VirtualBoxOVF.String()].Settings)
+	// Go through each element in the slice, only take the ones that matter
+	// to this builder.
+	for _, s := range mergedSlice {
+		// var tmp interface{}
+		k, v := parseVar(s)
+		v = r.replaceVariables(v)
+		switch k {
+		case "source_path", "ssh_username", "format", "guest_additions_mode",
+			"guest_additions_path", "guest_additions_sha256", "guest_additions_url",
+			"import_opts", "output_directory", "shutdown_timeout", "ssh_key_path",
+			"ssh_password", "ssh_wait_timeout", "virtualbox_version_file", "vm_name":
+			settings[k] = v
+		case "headless":
+			settings[k], _ = strconv.ParseBool(v)
+		// For the fields of int value, only set if it converts to a valid int.
+		// Otherwise, throw an error
+		case "ssh_host_port_min", "ssh_host_port_max", "ssh_port":
+			// only add if its an int
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				err = fmt.Errorf("VirtualBoxOVF error while trying to set %q to %q: %s", k, v, err)
+				jww.ERROR.Println(err)
+				return nil, nil, err
+			}
+			settings[k] = i
+		case "shutdown_command":
+			//If it ends in .command, replace it with the command from the filepath
+			var commands []string
+			commands, err = commandsFromFile(v)
+			if err != nil {
+				jww.ERROR.Println(err)
+				return nil, nil, err
+			}
+			// Assume it's the first element.
+			settings[k] = commands[0]
+		}
+	}
+	// Generate Packer Variables
+	// Generate builder specific section
+	l, err := getSliceLenFromIface(r.Builders[VirtualBoxOVF.String()].Arrays[VMSettings])
+	if err != nil {
+		jww.ERROR.Println(err)
+		return nil, nil, err
+	}
+	if l > 0 {
+		tmpVB := make([][]string, l)
+		tmp := reflect.ValueOf(r.Builders[VirtualBoxOVF.String()].Arrays[VMSettings])
+		var vmSettings interface{}
+		switch tmp.Type() {
+		case typeOfSliceInterfaces:
+			vmSettings = deepcopy.Iface(r.Builders[VirtualBoxOVF.String()].Arrays[VMSettings]).([]interface{})
+		case typeOfSliceStrings:
+			vmSettings = deepcopy.Iface(r.Builders[VirtualBoxOVF.String()].Arrays[VMSettings]).([]string)
+		}
+		vms := deepcopy.InterfaceToSliceStrings(vmSettings)
+		for i, v := range vms {
+			vo := reflect.ValueOf(v)
+			k, val := parseVar(vo.Interface().(string))
+			val = r.replaceVariables(val)
+			tmpVB[i] = make([]string, 4)
+			tmpVB[i][0] = "modifyvm"
+			tmpVB[i][1] = "{{.Name}}"
+			tmpVB[i][2] = "--" + k
+			tmpVB[i][3] = val
+		}
+		settings["vboxmanage"] = tmpVB
+	}
+	return settings, nil, nil
+}
+
+// createVMWareISO generates the settings for a vmware-iso builder.
+func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[VMWareISO.String()]
+	if !ok {
+		err = fmt.Errorf("no configuration for %q found", VMWareISO.String())
+	}
+	settings = make(map[string]interface{})
+	// Each create function is responsible for setting its own type.
+	settings["type"] = VMWareISO.String()
+	// Merge the settings between common and this builders.
+	mergedSlice := mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[VMWareISO.String()].Settings)
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
 	for _, s := range mergedSlice {
@@ -349,15 +338,11 @@ func (r *rawTemplate) createVMWare() (settings map[string]interface{}, vars []st
 				settings[k] = r.osType
 			}
 		case "headless", "skip_compaction", "ssh_skip_request_pty":
-			if strings.ToLower(v) == "true" {
-				settings[k] = true
-			} else {
-				settings[k] = false
-			}
+			settings[k], _ = strconv.ParseBool(v)
 		case "iso_checksum_type":
 			// First set the ISO info for the desired release, if it's not already set
 			if r.osType == "" {
-				err = r.ISOInfo(VMWare, mergedSlice)
+				err = r.ISOInfo(VMWareISO, mergedSlice)
 				if err != nil {
 					jww.ERROR.Println(err)
 					return nil, nil, err
@@ -404,7 +389,70 @@ func (r *rawTemplate) createVMWare() (settings map[string]interface{}, vars []st
 
 	// Generate builder specific section
 	tmpVB := map[string]string{}
-	vmSettings := deepcopy.InterfaceToSliceStrings(r.Builders[VirtualBox.String()].Arrays[VMSettings])
+	vmSettings := deepcopy.InterfaceToSliceStrings(r.Builders[VMWareISO.String()].Arrays[VMSettings])
+	for _, v := range vmSettings {
+		k, val := parseVar(v)
+		val = r.replaceVariables(val)
+		tmpVB[k] = val
+	}
+	settings["vmx_data"] = tmpVB
+	return settings, nil, nil
+}
+
+// createVMWareVMX generates the settings for a vmware-vmx builder.
+func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[VMWareVMX.String()]
+	if !ok {
+		err = fmt.Errorf("no configuration for %q found", VMWareVMX.String())
+	}
+	settings = make(map[string]interface{})
+	// Each create function is responsible for setting its own type.
+	settings["type"] = VMWareVMX.String()
+	// Merge the settings between common and this builders.
+	mergedSlice := mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[VMWareVMX.String()].Settings)
+	// Go through each element in the slice, only take the ones that matter
+	// to this builder.
+	for _, s := range mergedSlice {
+		// var tmp interface{}
+		k, v := parseVar(s)
+		v = r.replaceVariables(v)
+		switch k {
+		case "source_path", "ssh_username", "fusion_app_path", "output_directory", "shutdown_timeout", "ssh_key_path", "ssh_password", "ssh_wait_timeout", "vm_name":
+			settings[k] = v
+		case "guest_os_type":
+			if v == "" {
+				settings[k] = v
+			} else {
+				settings[k] = r.osType
+			}
+		case "headless", "skip_compaction", "ssh_skip_request_pty":
+			settings[k], _ = strconv.ParseBool(v)
+		// For the fields of int value, only set if it converts to a valid int.
+		// Otherwise, throw an error
+		case "ssh_port":
+			// only add if its an int
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				err = fmt.Errorf("VMWareVMX error while trying to set %q to %q: %s", k, v, err)
+				jww.ERROR.Println(err)
+				return nil, nil, err
+			}
+			settings[k] = i
+		case "shutdown_command":
+			//If it ends in .command, replace it with the command from the filepath
+			var commands []string
+			commands, err = commandsFromFile(v)
+			if err != nil {
+				jww.ERROR.Println(err)
+				return nil, nil, err
+			}
+			// Assume it's the first element.
+			settings[k] = commands[0]
+		}
+	}
+	// Generate builder specific section
+	tmpVB := map[string]string{}
+	vmSettings := deepcopy.InterfaceToSliceStrings(r.Builders[VMWareVMX.String()].Arrays[VMSettings])
 	for _, v := range vmSettings {
 		k, val := parseVar(v)
 		val = r.replaceVariables(val)
@@ -434,10 +482,10 @@ func (r *rawTemplate) createDigitalOcean() (settings map[string]interface{}, var
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
-		case "api_key", "api_token", "api_url", "client_id", "droplet_name", "image",  "region", "size", "snapshot_name", "ssh_username", "state_timeout":
+		case "api_key", "api_token", "api_url", "client_id", "droplet_name", "image", "region", "size", "snapshot_name", "ssh_username", "state_timeout":
 			settings[k] = v
 		case "private_networking":
-			settings[k] _ := strconv.ParseBool(v) // ignore ok because !ok will result in b being false, i.e. all non-true values are evaluated to false
+			settings[k], _ = strconv.ParseBool(v) // ignore ok because !ok will result in b being false, i.e. all non-true values are evaluated to false
 		case "ssh_port", "ssh_timeout":
 			i, err := strconv.Atoi(v)
 			if err != nil {
@@ -464,6 +512,7 @@ func (r *rawTemplate) createDocker() (settings map[string]interface{}, vars []st
 	mergedSlice := mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[Docker.String()].Settings)
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
+
 	for _, s := range mergedSlice {
 		// var tmp interface{}
 		k, v := parseVar(s)
@@ -472,7 +521,7 @@ func (r *rawTemplate) createDocker() (settings map[string]interface{}, vars []st
 		case "export_path", "image", "login_email", "login_username", "login_password", "login_server":
 			settings[k] = v
 		case "commit", "login", "pull":
-			settings[k] _ := strconv.ParseBool(v) // ignore ok because !ok will result in b being false, i.e. all non-true values are evaluated to false
+			settings[k], _ = strconv.ParseBool(v) // ignore ok because !ok will result in b being false, i.e. all non-true values are evaluated to false
 		case "ssh_port", "ssh_timeout":
 			i, err := strconv.Atoi(v)
 			if err != nil {
@@ -492,8 +541,8 @@ func (r *rawTemplate) createDocker() (settings map[string]interface{}, vars []st
 			// Assume it's the first element.
 			settings[k] = commands[0]
 		}
-		}
 	}
+
 	// Process the Arrays.
 	for name, val := range r.Builders[Docker.String()].Arrays {
 		array := deepcopy.InterfaceToSliceStrings(val)

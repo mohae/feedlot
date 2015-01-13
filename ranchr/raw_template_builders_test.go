@@ -30,8 +30,8 @@ var testBuilderUbuntu = &rawTemplate{
 	Release: "12.04",
 	build: build{
 		BuilderTypes: []string{
-			"virtualbox",
-			"vmware",
+			"virtualbox-iso",
+			"vmware-iso",
 		},
 		Builders: map[string]*builder{
 			"common": {
@@ -50,7 +50,7 @@ var testBuilderUbuntu = &rawTemplate{
 					},
 				},
 			},
-			"virtualbox": {
+			"virtualbox-iso": {
 				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
@@ -60,7 +60,7 @@ var testBuilderUbuntu = &rawTemplate{
 					},
 				},
 			},
-			"vmware": {
+			"vmware-iso": {
 				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
@@ -134,8 +134,10 @@ var testBuilderCentOS = &rawTemplate{
 	Release: "6",
 	build: build{
 		BuilderTypes: []string{
-			"virtualbox",
-			"vmware",
+			"virtualbox-iso",
+			"virtualbox-ovf",
+			"vmware-iso",
+			"vmware-vmx",
 		},
 		Builders: map[string]*builder{
 			"common": {
@@ -154,7 +156,7 @@ var testBuilderCentOS = &rawTemplate{
 					},
 				},
 			},
-			"virtualbox": {
+			"virtualbox-iso": {
 				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
@@ -164,7 +166,28 @@ var testBuilderCentOS = &rawTemplate{
 					},
 				},
 			},
-			"vmware": {
+			"virtualbox-ovf": {
+				templateSection{
+					Arrays: map[string]interface{}{
+						"vm_settings": []string{
+							"cpus=1",
+							"memory=4096",
+						},
+					},
+				},
+			},
+			"vmware-iso": {
+				templateSection{
+					Arrays: map[string]interface{}{
+						"vm_settings": []string{
+							"cpuid.coresPerSocket=1",
+							"memsize=1024",
+							"numvcpus=1",
+						},
+					},
+				},
+			},
+			"vmware-vmx": {
 				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
@@ -239,7 +262,7 @@ var builderOrig = map[string]*builder{
 			},
 		},
 	},
-	"virtualbox": {
+	"virtualbox-iso": {
 		templateSection{
 			Arrays: map[string]interface{}{
 				"vm_settings": []string{
@@ -249,7 +272,7 @@ var builderOrig = map[string]*builder{
 			},
 		},
 	},
-	"vmware": {
+	"vmware-iso": {
 		templateSection{
 			Arrays: map[string]interface{}{
 				"vm_settings": []string{
@@ -279,7 +302,7 @@ var builderNew = map[string]*builder{
 			},
 		},
 	},
-	"virtualbox": {
+	"virtualbox-iso": {
 		templateSection{
 			Arrays: map[string]interface{}{
 				"vm_settings": []string{
@@ -308,7 +331,7 @@ var builderMerged = map[string]*builder{
 			},
 		},
 	},
-	"virtualbox": {
+	"virtualbox-iso": {
 		templateSection{
 			Settings: []string{},
 			Arrays: map[string]interface{}{
@@ -319,7 +342,7 @@ var builderMerged = map[string]*builder{
 			},
 		},
 	},
-	"vmware": {
+	"vmware-iso": {
 		templateSection{
 			Arrays: map[string]interface{}{
 				"vm_settings": []string{
@@ -352,15 +375,15 @@ var vbB = &builder{
 func TestCreateBuilderVirtualbox(t *testing.T) {
 	var settings map[string]interface{}
 	var err error
-	settings, _, err = testBuilderUbuntu.createVirtualBox()
+	settings, _, err = testBuilderUbuntu.createVirtualBoxISO()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	}
 	if settings["boot_wait"] != "5s" {
 		t.Errorf("Expected \"5s\", got %q", settings["boot_wait"])
 	}
-	if settings["disk_size"] != "20000" {
-		t.Errorf("Expected \"20000\", got %q", settings["disk_size"])
+	if settings["disk_size"] != 20000 {
+		t.Errorf("Expected 20000, got %d", settings["disk_size"])
 	}
 	if settings["http_directory"] != "http" {
 		t.Errorf("Expected \"http\", got %q", settings["http_directory"])
@@ -374,37 +397,25 @@ func TestCreateBuilderVirtualbox(t *testing.T) {
 	if settings["ssh_password"] != "vagrant" {
 		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_password"])
 	}
-	if settings["ssh_port"] != "22" {
-		t.Errorf("Expected \"22\", got %q", settings["ssh_port"])
+	if settings["ssh_port"] != 22 {
+		t.Errorf("Expected 22, got %q", settings["ssh_port"])
 	}
 	if settings["ssh_username"] != "vagrant" {
 		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_username"])
 	}
-	if settings["type"] != "virtualbox" {
-		t.Errorf("Expected \"virtualbox\", got %q", settings["type"])
+	if settings["type"] != "virtualbox-iso" {
+		t.Errorf("Expected \"virtualbox-iso\", got %q", settings["type"])
 	}
 	if MarshalJSONToString.Get(settings["vboxmanage"]) != "[[\"modifyvm\",\"{{.Name}}\",\"--cpus\",\"1\"],[\"modifyvm\",\"{{.Name}}\",\"--memory\",\"4096\"]]" {
 		t.Errorf("Expected \"[[\"modifyvm\",\"{{.Name}}\",\"--cpus\",\"1\"],[\"modifyvm\",\"{{.Name}}\",\"--memory\",\"4096\"]]\", got %q", MarshalJSONToString.Get(settings["vboxmanage"]))
 	}
 
-	settings, _, err = testBuilderCentOS.createVirtualBox()
+	settings, _, err = testBuilderCentOS.createVirtualBoxOVF()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	}
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
-	}
-	if settings["boot_wait"] != "5s" {
-		t.Errorf("Expected \"5s\", got %q", settings["boot_wait"])
-	}
-	if settings["disk_size"] != "20000" {
-		t.Errorf("Expected \"20000\", got %q", settings["disk_size"])
-	}
-	if settings["http_directory"] != "http" {
-		t.Errorf("Expected \"http\", got %q", settings["http_directory"])
-	}
-	if settings["iso_checksum_type"] != "sha256" {
-		t.Errorf("Expected \"sha256\", got %q", settings["iso_checksum_type"])
 	}
 	if settings["shutdown_command"] != "echo 'vagrant'|sudo -S shutdown -t5 -h now" {
 		t.Errorf("Expected \"echo 'vagrant'|sudo -S shutdown -t5 -h now\", got %q", settings["shutdown_command"])
@@ -412,14 +423,14 @@ func TestCreateBuilderVirtualbox(t *testing.T) {
 	if settings["ssh_password"] != "vagrant" {
 		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_password"])
 	}
-	if settings["ssh_port"] != "22" {
-		t.Errorf("Expected \"22\", got %q", settings["ssh_port"])
+	if settings["ssh_port"] != 22 {
+		t.Errorf("Expected 22, got %d", settings["ssh_port"])
 	}
 	if settings["ssh_username"] != "vagrant" {
 		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_username"])
 	}
-	if settings["type"] != "virtualbox" {
-		t.Errorf("Expected \"virtualbox\", got %q", settings["type"])
+	if settings["type"] != "virtualbox-ovf" {
+		t.Errorf("Expected \"virtualbox-ovf\", got %q", settings["type"])
 	}
 	if MarshalJSONToString.Get(settings["vboxmanage"]) != "[[\"modifyvm\",\"{{.Name}}\",\"--cpus\",\"1\"],[\"modifyvm\",\"{{.Name}}\",\"--memory\",\"4096\"]]" {
 		t.Errorf("Expected \"[[\"modifyvm\",\"{{.Name}}\",\"--cpus\",\"1\"],[\"modifyvm\",\"{{.Name}}\",\"--memory\",\"4096\"]]\", got %q", MarshalJSONToString.Get(settings["vboxmanage"]))
@@ -429,15 +440,15 @@ func TestCreateBuilderVirtualbox(t *testing.T) {
 func TestCreateBuilderVMWare(t *testing.T) {
 	var settings map[string]interface{}
 	var err error
-	settings, _, err = testBuilderUbuntu.createVMWare()
+	settings, _, err = testBuilderUbuntu.createVMWareISO()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	}
 	if settings["boot_wait"] != "5s" {
 		t.Errorf("Expected \"5s\", got %q", settings["boot_wait"])
 	}
-	if settings["disk_size"] != "20000" {
-		t.Errorf("Expected \"20000\", got %q", settings["disk_size"])
+	if settings["disk_size"] != 20000 {
+		t.Errorf("Expected 20000, got %d", settings["disk_size"])
 	}
 	if settings["http_directory"] != "http" {
 		t.Errorf("Expected \"http\", got %q", settings["http_directory"])
@@ -451,35 +462,23 @@ func TestCreateBuilderVMWare(t *testing.T) {
 	if settings["ssh_password"] != "vagrant" {
 		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_password"])
 	}
-	if settings["ssh_port"] != "22" {
-		t.Errorf("Expected \"22\", got %q", settings["ssh_port"])
+	if settings["ssh_port"] != 22 {
+		t.Errorf("Expected 22, got %d", settings["ssh_port"])
 	}
 	if settings["ssh_username"] != "vagrant" {
 		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_username"])
 	}
-	if settings["type"] != "vmware" {
-		t.Errorf("Expected \"vmware\", got %q", settings["type"])
+	if settings["type"] != "vmware-iso" {
+		t.Errorf("Expected \"vmware-iso\", got %q", settings["type"])
 	}
-	expected := map[string]string{"cpus": "1", "memory": "4096"}
+	expected := map[string]string{"cpuid.coresPerSocket": "1", "memsize": "1024", "numvcpus": "1"}
 	if MarshalJSONToString.Get(settings["vmx_data"]) != MarshalJSONToString.Get(expected) {
 		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings["vmx_data"]))
 	}
 
-	settings, _, err = testBuilderCentOS.createVMWare()
+	settings, _, err = testBuilderCentOS.createVMWareVMX()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
-	}
-	if settings["boot_wait"] != "5s" {
-		t.Errorf("Expected \"5s\", got %q", settings["boot_wait"])
-	}
-	if settings["disk_size"] != "20000" {
-		t.Errorf("Expected \"20000\", got %q", settings["disk_size"])
-	}
-	if settings["http_directory"] != "http" {
-		t.Errorf("Expected \"http\", got %q", settings["http_directory"])
-	}
-	if settings["iso_checksum_type"] != "sha256" {
-		t.Errorf("Expected \"sha256\", got %q", settings["iso_checksum_type"])
 	}
 	if settings["shutdown_command"] != "echo 'vagrant'|sudo -S shutdown -t5 -h now" {
 		t.Errorf("Expected \"echo 'vagrant'|sudo -S shutdown -t5 -h now\", got %q", settings["shutdown_command"])
@@ -487,31 +486,31 @@ func TestCreateBuilderVMWare(t *testing.T) {
 	if settings["ssh_password"] != "vagrant" {
 		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_password"])
 	}
-	if settings["ssh_port"] != "22" {
-		t.Errorf("Expected \"22\", got %q", settings["ssh_port"])
+	if settings["ssh_port"] != 22 {
+		t.Errorf("Expected 22, got %d", settings["ssh_port"])
 	}
 	if settings["ssh_username"] != "vagrant" {
 		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_username"])
 	}
-	if settings["type"] != "vmware" {
-		t.Errorf("Expected \"vmware\", got %q", settings["type"])
+	if settings["type"] != "vmware-vmx" {
+		t.Errorf("Expected \"vmware-vmx\", got %q", settings["type"])
 	}
 
 	vmx := settings["vmx_data"].(map[string]string)
-	cpus, ok := vmx["cpus"]
+	cpus, ok := vmx["numvcpus"]
 	if !ok {
-		t.Error("Expected the \"cpus\" entry to exist in vmx_data map, not found")
+		t.Error("Expected the \"numvcpus\" entry to exist in vmx_data map, not found")
 	} else {
-		if vmx["cpus"] != "1" {
+		if vmx["numvcpus"] != "1" {
 			t.Errorf("Expected \"1\", got %q", cpus)
 		}
 	}
-	mem, ok := vmx["memory"]
+	mem, ok := vmx["memsize"]
 	if !ok {
-		t.Error("Expected the \"memory\" entry to exist in vmx_data map, not found")
+		t.Error("Expected the \"memsize\" entry to exist in vmx_data map, not found")
 	} else {
-		if vmx["cpus"] != "1" {
-			t.Errorf("Expected \"1\", got %q", mem)
+		if mem != "1024" {
+			t.Errorf("Expected \"1024\", got %q", mem)
 		}
 	}
 }

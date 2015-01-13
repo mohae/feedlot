@@ -20,10 +20,10 @@
        	release = [
        		"10.04",
        		"12.04",
-		"12.10",
-		"13.04",
+			"12.10",
+			"13.04",
        		"13.10",
-		"14.04"
+			"14.04"
        	]
        	default_image = [
        		"release = 12.04",
@@ -31,7 +31,7 @@
        		"arch = amd64",
        	]
 	builder_types = [
-		"virtualbox"
+		"virtualbox-iso"
 	]
 	post_processor_types = [
 		"vagrant",
@@ -42,27 +42,27 @@
 	]
 	[distro.ubuntu.builders]
 		[distro.ubuntu.builders.common]
-		settings = [
-			"boot_wait = 15s",
-			"headless = false"
-		]
-		[distro.ubuntu.builders.virtualbox]
-			[distro.ubuntu.builders.virtualbox.arrays]
-			vm_settings = [
-				"memory=2048"
+			settings = [
+				"boot_wait = 15s",
+				"headless = false"
 			]
+		[distro.ubuntu.builders.virtualbox-iso]
+			[distro.ubuntu.builders.virtualbox-iso.arrays]
+				vm_settings = [
+					"memory=2048"
+				]
 	[distro.ubuntu.post_processors]
 		[distro.ubuntu.post_processors.vagrant]
 			[distro.ubuntu.post_processors.vagrant.arrays]
-			only = [
-				"virtualbox",
-			]
+				only = [
+					"virtualbox-iso",
+				]
 	[distro.ubuntu.provisioners]
 		[distro.ubuntu.provisioners.shell-scripts]
 			[distro.ubuntu.provisioners.shell-scripts.arrays]
-			only = [
-				"virtualbox",
-			]				
+				only = [
+					"virtualbox-iso",
+				]				
 		[distro.ubuntu.provisioners.file-uploads]
 			settings = [
 				"source = source/dir",
@@ -73,20 +73,20 @@
 	base_url = ""
 	description = "Default template config and Rancher options for CentOS"
 	arch = [
-	        "i386",
-	        "x86_64"
+        "i386",
+        "x86_64"
 	]
 	image = [
-	        "minimal",
-	        "netinstall"
+        "minimal",
+        "netinstall"
 	]
 	release = [
-	        "5",
-        	"6"
+        "5",
+       	"6"
 	]
 	default_image = [
-	    	"release = 6",
-	    	"image = minimal",
-	    	"arch = x86_64",
+    	"release = 6",
+    	"image = minimal",
+    	"arch = x86_64",
 	]
 
