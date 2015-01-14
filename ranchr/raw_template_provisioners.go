@@ -220,16 +220,25 @@ func (r *rawTemplate) createSalt() (settings map[string]interface{}, vars []stri
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
 	var k, v string
+	var hasLocalStateTree bool
 	for _, s := range r.Provisioners[Salt.String()].Settings {
 		k, v = parseVar(s)
 		switch k {
-		case "bootstrap_args", "local_pillar_roots", "local_state_tree", "minion_config", "temp_config_dir":
+		case "local_state_tree":
+			settings[k] = v
+			hasLocalStateTree = true
+		case "bootstrap_args", "local_pillar_roots", "minion_config", "temp_config_dir":
 			settings[k] = v
 		case "skip_bootstrap":
 			settings[k], _ = strconv.ParseBool(v)
 		default:
 			jww.WARN.Println("unsupported " + Salt.String() + " key was encountered: " + k)
 		}
+	}
+	if !hasLocalStateTree {
+		err := fmt.Errorf("\"local_state_tree\" setting is required for salt-masterless, not found")
+		jww.ERROR.Println(err)
+		return nil, nil, err
 	}
 	// salt-masterless does not have any arrays to support
 	return settings, vars, nil

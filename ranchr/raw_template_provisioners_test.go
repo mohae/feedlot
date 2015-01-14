@@ -262,7 +262,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 		},
 		ProvisionerTypes: []string{
 			"ansible-local",
-			"salt",
+			"salt-masterless",
 			"shell-scripts",
 			"file-uploads",
 		},
@@ -293,7 +293,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 					},
 				},
 			},
-			"salt": {
+			"salt-masterless": {
 				templateSection{
 					Settings: []string{
 						"bootstrap_args = args",
@@ -534,6 +534,26 @@ func TestAnsibleProvisioner(t *testing.T) {
 		"type":              "ansible-local",
 	}
 	settings, _, err := testRawTemplateProvisionersAll.createAnsible()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		}
+	}
+}
+
+func TestSaltProvisioner(t *testing.T) {
+	expected := map[string]interface{}{
+		"bootstrap_args":     "args",
+		"local_pillar_roots": "/srv/pillar/",
+		"local_state_tree":   "/srv/salt/",
+		"minion_config":      "minion",
+		"skip_bootstrap":     false,
+		"temp_config_dir":    "/tmp",
+		"type":               "salt-masterless",
+	}
+	settings, _, err := testRawTemplateProvisionersAll.createSalt()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {

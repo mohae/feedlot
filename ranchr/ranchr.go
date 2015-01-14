@@ -211,7 +211,7 @@ var provisioners = [...]string{
 	"file-uploads",      //file-uploads is the name of the FileUploads Provisioner
 	"puppet-masterless", //puppet-masterless is the name of the PuppetMasterless Provisioner
 	"puppet-server",     // puppet-server is the name of the PuppetServer Provisioner
-	"salt",              //salt is the name of the Salt Provisioner
+	"salt-masterless",   //salt is the name of the Salt Provisioner
 	"shell-scripts",     // ShellScripts is an alias for the Shell provisioner
 }
 
@@ -234,7 +234,7 @@ func ProvisionerFromString(s string) Provisioner {
 		return PuppetMasterless
 	case "puppet-server":
 		return PuppetServer
-	case "salt":
+	case "salt-masterless":
 		return Salt
 	case "shell-scripts":
 		return ShellScripts
