@@ -308,7 +308,11 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 			"shell-scripts": {
 				templateSection{
 					Settings: []string{
+						"binary = false",
 						"execute_command = :commands_src_dir/execute_test.command",
+						"inline_shebang = /bin/sh",
+						"remote_path = /tmp/script.sh",
+						"start_retry_timeout = 5m",
 					},
 					Arrays: map[string]interface{}{
 						"except": []string{
@@ -554,6 +558,37 @@ func TestSaltProvisioner(t *testing.T) {
 		"type":               "salt-masterless",
 	}
 	settings, _, err := testRawTemplateProvisionersAll.createSalt()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		}
+	}
+}
+
+func TestShellProvisioner(t *testing.T) {
+	expected := map[string]interface{}{
+		"binary": false,
+		"except": []string{
+			"docker",
+		},
+		"execute_command": ":commands_src_dir/execute_test.command",
+		"inline_shebang":  "/bin/sh",
+		"only": []string{
+			"virtualbox-iso",
+		},
+		"remote_path": "/tmp/script.sh",
+		"scripts": []string{
+			":scripts_dir/setup_test.sh",
+			":scripts_dir/vagrant_test.sh",
+			":scripts_dir/sudoers_test.sh",
+			":scripts_dir/cleanup_test.sh",
+		},
+		"start_retry_timeout": "5m",
+		"type":                "shell-scripts",
+	}
+	settings, _, err := testRawTemplateProvisionersAll.createShellScripts()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {

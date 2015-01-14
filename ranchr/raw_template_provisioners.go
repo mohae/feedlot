@@ -276,7 +276,7 @@ func (r *rawTemplate) createShellScripts() (settings map[string]interface{}, var
 		k, v = parseVar(s)
 		switch k {
 		case "execute_command", "inline_shebang", "remote_path", "start_retry_timeout":
-			settings[s] = v
+			settings[k] = v
 		case "binary":
 			settings[k], _ = strconv.ParseBool(v)
 		default:
@@ -284,11 +284,20 @@ func (r *rawTemplate) createShellScripts() (settings map[string]interface{}, var
 		}
 	}
 	// Process the Arrays.
+	var hasScripts bool
 	for name, val := range r.Provisioners[ShellScripts.String()].Arrays {
+		if name == "scripts" {
+			hasScripts = true
+		}
 		array := deepcopy.Iface(val)
 		if array != nil {
 			settings[name] = array
 		}
+	}
+	if !hasScripts {
+		err := fmt.Errorf("\"scripts\" setting is required for shell-scripts, not found")
+		jww.ERROR.Println(err)
+		return nil, nil, err
 	}
 	return settings, vars, nil
 }
