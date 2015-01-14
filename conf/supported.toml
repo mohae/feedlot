@@ -7,7 +7,27 @@
 # the code to support the distro.
 
 [distro]
-	[distro.ubuntu]
+	[distro.centos]
+	base_url = ""
+	description = "Default template config and Rancher options for CentOS"
+	arch = [
+        "i386",
+        "x86_64"
+	]
+	image = [
+        "minimal",
+        "netinstall"
+	]
+	release = [
+        "5",
+       	"6"
+	]
+	default_image = [
+    	"release = 6",
+    	"image = minimal",
+    	"arch = x86_64",
+	]
+[distro.ubuntu]
 	base_url = "http://releases.ubuntu.com/"
 	description = "Default template config and Rancher options for Ubuntu"
        	arch = [
@@ -68,25 +88,4 @@
 				"source = source/dir",
 				"destination = destination/dir"
 			]
-	
-	[distro.centos]
-	base_url = ""
-	description = "Default template config and Rancher options for CentOS"
-	arch = [
-        "i386",
-        "x86_64"
-	]
-	image = [
-        "minimal",
-        "netinstall"
-	]
-	release = [
-        "5",
-       	"6"
-	]
-	default_image = [
-    	"release = 6",
-    	"image = minimal",
-    	"arch = x86_64",
-	]
 

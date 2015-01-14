@@ -205,7 +205,7 @@ type Provisioner int
 
 var provisioners = [...]string{
 	"unsupported provisioner",
-	"ansible",           //ansible is the name of the Ansible Provisioner
+	"ansible-local",     //ansible is the name of the Ansible Provisioner
 	"chef-client",       //chef-client is the name of the ChefClient Provisioner
 	"chef-solo",         //chef-solo is the name of the ChefSolo Provisioner
 	"file-uploads",      //file-uploads is the name of the FileUploads Provisioner
@@ -222,7 +222,7 @@ func (p Provisioner) String() string { return provisioners[p] }
 func ProvisionerFromString(s string) Provisioner {
 	s = strings.ToLower(s)
 	switch s {
-	case "ansible":
+	case "ansible-local":
 		return Ansible
 	case "chef-client":
 		return ChefClient

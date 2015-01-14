@@ -168,14 +168,23 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []s
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
 	var k, v string
+	var hasPlaybook bool
 	for _, s := range r.Provisioners[Ansible.String()].Settings {
 		k, v = parseVar(s)
 		switch k {
-		case "playbook_file", "command", "group_vars", "host_vars", "staging_directory":
+		case "playbook_file":
+			settings[k] = v
+			hasPlaybook = true
+		case "command", "inventory_file", "group_vars", "host_vars", "playbook_dir", "staging_directory":
 			settings[k] = v
 		default:
 			jww.WARN.Println("unsupported " + Ansible.String() + " key was encountered: " + k)
 		}
+	}
+	if !hasPlaybook {
+		err := fmt.Errorf("\"playbook_file\" setting is required for ansible-local, not found")
+		jww.ERROR.Println(err)
+		return nil, nil, err
 	}
 	// Process the Arrays.
 	for name, val := range r.Provisioners[Ansible.String()].Arrays {

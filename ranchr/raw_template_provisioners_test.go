@@ -261,18 +261,20 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 			},
 		},
 		ProvisionerTypes: []string{
-			"ansible",
+			"ansible-local",
 			"salt",
 			"shell-scripts",
 			"file-uploads",
 		},
 		Provisioners: map[string]*provisioner{
-			"ansible": {
+			"ansible-local": {
 				templateSection{
 					Settings: []string{
-						"playbook_file= :src_dir/ansible/playbook_file",
+						"playbook_file= :src_dir/ansible/playbook.yml",
 						"command =  :commands_src_dir/ansible_test.command",
 						"inventory_file = :src_dir/ansible/inventory_file",
+						"group_vars = groupvars",
+						"host_vars = hostvars",
 						"playbook_dir = :src_dir/ansible/playbooks",
 						"staging_directory = staging/directory",
 					},
@@ -282,12 +284,11 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 							"arg2",
 						},
 						"playbook_paths": []string{
-							"path1",
-							"path2",
+							"../ansible/playbook/",
 						},
 						"role_paths": []string{
-							"rolepath1",
-							"rolepath2",
+							"../ansible/roles1",
+							"../ansible/roles2",
 						},
 					},
 				},
@@ -510,3 +511,34 @@ func TestRawTemplateCreateProvisioners(t *testing.T) {
 	}
 }
 */
+func TestAnsibleProvisioner(t *testing.T) {
+	expected := map[string]interface{}{
+		"command": ":commands_src_dir/ansible_test.command",
+		"extra_arguments": []string{
+			"arg1",
+			"arg2",
+		},
+		"group_vars":     "groupvars",
+		"host_vars":      "hostvars",
+		"inventory_file": ":src_dir/ansible/inventory_file",
+		"playbook_dir":   ":src_dir/ansible/playbooks",
+		"playbook_file":  ":src_dir/ansible/playbook.yml",
+		"playbook_paths": []string{
+			"../ansible/playbook/",
+		},
+		"role_paths": []string{
+			"../ansible/roles1",
+			"../ansible/roles2",
+		},
+		"staging_directory": "staging/directory",
+		"type":              "ansible-local",
+	}
+	settings, _, err := testRawTemplateProvisionersAll.createAnsible()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		}
+	}
+}
