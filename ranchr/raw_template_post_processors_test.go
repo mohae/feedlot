@@ -169,6 +169,19 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 					},
 				},
 			},
+			"vagrant-cloud": {
+				templateSection{
+					Settings: []string{
+						"access_token = vagrant-cloud-token",
+						"box_download_url=download.example.com/box",
+						"box_tag=hashicorp/precise64",
+						"no_release=true",
+						"vagrant_cloud_url=https://vagrantcloud.com/api/v1",
+						"version=0.0.1",
+						"version_description=initial",
+					},
+				},
+			},
 		},
 		ProvisionerTypes: []string{
 			"shell-scripts",
@@ -406,6 +419,28 @@ func TestVagrantPostProcessor(t *testing.T) {
 	}
 
 	pp, _, err := testPostProcessorsAllTemplate.createVagrant()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(expected) != MarshalJSONToString.Get(pp) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(pp))
+		}
+	}
+}
+
+func TestVagrantCloudPostProcessor(t *testing.T) {
+	expected := map[string]interface{}{
+		"access_token":        "vagrant-cloud-token",
+		"box_download_url":    "download.example.com/box",
+		"box_tag":             "hashicorp/precise64",
+		"no_release":          "true",
+		"type":                "vagrant-cloud",
+		"vagrant_cloud_url":   "https://vagrantcloud.com/api/v1",
+		"version":             "0.0.1",
+		"version_description": "initial",
+	}
+
+	pp, _, err := testPostProcessorsAllTemplate.createVagrantCloud()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {

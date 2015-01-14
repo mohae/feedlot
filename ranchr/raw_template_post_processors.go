@@ -423,16 +423,41 @@ func (r *rawTemplate) createVagrantCloud() (settings map[string]interface{}, var
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = VagrantCloud.String()
-	for _, s := range r.PostProcessors[Vagrant.String()].Settings {
+	var hasAccessToken, hasBoxTag, hasVersion bool
+	for _, s := range r.PostProcessors[VagrantCloud.String()].Settings {
 		k, v := parseVar(s)
 		switch k {
-		case "access_token", "box_tag", "version", "no_release", "vagrant_cloud_url", "version_description", "box_download_url":
+		case "access_token":
+			settings[k] = v
+			hasAccessToken = true
+		case "box_tag":
+			settings[k] = v
+			hasBoxTag = true
+		case "version":
+			settings[k] = v
+			hasVersion = true
+		case "box_download_url", "no_release", "vagrant_cloud_url", "version_description":
 			settings[k] = v
 		default:
 			jww.WARN.Printf("unsupported key: %q", k)
 		}
 	}
-	return nil, nil, nil
+	if !hasAccessToken {
+		err := fmt.Errorf("\"access_token\" setting is required for vagrant-cloud, not found")
+		jww.ERROR.Print(err)
+		return nil, nil, err
+	}
+	if !hasBoxTag {
+		err := fmt.Errorf("\"box_tag\" setting is required for vagrant-cloud, not found")
+		jww.ERROR.Print(err)
+		return nil, nil, err
+	}
+	if !hasVersion {
+		err := fmt.Errorf("\"version\" setting is required for vagrant-cloud, not found")
+		jww.ERROR.Print(err)
+		return nil, nil, err
+	}
+	return settings, nil, nil
 }
 
 // DeepCopyMapStringPPostProcessor makes a deep copy of each builder passed and
