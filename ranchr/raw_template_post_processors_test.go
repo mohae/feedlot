@@ -116,6 +116,14 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 					},
 				},
 			},
+			"docker-import": {
+				templateSection{
+					Settings: []string{
+						"repository = mitchellh/packer",
+						"tag = 0.7",
+					},
+				},
+			},
 			"vagrant": {
 				templateSection{
 					Settings: []string{
@@ -286,6 +294,23 @@ func TestCompressPostProcessor(t *testing.T) {
 	}
 
 	pp, _, err := testPostProcessorsAllTemplate.createCompress()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(expected) != MarshalJSONToString.Get(pp) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(pp))
+		}
+	}
+}
+
+func TestDockerImportPostProcessor(t *testing.T) {
+	expected := map[string]interface{}{
+		"repository": "mitchellh/packer",
+		"tag":        "0.7",
+		"type":       "docker-import",
+	}
+
+	pp, _, err := testPostProcessorsAllTemplate.createDockerImport()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {

@@ -130,9 +130,9 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]i
 	return p, vars, nil
 }
 
-// createCompress() creates a map of settings for Packer's Compress
-// post-processor.  Any values that aren't supported by the Compress
-// post-processor are ignored. For more information refer to
+// createCompress() creates a map of settings for Packer's compress
+// provisioner.  Any values that aren't supported by the compress provisioner
+// are logged as a Warning and ignored. For more information refer to
 // https://packer.io/docs/post-processors/compress.html
 //
 // Rerquied configuration options:
@@ -150,14 +150,62 @@ func (r *rawTemplate) createCompress() (settings map[string]interface{}, vars []
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
 	var k, v string
+	var hasOutput bool
 	for _, s := range r.PostProcessors[Compress.String()].Settings {
 		k, v = parseVar(s)
 		switch k {
 		case "output":
 			settings[k] = v
+			hasOutput = true
 		default:
 			jww.WARN.Printf("unsupported key %q: ", k)
 		}
+	}
+	if !hasOutput {
+		err := fmt.Errorf("\"output\" setting is required for compress, not found")
+		jww.ERROR.Print()
+		return nil, nil, err
+	}
+	return settings, vars, nil
+}
+
+// createDockerImport() creates a map of settings for Packer's docker-import
+// provisioner.  Any values that aren't supported by the docker-import
+// provisioner are logged as a Warning and ignored. For more information
+// refer to https://packer.io/docs/post-processors/compress.html.
+//
+// Required configuration options:
+//		repository	// string
+func (r *rawTemplate) createDockerImport() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.PostProcessors[DockerImport.String()]
+	if !ok {
+		err = fmt.Errorf("no configuration found for %q", DockerImport.String())
+		jww.ERROR.Println(err)
+		return nil, nil, err
+	}
+	settings = make(map[string]interface{})
+	settings["type"] = DockerImport.String()
+	// For each value, extract its key value pair and then process. Only
+	// process the supported keys. Key validation isn't done here, leaving
+	// that for Packer.
+	var k, v string
+	var hasRepository bool
+	for _, s := range r.PostProcessors[DockerImport.String()].Settings {
+		k, v = parseVar(s)
+		switch k {
+		case "repository":
+			settings[k] = v
+			hasRepository = true
+		case "tag":
+			settings[k] = v
+		default:
+			jww.WARN.Printf("unsupported key %q: ", k)
+		}
+	}
+	if !hasRepository {
+		err := fmt.Errorf("\"repository\" setting is required for docker-import, not found")
+		jww.ERROR.Print()
+		return nil, nil, err
 	}
 	return settings, vars, nil
 }
