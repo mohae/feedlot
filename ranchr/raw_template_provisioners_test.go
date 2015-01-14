@@ -333,10 +333,9 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 			"file-uploads": {
 				templateSection{
 					Settings: []string{
-						"source = src/",
-						"destination = dst/",
+						"source = /src/",
+						"destination = /dst/",
 					},
-					Arrays: map[string]interface{}{},
 				},
 			},
 		},
@@ -589,6 +588,22 @@ func TestShellProvisioner(t *testing.T) {
 		"type":                "shell-scripts",
 	}
 	settings, _, err := testRawTemplateProvisionersAll.createShellScripts()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		}
+	}
+}
+
+func TestFileUploadsProvisioner(t *testing.T) {
+	expected := map[string]interface{}{
+		"destination": "/dst/",
+		"source":      "/src/",
+		"type":        "file-uploads",
+	}
+	settings, _, err := testRawTemplateProvisionersAll.createFileUploads()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {

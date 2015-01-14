@@ -321,21 +321,29 @@ func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, vars
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
 	var k, v string
+	var hasSource, hasDestination bool
 	for _, s := range r.Provisioners[FileUploads.String()].Settings {
 		k, v = parseVar(s)
 		switch k {
-		case "source", "destination":
+		case "source":
 			settings[k] = v
+			hasSource = true
+		case "destination":
+			settings[k] = v
+			hasDestination = true
 		default:
 			jww.WARN.Printf("unsupported %s key was encountered: %q", FileUploads.String(), k)
 		}
 	}
-	// Process the Arrays.
-	for name, val := range r.Provisioners[FileUploads.String()].Arrays {
-		array := deepcopy.InterfaceToSliceStrings(val)
-		if array != nil {
-			settings[name] = array
-		}
+	if !hasSource {
+		err := fmt.Errorf("\"source\" setting is required for file-uploads, not found")
+		jww.ERROR.Println(err)
+		return nil, nil, err
+	}
+	if !hasDestination {
+		err := fmt.Errorf("\"destination\" setting is required for file-uploads, not found")
+		jww.ERROR.Println(err)
+		return nil, nil, err
 	}
 	return settings, vars, nil
 }
