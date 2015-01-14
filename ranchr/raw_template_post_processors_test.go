@@ -124,6 +124,17 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 					},
 				},
 			},
+			"docker-push": {
+				templateSection{
+					Settings: []string{
+						"login = false",
+						"login_email = email@test.com",
+						"login_username = username",
+						"login_password = password",
+						"login_server = server.test.com",
+					},
+				},
+			},
 			"vagrant": {
 				templateSection{
 					Settings: []string{
@@ -311,6 +322,26 @@ func TestDockerImportPostProcessor(t *testing.T) {
 	}
 
 	pp, _, err := testPostProcessorsAllTemplate.createDockerImport()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(expected) != MarshalJSONToString.Get(pp) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(pp))
+		}
+	}
+}
+
+func TestDockerPushPostProcessor(t *testing.T) {
+	expected := map[string]interface{}{
+		"login":          false,
+		"login_email":    "email@test.com",
+		"login_username": "username",
+		"login_password": "password",
+		"login_server":   "server.test.com",
+		"type":           "docker-push",
+	}
+
+	pp, _, err := testPostProcessorsAllTemplate.createDockerPush()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {

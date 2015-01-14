@@ -172,7 +172,7 @@ func (r *rawTemplate) createCompress() (settings map[string]interface{}, vars []
 // createDockerImport() creates a map of settings for Packer's docker-import
 // provisioner.  Any values that aren't supported by the docker-import
 // provisioner are logged as a Warning and ignored. For more information
-// refer to https://packer.io/docs/post-processors/compress.html.
+// refer to https://packer.io/docs/post-processors/docker-import.html.
 //
 // Required configuration options:
 //		repository	// string
@@ -206,6 +206,40 @@ func (r *rawTemplate) createDockerImport() (settings map[string]interface{}, var
 		err := fmt.Errorf("\"repository\" setting is required for docker-import, not found")
 		jww.ERROR.Print()
 		return nil, nil, err
+	}
+	return settings, vars, nil
+}
+
+// createDockerPush() creates a map of settings for Packer's docker-push
+// provisioner.  Any values that aren't supported by the docker-push
+// provisioner are logged as a Warning and ignored. For more information
+// refer to https://packer.io/docs/post-processors/docker-push.html.
+//
+// Required configuration options:
+//		none
+func (r *rawTemplate) createDockerPush() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.PostProcessors[DockerPush.String()]
+	if !ok {
+		err = fmt.Errorf("no configuration found for %q", DockerPush.String())
+		jww.ERROR.Println(err)
+		return nil, nil, err
+	}
+	settings = make(map[string]interface{})
+	settings["type"] = DockerPush.String()
+	// For each value, extract its key value pair and then process. Only
+	// process the supported keys. Key validation isn't done here, leaving
+	// that for Packer.
+	var k, v string
+	for _, s := range r.PostProcessors[DockerPush.String()].Settings {
+		k, v = parseVar(s)
+		switch k {
+		case "login_email", "login_username", "login_password", "login_server":
+			settings[k] = v
+		case "login":
+			settings[k], _ = strconv.ParseBool(v)
+		default:
+			jww.WARN.Printf("unsupported key %q: ", k)
+		}
 	}
 	return settings, vars, nil
 }
