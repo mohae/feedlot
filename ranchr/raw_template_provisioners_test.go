@@ -500,20 +500,6 @@ func TestProvisionersSettingsToMap(t *testing.T) {
 	}
 }
 
-/*
-var prCreatedString = "[{\"command\":\":commands_src_dir/ansible_test.command\",\"extra_arguments\":[\"arg1\",\"arg2\"],\"inventory_file\":\":src_dir/ansible/inventory_file\",\"playbook_dir\":\":src_dir/ansible/playbooks\",\"playbook_file\":\":src_dir/ansible/playbook_file\",\"playbook_paths\":[\"path1\",\"path2\"],\"role_paths\":[\"rolepath1\",\"rolepath2\"],\"staging_directory\":\"staging/directory\",\"type\":\"ansible\"},{\"bootstrap_args\":\"args\",\"local_pillar_roots\":\"/srv/pillar/\",\"local_state_tree\":\"/srv/salt/\",\"minion_config\":\"minion\",\"skip_bootstrap\":false,\"temp_config_dir\":\"/tmp\",\"type\":\"salt\"},{\"except\":[\"docker\"],\"execute_command = :commands_src_dir/execute_test.command\":\":commands_src_dir/execute_test.command\",\"only\":[\"virtualbox-iso\"],\"scripts\":[\":scripts_dir/setup_test.sh\",\":scripts_dir/vagrant_test.sh\",\":scripts_dir/sudoers_test.sh\",\":scripts_dir/cleanup_test.sh\"],\"type\":\"shell-scripts\"},{\"destination\":\"dst/\",\"source\":\"src/\",\"type\":\"file-uploads\"}]"
-
-func TestRawTemplateCreateProvisioners(t *testing.T) {
-	prov, _, err := testRawTemplateProvisionersAll.createProvisioners()
-	if err != nil {
-		t.Errorf("Unexpected error: %q", err.Error())
-	} else {
-		if MarshalJSONToString.Get(prov) != prCreatedString {
-			t.Errorf("Expected %q, got %q", prCreatedString, MarshalJSONToString.Get(prov))
-		}
-	}
-}
-*/
 func TestAnsibleProvisioner(t *testing.T) {
 	expected := map[string]interface{}{
 		"command": ":commands_src_dir/ansible_test.command",
