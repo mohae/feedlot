@@ -5,6 +5,152 @@ import (
 	"testing"
 )
 
+var testPostProcessorTemplate = &rawTemplate{
+	PackerInf: PackerInf{
+		Description: "Test build template #1",
+	},
+	Distro:  "ubuntu",
+	Arch:    "amd64",
+	Image:   "server",
+	Release: "1204",
+	build: build{
+		BuilderTypes: []string{
+			"virtualbox-iso",
+		},
+		Builders: map[string]*builder{
+			"common": {
+				templateSection{
+					Settings: []string{
+						"ssh_wait_timeout = 300m",
+					},
+				},
+			},
+			"virtualbox-iso": {
+				templateSection{
+					Arrays: map[string]interface{}{
+						"vm_settings": []string{
+							"memory=4096",
+						},
+					},
+				},
+			},
+		},
+		PostProcessorTypes: []string{
+			"vagrant",
+		},
+		PostProcessors: map[string]*postProcessor{
+			"vagrant": {
+				templateSection{
+					Settings: []string{
+						"output = :out_dir/packer.box",
+					},
+					Arrays: map[string]interface{}{
+						"except": []string{
+							"docker",
+						},
+					},
+				},
+			},
+		},
+		ProvisionerTypes: []string{
+			"shell-scripts",
+		},
+		Provisioners: map[string]*provisioner{
+			"shell-scripts": {
+				templateSection{
+					Settings: []string{
+						"execute_command = :commands_src_dir/execute_test.command",
+					},
+					Arrays: map[string]interface{}{
+						"scripts": []string{
+							":scripts_dir/setup_test.sh",
+							":scripts_dir/vagrant_test.sh",
+							":scripts_dir/cleanup_test.sh",
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
+var testPostProcessorsAllTemplate = &rawTemplate{
+	PackerInf: PackerInf{
+		Description: "Test build template #1",
+	},
+	Distro:  "ubuntu",
+	Arch:    "amd64",
+	Image:   "server",
+	Release: "1204",
+	build: build{
+		BuilderTypes: []string{
+			"virtualbox-iso",
+		},
+		Builders: map[string]*builder{
+			"common": {
+				templateSection{
+					Settings: []string{
+						"ssh_wait_timeout = 300m",
+					},
+				},
+			},
+			"virtualbox-iso": {
+				templateSection{
+					Arrays: map[string]interface{}{
+						"vm_settings": []string{
+							"memory=4096",
+						},
+					},
+				},
+			},
+		},
+		PostProcessorTypes: []string{
+			"compress",
+			"vagrant",
+		},
+		PostProcessors: map[string]*postProcessor{
+			"compress": {
+				templateSection{
+					Settings: []string{
+						"output = foo.tar.gz",
+					},
+				},
+			},
+			"vagrant": {
+				templateSection{
+					Settings: []string{
+						"output = :out_dir/packer.box",
+					},
+					Arrays: map[string]interface{}{
+						"except": []string{
+							"docker",
+						},
+					},
+				},
+			},
+		},
+		ProvisionerTypes: []string{
+			"shell-scripts",
+		},
+		Provisioners: map[string]*provisioner{
+			"shell-scripts": {
+				templateSection{
+					Settings: []string{
+						"execute_command = :commands_src_dir/execute_test.command",
+					},
+					Arrays: map[string]interface{}{
+						"scripts": []string{
+							":scripts_dir/setup_test.sh",
+							":scripts_dir/vagrant_test.sh",
+							":scripts_dir/cleanup_test.sh",
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
 var pp = &postProcessor{
 	templateSection{
 		Settings: []string{
@@ -133,29 +279,17 @@ func TestPostProcessorsSettingsToMap(t *testing.T) {
 	}
 }
 
-func TestRawTemplateCreatePostProcessors(t *testing.T) {
-	var pp interface{}
-	var err error
-	pp, _, err = testDistroDefaults.Templates[CentOS].createPostProcessors()
+func TestCompressPostProcessor(t *testing.T) {
+	expected := map[string]interface{}{
+		"output": "foo.tar.gz",
+		"type":   "compress",
+	}
+
+	pp, _, err := testPostProcessorsAllTemplate.createCompress()
 	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
+		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		expected := []interface{}{
-			map[string]interface{}{
-				"compression_level":   8,
-				"include":             []string{"include1", "include2"},
-				"keep_input_artifact": true,
-				"only":                []string{"virtualbox-iso"},
-				"output":              "out/rancher-packer.box",
-				"override": map[string]interface{}{
-					"virtualbox-iso": map[string]interface{}{"output": "overridden-virtualbox.box"},
-					"vmware-iso":     map[string]interface{}{"output": "overridden-vmware.box"},
-				},
-				"type": "vagrant",
-			},
-			nil,
-		}
-		if MarshalJSONToString.Get(pp) != MarshalJSONToString.Get(expected) {
+		if MarshalJSONToString.Get(expected) != MarshalJSONToString.Get(pp) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(pp))
 		}
 	}
