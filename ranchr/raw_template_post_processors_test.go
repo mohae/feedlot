@@ -153,11 +153,18 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 			"vagrant": {
 				templateSection{
 					Settings: []string{
+						"compression_level = 6",
+						"keep_input_artifact = false",
 						"output = :out_dir/packer.box",
+						"vagrantfile_template = template/path",
 					},
 					Arrays: map[string]interface{}{
 						"except": []string{
 							"docker",
+						},
+						"include": []string{
+							"include/path1",
+							"include/path2",
 						},
 					},
 				},
@@ -381,6 +388,33 @@ func TestDockerTagPostProcessor(t *testing.T) {
 		}
 	}
 }
+
+func TestVagrantPostProcessor(t *testing.T) {
+	expected := map[string]interface{}{
+		"compression_level": 6,
+		"except": []string{
+			"docker",
+		},
+		"include": []string{
+			"include/path1",
+			"include/path2",
+		},
+		"keep_input_artifact":  false,
+		"output":               ":out_dir/packer.box",
+		"type":                 "vagrant",
+		"vagrantfile_template": "template/path",
+	}
+
+	pp, _, err := testPostProcessorsAllTemplate.createVagrant()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(expected) != MarshalJSONToString.Get(pp) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(pp))
+		}
+	}
+}
+
 func TestDeepCopyMapStringPPostProcessor(t *testing.T) {
 	cpy := DeepCopyMapStringPPostProcessor(ppOrig)
 	if MarshalJSONToString.Get(cpy) != MarshalJSONToString.Get(ppOrig) {

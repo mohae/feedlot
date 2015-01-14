@@ -131,12 +131,14 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]i
 }
 
 // createCompress() creates a map of settings for Packer's compress
-// provisioner.  Any values that aren't supported by the compress provisioner
-// are logged as a Warning and ignored. For more information refer to
-// https://packer.io/docs/post-processors/compress.html
+// post-processor.  Any values that aren't supported by the compress
+// post-processor are logged as a Warning and ignored. For more information
+// refer to https://packer.io/docs/post-processors/compress.html
 //
-// Rerquied configuration options:
+// Required configuration options:
 //		output	// string
+// Optional configuration options:
+//		none
 func (r *rawTemplate) createCompress() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.PostProcessors[Compress.String()]
 	if !ok {
@@ -170,8 +172,8 @@ func (r *rawTemplate) createCompress() (settings map[string]interface{}, vars []
 }
 
 // createDockerImport() creates a map of settings for Packer's docker-import
-// provisioner.  Any values that aren't supported by the docker-import
-// provisioner are logged as a Warning and ignored. For more information
+// post-processor.  Any values that aren't supported by the docker-import
+// post-processor are logged as a Warning and ignored. For more information
 // refer to https://packer.io/docs/post-processors/docker-import.html.
 //
 // Required configuration options:
@@ -213,8 +215,8 @@ func (r *rawTemplate) createDockerImport() (settings map[string]interface{}, var
 }
 
 // createDockerPush() creates a map of settings for Packer's docker-push
-// provisioner.  Any values that aren't supported by the docker-push
-// provisioner are logged as a Warning and ignored. For more information
+// post-processor.  Any values that aren't supported by the docker-push
+// post-processor are logged as a Warning and ignored. For more information
 // refer to https://packer.io/docs/post-processors/docker-push.html.
 //
 // Required configuration options:
@@ -253,8 +255,8 @@ func (r *rawTemplate) createDockerPush() (settings map[string]interface{}, vars 
 }
 
 // createDockerSave() creates a map of settings for Packer's docker-save
-// provisioner.  Any values that aren't supported by the docker-save
-// provisioner are logged as a Warning and ignored. For more information
+// post-processor.  Any values that aren't supported by the docker-save
+// post-processor are logged as a Warning and ignored. For more information
 // refer to https://packer.io/docs/post-processors/docker-save.html.
 //
 // Required configuration options:
@@ -294,8 +296,8 @@ func (r *rawTemplate) createDockerSave() (settings map[string]interface{}, vars 
 }
 
 // createDockerTag() creates a map of settings for Packer's docker-tag
-// provisioner.  Any values that aren't supported by the docker-tag
-// provisioner are logged as a Warning and ignored. For more information
+// post-processor.  Any values that aren't supported by the docker-tag
+// post-processor are logged as a Warning and ignored. For more information
 // refer to https://packer.io/docs/post-processors/docker-tag.html.
 //
 // Required configuration options:
@@ -371,7 +373,7 @@ func (r *rawTemplate) createVagrant() (settings map[string]interface{}, vars []s
 	for _, s := range r.PostProcessors[Vagrant.String()].Settings {
 		k, v = parseVar(s)
 		switch k {
-		case "output", "vagrantfile_tempate":
+		case "output", "vagrantfile_template":
 			settings[k] = v
 		case "keep_input_artifact":
 			settings[k], _ = strconv.ParseBool(v)
