@@ -60,7 +60,7 @@ const (
 	UnsupportedBuilder Builder = iota
 	Common
 	Custom
-	AmazonEC2
+	AmazonEBS
 	DigitalOcean
 	Docker
 	GoogleComputeEngine
@@ -81,7 +81,7 @@ var builders = [...]string{
 	"unsupported Builder",
 	"common",                // Common is the name of the common builder
 	"custom",                // custom is the name of the custom builder
-	"amazon-ec2",            // AmazonEC2 is the name of the Amazon EC2 builder, aka AMI
+	"amazon-ebs",            // AmazonEBS is the name of the amazon-ebs backed builder
 	"digitalocean",          // DigitalOcean is the name of the Digital Ocean builder
 	"docker",                // Docker is the name of the Docker builder
 	"google-compute-engine", // GoogleComputeEngine is the name of the Google Compute Engine builder
@@ -106,8 +106,8 @@ func BuilderFromString(s string) Builder {
 		return Common
 	case "custom":
 		return Custom
-	case "amazon-ec2":
-		return AmazonEC2
+	case "amazon-ebs":
+		return AmazonEBS
 	case "digitalocean":
 		return DigitalOcean
 	case "google-compute-engine":

@@ -24,7 +24,6 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
-	var vrbls, tmpVar []string
 	var tmpS map[string]interface{}
 	var ndx int
 	bldrs = make([]interface{}, len(r.BuilderTypes))
@@ -36,19 +35,17 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 	//
 	// Generate the builders for each builder type.
 	for _, bType := range r.BuilderTypes {
-		// TODO calculate the length of the two longest Settings and VMSettings sections and make it
-		// that length. That will prevent a panic should there be more than 50 options. Besides its
-		// stupid, on so many levels, to hard code this...which makes me...d'oh!
-		tmpVar = make([]string, 50)
 		tmpS = make(map[string]interface{})
 		typ := BuilderFromString(bType)
 		switch typ {
-		//		case AmazonEBS, AmazonInstance, AmazonChroot:
+		case AmazonEBS:
+			tmps, _, err = r.createAmazonEBS()
+		// AmazonInstance, AmazonChroot:
 		// not implemented
 		case DigitalOcean:
-			tmpS, tmpVar, err = r.createDigitalOcean()
+			tmpS, _, err = r.createDigitalOcean()
 		case Docker:
-			tmpS, tmpVar, err = r.createDocker()
+			tmpS, _, err = r.createDocker()
 			//		case GoogleCompute:
 
 			//		case NullBuilder:
@@ -60,13 +57,13 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 			//		case QEMU:
 
 		case VMWareISO:
-			tmpS, tmpVar, err = r.createVMWareISO()
+			tmpS, _, err = r.createVMWareISO()
 		case VMWareVMX:
-			tmpS, tmpVar, err = r.createVMWareVMX()
+			tmpS, _, err = r.createVMWareVMX()
 		case VirtualBoxISO:
-			tmpS, tmpVar, err = r.createVirtualBoxISO()
+			tmpS, _, err = r.createVirtualBoxISO()
 		case VirtualBoxOVF:
-			tmpS, tmpVar, err = r.createVirtualBoxOVF()
+			tmpS, _, err = r.createVirtualBoxOVF()
 		default:
 			err = fmt.Errorf("Builder, %q, is not supported by Rancher", bType)
 			jww.ERROR.Println(err)
@@ -74,7 +71,6 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 		}
 		bldrs[ndx] = tmpS
 		ndx++
-		vrbls = append(vrbls, tmpVar...)
 	}
 	return bldrs, vars, nil
 }
