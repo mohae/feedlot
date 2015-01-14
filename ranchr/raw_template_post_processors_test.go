@@ -182,6 +182,24 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 					},
 				},
 			},
+			"vsphere": {
+				templateSection{
+					Settings: []string{
+						"cluster=target-cluster",
+						"datacenter=target-datacenter",
+						"datastore=vm-datastore",
+						"disk_mode=thick",
+						"host=vsphere-host",
+						"insecure=false",
+						"password=password",
+						"resource_pool=rpool",
+						"username=username",
+						"vm_folder=vm-folder",
+						"vm_name=packervm",
+						"vm_network=vm-network",
+					},
+				},
+			},
 		},
 		ProvisionerTypes: []string{
 			"shell-scripts",
@@ -441,6 +459,33 @@ func TestVagrantCloudPostProcessor(t *testing.T) {
 	}
 
 	pp, _, err := testPostProcessorsAllTemplate.createVagrantCloud()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(expected) != MarshalJSONToString.Get(pp) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(pp))
+		}
+	}
+}
+
+func TestVagrantVSphereProcessor(t *testing.T) {
+	expected := map[string]interface{}{
+		"cluster":       "target-cluster",
+		"datacenter":    "target-datacenter",
+		"datastore":     "vm-datastore",
+		"disk_mode":     "thick",
+		"host":          "vsphere-host",
+		"insecure":      false,
+		"password":      "password",
+		"resource_pool": "rpool",
+		"type":          "vsphere",
+		"username":      "username",
+		"vm_folder":     "vm-folder",
+		"vm_name":       "packervm",
+		"vm_network":    "vm-network",
+	}
+
+	pp, _, err := testPostProcessorsAllTemplate.createVSphere()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {

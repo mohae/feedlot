@@ -460,6 +460,109 @@ func (r *rawTemplate) createVagrantCloud() (settings map[string]interface{}, var
 	return settings, nil, nil
 }
 
+// createvSphere() creates a map of settings for Packer's vSphere
+// post-processor.  Any values that aren't supported by the vSphere
+// post-processor are logged as a Warning and ignored. For more information
+// refer to https://packer.io/docs/post-processors/vsphere.html.
+//
+// Required configuration options:
+//   cluster         string
+//   datacenter      string
+//   host            string
+//   password        string
+//   resource_pool   string
+//   username        string
+//   vm_name         string
+// Optional configuration options:
+//   datastore       string
+//   disk_mode       string
+//   insecure        boolean
+//   vm_folder       string
+//   vm_network      string
+func (r *rawTemplate) createVSphere() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.PostProcessors[VSphere.String()]
+	if !ok {
+		err = fmt.Errorf("no configuration found for %q", VSphere.String())
+		jww.ERROR.Println(err)
+		return nil, nil, err
+	}
+	settings = make(map[string]interface{})
+	settings["type"] = VSphere.String()
+	// For each value, extract its key value pair and then process. Only
+	// process the supported keys. Key validation isn't done here, leaving
+	// that for Packer.
+	var k, v string
+	var hasCluster, hasDatacenter, hasHost, hasPassword, hasResourcePool, hasUsername, hasVMName bool
+	for _, s := range r.PostProcessors[VSphere.String()].Settings {
+		k, v = parseVar(s)
+		switch k {
+		case "cluster":
+			settings[k] = v
+			hasCluster = true
+		case "datacenter":
+			settings[k] = v
+			hasDatacenter = true
+		case "host":
+			settings[k] = v
+			hasHost = true
+		case "password":
+			settings[k] = v
+			hasPassword = true
+		case "resource_pool":
+			settings[k] = v
+			hasResourcePool = true
+		case "username":
+			settings[k] = v
+			hasUsername = true
+		case "vm_name":
+			settings[k] = v
+			hasVMName = true
+		case "datastore", "disk_mode", "vm_folder", "vm_network":
+			settings[k] = v
+		case "insecure":
+			settings[k], _ = strconv.ParseBool(v)
+		default:
+			jww.WARN.Printf("unsupported key %q: ", k)
+		}
+	}
+	if !hasCluster {
+		err := fmt.Errorf("\"cluster\" setting is required for vSphere, not found")
+		jww.ERROR.Print()
+		return nil, nil, err
+	}
+	if !hasDatacenter {
+		err := fmt.Errorf("\"datacenter\" setting is required for vSphere, not found")
+		jww.ERROR.Print()
+		return nil, nil, err
+	}
+	if !hasHost {
+		err := fmt.Errorf("\"host\" setting is required for vSphere, not found")
+		jww.ERROR.Print()
+		return nil, nil, err
+	}
+	if !hasPassword {
+		err := fmt.Errorf("\"password\" setting is required for vSphere, not found")
+		jww.ERROR.Print()
+		return nil, nil, err
+	}
+	if !hasResourcePool {
+		err := fmt.Errorf("\"resource_pool\" setting is required for vSphere, not found")
+		jww.ERROR.Print()
+		return nil, nil, err
+	}
+	if !hasUsername {
+		err := fmt.Errorf("\"username\" setting is required for vSphere, not found")
+		jww.ERROR.Print()
+		return nil, nil, err
+	}
+	if !hasVMName {
+		err := fmt.Errorf("\"vm_name\" setting is required for vSphere, not found")
+		jww.ERROR.Print()
+		return nil, nil, err
+	}
+	return settings, vars, nil
+}
+
 // DeepCopyMapStringPPostProcessor makes a deep copy of each builder passed and
 // returns the copie map[string]*builder as a map[string]interface{}
 // notes: This currently only supports string slices.
