@@ -135,6 +135,21 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 					},
 				},
 			},
+			"docker-save": {
+				templateSection{
+					Settings: []string{
+						"path = save/path",
+					},
+				},
+			},
+			"docker-tag": {
+				templateSection{
+					Settings: []string{
+						"repository = mitchellh/packer",
+						"tag = 0.7",
+					},
+				},
+			},
 			"vagrant": {
 				templateSection{
 					Settings: []string{
@@ -314,23 +329,6 @@ func TestCompressPostProcessor(t *testing.T) {
 	}
 }
 
-func TestDockerImportPostProcessor(t *testing.T) {
-	expected := map[string]interface{}{
-		"repository": "mitchellh/packer",
-		"tag":        "0.7",
-		"type":       "docker-import",
-	}
-
-	pp, _, err := testPostProcessorsAllTemplate.createDockerImport()
-	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err)
-	} else {
-		if MarshalJSONToString.Get(expected) != MarshalJSONToString.Get(pp) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(pp))
-		}
-	}
-}
-
 func TestDockerPushPostProcessor(t *testing.T) {
 	expected := map[string]interface{}{
 		"login":          false,
@@ -351,6 +349,38 @@ func TestDockerPushPostProcessor(t *testing.T) {
 	}
 }
 
+func TestDockerSavePostProcessor(t *testing.T) {
+	expected := map[string]interface{}{
+		"path": "save/path",
+		"type": "docker-save",
+	}
+
+	pp, _, err := testPostProcessorsAllTemplate.createDockerSave()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(expected) != MarshalJSONToString.Get(pp) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(pp))
+		}
+	}
+}
+
+func TestDockerTagPostProcessor(t *testing.T) {
+	expected := map[string]interface{}{
+		"repository": "mitchellh/packer",
+		"tag":        "0.7",
+		"type":       "docker-tag",
+	}
+
+	pp, _, err := testPostProcessorsAllTemplate.createDockerTag()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(expected) != MarshalJSONToString.Get(pp) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(pp))
+		}
+	}
+}
 func TestDeepCopyMapStringPPostProcessor(t *testing.T) {
 	cpy := DeepCopyMapStringPPostProcessor(ppOrig)
 	if MarshalJSONToString.Get(cpy) != MarshalJSONToString.Get(ppOrig) {

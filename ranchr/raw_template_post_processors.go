@@ -176,6 +176,8 @@ func (r *rawTemplate) createCompress() (settings map[string]interface{}, vars []
 //
 // Required configuration options:
 //		repository	// string
+// Optional configuration options:
+//		tag         // string
 func (r *rawTemplate) createDockerImport() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.PostProcessors[DockerImport.String()]
 	if !ok {
@@ -217,6 +219,12 @@ func (r *rawTemplate) createDockerImport() (settings map[string]interface{}, var
 //
 // Required configuration options:
 //		none
+// Optional configuration options:
+//		login            // boolean
+//      login_email      // string
+//		login_username   // string
+//		login_password   // string
+//		login_server     // string
 func (r *rawTemplate) createDockerPush() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.PostProcessors[DockerPush.String()]
 	if !ok {
@@ -240,6 +248,90 @@ func (r *rawTemplate) createDockerPush() (settings map[string]interface{}, vars 
 		default:
 			jww.WARN.Printf("unsupported key %q: ", k)
 		}
+	}
+	return settings, vars, nil
+}
+
+// createDockerSave() creates a map of settings for Packer's docker-save
+// provisioner.  Any values that aren't supported by the docker-save
+// provisioner are logged as a Warning and ignored. For more information
+// refer to https://packer.io/docs/post-processors/docker-save.html.
+//
+// Required configuration options:
+//		path	// string
+// Optional configuration options:
+//		none
+func (r *rawTemplate) createDockerSave() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.PostProcessors[DockerSave.String()]
+	if !ok {
+		err = fmt.Errorf("no configuration found for %q", DockerSave.String())
+		jww.ERROR.Println(err)
+		return nil, nil, err
+	}
+	settings = make(map[string]interface{})
+	settings["type"] = DockerSave.String()
+	// For each value, extract its key value pair and then process. Only
+	// process the supported keys. Key validation isn't done here, leaving
+	// that for Packer.
+	var k, v string
+	var hasPath bool
+	for _, s := range r.PostProcessors[DockerSave.String()].Settings {
+		k, v = parseVar(s)
+		switch k {
+		case "path":
+			settings[k] = v
+			hasPath = true
+		default:
+			jww.WARN.Printf("unsupported key %q: ", k)
+		}
+	}
+	if !hasPath {
+		err := fmt.Errorf("\"path\" setting is required for docker-save, not found")
+		jww.ERROR.Print()
+		return nil, nil, err
+	}
+	return settings, vars, nil
+}
+
+// createDockerTag() creates a map of settings for Packer's docker-tag
+// provisioner.  Any values that aren't supported by the docker-tag
+// provisioner are logged as a Warning and ignored. For more information
+// refer to https://packer.io/docs/post-processors/docker-tag.html.
+//
+// Required configuration options:
+//		repository  // string
+// Optional configuration options:
+//		tag         // string
+func (r *rawTemplate) createDockerTag() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.PostProcessors[DockerTag.String()]
+	if !ok {
+		err = fmt.Errorf("no configuration found for %q", DockerTag.String())
+		jww.ERROR.Println(err)
+		return nil, nil, err
+	}
+	settings = make(map[string]interface{})
+	settings["type"] = DockerTag.String()
+	// For each value, extract its key value pair and then process. Only
+	// process the supported keys. Key validation isn't done here, leaving
+	// that for Packer.
+	var k, v string
+	var hasRepository bool
+	for _, s := range r.PostProcessors[DockerTag.String()].Settings {
+		k, v = parseVar(s)
+		switch k {
+		case "repository":
+			settings[k] = v
+			hasRepository = true
+		case "tag":
+			settings[k] = v
+		default:
+			jww.WARN.Printf("unsupported key %q: ", k)
+		}
+	}
+	if !hasRepository {
+		err := fmt.Errorf("\"repository\" setting is required for docker-tag, not found")
+		jww.ERROR.Print()
+		return nil, nil, err
 	}
 	return settings, vars, nil
 }
