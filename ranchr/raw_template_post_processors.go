@@ -202,7 +202,14 @@ func (r *rawTemplate) createVagrant() (settings map[string]interface{}, vars []s
 		case "keep_input_artifact":
 			settings[k], _ = strconv.ParseBool(v)
 		case "compression_level":
-			settings[k] = strconv.Atoi(v)
+			// only add if its an int
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				err = fmt.Errorf("Vargrant builder error while trying to set %q to %q: %s", k, v, err)
+				jww.ERROR.Println(err)
+				return nil, nil, err
+			}
+			settings[k] = i
 		default:
 			jww.WARN.Printf("unsupported key %q: ", k)
 		}

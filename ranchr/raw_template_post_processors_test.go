@@ -142,9 +142,9 @@ func TestRawTemplateCreatePostProcessors(t *testing.T) {
 	} else {
 		expected := []interface{}{
 			map[string]interface{}{
-				"compression_level":   "8",
+				"compression_level":   8,
 				"include":             []string{"include1", "include2"},
-				"keep_input_artifact": "true",
+				"keep_input_artifact": true,
 				"only":                []string{"virtualbox-iso"},
 				"output":              "out/rancher-packer.box",
 				"override": map[string]interface{}{
