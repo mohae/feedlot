@@ -271,6 +271,7 @@ var testAllBuilders = &rawTemplate{
 	build: build{
 		BuilderTypes: []string{
 			"amazon-ebs",
+			"digitalocean",
 			"virtualbox-iso",
 			"virtualbox-ovf",
 			"vmware-iso",
@@ -337,6 +338,24 @@ var testAllBuilders = &rawTemplate{
 					},
 				},
 			},
+			"digitalocean": {
+				templateSection{
+					Settings: []string{
+						"api_token=DIGITALOCEAN_API_TOKEN",
+						"api_url=https://api.digitalocean.com",
+						"droplet_name=ocean-drop",
+						"image=ubuntu-12-04-x64",
+						"private_networking=false",
+						"region=nyc3",
+						"size=512mb",
+						"snapshot_name=my-snapshot",
+						"ssh_port=22",
+						"ssh_timeout=5m",
+						"ssh_username=user",
+						"state_timeout=6m",
+					},
+				},
+			},
 			"virtualbox-iso": {
 				templateSection{
 					Arrays: map[string]interface{}{
@@ -394,7 +413,6 @@ var testAllBuilders = &rawTemplate{
 			},
 		},
 		ProvisionerTypes: []string{
-			"shell-scripts",
 			"salt",
 		},
 		Provisioners: map[string]*provisioner{
@@ -406,19 +424,103 @@ var testAllBuilders = &rawTemplate{
 					},
 				},
 			},
-			"shell-scripts": {
+		},
+	},
+}
+
+var testDigtialOceanAPIV1 = &rawTemplate{
+	IODirInf: IODirInf{
+		CommandsSrcDir: "../test_files/ubuntu/src/commands",
+		HTTPDir:        "http",
+		HTTPSrcDir:     "../test_files/ubuntu/src/http",
+		OutDir:         "../test_files/ubuntu/out/ubuntu",
+		ScriptsDir:     "scripts",
+		ScriptsSrcDir:  "../test_files/src/ubuntu/scripts",
+		SrcDir:         "../test_files/src/ubuntu",
+	},
+	PackerInf: PackerInf{
+		MinPackerVersion: "",
+		Description:      "Test build template",
+	},
+	BuildInf: BuildInf{
+		Name:      ":type-:release-:image-:arch",
+		BuildName: "",
+		BaseURL:   "http://releases.ubuntu.com/",
+	},
+	Distro:  "ubuntu",
+	Arch:    "amd64",
+	Image:   "desktop",
+	Release: "12.04",
+	build: build{
+		BuilderTypes: []string{
+			"digitalocean",
+		},
+		Builders: map[string]*builder{
+			"digitalocean": {
 				templateSection{
 					Settings: []string{
-						"execute_command = ../test_files/src/centos/commands/execute_test.command",
+						"api_key=DIGITALOCEAN_API_KEY",
+						"client_id=DIGITALOCEAN_CLIENT_ID",
+						"api_url=https://api.digitalocean.com",
+						"droplet_name=ocean-drop",
+						"image=ubuntu-12-04-x64",
+						"private_networking=false",
+						"region=nyc3",
+						"size=512mb",
+						"snapshot_name=my-snapshot",
+						"ssh_port=22",
+						"ssh_timeout=5m",
+						"ssh_username=user",
+						"state_timeout=6m",
 					},
-					Arrays: map[string]interface{}{
-						"scripts": []string{
-							"../test_files/centos/src/scripts/setup_test.sh",
-							"../test_files/centos/src/scripts/base_test.sh",
-							"../test_files/centos/src/scripts/vagrant_test.sh",
-							"../test_files/centos/src/scripts/cleanup_test.sh",
-							"../test_files/centos/src/scripts/zerodisk_test.sh",
-						},
+				},
+			},
+		},
+	},
+}
+
+var testDigtialOceanNoAPI = &rawTemplate{
+	IODirInf: IODirInf{
+		CommandsSrcDir: "../test_files/ubuntu/src/commands",
+		HTTPDir:        "http",
+		HTTPSrcDir:     "../test_files/ubuntu/src/http",
+		OutDir:         "../test_files/ubuntu/out/ubuntu",
+		ScriptsDir:     "scripts",
+		ScriptsSrcDir:  "../test_files/src/ubuntu/scripts",
+		SrcDir:         "../test_files/src/ubuntu",
+	},
+	PackerInf: PackerInf{
+		MinPackerVersion: "",
+		Description:      "Test build template",
+	},
+	BuildInf: BuildInf{
+		Name:      ":type-:release-:image-:arch",
+		BuildName: "",
+		BaseURL:   "http://releases.ubuntu.com/",
+	},
+	Distro:  "ubuntu",
+	Arch:    "amd64",
+	Image:   "desktop",
+	Release: "12.04",
+	build: build{
+		BuilderTypes: []string{
+			"digitalocean",
+		},
+		Builders: map[string]*builder{
+			"digitalocean": {
+				templateSection{
+					Settings: []string{
+						"api_url=https://api.digitalocean.com",
+						"droplet_name=ocean-drop",
+						"image=ubuntu-12-04-x64",
+						"private_networking=false",
+						"region=nyc3",
+						"size=512mb",
+						"snapshot_name=my-snapshot",
+						"ssh_port=22",
+						"ssh_timeout=5m",
+						"ssh_username=user",
+						"state_timeout=6m",
 					},
 				},
 			},
@@ -779,6 +881,63 @@ func TestAmazonEBSBuilder(t *testing.T) {
 	}
 }
 
+func TestDigitalOceanBuilder(t *testing.T) {
+	expectedV1 := map[string]interface{}{
+		"api_key":            "DIGITALOCEAN_API_KEY",
+		"client_id":          "DIGITALOCEAN_CLIENT_ID",
+		"api_url":            "https://api.digitalocean.com",
+		"droplet_name":       "ocean-drop",
+		"image":              "ubuntu-12-04-x64",
+		"private_networking": false,
+		"region":             "nyc3",
+		"size":               "512mb",
+		"snapshot_name":      "my-snapshot",
+		"ssh_port":           22,
+		"ssh_timeout":        "5m",
+		"ssh_username":       "user",
+		"state_timeout":      "6m",
+		"type":               "digitalocean",
+	}
+	expectedV2 := map[string]interface{}{
+		"api_token":          "DIGITALOCEAN_API_TOKEN",
+		"api_url":            "https://api.digitalocean.com",
+		"droplet_name":       "ocean-drop",
+		"image":              "ubuntu-12-04-x64",
+		"private_networking": false,
+		"region":             "nyc3",
+		"size":               "512mb",
+		"snapshot_name":      "my-snapshot",
+		"ssh_port":           22,
+		"ssh_timeout":        "5m",
+		"ssh_username":       "user",
+		"state_timeout":      "6m",
+		"type":               "digitalocean",
+	}
+	bldr, _, err := testAllBuilders.createDigitalOcean()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedV2) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedV2), MarshalJSONToString.Get(bldr))
+		}
+	}
+	bldr, _, err = testDigtialOceanAPIV1.createDigitalOcean()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedV1) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedV1), MarshalJSONToString.Get(bldr))
+		}
+	}
+	_, _, err = testDigtialOceanNoAPI.createDigitalOcean()
+	if err == nil {
+		t.Errorf("Expected an error, got nil")
+	} else {
+		if err.Error() != "required Digital Ocean API information not set" {
+			t.Errorf("Expected \"required Digital Ocean API information not set\", got %q", err.Error())
+		}
+	}
+}
 func TestDeepCopyMapStringPBuilder(t *testing.T) {
 	cpy := DeepCopyMapStringPBuilder(testDistroDefaults.Templates[Ubuntu].Builders)
 	if MarshalJSONToString.Get(cpy["common"]) != MarshalJSONToString.Get(testDistroDefaults.Templates[Ubuntu].Builders["common"]) {

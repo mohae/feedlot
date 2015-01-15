@@ -242,6 +242,149 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, vars [
 	return settings, vars, nil
 }
 
+// createDigitalOcean creates a map of settings for Packer's digitalocean
+// builder. Any values that aren't supported by the digitalocean builder
+// are ignored. For more information, refer to
+// https://packer.io/docs/builders/digitalocean.html
+//
+// NOTE: The deprecated image_id, region_id, and size_id options are not
+//       supported.
+//
+// Required V1 api configuration options:
+//   api_key             string
+//   client_id           string
+// Required V2 api configuration options:
+//   api_token           string
+// Optional configuration options:
+//   api_url             string
+//   droplet_name        string
+//   image               string
+//   image_id            integer
+//   private_networking  boolean
+//   region              string
+//   region_id           integer
+//   size                string
+//   size_id             integer
+//   snapshot_name       string
+//   ssh_port            integer
+//   ssh_timeout         string
+//   ssh_username        string
+//   state_timeout       string
+func (r *rawTemplate) createDigitalOcean() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Builders[DigitalOcean.String()]
+	if !ok {
+		err = fmt.Errorf("no configuration for %q found", DigitalOcean.String())
+	}
+	settings = make(map[string]interface{})
+	// Each create function is responsible for setting its own type.
+	settings["type"] = DigitalOcean.String()
+	// If a common builder was defined, merge the settings between common and this builders.
+	_, ok = r.Builders[Common.String()]
+	var workSlice []string
+	if ok {
+		workSlice = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[DigitalOcean.String()].Settings)
+	} else {
+		workSlice = r.Builders[DigitalOcean.String()].Settings
+	}
+	// Go through each element in the slice, only take the ones that matter
+	// to this builder.
+	// TODO look at snapshot name handling--it should be unique, e.g. timestamp
+	var hasApiToken, hasApiKey, hasClientID bool
+	for _, s := range workSlice {
+		// var tmp interface{}
+		k, v := parseVar(s)
+		v = r.replaceVariables(v)
+		switch k {
+		case "api_key":
+			settings[k] = v
+			hasApiKey = true
+		case "api_token":
+			settings[k] = v
+			hasApiToken = true
+		case "client_id":
+			settings[k] = v
+			hasClientID = true
+		case "api_url", "droplet_name", "image", "region", "size", "snapshot_name", "ssh_timeout", "ssh_username", "state_timeout":
+			settings[k] = v
+		case "private_networking":
+			settings[k], _ = strconv.ParseBool(v)
+		case "ssh_port":
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				err = fmt.Errorf("An error occurred while trying to set %s to %s: %s", k, v, err)
+				jww.ERROR.Println(err)
+				return nil, nil, err
+			}
+			settings[k] = i
+		default:
+			jww.WARN.Println("unsupported digitalocean key was encountered: " + k)
+		}
+	}
+	if hasApiToken {
+		return settings, nil, nil
+	}
+	if hasApiKey && hasClientID {
+		return settings, nil, nil
+	}
+	err = fmt.Errorf("required Digital Ocean API information not set")
+	jww.ERROR.Print(err)
+	return nil, nil, err
+}
+
+// createDocker generates the settings for a docker builder.
+func (r *rawTemplate) createDocker() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[Docker.String()]
+	if !ok {
+		err = fmt.Errorf("no configuration for %q found", Docker.String())
+	}
+	settings = make(map[string]interface{})
+	// Each create function is responsible for setting its own type.
+	settings["type"] = Docker
+	// Merge the settings between common and this builders.
+	mergedSlice := mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[Docker.String()].Settings)
+	// Go through each element in the slice, only take the ones that matter
+	// to this builder.
+
+	for _, s := range mergedSlice {
+		// var tmp interface{}
+		k, v := parseVar(s)
+		v = r.replaceVariables(v)
+		switch k {
+		case "export_path", "image", "login_email", "login_username", "login_password", "login_server":
+			settings[k] = v
+		case "commit", "login", "pull":
+			settings[k], _ = strconv.ParseBool(v) // ignore ok because !ok will result in b being false, i.e. all non-true values are evaluated to false
+		case "ssh_port", "ssh_timeout":
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				err = fmt.Errorf("An error occurred while trying to set %s to %s: %s", k, v, err)
+				jww.ERROR.Println(err)
+				return nil, nil, err
+			}
+			settings[k] = i
+		case "run_command":
+			//If it ends in .command, replace it with the command from the filepath
+			var commands []string
+			commands, err = commandsFromFile(v)
+			if err != nil {
+				jww.ERROR.Println(err)
+				return nil, nil, err
+			}
+			// Assume it's the first element.
+			settings[k] = commands[0]
+		}
+	}
+
+	// Process the Arrays.
+	for name, val := range r.Builders[Docker.String()].Arrays {
+		array := deepcopy.InterfaceToSliceStrings(val)
+		if array != nil {
+			settings[name] = array
+		}
+	}
+	return settings, nil, nil
+}
+
 // createVirtualBoxISO creates a map of settings for Packer's VirtualBox-ISO
 // builder. Any values that aren't supported by the VirtualBox-ISO builder
 // are ignored. For more information, refer to
@@ -742,123 +885,6 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, vars [
 		tmpVB[k] = val
 	}
 	settings["vmx_data"] = tmpVB
-	return settings, nil, nil
-}
-
-// createDigitalOcean creates a map of settings for Packer's digitalocean
-// builder. Any values that aren't supported by the digitalocean builder
-// are ignored. For more information, refer to
-// https://packer.io/docs/builders/digitalocean.html
-//
-// NOTE: The deprecated image_id, region_id, and size_id options are not
-//       supported.
-//
-// Required V1 api configuration options:
-//   api_key 				// string
-//   client_id				// string
-// Required V2 api configuration options:
-//   api_token				// string
-// Optional configuration options:
-//   api_url				// string
-//   droplet_name			// string
-//   image					// string
-//   image_id				// integer
-//   private_networking		// boolean
-//   region					// string
-//   region_id				// integer
-//   size					// string
-//   size_id				// integer
-//   snapshot_name			// string
-//   ssh_port				// integer
-//   ssh_timeout			// string
-//   ssh_username			// string
-//   state_timeout			// string
-func (r *rawTemplate) createDigitalOcean() (settings map[string]interface{}, vars []string, err error) {
-	_, ok := r.Provisioners[DigitalOcean.String()]
-	if !ok {
-		err = fmt.Errorf("no configuration for %q found", DigitalOcean.String())
-	}
-	settings = make(map[string]interface{})
-	// Each create function is responsible for setting its own type.
-	settings["type"] = DigitalOcean
-	// Merge the settings between common and this builders.
-	mergedSlice := mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[DigitalOcean.String()].Settings)
-	// Go through each element in the slice, only take the ones that matter
-	// to this builder.
-	// TODO look at snapshot name handling--it should be unique, e.g. timestamp
-	for _, s := range mergedSlice {
-		// var tmp interface{}
-		k, v := parseVar(s)
-		v = r.replaceVariables(v)
-		switch k {
-		case "api_key", "api_token", "api_url", "client_id", "droplet_name", "image", "region", "size", "snapshot_name", "ssh_username", "state_timeout":
-			settings[k] = v
-		case "private_networking":
-			settings[k], _ = strconv.ParseBool(v) // ignore ok because !ok will result in b being false, i.e. all non-true values are evaluated to false
-		case "ssh_port", "ssh_timeout":
-			i, err := strconv.Atoi(v)
-			if err != nil {
-				err = fmt.Errorf("An error occurred while trying to set %s to %s: %s", k, v, err)
-				jww.ERROR.Println(err)
-				return nil, nil, err
-			}
-			settings[k] = i
-		}
-	}
-	return settings, nil, nil
-}
-
-// createDocker generates the settings for a docker builder.
-func (r *rawTemplate) createDocker() (settings map[string]interface{}, vars []string, err error) {
-	_, ok := r.Provisioners[Docker.String()]
-	if !ok {
-		err = fmt.Errorf("no configuration for %q found", Docker.String())
-	}
-	settings = make(map[string]interface{})
-	// Each create function is responsible for setting its own type.
-	settings["type"] = Docker
-	// Merge the settings between common and this builders.
-	mergedSlice := mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[Docker.String()].Settings)
-	// Go through each element in the slice, only take the ones that matter
-	// to this builder.
-
-	for _, s := range mergedSlice {
-		// var tmp interface{}
-		k, v := parseVar(s)
-		v = r.replaceVariables(v)
-		switch k {
-		case "export_path", "image", "login_email", "login_username", "login_password", "login_server":
-			settings[k] = v
-		case "commit", "login", "pull":
-			settings[k], _ = strconv.ParseBool(v) // ignore ok because !ok will result in b being false, i.e. all non-true values are evaluated to false
-		case "ssh_port", "ssh_timeout":
-			i, err := strconv.Atoi(v)
-			if err != nil {
-				err = fmt.Errorf("An error occurred while trying to set %s to %s: %s", k, v, err)
-				jww.ERROR.Println(err)
-				return nil, nil, err
-			}
-			settings[k] = i
-		case "run_command":
-			//If it ends in .command, replace it with the command from the filepath
-			var commands []string
-			commands, err = commandsFromFile(v)
-			if err != nil {
-				jww.ERROR.Println(err)
-				return nil, nil, err
-			}
-			// Assume it's the first element.
-			settings[k] = commands[0]
-		}
-	}
-
-	// Process the Arrays.
-	for name, val := range r.Builders[Docker.String()].Arrays {
-		array := deepcopy.InterfaceToSliceStrings(val)
-		if array != nil {
-			settings[name] = array
-		}
-	}
 	return settings, nil, nil
 }
 
