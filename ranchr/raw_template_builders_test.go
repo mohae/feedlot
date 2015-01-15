@@ -356,6 +356,30 @@ var testAllBuilders = &rawTemplate{
 					},
 				},
 			},
+			"docker": {
+				templateSection{
+					Settings: []string{
+						"commit=true",
+						"export_path=export/path",
+						"image=baseImage",
+						"login=true",
+						"login_email=test@test.com",
+						"login_username=username",
+						"login_password=password",
+						"login_server=127.0.0.1",
+						"pull=true",
+					},
+					Arrays: map[string]interface{}{
+						"run_command": []string{
+							"-d",
+							"-i",
+							"-t",
+							"{{.Image}}",
+							"/bin/bash",
+						},
+					},
+				},
+			},
 			"virtualbox-iso": {
 				templateSection{
 					Arrays: map[string]interface{}{
@@ -938,6 +962,37 @@ func TestDigitalOceanBuilder(t *testing.T) {
 		}
 	}
 }
+
+func TestDockerBuilder(t *testing.T) {
+	expected := map[string]interface{}{
+		"commit":         true,
+		"export_path":    "export/path",
+		"image":          "baseImage",
+		"login":          true,
+		"login_email":    "test@test.com",
+		"login_username": "username",
+		"login_password": "password",
+		"login_server":   "127.0.0.1",
+		"pull":           true,
+		"run_command": []string{
+			"-d",
+			"-i",
+			"-t",
+			"{{.Image}}",
+			"/bin/bash",
+		},
+		"type": "docker",
+	}
+	bldr, _, err := testAllBuilders.createDocker()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(bldr))
+		}
+	}
+}
+
 func TestDeepCopyMapStringPBuilder(t *testing.T) {
 	cpy := DeepCopyMapStringPBuilder(testDistroDefaults.Templates[Ubuntu].Builders)
 	if MarshalJSONToString.Get(cpy["common"]) != MarshalJSONToString.Get(testDistroDefaults.Templates[Ubuntu].Builders["common"]) {

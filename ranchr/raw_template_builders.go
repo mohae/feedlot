@@ -331,7 +331,24 @@ func (r *rawTemplate) createDigitalOcean() (settings map[string]interface{}, var
 	return nil, nil, err
 }
 
-// createDocker generates the settings for a docker builder.
+// createDocker creates a map of settings for Packer's docker builder. Any
+// values that aren't supported by the digitalocean builder are ignored. For
+// more information, refer to https://packer.io/docs/builders/docker.html
+//
+// Required configuration options:
+//   commit         boolean
+//   export_path    string
+//   image          string
+// Optional configuration options:
+//   login          boolean
+//   login_email    string
+//   login_username  string
+//   login_password  string
+//   login_server    string
+//   pull            boolean
+//   run_command     array of strings
+// Not implemented configuration options:
+//   volumes         map of strings to strings
 func (r *rawTemplate) createDocker() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.Provisioners[Docker.String()]
 	if !ok {
@@ -339,47 +356,63 @@ func (r *rawTemplate) createDocker() (settings map[string]interface{}, vars []st
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
-	settings["type"] = Docker
+	settings["type"] = Docker.String()
 	// Merge the settings between common and this builders.
-	mergedSlice := mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[Docker.String()].Settings)
+	var workSlice []string
+	_, ok = r.Builders[Common.String()]
+	if ok {
+		workSlice = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[Docker.String()].Settings)
+	} else {
+		workSlice = r.Builders[Docker.String()].Settings
+	}
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
-
-	for _, s := range mergedSlice {
-		// var tmp interface{}
+	var hasCommit, hasExportPath, hasImage bool
+	for _, s := range workSlice {
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
-		case "export_path", "image", "login_email", "login_username", "login_password", "login_server":
+		case "export_path":
 			settings[k] = v
-		case "commit", "login", "pull":
-			settings[k], _ = strconv.ParseBool(v) // ignore ok because !ok will result in b being false, i.e. all non-true values are evaluated to false
-		case "ssh_port", "ssh_timeout":
-			i, err := strconv.Atoi(v)
-			if err != nil {
-				err = fmt.Errorf("An error occurred while trying to set %s to %s: %s", k, v, err)
-				jww.ERROR.Println(err)
-				return nil, nil, err
-			}
-			settings[k] = i
-		case "run_command":
-			//If it ends in .command, replace it with the command from the filepath
-			var commands []string
-			commands, err = commandsFromFile(v)
-			if err != nil {
-				jww.ERROR.Println(err)
-				return nil, nil, err
-			}
-			// Assume it's the first element.
-			settings[k] = commands[0]
+			hasExportPath = true
+		case "image":
+			settings[k] = v
+			hasImage = true
+		case "login_email", "login_username", "login_password", "login_server":
+			settings[k] = v
+		case "commit":
+			settings[k], _ = strconv.ParseBool(v)
+			hasCommit = true
+		case "login", "pull":
+			settings[k], _ = strconv.ParseBool(v)
+		default:
+			jww.WARN.Printf("unsupported docker key was encountered: %q", k)
 		}
 	}
-
+	if !hasCommit {
+		err := fmt.Errorf("\"commit\" setting is required for docker, not found")
+		jww.ERROR.Println(err)
+		return nil, nil, err
+	}
+	if !hasExportPath {
+		err := fmt.Errorf("\"export_path\" setting is required for docker, not found")
+		jww.ERROR.Println(err)
+		return nil, nil, err
+	}
+	if !hasImage {
+		err := fmt.Errorf("\"image\" setting is required for docker, not found")
+		jww.ERROR.Println(err)
+		return nil, nil, err
+	}
 	// Process the Arrays.
 	for name, val := range r.Builders[Docker.String()].Arrays {
-		array := deepcopy.InterfaceToSliceStrings(val)
-		if array != nil {
-			settings[name] = array
+		if name == "run_command" {
+			array := deepcopy.InterfaceToSliceStrings(val)
+			if array != nil {
+				settings[name] = array
+			}
+		} else {
+			jww.WARN.Printf("unsupported docker array element was encountered: %q", name)
 		}
 	}
 	return settings, nil, nil
