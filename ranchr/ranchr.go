@@ -63,7 +63,7 @@ const (
 	AmazonEBS
 	DigitalOcean
 	Docker
-	GoogleComputeEngine
+	GoogleCompute
 	Null
 	Openstack
 	Parallels
@@ -79,20 +79,20 @@ type Builder int
 
 var builders = [...]string{
 	"unsupported Builder",
-	"common",                // Common is the name of the common builder
-	"custom",                // custom is the name of the custom builder
-	"amazon-ebs",            // AmazonEBS is the name of the amazon-ebs backed builder
-	"digitalocean",          // DigitalOcean is the name of the Digital Ocean builder
-	"docker",                // Docker is the name of the Docker builder
-	"google-compute-engine", // GoogleComputeEngine is the name of the Google Compute Engine builder
-	"null",                  // Null is the name of the Null
-	"openstack",             // Openstack is the name of the Openstack
-	"parallels",             // Parallels is the name of the Parallels builder
-	"qemu",                  // QEMU is the name of the QEMU builder
-	"virtualbox-iso",        // VirtualBoxISO is the name of the VirtualBox ISO builder
-	"virtualbox-ovf",        // VirtualBoxOVF is the name of the VirtualBox OVF builder
-	"vmware-iso",            // VMWareISO is the name of the VMWare ISO builder
-	"vmware-vmx",            // VMWareVMX is the name of the VMWare VMX builder
+	"common",         // Common is the name of the common builder
+	"custom",         // custom is the name of the custom builder
+	"amazon-ebs",     // AmazonEBS is the name of the amazon-ebs backed builder
+	"digitalocean",   // DigitalOcean is the name of the Digital Ocean builder
+	"docker",         // Docker is the name of the Docker builder
+	"googlecompute",  // GoogleComputeEngine is the name of the Google Compute Engine builder
+	"null",           // Null is the name of the Null
+	"openstack",      // Openstack is the name of the Openstack
+	"parallels",      // Parallels is the name of the Parallels builder
+	"qemu",           // QEMU is the name of the QEMU builder
+	"virtualbox-iso", // VirtualBoxISO is the name of the VirtualBox ISO builder
+	"virtualbox-ovf", // VirtualBoxOVF is the name of the VirtualBox OVF builder
+	"vmware-iso",     // VMWareISO is the name of the VMWare ISO builder
+	"vmware-vmx",     // VMWareVMX is the name of the VMWare VMX builder
 }
 
 func (b Builder) String() string { return builders[b] }
@@ -110,8 +110,8 @@ func BuilderFromString(s string) Builder {
 		return AmazonEBS
 	case "digitalocean":
 		return DigitalOcean
-	case "google-compute-engine":
-		return GoogleComputeEngine
+	case "googlecompute":
+		return GoogleCompute
 	case "null":
 		return Null
 	case "openstack":
@@ -190,13 +190,13 @@ func PostProcessorFromString(s string) PostProcessor {
 // Provisioner constants
 const (
 	UnsupportedProvisioner Provisioner = iota
-	Ansible
+	AnsibleLocal
 	ChefClient
 	ChefSolo
 	FileUploads
 	PuppetMasterless
 	PuppetServer
-	Salt
+	SaltMasterless
 	ShellScripts
 )
 
@@ -223,7 +223,7 @@ func ProvisionerFromString(s string) Provisioner {
 	s = strings.ToLower(s)
 	switch s {
 	case "ansible-local":
-		return Ansible
+		return AnsibleLocal
 	case "chef-client":
 		return ChefClient
 	case "chef-solo":
@@ -235,7 +235,7 @@ func ProvisionerFromString(s string) Provisioner {
 	case "puppet-server":
 		return PuppetServer
 	case "salt-masterless":
-		return Salt
+		return SaltMasterless
 	case "shell-scripts":
 		return ShellScripts
 	}

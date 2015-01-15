@@ -46,16 +46,12 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 			tmpS, _, err = r.createDigitalOcean()
 		case Docker:
 			tmpS, _, err = r.createDocker()
-			//		case GoogleCompute:
-
-			//		case NullBuilder:
-
-			//		case Openstack:
-
-			//		case ParallelsISO, ParallelsPVM:
-
-			//		case QEMU:
-
+		case GoogleCompute:
+			tmpS, _, err = r.createGoogleCompute()
+		//	case Null:
+		//	case Openstack:
+		//	case ParallelsISO, ParallelsPVM:
+		//	case QEMU:
 		case VMWareISO:
 			tmpS, _, err = r.createVMWareISO()
 		case VMWareVMX:
@@ -90,10 +86,10 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 }
 
 // createAmazonEBS creates a map of settings for Packer's amazon-ebs builder.
-// Any values that aren't supported by the amazon-ebs builder result in a
-// logged warning and are ignored. Any required settings that don't exist
-// result in an error and processing of the builder is stopped. For more
-// information, refer to https://packer.io/docs/builders/amazon-ebs.html
+// Any values that aren't supported by the amazon-ebs builder are logged as a
+// WARN and are ignored. Any required settings that don't exist result in an
+// error and processing of the builder is stopped. For more information, refer
+// to https://packer.io/docs/builders/amazon-ebs.html
 //
 // Required configuration options:
 //   access_key                   string
@@ -244,8 +240,9 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, vars [
 
 // createDigitalOcean creates a map of settings for Packer's digitalocean
 // builder. Any values that aren't supported by the digitalocean builder
-// are ignored. For more information, refer to
-// https://packer.io/docs/builders/digitalocean.html
+// are logged as a WARN and ignored.  Any required settings that don't exist
+// result in an error and processing of the builder is stopped. For more
+// information, refer to https://packer.io/docs/builders/digitalocean.html
 //
 // NOTE: The deprecated image_id, region_id, and size_id options are not
 //       supported.
@@ -332,8 +329,10 @@ func (r *rawTemplate) createDigitalOcean() (settings map[string]interface{}, var
 }
 
 // createDocker creates a map of settings for Packer's docker builder. Any
-// values that aren't supported by the digitalocean builder are ignored. For
-// more information, refer to https://packer.io/docs/builders/docker.html
+// values that aren't supported by the digitalocean builder are logged as a
+// WARN and ignored.  Any required settings that don't exist result in an
+// error and processing of the builder is stopped. For more information, refer
+// to https://packer.io/docs/builders/docker.html
 //
 // Required configuration options:
 //   commit         boolean
@@ -413,6 +412,107 @@ func (r *rawTemplate) createDocker() (settings map[string]interface{}, vars []st
 			}
 		} else {
 			jww.WARN.Printf("unsupported docker array element was encountered: %q", name)
+		}
+	}
+	return settings, nil, nil
+}
+
+// createGoogleCompute creates a map of settings for Packer's googlecompute
+// builder. Any values that aren't supported by the googlecompute builder are
+// logged as a WARN and ignored.  Any required settings that don't exist
+// result in an error and processing of the builder is stopped. For more
+// information, refer to https://packer.io/docs/builders/googlecompute.html
+//
+// Required configuration options:
+//   project_id         string
+//   source_image       string
+//   zone               string
+// Optional configuration options:
+//   account_file       string
+//   disk_size          integer
+//   image_name         string
+//   image_description  string
+//   instance_name      string
+//   machine_name       string
+//   machine_type       string
+//   network            string
+//   ssh_port           integer
+//   ssh_username       string
+//   state_timeout      string
+//   tags               array of strings
+// Not implemented configuration options:
+//   metadata           object of key/value strings
+func (r *rawTemplate) createGoogleCompute() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[GoogleCompute.String()]
+	if !ok {
+		err = fmt.Errorf("no configuration for %q found", GoogleCompute.String())
+	}
+	settings = make(map[string]interface{})
+	// Each create function is responsible for setting its own type.
+	settings["type"] = GoogleCompute.String()
+	// Merge the settings between common and this builders.
+	var workSlice []string
+	_, ok = r.Builders[Common.String()]
+	if ok {
+		workSlice = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[GoogleCompute.String()].Settings)
+	} else {
+		workSlice = r.Builders[GoogleCompute.String()].Settings
+	}
+	// Go through each element in the slice, only take the ones that matter
+	// to this builder.
+	var hasProjectID, hasSourceImage, hasZone bool
+	for _, s := range workSlice {
+		k, v := parseVar(s)
+		v = r.replaceVariables(v)
+		switch k {
+		case "project_id":
+			settings[k] = v
+			hasProjectID = true
+		case "source_image":
+			settings[k] = v
+			hasSourceImage = true
+		case "zone":
+			settings[k] = v
+			hasZone = true
+		case "account_file", "image_name", "image_description", "instance_name",
+			"machine_type", "network", "ssh_timeout", "ssh_username", "state_timeout":
+			settings[k] = v
+		case "disk_size", "ssh_port":
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				err = fmt.Errorf("An error occurred while trying to set %s to %s: %s", k, v, err)
+				jww.ERROR.Println(err)
+				return nil, nil, err
+			}
+			settings[k] = i
+		default:
+			jww.WARN.Printf("unsupported docker key was encountered: %q", k)
+		}
+	}
+	if !hasProjectID {
+		err := fmt.Errorf("\"project_id\" setting is required for googlecompute, not found")
+		jww.ERROR.Println(err)
+		return nil, nil, err
+	}
+	if !hasSourceImage {
+		err := fmt.Errorf("\"source_image\" setting is required for googlecompute, not found")
+		jww.ERROR.Println(err)
+		return nil, nil, err
+	}
+	if !hasZone {
+		err := fmt.Errorf("\"zone\" setting is required for googlecompute, not found")
+		jww.ERROR.Println(err)
+		return nil, nil, err
+	}
+	// Process the Arrays.
+	for name, val := range r.Builders[GoogleCompute.String()].Arrays {
+		if name == "tags" {
+			array := deepcopy.InterfaceToSliceStrings(val)
+			if array != nil {
+				settings[name] = array
+			}
+		} else {
+			jww.WARN.Printf("unsupported googlecompute array element was encountered: %q", name)
 		}
 	}
 	return settings, nil, nil

@@ -272,6 +272,7 @@ var testAllBuilders = &rawTemplate{
 		BuilderTypes: []string{
 			"amazon-ebs",
 			"digitalocean",
+			"googlecompute",
 			"virtualbox-iso",
 			"virtualbox-ovf",
 			"vmware-iso",
@@ -376,6 +377,28 @@ var testAllBuilders = &rawTemplate{
 							"-t",
 							"{{.Image}}",
 							"/bin/bash",
+						},
+					},
+				},
+			},
+			"googlecompute": {
+				templateSection{
+					Settings: []string{
+						"account_file=account.json",
+						"image_name=packer-{{timestamp}}",
+						"image_description=test image",
+						"instance_name=packer-{{uuid}}",
+						"machine_type=nl-standard-1",
+						"network=default",
+						"project_id=projectID",
+						"source_image=centos-6",
+						"ssh_timeout=5m",
+						"state_timeout=5m",
+						"zone=us-central1-a",
+					},
+					Arrays: map[string]interface{}{
+						"tags": []string{
+							"tag1",
 						},
 					},
 				},
@@ -486,8 +509,8 @@ var testDigtialOceanAPIV1 = &rawTemplate{
 						"api_key=DIGITALOCEAN_API_KEY",
 						"client_id=DIGITALOCEAN_CLIENT_ID",
 						"api_url=https://api.digitalocean.com",
-						"droplet_name=ocean-drop",
 						"image=ubuntu-12-04-x64",
+						"droplet_name=ocean-drop",
 						"private_networking=false",
 						"region=nyc3",
 						"size=512mb",
@@ -984,6 +1007,38 @@ func TestDockerBuilder(t *testing.T) {
 		"type": "docker",
 	}
 	bldr, _, err := testAllBuilders.createDocker()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(bldr))
+		}
+	}
+}
+
+func TestDockerGoogleCompute(t *testing.T) {
+	expected := map[string]interface{}{
+		"account_file":      "account.json",
+		"disk_size":         20000,
+		"image_name":        "packer-{{timestamp}}",
+		"image_description": "test image",
+		"instance_name":     "packer-{{uuid}}",
+		"machine_type":      "nl-standard-1",
+		"network":           "default",
+		"project_id":        "projectID",
+		"source_image":      "centos-6",
+		"ssh_port":          22,
+		"ssh_timeout":       "5m",
+		"ssh_username":      "vagrant",
+		"state_timeout":     "5m",
+		"tags": []string{
+			"tag1",
+		},
+		"type": "googlecompute",
+		"zone": "us-central1-a",
+	}
+
+	bldr, _, err := testAllBuilders.createGoogleCompute()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {

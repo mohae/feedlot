@@ -110,12 +110,12 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 		tmpS = make(map[string]interface{})
 		typ := ProvisionerFromString(pType)
 		switch typ {
-		case Ansible:
-			tmpS, tmpVar, err = r.createAnsible()
+		case AnsibleLocal:
+			tmpS, tmpVar, err = r.createAnsibleLocal()
 		case FileUploads:
 			tmpS, tmpVar, err = r.createFileUploads()
-		case Salt:
-			tmpS, tmpVar, err = r.createSalt()
+		case SaltMasterless:
+			tmpS, tmpVar, err = r.createSaltMasterless()
 		case ShellScripts:
 			tmpS, tmpVar, err = r.createShellScripts()
 			/*
@@ -140,7 +140,7 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 	return p, vars, nil
 }
 
-// createAnsible() creates a map of settings for Packer's ansible-local
+// createAnsibleLocal() creates a map of settings for Packer's ansible-local
 // provisioner. Any values that aren't supported by the file provisioner are
 // ignored. For more information, refer to
 // https://packer.io/docs/provisioners/ansible-local.html
@@ -157,19 +157,19 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 //   playbook_paths		// array of strings
 //   role_paths			// array of strings
 //   staging_directory	// string
-func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []string, err error) {
-	_, ok := r.Provisioners[Ansible.String()]
+func (r *rawTemplate) createAnsibleLocal() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[AnsibleLocal.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration for %q found", Ansible.String())
+		err = fmt.Errorf("no configuration for %q found", AnsibleLocal.String())
 	}
 	settings = make(map[string]interface{})
-	settings["type"] = Ansible.String()
+	settings["type"] = AnsibleLocal.String()
 	// For each value, extract its key value pair and then process. Only
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
 	var k, v string
 	var hasPlaybook bool
-	for _, s := range r.Provisioners[Ansible.String()].Settings {
+	for _, s := range r.Provisioners[AnsibleLocal.String()].Settings {
 		k, v = parseVar(s)
 		switch k {
 		case "playbook_file":
@@ -187,7 +187,7 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []s
 		return nil, nil, err
 	}
 	// Process the Arrays.
-	for name, val := range r.Provisioners[Ansible.String()].Arrays {
+	for name, val := range r.Provisioners[AnsibleLocal.String()].Arrays {
 		array := deepcopy.InterfaceToSliceStrings(val)
 		if array != nil {
 			settings[name] = array
@@ -196,7 +196,7 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []s
 	return settings, vars, err
 }
 
-// createSalt() creates a map of settings for Packer's salt-masterless
+// createSaltMasterless() creates a map of settings for Packer's salt-masterless
 // provisioner. Any values that aren't supported by the salt-masterless
 // provisioner are ignored. For more information, refer to
 // https://packer.io/docs/provisioners/salt-masterless.html
@@ -209,19 +209,19 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []s
 //   minion_config			// string
 //   skip_bootstrap			// boolean
 //   temp_config_dir			// string
-func (r *rawTemplate) createSalt() (settings map[string]interface{}, vars []string, err error) {
-	_, ok := r.Provisioners[Salt.String()]
+func (r *rawTemplate) createSaltMasterless() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[SaltMasterless.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration for %q found", Salt.String())
+		err = fmt.Errorf("no configuration for %q found", SaltMasterless.String())
 	}
 	settings = make(map[string]interface{})
-	settings["type"] = Salt.String()
+	settings["type"] = SaltMasterless.String()
 	// For each value, extract its key value pair and then process. Only
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
 	var k, v string
 	var hasLocalStateTree bool
-	for _, s := range r.Provisioners[Salt.String()].Settings {
+	for _, s := range r.Provisioners[SaltMasterless.String()].Settings {
 		k, v = parseVar(s)
 		switch k {
 		case "local_state_tree":
@@ -232,7 +232,7 @@ func (r *rawTemplate) createSalt() (settings map[string]interface{}, vars []stri
 		case "skip_bootstrap":
 			settings[k], _ = strconv.ParseBool(v)
 		default:
-			jww.WARN.Println("unsupported " + Salt.String() + " key was encountered: " + k)
+			jww.WARN.Println("unsupported " + SaltMasterless.String() + " key was encountered: " + k)
 		}
 	}
 	if !hasLocalStateTree {
