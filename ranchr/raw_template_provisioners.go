@@ -178,7 +178,7 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []s
 		case "command", "inventory_file", "group_vars", "host_vars", "playbook_dir", "staging_directory":
 			settings[k] = v
 		default:
-			jww.WARN.Println("unsupported " + Ansible.String() + " key was encountered: " + k)
+			jww.WARN.Printf("unsupported ansible-masterless key was encountered: %q" + k)
 		}
 	}
 	if !hasPlaybook {

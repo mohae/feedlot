@@ -245,6 +245,187 @@ var testBuilderCentOS = &rawTemplate{
 	},
 }
 
+var testAllBuilders = &rawTemplate{
+	IODirInf: IODirInf{
+		CommandsSrcDir: "../test_files/centos/src/commands",
+		HTTPDir:        "http",
+		HTTPSrcDir:     "../test_files/centos/src/http",
+		OutDir:         "../test_files/out/centos",
+		ScriptsDir:     "scripts",
+		ScriptsSrcDir:  "../test_files/centos/src/scripts",
+		SrcDir:         "../test_files/src/centos",
+	},
+	PackerInf: PackerInf{
+		MinPackerVersion: "",
+		Description:      "Test build template for salt provisioner using CentOS6",
+	},
+	BuildInf: BuildInf{
+		Name:      ":type-:release-:image-:arch",
+		BuildName: "",
+		BaseURL:   "",
+	},
+	Distro:  "centos",
+	Arch:    "x86_64",
+	Image:   "minimal",
+	Release: "6",
+	build: build{
+		BuilderTypes: []string{
+			"amazon-ebs",
+			"virtualbox-iso",
+			"virtualbox-ovf",
+			"vmware-iso",
+			"vmware-vmx",
+		},
+		Builders: map[string]*builder{
+			"common": {
+				templateSection{
+					Settings: []string{
+						"boot_command = ../test_files/src/centos/commands/boot_test.command",
+						"boot_wait = 5s",
+						"disk_size = 20000",
+						"http_directory = http",
+						"iso_checksum_type = sha256",
+						"shutdown_command = ../test_files/src/centos/commands/shutdown_test.command",
+						"ssh_password = vagrant",
+						"ssh_port = 22",
+						"ssh_username = vagrant",
+						"ssh_wait_timeout = 300m",
+					},
+				},
+			},
+			"amazon-ebs": {
+				templateSection{
+					Settings: []string{
+						"access_key=AWS_ACCESS_KEY",
+						"ami_description=AMI_DESCRIPTION",
+						"ami_name=AMI_NAME",
+						"associate_public_ip_address=false",
+						"availability_zone=us-east-1b",
+						"enhanced_networking=false",
+						"iam_instance_profile=INSTANCE_PROFILE",
+						"instance_type=m3.medium",
+						"region=us-east-1",
+						"secret_key=AWS_SECRET_ACCESS_KEY",
+						"security_group_id=GROUP_ID",
+						"source_ami=SOURCE_AMI",
+						"spot_price=auto",
+						"spot_price_auto_product=Linux/Unix",
+						"ssh_private_ip=true",
+						"subnet_id=subnet-12345def",
+						"temporary_key_pair_name=TMP_KEYPAIR",
+						"token=AWS_SECURITY_TOKEN",
+						"user_data=SOME_USER_DATA",
+						"user_data_file=/user/data/file.txt",
+						"vpc_id=VPC_ID",
+					},
+					Arrays: map[string]interface{}{
+						"ami_groups": []string{
+							"AGroup",
+						},
+						"ami_product_codes": []string{
+							"ami-d4e356aa",
+						},
+						"ami_regions": []string{
+							"us-east-1",
+						},
+						"ami_users": []string{
+							"ami-account",
+						},
+						"security_group_ids": []string{
+							"SECURITY_GROUP",
+						},
+					},
+				},
+			},
+			"virtualbox-iso": {
+				templateSection{
+					Arrays: map[string]interface{}{
+						"vm_settings": []string{
+							"cpus=1",
+							"memory=4096",
+						},
+					},
+				},
+			},
+			"virtualbox-ovf": {
+				templateSection{
+					Arrays: map[string]interface{}{
+						"vm_settings": []string{
+							"cpus=1",
+							"memory=4096",
+						},
+					},
+				},
+			},
+			"vmware-iso": {
+				templateSection{
+					Arrays: map[string]interface{}{
+						"vm_settings": []string{
+							"cpuid.coresPerSocket=1",
+							"memsize=1024",
+							"numvcpus=1",
+						},
+					},
+				},
+			},
+			"vmware-vmx": {
+				templateSection{
+					Arrays: map[string]interface{}{
+						"vm_settings": []string{
+							"cpuid.coresPerSocket=1",
+							"memsize=1024",
+							"numvcpus=1",
+						},
+					},
+				},
+			},
+		},
+		PostProcessorTypes: []string{
+			"vagrant",
+		},
+		PostProcessors: map[string]*postProcessor{
+			"vagrant": {
+				templateSection{
+					Settings: []string{
+						"keep_input_artifact = false",
+						"output = out/someComposedBoxName.box",
+					},
+				},
+			},
+		},
+		ProvisionerTypes: []string{
+			"shell-scripts",
+			"salt",
+		},
+		Provisioners: map[string]*provisioner{
+			"salt": {
+				templateSection{
+					Settings: []string{
+						"local_state_tree = ~/saltstates/centos6/salt",
+						"skip_bootstrap = true",
+					},
+				},
+			},
+			"shell-scripts": {
+				templateSection{
+					Settings: []string{
+						"execute_command = ../test_files/src/centos/commands/execute_test.command",
+					},
+					Arrays: map[string]interface{}{
+						"scripts": []string{
+							"../test_files/centos/src/scripts/setup_test.sh",
+							"../test_files/centos/src/scripts/base_test.sh",
+							"../test_files/centos/src/scripts/vagrant_test.sh",
+							"../test_files/centos/src/scripts/cleanup_test.sh",
+							"../test_files/centos/src/scripts/zerodisk_test.sh",
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
 var builderOrig = map[string]*builder{
 	"common": {
 		templateSection{
@@ -547,6 +728,54 @@ func TestRawTemplateBuildersSettingsToMap(t *testing.T) {
 	}
 	if settings["ssh_username"] != "vagrant" {
 		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_username"])
+	}
+}
+
+func TestAmazonEBSBuilder(t *testing.T) {
+	expected := map[string]interface{}{
+		"access_key":      "AWS_ACCESS_KEY",
+		"ami_description": "AMI_DESCRIPTION",
+		"ami_groups": []string{
+			"AGroup",
+		},
+		"ami_name": "AMI_NAME",
+		"ami_product_codes": []string{
+			"ami-d4e356aa",
+		},
+		"ami_regions": []string{
+			"us-east-1",
+		},
+		"associate_public_ip_address": false,
+		"availability_zone":           "us-east-1b",
+		"enhanced_networking":         false,
+		"iam_instance_profile":        "INSTANCE_PROFILE",
+		"instance_type":               "m3.medium",
+		"region":                      "us-east-1",
+		"secret_key":                  "AWS_SECRET_ACCESS_KEY",
+		"security_group_id":           "GROUP_ID",
+		"security_group_ids": []string{
+			"SECURITY_GROUP",
+		},
+		"source_ami":              "SOURCE_AMI",
+		"spot_price":              "auto",
+		"spot_price_auto_product": "Linux/Unix",
+		"ssh_port":                22,
+		"ssh_private_ip":          true,
+		"ssh_username":            "vagrant",
+		"subnet_id":               "subnet-12345def",
+		"token":                   "AWS_SECURITY_TOKEN",
+		"type":                    "amazon-ebs",
+		"user_data":               "SOME_USER_DATA",
+		"user_data_file":          "/user/data/file.txt",
+		"vpc_id":                  "VPC_ID",
+	}
+	bldr, _, err := testAllBuilders.createAmazonEBS()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(bldr))
+		}
 	}
 }
 
