@@ -549,11 +549,39 @@ var testAllBuilders = &rawTemplate{
 			},
 			"vmware-vmx": {
 				templateSection{
+					Settings: []string{
+						"fusion_app_path=/Applications/VMware Fusion.app",
+						"headless=true",
+						"http_port_min=8000",
+						"http_port_max=9000",
+						"output_directory=out/dir",
+						"shutdown_timeout=5m",
+						"skip_compaction=false",
+						"source_path=source/path/file.vmx",
+						"ssh_key_path=key/path",
+						"ssh_port=22",
+						"ssh_skip_request_pty=false",
+						"vm_name=packer-BUILDNAME",
+						"vnc_port_min=5900",
+						"vnc_port_max=6000",
+					},
 					Arrays: map[string]interface{}{
-						"vm_settings": []string{
+						"boot_command": []string{
+							"<bs>",
+							"<del>",
+							"<enter><return>",
+							"<esc>",
+						},
+						"floppy_files": []string{
+							"disk1",
+						},
+						"vmx_data": []string{
 							"cpuid.coresPerSocket=1",
 							"memsize=1024",
 							"numvcpus=1",
+						},
+						"vmx_data_post": []string{
+							"something=value",
 						},
 					},
 				},
@@ -1235,34 +1263,57 @@ func TestCreateBuilderVMWareISO(t *testing.T) {
 	}
 }
 
-/*	settings, _, err = testBuilderCentOS.createVirtualBoxOVF()
+func TestCreateBuilderVMWareVMX(t *testing.T) {
+	expected := map[string]interface{}{
+		"boot_command": []string{
+			"<bs>",
+			"<del>",
+			"<enter><return>",
+			"<esc>",
+		},
+		"boot_wait": "5s",
+		"floppy_files": []string{
+			"disk1",
+		},
+		"fusion_app_path":      "/Applications/VMware Fusion.app",
+		"headless":             true,
+		"http_directory":       "http",
+		"http_port_max":        9000,
+		"http_port_min":        8000,
+		"output_directory":     "out/dir",
+		"shutdown_command":     "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
+		"shutdown_timeout":     "5m",
+		"skip_compaction":      false,
+		"source_path":          "source/path/file.vmx",
+		"ssh_key_path":         "key/path",
+		"ssh_password":         "vagrant",
+		"ssh_port":             22,
+		"ssh_skip_request_pty": false,
+		"ssh_username":         "vagrant",
+		"ssh_wait_timeout":     "300m",
+		"type":                 "vmware-vmx",
+		"vmx_data": map[string]string{
+			"cpuid.coresPerSocket": "1",
+			"memsize":              "1024",
+			"numvcpus":             "1",
+		},
+		"vmx_data_post": map[string]string{
+			"something": "value",
+		},
+		"vm_name":      "packer-BUILDNAME",
+		"vnc_port_max": 6000,
+		"vnc_port_min": 5900,
+	}
+
+	settings, _, err := testAllBuilders.createVMWareVMX()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
-	}
-	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
-	}
-	if settings["shutdown_command"] != "echo 'vagrant'|sudo -S shutdown -t5 -h now" {
-		t.Errorf("Expected \"echo 'vagrant'|sudo -S shutdown -t5 -h now\", got %q", settings["shutdown_command"])
-	}
-	if settings["ssh_password"] != "vagrant" {
-		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_password"])
-	}
-	if settings["ssh_port"] != 22 {
-		t.Errorf("Expected 22, got %d", settings["ssh_port"])
-	}
-	if settings["ssh_username"] != "vagrant" {
-		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_username"])
-	}
-	if settings["type"] != "virtualbox-ovf" {
-		t.Errorf("Expected \"virtualbox-ovf\", got %q", settings["type"])
-	}
-	if MarshalJSONToString.Get(settings["vboxmanage"]) != "[[\"modifyvm\",\"{{.Name}}\",\"--cpus\",\"1\"],[\"modifyvm\",\"{{.Name}}\",\"--memory\",\"4096\"]]" {
-		t.Errorf("Expected \"[[\"modifyvm\",\"{{.Name}}\",\"--cpus\",\"1\"],[\"modifyvm\",\"{{.Name}}\",\"--memory\",\"4096\"]]\", got %q", MarshalJSONToString.Get(settings["vboxmanage"]))
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		}
 	}
 }
-*/
-
 func TestDeepCopyMapStringPBuilder(t *testing.T) {
 	cpy := DeepCopyMapStringPBuilder(testDistroDefaults.Templates[Ubuntu].Builders)
 	if MarshalJSONToString.Get(cpy["common"]) != MarshalJSONToString.Get(testDistroDefaults.Templates[Ubuntu].Builders["common"]) {

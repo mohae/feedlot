@@ -1058,12 +1058,10 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 	}
 	// Process arrays, iso_urls is only valid if iso_url is not set
 	for name, val := range r.Builders[VMWareISO.String()].Arrays {
-		jww.ERROR.Println(name)
-		jww.ERROR.Printf("%#v", val)
 		switch name {
 		case "boot_command":
 			if bootCmdProcessed {
-				jww.WARN.Print("\"boot_command\" array for virtualbox-iso was found; already processed from a file from the \"Settings\" section")
+				jww.WARN.Print("\"boot_command\" array for vmware-iso was found; already processed from a file from the \"Settings\" section")
 				continue // if the boot command was already set, don't use this array
 			}
 			settings[name] = val
@@ -1073,18 +1071,18 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 			// these are only added if iso_url isn't set
 			if tmpISOUrl == "" {
 				if tmpISOChecksum == "" {
-					err = fmt.Errorf("\"iso_urls\" found for virtualbox-iso but no \"iso_checksum\" information was found")
+					err = fmt.Errorf("\"iso_urls\" found for vmware-iso but no \"iso_checksum\" information was found")
 					jww.ERROR.Print(err)
 					return nil, nil, err
 				}
 				if tmpISOChecksumType == "" {
-					err = fmt.Errorf("\"iso_urls\" found for virtualbox-iso but no \"iso_checksum_type\" information was found")
+					err = fmt.Errorf("\"iso_urls\" found for vmware-iso but no \"iso_checksum_type\" information was found")
 					jww.ERROR.Print(err)
 					return nil, nil, err
 				}
 				settings[name] = val
 			} else {
-				jww.WARN.Print("\"iso_urls\" array for virtualbox-iso was found; the iso_url was already set from the \"Settings\" section")
+				jww.WARN.Print("\"iso_urls\" array for vmware-iso was found; the iso_url was already set from the \"Settings\" section")
 			}
 		case "vmx_data", "vmx_data_post":
 			vms := deepcopy.InterfaceToSliceStrings(val)
@@ -1096,7 +1094,7 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 			}
 			settings[name] = tmpVM
 		default:
-			jww.WARN.Printf("unsupported virtualbox-iso array key was encountered: %q", name)
+			jww.WARN.Printf("unsupported vmware-iso array key was encountered: %q", name)
 		}
 	}
 
@@ -1145,10 +1143,11 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 	return settings, nil, nil
 }
 
-// createVMWareVMX creates a map of settings for Packer's vmware-vmx
-// builder. Any values that aren't supported by the vmware-vmx builder
-// are ignored. For more information, refer to
-// https://packer.io/docs/builders/vmware-vmx.html
+// createVMWareVMX creates a map of settings for Packer's vmware-vmx builder.
+// Any values that aren't supported by the vmware-vmx builder result in a
+// logged warning and are ignored. Any required settings that don't exist
+// result in an error and processing of the builder is stopped. For more
+// information, refer to https://packer.io/docs/builders/vmware-vmx.html
 //
 // Required configuration options:
 //   source_name				// string
@@ -1185,56 +1184,110 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, vars [
 	// Each create function is responsible for setting its own type.
 	settings["type"] = VMWareVMX.String()
 	// Merge the settings between common and this builders.
-	mergedSlice := mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[VMWareVMX.String()].Settings)
+	var workSlice []string
+	_, ok = r.Builders[Common.String()]
+	if ok {
+		workSlice = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[VMWareVMX.String()].Settings)
+	} else {
+		workSlice = r.Builders[VMWareVMX.String()].Settings
+	}
+	var hasSourcePath, hasSSHUsername, bootCmdProcessed bool
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
-	for _, s := range mergedSlice {
+	for _, s := range workSlice {
 		// var tmp interface{}
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
-		case "source_path", "ssh_username", "fusion_app_path", "output_directory", "shutdown_timeout", "ssh_key_path", "ssh_password", "ssh_wait_timeout", "vm_name":
-			settings[k] = v
-		case "guest_os_type":
-			if v == "" {
-				settings[k] = v
-			} else {
-				settings[k] = r.osType
+		case "boot_command":
+			// if the boot_command exists in the Settings section, it should
+			// reference a file. This boot_command takes precedence over any
+			// boot_command in the array defined in the Arrays section.
+			if strings.HasSuffix(v, ".command") {
+				var commands []string
+				commands, err = commandsFromFile(v)
+				if err != nil {
+					jww.ERROR.Println(err)
+					return nil, nil, err
+				}
+				settings[k] = commands
+				bootCmdProcessed = true
 			}
+		case "shutdown_command":
+			//If it ends in .command, replace it with the command from the filepath
+			if strings.HasSuffix(v, ".command") {
+				var commands []string
+				commands, err = commandsFromFile(v)
+				if err != nil {
+					jww.ERROR.Println(err)
+					return nil, nil, err
+				}
+				// Assume it's the first element.
+				settings[k] = commands[0]
+			} else {
+				settings[k] = v // the value is the command
+			}
+		case "source_path":
+			settings[k] = v
+			hasSourcePath = true
+		case "ssh_username":
+			settings[k] = v
+			hasSSHUsername = true
+		case "boot_wait", "fusion_app_path", "http_directory", "output_directory", "shutdown_timeout",
+			"ssh_key_path", "ssh_password", "ssh_wait_timeout", "vm_name":
+			settings[k] = v
 		case "headless", "skip_compaction", "ssh_skip_request_pty":
 			settings[k], _ = strconv.ParseBool(v)
 		// For the fields of int value, only set if it converts to a valid int.
 		// Otherwise, throw an error
-		case "ssh_port":
+		case "http_port_max", "http_port_min", "ssh_port", "vnc_port_max", "vnc_port_min":
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				err = fmt.Errorf("VMWareVMX error while trying to set %q to %q: %s", k, v, err)
+				err = fmt.Errorf("vmware-vmx error while trying to set %q to %q: %s", k, v, err)
 				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
 			settings[k] = i
-		case "shutdown_command":
-			//If it ends in .command, replace it with the command from the filepath
-			var commands []string
-			commands, err = commandsFromFile(v)
-			if err != nil {
-				jww.ERROR.Println(err)
-				return nil, nil, err
-			}
-			// Assume it's the first element.
-			settings[k] = commands[0]
+		default:
+			jww.WARN.Printf("unsupported vmware-vmx setting was encountered: %q", k)
 		}
 	}
-	// Generate builder specific section
-	tmpVB := map[string]string{}
-	vmSettings := deepcopy.InterfaceToSliceStrings(r.Builders[VMWareVMX.String()].Arrays[VMSettings])
-	for _, v := range vmSettings {
-		k, val := parseVar(v)
-		val = r.replaceVariables(val)
-		tmpVB[k] = val
+	// Check if required fields were processed
+	if !hasSSHUsername {
+		err = fmt.Errorf("\"ssh_username\" is a required setting for vmware-vmx; not found")
+		jww.ERROR.Print(err)
+		return nil, nil, err
 	}
-	settings["vmx_data"] = tmpVB
+	if !hasSourcePath {
+		err = fmt.Errorf("\"source_path\" is a required setting for vmware-vmx; not found")
+		jww.ERROR.Print(err)
+		return nil, nil, err
+	}
+	// Process arrays, iso_urls is only valid if iso_url is not set
+	for name, val := range r.Builders[VMWareVMX.String()].Arrays {
+		switch name {
+		case "boot_command":
+			if bootCmdProcessed {
+				jww.WARN.Print("\"boot_command\" array for vmware-vmx was found; already processed from a file from the \"Settings\" section")
+				continue // if the boot command was already set, don't use this array
+			}
+			settings[name] = val
+		case "floppy_files":
+			settings[name] = val
+		case "vmx_data", "vmx_data_post":
+			vms := deepcopy.InterfaceToSliceStrings(val)
+			tmpVM := map[string]string{}
+			for _, v := range vms {
+				k, vv := parseVar(v)
+				vv = r.replaceVariables(vv)
+				tmpVM[k] = vv
+			}
+			settings[name] = tmpVM
+		default:
+			jww.WARN.Printf("unsupported vmware-vmx array key was encountered: %q", name)
+		}
+	}
 	return settings, nil, nil
 }
 
