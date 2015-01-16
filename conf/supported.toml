@@ -68,7 +68,7 @@
 			]
 		[distro.ubuntu.builders.virtualbox-iso]
 			[distro.ubuntu.builders.virtualbox-iso.arrays]
-				vm_settings = [
+				vboxmanage = [
 					"memory=2048"
 				]
 	[distro.ubuntu.post_processors]

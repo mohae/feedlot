@@ -18,7 +18,7 @@
 				"ssh_wait_timeout = 300m"
 			]
 			[build.1204-amd64-server.builders.virtualbox-iso.arrays]
-			vm_settings = [
+			vboxmanage = [
 				"memory=4096"
 			]
 
@@ -29,8 +29,8 @@
 	        release = "14.04"
 	        image = "server"
 	        builder_types = [
-			"virtualbox-iso"
-		]
+				"virtualbox-iso"
+			]
 		post_processor_types = [
 			"vagrant"
 		]
@@ -39,7 +39,7 @@
 		]
 		[build.1404-dev.builders]
 				[build.1404-dev.builders.virtualbox-iso.arrays]
-				vm_settings = [
+				vbox_manage = [
 					"memory=4096"
 				]
 
@@ -85,9 +85,9 @@
 			"virtualbox-iso"
 		]
 		provisioner_types = [
-			"salt"
+			"salt-masterless"
 		]
-		[build.centos6-salt.provisioner.salt]
+		[build.centos6-salt.provisioner.salt-masterless]
 			settings = [
 				"local_state_tree = ~/saltstack/centos6/salt"
 			]
@@ -100,19 +100,14 @@
 			"virtualbox-iso"
 		]
 		provisioner_types = [
-			"ansible"
+			"ansible-local"
 		]
-		[build.centos6-ansible.provisioner.ansible]
+		[build.centos6-ansible.provisioner.ansible-local]
 			settings = [
 				"command = ansible-playbook-command-override",
 				"inventory_file = playbook-inventory.yaml",
 				"playbook_file = local.yaml"
 			]
-			[build.centos6-ansible.provisioner.ansible.arrays]
-				extra_arguments = [
-					"arg1",
-					"arg2"
-				]
 
 	[build.centos6-chef-solo]
 		distro = "centos"
@@ -146,4 +141,3 @@
 					"skip_install = false",
 					"staging_directory = :out_dir/staging/"
 				]
-
