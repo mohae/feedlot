@@ -247,27 +247,27 @@ var testBuilderCentOS = &rawTemplate{
 
 var testAllBuilders = &rawTemplate{
 	IODirInf: IODirInf{
-		CommandsSrcDir: "../test_files/centos/src/commands",
+		CommandsSrcDir: "../test_files/ubuntu/src/commands",
 		HTTPDir:        "http",
-		HTTPSrcDir:     "../test_files/centos/src/http",
-		OutDir:         "../test_files/out/centos",
+		HTTPSrcDir:     "../test_files/ubuntu/src/http",
+		OutDir:         "../test_files/out/ubuntu",
 		ScriptsDir:     "scripts",
-		ScriptsSrcDir:  "../test_files/centos/src/scripts",
-		SrcDir:         "../test_files/src/centos",
+		ScriptsSrcDir:  "../test_files/ubuntu/src/scripts",
+		SrcDir:         "../test_files/src/ubuntu",
 	},
 	PackerInf: PackerInf{
 		MinPackerVersion: "",
-		Description:      "Test build template for salt provisioner using CentOS6",
+		Description:      "Test build template for all builders",
 	},
 	BuildInf: BuildInf{
 		Name:      ":type-:release-:image-:arch",
 		BuildName: "",
 		BaseURL:   "",
 	},
-	Distro:  "centos",
-	Arch:    "x86_64",
+	Distro:  "ubuntu",
+	Arch:    "amd64",
 	Image:   "minimal",
-	Release: "6",
+	Release: "14.04",
 	build: build{
 		BuilderTypes: []string{
 			"amazon-ebs",
@@ -497,11 +497,52 @@ var testAllBuilders = &rawTemplate{
 			},
 			"vmware-iso": {
 				templateSection{
+					Settings: []string{
+						"disk_type_id=1",
+						"fusion_app_path=/Applications/VMware Fusion.app",
+						"hard_drive_interface=ide",
+						"headless=true",
+						"http_port_min=8000",
+						"http_port_max=9000",
+						"iso_checksum=ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
+						"iso_url=http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+						"output_directory=out/dir",
+						"remote_cache_datastore=datastore1",
+						"remote_cache_directory=packer_cache",
+						"remote_datastore=datastore1",
+						"remote_host=remoteHost",
+						"remote_password=rpassword",
+						"remote_type=esx5",
+						"shutdown_timeout=5m",
+						"ssh_host=127.0.0.1",
+						"ssh_key_path=key/path",
+						"ssh_port=22",
+						"tools_upload_flavor=linux",
+						"tools_upload_path={{.Flavor}}.iso",
+						"version=9",
+						"vm_name=packer-BUILDNAME",
+						"vmdk_name=packer",
+						"vmx_template_path=template/path",
+						"vnc_port_min=5900",
+						"vnc_port_max=6000",
+					},
 					Arrays: map[string]interface{}{
-						"vm_settings": []string{
+						"boot_command": []string{
+							"<bs>",
+							"<del>",
+							"<enter><return>",
+							"<esc>",
+						},
+						"floppy_files": []string{
+							"disk1",
+						},
+						"vmx_data": []string{
 							"cpuid.coresPerSocket=1",
 							"memsize=1024",
 							"numvcpus=1",
+						},
+						"vmx_data_post": []string{
+							"something=value",
 						},
 					},
 				},
@@ -774,84 +815,6 @@ var vbB = &builder{
 	},
 }
 
-func TestCreateBuilderVMWare(t *testing.T) {
-	var settings map[string]interface{}
-	var err error
-	settings, _, err = testBuilderUbuntu.createVMWareISO()
-	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
-	}
-	if settings["boot_wait"] != "5s" {
-		t.Errorf("Expected \"5s\", got %q", settings["boot_wait"])
-	}
-	if settings["disk_size"] != 20000 {
-		t.Errorf("Expected 20000, got %d", settings["disk_size"])
-	}
-	if settings["http_directory"] != "http" {
-		t.Errorf("Expected \"http\", got %q", settings["http_directory"])
-	}
-	if settings["iso_checksum_type"] != "sha256" {
-		t.Errorf("Expected \"sha256\", got %q", settings["iso_checksum_type"])
-	}
-	if settings["shutdown_command"] != "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'" {
-		t.Errorf("Expected \"echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'\", got %q", settings["shutdown_command"])
-	}
-	if settings["ssh_password"] != "vagrant" {
-		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_password"])
-	}
-	if settings["ssh_port"] != 22 {
-		t.Errorf("Expected 22, got %d", settings["ssh_port"])
-	}
-	if settings["ssh_username"] != "vagrant" {
-		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_username"])
-	}
-	if settings["type"] != "vmware-iso" {
-		t.Errorf("Expected \"vmware-iso\", got %q", settings["type"])
-	}
-	expected := map[string]string{"cpuid.coresPerSocket": "1", "memsize": "1024", "numvcpus": "1"}
-	if MarshalJSONToString.Get(settings["vmx_data"]) != MarshalJSONToString.Get(expected) {
-		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings["vmx_data"]))
-	}
-
-	settings, _, err = testBuilderCentOS.createVMWareVMX()
-	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
-	}
-	if settings["shutdown_command"] != "echo 'vagrant'|sudo -S shutdown -t5 -h now" {
-		t.Errorf("Expected \"echo 'vagrant'|sudo -S shutdown -t5 -h now\", got %q", settings["shutdown_command"])
-	}
-	if settings["ssh_password"] != "vagrant" {
-		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_password"])
-	}
-	if settings["ssh_port"] != 22 {
-		t.Errorf("Expected 22, got %d", settings["ssh_port"])
-	}
-	if settings["ssh_username"] != "vagrant" {
-		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_username"])
-	}
-	if settings["type"] != "vmware-vmx" {
-		t.Errorf("Expected \"vmware-vmx\", got %q", settings["type"])
-	}
-
-	vmx := settings["vmx_data"].(map[string]string)
-	cpus, ok := vmx["numvcpus"]
-	if !ok {
-		t.Error("Expected the \"numvcpus\" entry to exist in vmx_data map, not found")
-	} else {
-		if vmx["numvcpus"] != "1" {
-			t.Errorf("Expected \"1\", got %q", cpus)
-		}
-	}
-	mem, ok := vmx["memsize"]
-	if !ok {
-		t.Error("Expected the \"memsize\" entry to exist in vmx_data map, not found")
-	} else {
-		if mem != "1024" {
-			t.Errorf("Expected \"1024\", got %q", mem)
-		}
-	}
-}
-
 func TestRawTemplateUpdatebuilders(t *testing.T) {
 	testBuilderUbuntu.updateBuilders(nil)
 	if MarshalJSONToString.Get(testBuilderUbuntu.Builders) != MarshalJSONToString.Get(builderOrig) {
@@ -864,7 +827,7 @@ func TestRawTemplateUpdatebuilders(t *testing.T) {
 	}
 }
 
-func TestRawTemplateUpdateBuildercommon(t *testing.T) {
+func TestRawTemplateUpdateBuilderCommon(t *testing.T) {
 	testBuilderUbuntu.updateCommon(builderNew["common"])
 	if MarshalJSONToString.Get(testBuilderUbuntu.Builders["common"]) != MarshalJSONToString.Get(builderMerged["common"]) {
 		t.Errorf("expected %q, got %q", MarshalJSONToString.Get(builderMerged["common"]), MarshalJSONToString.Get(testBuilderUbuntu.Builders["common"]))
@@ -1076,6 +1039,7 @@ func TestCreateBuilderVirtualboxISO(t *testing.T) {
 		"guest_additions_path":   "path/to/additions",
 		"guest_additions_sha256": "89dac78769b26f8facf98ce85020a605b7601fec1946b0597e22ced5498b3597",
 		"guest_additions_url":    "file://guest-additions",
+		"guest_os_type":          "Ubuntu_64",
 		"hard_drive_interface":   "ide",
 		"headless":               true,
 		"http_directory":         "http",
@@ -1196,6 +1160,72 @@ func TestCreateBuilderVirtualboxOVF(t *testing.T) {
 	}
 
 	settings, _, err := testAllBuilders.createVirtualBoxOVF()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		}
+	}
+}
+
+func TestCreateBuilderVMWareISO(t *testing.T) {
+	expected := map[string]interface{}{
+		"boot_command": []string{
+			"<bs>",
+			"<del>",
+			"<enter><return>",
+			"<esc>",
+		},
+		"boot_wait":    "5s",
+		"disk_size":    20000,
+		"disk_type_id": "1",
+		"floppy_files": []string{
+			"disk1",
+		},
+		"fusion_app_path":        "/Applications/VMware Fusion.app",
+		"guest_os_type":          "Ubuntu_64",
+		"headless":               true,
+		"http_directory":         "http",
+		"http_port_max":          9000,
+		"http_port_min":          8000,
+		"iso_checksum":           "ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
+		"iso_checksum_type":      "sha256",
+		"iso_url":                "http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+		"output_directory":       "out/dir",
+		"remote_cache_datastore": "datastore1",
+		"remote_cache_directory": "packer_cache",
+		"remote_datastore":       "datastore1",
+		"remote_host":            "remoteHost",
+		"remote_password":        "rpassword",
+		"remote_type":            "esx5",
+		"shutdown_command":       "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
+		"shutdown_timeout":       "5m",
+		"ssh_host":               "127.0.0.1",
+		"ssh_key_path":           "key/path",
+		"ssh_password":           "vagrant",
+		"ssh_port":               22,
+		"ssh_username":           "vagrant",
+		"ssh_wait_timeout":       "300m",
+		"tools_upload_flavor":    "linux",
+		"tools_upload_path":      "{{.Flavor}}.iso",
+		"type":                   "vmware-iso",
+		"vmx_data": map[string]string{
+			"cpuid.coresPerSocket": "1",
+			"memsize":              "1024",
+			"numvcpus":             "1",
+		},
+		"vmx_data_post": map[string]string{
+			"something": "value",
+		},
+		"vm_name":           "packer-BUILDNAME",
+		"vmdk_name":         "packer",
+		"vmx_template_path": "template/path",
+		"vnc_port_max":      6000,
+		"vnc_port_min":      5900,
+	}
+
+	settings, _, err := testAllBuilders.createVMWareISO()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
