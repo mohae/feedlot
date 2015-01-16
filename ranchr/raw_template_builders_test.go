@@ -282,12 +282,11 @@ var testAllBuilders = &rawTemplate{
 			"common": {
 				templateSection{
 					Settings: []string{
-						"boot_command = ../test_files/src/centos/commands/boot_test.command",
 						"boot_wait = 5s",
 						"disk_size = 20000",
 						"http_directory = http",
 						"iso_checksum_type = sha256",
-						"shutdown_command = ../test_files/src/centos/commands/shutdown_test.command",
+						"shutdown_command = echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
 						"ssh_password = vagrant",
 						"ssh_port = 22",
 						"ssh_username = vagrant",
@@ -405,10 +404,47 @@ var testAllBuilders = &rawTemplate{
 			},
 			"virtualbox-iso": {
 				templateSection{
+					Settings: []string{
+						"format = ovf",
+						"guest_additions_mode=upload",
+						"guest_additions_path=path/to/additions",
+						"guest_additions_sha256=89dac78769b26f8facf98ce85020a605b7601fec1946b0597e22ced5498b3597",
+						"guest_additions_url=file://guest-additions",
+						"hard_drive_interface=ide",
+						"headless=true",
+						"http_port_min=8000",
+						"http_port_max=9000",
+						"iso_checksum=ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
+						"iso_interface=ide",
+						"iso_url=http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+						"output_directory=out/dir",
+						"shutdown_timeout=5m",
+						"ssh_host_port_min=22",
+						"ssh_host_port_max=40",
+						"ssh_key_path=key/path",
+						"ssh_port=22",
+						"virtualbox_version_file=.vbox_version",
+						"vm_name=test-vb-iso",
+					},
 					Arrays: map[string]interface{}{
-						"vm_settings": []string{
-							"cpus=1",
-							"memory=4096",
+						"boot_command": []string{
+							"<bs>",
+							"<del>",
+							"<enter><return>",
+							"<esc>",
+						},
+						"export_opts": []string{
+							"opt1",
+						},
+						"floppy_files": []string{
+							"disk1",
+						},
+						"vboxmanage": []string{
+							"--cpus=1",
+							"--memory=4096",
+						},
+						"vboxmanage_post": []string{
+							"something=value",
 						},
 					},
 				},
@@ -702,71 +738,6 @@ var vbB = &builder{
 	},
 }
 
-func TestCreateBuilderVirtualbox(t *testing.T) {
-	var settings map[string]interface{}
-	var err error
-	settings, _, err = testBuilderUbuntu.createVirtualBoxISO()
-	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
-	}
-	if settings["boot_wait"] != "5s" {
-		t.Errorf("Expected \"5s\", got %q", settings["boot_wait"])
-	}
-	if settings["disk_size"] != 20000 {
-		t.Errorf("Expected 20000, got %d", settings["disk_size"])
-	}
-	if settings["http_directory"] != "http" {
-		t.Errorf("Expected \"http\", got %q", settings["http_directory"])
-	}
-	if settings["iso_checksum_type"] != "sha256" {
-		t.Errorf("Expected \"sha256\", got %q", settings["iso_checksum_type"])
-	}
-	if settings["shutdown_command"] != "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'" {
-		t.Errorf("Expected \"echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'\", got %q", settings["shutdown_command"])
-	}
-	if settings["ssh_password"] != "vagrant" {
-		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_password"])
-	}
-	if settings["ssh_port"] != 22 {
-		t.Errorf("Expected 22, got %q", settings["ssh_port"])
-	}
-	if settings["ssh_username"] != "vagrant" {
-		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_username"])
-	}
-	if settings["type"] != "virtualbox-iso" {
-		t.Errorf("Expected \"virtualbox-iso\", got %q", settings["type"])
-	}
-	if MarshalJSONToString.Get(settings["vboxmanage"]) != "[[\"modifyvm\",\"{{.Name}}\",\"--cpus\",\"1\"],[\"modifyvm\",\"{{.Name}}\",\"--memory\",\"4096\"]]" {
-		t.Errorf("Expected \"[[\"modifyvm\",\"{{.Name}}\",\"--cpus\",\"1\"],[\"modifyvm\",\"{{.Name}}\",\"--memory\",\"4096\"]]\", got %q", MarshalJSONToString.Get(settings["vboxmanage"]))
-	}
-
-	settings, _, err = testBuilderCentOS.createVirtualBoxOVF()
-	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
-	}
-	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
-	}
-	if settings["shutdown_command"] != "echo 'vagrant'|sudo -S shutdown -t5 -h now" {
-		t.Errorf("Expected \"echo 'vagrant'|sudo -S shutdown -t5 -h now\", got %q", settings["shutdown_command"])
-	}
-	if settings["ssh_password"] != "vagrant" {
-		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_password"])
-	}
-	if settings["ssh_port"] != 22 {
-		t.Errorf("Expected 22, got %d", settings["ssh_port"])
-	}
-	if settings["ssh_username"] != "vagrant" {
-		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_username"])
-	}
-	if settings["type"] != "virtualbox-ovf" {
-		t.Errorf("Expected \"virtualbox-ovf\", got %q", settings["type"])
-	}
-	if MarshalJSONToString.Get(settings["vboxmanage"]) != "[[\"modifyvm\",\"{{.Name}}\",\"--cpus\",\"1\"],[\"modifyvm\",\"{{.Name}}\",\"--memory\",\"4096\"]]" {
-		t.Errorf("Expected \"[[\"modifyvm\",\"{{.Name}}\",\"--cpus\",\"1\"],[\"modifyvm\",\"{{.Name}}\",\"--memory\",\"4096\"]]\", got %q", MarshalJSONToString.Get(settings["vboxmanage"]))
-	}
-}
-
 func TestCreateBuilderVMWare(t *testing.T) {
 	var settings map[string]interface{}
 	var err error
@@ -1047,6 +1018,111 @@ func TestDockerGoogleCompute(t *testing.T) {
 		}
 	}
 }
+
+func TestCreateBuilderVirtualboxISO(t *testing.T) {
+	expected := map[string]interface{}{
+		"boot_command": []string{
+			"<bs>",
+			"<del>",
+			"<enter><return>",
+			"<esc>",
+		},
+		"boot_wait": "5s",
+		"disk_size": 20000,
+		"export_opts": []string{
+			"opt1",
+		},
+		"floppy_files": []string{
+			"disk1",
+		},
+		"format":                 "ovf",
+		"guest_additions_mode":   "upload",
+		"guest_additions_path":   "path/to/additions",
+		"guest_additions_sha256": "89dac78769b26f8facf98ce85020a605b7601fec1946b0597e22ced5498b3597",
+		"guest_additions_url":    "file://guest-additions",
+		"hard_drive_interface":   "ide",
+		"headless":               true,
+		"http_directory":         "http",
+		"http_port_max":          9000,
+		"http_port_min":          8000,
+		"iso_checksum":           "ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
+		"iso_checksum_type":      "sha256",
+		"iso_interface":          "ide",
+		"iso_url":                "http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+		"output_directory":       "out/dir",
+		"shutdown_command":       "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
+		"shutdown_timeout":       "5m",
+		"ssh_host_port_max":      40,
+		"ssh_host_port_min":      22,
+		"ssh_key_path":           "key/path",
+		"ssh_password":           "vagrant",
+		"ssh_port":               22,
+		"ssh_username":           "vagrant",
+		"ssh_wait_timeout":       "300m",
+		"type":                   "virtualbox-iso",
+		"vboxmanage": [][]string{
+			[]string{
+				"modifyvm",
+				"{{.Name}}",
+				"--cpus",
+				"1",
+			},
+			[]string{
+				"modifyvm",
+				"{{.Name}}",
+				"--memory",
+				"4096",
+			},
+		},
+		"vboxmanage_post": [][]string{
+			[]string{
+				"modifyvm",
+				"{{.Name}}",
+				"something",
+				"value",
+			},
+		},
+		"virtualbox_version_file": ".vbox_version",
+		"vm_name":                 "test-vb-iso",
+	}
+
+	settings, _, err := testAllBuilders.createVirtualBoxISO()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		}
+	}
+}
+
+/*	settings, _, err = testBuilderCentOS.createVirtualBoxOVF()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	}
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	}
+	if settings["shutdown_command"] != "echo 'vagrant'|sudo -S shutdown -t5 -h now" {
+		t.Errorf("Expected \"echo 'vagrant'|sudo -S shutdown -t5 -h now\", got %q", settings["shutdown_command"])
+	}
+	if settings["ssh_password"] != "vagrant" {
+		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_password"])
+	}
+	if settings["ssh_port"] != 22 {
+		t.Errorf("Expected 22, got %d", settings["ssh_port"])
+	}
+	if settings["ssh_username"] != "vagrant" {
+		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_username"])
+	}
+	if settings["type"] != "virtualbox-ovf" {
+		t.Errorf("Expected \"virtualbox-ovf\", got %q", settings["type"])
+	}
+	if MarshalJSONToString.Get(settings["vboxmanage"]) != "[[\"modifyvm\",\"{{.Name}}\",\"--cpus\",\"1\"],[\"modifyvm\",\"{{.Name}}\",\"--memory\",\"4096\"]]" {
+		t.Errorf("Expected \"[[\"modifyvm\",\"{{.Name}}\",\"--cpus\",\"1\"],[\"modifyvm\",\"{{.Name}}\",\"--memory\",\"4096\"]]\", got %q", MarshalJSONToString.Get(settings["vboxmanage"]))
+	}
+}
+*/
 
 func TestDeepCopyMapStringPBuilder(t *testing.T) {
 	cpy := DeepCopyMapStringPBuilder(testDistroDefaults.Templates[Ubuntu].Builders)

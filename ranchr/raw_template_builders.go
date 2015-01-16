@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/mohae/deepcopy"
 	jww "github.com/spf13/jwalterweatherman"
@@ -578,8 +579,8 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 		workSlice = r.Builders[VirtualBoxISO.String()].Settings
 	}
 	var k, v string
-	var hasISOChecksum, hasISOChecksumType, hasISOURL, hasSSHUsername bool
-	var bootCommandProcessed bool
+	var bootCmdProcessed, hasSSHUsername bool
+	var tmpISOChecksumType, tmpISOChecksum, tmpISOUrl string
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
 	for _, s := range workSlice {
@@ -588,7 +589,9 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 		v = r.replaceVariables(v)
 		switch k {
 		case "boot_command":
-			//If it ends in .command, replace it with the command from the filepath
+			// if the boot_command exists in the Settings section, it should
+			// reference a file. This boot_command takes precedence over any
+			// boot_command in the array defined in the Arrays section.
 			var commands []string
 			commands, err = commandsFromFile(v)
 			if err != nil {
@@ -596,48 +599,49 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 				return nil, nil, err
 			}
 			settings[k] = commands
-			bootCommandProcessed = true
-		case "boot_wait", "export_opts", "floppy_files", "format", "guest_additions_mode",
-			"guest_additions_path", "guest_additions_sha256", "guest_additions_url",
-			"hard_drive_interface", "http_directory", "ssh_key_path", "ssh_password",
-			"ssh_username", "ssh_wait_timeout", "vboxmanage", "vboxmanage_post",
-			"virtualbox_version_file", "vm_name":
-			settings[k] = v
-		case "guest_os_type":
-			if v == "" {
-				settings[k] = v
-			} else {
-				settings[k] = r.osType
-			}
-		case "headless":
-			settings[k], _ = strconv.ParseBool(v)
-		case "iso_checksum_type":
-			// First set the ISO info for the desired release, if it's not already set
-			if r.osType == "" {
-				err = r.ISOInfo(VirtualBoxISO, mergedSlice)
+			bootCmdProcessed = true
+		case "shutdown_command":
+			//If it ends in .command, replace it with the command from the filepath
+			if strings.HasSuffix(v, ".command") {
+				var commands []string
+				commands, err = commandsFromFile(v)
 				if err != nil {
 					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
+				// Assume it's the first element.
+				settings[k] = commands[0]
+			} else {
+				settings[k] = v // the value is the command
 			}
-			//handle iso lookup vs set in file
-			switch r.Distro {
-			case "ubuntu":
-				settings["iso_url"] = r.releaseISO.(*ubuntu).isoURL
-				settings["iso_checksum"] = r.releaseISO.(*ubuntu).Checksum
-				settings["iso_checksum_type"] = r.releaseISO.(*ubuntu).ChecksumType
-			case "centos":
-				settings["iso_url"] = r.releaseISO.(*centOS).isoURL
-				settings["iso_checksum"] = r.releaseISO.(*centOS).Checksum
-				settings["iso_checksum_type"] = r.releaseISO.(*centOS).ChecksumType
-			default:
-				err = fmt.Errorf("%q is not a supported Distro", r.Distro)
-				jww.ERROR.Println(err)
-				return nil, nil, err
+		case "boot_wait", "format", "guest_additions_mode", "guest_additions_path",
+			"guest_additions_sha256", "guest_additions_url", "hard_drive_interface",
+			"http_directory", "iso_interface", "output_directory", "shutdown_timeout",
+			"ssh_key_path", "ssh_password", "ssh_wait_timeout", "virtualbox_version_file",
+			"vm_name":
+			settings[k] = v
+		case "guest_os_type":
+			if v == "" { // if not set, use the osType
+				settings[k] = r.osType
+			} else {
+				settings[k] = v
 			}
-		// For the fields of int value, only set if it converts to a valid int.
-		// Otherwise, throw an error
-		case "disk_size", "ssh_host_port_min", "ssh_host_port_max", "ssh_port":
+		case "ssh_username":
+			settings[k] = v
+			hasSSHUsername = true
+		case "headless":
+			settings[k], _ = strconv.ParseBool(v)
+		case "iso_checksum_type":
+			settings[k] = v
+			tmpISOChecksumType = v
+		case "iso_checksum":
+			settings[k] = v
+			tmpISOChecksum = v
+		case "iso_url":
+			settings[k] = v
+			tmpISOUrl = v
+		case "disk_size", "http_port_min", "http_port_max", "ssh_host_port_min",
+			"ssh_host_port_max", "ssh_port":
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
@@ -646,53 +650,98 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 				return nil, nil, err
 			}
 			settings[k] = i
-		case "shutdown_command":
-			//If it ends in .command, replace it with the command from the filepath
-			var commands []string
-			commands, err = commandsFromFile(v)
+		default:
+			jww.WARN.Printf("unsupported virtualbox-iso setting was encountered: %q", k)
+		}
+	}
+
+	// Only check to see if the required ssh_username field was set. The required iso info is checked after Array processing
+	if !hasSSHUsername {
+		err = fmt.Errorf("\"ssh_username\" is a required setting for virtualbox-iso; not found")
+		jww.ERROR.Print(err)
+		return nil, nil, err
+	}
+	// Process arrays, iso_urls is only valid if iso_url is not set
+	for name, val := range r.Builders[VirtualBoxISO.String()].Arrays {
+		switch name {
+		case "boot_command":
+			if bootCmdProcessed {
+				jww.WARN.Print("\"boot_command\" array for virtualbox-iso was found; already processed from a file from the \"Settings\" section")
+				continue // if the boot command was already set, don't use this array
+			}
+			settings[name] = val
+		case "export_opts", "floppy_files":
+			settings[name] = val
+		case "iso_urls":
+			// these are only added if iso_url isn't set
+			if tmpISOUrl == "" {
+				if tmpISOChecksum == "" {
+					err = fmt.Errorf("\"iso_urls\" found for virtualbox-iso but no \"iso_checksum\" information was found")
+					jww.ERROR.Print(err)
+					return nil, nil, err
+				}
+				if tmpISOChecksumType == "" {
+					err = fmt.Errorf("\"iso_urls\" found for virtualbox-iso but no \"iso_checksum_type\" information was found")
+					jww.ERROR.Print(err)
+					return nil, nil, err
+				}
+				settings[name] = val
+			} else {
+				jww.WARN.Print("\"iso_urls\" array for virtualbox-iso was found; the iso_url was already set from the \"Settings\" section")
+			}
+		case "vboxmanage", "vboxmanage_post":
+			vms := deepcopy.InterfaceToSliceStrings(val)
+			tmpVB := make([][]string, len(vms))
+			for i, v := range vms {
+				k, vv := parseVar(v)
+				vv = r.replaceVariables(vv)
+				tmpVB[i] = make([]string, 4)
+				tmpVB[i][0] = "modifyvm"
+				tmpVB[i][1] = "{{.Name}}"
+				tmpVB[i][2] = k
+				tmpVB[i][3] = vv
+			}
+			settings[name] = tmpVB
+		default:
+			jww.WARN.Printf("unsupported virtualbox-iso array key was encountered: %q", k)
+		}
+	}
+
+	// If the iso info wasn't set from the Settings, get it from the distro's release
+	if tmpISOUrl == "" {
+		if r.osType == "" { // if the os type hasn't been set, the ISO info hasn't been retrieved
+			err = r.ISOInfo(VirtualBoxISO, workSlice)
 			if err != nil {
 				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
-			// Assume it's the first element.
-			settings[k] = commands[0]
 		}
+		//handle iso lookup vs set in file
+		switch r.Distro {
+		case "ubuntu":
+			tmpISOUrl = r.releaseISO.(*ubuntu).isoURL
+			settings["iso_checksum"] = r.releaseISO.(*ubuntu).Checksum
+			settings["iso_checksum_type"] = r.releaseISO.(*ubuntu).ChecksumType
+		case "centos":
+			settings["iso_url"] = r.releaseISO.(*centOS).isoURL
+			settings["iso_checksum"] = r.releaseISO.(*centOS).Checksum
+			settings["iso_checksum_type"] = r.releaseISO.(*centOS).ChecksumType
+		default:
+			err = fmt.Errorf("%q is not a supported Distro", r.Distro)
+			jww.ERROR.Println(err)
+			return nil, nil, err
+		}
+		return settings, nil, nil
 	}
-
-	// Generate Packer Variables
-	// Generate builder specific section
-
-	// loop through the Arrays and process the supported ones
-	// if bootCommandProcessed don't process array and add a WARN message
-	// or should array processing occur first?
-	l, err := getSliceLenFromIface(r.Builders[VirtualBoxISO.String()].Arrays[VMSettings])
-	if err != nil {
-		jww.ERROR.Println(err)
+	if tmpISOChecksumType == "" {
+		err = fmt.Errorf("\"iso_url\" information was set for virtualbox-iso but the \"iso_checksum_type\" was not")
+		jww.ERROR.Print(err)
 		return nil, nil, err
 	}
-
-	if l > 0 {
-		tmpVB := make([][]string, l)
-		tmp := reflect.ValueOf(r.Builders[VirtualBoxISO.String()].Arrays[VMSettings])
-		var vmSettings interface{}
-		switch tmp.Type() {
-		case typeOfSliceInterfaces:
-			vmSettings = deepcopy.Iface(r.Builders[VirtualBoxISO.String()].Arrays[VMSettings]).([]interface{})
-		case typeOfSliceStrings:
-			vmSettings = deepcopy.Iface(r.Builders[VirtualBoxISO.String()].Arrays[VMSettings]).([]string)
-		}
-		vms := deepcopy.InterfaceToSliceStrings(vmSettings)
-		for i, v := range vms {
-			vo := reflect.ValueOf(v)
-			k, val := parseVar(vo.Interface().(string))
-			val = r.replaceVariables(val)
-			tmpVB[i] = make([]string, 4)
-			tmpVB[i][0] = "modifyvm"
-			tmpVB[i][1] = "{{.Name}}"
-			tmpVB[i][2] = "--" + k
-			tmpVB[i][3] = val
-		}
-		settings["vboxmanage"] = tmpVB
+	if tmpISOChecksum == "" {
+		err = fmt.Errorf("\"iso_url\" information was set for virtualbox-iso but the \"iso_checksum\" was not")
+		jww.ERROR.Print(err)
+		return nil, nil, err
 	}
 	return settings, nil, nil
 }

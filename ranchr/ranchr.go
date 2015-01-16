@@ -269,7 +269,7 @@ const (
 var (
 	// indent: default indent to use for marshal stuff
 	indent = "    "
-	//VMSettings is the constant for builders with vm-settings
+	//VMSettings is the var for builders with vm-settings
 	VMSettings            = "vm_settings"
 	typeOfSliceInterfaces = reflect.TypeOf([]interface{}(nil))
 	typeOfSliceStrings    = reflect.TypeOf([]string(nil))
