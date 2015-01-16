@@ -121,7 +121,7 @@ The `settings` for a build are merged with the Rancher defaults and distribution
 Builds are used in conjunction with the `build` command or are added to build lists in `buildlists.toml`.
 
 #### `conf.d/buildlists.toml`
-`buildlists.toml` defines named lists of builds. These name lists are used in conjunction with the `rancher buildlists buildlistNames...` command. If you often find that the `build` sub-command is used with mupltiple build names, a buildlist might be useful instead. 
+`buildlists.toml` defines named lists of builds. These name lists are used in conjunction with the `rancher run buildlistNames...` command. If you often find that the `build` sub-command is used with mupltiple build names, a buildlist might be useful instead. 
 
 ## Rancher Commands
 Rancher uses mitchellh's cli package, with support for the `build` and `run` custom commands, along with the standard `version` and `help` commands.
@@ -139,7 +139,7 @@ Supported Flags:
 If the `-distro` flag is passed, a build based on the default setting for the distro will be created. The additional flags allow for runtime overrides of the distro defaults for the target ISO. This flag can be used in conjunction with named builds. If both the -distro flag is passed along with a space separated list of one or more named builds are passed to the `build` sub-command, both the default Packer template for the distro and all of the Packer templates for the passed build names will be created.
 
 ### `run`
-`rancher run buildlist...`
+`rancher run buildlistNames...`
 
 Generate the Packer templates for all of the builds listed within the passed buildlists; buildlists is variadic. No flags are supported.
 
