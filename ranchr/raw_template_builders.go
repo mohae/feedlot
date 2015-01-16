@@ -2,7 +2,6 @@ package ranchr
 
 import (
 	"fmt"
-	"reflect"
 	"strconv"
 	"strings"
 
@@ -592,14 +591,16 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 			// if the boot_command exists in the Settings section, it should
 			// reference a file. This boot_command takes precedence over any
 			// boot_command in the array defined in the Arrays section.
-			var commands []string
-			commands, err = commandsFromFile(v)
-			if err != nil {
-				jww.ERROR.Println(err)
-				return nil, nil, err
+			if strings.HasSuffix(v, ".command") {
+				var commands []string
+				commands, err = commandsFromFile(v)
+				if err != nil {
+					jww.ERROR.Println(err)
+					return nil, nil, err
+				}
+				settings[k] = commands
+				bootCmdProcessed = true
 			}
-			settings[k] = commands
-			bootCmdProcessed = true
 		case "shutdown_command":
 			//If it ends in .command, replace it with the command from the filepath
 			if strings.HasSuffix(v, ".command") {
@@ -703,7 +704,7 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 			}
 			settings[name] = tmpVB
 		default:
-			jww.WARN.Printf("unsupported virtualbox-iso array key was encountered: %q", k)
+			jww.WARN.Printf("unsupported virtualbox-iso array key was encountered: %q", name)
 		}
 	}
 
@@ -793,16 +794,43 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, va
 	// Each create function is responsible for setting its own type.
 	settings["type"] = VirtualBoxOVF.String()
 	// Merge the settings between common and this builders.
-	mergedSlice := mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[VirtualBoxOVF.String()].Settings)
+	var workSlice []string
+	_, ok = r.Builders[Common.String()]
+	if ok {
+		workSlice = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[VirtualBoxOVF.String()].Settings)
+	} else {
+		workSlice = r.Builders[VirtualBoxOVF.String()].Settings
+	}
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
-	for _, s := range mergedSlice {
+	var hasSourcePath, hasSSHUsername, bootCmdProcessed bool
+	for _, s := range workSlice {
 		// var tmp interface{}
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
-		case "source_path", "ssh_username", "format", "guest_additions_mode",
-			"guest_additions_path", "guest_additions_sha256", "guest_additions_url",
+		case "boot_command":
+			// if the boot_command exists in the Settings section, it should
+			// reference a file. This boot_command takes precedence over any
+			// boot_command in the array defined in the Arrays section.
+			if strings.HasSuffix(v, ".command") {
+				var commands []string
+				commands, err = commandsFromFile(v)
+				if err != nil {
+					jww.ERROR.Println(err)
+					return nil, nil, err
+				}
+				settings[k] = commands
+				bootCmdProcessed = true
+			}
+		case "source_path":
+			settings[k] = v
+			hasSourcePath = true
+		case "ssh_username":
+			settings[k] = v
+			hasSSHUsername = true
+		case "boot_wait", "format", "guest_additions_mode", "guest_additions_path",
+			"guest_additions_sha256", "guest_additions_url", "http_directory",
 			"import_opts", "output_directory", "shutdown_timeout", "ssh_key_path",
 			"ssh_password", "ssh_wait_timeout", "virtualbox_version_file", "vm_name":
 			settings[k] = v
@@ -810,7 +838,7 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, va
 			settings[k], _ = strconv.ParseBool(v)
 		// For the fields of int value, only set if it converts to a valid int.
 		// Otherwise, throw an error
-		case "ssh_host_port_min", "ssh_host_port_max", "ssh_port":
+		case "http_port_min", "http_port_max", "ssh_host_port_min", "ssh_host_port_max", "ssh_port":
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
@@ -820,46 +848,60 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, va
 			}
 			settings[k] = i
 		case "shutdown_command":
-			//If it ends in .command, replace it with the command from the filepath
-			var commands []string
-			commands, err = commandsFromFile(v)
-			if err != nil {
-				jww.ERROR.Println(err)
-				return nil, nil, err
+			if strings.HasSuffix(v, ".command") {
+				//If it ends in .command, replace it with the command from the filepath
+				var commands []string
+				commands, err = commandsFromFile(v)
+				if err != nil {
+					jww.ERROR.Println(err)
+					return nil, nil, err
+				}
+				// Assume it's the first element.
+				settings[k] = commands[0]
+			} else {
+				settings[k] = v
 			}
-			// Assume it's the first element.
-			settings[k] = commands[0]
 		}
+	}
+	// Check to see if the required info was processed.
+	if !hasSSHUsername {
+		err = fmt.Errorf("\"ssh_username\" is a required setting for virtualbox-ovf; not found")
+		jww.ERROR.Print(err)
+		return nil, nil, err
+	}
+	if !hasSourcePath {
+		err = fmt.Errorf("\"source_path\" is a required setting for virtualbox-ovf; not found")
+		jww.ERROR.Print(err)
+		return nil, nil, err
 	}
 	// Generate Packer Variables
 	// Generate builder specific section
-	l, err := getSliceLenFromIface(r.Builders[VirtualBoxOVF.String()].Arrays[VMSettings])
-	if err != nil {
-		jww.ERROR.Println(err)
-		return nil, nil, err
-	}
-	if l > 0 {
-		tmpVB := make([][]string, l)
-		tmp := reflect.ValueOf(r.Builders[VirtualBoxOVF.String()].Arrays[VMSettings])
-		var vmSettings interface{}
-		switch tmp.Type() {
-		case typeOfSliceInterfaces:
-			vmSettings = deepcopy.Iface(r.Builders[VirtualBoxOVF.String()].Arrays[VMSettings]).([]interface{})
-		case typeOfSliceStrings:
-			vmSettings = deepcopy.Iface(r.Builders[VirtualBoxOVF.String()].Arrays[VMSettings]).([]string)
+	for name, val := range r.Builders[VirtualBoxOVF.String()].Arrays {
+		switch name {
+		case "boot_command":
+			if bootCmdProcessed {
+				jww.WARN.Print("\"boot_command\" array for virtualbox-ovf was found; already processed from a file from the \"Settings\" section")
+				continue // if the boot command was already set, don't use this array
+			}
+			settings[name] = val
+		case "export_opts", "floppy_files":
+			settings[name] = val
+		case "vboxmanage", "vboxmanage_post":
+			vms := deepcopy.InterfaceToSliceStrings(val)
+			tmpVB := make([][]string, len(vms))
+			for i, v := range vms {
+				k, vv := parseVar(v)
+				vv = r.replaceVariables(vv)
+				tmpVB[i] = make([]string, 4)
+				tmpVB[i][0] = "modifyvm"
+				tmpVB[i][1] = "{{.Name}}"
+				tmpVB[i][2] = k
+				tmpVB[i][3] = vv
+			}
+			settings[name] = tmpVB
+		default:
+			jww.WARN.Printf("unsupported virtualbox-ovf array key was encountered: %q", name)
 		}
-		vms := deepcopy.InterfaceToSliceStrings(vmSettings)
-		for i, v := range vms {
-			vo := reflect.ValueOf(v)
-			k, val := parseVar(vo.Interface().(string))
-			val = r.replaceVariables(val)
-			tmpVB[i] = make([]string, 4)
-			tmpVB[i][0] = "modifyvm"
-			tmpVB[i][1] = "{{.Name}}"
-			tmpVB[i][2] = "--" + k
-			tmpVB[i][3] = val
-		}
-		settings["vboxmanage"] = tmpVB
 	}
 	return settings, nil, nil
 }

@@ -451,10 +451,46 @@ var testAllBuilders = &rawTemplate{
 			},
 			"virtualbox-ovf": {
 				templateSection{
+					Settings: []string{
+						"format = ovf",
+						"guest_additions_mode=upload",
+						"guest_additions_path=path/to/additions",
+						"guest_additions_sha256=89dac78769b26f8facf98ce85020a605b7601fec1946b0597e22ced5498b3597",
+						"guest_additions_url=file://guest-additions",
+						"headless=true",
+						"http_port_min=8000",
+						"http_port_max=9000",
+						"import_opts=keepallmacs",
+						"iso_checksum=ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
+						"output_directory=out/dir",
+						"shutdown_timeout=5m",
+						"source_path=source/path",
+						"ssh_host_port_min=22",
+						"ssh_host_port_max=40",
+						"ssh_key_path=key/path",
+						"ssh_port=22",
+						"virtualbox_version_file=.vbox_version",
+						"vm_name=test-vb-ovf",
+					},
 					Arrays: map[string]interface{}{
-						"vm_settings": []string{
-							"cpus=1",
-							"memory=4096",
+						"boot_command": []string{
+							"<bs>",
+							"<del>",
+							"<enter><return>",
+							"<esc>",
+						},
+						"export_opts": []string{
+							"opt1",
+						},
+						"floppy_files": []string{
+							"disk1",
+						},
+						"vboxmanage": []string{
+							"--cpus=1",
+							"--memory=4096",
+						},
+						"vboxmanage_post": []string{
+							"something=value",
 						},
 					},
 				},
@@ -1087,6 +1123,79 @@ func TestCreateBuilderVirtualboxISO(t *testing.T) {
 	}
 
 	settings, _, err := testAllBuilders.createVirtualBoxISO()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		}
+	}
+}
+
+func TestCreateBuilderVirtualboxOVF(t *testing.T) {
+	expected := map[string]interface{}{
+		"boot_command": []string{
+			"<bs>",
+			"<del>",
+			"<enter><return>",
+			"<esc>",
+		},
+		"boot_wait": "5s",
+		"export_opts": []string{
+			"opt1",
+		},
+		"floppy_files": []string{
+			"disk1",
+		},
+		"format":                 "ovf",
+		"guest_additions_mode":   "upload",
+		"guest_additions_path":   "path/to/additions",
+		"guest_additions_sha256": "89dac78769b26f8facf98ce85020a605b7601fec1946b0597e22ced5498b3597",
+		"guest_additions_url":    "file://guest-additions",
+		"headless":               true,
+		"http_directory":         "http",
+		"http_port_max":          9000,
+		"http_port_min":          8000,
+		"import_opts":            "keepallmacs",
+		"output_directory":       "out/dir",
+		"shutdown_command":       "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
+		"shutdown_timeout":       "5m",
+		"source_path":            "source/path",
+		"ssh_host_port_max":      40,
+		"ssh_host_port_min":      22,
+		"ssh_key_path":           "key/path",
+		"ssh_password":           "vagrant",
+		"ssh_port":               22,
+		"ssh_username":           "vagrant",
+		"ssh_wait_timeout":       "300m",
+		"type":                   "virtualbox-ovf",
+		"vboxmanage": [][]string{
+			[]string{
+				"modifyvm",
+				"{{.Name}}",
+				"--cpus",
+				"1",
+			},
+			[]string{
+				"modifyvm",
+				"{{.Name}}",
+				"--memory",
+				"4096",
+			},
+		},
+		"vboxmanage_post": [][]string{
+			[]string{
+				"modifyvm",
+				"{{.Name}}",
+				"something",
+				"value",
+			},
+		},
+		"virtualbox_version_file": ".vbox_version",
+		"vm_name":                 "test-vb-ovf",
+	}
+
+	settings, _, err := testAllBuilders.createVirtualBoxOVF()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
