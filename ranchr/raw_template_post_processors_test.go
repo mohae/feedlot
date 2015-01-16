@@ -345,7 +345,7 @@ func TestRawTemplateUpdatePostProcessors(t *testing.T) {
 }
 
 func TestPostProcessorsSettingsToMap(t *testing.T) {
-	res := pp.settingsToMap("vagrant", rawTpl)
+	res := pp.settingsToMap("vagrant", testRawTpl)
 	if MarshalJSONToString.Get(res) != MarshalJSONToString.Get(map[string]interface{}{"type": "vagrant", "compression_level": "8", "keep_input_artifact": true}) {
 		t.Errorf("expected %q, got %q", MarshalJSONToString.Get(map[string]interface{}{"type": "vagrant", "compression_level": "8", "keep_input_artifact": true}), MarshalJSONToString.Get(res))
 	}

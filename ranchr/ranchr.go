@@ -389,17 +389,6 @@ func (d *distroDefaults) Set() error {
 	return nil
 }
 
-/*
-// rancherBuilds holds the build definitions for rancher.
-type rancherBuilds struct {
-	Build *build
-}
-
-//
-func (r *rancherBuilds) Get(n string) build
-
-*/
-
 // SetEnv sets the environment variables, if they do not already exist.
 //
 // The location of the rancher.cfg file can be overridden by setting its ENV

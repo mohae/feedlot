@@ -1,16 +1,305 @@
 package ranchr
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
-	_ "github.com/mohae/deepcopy"
+	json "github.com/mohae/customjson"
 )
 
+var MarshalJSONToString = json.NewMarshalString()
+var today = time.Now().Local().Format("2006-01-02")
+
+// Simple funcs to help handle testing returned stuff
+func stringSliceContains(sl []string, val string) bool {
+	for _, v := range sl {
+		if v == val {
+			return true
+		}
+	}
+	return false
+}
+
+var testDistroDefaultUbuntu = &rawTemplate{
+	PackerInf: PackerInf{MinPackerVersion: "0.4.0", Description: "Test supported distribution template"},
+	IODirInf: IODirInf{
+		CommandsSrcDir: ":src_dir/commands",
+		HTTPDir:        "http",
+		HTTPSrcDir:     ":src_dir/http",
+		OutDir:         "../test_files/out/:distro/:build_name",
+		ScriptsDir:     "scripts",
+		ScriptsSrcDir:  ":src_dir/scripts",
+		SrcDir:         "../test_files/src/:distro",
+	},
+	BuildInf: BuildInf{
+		Name:      ":build_name",
+		BuildName: "",
+		BaseURL:   "http://releases.ubuntu.org/",
+	},
+	date:    today,
+	delim:   ":",
+	Distro:  "ubuntu",
+	Arch:    "amd64",
+	Image:   "server",
+	Release: "12.04",
+	varVals: map[string]string{},
+	vars:    map[string]string{},
+	build: build{
+		BuilderTypes: []string{"virtualbox-iso", "vmware-iso"},
+		Builders: map[string]*builder{
+			"common": {
+				templateSection{
+					Settings: []string{
+						"boot_command = :commands_src_dir/boot_test.command",
+						"boot_wait = 5s",
+						"disk_size = 20000",
+						"guest_os_type = ",
+						"headless = true",
+						"http_directory = http",
+						"iso_checksum_type = sha256",
+						"shutdown_command = :commands_src_dir/shutdown_test.command",
+						"ssh_password = vagrant",
+						"ssh_port = 22",
+						"ssh_username = vagrant",
+						"ssh_wait_timeout = 240m",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
+			"virtualbox-iso": {
+				templateSection{
+					Settings: []string{
+						"virtualbox_version_file = .vbox_version",
+					},
+					Arrays: map[string]interface{}{
+						"vm_settings": []string{
+							"cpus=1",
+							"memory=1024",
+						},
+					},
+				},
+			},
+			"vmware-iso": {
+				templateSection{
+					Settings: []string{},
+					Arrays: map[string]interface{}{
+						"vm_settings": []string{
+							"cpuid.coresPerSocket=1",
+							"memsize=1024",
+							"numvcpus=1",
+						},
+					},
+				},
+			},
+		},
+		PostProcessorTypes: []string{
+			"vagrant",
+			"vagrant-cloud",
+		},
+		PostProcessors: map[string]*postProcessor{
+			"vagrant": {
+				templateSection{
+					Settings: []string{
+						"compression_level = 9",
+						"keep_input_artifact = false",
+						"output = out/rancher-packer.box",
+					},
+					Arrays: map[string]interface{}{
+						"include": []string{
+							"include1",
+							"include2",
+						},
+					},
+				},
+			},
+			"vagrant-cloud": {
+				templateSection{
+					Settings: []string{
+						"access_token = getAValidTokenFrom-VagrantCloud.com",
+						"box_tag = foo/bar",
+						"no_release = true",
+						"version = 1.0.1",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
+		},
+		ProvisionerTypes: []string{"shell-scripts"},
+		Provisioners: map[string]*provisioner{
+			"shell-scripts": {
+				templateSection{
+					Settings: []string{
+						"execute_command = :commands_src_dir/execute_test.command",
+					},
+					Arrays: map[string]interface{}{
+						"except": []string{
+							"docker",
+						},
+						"only": []string{
+							"virtualbox-iso",
+						},
+						"scripts": []string{
+							":scripts_dir/setup_test.sh",
+							":scripts_dir/vagrant_test.sh",
+							":scripts_dir/sudoers_test.sh",
+							":scripts_dir/cleanup_test.sh",
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
+var testDistroDefaultCentOS = &rawTemplate{
+	PackerInf: PackerInf{
+		MinPackerVersion: "0.4.0",
+		Description:      "Test template config and Rancher options for CentOS",
+	},
+	IODirInf: IODirInf{
+		CommandsSrcDir: ":src_dir/commands",
+		HTTPDir:        "http",
+		HTTPSrcDir:     ":src_dir/http",
+		OutDir:         "../test_files/out/:distro/:build_name",
+		ScriptsDir:     "scripts",
+		ScriptsSrcDir:  ":src_dir/scripts",
+		SrcDir:         "../test_files/src/:distro",
+	},
+	BuildInf: BuildInf{
+		Name:      ":build_name",
+		BuildName: "",
+		BaseURL:   "",
+	},
+	date:    today,
+	delim:   ":",
+	Distro:  "centos",
+	Arch:    "x86_64",
+	Image:   "minimal",
+	Release: "6",
+	varVals: map[string]string{},
+	vars:    map[string]string{},
+	build: build{
+		BuilderTypes: []string{"virtualbox-iso", "vmware-iso"},
+		Builders: map[string]*builder{
+			"common": {
+				templateSection{
+					Settings: []string{
+						"boot_command = :commands_src_dir/boot_test.command",
+						"boot_wait = 5s",
+						"disk_size = 20000",
+						"guest_os_type = ",
+						"headless = true",
+						"http_directory = http",
+						"iso_checksum_type = sha256",
+						"shutdown_command = :commands_src_dir/shutdown_test.command",
+						"ssh_password = vagrant",
+						"ssh_port = 22",
+						"ssh_username = vagrant",
+						"ssh_wait_timeout = 240m",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
+			"virtualbox-iso": {
+				templateSection{
+					Settings: []string{
+						"virtualbox_version_file = .vbox_version",
+					},
+					Arrays: map[string]interface{}{
+						"vm_settings": []string{
+							"cpus=1",
+							"memory=1024",
+						},
+					},
+				},
+			},
+			"vmware-iso": {
+				templateSection{
+					Settings: []string{},
+					Arrays: map[string]interface{}{
+						"vm_settings": []string{
+							"cpuid.coresPerSocket=1",
+							"memsize=1024",
+							"numvcpus=1",
+						},
+					},
+				},
+			},
+		},
+		PostProcessorTypes: []string{
+			"vagrant",
+			"vagrant-cloud",
+		},
+		PostProcessors: map[string]*postProcessor{
+			"vagrant": {
+				templateSection{
+					Settings: []string{
+						"compression_level = 9",
+						"keep_input_artifact = false",
+						"output = out/rancher-packer.box",
+					},
+					Arrays: map[string]interface{}{
+						"include": []string{
+							"include1",
+							"include2",
+						},
+						"only": []string{
+							"virtualbox-iso",
+						},
+					},
+				},
+			},
+			"vagrant-cloud": {
+				templateSection{
+					Settings: []string{
+						"access_token = getAValidTokenFrom-VagrantCloud.com",
+						"box_tag = foo/bar",
+						"no_release = true",
+						"version = 1.0.1",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
+		},
+		ProvisionerTypes: []string{
+			"shell-scripts",
+		},
+		Provisioners: map[string]*provisioner{
+			"shell-scripts": {
+				templateSection{
+					Settings: []string{
+						"execute_command = :commands_src_dir/execute_test.command",
+					},
+					Arrays: map[string]interface{}{
+						"except": []string{
+							"docker",
+						},
+						"only": []string{
+							"virtualbox-iso",
+						},
+						"scripts": []string{
+							":scripts_dir/setup_test.sh",
+							":scripts_dir/vagrant_test.sh",
+							":scripts_dir/sudoers_test.sh",
+							":scripts_dir/cleanup_test.sh",
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
+var testDistroDefaults distroDefaults
+
 func init() {
-	setCommonTestData()
+	testDistroDefaults = distroDefaults{Templates: map[Distro]*rawTemplate{}, IsSet: true}
+	testDistroDefaults.Templates[Ubuntu] = testDistroDefaultUbuntu
+	testDistroDefaults.Templates[CentOS] = testDistroDefaultCentOS
 }
 
 func TestDistroDefaultsGetTemplate(t *testing.T) {
@@ -40,29 +329,6 @@ func TestDistroDefaultsGetTemplate(t *testing.T) {
 }
 
 func TestSetEnv(t *testing.T) {
-	// Preserve current state.
-	tmpConfig := os.Getenv(EnvRancherFile)
-	tmpBuildsFile := os.Getenv(EnvBuildsFile)
-	tmpBuildListsFile := os.Getenv(EnvBuildListsFile)
-	tmpDefaultsFile := os.Getenv(EnvDefaultsFile)
-	tmpLogToFile := os.Getenv(EnvLogToFile)
-	tmpLogFilename := os.Getenv(EnvLogFilename)
-	tmpLogLevelFile := os.Getenv(EnvLogLevelFile)
-	tmpLogLevelStdout := os.Getenv(EnvLogLevelStdout)
-	tmpParamDelimStart := os.Getenv(EnvParamDelimStart)
-	tmpSupportedFile := os.Getenv(EnvSupportedFile)
-
-	os.Setenv(EnvRancherFile, "")
-	os.Setenv(EnvBuildsFile, "")
-	os.Setenv(EnvBuildListsFile, "")
-	os.Setenv(EnvDefaultsFile, "")
-	os.Setenv(EnvLogToFile, "")
-	os.Setenv(EnvLogFilename, "")
-	os.Setenv(EnvLogLevelFile, "")
-	os.Setenv(EnvLogLevelStdout, "")
-	os.Setenv(EnvParamDelimStart, "")
-	os.Setenv(EnvSupportedFile, "")
-
 	err := SetEnv()
 	if err == nil {
 		t.Error("Expected an error, was nil")
@@ -71,97 +337,10 @@ func TestSetEnv(t *testing.T) {
 			t.Errorf("Expected \"open rancher.cfg: no such file or directory\", %q", err.Error())
 		}
 	}
-
-	os.Setenv(EnvRancherFile, testRancherCfg)
-	err = SetEnv()
-	if err != nil {
-		t.Errorf("Expected no error, got %q", err.Error())
-	} else {
-		if os.Getenv(EnvBuildsFile) != testBuildsFile {
-			t.Errorf("Expected %q, got %q", testBuildsFile, os.Getenv(EnvBuildsFile))
-		}
-		if os.Getenv(EnvBuildListsFile) != testBuildListsFile {
-			t.Errorf("Expected %q, got %q", testBuildListsFile, os.Getenv(EnvBuildListsFile))
-		}
-		if os.Getenv(EnvDefaultsFile) != testDefaultsFile {
-			t.Errorf("Expected %q, got %q", testDefaultsFile, os.Getenv(EnvDefaultsFile))
-		}
-		if os.Getenv(EnvLogToFile) != "false" {
-			t.Errorf("Expected \"false\", got %q", os.Getenv(EnvLogToFile))
-		}
-		if os.Getenv(EnvLogToFile) != "false" {
-			t.Errorf("Expected \"false\", got %q", os.Getenv(EnvLogToFile))
-		}
-		if os.Getenv(EnvLogLevelFile) != "INFO" {
-			t.Errorf("Expected \"INFO\", got %q", os.Getenv(EnvLogLevelFile))
-		}
-		if os.Getenv(EnvLogLevelStdout) != "TRACE" {
-			t.Errorf("Expected \"TRACE\", got %q", os.Getenv(EnvLogLevelStdout))
-		}
-		if os.Getenv(EnvParamDelimStart) != ":" {
-			t.Errorf("Expected \":\", got %q", os.Getenv(EnvParamDelimStart))
-		}
-		if os.Getenv(EnvSupportedFile) != testSupportedFile {
-			t.Errorf("Expected %q, got %q", testSupportedFile, os.Getenv(EnvSupportedFile))
-		}
-	}
-
-	os.Setenv(EnvRancherFile, testRancherCfg)
-	err = SetEnv()
-	if err != nil {
-		t.Errorf("Expected no error, got %q", err.Error())
-	} else {
-		if os.Getenv(EnvDefaultsFile) != testDefaultsFile {
-			t.Errorf("Expected %q, got %q", testDefaultsFile, os.Getenv(EnvDefaultsFile))
-		}
-	}
-
-	// Restore the state
-	os.Setenv(EnvRancherFile, tmpConfig)
-	os.Setenv(EnvBuildsFile, tmpBuildsFile)
-	os.Setenv(EnvBuildListsFile, tmpBuildListsFile)
-	os.Setenv(EnvDefaultsFile, tmpDefaultsFile)
-	os.Setenv(EnvLogToFile, tmpLogToFile)
-	os.Setenv(EnvLogFilename, tmpLogFilename)
-	os.Setenv(EnvLogLevelFile, tmpLogLevelFile)
-	os.Setenv(EnvLogLevelStdout, tmpLogLevelStdout)
-	os.Setenv(EnvParamDelimStart, tmpParamDelimStart)
-	os.Setenv(EnvSupportedFile, tmpSupportedFile)
-}
-
-// TODO add check of results other than error state and fix
-func TestBuildDistro(t *testing.T) {
-	tmpEnvRancherFile := os.Getenv(EnvRancherFile)
-	tmpEnvBuildsFile := os.Getenv(EnvBuildsFile)
-	tmpEnvDefaultsFile := os.Getenv(EnvDefaultsFile)
-	tmpEnvParamDelimStart := os.Getenv(EnvParamDelimStart)
-	tmpEnvSupportedFile := os.Getenv(EnvSupportedFile)
-	os.Setenv(EnvRancherFile, testRancherCfg)
-	os.Setenv(EnvBuildsFile, testBuildsFile)
-	os.Setenv(EnvDefaultsFile, testDefaultsFile)
-	os.Setenv(EnvParamDelimStart, ":")
-	os.Setenv(EnvSupportedFile, testSupportedFile)
-
-	err := DistroDefaults.Set()
-	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
-	}
-	aFilter := ArgsFilter{Arch: "amd64", Distro: "ubuntu", Image: "server", Release: "14.04"}
-	err = BuildDistro(aFilter)
-	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
-	}
-
-	os.Setenv(EnvRancherFile, tmpEnvRancherFile)
-	os.Setenv(EnvBuildsFile, tmpEnvBuildsFile)
-	os.Setenv(EnvDefaultsFile, tmpEnvDefaultsFile)
-	os.Setenv(EnvParamDelimStart, tmpEnvParamDelimStart)
-	os.Setenv(EnvSupportedFile, tmpEnvSupportedFile)
 }
 
 func TestbuildPackerTemplateFromDistros(t *testing.T) {
 	a := ArgsFilter{}
-	tmp := os.Getenv(EnvRancherFile)
 	err := buildPackerTemplateFromDistro(a)
 	if err == nil {
 		t.Error("Expected an error, none occurred")
@@ -195,79 +374,9 @@ func TestbuildPackerTemplateFromDistros(t *testing.T) {
 	if err.Error() != "Cannot build a packer template from passed distro: slackware is not supported. Please pass a supported distribution." {
 		t.Errorf("Expected \"Cannot build a packer template from passed distro: slackware is not supported. Please pass a supported distribution.\", got %q", err.Error())
 	}
-
-	_ = os.Setenv(EnvRancherFile, testRancherCfg)
-	a = ArgsFilter{Distro: "ubuntu", Arch: "amd64", Image: "desktop", Release: "14.04"}
-	err = buildPackerTemplateFromDistro(a)
-	if err != nil {
-		t.Errorf("Expected no error, got %q", err.Error())
-	}
-
-	os.Setenv(EnvRancherFile, tmp)
 }
-
-/*
-TODO: rewrite this test to work with refactored code
-func TestBuildBuilds(t *testing.T) {
-	tmpEnvRancherFile := os.Getenv(EnvRancherFile)
-	tmpEnvBuildsFile := os.Getenv(EnvBuildsFile)
-	tmpEnvDefaultsFile := os.Getenv(EnvDefaultsFile)
-	tmpEnvParamDelimStart := os.Getenv(EnvParamDelimStart)
-	tmpEnvSupportedFile := os.Getenv(EnvSupportedFile)
-	os.Setenv(EnvRancherFile, testRancherCfg)
-	os.Setenv(EnvBuildsFile, testBuildsFile)
-	os.Setenv(EnvDefaultsFile, testDefaultsFile)
-	os.Setenv(EnvParamDelimStart, ":")
-	os.Setenv(EnvSupportedFile, testSupportedFile)
-	_ = loadSupported()
-
-	bldName := ""
-	resultString, err := BuildBuilds(bldName)
-	if err == nil {
-		t.Error("Expected an error, none received")
-	} else {
-		if err.Error() != "Nothing to build. No build name was passed" {
-			t.Errorf("Expected \"Nothing to build. No build name was passed\", got %q", err.Error())
-		}
-	}
-	if resultString != "" {
-		t.Errorf("Expected an empty string, got %q", resultString)
-	}
-
-	bldName = "test1"
-	resultString, err = BuildBuilds(bldName)
-	if err != nil {
-		t.Errorf("Expected no error, got %q", err.Error())
-	}
-	if resultString != "Create Packer templates from named builds: 1 Builds were successfully processed and 0 Builds resulted in an error." {
-		t.Errorf("Expected \"Create Packer templates from named builds: 1 Builds were successfully processed and 0 Builds resulted in an error.\", got %q", resultString)
-	}
-
-	bldName1 := "test1"
-	bldName2 := "test2"
-	resultString, err = BuildBuilds(bldName1, bldName2)
-	resultString, err = BuildBuilds(bldName)
-	if err != nil {
-		t.Errorf("Expected no error, got %q", err.Error())
-	}
-	if resultString != "Create Packer templates from named builds: 1 Builds were successfully processed and 1 Builds resulted in an error." {
-		t.Errorf("Expected \"Create Packer templates from named builds: 1 Builds were successfully processed and 1 Builds resulted in an error.\", got %q", resultString)
-	}
-
-	os.Setenv(EnvRancherFile, tmpEnvRancherFile)
-	os.Setenv(EnvBuildsFile, tmpEnvBuildsFile)
-	os.Setenv(EnvDefaultsFile, tmpEnvDefaultsFile)
-	os.Setenv(EnvParamDelimStart, tmpEnvParamDelimStart)
-	os.Setenv(EnvSupportedFile, tmpEnvSupportedFile)
-}
-*/
 
 func TestbuildPackerTemplateFromNamedBuild(t *testing.T) {
-	tmp := os.Getenv(EnvRancherFile)
-	tmpBuildsFile := os.Getenv(EnvBuildsFile)
-
-	os.Setenv(EnvRancherFile, testRancherCfg)
-	os.Setenv(EnvBuildsFile, "look/for/it/here/")
 	doneCh := make(chan error)
 	go buildPackerTemplateFromNamedBuild("", doneCh)
 	err := <-doneCh
@@ -290,132 +399,13 @@ func TestbuildPackerTemplateFromNamedBuild(t *testing.T) {
 		}
 	}
 
-	go buildPackerTemplateFromNamedBuild("test1", doneCh)
-	err = <-doneCh
-	if err != nil {
-		t.Errorf("Expected no error, received %q", err.Error())
-	}
-
-	//	doneCh := make(chan error, 1)
-	go buildPackerTemplateFromNamedBuild("test11", doneCh)
-	err = <-doneCh
-	if err != nil {
-		t.Errorf("Expected no error, received %q", err.Error())
-	}
-
-	//	doneCh := make(chan error, 1)
-	go buildPackerTemplateFromNamedBuild("test2", doneCh)
-	err = <-doneCh
-	if err != nil {
-		t.Errorf("Expected no error, received %q", err.Error())
-	}
-
 	close(doneCh)
-	os.Setenv(EnvRancherFile, tmp)
-	os.Setenv(EnvBuildsFile, tmpBuildsFile)
 }
 
 func TestCommandsFromFile(t *testing.T) {
-	var commands []string
-	var err error
-
-	commands, err = commandsFromFile("")
+	_, err := commandsFromFile("")
 	if err.Error() != "the passed Command filename was empty" {
 		t.Errorf("Expected \"the passed Command filename was empty\", got %q", err.Error())
-	}
-
-	commands, err = commandsFromFile(testDir + "src/ubuntu/commands/execute_test.command")
-	if err != nil {
-		t.Errorf("expected error to be nil, got %q", err.Error())
-	}
-	if commands == nil {
-		t.Error("expected commands to no be nil, got nil")
-	} else {
-		if len(commands) != 1 {
-			t.Errorf("expected commands to have 1 member, had %d", len(commands))
-		}
-		if !stringSliceContains(commands, "\"echo 'vagrant'|sudo -S sh '{{.Path}}'\"") {
-			t.Error("expected commands to have member \"\"echo 'vagrant'|sudo -S sh '{{.Path}}'\"\", not a member")
-		}
-	}
-	commands, err = commandsFromFile(testDir + "src/ubuntu/commands/boot_test.command")
-	if err != nil {
-		t.Errorf("expected error to be nil, got %q", err.Error())
-	}
-	if commands == nil {
-		t.Error("expected commands to no be nil, got nil")
-	} else {
-		if len(commands) != 22 {
-			t.Errorf("expected commands to have 22 member, had %d", len(commands))
-		} else {
-			// check the slice in order
-			if commands[0] != "<esc><wait>" {
-				t.Errorf("expected \"<esc><wait>\", got %q", commands[0])
-			}
-			if commands[1] != "<esc><wait>" {
-				t.Errorf("expected \"<esc><wait>\", got %q", commands[1])
-			}
-			if commands[2] != "<enter><wait>" {
-				t.Errorf("expected \"<enter><wait>\", got %q", commands[2])
-			}
-			if commands[3] != "/install/vmlinuz<wait>" {
-				t.Errorf("expected \"/install/vmlinuz<wait>\", got %q", commands[3])
-			}
-			if commands[4] != " auto<wait>" {
-				t.Errorf("expected \" auto<wait>\", got %q", commands[4])
-			}
-			if commands[5] != " console-setup/ask_detect=false<wait>" {
-				t.Errorf("expected \" console-setup/ask_detect=false<wait>\", got %q", commands[5])
-			}
-			if commands[6] != " console-setup/layoutcode=us<wait>" {
-				t.Errorf("expected \" console-setup/layoutcode=us<wait>\", got %q", commands[6])
-			}
-			if commands[7] != " console-setup/modelcode=pc105<wait>" {
-				t.Errorf("expected \" console-setup/modelcode=pc105<wait>\", got %q", commands[7])
-			}
-			if commands[8] != " debconf/frontend=noninteractive<wait>" {
-				t.Errorf("expected \" debconf/frontend=noninteractive<wait>\", got %q", commands[8])
-			}
-			if commands[9] != " debian-installer=en_US<wait>" {
-				t.Errorf("expected \" debian-installer=en_US<wait>\", got %q", commands[9])
-			}
-			if commands[10] != " fb=false<wait>" {
-				t.Errorf("expected \" fb=false<wait>\", got %q", commands[10])
-			}
-			if commands[11] != " initrd=/install/initrd.gz<wait>" {
-				t.Errorf("expected \" initrd=/install/initrd.gz<wait>\", got %q", commands[11])
-			}
-			if commands[12] != " kbd-chooser/method=us<wait>" {
-				t.Errorf("expected \" kbd-chooser/method=us<wait>\", got %q", commands[12])
-			}
-			if commands[13] != " keyboard-configuration/layout=USA<wait>" {
-				t.Errorf("expected \" keyboard-configuration/layout=USA<wait>\", got %q", commands[13])
-			}
-			if commands[14] != " keyboard-configuration/variant=USA<wait>" {
-				t.Errorf("expected \" keyboard-configuration/variant=USA<wait>\", got %q", commands[14])
-			}
-			if commands[15] != " locale=en_US<wait>" {
-				t.Errorf("expected \" locale=en_US<wait>\", got %q", commands[15])
-			}
-			if commands[16] != " netcfg/get_hostname=ubuntu-1204<wait>" {
-				t.Errorf("expected \" netcfg/get_hostname=ubuntu-1204<wait>\", got %q", commands[16])
-			}
-			if commands[17] != " netcfg/get_domain=vagrantup.com<wait>" {
-				t.Errorf("expected \" netcfg/get_domain=vagrantup.com<wait>\", got %q", commands[17])
-			}
-			if commands[18] != " noapic<wait>" {
-				t.Errorf("expected \" noapic<wait>\", got %q", commands[18])
-			}
-			if commands[19] != " preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg<wait>" {
-				t.Errorf("expected \" preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg<wait>\", got %q", commands[19])
-			}
-			if commands[20] != " -- <wait>" {
-				t.Errorf("expected \" -- <wait>\", got %q", commands[20])
-			}
-			if commands[21] != "<enter><wait>" {
-				t.Errorf("expected \"<enter><wait>\", got %q", commands[21])
-			}
-		}
 	}
 }
 
@@ -800,7 +790,7 @@ func TestTrimSuffix(t *testing.T) {
 }
 
 func TestCopyFile(t *testing.T) {
-	wB, err := copyFile("", "", testDir+"test")
+	wB, err := copyFile("", "", "test")
 	if err == nil {
 		t.Error("Expected an error, no received")
 	} else {
@@ -812,7 +802,7 @@ func TestCopyFile(t *testing.T) {
 		t.Errorf("Expected 0 bytes written, %d were written", wB)
 	}
 
-	wB, err = copyFile("", testDir+"conf", "")
+	wB, err = copyFile("", "conf", "")
 	if err == nil {
 		t.Error("Expected an error, no received")
 	} else {
@@ -821,7 +811,7 @@ func TestCopyFile(t *testing.T) {
 		}
 	}
 
-	wB, err = copyFile("", testDir+"conf", testDir+"test")
+	wB, err = copyFile("", "conf", "test")
 	if err == nil {
 		t.Error("Expected an error, no received")
 	} else {
@@ -829,35 +819,34 @@ func TestCopyFile(t *testing.T) {
 			t.Errorf("Expected \"copyFile: no filename passed\", got %q", err.Error())
 		}
 	}
-	if wB != 0 {
-		t.Errorf("Expected 0 bytes written, %d were written", wB)
-	}
-
-	wB, err = copyFile("builds_test.toml", testDir+"conf", testDir+"test")
-	if err != nil {
-		t.Errorf("Expected no error, got %q", err.Error())
-	}
-	if wB != 2571 {
-		t.Errorf("Expected 2571 bytes written, %d were written", wB)
-	}
 }
 
 func TestCopyDirContent(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "test")
-	os.MkdirAll(tmpDir+"test", os.FileMode(0766))
-	err = copyDirContent("../test_files/conf", tmpDir)
-	if err != nil {
-		t.Errorf("expected no error, got %q", err.Error())
-	}
+	origDir, err := ioutil.TempDir("", "orig")
+	os.MkdirAll(origDir, os.FileMode(0766))
 
-	err = copyDirContent("../test_files/buildbuild", tmpDir)
+	copyDir, err := ioutil.TempDir("", "test")
+	os.MkdirAll(copyDir, os.FileMode(0766))
+	ioutil.WriteFile(filepath.Join(origDir, "test1"), []byte("this is a test file"), 0777)
+	ioutil.WriteFile(filepath.Join(origDir, "test2"), []byte("this is another test file"), 0777)
+
+	notADir := filepath.Join(origDir, "zzz")
+	err = copyDirContent(notADir, copyDir)
 	if err == nil {
 		t.Error("Expected an error, none received")
 	} else {
-		if err.Error() != "nothing copied: the source, ../test_files/buildbuild, does not exist" {
-			t.Errorf("Expected \"nothing copied: the source, ../test_files/buildbuild, does not exist\", got %q", err.Error())
+		if err.Error() != fmt.Sprintf("nothing copied: the source, %s, does not exist", notADir) {
+			t.Errorf("Expected \"nothing copied: the source, %q, does not exist\", got %q", notADir, err.Error())
 		}
 	}
+
+	err = copyDirContent(origDir, copyDir)
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	}
+
+	os.RemoveAll(copyDir)
+	os.RemoveAll(origDir)
 }
 
 func TestDeleteDirContent(t *testing.T) {
@@ -869,7 +858,7 @@ func TestDeleteDirContent(t *testing.T) {
 		testFile1.Close()
 	}
 
-	testFile2, err := os.Create(testDir + "test2.txt")
+	testFile2, err := os.Create(filepath.Join(tmpDir + "test2.txt"))
 	if err != nil {
 		t.Errorf("no error expected, got %q", err.Error())
 	} else {
@@ -885,7 +874,7 @@ func TestDeleteDirContent(t *testing.T) {
 		}
 	}
 
-	err = deleteDirContent(tmpDir)
+	err = os.RemoveAll(tmpDir)
 	if err != nil {
 		t.Errorf("Expected no error: got %q", err.Error())
 	}

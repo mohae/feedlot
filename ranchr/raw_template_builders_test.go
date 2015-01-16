@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-var testBuilderUbuntu = &rawTemplate{
+var testUbuntu = &rawTemplate{
 	IODirInf: IODirInf{
 		CommandsSrcDir: "../test_files/ubuntu/src/commands",
 		HTTPDir:        "http",
@@ -109,7 +109,7 @@ var testBuilderUbuntu = &rawTemplate{
 	},
 }
 
-var testBuilderCentOS = &rawTemplate{
+var testCentOS = &rawTemplate{
 	IODirInf: IODirInf{
 		CommandsSrcDir: "../test_files/centos/src/commands",
 		HTTPDir:        "http",
@@ -844,26 +844,26 @@ var vbB = &builder{
 }
 
 func TestRawTemplateUpdatebuilders(t *testing.T) {
-	testBuilderUbuntu.updateBuilders(nil)
-	if MarshalJSONToString.Get(testBuilderUbuntu.Builders) != MarshalJSONToString.Get(builderOrig) {
-		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(builderOrig), MarshalJSONToString.Get(testBuilderUbuntu.Builders))
+	testUbuntu.updateBuilders(nil)
+	if MarshalJSONToString.Get(testUbuntu.Builders) != MarshalJSONToString.Get(builderOrig) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(builderOrig), MarshalJSONToString.Get(testUbuntu.Builders))
 	}
 
-	testBuilderUbuntu.updateBuilders(builderNew)
-	if MarshalJSONToString.Get(testBuilderUbuntu.Builders) != MarshalJSONToString.Get(builderMerged) {
-		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(builderMerged), MarshalJSONToString.Get(testBuilderUbuntu.Builders))
+	testUbuntu.updateBuilders(builderNew)
+	if MarshalJSONToString.Get(testUbuntu.Builders) != MarshalJSONToString.Get(builderMerged) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(builderMerged), MarshalJSONToString.Get(testUbuntu.Builders))
 	}
 }
 
 func TestRawTemplateUpdateBuilderCommon(t *testing.T) {
-	testBuilderUbuntu.updateCommon(builderNew["common"])
-	if MarshalJSONToString.Get(testBuilderUbuntu.Builders["common"]) != MarshalJSONToString.Get(builderMerged["common"]) {
-		t.Errorf("expected %q, got %q", MarshalJSONToString.Get(builderMerged["common"]), MarshalJSONToString.Get(testBuilderUbuntu.Builders["common"]))
+	testUbuntu.updateCommon(builderNew["common"])
+	if MarshalJSONToString.Get(testUbuntu.Builders["common"]) != MarshalJSONToString.Get(builderMerged["common"]) {
+		t.Errorf("expected %q, got %q", MarshalJSONToString.Get(builderMerged["common"]), MarshalJSONToString.Get(testUbuntu.Builders["common"]))
 	}
 }
 
 func TestRawTemplateBuildersSettingsToMap(t *testing.T) {
-	settings := vbB.settingsToMap(rawTpl)
+	settings := vbB.settingsToMap(testRawTpl)
 	if settings["boot_wait"] != "5s" {
 		t.Errorf("Expected \"5s\", got %q", settings["boot_wait"])
 	}

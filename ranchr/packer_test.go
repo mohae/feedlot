@@ -67,15 +67,8 @@ func TestCreate(t *testing.T) {
 		}
 	}
 
-	i = IODirInf{HTTPDir: "http", HTTPSrcDir: "../test_files/src/ubuntu/http/", OutDir: "../test_files/out/build/", SrcDir: "../test_files/src/ubuntu/", ScriptsDir: "scripts", ScriptsSrcDir: "../test_files/src/ubuntu/scripts/"}
-	Scripts := []string{"cleanup_test.sh", "setup_test.sh", "test_file.sh"}
-	err = p.create(i, b, Scripts)
-	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
-	}
-
 	i = IODirInf{HTTPDir: "http", HTTPSrcDir: "../test_files/http/", OutDir: "../test_files/out/build/", SrcDir: "../test_files/", ScriptsDir: "scripts", ScriptsSrcDir: "../test_files/scripts/"}
-	Scripts = []string{"cleanup_test.sh", "setup_test.sh", "not_there.sh", "missing.sh", "test_file.sh"}
+	Scripts := []string{"cleanup_test.sh", "setup_test.sh", "not_there.sh", "missing.sh", "test_file.sh"}
 	err = p.create(i, b, Scripts)
 	if err == nil {
 		t.Error("Expected \"open ../test_files/scripts/test_file.sh: no such file or directory\", error was nil")

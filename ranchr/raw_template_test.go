@@ -5,6 +5,8 @@ import (
 	_ "time"
 )
 
+var testRawTpl = newRawTemplate()
+
 var updatedBuilders = map[string]*builder{
 	"common": {
 		templateSection{
@@ -77,14 +79,99 @@ var compareProvisioners = map[string]*provisioner{
 	},
 }
 
-func init() {
-	setCommonTestData()
+var testBuildNewTPL = &rawTemplate{
+	PackerInf: PackerInf{
+		Description: "Test build new template",
+	},
+	Distro:  "ubuntu",
+	Arch:    "amd64",
+	Image:   "server",
+	Release: "1204",
+	build: build{
+		BuilderTypes: []string{
+			"virtualbox-iso",
+		},
+		Builders: map[string]*builder{
+			"common": {
+				templateSection{
+					Settings: []string{
+						"ssh_wait_timeout = 300m",
+					},
+				},
+			},
+			"virtualbox-iso": {
+				templateSection{
+					Arrays: map[string]interface{}{
+						"vm_settings": []string{
+							"memory=4096",
+						},
+					},
+				},
+			},
+		},
+		PostProcessorTypes: []string{
+			"vagrant",
+			"vagrant-cloud",
+		},
+		PostProcessors: map[string]*postProcessor{
+			"vagrant": {
+				templateSection{
+					Settings: []string{
+						"output = :out_dir/packer.box",
+					},
+					Arrays: map[string]interface{}{
+						"except": []string{
+							"docker",
+						},
+						"only": []string{
+							"virtualbox-iso",
+						},
+					},
+				},
+			},
+			"vagrant-cloud": {
+				templateSection{
+					Settings: []string{
+						"access_token = getAValidTokenFrom-VagrantCloud.com",
+						"box_tag = foo/bar/baz",
+						"no_release = false",
+						"version = 1.0.2",
+					},
+				},
+			},
+		},
+		ProvisionerTypes: []string{
+			"shell-scripts",
+		},
+		Provisioners: map[string]*provisioner{
+			"shell-scripts": {
+				templateSection{
+					Settings: []string{
+						"execute_command = :commands_src_dir/execute_test.command",
+					},
+					Arrays: map[string]interface{}{
+						"scripts": []string{
+							":scripts_dir/setup_test.sh",
+							":scripts_dir/vagrant_test.sh",
+							":scripts_dir/cleanup_test.sh",
+						},
+						"except": []string{
+							"docker",
+						},
+						"only": []string{
+							"virtualbox-iso",
+						},
+					},
+				},
+			},
+		},
+	},
 }
 
 func TestNewRawTemplate(t *testing.T) {
 	rawTpl := newRawTemplate()
-	if MarshalJSONToString.Get(rawTpl) != MarshalJSONToString.Get(testRawTemplate) {
-		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testRawTemplate), MarshalJSONToString.Get(rawTpl))
+	if MarshalJSONToString.Get(rawTpl) != MarshalJSONToString.Get(testRawTpl) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testRawTpl), MarshalJSONToString.Get(rawTpl))
 	}
 }
 
@@ -259,25 +346,25 @@ func TestReplaceVariables(t *testing.T) {
 
 func TestRawTemplateUpdateBuildSettings(t *testing.T) {
 	r := newRawTemplate()
-	r.setDefaults(testSupported.Distro["centos"])
-	r.updateBuildSettings(testBuilds.Build["test1"])
-	if MarshalJSONToString.Get(r.IODirInf) != MarshalJSONToString.Get(testSupported.Distro["centos"].IODirInf) {
-		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupported.Distro["centos"].IODirInf), MarshalJSONToString.Get(r.IODirInf))
+	r.setDefaults(testSupportedCentOS)
+	r.updateBuildSettings(testBuildNewTPL)
+	if MarshalJSONToString.Get(r.IODirInf) != MarshalJSONToString.Get(testSupportedCentOS.IODirInf) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupportedCentOS.IODirInf), MarshalJSONToString.Get(r.IODirInf))
 	}
-	if MarshalJSONToString.Get(r.PackerInf) != MarshalJSONToString.Get(testBuilds.Build["test1"].PackerInf) {
-		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupported.Distro["test1"].PackerInf), MarshalJSONToString.Get(r.PackerInf))
+	if MarshalJSONToString.Get(r.PackerInf) != MarshalJSONToString.Get(testBuildNewTPL.PackerInf) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testBuildNewTPL.PackerInf), MarshalJSONToString.Get(r.PackerInf))
 	}
-	if MarshalJSONToString.Get(r.BuildInf) != MarshalJSONToString.Get(testSupported.Distro["centos"].BuildInf) {
-		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupported.Distro["centos"].BuildInf), MarshalJSONToString.Get(r.BuildInf))
+	if MarshalJSONToString.Get(r.BuildInf) != MarshalJSONToString.Get(testSupportedCentOS.BuildInf) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupportedCentOS.BuildInf), MarshalJSONToString.Get(r.BuildInf))
 	}
-	if MarshalJSONToString.Get(r.BuilderTypes) != MarshalJSONToString.Get(testBuilds.Build["test1"].BuilderTypes) {
-		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupported.Distro["test1"].BuilderTypes), MarshalJSONToString.Get(r.BuilderTypes))
+	if MarshalJSONToString.Get(r.BuilderTypes) != MarshalJSONToString.Get(testBuildNewTPL.BuilderTypes) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testBuildNewTPL.BuilderTypes), MarshalJSONToString.Get(r.BuilderTypes))
 	}
-	if MarshalJSONToString.Get(r.PostProcessorTypes) != MarshalJSONToString.Get(testBuilds.Build["test1"].PostProcessorTypes) {
-		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupported.Distro["test1"].PostProcessorTypes), MarshalJSONToString.Get(r.PostProcessorTypes))
+	if MarshalJSONToString.Get(r.PostProcessorTypes) != MarshalJSONToString.Get(testBuildNewTPL.PostProcessorTypes) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testBuildNewTPL.PostProcessorTypes), MarshalJSONToString.Get(r.PostProcessorTypes))
 	}
-	if MarshalJSONToString.Get(r.ProvisionerTypes) != MarshalJSONToString.Get(testBuilds.Build["test1"].ProvisionerTypes) {
-		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupported.Distro["test1"].ProvisionerTypes), MarshalJSONToString.Get(r.ProvisionerTypes))
+	if MarshalJSONToString.Get(r.ProvisionerTypes) != MarshalJSONToString.Get(testBuildNewTPL.ProvisionerTypes) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testBuildNewTPL.ProvisionerTypes), MarshalJSONToString.Get(r.ProvisionerTypes))
 	}
 	if MarshalJSONToString.Get(r.Builders) != MarshalJSONToString.Get(updatedBuilders) {
 		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(updatedBuilders), MarshalJSONToString.Get(r.Builders))

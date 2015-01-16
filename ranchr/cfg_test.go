@@ -6,8 +6,260 @@ import (
 	"testing"
 )
 
-func init() {
-	setCommonTestData()
+var testDefaults = &defaults{
+	IODirInf: IODirInf{
+		CommandsSrcDir: ":src_dir/commands",
+		HTTPDir:        "http",
+		HTTPSrcDir:     ":src_dir/http",
+		OutDir:         "../test_files/out/:distro/:build_name",
+		ScriptsDir:     "scripts",
+		ScriptsSrcDir:  ":src_dir/scripts",
+		SrcDir:         "../test_files/src/:distro",
+	},
+	PackerInf: PackerInf{
+		Description:      "Test Default Rancher template",
+		MinPackerVersion: "0.4.0",
+	},
+	BuildInf: BuildInf{
+		BaseURL:   "",
+		BuildName: "",
+		Name:      ":build_name",
+	},
+	build: build{
+		BuilderTypes: []string{
+			"virtualbox-iso",
+			"vmware-iso",
+		},
+		Builders: map[string]*builder{
+			"common": {
+				templateSection{
+					Settings: []string{
+						"boot_command = :commands_src_dir/boot_test.command",
+						"boot_wait = 5s",
+						"disk_size = 20000",
+						"guest_os_type = ",
+						"headless = true",
+						"http_directory = http",
+						"iso_checksum_type = sha256",
+						"shutdown_command = :commands_src_dir/shutdown_test.command",
+						"ssh_password = vagrant",
+						"ssh_port = 22",
+						"ssh_username = vagrant",
+						"ssh_wait_timeout = 240m",
+					},
+				},
+			},
+			"virtualbox-iso": {
+				templateSection{
+					Settings: []string{
+						"virtualbox_version_file = .vbox_version",
+					},
+					Arrays: map[string]interface{}{
+						"vm_settings": []string{
+							"cpus=1",
+							"memory=1024",
+						},
+					},
+				},
+			},
+			"vmware-iso": {
+				templateSection{
+					Arrays: map[string]interface{}{
+						"vm_settings": []string{
+							"cpuid.coresPerSocket=1",
+							"memsize=1024",
+							"numvcpus=1",
+						},
+					},
+				},
+			},
+		},
+		PostProcessorTypes: []string{
+			"vagrant",
+			"vagrant-cloud",
+		},
+		PostProcessors: map[string]*postProcessor{
+			"vagrant": {
+				templateSection{
+					Settings: []string{
+						"compression_level = 9",
+						"keep_input_artifact = false",
+						"output = out/rancher-packer.box",
+					},
+					Arrays: map[string]interface{}{
+						"only": []string{
+							"virtualbox-iso",
+						},
+					},
+				},
+			},
+			"vagrant-cloud": {
+				templateSection{
+					Settings: []string{
+						"access_token = getAValidTokenFrom-VagrantCloud.com",
+						"box_tag = foo/bar",
+						"no_release = true",
+						"version = 1.0.1",
+					},
+				},
+			},
+		},
+		ProvisionerTypes: []string{
+			"shell-scripts",
+		},
+		Provisioners: map[string]*provisioner{
+			"shell-scripts": {
+				templateSection{
+					Settings: []string{
+						"execute_command = :commands_src_dir/execute_test.command",
+					},
+					Arrays: map[string]interface{}{
+						"except": []string{
+							"docker",
+						},
+						"only": []string{
+							"virtualbox-iso",
+						},
+						"scripts": []string{
+							":scripts_dir/setup_test.sh",
+							":scripts_dir/vagrant_test.sh",
+							":scripts_dir/sudoers_test.sh",
+							":scripts_dir/cleanup_test.sh",
+						},
+					},
+				},
+			},
+		},
+	},
+	loaded: true,
+}
+
+var testSupportedUbuntu = &distro{
+	BuildInf: BuildInf{
+		BaseURL: "http://releases.ubuntu.com/",
+	},
+	IODirInf: IODirInf{},
+	PackerInf: PackerInf{
+		MinPackerVersion: "",
+		Description:      "Test supported distribution template",
+	},
+	Arch: []string{
+		"i386",
+		"amd64",
+	},
+	Image: []string{
+		"server",
+	},
+	Release: []string{
+		"10.04",
+		"12.04",
+		"12.10",
+		"13.04",
+		"13.10",
+	},
+	DefImage: []string{
+		"release = 12.04",
+		"image = server",
+		"arch = amd64",
+	},
+	build: build{
+		BuilderTypes: []string{
+			"virtualbox-iso",
+			"vmware-iso",
+		},
+		Builders: map[string]*builder{
+			"common": {
+				templateSection{
+					Settings: []string{
+						"boot_command = ../test_files/src/ubuntu/commands/boot_test.command",
+						"shutdown_command = :command_src_dir/shutdown_test.command",
+					},
+				},
+			},
+			"virtualbox-iso": {
+				templateSection{
+					Arrays: map[string]interface{}{
+						"vm_settings": []string{"memory=2048"},
+					},
+				},
+			},
+			"vmware-iso": {
+				templateSection{
+					Arrays: map[string]interface{}{
+						"vm_settings": []string{"memsize=2048"},
+					},
+				},
+			},
+		},
+		PostProcessorTypes: []string{
+			"vagrant",
+		},
+		PostProcessors: map[string]*postProcessor{
+			"vagrant": {
+				templateSection{
+					Settings: []string{
+						"output = out/:build_name-packer.box",
+					},
+				},
+			},
+		},
+		ProvisionerTypes: []string{
+			"shell-scripts",
+			"file-uploads",
+		},
+		Provisioners: map[string]*provisioner{
+			"shell-scripts": {
+				templateSection{
+					Settings: []string{
+						"execute_command = :command_src_dir/execute_test.command",
+					},
+					Arrays: map[string]interface{}{
+						"scripts": []string{
+							":scripts_dir/setup_test.sh",
+							":scripts_dir/base_test.sh",
+							":scripts_dir/vagrant_test.sh",
+							":scripts_dir/sudoers_test.sh",
+							":scripts_dir/cleanup_test.sh",
+						},
+					},
+				},
+			},
+			"file-uploads": {
+				templateSection{
+					Settings: []string{
+						"source = source/dir",
+						"destination = destination/dir",
+					},
+				},
+			},
+		},
+	},
+}
+
+var testSupportedCentOS = &distro{
+	BuildInf: BuildInf{BaseURL: ""},
+	IODirInf: IODirInf{},
+	PackerInf: PackerInf{
+		MinPackerVersion: "",
+		Description:      "Test template config and Rancher options for CentOS",
+	},
+	Arch: []string{
+		"i386",
+		"x86_64",
+	},
+	Image: []string{
+		"minimal",
+		"netinstall",
+	},
+	Release: []string{
+		"5",
+		"6",
+	},
+	DefImage: []string{
+		"release = 6",
+		"image = minimal",
+		"arch = x86_64",
+	},
 }
 
 func TestTemplateSectionMergeArrays(t *testing.T) {
@@ -290,19 +542,7 @@ func TestDefaults(t *testing.T) {
 			}
 		}
 	}
-
-	os.Setenv(EnvDefaultsFile, "../test_files/conf/defaults_test.toml")
-	os.Setenv(EnvRancherFile, "../test_files/rancher.cfg")
-	d = defaults{}
-	err = d.LoadOnce()
-	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
-	} else {
-		if MarshalJSONToString.Get(d) != MarshalJSONToString.Get(testDefaults) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testDefaults), MarshalJSONToString.Get(d))
-		}
-	}
-	_ = os.Setenv(EnvDefaultsFile, tmpEnvDefaultsFile)
+	os.Setenv(EnvDefaultsFile, tmpEnvDefaultsFile)
 }
 
 func TestSupported(t *testing.T) {
@@ -320,27 +560,7 @@ func TestSupported(t *testing.T) {
 			t.Errorf("expected Supported info not to be loaded, but it was")
 		}
 	}
-
-	s = supported{}
-	os.Setenv(EnvSupportedFile, "../test_files/conf/supported_test.toml")
-	err = s.LoadOnce()
-	if err != nil {
-		t.Errorf("unexpected error %q", err.Error())
-	} else {
-		if !s.loaded {
-			t.Errorf("expected the Supported info to be loaded, but it wasn't")
-		} else {
-			if MarshalJSONToString.Get(s.Distro[Ubuntu.String()]) != MarshalJSONToString.Get(testSupported.Distro[Ubuntu.String()]) {
-				t.Errorf("expected %q, got %q", MarshalJSONToString.Get(testSupported.Distro[Ubuntu.String()]), MarshalJSONToString.Get(s.Distro[Ubuntu.String()]))
-			}
-			if MarshalJSONToString.Get(s.Distro[CentOS.String()]) != MarshalJSONToString.Get(testSupported.Distro[CentOS.String()]) {
-				t.Errorf("expected %q, got %q", MarshalJSONToString.Get(testSupported.Distro[CentOS.String()]), MarshalJSONToString.Get(s.Distro[CentOS.String()]))
-			}
-		}
-	}
-	// Set this because, for some reason it isn't set in testing >.>
-	//	testSupported.Distro["ubuntu"].BaseURL = "http://releases.ubuntu.com/"
-	_ = os.Setenv(EnvSupportedFile, tmpEnv)
+	os.Setenv(EnvSupportedFile, tmpEnv)
 }
 
 func TestBuildsStuff(t *testing.T) {
@@ -356,20 +576,6 @@ func TestBuildsStuff(t *testing.T) {
 	b.LoadOnce()
 	if b.loaded == true {
 		t.Errorf("expected Build's loaded flag to be false, but it was")
-	}
-
-	os.Setenv(EnvBuildsFile, "../test_files/conf/builds_test.toml")
-	b = builds{}
-	b.LoadOnce()
-	if b.loaded == false {
-		t.Errorf("expected Build info to be loaded, but it wasn't")
-	} else {
-		if MarshalJSONToString.Get(testBuilds.Build["test1"]) != MarshalJSONToString.Get(b.Build["test1"]) {
-			t.Errorf("expected %q, got %q", MarshalJSONToString.Get(testBuilds.Build["test1"]), MarshalJSONToString.Get(b.Build["test1"]))
-		}
-		if MarshalJSONToString.Get(testBuilds.Build["test2"]) != MarshalJSONToString.Get(b.Build["test2"]) {
-			t.Errorf("expected %q, got %q", MarshalJSONToString.Get(testBuilds.Build["test2"]), MarshalJSONToString.Get(b.Build["test2"]))
-		}
 	}
 
 	os.Setenv(EnvBuildsFile, tmpEnv)
@@ -396,48 +602,6 @@ func TestBuildListsStuff(t *testing.T) {
 	} else {
 		if err.Error() != "open ../test_files/notthere.toml: no such file or directory" {
 			t.Errorf("Expected \"open ../test_files/notthere.toml: no such file or directory\", got %q", err.Error())
-		}
-	}
-
-	os.Setenv(EnvBuildListsFile, "../test_files/conf/build_lists_test.toml")
-	err = b.Load()
-	if err != nil {
-		t.Errorf("Did not expect an error, got %q", err.Error())
-	} else {
-		//check if testlist-1 exists
-		lst, ok := b.List["testlist-1"]
-		if !ok {
-			t.Error("Expected \"testlist-1\" to exist in Build list map, not found")
-		} else {
-			if len(lst.Builds) != 2 {
-				t.Errorf("Expected \"testlist-2\" to contain 4 elements, had %d", len(lst.Builds))
-			}
-			if !stringSliceContains(lst.Builds, "test1") {
-				t.Error("Expected \"test1\" to be in \"testlist-1\" slice, not found")
-			}
-			if !stringSliceContains(lst.Builds, "test2") {
-				t.Error("Expected \"test2\" to be in \"testlist-1\" slice, not found")
-			}
-		}
-		lst, ok = b.List["testlist-2"]
-		if !ok {
-			t.Error("Expected \"testlist-2\" to exist in Build list map, not found")
-		} else {
-			if len(lst.Builds) != 4 {
-				t.Errorf("Expected \"testlist-2\" to contain 4 elements, had %d", len(lst.Builds))
-			}
-			if !stringSliceContains(lst.Builds, "test1") {
-				t.Error("Expected \"test1\" to be in \"testlist-2\" slice, not found")
-			}
-			if !stringSliceContains(lst.Builds, "test2") {
-				t.Error("Expected \"test2\" to be in \"testlist-2\" slice, not found")
-			}
-			if !stringSliceContains(lst.Builds, "test3") {
-				t.Error("Expected \"test3\" to be in \"testlist-2\" slice, not found")
-			}
-			if !stringSliceContains(lst.Builds, "test4") {
-				t.Error("Expected \"test4\" to be in \"testlist-2\" slice, not found")
-			}
 		}
 	}
 

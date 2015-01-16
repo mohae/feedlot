@@ -216,63 +216,6 @@ func (p *provisioner) mergeArrays(m map[string]interface{}) {
 	p.Arrays = p.templateSection.mergeArrays(p.Arrays, m)
 }
 
-/*
-// Go through all of the Settings and convert them to a map. Each setting is
-// parsed into its constituent parts. The value then goes through variable
-// replacement to ensure that the settings are properly resolved.
-func (p *provisioner) settingsToMap(Type string, r *rawTemplate) (map[string]interface{}, error) {
-//	var k, v string
-//	var err error
-
-	m := make(map[string]interface{}, len(p.Settings))
-	m["type"] = Type
-
-	for _, s := range p.Settings {
-		jww.TRACE.Printf("%v\n", s)
-/*
-		k, v = parseVar(s)
-		v = r.replaceVariables(v)
-
-		switch k {
-		case "execute_command":
-			// Get the command from the specified file
-			var c []string
-
-			if c, err = commandsFromFile(v); err != nil {
-				jww.ERROR.Print(err.Error())
-				return nil, err
-			}
-			v = c[0]
-		}
-*
-//		m[k] = v
-	}
-
-	// Add except array.
-	if p.Except != nil {
-		m["except"] = p.Except
-	}
-
-	// Add only array.
-	if p.Only != nil {
-		m["only"] = p.Only
-	}
-
-	jww.TRACE.Printf("Provisioners Map: %v\n",m)
-
-	return m, nil
-}
-*/
-
-/*
-func (p *provisioner) setScripts(new []string) {
-	// Scripts are only replaced if it has values, otherwise the existing values are used.
-	if len(new) > 0 {
-		p.Scripts = new
-	}
-}
-*/
-
 // defaults is used to store Rancher application level defaults for Packer templates.
 type defaults struct {
 	IODirInf
