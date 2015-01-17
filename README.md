@@ -32,24 +32,24 @@ Each supported Packer section type has various configuration options. Any requir
     * centos
 
 ### Supported Builders
-	* amazon-ebs
-	* digitalocean
-	* docker
-	* googlecompute
+    * amazon-ebs
+    * digitalocean
+    * docker
+    * googlecompute
     * virtualbox-iso
     * virtualbox-ovf
-	* vmware-iso
+    * vmware-iso
     * vmware-vmx
     
 ### Supported Post-processors
-	* compress
-	* docker-import
-	* docker-push
-	* docker-save
-	* docker-tag
+    * compress
+    * docker-import
+    * docker-push
+    * docker-save
+    * docker-tag
     * vagrant
     * vagrant-cloud
-	* vsphere
+    * vsphere
 
 ### Supported Provisioners 
     * ansible-local
@@ -74,10 +74,12 @@ Build a Packer template for Ubuntu using the distro defaults and from more than 
 	
 	rancher build -distro=ubuntu -arch=i386 1404-dev 1204-amd64-server
 
-## `rancher.cfg` and Environment Variables
-The `rancher.cfg` file is the default core configuration file for Rancher. It contains the default locations for all of the TOML files that Rancher uses. Environment variables are supported. Rancher will first check to see if the environment variable is set. If it is empty, the relevant `rancher.cfg` setting will be used.
+## `rancher.toml` and Environment Variables
+The `rancher.toml` file is the default core configuration file for Rancher. It contains the default locations for all of the TOML files that Rancher uses. Environment variables are supported. Rancher will first check to see if the environment variable is set. If it is empty, the relevant `rancher.toml` setting will be used.
 
 For a full list of environment variables, please check the code comments.
+
+The `RANCHER_CONFIG` environment variable can be used to specify a different file and location for Rancher's configuration, otherwise the `rancher.toml` file will be used by default.
 
 ## Rancher Configuration files
 Information about defaults, supported distros, builds, and build lists are all stored in rancher configuration files, which are written in TOML. The defaults are set so that one can create a basic Packer template without any additional changes or overrides. 

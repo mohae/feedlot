@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/dotcloud/tar"
+	"github.com/mohae/tar"
 	jww "github.com/spf13/jwalterweatherman"
 )
 

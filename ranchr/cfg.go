@@ -235,7 +235,7 @@ func (d *defaults) LoadOnce() error {
 	loadFunc := func() {
 		name := os.Getenv(EnvDefaultsFile)
 		if name == "" {
-			d.err = fmt.Sprintf("unable to retrieve the default settings: %q was not set; check your \"rancher.cfg\"", EnvBuildsFile)
+			d.err = fmt.Sprintf("unable to retrieve the default settings: %q was not set; check your \"rancher.toml\"", EnvBuildsFile)
 			jww.CRITICAL.Print(d.err)
 			return
 		}

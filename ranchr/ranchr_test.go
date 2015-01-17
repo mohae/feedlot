@@ -333,8 +333,8 @@ func TestSetEnv(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, was nil")
 	} else {
-		if err.Error() != "open rancher.cfg: no such file or directory" {
-			t.Errorf("Expected \"open rancher.cfg: no such file or directory\", %q", err.Error())
+		if err.Error() != "open rancher.toml: no such file or directory" {
+			t.Errorf("Expected \"open rancher.toml: no such file or directory\", %q", err.Error())
 		}
 	}
 }

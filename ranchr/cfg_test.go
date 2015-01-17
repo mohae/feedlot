@@ -534,8 +534,8 @@ func TestDefaults(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, got nil")
 	} else {
-		if err.Error() != "unable to retrieve the default settings: \"RANCHER_BUILDS_FILE\" was not set; check your \"rancher.cfg\"" {
-			t.Errorf("Expected \"unable to retrieve the default settings: \"RANCHER_BUILDS_FILE\" was not set; check your \"rancher.cfg\"\", got %q", err.Error())
+		if err.Error() != "unable to retrieve the default settings: \"RANCHER_BUILDS_FILE\" was not set; check your \"rancher.toml\"" {
+			t.Errorf("Expected \"unable to retrieve the default settings: \"RANCHER_BUILDS_FILE\" was not set; check your \"rancher.toml\"\", got %q", err.Error())
 		} else {
 			if d.MinPackerVersion != "" {
 				t.Errorf("Expected \"\", got %q", d.MinPackerVersion)
@@ -591,7 +591,7 @@ func TestBuildListsStuff(t *testing.T) {
 		t.Error("Expected an error, but none received")
 	} else {
 		if err.Error() != EnvBuildListsFile+" not set, unable to retrieve the BuildLists file" {
-			t.Errorf("Expected \"could not retrieve the BuildLists file because the "+EnvBuildListsFile+" environment variable was not set. Either set it or check your rancher.cfg setting\", got %q", err.Error())
+			t.Errorf("Expected \"could not retrieve the BuildLists file because the "+EnvBuildListsFile+" environment variable was not set. Either set it or check your rancher.toml setting\", got %q", err.Error())
 		}
 	}
 

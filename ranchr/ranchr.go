@@ -391,10 +391,10 @@ func (d *distroDefaults) Set() error {
 
 // SetEnv sets the environment variables, if they do not already exist.
 //
-// The location of the rancher.cfg file can be overridden by setting its ENV
+// The location of the rancher.toml file can be overridden by setting its ENV
 // variable prior to running Rancher. In addition, any of the other Rancher
 // TOML file locations can be overridden by setting their corresponding ENV
-// variable prior to running Rancher. The settings in the rancher.cfg file are
+// variable prior to running Rancher. The settings in the rancher.toml file are
 // only used if their corresponding ENV variables aren't set.
 //
 // ENV variables are used by rancher for the location of its TOML files and
@@ -404,7 +404,7 @@ func SetEnv() error {
 	var tmp string
 	tmp = os.Getenv(EnvRancherFile)
 	if tmp == "" {
-		tmp = "rancher.cfg"
+		tmp = "rancher.toml"
 	}
 	_, err = toml.DecodeFile(tmp, &AppConfig)
 	if err != nil {
