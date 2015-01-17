@@ -13,7 +13,7 @@ build_lists_file        = "conf.d/build_lists.toml"
 log_to_file		= true
 log_filename		= ""
 log_level_file		= "INFO"
-log_level_stdout	= ""
+log_level_stdout	= "TRACE"
 
 ## Misc. 
 # The delimiter that signifies the start of a Rancher parameter. This Parameter
