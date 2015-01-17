@@ -50,54 +50,6 @@ type release struct {
 	ReleaseFull string
 }
 
-// An Ubuntu specific wrapper to release
-type ubuntu struct {
-	release
-}
-
-// Sets the ISO information for a Packer template.
-func (u *ubuntu) SetISOInfo() error {
-	// Set the ISO name.
-	u.setName()
-	// Set the Checksum information for this ISO.
-	if err := u.setChecksum(); err != nil {
-		jww.ERROR.Println(err)
-		return err
-	}
-	// Set the URL for the ISO image.
-	u.setISOURL()
-	return nil
-}
-
-// Set the checksum value for the iso.
-func (u *ubuntu) setChecksum() error {
-	// Don't check for ReleaseFull existence since Release will also resolve
-	// for Ubuntu dl directories.
-	var page string
-	var err error
-	page, err = getStringFromURL(appendSlash(u.BaseURL) + appendSlash(u.Release) + strings.ToUpper(u.ChecksumType) + "SUMS")
-	if err != nil {
-		jww.ERROR.Println(err)
-		return err
-	}
-	// Now that we have a page...we need to find the checksum and set it
-	u.Checksum, err = u.findChecksum(page)
-	if err != nil {
-		jww.ERROR.Println(err)
-		return err
-	}
-	return nil
-}
-
-func (u *ubuntu) setISOURL() error {
-	// Its ok to use Release in the directory path because Release will resolve
-	// correctly, at the directory level, for Ubuntu.
-	u.isoURL = appendSlash(u.BaseURL) + appendSlash(u.Release) + u.Name
-	// This never errors so return nil...error is needed for other
-	// implementations of the interface.
-	return nil
-}
-
 // findChecksum finds the checksum in the passed page string for the current
 // ISO image. This is for releases.ubuntu.com checksums which are in a plain
 // text file with each line representing an iso image and checksum pair, each
@@ -110,101 +62,6 @@ func (u *ubuntu) setISOURL() error {
 //      Ubuntu LTS images can have an additional release number, which is
 //  	incremented each release. Because of this, a second search is performed
 //	if the first one fails to find a match.
-func (u *ubuntu) findChecksum(page string) (string, error) {
-	if page == "" {
-		err := fmt.Errorf("page to parse was empty; unable to process request for %s", u.Name)
-		jww.ERROR.Println(err)
-		return "", err
-	}
-	pos := strings.Index(page, u.Name)
-	if pos <= 0 {
-		// if it wasn't found, there's a chance that there's an extension on the release number
-		// e.g. 12.04.4 instead of 12.04. This should only be true for LTS releases.
-		// For this look for a line  that contains .iso.
-		// Substring the release string and explode it on '-'. Update isoName
-		pos = strings.Index(page, ".iso")
-		if pos < 0 {
-			err := fmt.Errorf("unable to find ISO information while looking for the release string on the Ubuntu checksums page")
-			jww.ERROR.Println(err)
-			return "", err
-		}
-		tmpRel := page[:pos]
-		tmpSl := strings.Split(tmpRel, "-")
-		// 3 is just an arbitrarily small number as there should always
-		// be more than 3 elements in the split slice.
-		if len(tmpSl) < 3 {
-			err := fmt.Errorf("unable to parse release information for %s", u.Name)
-			jww.ERROR.Println(err)
-			return "", err
-		}
-		u.ReleaseFull = tmpSl[1]
-		u.setName()
-		pos = strings.Index(page, u.Name)
-		if pos < 0 {
-			err := fmt.Errorf("unable to find %s's checksum", u.Name)
-			jww.ERROR.Println(err)
-			return "", err
-		}
-	}
-	// Safety check...should never occur, but sanity check it anyways.
-	if len(page) < pos-2 {
-		err := fmt.Errorf("unable to retrieve checksum information for %s", u.Name)
-		jww.ERROR.Println(err)
-		return "", err
-	}
-	// Get the checksum string. If the substring request goes beyond the
-	// variable boundary, be safe and make the request equal to the length
-	// of the string.
-	if pos-66 < 1 {
-		u.Checksum = page[:pos-2]
-	} else {
-		u.Checksum = page[pos-66 : pos-2]
-	}
-	return u.Checksum, nil
-}
-
-// setName() sets the name of the iso for the release specified.
-func (u *ubuntu) setName() {
-	// ReleaseFull is set on LTS, otherwise just set it equal to the Release.
-	if u.ReleaseFull == "" {
-		u.ReleaseFull = u.Release
-	}
-	var buff bytes.Buffer
-	buff.WriteString("ubuntu-")
-	buff.WriteString(u.ReleaseFull)
-	buff.WriteString("-")
-	buff.WriteString(u.Image)
-	buff.WriteString("-")
-	buff.WriteString(u.Arch)
-	buff.WriteString(".iso")
-	u.Name = buff.String()
-	return
-}
-
-// getOSType returns the OSType string for the provided builder. The OS Type
-// varies by distro, arch, and builder.
-func (u *ubuntu) getOSType(buildType string) (string, error) {
-	switch buildType {
-	case "vmware-iso", "vmware-vmx":
-		switch u.Arch {
-		case "amd64":
-			return "ubuntu-64", nil
-		case "i386":
-			return "ubuntu-32", nil
-		}
-	case "virtualbox-iso", "vmware-ovf":
-		switch u.Arch {
-		case "amd64":
-			return "Ubuntu_64", nil
-		case "i386":
-			return "Ubuntu_32", nil
-		}
-	}
-	// Shouldn't get here unless the buildType passed is an unsupported one.
-	err := fmt.Errorf("%s does not support the %s builder", u.Distro, buildType)
-	jww.ERROR.Println(err)
-	return "", err
-}
 
 // centOS wrapper to release.
 type centOS struct {
@@ -464,6 +321,102 @@ func (c *centOS) setName() {
 	buff.WriteString(".iso")
 	c.Name = buff.String()
 	return
+}
+
+// An Debian specific wrapper to release
+type debian struct {
+	release
+}
+
+// Sets the ISO information for a Packer template.
+func (d *debian) SetISOInfo() error {
+	// Set the ISO name.
+	d.setName()
+	// Set the Checksum information for this ISO.
+	if err := d.setChecksum(); err != nil {
+		jww.ERROR.Println(err)
+		return err
+	}
+	// Set the URL for the ISO image.
+	d.setISOURL()
+	return nil
+}
+
+// Set the checksum value for the iso.
+func (d *debian) setChecksum() error {
+	// Don't check for ReleaseFull existence since Release will also resolve
+	// for Ubuntu dl directories.
+	var page string
+	var err error
+	page, err = getStringFromURL(appendSlash(d.BaseURL) + appendSlash(d.Release) + strings.ToUpper(d.ChecksumType) + "SUMS")
+	if err != nil {
+		jww.ERROR.Println(err)
+		return err
+	}
+	// Now that we have a page...we need to find the checksum and set it
+	d.Checksum, err = d.findChecksum(page)
+	if err != nil {
+		jww.ERROR.Println(err)
+		return err
+	}
+	return nil
+}
+
+func (d *debian) setISOURL() error {
+	// Its ok to use Release in the directory path because Release will resolve
+	// correctly, at the directory level, for Ubuntu.
+	d.isoURL = appendSlash(d.BaseURL) + appendSlash(d.Release) + d.Name
+	// This never errors so return nil...error is needed for other
+	// implementations of the interface.
+	return nil
+}
+
+// An Ubuntu specific wrapper to release
+type ubuntu struct {
+	release
+}
+
+// Sets the ISO information for a Packer template.
+func (u *ubuntu) SetISOInfo() error {
+	// Set the ISO name.
+	u.setName()
+	// Set the Checksum information for this ISO.
+	if err := u.setChecksum(); err != nil {
+		jww.ERROR.Println(err)
+		return err
+	}
+	// Set the URL for the ISO image.
+	u.setISOURL()
+	return nil
+}
+
+// Set the checksum value for the iso.
+func (u *ubuntu) setChecksum() error {
+	// Don't check for ReleaseFull existence since Release will also resolve
+	// for Ubuntu dl directories.
+	var page string
+	var err error
+	page, err = getStringFromURL(appendSlash(u.BaseURL) + appendSlash(u.Release) + strings.ToUpper(u.ChecksumType) + "SUMS")
+	if err != nil {
+		jww.ERROR.Println(err)
+		return err
+	}
+	// Now that we have a page...we need to find the checksum and set it
+	u.Checksum, err = u.findChecksum(page)
+	if err != nil {
+		jww.ERROR.Println(err)
+		return err
+	}
+	return nil
+}
+
+func (u *ubuntu) setISOURL() error {
+	// Its ok to use Release in the directory path because Release will resolve
+	// correctly, at the directory level, for Ubuntu.
+	u.isoURL = appendSlash(u.BaseURL) + appendSlash(u.Release) + u.Name
+	// This never errors so return nil...error is needed for other
+	// implementations of the interface.
+	return nil
 }
 
 // getStringFromURL returns the response body for the passed url as a string.

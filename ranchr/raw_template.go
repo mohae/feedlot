@@ -247,26 +247,7 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 		}
 	}
 	switch r.Distro {
-	case "ubuntu":
-		r.releaseISO = &ubuntu{
-			release: release{
-				iso: iso{
-					BaseURL:      r.BaseURL,
-					ChecksumType: checksumType,
-				},
-				Arch:    r.Arch,
-				Distro:  r.Distro,
-				Image:   r.Image,
-				Release: r.Release,
-			},
-		}
-		r.releaseISO.SetISOInfo()
-		r.osType, err = r.releaseISO.(*ubuntu).getOSType(builderType.String())
-		if err != nil {
-			jww.ERROR.Println(err)
-			return err
-		}
-	case "centos":
+	case CentOS.String():
 		r.releaseISO = &centOS{
 			release: release{
 				iso: iso{
@@ -286,5 +267,43 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 			return err
 		}
 	}
-	return nil
+	case Debian.String():
+		r.releaseISO = &debian{
+			release: release{
+				iso: iso{
+					BaseURL:      r.BaseURL,
+					ChecksumType: checksumType,
+				},
+				Arch:    r.Arch,
+				Distro:  r.Distro,
+				Image:   r.Image,
+				Release: r.Release,
+			},
+		}
+		r.releaseISO.SetISOInfo()
+		r.osType, err = r.releaseISO.(*debian).getOSType(builderType.String())
+		if err != nil {
+			jww.ERROR.Println(err)
+			return err
+		}
+	}
+	case Ubuntu.String():
+		r.releaseISO = &ubuntu{
+			release: release{
+				iso: iso{
+					BaseURL:      r.BaseURL,
+					ChecksumType: checksumType,
+				},
+				Arch:    r.Arch,
+				Distro:  r.Distro,
+				Image:   r.Image,
+				Release: r.Release,
+			},
+		}
+		r.releaseISO.SetISOInfo()
+		r.osType, err = r.releaseISO.(*ubuntu).getOSType(builderType.String())
+		if err != nil {
+			jww.ERROR.Println(err)
+			return err
+		}	return nil
 }

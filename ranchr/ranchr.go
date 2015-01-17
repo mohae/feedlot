@@ -28,6 +28,7 @@ import (
 const (
 	UnsupportedDistro Distro = iota
 	CentOS
+	Debian // does not support automatic lookup of iso info
 	Ubuntu
 )
 
@@ -37,6 +38,7 @@ type Distro int
 var distros = [...]string{
 	"unsupported distro",
 	"centos",
+	"debian",
 	"ubuntu",
 }
 
@@ -49,6 +51,8 @@ func DistroFromString(s string) Distro {
 	switch s {
 	case "centos":
 		return CentOS
+	case "debian":
+		return Debian
 	case "ubuntu":
 		return Ubuntu
 	}
@@ -218,7 +222,7 @@ var provisioners = [...]string{
 func (p Provisioner) String() string { return provisioners[p] }
 
 // ProvisionerFromString returns the Provisioner constant for the passed string or
-// unsupporte. All incoming strings are normalized to lowercase
+// unsupported. All incoming strings are normalized to lowercase
 func ProvisionerFromString(s string) Provisioner {
 	s = strings.ToLower(s)
 	switch s {
@@ -270,9 +274,9 @@ var (
 	// indent: default indent to use for marshal stuff
 	indent = "    "
 	//VMSettings is the var for builders with vm-settings
-	VMSettings            = "vm_settings"
-	typeOfSliceInterfaces = reflect.TypeOf([]interface{}(nil))
-	typeOfSliceStrings    = reflect.TypeOf([]string(nil))
+//	VMSettings            = "vm_settings"
+//	typeOfSliceInterfaces = reflect.TypeOf([]interface{}(nil))
+//	typeOfSliceStrings    = reflect.TypeOf([]string(nil))
 )
 
 // Defined builds
@@ -364,8 +368,10 @@ func (d *distroDefaults) Set() error {
 	d.Templates = map[Distro]*rawTemplate{}
 	// Generate the default settings for each distro.
 	for k, v := range s.Distro {
-		// See if the base url exists for non centos distros
-		if v.BaseURL == "" && k != CentOS.String() {
+		// See if the base url exists for non centos and non-debian distros
+		// It isn't required for debian because automatic resolution of iso
+		// information is not supported.
+		if v.BaseURL == "" && (k != CentOS.String() || k != Debian.String()) {
 			err = fmt.Errorf("%s requires a BaseURL, none provided", k)
 			jww.CRITICAL.Println(err)
 			return err

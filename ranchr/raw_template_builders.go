@@ -721,14 +721,18 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 	if tmpISOUrl == "" {
 		//handle iso lookup vs set in file
 		switch r.Distro {
-		case "ubuntu":
-			tmpISOUrl = r.releaseISO.(*ubuntu).isoURL
-			settings["iso_checksum"] = r.releaseISO.(*ubuntu).Checksum
-			settings["iso_checksum_type"] = r.releaseISO.(*ubuntu).ChecksumType
-		case "centos":
+		case CentOS.String():
 			settings["iso_url"] = r.releaseISO.(*centOS).isoURL
 			settings["iso_checksum"] = r.releaseISO.(*centOS).Checksum
 			settings["iso_checksum_type"] = r.releaseISO.(*centOS).ChecksumType
+		case Debian.String()
+			err = fmt.Errorf("automatic resolution of iso information for %q is not supported, the \"iso_url\" and \"iso_checksum\" settings must exist", r.Distro)
+			jww.ERROR.Print(err)
+			return nil, nil, err
+		case Ubuntu.String():
+			tmpISOUrl = r.releaseISO.(*ubuntu).isoURL
+			settings["iso_checksum"] = r.releaseISO.(*ubuntu).Checksum
+			settings["iso_checksum_type"] = r.releaseISO.(*ubuntu).ChecksumType
 		default:
 			err = fmt.Errorf("%q is not a supported Distro", r.Distro)
 			jww.ERROR.Println(err)
@@ -1115,14 +1119,18 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 	if tmpISOUrl == "" {
 		//handle iso lookup vs set in file
 		switch r.Distro {
-		case "ubuntu":
-			tmpISOUrl = r.releaseISO.(*ubuntu).isoURL
-			settings["iso_checksum"] = r.releaseISO.(*ubuntu).Checksum
-			settings["iso_checksum_type"] = r.releaseISO.(*ubuntu).ChecksumType
-		case "centos":
+		case CentOS.String():
 			settings["iso_url"] = r.releaseISO.(*centOS).isoURL
 			settings["iso_checksum"] = r.releaseISO.(*centOS).Checksum
 			settings["iso_checksum_type"] = r.releaseISO.(*centOS).ChecksumType
+		case Debian.String()
+			err = fmt.Errorf("automatic resolution of iso information for %q is not supported, the \"iso_url\" and \"iso_checksum\" settings must exist", r.Distro)
+			jww.ERROR.Print(err)
+			return nil, nil, err
+		case Ubuntu.String():
+			tmpISOUrl = r.releaseISO.(*ubuntu).isoURL
+			settings["iso_checksum"] = r.releaseISO.(*ubuntu).Checksum
+			settings["iso_checksum_type"] = r.releaseISO.(*ubuntu).ChecksumType
 		default:
 			err = fmt.Errorf("%q is not a supported Distro", r.Distro)
 			jww.ERROR.Println(err)
