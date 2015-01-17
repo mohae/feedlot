@@ -64,7 +64,7 @@
 		[distro.ubuntu.builders.common]
 			settings = [
 				"boot_wait = 15s",
-				"headless = false"
+				"headless = true"
 			]
 		[distro.ubuntu.builders.virtualbox-iso]
 			[distro.ubuntu.builders.virtualbox-iso.arrays]

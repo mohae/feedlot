@@ -1,4 +1,4 @@
-## rancher.cfg contains default values for the application ENV varaiables. 
+## rancher.toml contains default values for the application ENV varaiables. 
 ## Rancher only uses these values if their respective ENV variables do not exist
 ## or are not set. To use custom settings, set the respective ENV variables 
 ## prior to running.

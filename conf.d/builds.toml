@@ -21,7 +21,33 @@
 			vboxmanage = [
 				"memory=4096"
 			]
-
+	[build.1404-amd64-salt]
+		distro = "ubuntu"
+		description = "ubuntu LTS 1404 amd64 server build, minimal salt install"
+		arch = "amd64"
+		image = "server"
+		release = "14.04"
+		builder_types = [
+			"virtualbox-iso"
+		]
+		provisioner_types = [
+			"shell-scripts",
+			"salt-masterless"
+		]
+		[build.1404-amd64-salt.builders]
+			[build.1404-amd64-salt.builders.common]
+			settings = [
+				"ssh_wait_timeout = 300m"
+			]
+			[build.1404-amd64-salt.builders.virtualbox-iso.arrays]
+			vboxmanage = [
+				"memory=4096"
+			]
+		[build.1404-amd64-salt.provisioner.salt-masterless]
+			settings = [
+				"local_state_tree = ~/code/saltstack/saltbase/salt"
+			]
+		
 	[build.1404-dev]
 		distro = "ubuntu"
 		description = "ubuntu LTS 1404 amd64 desktop build, minimal install w go"
