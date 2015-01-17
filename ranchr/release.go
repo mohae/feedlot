@@ -371,6 +371,112 @@ func (d *debian) setISOURL() error {
 	return nil
 }
 
+// findChecksum finds the checksum in the passed page string for the current
+// ISO image. This is for releases.ubuntu.com checksums which are in a plain
+// text file with each line representing an iso image and checksum pair, each
+// line is in the format of:
+//      checksumText image.isoname
+//
+// Notes:
+//	\n separate lines
+//      since this is plain text processing we don't worry about runes
+// TODO update to work with Debian
+func (d *debian) findChecksum(page string) (string, error) {
+	if page == "" {
+		err := fmt.Errorf("page to parse was empty; unable to process request for %s", d.Name)
+		jww.ERROR.Println(err)
+		return "", err
+	}
+	pos := strings.Index(page, d.Name)
+	if pos <= 0 {
+		// if it wasn't found, there's a chance that there's an extension on the release number
+		// e.g. 12.04.4 instead of 12.04. This should only be true for LTS releases.
+		// For this look for a line  that contains .iso.
+		// Substring the release string and explode it on '-'. Update isoName
+		pos = strings.Index(page, ".iso")
+		if pos < 0 {
+			err := fmt.Errorf("unable to find ISO information while looking for the release string on the Ubuntu checksums page")
+			jww.ERROR.Println(err)
+			return "", err
+		}
+		tmpRel := page[:pos]
+		tmpSl := strings.Split(tmpRel, "-")
+		// 3 is just an arbitrarily small number as there should always
+		// be more than 3 elements in the split slice.
+		if len(tmpSl) < 3 {
+			err := fmt.Errorf("unable to parse release information for %s", d.Name)
+			jww.ERROR.Println(err)
+			return "", err
+		}
+		d.ReleaseFull = tmpSl[1]
+		d.setName()
+		pos = strings.Index(page, d.Name)
+		if pos < 0 {
+			err := fmt.Errorf("unable to find %s's checksum", d.Name)
+			jww.ERROR.Println(err)
+			return "", err
+		}
+	}
+	// Safety check...should never occur, but sanity check it anyways.
+	if len(page) < pos-2 {
+		err := fmt.Errorf("unable to retrieve checksum information for %s", d.Name)
+		jww.ERROR.Println(err)
+		return "", err
+	}
+	// Get the checksum string. If the substring request goes beyond the
+	// variable boundary, be safe and make the request equal to the length
+	// of the string.
+	if pos-66 < 1 {
+		d.Checksum = page[:pos-2]
+	} else {
+		d.Checksum = page[pos-66 : pos-2]
+	}
+	return d.Checksum, nil
+}
+
+// setName() sets the name of the iso for the release specified.
+func (d *debian) setName() {
+	// ReleaseFull is set on LTS, otherwise just set it equal to the Release.
+	if d.ReleaseFull == "" {
+		d.ReleaseFull = d.Release
+	}
+	var buff bytes.Buffer
+	buff.WriteString("ubuntu-")
+	buff.WriteString(d.ReleaseFull)
+	buff.WriteString("-")
+	buff.WriteString(d.Arch)
+	buff.WriteString("-")
+	buff.WriteString(d.Image)
+	buff.WriteString(".iso")
+	d.Name = buff.String()
+	return
+}
+
+// getOSType returns the OSType string for the provided builder. The OS Type
+// varies by distro, arch, and builder.
+func (d *debian) getOSType(buildType string) (string, error) {
+	switch buildType {
+	case "vmware-iso", "vmware-vmx":
+		switch d.Arch {
+		case "amd64":
+			return "debian-64", nil
+		case "i386":
+			return "debian-32", nil
+		}
+	case "virtualbox-iso", "vmware-ovf":
+		switch d.Arch {
+		case "amd64":
+			return "Debian_64", nil
+		case "i386":
+			return "Debian_32", nil
+		}
+	}
+	// Shouldn't get here unless the buildType passed is an unsupported one.
+	err := fmt.Errorf("%s does not support the %s builder", d.Distro, buildType)
+	jww.ERROR.Println(err)
+	return "", err
+}
+
 // An Ubuntu specific wrapper to release
 type ubuntu struct {
 	release
@@ -417,6 +523,114 @@ func (u *ubuntu) setISOURL() error {
 	// This never errors so return nil...error is needed for other
 	// implementations of the interface.
 	return nil
+}
+
+// findChecksum finds the checksum in the passed page string for the current
+// ISO image. This is for releases.ubuntu.com checksums which are in a plain
+// text file with each line representing an iso image and checksum pair, each
+// line is in the format of:
+//      checksumText image.isoname
+//
+// Notes:
+//	\n separate lines
+//      since this is plain text processing we don't worry about runes
+//      Ubuntu LTS images can have an additional release number, which is
+//  	incremented each release. Because of this, a second search is performed
+//	if the first one fails to find a match.
+func (u *ubuntu) findChecksum(page string) (string, error) {
+	if page == "" {
+		err := fmt.Errorf("page to parse was empty; unable to process request for %s", u.Name)
+		jww.ERROR.Println(err)
+		return "", err
+	}
+	pos := strings.Index(page, u.Name)
+	if pos <= 0 {
+		// if it wasn't found, there's a chance that there's an extension on the release number
+		// e.g. 12.04.4 instead of 12.04. This should only be true for LTS releases.
+		// For this look for a line  that contains .iso.
+		// Substring the release string and explode it on '-'. Update isoName
+		pos = strings.Index(page, ".iso")
+		if pos < 0 {
+			err := fmt.Errorf("unable to find ISO information while looking for the release string on the Ubuntu checksums page")
+			jww.ERROR.Println(err)
+			return "", err
+		}
+		tmpRel := page[:pos]
+		tmpSl := strings.Split(tmpRel, "-")
+		// 3 is just an arbitrarily small number as there should always
+		// be more than 3 elements in the split slice.
+		if len(tmpSl) < 3 {
+			err := fmt.Errorf("unable to parse release information for %s", u.Name)
+			jww.ERROR.Println(err)
+			return "", err
+		}
+		u.ReleaseFull = tmpSl[1]
+		u.setName()
+		pos = strings.Index(page, u.Name)
+		if pos < 0 {
+			err := fmt.Errorf("unable to find %s's checksum", u.Name)
+			jww.ERROR.Println(err)
+			return "", err
+		}
+	}
+	// Safety check...should never occur, but sanity check it anyways.
+	if len(page) < pos-2 {
+		err := fmt.Errorf("unable to retrieve checksum information for %s", u.Name)
+		jww.ERROR.Println(err)
+		return "", err
+	}
+	// Get the checksum string. If the substring request goes beyond the
+	// variable boundary, be safe and make the request equal to the length
+	// of the string.
+	if pos-66 < 1 {
+		u.Checksum = page[:pos-2]
+	} else {
+		u.Checksum = page[pos-66 : pos-2]
+	}
+	return u.Checksum, nil
+}
+
+// setName() sets the name of the iso for the release specified.
+func (u *ubuntu) setName() {
+	// ReleaseFull is set on LTS, otherwise just set it equal to the Release.
+	if u.ReleaseFull == "" {
+		u.ReleaseFull = u.Release
+	}
+	var buff bytes.Buffer
+	buff.WriteString("ubuntu-")
+	buff.WriteString(u.ReleaseFull)
+	buff.WriteString("-")
+	buff.WriteString(u.Image)
+	buff.WriteString("-")
+	buff.WriteString(u.Arch)
+	buff.WriteString(".iso")
+	u.Name = buff.String()
+	return
+}
+
+// getOSType returns the OSType string for the provided builder. The OS Type
+// varies by distro, arch, and builder.
+func (u *ubuntu) getOSType(buildType string) (string, error) {
+	switch buildType {
+	case "vmware-iso", "vmware-vmx":
+		switch u.Arch {
+		case "amd64":
+			return "ubuntu-64", nil
+		case "i386":
+			return "ubuntu-32", nil
+		}
+	case "virtualbox-iso", "vmware-ovf":
+		switch u.Arch {
+		case "amd64":
+			return "Ubuntu_64", nil
+		case "i386":
+			return "Ubuntu_32", nil
+		}
+	}
+	// Shouldn't get here unless the buildType passed is an unsupported one.
+	err := fmt.Errorf("%s does not support the %s builder", u.Distro, buildType)
+	jww.ERROR.Println(err)
+	return "", err
 }
 
 // getStringFromURL returns the response body for the passed url as a string.

@@ -137,6 +137,8 @@ func (b *builder) mergeSettings(new []string) {
 }
 
 // mergeVMSettings Merge the VMSettings section of a builder. New values supercede existing ones.
+// TODO update to work with new arrays processing
+/*
 func (b *builder) mergeVMSettings(new []string) []string {
 	if new == nil {
 		return nil
@@ -149,6 +151,7 @@ func (b *builder) mergeVMSettings(new []string) []string {
 	}
 	return merged
 }
+*/
 
 // Type for handling the post-processor section of the configs.
 type postProcessor struct {

@@ -1,6 +1,7 @@
 package ranchr
 
 import (
+	"fmt"
 	"os"
 	"reflect"
 	"strings"
@@ -266,7 +267,6 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 			jww.ERROR.Println(err)
 			return err
 		}
-	}
 	case Debian.String():
 		r.releaseISO = &debian{
 			release: release{
@@ -286,7 +286,6 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 			jww.ERROR.Println(err)
 			return err
 		}
-	}
 	case Ubuntu.String():
 		r.releaseISO = &ubuntu{
 			release: release{
@@ -305,5 +304,11 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 		if err != nil {
 			jww.ERROR.Println(err)
 			return err
-		}	return nil
+		}
+	default:
+		err := fmt.Errorf("unable to set ISO related information for the unsupported distro: %q", r.Distro)
+		jww.ERROR.Println(err)
+		return err
+	}
+	return nil
 }

@@ -725,7 +725,7 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 			settings["iso_url"] = r.releaseISO.(*centOS).isoURL
 			settings["iso_checksum"] = r.releaseISO.(*centOS).Checksum
 			settings["iso_checksum_type"] = r.releaseISO.(*centOS).ChecksumType
-		case Debian.String()
+		case Debian.String():
 			err = fmt.Errorf("automatic resolution of iso information for %q is not supported, the \"iso_url\" and \"iso_checksum\" settings must exist", r.Distro)
 			jww.ERROR.Print(err)
 			return nil, nil, err
@@ -1123,7 +1123,7 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 			settings["iso_url"] = r.releaseISO.(*centOS).isoURL
 			settings["iso_checksum"] = r.releaseISO.(*centOS).Checksum
 			settings["iso_checksum_type"] = r.releaseISO.(*centOS).ChecksumType
-		case Debian.String()
+		case Debian.String():
 			err = fmt.Errorf("automatic resolution of iso information for %q is not supported, the \"iso_url\" and \"iso_checksum\" settings must exist", r.Distro)
 			jww.ERROR.Print(err)
 			return nil, nil, err
@@ -1346,14 +1346,13 @@ func (r *rawTemplate) updateBuilders(new map[string]*builder) {
 	var keys []string
 	// Convert the keys to a map
 	keys = mergedKeysFromMaps(ifaceOld, ifaceNew)
-	var vmSettings []string
 	// If there's a builder with the key CommonBuilder, merge them. This is
 	// a special case for builders only.
 	_, ok := new[Common.String()]
 	if ok {
 		r.updateCommon(new[Common.String()])
 	}
-	b := &builder{}
+	// b := &builder{}
 	// Copy: if the key exists in the new builder only.
 	// Ignore: if the key does not exist in the new builder.
 	// Merge: if the key exists in both the new and old builder.
@@ -1369,12 +1368,15 @@ func (r *rawTemplate) updateBuilders(new map[string]*builder) {
 			continue
 		}
 		b = r.Builders[v].DeepCopy()
-		vmSettings = deepcopy.InterfaceToSliceStrings(new[v].Arrays[VMSettings])
-		// If there is anything to merge, do so
-		if vmSettings != nil {
-			b.Arrays[VMSettings] = vmSettings
-			r.Builders[v] = b
-		}
+		// TODO change to reflect new array handling
+		/*
+			vmSettings = deepcopy.InterfaceToSliceStrings(new[v].Arrays[VMSettings])
+			// If there is anything to merge, do so
+			if vmSettings != nil {
+				b.Arrays[VMSettings] = vmSettings
+				r.Builders[v] = b
+			}
+		*/
 	}
 	return
 }
