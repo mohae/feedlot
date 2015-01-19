@@ -2,7 +2,6 @@ package ranchr
 
 import (
 	"os"
-	"reflect"
 	"testing"
 )
 
@@ -377,74 +376,6 @@ func TestBuilderMergeSettings(t *testing.T) {
 	}
 	if stringSliceContains(b.Settings, key2) {
 		t.Errorf("did not expect %s in slice: was found", key2)
-	}
-}
-
-func TestMergeVMSettings(t *testing.T) {
-	b := builder{}
-	key1 := "VMkey1=VMvalue1"
-	key2 := "VMkey2=VMvalue2"
-	b.Arrays = map[string]interface{}{}
-	b.Arrays[VMSettings] = []string{key1, key2}
-
-	merged := b.mergeVMSettings(nil)
-	if merged != nil {
-		t.Errorf("Expected nil, got %v", merged)
-	}
-
-	key1update := "VMkey1=VMvalue11"
-	key3 := "VMkey3=VMvalue3"
-	newVMSettings := []string{key1update, key3}
-	mergedVMSettings := []string{key1update, key2, key3}
-	merged = b.mergeVMSettings(newVMSettings)
-	if !reflect.DeepEqual(merged, mergedVMSettings) {
-		t.Errorf("Expected %v, got %v", merged, mergedVMSettings)
-	}
-	if !stringSliceContains(merged, key1update) {
-		t.Errorf("expected %s in slice: not found", key1update)
-	}
-	if !stringSliceContains(merged, key2) {
-		t.Errorf("expected %s in slice: not found", key2)
-	}
-	if !stringSliceContains(merged, key3) {
-		t.Errorf("expected %s in slice: not found", key3)
-	}
-	if stringSliceContains(merged, key1) {
-		t.Errorf("did not expect %s in slice: was found", key1)
-	}
-
-	b.Settings = []string{key1, key2, key3}
-	rawTpl := &rawTemplate{}
-	res := b.settingsToMap(rawTpl)
-	if len(res) != 3 {
-		t.Errorf("Expected map to contain 3 elements, got %d", len(res))
-	}
-
-	v, ok := res["VMkey1"]
-	if !ok {
-		t.Errorf("Expected \"VMkey1\" to be in map, it isn't.")
-	} else {
-		if "VMvalue1" != v.(string) {
-			t.Errorf("Expected \"VMkey1's\" to equal \"VMvalue1\", got %q", v.(string))
-		}
-	}
-
-	v, ok = res["VMkey2"]
-	if !ok {
-		t.Errorf("Expected \"VMkey2\" to be in map, it isn't.")
-	} else {
-		if "VMvalue2" != v.(string) {
-			t.Errorf("Expected \"VMkey2's\" to equal \"VMvalue2\", got %q", v.(string))
-		}
-	}
-
-	v, ok = res["VMkey3"]
-	if !ok {
-		t.Errorf("Expected \"VMkey3\" to be in map, it isn't.")
-	} else {
-		if "VMvalue3" != v.(string) {
-			t.Errorf("Expected \"VMkey3'\" to equal \"VMvalue3\", got %q", v.(string))
-		}
 	}
 }
 

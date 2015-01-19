@@ -27,8 +27,7 @@
 	    	"image = minimal",
 	    	"arch = x86_64",
 	]
-[distro]
-	[distro.debian]
+[distro.debian]
 	base_url = ""
 	description = "Default template config and Rancher options for Debian"
 	arch = [
@@ -90,6 +89,7 @@
 		[distro.ubuntu.builders.virtualbox-iso]
 			[distro.ubuntu.builders.virtualbox-iso.arrays]
 				vboxmanage = [
+					"cpus=2",
 					"memory=2048"
 				]
 	[distro.ubuntu.post_processors]

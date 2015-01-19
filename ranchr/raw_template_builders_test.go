@@ -48,6 +48,7 @@ var testUbuntu = &rawTemplate{
 						"ssh_username = vagrant",
 						"ssh_wait_timeout = 300m",
 					},
+					Arrays: map[string]interface{}{},
 				},
 			},
 			"virtualbox-iso": {
@@ -731,6 +732,7 @@ var builderOrig = map[string]*builder{
 				"ssh_username = vagrant",
 				"ssh_wait_timeout = 300m",
 			},
+			Arrays: map[string]interface{}{},
 		},
 	},
 	"virtualbox-iso": {
@@ -800,6 +802,7 @@ var builderMerged = map[string]*builder{
 				"ssh_username = vagrant",
 				"ssh_wait_timeout = 240m",
 			},
+			Arrays: map[string]interface{}{},
 		},
 	},
 	"virtualbox-iso": {

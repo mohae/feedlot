@@ -78,39 +78,39 @@ type templateSection struct {
 }
 
 // templateSection.DeepCopy updates its information with new via a deep copy.
-func (t *templateSection) DeepCopy(new templateSection) {
+func (t *templateSection) DeepCopy(ts templateSection) {
 	//Deep Copy of settings
-	t.Settings = make([]string, len(new.Settings))
-	copy(t.Settings, new.Settings)
+	t.Settings = make([]string, len(ts.Settings))
+	copy(t.Settings, ts.Settings)
 	// make a deep copy of the Arrays(map[string]interface)
-	t.Arrays = deepcopy.Iface(new.Arrays).(map[string]interface{})
+	t.Arrays = deepcopy.Iface(ts.Arrays).(map[string]interface{})
 }
 
 // mergeArrays merges the arrays section of a template builder
-func (t *templateSection) mergeArrays(old map[string]interface{}, new map[string]interface{}) map[string]interface{} {
-	if old == nil && new == nil {
+func (t *templateSection) mergeArrays(old map[string]interface{}, n map[string]interface{}) map[string]interface{} {
+	if old == nil && n == nil {
 		return nil
 	}
 	if old == nil {
-		return new
+		return n
 	}
-	if new == nil {
+	if n == nil {
 		return old
 	}
 	// both are populated, merge them.
 	merged := map[string]interface{}{}
 	// Get the all keys from both maps
 	var keys []string
-	keys = mergedKeysFromMaps(old, new)
+	keys = mergedKeysFromMaps(old, n)
 	// Process using the keys.
 	for _, v := range keys {
 		// If the element for this key doesn't exist in new, add old.
-		if _, ok := new[v]; !ok {
+		if _, ok := n[v]; !ok {
 			merged[v] = old[v]
 			continue
 		}
 		// Otherwise use the new value
-		merged[v] = new[v]
+		merged[v] = n[v]
 	}
 	return merged
 }
@@ -129,11 +129,16 @@ func (b *builder) DeepCopy() *builder {
 }
 
 // mergeSettings the settings section of a builder. New values supercede existing ones.
-func (b *builder) mergeSettings(new []string) {
-	if new == nil {
+func (b *builder) mergeSettings(sl []string) {
+	if sl == nil {
 		return
 	}
-	b.Settings = mergeSettingsSlices(b.Settings, new)
+	b.Settings = mergeSettingsSlices(b.Settings, sl)
+}
+
+// mergeArrays merges the arrays section of a template builder
+func (b *builder) mergeArrays(m map[string]interface{}) {
+	b.Arrays = b.templateSection.mergeArrays(b.Arrays, m)
 }
 
 // mergeVMSettings Merge the VMSettings section of a builder. New values supercede existing ones.
@@ -168,16 +173,16 @@ func (p *postProcessor) DeepCopy() *postProcessor {
 
 // postProcessor.mergeSettings  merges the settings section of a post-processor
 // with the passed slice of settings. New values supercede existing ones.
-func (p *postProcessor) mergeSettings(new []string) {
-	if new == nil {
+func (p *postProcessor) mergeSettings(sl []string) {
+	if sl == nil {
 		return
 	}
 	if p.Settings == nil {
-		p.Settings = new
+		p.Settings = sl
 		return
 	}
 	// merge the keys
-	p.Settings = mergeSettingsSlices(p.Settings, new)
+	p.Settings = mergeSettingsSlices(p.Settings, sl)
 }
 
 // postProcessor.mergeArrays wraps templateSection.mergeArrays
@@ -201,16 +206,16 @@ func (p *provisioner) DeepCopy() *provisioner {
 
 // provisioner.mergeSettings  merges the settings section of a post-processor
 // with the passed slice of settings. New values supercede existing ones.
-func (p *provisioner) mergeSettings(new []string) {
-	if new == nil {
+func (p *provisioner) mergeSettings(sl []string) {
+	if sl == nil {
 		return
 	}
 	if p.Settings == nil {
-		p.Settings = new
+		p.Settings = sl
 		return
 	}
 	// merge the keys
-	p.Settings = mergeSettingsSlices(p.Settings, new)
+	p.Settings = mergeSettingsSlices(p.Settings, sl)
 }
 
 // provisioner.mergeArrays wraps templateSection.mergeArrays
@@ -270,12 +275,12 @@ type BuildInf struct {
 	BaseURL   string `toml:"base_url"`
 }
 
-func (i *BuildInf) update(new BuildInf) {
-	if new.Name != "" {
-		i.Name = new.Name
+func (i *BuildInf) update(b BuildInf) {
+	if b.Name != "" {
+		i.Name = b.Name
 	}
-	if new.BuildName != "" {
-		i.BuildName = new.BuildName
+	if b.BuildName != "" {
+		i.BuildName = b.BuildName
 	}
 }
 
@@ -301,27 +306,27 @@ type IODirInf struct {
 	SrcDir string `toml:"src_dir"`
 }
 
-func (i *IODirInf) update(new IODirInf) {
-	if new.CommandsSrcDir != "" {
-		i.CommandsSrcDir = appendSlash(new.CommandsSrcDir)
+func (i *IODirInf) update(inf IODirInf) {
+	if inf.CommandsSrcDir != "" {
+		i.CommandsSrcDir = appendSlash(inf.CommandsSrcDir)
 	}
-	if new.HTTPDir != "" {
-		i.HTTPDir = appendSlash(new.HTTPDir)
+	if inf.HTTPDir != "" {
+		i.HTTPDir = appendSlash(inf.HTTPDir)
 	}
-	if new.HTTPSrcDir != "" {
-		i.HTTPSrcDir = appendSlash(new.HTTPSrcDir)
+	if inf.HTTPSrcDir != "" {
+		i.HTTPSrcDir = appendSlash(inf.HTTPSrcDir)
 	}
-	if new.OutDir != "" {
-		i.OutDir = appendSlash(new.OutDir)
+	if inf.OutDir != "" {
+		i.OutDir = appendSlash(inf.OutDir)
 	}
-	if new.ScriptsDir != "" {
-		i.ScriptsDir = appendSlash(new.ScriptsDir)
+	if inf.ScriptsDir != "" {
+		i.ScriptsDir = appendSlash(inf.ScriptsDir)
 	}
-	if new.ScriptsSrcDir != "" {
-		i.ScriptsSrcDir = appendSlash(new.ScriptsSrcDir)
+	if inf.ScriptsSrcDir != "" {
+		i.ScriptsSrcDir = appendSlash(inf.ScriptsSrcDir)
 	}
-	if new.SrcDir != "" {
-		i.SrcDir = appendSlash(new.SrcDir)
+	if inf.SrcDir != "" {
+		i.SrcDir = appendSlash(inf.SrcDir)
 	}
 }
 
@@ -369,12 +374,12 @@ type PackerInf struct {
 	Description      string `toml:"description" json:"description"`
 }
 
-func (i *PackerInf) update(new PackerInf) {
-	if new.MinPackerVersion != "" {
-		i.MinPackerVersion = new.MinPackerVersion
+func (i *PackerInf) update(inf PackerInf) {
+	if inf.MinPackerVersion != "" {
+		i.MinPackerVersion = inf.MinPackerVersion
 	}
-	if new.Description != "" {
-		i.Description = new.Description
+	if inf.Description != "" {
+		i.Description = inf.Description
 	}
 }
 

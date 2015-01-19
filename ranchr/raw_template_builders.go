@@ -1327,9 +1327,9 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, vars [
 //
 //	  	* `guest_os_type`: This is generally set at Packer Template
 //		  generation time by Rancher.
-func (r *rawTemplate) updateBuilders(new map[string]*builder) {
+func (r *rawTemplate) updateBuilders(newB map[string]*builder) {
 	// If there is nothing new, old equals merged.
-	if len(new) <= 0 || new == nil {
+	if len(newB) <= 0 || newB == nil {
 		return
 	}
 	// Convert the existing Builders to interfaces.
@@ -1339,8 +1339,8 @@ func (r *rawTemplate) updateBuilders(new map[string]*builder) {
 	//		ifaceOld[i] = o
 	//	}
 	// Convert the new Builders to interfaces.
-	var ifaceNew = make(map[string]interface{}, len(new))
-	ifaceNew = DeepCopyMapStringPBuilder(new)
+	var ifaceNew = make(map[string]interface{}, len(newB))
+	ifaceNew = DeepCopyMapStringPBuilder(newB)
 	// Make the slice as long as the slices in both builders, odds are its
 	// shorter, but this is the worst case.
 	var keys []string
@@ -1348,34 +1348,55 @@ func (r *rawTemplate) updateBuilders(new map[string]*builder) {
 	keys = mergedKeysFromMaps(ifaceOld, ifaceNew)
 	// If there's a builder with the key CommonBuilder, merge them. This is
 	// a special case for builders only.
-	_, ok := new[Common.String()]
+	_, ok := newB[Common.String()]
 	if ok {
-		r.updateCommon(new[Common.String()])
+		r.updateCommon(newB[Common.String()])
 	}
-	// b := &builder{}
+	//b := &builder{}
 	// Copy: if the key exists in the new builder only.
 	// Ignore: if the key does not exist in the new builder.
 	// Merge: if the key exists in both the new and old builder.
+	jww.TRACE.Println("keys", keys)
 	for _, v := range keys {
 		// If it doesn't exist in the old builder, add it.
-		if _, ok := r.Builders[v]; !ok {
-			r.Builders[v] = new[v].DeepCopy()
+		_, ok := r.Builders[v]
+		if !ok {
+			r.Builders[v] = newB[v].DeepCopy()
 			continue
 		}
 		// If the element for this key doesn't exist, skip it.
-		_, ok := new[v]
+		_, ok = newB[v]
 		if !ok {
 			continue
 		}
-		b = r.Builders[v].DeepCopy()
-		// TODO change to reflect new array handling
+
+		b := r.Builders[v].DeepCopy()
+		b.mergeArrays(newB[v].Arrays)
+		r.Builders[v] = b
 		/*
-			vmSettings = deepcopy.InterfaceToSliceStrings(new[v].Arrays[VMSettings])
-			// If there is anything to merge, do so
-			if vmSettings != nil {
-				b.Arrays[VMSettings] = vmSettings
+			for name, val := range b.Arrays {
+				// see if it exists in new
+				_, ok = newB[v].Arrays[name]
+				arrayVals := deepcopy.InterfaceToSliceStrings(newB[v].Arrays[name])
+				// if there is anything to merge, do so
+				fmt.Println("b.Arrays[", name, "]:", b.Arrays[name])
+				fmt.Println("array vals", arrayVals)
+				if arrayVals != nil {
+					b.Arrays[name] = mergeArrays(newB[v].Arrays[name], b.Arrays[name])
+				}
 				r.Builders[v] = b
+				jww.TRACE.Println(name)
+				jww.TRACE.Printf("%#v\n", val)
+				jww.TRACE.Printf("%#v\n", r.Builders[v])
 			}
+			// TODO change to reflect new array handling
+			/*
+				vmSettings = deepcopy.InterfaceToSliceStrings(new[v].Arrays[VMSettings])
+				// If there is anything to merge, do so
+				if vmSettings != nil {
+					b.Arrays[VMSettings] = vmSettings
+					r.Builders[v] = b
+				}
 		*/
 	}
 	return

@@ -13,6 +13,7 @@ var updatedBuilders = map[string]*builder{
 			Settings: []string{
 				"ssh_wait_timeout = 300m",
 			},
+			Arrays: map[string]interface{}{},
 		},
 	},
 	"virtualbox-iso": {

@@ -371,7 +371,7 @@ func (d *distroDefaults) Set() error {
 		// See if the base url exists for non centos and non-debian distros
 		// It isn't required for debian because automatic resolution of iso
 		// information is not supported.
-		if v.BaseURL == "" && (k != CentOS.String() || k != Debian.String()) {
+		if v.BaseURL == "" && k != CentOS.String() && k != Debian.String() {
 			err = fmt.Errorf("%s requires a BaseURL, none provided", k)
 			jww.CRITICAL.Println(err)
 			return err
