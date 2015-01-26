@@ -273,6 +273,7 @@ var testAllBuilders = &rawTemplate{
 		BuilderTypes: []string{
 			"amazon-ebs",
 			"digitalocean",
+			"docker",
 			"googlecompute",
 			"virtualbox-iso",
 			"virtualbox-ovf",
@@ -844,6 +845,136 @@ var vbB = &builder{
 			},
 		},
 	},
+}
+
+func TestCreateBuilders(t *testing.T) {
+	_, _, err := testRawTemplateBuilderOnly.createBuilders()
+	if err == nil {
+		t.Error("Expected error \"unable to create builders: none specified\", got nil")
+	} else {
+		if err.Error() != "unable to create builders: none specified" {
+			t.Errorf("Expected \"unable to create builders: none specified\", got %q", err.Error())
+		}
+	}
+
+	_, _, err = testRawTemplateWOSection.createBuilders()
+	if err == nil {
+		t.Error("Expected error \"no configuration found for \"amazon-ebs\"\", got nil")
+	} else {
+		if err.Error() != "no configuration found for \"amazon-ebs\"" {
+			t.Errorf("Expected error \"no configuration found for \"amazon-ebs\"\", got %q", err.Error())
+		}
+	}
+
+	testRawTemplateWOSection.build.BuilderTypes[0] = "digitalocean"
+	_, _, err = testRawTemplateWOSection.createBuilders()
+	if err == nil {
+		t.Error("Expected error \"no configuration found for \"digitalocean\"\", got nil")
+	} else {
+		if err.Error() != "no configuration found for \"digitalocean\"" {
+			t.Errorf("Expected error \"no configuration found for \"digitalocean\"\", got %q", err.Error())
+		}
+	}
+
+	testRawTemplateWOSection.build.BuilderTypes[0] = "docker"
+	_, _, err = testRawTemplateWOSection.createBuilders()
+	if err == nil {
+		t.Error("Expected error \"no configuration found for \"docker\"\", got nil")
+	} else {
+		if err.Error() != "no configuration found for \"docker\"" {
+			t.Errorf("Expected error \"no configuration found for \"docker\"\", got %q", err.Error())
+		}
+	}
+
+	testRawTemplateWOSection.build.BuilderTypes[0] = "googlecompute"
+	_, _, err = testRawTemplateWOSection.createBuilders()
+	if err == nil {
+		t.Error("Expected error \"no configuration found for \"googlecompute\"\", got nil")
+	} else {
+		if err.Error() != "no configuration found for \"googlecompute\"" {
+			t.Errorf("Expected error \"no configuration found for \"googlecompute\"\", got %q", err.Error())
+		}
+	}
+
+	testRawTemplateWOSection.build.BuilderTypes[0] = "virtualbox-iso"
+	_, _, err = testRawTemplateWOSection.createBuilders()
+	if err == nil {
+		t.Error("Expected error \"no configuration found for \"virtualbox-iso\"\", got nil")
+	} else {
+		if err.Error() != "no configuration found for \"virtualbox-iso\"" {
+			t.Errorf("Expected error \"no configuration found for \"virtualbox-iso\"\", got %q", err.Error())
+		}
+	}
+
+	testRawTemplateWOSection.build.BuilderTypes[0] = "virtualbox-ovf"
+	_, _, err = testRawTemplateWOSection.createBuilders()
+	if err == nil {
+		t.Error("Expected error \"no configuration found for \"virtualbox-ovf\"\", got nil")
+	} else {
+		if err.Error() != "no configuration found for \"virtualbox-ovf\"" {
+			t.Errorf("Expected error \"no configuration found for \"virtualbox-ovf\"\", got %q", err.Error())
+		}
+	}
+
+	testRawTemplateWOSection.build.BuilderTypes[0] = "vmware-iso"
+	_, _, err = testRawTemplateWOSection.createBuilders()
+	if err == nil {
+		t.Error("Expected error \"no configuration found for \"vmware-iso\"\", got nil")
+	} else {
+		if err.Error() != "no configuration found for \"vmware-iso\"" {
+			t.Errorf("Expected error \"no configuration found for \"vmware-iso\"\", got %q", err.Error())
+		}
+	}
+
+	testRawTemplateWOSection.build.BuilderTypes[0] = "vmware-vmx"
+	_, _, err = testRawTemplateWOSection.createBuilders()
+	if err == nil {
+		t.Error("Expected error \"no configuration found for \"vmware-vmx\"\", got nil")
+	} else {
+		if err.Error() != "no configuration found for \"vmware-vmx\"" {
+			t.Errorf("Expected error \"no configuration found for \"vmware-vmx\"\", got %q", err.Error())
+		}
+	}
+
+	r := &rawTemplate{}
+	r = testDistroDefaultUbuntu
+	var bldrs []interface{}
+	//first merge the variables so that create builders will work
+	r.mergeVariables()
+	bldrs, _, err = r.createBuilders()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	}
+	/*else {
+		if MarshalJSONToString.Get(bldrs[0]) != MarshalJSONToString.Get(merged[0]) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(merged[0]), MarshalJSONToString.Get(bldrs[0]))
+		}
+		if MarshalJSONToString.Get(bldrs[1]) != MarshalJSONToString.Get(merged[1]) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(merged[1]), MarshalJSONToString.Get(bldrs[1]))
+		}
+	}
+	*/
+	_ = bldrs
+
+	r.BuilderTypes[0] = "unsupported"
+	bldrs, _, err = r.createBuilders()
+	if err == nil {
+		t.Error("Expected an error, got nil")
+	} else {
+		if err.Error() != "Builder, \"unsupported\", is not supported by Rancher" {
+			t.Errorf("Expected \"tBuilder, \"unsupported\", is not supported by Rancher\"), got %q", err.Error())
+		}
+	}
+
+	r.BuilderTypes = nil
+	bldrs, _, err = r.createBuilders()
+	if err == nil {
+		t.Error("Expected an error, got nil")
+	} else {
+		if err.Error() != "unable to create builders: none specified" {
+			t.Errorf("Expected \"unable to create builders: none specified\"), got %q", err.Error())
+		}
+	}
 }
 
 func TestRawTemplateUpdatebuilders(t *testing.T) {

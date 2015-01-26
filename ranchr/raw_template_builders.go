@@ -13,6 +13,7 @@ import (
 // Builders along with a slice of variables for that section builder type.
 // Some Settings are in-lined instead of adding them to the variable section.
 //
+//
 // At this point, all of the settings
 //
 // * update CommonBuilder with the ne, as this may be used by any of the Packer
@@ -40,26 +41,50 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 		switch typ {
 		case AmazonEBS:
 			tmpS, _, err = r.createAmazonEBS()
+			if err != nil {
+				return nil, nil, err
+			}
 		// AmazonInstance, AmazonChroot:
 		// not implemented
 		case DigitalOcean:
 			tmpS, _, err = r.createDigitalOcean()
+			if err != nil {
+				return nil, nil, err
+			}
 		case Docker:
 			tmpS, _, err = r.createDocker()
+			if err != nil {
+				return nil, nil, err
+			}
 		case GoogleCompute:
 			tmpS, _, err = r.createGoogleCompute()
+			if err != nil {
+				return nil, nil, err
+			}
 		//	case Null:
 		//	case Openstack:
 		//	case ParallelsISO, ParallelsPVM:
 		//	case QEMU:
 		case VMWareISO:
 			tmpS, _, err = r.createVMWareISO()
+			if err != nil {
+				return nil, nil, err
+			}
 		case VMWareVMX:
 			tmpS, _, err = r.createVMWareVMX()
+			if err != nil {
+				return nil, nil, err
+			}
 		case VirtualBoxISO:
 			tmpS, _, err = r.createVirtualBoxISO()
+			if err != nil {
+				return nil, nil, err
+			}
 		case VirtualBoxOVF:
 			tmpS, _, err = r.createVirtualBoxOVF()
+			if err != nil {
+				return nil, nil, err
+			}
 		default:
 			err = fmt.Errorf("Builder, %q, is not supported by Rancher", bType)
 			jww.ERROR.Println(err)
@@ -128,19 +153,27 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 //   tags                          object of key/value strings
 func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.Builders[AmazonEBS.String()]
-	if !!ok {
-		err = fmt.Errorf("no configuration for %q found", AmazonEBS.String())
+	if !ok {
+		err = fmt.Errorf("no configuration found for %q", AmazonEBS.String())
+		jww.ERROR.Print(err.Error())
+		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
 	settings["type"] = AmazonEBS.String()
 	// Merge the settings between common and this builders.
-	mergedSlice := mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[AmazonEBS.String()].Settings)
+	var workSlice []string
+	_, ok = r.Builders[Common.String()]
+	if ok {
+		workSlice = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[AmazonEBS.String()].Settings)
+	} else {
+		workSlice = r.Builders[AmazonEBS.String()].Settings
+	}
 	var k, v string
 	var hasAccessKey, hasAmiName, hasInstanceType, hasRegion, hasSecretKey, hasSourceAmi, hasSSHUsername bool
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
-	for _, s := range mergedSlice {
+	for _, s := range workSlice {
 		// var tmp interface{}
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
@@ -270,7 +303,9 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, vars [
 func (r *rawTemplate) createDigitalOcean() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.Builders[DigitalOcean.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration for %q found", DigitalOcean.String())
+		err = fmt.Errorf("no configuration found for %q", DigitalOcean.String())
+		jww.ERROR.Print(err.Error())
+		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -349,9 +384,11 @@ func (r *rawTemplate) createDigitalOcean() (settings map[string]interface{}, var
 // Not implemented configuration options:
 //   volumes         map of strings to strings
 func (r *rawTemplate) createDocker() (settings map[string]interface{}, vars []string, err error) {
-	_, ok := r.Provisioners[Docker.String()]
+	_, ok := r.Builders[Docker.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration for %q found", Docker.String())
+		err = fmt.Errorf("no configuration found for %q", Docker.String())
+		jww.ERROR.Print(err.Error())
+		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -443,9 +480,11 @@ func (r *rawTemplate) createDocker() (settings map[string]interface{}, vars []st
 // Not implemented configuration options:
 //   metadata           object of key/value strings
 func (r *rawTemplate) createGoogleCompute() (settings map[string]interface{}, vars []string, err error) {
-	_, ok := r.Provisioners[GoogleCompute.String()]
+	_, ok := r.Builders[GoogleCompute.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration for %q found", GoogleCompute.String())
+		err = fmt.Errorf("no configuration found for %q", GoogleCompute.String())
+		jww.ERROR.Print(err.Error())
+		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -562,9 +601,11 @@ func (r *rawTemplate) createGoogleCompute() (settings map[string]interface{}, va
 //   virtualbox_version_file  string
 //   vm_name                  string
 func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, vars []string, err error) {
-	_, ok := r.Provisioners[VirtualBoxISO.String()]
+	_, ok := r.Builders[VirtualBoxISO.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration for %q found", VirtualBoxISO.String())
+		err = fmt.Errorf("no configuration found for %q", VirtualBoxISO.String())
+		jww.ERROR.Print(err.Error())
+		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -792,9 +833,11 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 //   virtualbox_version_file  string
 //   vm_name                  string
 func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, vars []string, err error) {
-	_, ok := r.Provisioners[VirtualBoxOVF.String()]
+	_, ok := r.Builders[VirtualBoxOVF.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration for %q found", VirtualBoxOVF.String())
+		err = fmt.Errorf("no configuration found for %q", VirtualBoxOVF.String())
+		jww.ERROR.Print(err.Error())
+		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -964,9 +1007,11 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, va
 //   vnc_port_min            integer
 //   vnc_port_max            integer
 func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars []string, err error) {
-	_, ok := r.Provisioners[VMWareISO.String()]
+	_, ok := r.Builders[VMWareISO.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration for %q found", VMWareISO.String())
+		err = fmt.Errorf("no configuration found for %q", VMWareISO.String())
+		jww.ERROR.Print(err.Error())
+		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -1184,9 +1229,11 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 //   vnc_port_min				// integer
 //   vnc_port_max				// integer
 func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, vars []string, err error) {
-	_, ok := r.Provisioners[VMWareVMX.String()]
+	_, ok := r.Builders[VMWareVMX.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration for %q found", VMWareVMX.String())
+		err = fmt.Errorf("no configuration found for %q", VMWareVMX.String())
+		jww.ERROR.Print(err.Error())
+		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.

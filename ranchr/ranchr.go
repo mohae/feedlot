@@ -114,6 +114,8 @@ func BuilderFromString(s string) Builder {
 		return AmazonEBS
 	case "digitalocean":
 		return DigitalOcean
+	case "docker":
+		return Docker
 	case "googlecompute":
 		return GoogleCompute
 	case "null":

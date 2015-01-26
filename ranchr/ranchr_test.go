@@ -54,14 +54,13 @@ var testDistroDefaultUbuntu = &rawTemplate{
 			"common": {
 				templateSection{
 					Settings: []string{
-						"boot_command = :commands_src_dir/boot_test.command",
 						"boot_wait = 5s",
 						"disk_size = 20000",
 						"guest_os_type = ",
 						"headless = true",
 						"http_directory = http",
 						"iso_checksum_type = sha256",
-						"shutdown_command = :commands_src_dir/shutdown_test.command",
+						"shutdown_command = shutdown",
 						"ssh_password = vagrant",
 						"ssh_port = 22",
 						"ssh_username = vagrant",
