@@ -112,12 +112,24 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 		switch typ {
 		case AnsibleLocal:
 			tmpS, tmpVar, err = r.createAnsibleLocal()
+			if err != nil {
+				return nil, nil, err
+			}
 		case FileUploads:
 			tmpS, tmpVar, err = r.createFileUploads()
+			if err != nil {
+				return nil, nil, err
+			}
 		case SaltMasterless:
 			tmpS, tmpVar, err = r.createSaltMasterless()
+			if err != nil {
+				return nil, nil, err
+			}
 		case ShellScripts:
 			tmpS, tmpVar, err = r.createShellScripts()
+			if err != nil {
+				return nil, nil, err
+			}
 			/*
 				case ChefClient:
 					// not implemented
@@ -160,7 +172,9 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 func (r *rawTemplate) createAnsibleLocal() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.Provisioners[AnsibleLocal.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration for %q found", AnsibleLocal.String())
+		err = fmt.Errorf("no configuration found for %q", AnsibleLocal.String())
+		jww.ERROR.Print(err)
+		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = AnsibleLocal.String()
@@ -196,6 +210,54 @@ func (r *rawTemplate) createAnsibleLocal() (settings map[string]interface{}, var
 	return settings, vars, err
 }
 
+// createFileUploads() creates a map of settings for Packer's file uploads
+// provisioner. Any values that aren't supported by the file provisioner are
+// ignored. For more information, refer to
+// https://packer.io/docs/provisioners/file.html
+//
+//	Required configuration options:
+//   destination	// string
+//   source			// string
+func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[FileUploads.String()]
+	if !ok {
+		err = fmt.Errorf("no configuration found for %q", FileUploads.String())
+		jww.ERROR.Print(err)
+		return nil, nil, err
+	}
+	settings = make(map[string]interface{})
+	settings["type"] = FileUploads.String()
+	// For each value, extract its key value pair and then process. Only
+	// process the supported keys. Key validation isn't done here, leaving
+	// that for Packer.
+	var k, v string
+	var hasSource, hasDestination bool
+	for _, s := range r.Provisioners[FileUploads.String()].Settings {
+		k, v = parseVar(s)
+		switch k {
+		case "source":
+			settings[k] = v
+			hasSource = true
+		case "destination":
+			settings[k] = v
+			hasDestination = true
+		default:
+			jww.WARN.Printf("unsupported %s key was encountered: %q", FileUploads.String(), k)
+		}
+	}
+	if !hasSource {
+		err := fmt.Errorf("\"source\" setting is required for file-uploads, not found")
+		jww.ERROR.Println(err)
+		return nil, nil, err
+	}
+	if !hasDestination {
+		err := fmt.Errorf("\"destination\" setting is required for file-uploads, not found")
+		jww.ERROR.Println(err)
+		return nil, nil, err
+	}
+	return settings, vars, nil
+}
+
 // createSaltMasterless() creates a map of settings for Packer's salt-masterless
 // provisioner. Any values that aren't supported by the salt-masterless
 // provisioner are ignored. For more information, refer to
@@ -212,7 +274,9 @@ func (r *rawTemplate) createAnsibleLocal() (settings map[string]interface{}, var
 func (r *rawTemplate) createSaltMasterless() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.Provisioners[SaltMasterless.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration for %q found", SaltMasterless.String())
+		err = fmt.Errorf("no configuration found for %q", SaltMasterless.String())
+		jww.ERROR.Print(err)
+		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = SaltMasterless.String()
@@ -264,7 +328,9 @@ func (r *rawTemplate) createSaltMasterless() (settings map[string]interface{}, v
 func (r *rawTemplate) createShellScripts() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.Provisioners[ShellScripts.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration for %q found", ShellScripts.String())
+		err = fmt.Errorf("no configuration found for %q", ShellScripts.String())
+		jww.ERROR.Print(err)
+		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = ShellScripts.String()
@@ -296,52 +362,6 @@ func (r *rawTemplate) createShellScripts() (settings map[string]interface{}, var
 	}
 	if !hasScripts {
 		err := fmt.Errorf("\"scripts\" setting is required for shell-scripts, not found")
-		jww.ERROR.Println(err)
-		return nil, nil, err
-	}
-	return settings, vars, nil
-}
-
-// createFileUploads() creates a map of settings for Packer's file uploads
-// provisioner. Any values that aren't supported by the file provisioner are
-// ignored. For more information, refer to
-// https://packer.io/docs/provisioners/file.html
-//
-//	Required configuration options:
-//   destination	// string
-//   source			// string
-func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, vars []string, err error) {
-	_, ok := r.Provisioners[FileUploads.String()]
-	if !ok {
-		err = fmt.Errorf("no configuration for %q found", FileUploads.String())
-	}
-	settings = make(map[string]interface{})
-	settings["type"] = FileUploads.String()
-	// For each value, extract its key value pair and then process. Only
-	// process the supported keys. Key validation isn't done here, leaving
-	// that for Packer.
-	var k, v string
-	var hasSource, hasDestination bool
-	for _, s := range r.Provisioners[FileUploads.String()].Settings {
-		k, v = parseVar(s)
-		switch k {
-		case "source":
-			settings[k] = v
-			hasSource = true
-		case "destination":
-			settings[k] = v
-			hasDestination = true
-		default:
-			jww.WARN.Printf("unsupported %s key was encountered: %q", FileUploads.String(), k)
-		}
-	}
-	if !hasSource {
-		err := fmt.Errorf("\"source\" setting is required for file-uploads, not found")
-		jww.ERROR.Println(err)
-		return nil, nil, err
-	}
-	if !hasDestination {
-		err := fmt.Errorf("\"destination\" setting is required for file-uploads, not found")
 		jww.ERROR.Println(err)
 		return nil, nil, err
 	}

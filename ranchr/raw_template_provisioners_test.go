@@ -485,6 +485,57 @@ func TestRawTemplateUpdateProvisioners(t *testing.T) {
 	}
 }
 
+func TestCreateProvisioners(t *testing.T) {
+	_, _, err := testRawTemplateBuilderOnly.createProvisioners()
+	if err == nil {
+		t.Error("Expected error \"unable to create provisioners: none specified\", got nil")
+	} else {
+		if err.Error() != "unable to create provisioners: none specified" {
+			t.Errorf("Expected \"unable to create provisioners: none specified\", got %q", err.Error())
+		}
+	}
+
+	_, _, err = testRawTemplateWOSection.createProvisioners()
+	if err == nil {
+		t.Error("Expected error \"no configuration found for \"ansible-local\"\", got nil")
+	} else {
+		if err.Error() != "no configuration found for \"ansible-local\"" {
+			t.Errorf("Expected error \"no configuration found for \"ansible-local\"\", got %q", err.Error())
+		}
+	}
+
+	testRawTemplateWOSection.build.ProvisionerTypes[0] = "file-uploads"
+	_, _, err = testRawTemplateWOSection.createProvisioners()
+	if err == nil {
+		t.Error("Expected error \"no configuration found for \"file-uploads\"\", got nil")
+	} else {
+		if err.Error() != "no configuration found for \"file-uploads\"" {
+			t.Errorf("Expected error \"no configuration found for \"file-uploads\"\", got %q", err.Error())
+		}
+	}
+
+	testRawTemplateWOSection.build.ProvisionerTypes[0] = "salt-masterless"
+	_, _, err = testRawTemplateWOSection.createProvisioners()
+	if err == nil {
+		t.Error("Expected error \"no configuration found for \"salt-masterless\"\", got nil")
+	} else {
+		if err.Error() != "no configuration found for \"salt-masterless\"" {
+			t.Errorf("Expected error \"no configuration found for \"salt-masterless\"\", got %q", err.Error())
+		}
+	}
+
+	testRawTemplateWOSection.build.ProvisionerTypes[0] = "shell-scripts"
+	_, _, err = testRawTemplateWOSection.createProvisioners()
+	if err == nil {
+		t.Error("Expected error \"no configuration found for \"shell-scripts\"\", got nil")
+	} else {
+		if err.Error() != "no configuration found for \"shell-scripts\"" {
+			t.Errorf("Expected error \"no configuration found for \"shell-scripts\"\", got %q", err.Error())
+		}
+	}
+
+}
+
 func TestProvisionersSettingsToMap(t *testing.T) {
 	res := pr.settingsToMap("shell", testRawTpl)
 	compare := map[string]interface{}{"type": "shell", "execute_command": "echo 'vagrant' | sudo -S sh '{{.Path}}'"}
