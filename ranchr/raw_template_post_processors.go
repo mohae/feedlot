@@ -113,11 +113,45 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]i
 		switch typ {
 		case Compress:
 			tmpS, tmpVar, err = r.createCompress()
+			if err != nil {
+				return nil, nil, err
+			}
+		case DockerImport:
+			tmpS, tmpVar, err = r.createDockerImport()
+			if err != nil {
+				return nil, nil, err
+			}
+		case DockerPush:
+			tmpS, tmpVar, err = r.createDockerPush()
+			if err != nil {
+				return nil, nil, err
+			}
+		case DockerSave:
+			tmpS, tmpVar, err = r.createDockerSave()
+			if err != nil {
+				return nil, nil, err
+			}
+		case DockerTag:
+			tmpS, tmpVar, err = r.createDockerTag()
+			if err != nil {
+				return nil, nil, err
+			}
 		case Vagrant:
 			tmpS, tmpVar, err = r.createVagrant()
+			if err != nil {
+				return nil, nil, err
+			}
 		case VagrantCloud:
 			// Create the settings
 			tmpS, tmpVar, err = r.createVagrantCloud()
+			if err != nil {
+				return nil, nil, err
+			}
+		case VSphere:
+			tmpS, tmpVar, err = r.createVSphere()
+			if err != nil {
+				return nil, nil, err
+			}
 		default:
 			err = fmt.Errorf("%s is not supported", pType)
 			jww.ERROR.Println(err)

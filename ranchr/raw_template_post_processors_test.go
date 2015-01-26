@@ -332,6 +332,96 @@ var ppMerged = map[string]*postProcessor{
 	},
 }
 
+func TestCreatePostProcessors(t *testing.T) {
+	_, _, err := testRawTemplateBuilderOnly.createPostProcessors()
+	if err == nil {
+		t.Error("Expected error \"unable to create post-processors: none specified\", got nil")
+	} else {
+		if err.Error() != "unable to create post-processors: none specified" {
+			t.Errorf("Expected \"unable to create post-processors: none specified\", got %q", err.Error())
+		}
+	}
+
+	_, _, err = testRawTemplateWOSection.createPostProcessors()
+	if err == nil {
+		t.Error("Expected error \"no configuration found for \"compress\"\", got nil")
+	} else {
+		if err.Error() != "no configuration found for \"compress\"" {
+			t.Errorf("Expected error \"no configuration found for \"compress\"\", got %q", err.Error())
+		}
+	}
+
+	testRawTemplateWOSection.build.PostProcessorTypes[0] = "docker-import"
+	_, _, err = testRawTemplateWOSection.createPostProcessors()
+	if err == nil {
+		t.Error("Expected error \"no configuration found for \"docker-import\"\", got nil")
+	} else {
+		if err.Error() != "no configuration found for \"docker-import\"" {
+			t.Errorf("Expected error \"no configuration found for \"docker-import\"\", got %q", err.Error())
+		}
+	}
+
+	testRawTemplateWOSection.build.PostProcessorTypes[0] = "docker-push"
+	_, _, err = testRawTemplateWOSection.createPostProcessors()
+	if err == nil {
+		t.Error("Expected error \"no configuration found for \"docker-push\"\", got nil")
+	} else {
+		if err.Error() != "no configuration found for \"docker-push\"" {
+			t.Errorf("Expected error \"no configuration found for \"docker-push\"\", got %q", err.Error())
+		}
+	}
+
+	testRawTemplateWOSection.build.PostProcessorTypes[0] = "docker-save"
+	_, _, err = testRawTemplateWOSection.createPostProcessors()
+	if err == nil {
+		t.Error("Expected error \"no configuration found for \"docker-save\"\", got nil")
+	} else {
+		if err.Error() != "no configuration found for \"docker-save\"" {
+			t.Errorf("Expected error \"no configuration found for \"docker-save\"\", got %q", err.Error())
+		}
+	}
+
+	testRawTemplateWOSection.build.PostProcessorTypes[0] = "docker-tag"
+	_, _, err = testRawTemplateWOSection.createPostProcessors()
+	if err == nil {
+		t.Error("Expected error \"no configuration found for \"docker-tag\"\", got nil")
+	} else {
+		if err.Error() != "no configuration found for \"docker-tag\"" {
+			t.Errorf("Expected error \"no configuration found for \"docker-tag\"\", got %q", err.Error())
+		}
+	}
+
+	testRawTemplateWOSection.build.PostProcessorTypes[0] = "vagrant"
+	_, _, err = testRawTemplateWOSection.createPostProcessors()
+	if err == nil {
+		t.Error("Expected error \"no configuration found for \"vagrant\"\", got nil")
+	} else {
+		if err.Error() != "no configuration found for \"vagrant\"" {
+			t.Errorf("Expected error \"no configuration found for \"vagrant\"\", got %q", err.Error())
+		}
+	}
+
+	testRawTemplateWOSection.build.PostProcessorTypes[0] = "vagrant-cloud"
+	_, _, err = testRawTemplateWOSection.createPostProcessors()
+	if err == nil {
+		t.Error("Expected error \"no configuration found for \"vagrant-cloud\"\", got nil")
+	} else {
+		if err.Error() != "no configuration found for \"vagrant-cloud\"" {
+			t.Errorf("Expected error \"no configuration found for \"vagrant-cloud\"\", got %q", err.Error())
+		}
+	}
+
+	testRawTemplateWOSection.build.PostProcessorTypes[0] = "vsphere"
+	_, _, err = testRawTemplateWOSection.createPostProcessors()
+	if err == nil {
+		t.Error("Expected error \"no configuration found for \"vsphere\"\", got nil")
+	} else {
+		if err.Error() != "no configuration found for \"vsphere\"" {
+			t.Errorf("Expected error \"no configuration found for \"vsphere\"\", got %q", err.Error())
+		}
+	}
+}
+
 func TestRawTemplateUpdatePostProcessors(t *testing.T) {
 	testDistroDefaults.Templates[CentOS].updatePostProcessors(nil)
 	if MarshalJSONToString.Get(testDistroDefaults.Templates[CentOS].PostProcessors) != MarshalJSONToString.Get(ppOrig) {

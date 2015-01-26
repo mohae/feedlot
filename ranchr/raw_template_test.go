@@ -169,6 +169,103 @@ var testBuildNewTPL = &rawTemplate{
 	},
 }
 
+var testRawTemplateBuilderOnly = &rawTemplate{
+	PackerInf: PackerInf{MinPackerVersion: "0.4.0", Description: "Test supported distribution template"},
+	IODirInf: IODirInf{
+		CommandsSrcDir: ":src_dir/commands",
+		HTTPDir:        "http",
+		HTTPSrcDir:     ":src_dir/http",
+		OutDir:         "../test_files/out/:distro/:build_name",
+		ScriptsDir:     "scripts",
+		ScriptsSrcDir:  ":src_dir/scripts",
+		SrcDir:         "../test_files/src/:distro",
+	},
+	BuildInf: BuildInf{
+		Name:      ":build_name",
+		BuildName: "",
+		BaseURL:   "http://releases.ubuntu.org/",
+	},
+	date:    today,
+	delim:   ":",
+	Distro:  "ubuntu",
+	Arch:    "amd64",
+	Image:   "server",
+	Release: "12.04",
+	varVals: map[string]string{},
+	vars:    map[string]string{},
+	build: build{
+		BuilderTypes: []string{"virtualbox-iso"},
+		Builders: map[string]*builder{
+			"common": {
+				templateSection{
+					Settings: []string{
+						"boot_command = :commands_src_dir/boot_test.command",
+						"boot_wait = 5s",
+						"disk_size = 20000",
+						"guest_os_type = ",
+						"headless = true",
+						"http_directory = http",
+						"iso_checksum_type = sha256",
+						"shutdown_command = :commands_src_dir/shutdown_test.command",
+						"ssh_password = vagrant",
+						"ssh_port = 22",
+						"ssh_username = vagrant",
+						"ssh_wait_timeout = 240m",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
+			"virtualbox-iso": {
+				templateSection{
+					Settings: []string{
+						"virtualbox_version_file = .vbox_version",
+					},
+					Arrays: map[string]interface{}{
+						"vm_settings": []string{
+							"cpus=1",
+							"memory=1024",
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
+var testRawTemplateWOSection = &rawTemplate{
+	PackerInf: PackerInf{MinPackerVersion: "0.4.0", Description: "Test supported distribution template"},
+	IODirInf: IODirInf{
+		CommandsSrcDir: ":src_dir/commands",
+		HTTPDir:        "http",
+		HTTPSrcDir:     ":src_dir/http",
+		OutDir:         "../test_files/out/:distro/:build_name",
+		ScriptsDir:     "scripts",
+		ScriptsSrcDir:  ":src_dir/scripts",
+		SrcDir:         "../test_files/src/:distro",
+	},
+	BuildInf: BuildInf{
+		Name:      ":build_name",
+		BuildName: "",
+		BaseURL:   "http://releases.ubuntu.org/",
+	},
+	date:    today,
+	delim:   ":",
+	Distro:  "ubuntu",
+	Arch:    "amd64",
+	Image:   "server",
+	Release: "12.04",
+	varVals: map[string]string{},
+	vars:    map[string]string{},
+	build: build{
+		BuilderTypes:       []string{"amazon-ebs"},
+		Builders:           map[string]*builder{},
+		PostProcessorTypes: []string{"compress"},
+		PostProcessors:     map[string]*postProcessor{},
+		ProvisionerTypes:   []string{"ansible-local"},
+		Provisioners:       map[string]*provisioner{},
+	},
+}
+
 func TestNewRawTemplate(t *testing.T) {
 	rawTpl := newRawTemplate()
 	if MarshalJSONToString.Get(rawTpl) != MarshalJSONToString.Get(testRawTpl) {
