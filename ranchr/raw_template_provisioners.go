@@ -185,6 +185,7 @@ func (r *rawTemplate) createAnsibleLocal() (settings map[string]interface{}, var
 	var hasPlaybook bool
 	for _, s := range r.Provisioners[AnsibleLocal.String()].Settings {
 		k, v = parseVar(s)
+		v = r.replaceVariables(v)
 		switch k {
 		case "playbook_file":
 			settings[k] = v
@@ -202,7 +203,7 @@ func (r *rawTemplate) createAnsibleLocal() (settings map[string]interface{}, var
 	}
 	// Process the Arrays.
 	for name, val := range r.Provisioners[AnsibleLocal.String()].Arrays {
-		array := deepcopy.InterfaceToSliceStrings(val)
+		array := deepcopy.InterfaceToStringSlice(val)
 		if array != nil {
 			settings[name] = array
 		}
@@ -234,6 +235,7 @@ func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, vars
 	var hasSource, hasDestination bool
 	for _, s := range r.Provisioners[FileUploads.String()].Settings {
 		k, v = parseVar(s)
+		v = r.replaceVariables(v)
 		switch k {
 		case "source":
 			settings[k] = v
@@ -287,6 +289,7 @@ func (r *rawTemplate) createSaltMasterless() (settings map[string]interface{}, v
 	var hasLocalStateTree bool
 	for _, s := range r.Provisioners[SaltMasterless.String()].Settings {
 		k, v = parseVar(s)
+		v = r.replaceVariables(v)
 		switch k {
 		case "local_state_tree":
 			settings[k] = v
@@ -340,6 +343,7 @@ func (r *rawTemplate) createShellScripts() (settings map[string]interface{}, var
 	var k, v string
 	for _, s := range r.Provisioners[ShellScripts.String()].Settings {
 		k, v = parseVar(s)
+		v = r.replaceVariables(v)
 		switch k {
 		case "execute_command", "inline_shebang", "remote_path", "start_retry_timeout":
 			settings[k] = v
@@ -354,6 +358,12 @@ func (r *rawTemplate) createShellScripts() (settings map[string]interface{}, var
 	for name, val := range r.Provisioners[ShellScripts.String()].Arrays {
 		if name == "scripts" {
 			hasScripts = true
+			sl := deepcopy.InterfaceToStringSlice(val)
+			for i, v := range sl {
+				sl[i] = r.replaceVariables(v)
+			}
+			settings[name] = sl
+			continue
 		}
 		array := deepcopy.Iface(val)
 		if array != nil {

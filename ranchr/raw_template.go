@@ -175,7 +175,7 @@ func (r *rawTemplate) ScriptNames() []string {
 	if !ok {
 		return nil
 	}
-	scrpts := deepcopy.InterfaceToSliceStrings(r.Provisioners[ShellScripts.String()].Arrays[scripts])
+	scrpts := deepcopy.InterfaceToStringSlice(r.Provisioners[ShellScripts.String()].Arrays[scripts])
 	names := make([]string, len(scrpts))
 	for i, scrpt := range scrpts {
 		so := reflect.ValueOf(scrpt)
@@ -232,6 +232,13 @@ func (r *rawTemplate) mergeVariables() {
 	r.ScriptsDir = trimSuffix(r.replaceVariables(r.ScriptsDir), "/")
 	r.ScriptsSrcDir = trimSuffix(r.replaceVariables(r.ScriptsSrcDir), "/")
 	r.SrcDir = trimSuffix(r.replaceVariables(r.SrcDir), "/")
+	r.varVals[r.delim+"commands_src_dir"] = r.CommandsSrcDir
+	r.varVals[r.delim+"http_dir"] = r.HTTPDir
+	r.varVals[r.delim+"http_src_dir"] = r.HTTPSrcDir
+	r.varVals[r.delim+"out_dir"] = r.OutDir
+	r.varVals[r.delim+"scripts_dir"] = r.ScriptsDir
+	r.varVals[r.delim+"scripts_src_dir"] = r.ScriptsSrcDir
+	r.varVals[r.delim+"src_dir"] = r.SrcDir
 }
 
 // ISOInfo sets the ISO info for the template's supported distro type. This

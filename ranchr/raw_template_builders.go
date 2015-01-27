@@ -443,7 +443,7 @@ func (r *rawTemplate) createDocker() (settings map[string]interface{}, vars []st
 	// Process the Arrays.
 	for name, val := range r.Builders[Docker.String()].Arrays {
 		if name == "run_command" {
-			array := deepcopy.InterfaceToSliceStrings(val)
+			array := deepcopy.InterfaceToStringSlice(val)
 			if array != nil {
 				settings[name] = array
 			}
@@ -546,7 +546,7 @@ func (r *rawTemplate) createGoogleCompute() (settings map[string]interface{}, va
 	// Process the Arrays.
 	for name, val := range r.Builders[GoogleCompute.String()].Arrays {
 		if name == "tags" {
-			array := deepcopy.InterfaceToSliceStrings(val)
+			array := deepcopy.InterfaceToStringSlice(val)
 			if array != nil {
 				settings[name] = array
 			}
@@ -728,7 +728,7 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 				jww.WARN.Print("\"iso_urls\" array for virtualbox-iso was found; the iso_url was already set from the \"Settings\" section")
 			}
 		case "vboxmanage", "vboxmanage_post":
-			vms := deepcopy.InterfaceToSliceStrings(val)
+			vms := deepcopy.InterfaceToStringSlice(val)
 			tmpVB := make([][]string, len(vms))
 			for i, v := range vms {
 				k, vv := parseVar(v)
@@ -936,7 +936,7 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, va
 		case "export_opts", "floppy_files":
 			settings[name] = val
 		case "vboxmanage", "vboxmanage_post":
-			vms := deepcopy.InterfaceToSliceStrings(val)
+			vms := deepcopy.InterfaceToStringSlice(val)
 			tmpVB := make([][]string, len(vms))
 			for i, v := range vms {
 				k, vv := parseVar(v)
@@ -1134,7 +1134,7 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 				jww.WARN.Print("\"iso_urls\" array for vmware-iso was found; the iso_url was already set from the \"Settings\" section")
 			}
 		case "vmx_data", "vmx_data_post":
-			vms := deepcopy.InterfaceToSliceStrings(val)
+			vms := deepcopy.InterfaceToStringSlice(val)
 			tmpVM := map[string]string{}
 			for _, v := range vms {
 				k, vv := parseVar(v)
@@ -1331,7 +1331,7 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, vars [
 		case "floppy_files":
 			settings[name] = val
 		case "vmx_data", "vmx_data_post":
-			vms := deepcopy.InterfaceToSliceStrings(val)
+			vms := deepcopy.InterfaceToStringSlice(val)
 			tmpVM := map[string]string{}
 			for _, v := range vms {
 				k, vv := parseVar(v)
@@ -1424,7 +1424,7 @@ func (r *rawTemplate) updateBuilders(newB map[string]*builder) {
 			for name, val := range b.Arrays {
 				// see if it exists in new
 				_, ok = newB[v].Arrays[name]
-				arrayVals := deepcopy.InterfaceToSliceStrings(newB[v].Arrays[name])
+				arrayVals := deepcopy.InterfaceToStringSlice(newB[v].Arrays[name])
 				// if there is anything to merge, do so
 				fmt.Println("b.Arrays[", name, "]:", b.Arrays[name])
 				fmt.Println("array vals", arrayVals)
@@ -1438,7 +1438,7 @@ func (r *rawTemplate) updateBuilders(newB map[string]*builder) {
 			}
 			// TODO change to reflect new array handling
 			/*
-				vmSettings = deepcopy.InterfaceToSliceStrings(new[v].Arrays[VMSettings])
+				vmSettings = deepcopy.InterfaceToStringSlice(new[v].Arrays[VMSettings])
 				// If there is anything to merge, do so
 				if vmSettings != nil {
 					b.Arrays[VMSettings] = vmSettings
