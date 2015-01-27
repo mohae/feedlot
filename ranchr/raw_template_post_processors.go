@@ -189,6 +189,7 @@ func (r *rawTemplate) createCompress() (settings map[string]interface{}, vars []
 	var hasOutput bool
 	for _, s := range r.PostProcessors[Compress.String()].Settings {
 		k, v = parseVar(s)
+		v = r.replaceVariables(v)
 		switch k {
 		case "output":
 			settings[k] = v
@@ -230,6 +231,7 @@ func (r *rawTemplate) createDockerImport() (settings map[string]interface{}, var
 	var hasRepository bool
 	for _, s := range r.PostProcessors[DockerImport.String()].Settings {
 		k, v = parseVar(s)
+		v = r.replaceVariables(v)
 		switch k {
 		case "repository":
 			settings[k] = v
@@ -276,6 +278,7 @@ func (r *rawTemplate) createDockerPush() (settings map[string]interface{}, vars 
 	var k, v string
 	for _, s := range r.PostProcessors[DockerPush.String()].Settings {
 		k, v = parseVar(s)
+		v = r.replaceVariables(v)
 		switch k {
 		case "login_email", "login_username", "login_password", "login_server":
 			settings[k] = v
@@ -313,6 +316,7 @@ func (r *rawTemplate) createDockerSave() (settings map[string]interface{}, vars 
 	var hasPath bool
 	for _, s := range r.PostProcessors[DockerSave.String()].Settings {
 		k, v = parseVar(s)
+		v = r.replaceVariables(v)
 		switch k {
 		case "path":
 			settings[k] = v
@@ -354,6 +358,7 @@ func (r *rawTemplate) createDockerTag() (settings map[string]interface{}, vars [
 	var hasRepository bool
 	for _, s := range r.PostProcessors[DockerTag.String()].Settings {
 		k, v = parseVar(s)
+		v = r.replaceVariables(v)
 		switch k {
 		case "repository":
 			settings[k] = v
@@ -406,6 +411,7 @@ func (r *rawTemplate) createVagrant() (settings map[string]interface{}, vars []s
 	var k, v string
 	for _, s := range r.PostProcessors[Vagrant.String()].Settings {
 		k, v = parseVar(s)
+		v = r.replaceVariables(v)
 		switch k {
 		case "output", "vagrantfile_template":
 			settings[k] = v
@@ -460,6 +466,7 @@ func (r *rawTemplate) createVagrantCloud() (settings map[string]interface{}, var
 	var hasAccessToken, hasBoxTag, hasVersion bool
 	for _, s := range r.PostProcessors[VagrantCloud.String()].Settings {
 		k, v := parseVar(s)
+		v = r.replaceVariables(v)
 		switch k {
 		case "access_token":
 			settings[k] = v
@@ -529,6 +536,7 @@ func (r *rawTemplate) createVSphere() (settings map[string]interface{}, vars []s
 	var hasCluster, hasDatacenter, hasHost, hasPassword, hasResourcePool, hasUsername, hasVMName bool
 	for _, s := range r.PostProcessors[VSphere.String()].Settings {
 		k, v = parseVar(s)
+		v = r.replaceVariables(v)
 		switch k {
 		case "cluster":
 			settings[k] = v
