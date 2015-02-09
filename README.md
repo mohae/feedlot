@@ -57,6 +57,32 @@ Each supported Packer section type has various configuration options. Any requir
     * salt-masterless
     * shell-scripts
 
+## Rancher variable replacement
+Rancher supports a limited number of variables in the toml configuration files. These are mostly used to allow for the path of files and names of things to be built based on other information within the configuration, e.g :distro is replaced by the name of the distro for which the Packer template is being built.
+
+Since Packer uses Go's template engine, Rancher variables are prefixed with a colon, `:`, to avoid collision with Go template conventions, `{{}}`. Using a `:` in non-variable values may lead to unexpected results, as such don't use it unless you are prefixing a variable. Please submit an issue if this is problematic for your use-case scenario.
+
+Current Rancher variable replacement is dumb, it will look for the variables that it can replace and do so. A setting string may have contain multiple variables, in which case it replaces them as encountered, with the exception of `src_dir` and `out_dir`, which are resolved before any other directory path variables. This is because most path settings will start with either `src_dir` or `out_dir`.
+
+System variables, these are automatically resolved by Packer and can be used in other variables.
+
+    :distro      // The name of the distribution
+    :release     // The full release number being used for the template
+    :arch        // The architecture of the OS being used for the template
+    :image       // The name of the image being used for the template.
+    :date        // The current datetime.
+    :build_name  // The name of the build.
+
+Standard variables:
+    :name         // The name for Packer
+    :out_dir      // The directory that the template output should be written to.
+    :src_dir      // The source directory for files that should be copied with the template.
+    :commands_src_dir  // The directory that command files are in.
+    :http_dir      // The directory location for the "http" setting.
+    :http_src_dir  // The source directory for files that will be copied to the "http_dir"
+    :scripts_dir   // The directory location for the "scripts" setting
+    :scripts_src_dir // The source directory for the files that will be copied to the "scripts_dir"
+
 ## Running Rancher
 Build a Packer template for CentOS using the distro defaults:
 
@@ -151,3 +177,7 @@ Each Packer section also has a `_type`, e.g. builders have a `builder_type`. Thi
 For builders that require the `iso` information, you can specify your own information by populating the `iso_url` or `iso_urls`, `iso_checksum`, and `iso_checksum_type` settings. If these settings are not set, Rancher will look-up the information for you. For CentOS, this will result in a random mirror being chosen, unless you have specified the mirror in the `base_url` field.
 
 Any command setting can either be set from a file or in the settings. If a file is going to be used, the filename must end in `.command` and be a valid file location. For `shutdown_command`, if it does not end in `.command`, Rancher assumes that the contents are the command. If `boot_command` exists in the `settings` section, it is assumed to represent a file, which must end in `.command`, and the `boot_command` array is populated from that file's contents. If the `boot_command` setting is not found in the settings section, the `arrays` section is checked and the array of boot commands found in the `boot_command` array are used. The `boot_command` setting in the settings section takes precedence over the array definition.
+
+### File copy support
+The only provisioner for which file copy is guaranteed to work properly is the `shell-scripts` provisioner as this is what Rancher was originally written to support. This functionality may work for other provisioners but is not guaranteed. Please file an issue for any other provisioners for which this should be supported. Or better yet, file a pull request!
+
