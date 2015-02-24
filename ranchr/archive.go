@@ -1,6 +1,7 @@
 package ranchr
 
 import (
+	"archive/car"
 	"compress/gzip"
 	"fmt"
 	"io"
@@ -9,7 +10,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/mohae/tar"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
