@@ -115,12 +115,16 @@ func (c *centOS) SetISOInfo() error {
 // setReleaseInfo makes sure that both c.Release and c.ReleaseFull are properly
 // set. The release number set in the file may be either the release or the
 // version.
+// For centOS, the Release is an int, e.g. 6 or 7 while the ReleaseFull is
+// the current release version, e.g. 6,6. When only the Release number is
+// specified, Rancher will determine what the current version of the release
+// is and use that as the ReleaseFull.
 func (c *centOS) setReleaseInfo() error {
 	version := strings.Split(c.Release, ".")
 	// If this was a release string, it will have two parts.
 	if len(version) > 1 {
 		c.ReleaseFull = c.Release // Set release full with the release number
-		c.Release = version[0]    // not sure why I did it this way, revisit
+		c.Release = version[0]
 		return nil
 	}
 	// Otherwise, figure out what the current release is. The mirrorlist
