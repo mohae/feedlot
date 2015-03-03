@@ -35,16 +35,16 @@
 	        "amd64"
 	]
 	image = [
-	        "small-cd",
-	        "tiny-cd"
+			"lxde-CD-1"
+	        "netinst",
+	        "xfce-CD-1"
 	]
 	release = [
-	       	"stable",
-		"testing"
+	       	"7"
 	]
 	default_image = [
-	    	"release = stable",
-    		"image = small-cd",
+	    	"release = 7",
+    		"image = netinst",
     		"arch = amd64",
 	]
 [distro.ubuntu]
