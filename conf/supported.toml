@@ -35,7 +35,7 @@
 	        "amd64"
 	]
 	image = [
-			"lxde-CD-1"
+			"lxde-CD-1",
 	        "netinst",
 	        "xfce-CD-1"
 	]
