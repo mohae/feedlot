@@ -165,10 +165,10 @@ func TestCentOSsetReleaseInfo(t *testing.T) {
 	}
 }
 
-func TestCentOSSetName(t *testing.T) {
+func TestCentOSSetISOName(t *testing.T) {
 	c := newTestCentOS()
 	c.setReleaseInfo()
-	c.setName()
+	c.setISOName()
 	expected := "CentOS-" + c.ReleaseFull + "-" + c.Arch + "-" + c.Image + ".iso"
 	if c.Name != expected {
 		t.Errorf("Expected %q, got %q", expected, c.Name)
@@ -233,7 +233,7 @@ func TestCentOSSetChecksum(t *testing.T) {
 	c := newTestCentOS()
 	c.setReleaseInfo()
 	//	c.SetISOInfo()
-	err := c.setChecksum()
+	err := c.setISOChecksum()
 	if err == nil {
 		t.Error("Expected error to not be nil, it was")
 	} else {
@@ -243,7 +243,7 @@ func TestCentOSSetChecksum(t *testing.T) {
 	}
 
 	c.Arch = ""
-	err = c.setChecksum()
+	err = c.setISOChecksum()
 	if err == nil {
 		t.Error("Expected error to not be nil, it was")
 	} else {
@@ -255,9 +255,9 @@ func TestCentOSSetChecksum(t *testing.T) {
 	c = newTestCentOS()
 	c.Arch = "x86_64"
 	c.setReleaseInfo()
-	c.setName()
+	c.setISOName()
 	c.SetISOInfo()
-	err = c.setChecksum()
+	err = c.setISOChecksum()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
@@ -285,7 +285,7 @@ func TestCentOSsetISOURL(t *testing.T) {
 	c := newTestCentOS()
 	c.ReleaseFull = "6.6"
 	c.BaseURL = "http://mirror.cogentco.com/pub/linux/centos/"
-	c.setName()
+	c.setISOName()
 	err := c.setISOURL()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
@@ -314,7 +314,7 @@ func TestCentOSsetISOURL(t *testing.T) {
 func TestCentOSrandomISOURL(t *testing.T) {
 	c := newTestCentOS()
 	c.setReleaseInfo()
-	c.setName()
+	c.setISOName()
 	randomURL, err := c.randomISOURL()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
@@ -334,7 +334,7 @@ func TestCentOSFindChecksum(t *testing.T) {
 	var s string
 	c := newTestCentOS()
 	c.setReleaseInfo()
-	c.setName()
+	c.setISOName()
 	c.setISOURL()
 	s, err = c.findChecksum("")
 	if err == nil {
@@ -382,10 +382,10 @@ d8aaf698408c0c01843446da4a20b1ac03d27f87aad3b3b7b7f42c6163be83b9  CentOS-6.5-x86
 	}
 }
 
-func TestCentOSsetName(t *testing.T) {
+func TestCentOSsetISOName(t *testing.T) {
 	c := newTestCentOS()
 	c.setReleaseInfo()
-	c.setName()
+	c.setISOName()
 	if !strings.HasPrefix(c.Name, "CentOS-") {
 		t.Errorf("Expected %q to start with \"CentOS-\", it didn't", c.Name)
 	}

@@ -35,7 +35,7 @@ type iso struct {
 
 type releaser interface {
 	SetISOInfo() error
-	setChecksum() error
+	setISOChecksum() error
 	setISOURL() error
 }
 
@@ -98,14 +98,14 @@ func (c *centOS) SetISOInfo() error {
 		jww.ERROR.Println(err)
 		return err
 	}
-	c.setName()
+	c.setISOName()
 	err = c.setISOURL()
 	if err != nil {
 		jww.ERROR.Println(err)
 		return err
 	}
 	// Set the Checksum information for the ISO image.
-	if err := c.setChecksum(); err != nil {
+	if err := c.setISOChecksum(); err != nil {
 		jww.ERROR.Println(err)
 		return err
 	}
@@ -187,9 +187,9 @@ func (c *centOS) getOSType(buildType string) (string, error) {
 	return "", err
 }
 
-// setChecksum finds the URL for the checksum page for the current mirror,
+// setISOChecksum finds the URL for the checksum page for the current mirror,
 // retrieves the page, and finds the checksum for the release ISO.
-func (c *centOS) setChecksum() error {
+func (c *centOS) setISOChecksum() error {
 	if c.ChecksumType == "" {
 		err := fmt.Errorf("Checksum Type not set")
 		jww.ERROR.Println(err)
@@ -314,7 +314,7 @@ func (c *centOS) findChecksum(page string) (string, error) {
 }
 
 // Set the name of the ISO.
-func (c *centOS) setName() {
+func (c *centOS) setISOName() {
 	var buff bytes.Buffer
 	buff.WriteString("CentOS-")
 	buff.WriteString(c.ReleaseFull)
@@ -334,20 +334,39 @@ type debian struct {
 
 // Sets the ISO information for a Packer template.
 func (d *debian) SetISOInfo() error {
-	// Set the ISO name.
-	d.setName()
-	// Set the Checksum information for this ISO.
-	if err := d.setChecksum(); err != nil {
+	if d.Arch == "" {
+		err := fmt.Errorf("arch for %s was empty, unable to continue", d.Name)
 		jww.ERROR.Println(err)
 		return err
 	}
-	// Set the URL for the ISO image.
-	d.setISOURL()
+	if d.Release == "" {
+		err := fmt.Errorf("release for %s was empty, unable to continue", d.Name)
+		jww.ERROR.Println(err)
+		return err
+	}
+	// Make sure that the version and release are set, Release and FullRelease
+	// respectively. Make sure they are both set properly.
+	err := d.setReleaseInfo()
+	if err != nil {
+		jww.ERROR.Println(err)
+		return err
+	}
+	d.setISOName()
+	err = d.setISOURL()
+	if err != nil {
+		jww.ERROR.Println(err)
+		return err
+	}
+	// Set the Checksum information for the ISO image.
+	if err := d.setISOChecksum(); err != nil {
+		jww.ERROR.Println(err)
+		return err
+	}
 	return nil
 }
 
-// Set the checksum value for the iso.
-func (d *debian) setChecksum() error {
+// setISOChecksum: Set the checksum value for the iso.
+func (d *debian) setISOChecksum() error {
 	// Don't check for ReleaseFull existence since Release will also resolve
 	// for Ubuntu dl directories.
 	var page string
@@ -369,7 +388,7 @@ func (d *debian) setChecksum() error {
 func (d *debian) setISOURL() error {
 	// Its ok to use Release in the directory path because Release will resolve
 	// correctly, at the directory level, for Ubuntu.
-	d.isoURL = appendSlash(d.BaseURL) + appendSlash(d.Release) + d.Name
+	d.isoURL = appendSlash(d.BaseURL) + appendSlash("debian-cd") + appendSlash(d.ReleaseFull) + appendSlash(iso-cd) + d.Name
 	// This never errors so return nil...error is needed for other
 	// implementations of the interface.
 	return nil
@@ -413,7 +432,7 @@ func (d *debian) findChecksum(page string) (string, error) {
 			return "", err
 		}
 		d.ReleaseFull = tmpSl[1]
-		d.setName()
+		d.setISOName()
 		pos = strings.Index(page, d.Name)
 		if pos < 0 {
 			err := fmt.Errorf("unable to find %s's checksum", d.Name)
@@ -438,8 +457,8 @@ func (d *debian) findChecksum(page string) (string, error) {
 	return d.Checksum, nil
 }
 
-// setName() sets the name of the iso for the release specified.
-func (d *debian) setName() {
+// setISOName() sets the name of the iso for the release specified.
+func (d *debian) setISOName() {
 	// ReleaseFull is set on LTS, otherwise just set it equal to the Release.
 	if d.ReleaseFull == "" {
 		d.ReleaseFull = d.Release
@@ -489,9 +508,9 @@ type ubuntu struct {
 // Sets the ISO information for a Packer template.
 func (u *ubuntu) SetISOInfo() error {
 	// Set the ISO name.
-	u.setName()
+	u.setISOName()
 	// Set the Checksum information for this ISO.
-	if err := u.setChecksum(); err != nil {
+	if err := u.setISOChecksum(); err != nil {
 		jww.ERROR.Println(err)
 		return err
 	}
@@ -500,8 +519,8 @@ func (u *ubuntu) SetISOInfo() error {
 	return nil
 }
 
-// Set the checksum value for the iso.
-func (u *ubuntu) setChecksum() error {
+// setISOChecksum: Set the checksum value for the iso.
+func (u *ubuntu) setISOChecksum() error {
 	// Don't check for ReleaseFull existence since Release will also resolve
 	// for Ubuntu dl directories.
 	var page string
@@ -569,7 +588,7 @@ func (u *ubuntu) findChecksum(page string) (string, error) {
 			return "", err
 		}
 		u.ReleaseFull = tmpSl[1]
-		u.setName()
+		u.setISOName()
 		pos = strings.Index(page, u.Name)
 		if pos < 0 {
 			err := fmt.Errorf("unable to find %s's checksum", u.Name)
@@ -594,8 +613,8 @@ func (u *ubuntu) findChecksum(page string) (string, error) {
 	return u.Checksum, nil
 }
 
-// setName() sets the name of the iso for the release specified.
-func (u *ubuntu) setName() {
+// setISOName() sets the name of the iso for the release specified.
+func (u *ubuntu) setISOName() {
 	// ReleaseFull is set on LTS, otherwise just set it equal to the Release.
 	if u.ReleaseFull == "" {
 		u.ReleaseFull = u.Release
