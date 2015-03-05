@@ -340,7 +340,7 @@ func (d *debian) SetISOInfo() error {
 		return err
 	}
 
-	if d.ReleaseFull == "" {
+	if d.Release == "" {
 		err := fmt.Errorf("release for %s was empty, unable to continue", d.Name)
 		jww.ERROR.Println(err)
 		return err
@@ -353,12 +353,21 @@ func (d *debian) SetISOInfo() error {
 	//	jww.ERROR.Println(err)
 	//	return err
 	//}
+	// set ReleaseFull. if needed
+	err := d.getReleaseVersion()
+	if err != nil {
+		jww.ERROR.Print(err)
+		return err
+	}
+
 	d.setISOName()
-	err := d.setISOURL()
+
+	err = d.setISOURL()
 	if err != nil {
 		jww.ERROR.Println(err)
 		return err
 	}
+
 	// Set the Checksum information for the ISO image.
 	if err := d.setISOChecksum(); err != nil {
 		jww.ERROR.Println(err)
@@ -373,7 +382,7 @@ func (d *debian) setISOChecksum() error {
 	// for Ubuntu dl directories.
 	var page string
 	var err error
-	page, err = getStringFromURL(appendSlash(d.BaseURL) + appendSlash(d.Release) + strings.ToUpper(d.ChecksumType) + "SUMS")
+	page, err = getStringFromURL(appendSlash(d.BaseURL) + appendSlash(d.ReleaseFull) + "amd64/iso-cd/" + strings.ToUpper(d.ChecksumType) + "SUMS")
 	if err != nil {
 		jww.ERROR.Println(err)
 		return err
@@ -390,7 +399,7 @@ func (d *debian) setISOChecksum() error {
 func (d *debian) setISOURL() error {
 	// If the base isn't set, use cdimage.debian.org
 	if d.BaseURL == "" {
-		d.BaseURL = "cdimage.debian.org"
+		d.BaseURL = "http://cdimage.debian.org/debian-cd/"
 	}
 
 	// Its ok to use Release in the directory path because Release will resolve
@@ -473,9 +482,10 @@ func (d *debian) getOSType(buildType string) (string, error) {
 	return "", err
 }
 
-// this is abstracted out from the d.setReleaseInfo() so that
-// d.setReleaseInfo() can be tested without. This method is not tested by
-// the tests.
+// getReleaseVersion() get's the directory info so that the current version
+// of the release can be extracted. This is abstracted out from
+// d.getReleaseInfo() so that d.setReleaseInfo() can be tested. This method is
+// not tested by the tests.
 //
 // Note: This method assumes that the baseurl will resolve to a directory
 // listing that provide the information necessary to extract the current
@@ -483,7 +493,7 @@ func (d *debian) getOSType(buildType string) (string, error) {
 // is being used, like for a mirror, either make sure that the releaseFull
 // is set or that the url resolves to a page from which the current version
 // cn be extracted.
-func (d *debian) getReleasePage() error {
+func (d *debian) getReleaseVersion() error {
 	// if ReleaseFull is set, nothing to do
 	if d.ReleaseFull != "" {
 		return nil

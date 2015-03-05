@@ -370,10 +370,10 @@ func (d *distroDefaults) Set() error {
 	d.Templates = map[Distro]*rawTemplate{}
 	// Generate the default settings for each distro.
 	for k, v := range s.Distro {
-		// See if the base url exists for non centos and non-debian distros
+		// See if the base url exists for non cento distros
 		// It isn't required for debian because automatic resolution of iso
 		// information is not supported.
-		if v.BaseURL == "" && k != CentOS.String() && k != Debian.String() {
+		if v.BaseURL == "" && k != CentOS.String() {
 			err = fmt.Errorf("%s requires a BaseURL, none provided", k)
 			jww.CRITICAL.Println(err)
 			return err
@@ -631,7 +631,6 @@ func BuildBuilds(buildNames ...string) (string, error) {
 		err := <-doneCh
 		if err != nil {
 			errorCount++
-			return "", err
 		} else {
 			builtCount++
 		}
