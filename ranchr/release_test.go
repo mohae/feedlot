@@ -329,6 +329,39 @@ func TestCentOSrandomISOURL(t *testing.T) {
 	}
 }
 
+func TestDebianSetReleaseInfo(t *testing.T) {
+	page := `
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+ <head>
+  <title>Index of /debian-cd</title>
+ </head>
+ <body>
+<h1>Index of /debian-cd</h1>
+<pre><img src="/icons/blank.gif" alt="Icon "> <a href="?C=N;O=D">Name</a>                    <a href="?C=M;O=A">Last modified</a>      <a href="?C=S;O=A">Size</a>  <hr><img src="/icons/back.gif" alt="[PARENTDIR]"> <a href="/">Parent Directory</a>                             -   
+<img src="/icons/folder.gif" alt="[DIR]"> <a href="7.8.0-live/">7.8.0-live/</a>             2015-01-14 05:00    -   
+<img src="/icons/folder.gif" alt="[DIR]"> <a href="7.8.0/">7.8.0/</a>                  2015-01-12 03:07    -   
+<img src="/icons/folder.gif" alt="[DIR]"> <a href="current-live/">current-live/</a>           2015-01-14 05:00    -   
+<img src="/icons/folder.gif" alt="[DIR]"> <a href="current/">current/</a>                2015-01-12 03:07    -   
+<img src="/icons/folder.gif" alt="[DIR]"> <a href="project/">project/</a>                2005-05-23 18:50    -   
+<img src="/icons/compressed.gif" alt="[   ]"> <a href="ls-lR.gz">ls-lR.gz</a>                2015-03-05 03:12   39K  
+<hr></pre>
+<address>Apache/2.4.10 (Unix) Server at cdimage.debian.org Port 80</address>
+</body></html>
+
+`
+	d := newTestDebian()
+	d.ReleaseFull = ""
+	err := d.setReleaseInfo(page)
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	}
+	expected := "7.8.0"
+	if d.ReleaseFull != expected {
+		t.Errorf("Expected %q, got %q", expected, d.ReleaseFull)
+	}
+}
+
 func TestCentOSFindChecksum(t *testing.T) {
 	var err error
 	var s string
@@ -391,5 +424,125 @@ func TestCentOSsetISOName(t *testing.T) {
 	}
 	if !strings.HasSuffix(c.Name, ".iso") {
 		t.Errorf("Expected %q to end with \".iso\", it didn't", c.Name)
+	}
+}
+
+func newTestDebian() debian {
+	d := debian{release{Release: "7", ReleaseFull: "7.8.0", Image: "netinst", Arch: "amd64"}}
+	d.ChecksumType = "sha256"
+	return d
+}
+
+func TestDebianFindISOChecksum(t *testing.T) {
+	d := newTestDebian()
+	s, err := d.findISOChecksum("")
+	if err == nil {
+		t.Error("Expected an error, got nil")
+	} else {
+		if err.Error() != "page to parse was empty; unable to process request for " {
+			t.Errorf("Expected \"page to parse was empty; unable to process request for \", got %q", err.Error())
+		}
+	}
+
+	checksumPage := `
+6489ad85505b02a73e1049ba70137f25d5eab0d0b25701b15cedb840753a53a3  debian-7.8.0-amd64-CD-9.iso
+72763957bcd206882ca29ce524f9ca1940d1e5bce5ed15ccc6c346b35feb4a41  debian-7.8.0-amd64-kde-CD-1.iso
+1c8164b42e27a55657ab971b5e32ca2045dda6c49e3484279de63167c6aada31  debian-7.8.0-amd64-lxde-CD-1.iso
+e39c36d6adc0fd86c6edb0e03e22919086c883b37ca194d063b8e3e8f6ff6a3a  debian-7.8.0-amd64-netinst.iso
+fb1c1c30815da3e7189d44b6699cf9114b16e44ea139f0cd4df5f1dde3659272  debian-7.8.0-amd64-xfce-CD-1.iso
+23a0d89e337c96f3e26a1ab5d49392d3129fbcb3d982b9d58a797039b01f1e7f  debian-update-7.8.0-amd64-CD-1.iso
+`
+	d.Name = "debian-7.8.0-amd64-whatever.iso"
+	d.Image = "whatever"
+	s, err = d.findISOChecksum(checksumPage)
+	if err == nil {
+		t.Error("Expected an error, got nil")
+	} else {
+		if err.Error() != "unable to find debian-7.8.0-amd64-whatever.iso's checksum" {
+			t.Errorf("Expected \"unable to find debian-7.8.0-amd64-whatever.iso's checksum\", got %q", err.Error())
+		}
+	}
+
+	d.ReleaseFull = "7.8.0"
+	d.Name = "debian-7.8.0-amd64-netinst.iso"
+	d.Image = "netinst"
+	d.Arch = "amd64"
+	s, err = d.findISOChecksum(checksumPage)
+	if err != nil {
+		t.Errorf("Expected no error, got %q", err.Error())
+	} else {
+		if s != "e39c36d6adc0fd86c6edb0e03e22919086c883b37ca194d063b8e3e8f6ff6a3a" {
+			t.Errorf("Expected \"e39c36d6adc0fd86c6edb0e03e22919086c883b37ca194d063b8e3e8f6ff6a3a\", got %q", s)
+		}
+	}
+}
+
+func TestDebianSetISO(t *testing.T) {
+	d := newTestDebian()
+	d.setISOName()
+	expected := "debian-7.8.0-amd64-netinst.iso"
+	if d.Name != expected {
+		t.Errorf("Expected %q, got %q", expected, d.Name)
+	}
+
+	d.setISOURL()
+	expected = "cdimage.debian.org/debian-cd/7.8.0/amd64/iso-cd/" + d.Name
+	if d.isoURL != expected {
+		t.Errorf("Expected %q, got %q", expected, d.isoURL)
+	}
+
+}
+
+func TestDebianGetOSType(t *testing.T) {
+	d := debian{release{Arch: "amd64"}}
+	buildType := "vmware-iso"
+	res, err := d.getOSType(buildType)
+	if err != nil {
+		t.Errorf("Expected no error, got %q", err.Error())
+	} else {
+		if res != "debian-64" {
+			t.Errorf("Expected \"debian-64\", got %q", res)
+		}
+	}
+
+	buildType = "virtualbox-iso"
+	res, err = d.getOSType(buildType)
+	if err != nil {
+		t.Errorf("Expected no error, got %q", err.Error())
+	} else {
+		if res != "Debian_64" {
+			t.Errorf("Expected \"Debian_64\", got %q", res)
+		}
+	}
+
+	d = debian{release{Arch: "i386"}}
+	buildType = "vmware-iso"
+	res, err = d.getOSType(buildType)
+	if err != nil {
+		t.Errorf("Expected no error, got %q", err.Error())
+	} else {
+		if res != "debian-32" {
+			t.Errorf("Expected \"debian-32\", got %q", res)
+		}
+	}
+
+	buildType = "virtualbox-iso"
+	res, err = d.getOSType(buildType)
+	if err != nil {
+		t.Errorf("Expected no error, got %q", err.Error())
+	} else {
+		if res != "Debian_32" {
+			t.Errorf("Expected \"Debian_32\", got %q", res)
+		}
+	}
+
+	buildType = "voodoo"
+	res, err = d.getOSType(buildType)
+	if err == nil {
+		t.Error("Expected an error, received nil")
+	} else {
+		if err.Error() != " does not support the voodoo builder" {
+			t.Errorf("Expected \" does not support the voodoo builder\", got %q", err.Error())
+		}
 	}
 }

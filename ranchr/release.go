@@ -339,20 +339,22 @@ func (d *debian) SetISOInfo() error {
 		jww.ERROR.Println(err)
 		return err
 	}
-	if d.Release == "" {
+
+	if d.ReleaseFull == "" {
 		err := fmt.Errorf("release for %s was empty, unable to continue", d.Name)
 		jww.ERROR.Println(err)
 		return err
 	}
+
 	// Make sure that the version and release are set, Release and FullRelease
 	// respectively. Make sure they are both set properly.
-	err := d.setReleaseInfo()
-	if err != nil {
-		jww.ERROR.Println(err)
-		return err
-	}
+	//err := d.setReleaseInfo()
+	//if err != nil {
+	//	jww.ERROR.Println(err)
+	//	return err
+	//}
 	d.setISOName()
-	err = d.setISOURL()
+	err := d.setISOURL()
 	if err != nil {
 		jww.ERROR.Println(err)
 		return err
@@ -377,7 +379,7 @@ func (d *debian) setISOChecksum() error {
 		return err
 	}
 	// Now that we have a page...we need to find the checksum and set it
-	d.Checksum, err = d.findChecksum(page)
+	d.Checksum, err = d.findISOChecksum(page)
 	if err != nil {
 		jww.ERROR.Println(err)
 		return err
@@ -386,15 +388,20 @@ func (d *debian) setISOChecksum() error {
 }
 
 func (d *debian) setISOURL() error {
+	// If the base isn't set, use cdimage.debian.org
+	if d.BaseURL == "" {
+		d.BaseURL = "cdimage.debian.org"
+	}
+
 	// Its ok to use Release in the directory path because Release will resolve
 	// correctly, at the directory level, for Ubuntu.
-	d.isoURL = appendSlash(d.BaseURL) + appendSlash("debian-cd") + appendSlash(d.ReleaseFull) + appendSlash(iso-cd) + d.Name
+	d.isoURL = appendSlash(d.BaseURL) + appendSlash(d.ReleaseFull) + appendSlash(d.Arch) + appendSlash("iso-cd") + d.Name
 	// This never errors so return nil...error is needed for other
 	// implementations of the interface.
 	return nil
 }
 
-// findChecksum finds the checksum in the passed page string for the current
+// findISOChecksum finds the checksum in the passed page string for the current
 // ISO image. This is for releases.ubuntu.com checksums which are in a plain
 // text file with each line representing an iso image and checksum pair, each
 // line is in the format of:
@@ -403,58 +410,24 @@ func (d *debian) setISOURL() error {
 // Notes:
 //	\n separate lines
 //      since this is plain text processing we don't worry about runes
-// TODO update to work with Debian
-func (d *debian) findChecksum(page string) (string, error) {
+func (d *debian) findISOChecksum(page string) (string, error) {
 	if page == "" {
 		err := fmt.Errorf("page to parse was empty; unable to process request for %s", d.Name)
 		jww.ERROR.Println(err)
 		return "", err
 	}
 	pos := strings.Index(page, d.Name)
-	if pos <= 0 {
-		// if it wasn't found, there's a chance that there's an extension on the release number
-		// e.g. 12.04.4 instead of 12.04. This should only be true for LTS releases.
-		// For this look for a line  that contains .iso.
-		// Substring the release string and explode it on '-'. Update isoName
-		pos = strings.Index(page, ".iso")
-		if pos < 0 {
-			err := fmt.Errorf("unable to find ISO information while looking for the release string on the Ubuntu checksums page")
-			jww.ERROR.Println(err)
-			return "", err
-		}
-		tmpRel := page[:pos]
-		tmpSl := strings.Split(tmpRel, "-")
-		// 3 is just an arbitrarily small number as there should always
-		// be more than 3 elements in the split slice.
-		if len(tmpSl) < 3 {
-			err := fmt.Errorf("unable to parse release information for %s", d.Name)
-			jww.ERROR.Println(err)
-			return "", err
-		}
-		d.ReleaseFull = tmpSl[1]
-		d.setISOName()
-		pos = strings.Index(page, d.Name)
-		if pos < 0 {
-			err := fmt.Errorf("unable to find %s's checksum", d.Name)
-			jww.ERROR.Println(err)
-			return "", err
-		}
-	}
-	// Safety check...should never occur, but sanity check it anyways.
-	if len(page) < pos-2 {
-		err := fmt.Errorf("unable to retrieve checksum information for %s", d.Name)
+	if pos < 0 {
+		err := fmt.Errorf("unable to find %s's checksum", d.Name)
 		jww.ERROR.Println(err)
 		return "", err
 	}
-	// Get the checksum string. If the substring request goes beyond the
-	// variable boundary, be safe and make the request equal to the length
-	// of the string.
-	if pos-66 < 1 {
-		d.Checksum = page[:pos-2]
-	} else {
-		d.Checksum = page[pos-66 : pos-2]
-	}
-	return d.Checksum, nil
+	tmpRel := page[:pos]
+	tmpSl := strings.Split(tmpRel, "\n")
+
+	// The checksum we want is the last element in the array
+	checksum := strings.TrimSpace(tmpSl[len(tmpSl)-1])
+	return checksum, nil
 }
 
 // setISOName() sets the name of the iso for the release specified.
@@ -464,7 +437,7 @@ func (d *debian) setISOName() {
 		d.ReleaseFull = d.Release
 	}
 	var buff bytes.Buffer
-	buff.WriteString("ubuntu-")
+	buff.WriteString("debian-")
 	buff.WriteString(d.ReleaseFull)
 	buff.WriteString("-")
 	buff.WriteString(d.Arch)
@@ -498,6 +471,62 @@ func (d *debian) getOSType(buildType string) (string, error) {
 	err := fmt.Errorf("%s does not support the %s builder", d.Distro, buildType)
 	jww.ERROR.Println(err)
 	return "", err
+}
+
+// this is abstracted out from the d.setReleaseInfo() so that
+// d.setReleaseInfo() can be tested without. This method is not tested by
+// the tests.
+//
+// Note: This method assumes that the baseurl will resolve to a directory
+// listing that provide the information necessary to extract the current
+// release: e.g. http://cdimage.debian.org/debian-cd/. If a custom url
+// is being used, like for a mirror, either make sure that the releaseFull
+// is set or that the url resolves to a page from which the current version
+// cn be extracted.
+func (d *debian) getReleasePage() error {
+	// if ReleaseFull is set, nothing to do
+	if d.ReleaseFull != "" {
+		return nil
+	}
+	p, err := getStringFromURL(d.BaseURL)
+	if err != nil {
+		jww.ERROR.Println(err)
+	}
+
+	err = d.setReleaseInfo(p)
+	if err != nil {
+		jww.ERROR.Print(err)
+	}
+
+	return err
+}
+
+// Since only the release is specified, the current version needs to be
+// determined. For Debian, rancher can only grab the latest release as that
+// is all the Debian makes available on their cdimage site.
+func (d *debian) setReleaseInfo(s string) error {
+	// look for the first line that starts with debian-(release)
+	pos := strings.Index(s, fmt.Sprintf("a href=\"%s", d.Release))
+	if pos < 0 {
+		err := fmt.Errorf("unable to determine the current debian version: search string 'a href =\"%s not found", d.Release)
+		jww.ERROR.Print(err)
+		return err
+	}
+	// remove everything before that
+	s = s[pos+8:]
+	// find the next .iso, we only care about in between
+	pos = strings.Index(s, "\"")
+	if pos > 0 {
+		s = s[:pos]
+	}
+	// take the next 5 chars as the release full, e.g. 7.8.0
+	if len(s) < 5 {
+		err := fmt.Errorf("unable to determine the current debian version: the version string is less than the expected 5 chars")
+		jww.ERROR.Print(err)
+		return err
+	}
+	d.ReleaseFull = s[:5]
+	return nil
 }
 
 // An Ubuntu specific wrapper to release

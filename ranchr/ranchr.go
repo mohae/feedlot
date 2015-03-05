@@ -28,7 +28,7 @@ import (
 const (
 	UnsupportedDistro Distro = iota
 	CentOS
-	Debian // does not support automatic lookup of iso info
+	Debian
 	Ubuntu
 )
 

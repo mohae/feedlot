@@ -1,7 +1,7 @@
 package ranchr
 
 import (
-	"archive/car"
+	"archive/tar"
 	"compress/gzip"
 	"fmt"
 	"io"

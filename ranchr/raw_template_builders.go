@@ -767,9 +767,9 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 			settings["iso_checksum"] = r.releaseISO.(*centOS).Checksum
 			settings["iso_checksum_type"] = r.releaseISO.(*centOS).ChecksumType
 		case Debian.String():
-			err = fmt.Errorf("automatic resolution of iso information for %q is not supported, the \"iso_url\" and \"iso_checksum\" settings must exist", r.Distro)
-			jww.ERROR.Print(err)
-			return nil, nil, err
+			settings["iso_url"] = r.releaseISO.(*debian).isoURL
+			settings["iso_checksum"] = r.releaseISO.(*debian).Checksum
+			settings["iso_checksum_type"] = r.releaseISO.(*debian).ChecksumType
 		case Ubuntu.String():
 			tmpISOUrl = r.releaseISO.(*ubuntu).isoURL
 			settings["iso_checksum"] = r.releaseISO.(*ubuntu).Checksum

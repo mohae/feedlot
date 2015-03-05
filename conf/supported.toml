@@ -8,48 +8,48 @@
 
 [distro]
 	[distro.centos]
-	base_url = ""
-	description = "Default template config and Rancher options for CentOS"
-	arch = [
+		base_url = ""
+		description = "Default template config and Rancher options for CentOS"
+		arch = [
 	        "i386",
 	        "x86_64"
-	]
-	image = [
+		]
+		image = [
 	        "minimal",
 	        "netinstall"
-	]
-	release = [
+		]
+		release = [
 	        "5",
 	       	"6"
-	]
-	default_image = [
+		]
+		default_image = [
 	    	"release = 6",
 	    	"image = minimal",
 	    	"arch = x86_64",
-	]
-[distro.debian]
-	base_url = ""
-	description = "Default template config and Rancher options for Debian"
-	arch = [
+		]
+    [distro.debian]
+		base_url = "http://cdimage.debian.org/debian-cd/"
+		description = "Default template config and Rancher options for Debian"
+		arch = [
 	        "i386",
 	        "amd64"
-	]
-	image = [
+		]
+		image = [
 			"lxde-CD-1",
 	        "netinst",
 	        "xfce-CD-1"
-	]
-	release = [
+		]
+		release = [
 	       	"7"
-	]
-	default_image = [
+		]
+		default_image = [
 	    	"release = 7",
     		"image = netinst",
     		"arch = amd64",
-	]
-[distro.ubuntu]
-	base_url = "http://releases.ubuntu.com/"
-	description = "Default template config and Rancher options for Ubuntu"
+		]
+	[distro.ubuntu]
+		base_url = "http://releases.ubuntu.com/"
+		description = "Default template config and Rancher options for Ubuntu"
        	arch = [
        		"i386",
        		"amd64"
@@ -70,43 +70,42 @@
        		"image = server",
        		"arch = amd64",
        	]
-	builder_types = [
-		"virtualbox-iso"
-	]
-	post_processor_types = [
-		"vagrant",
-	]
-	provisioner_types = [
-		"shell-scripts",
-		"file-uploads",
-	]
-	[distro.ubuntu.builders]
-		[distro.ubuntu.builders.common]
-			settings = [
-				"boot_wait = 15s",
-				"headless = true"
-			]
-		[distro.ubuntu.builders.virtualbox-iso]
-			[distro.ubuntu.builders.virtualbox-iso.arrays]
-				vboxmanage = [
-					"cpus=2",
-					"memory=2048"
+		builder_types = [
+			"virtualbox-iso"
+		]
+		post_processor_types = [
+			"vagrant",
+		]
+		provisioner_types = [
+			"shell-scripts",
+			"file-uploads",
+		]
+		[distro.ubuntu.builders]
+			[distro.ubuntu.builders.common]
+				settings = [
+					"boot_wait = 15s",
+					"headless = true"
 				]
-	[distro.ubuntu.post_processors]
-		[distro.ubuntu.post_processors.vagrant]
-			[distro.ubuntu.post_processors.vagrant.arrays]
-				only = [
-					"virtualbox-iso",
-				]
-	[distro.ubuntu.provisioners]
-		[distro.ubuntu.provisioners.shell-scripts]
-			[distro.ubuntu.provisioners.shell-scripts.arrays]
-				only = [
-					"virtualbox-iso",
-				]				
+			[distro.ubuntu.builders.virtualbox-iso]
+				[distro.ubuntu.builders.virtualbox-iso.arrays]
+					vboxmanage = [
+						"cpus=2",
+						"memory=2048"
+					]
+		[distro.ubuntu.post_processors]
+			[distro.ubuntu.post_processors.vagrant]
+				[distro.ubuntu.post_processors.vagrant.arrays]
+					only = [
+						"virtualbox-iso",
+					]
+		[distro.ubuntu.provisioners]
+			[distro.ubuntu.provisioners.shell-scripts]
+				[distro.ubuntu.provisioners.shell-scripts.arrays]
+					only = [
+						"virtualbox-iso",
+					]				
 		[distro.ubuntu.provisioners.file-uploads]
 			settings = [
 				"source = source/dir",
 				"destination = destination/dir"
 			]
-
