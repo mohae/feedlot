@@ -19,3 +19,10 @@ echo allow-guest=false | tee -a /etc/lightdm/lightdm.conf.d/50-unity-greeter.con
 ## Remove remote login
 echo greeter-show-remote-login=false | tee -a /etc/lightdm/lighdm.conf.d/50-unity-greeter.conf
 
+# chrome
+# get the key and add it
+wget -q -O https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+# set up the repository
+sudo sh -c 'echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
+apt-get -y update
+apt-get -y install google-chrome-stable
