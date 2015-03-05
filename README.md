@@ -24,12 +24,16 @@ There is one problem with my approach, parts of the Packer template depend on or
 
 As such, for now, if the order is important, you will have to manually re-order the sections within the generated JSON file. I have ideas on how to resolve this, which would involve using the order of the entries in the `*_type` arrays, outputting each JSON section separately to a temp file, and concatonating those files in the order defined by the `*_type` arrays. However that is not something I have done anything more than think about.
 
+This will not be an issue for most templates.
+
 ## Supported Packer Section types
 Each supported Packer section type has various configuration options. Any required configuration option is supported and a missing required element will result in a processing error, with the information logged to the Log. Most optional configuration options are supported, any that are not will be listed under as a `not supported configuration option` in that section's comments. If there are any options defined in the template that either do not exist for or are not supported by that Packer section type, a warning message will be logged, but the processing of the template will continue.
 
 ### Supported Distro
-    * ubuntu
     * centos
+    * debian
+    * ubuntu
+
 
 ### Supported Builders
     * amazon-ebs
