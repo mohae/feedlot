@@ -97,6 +97,45 @@
 					":scripts_dir/cleanup.sh",
 				]
 
+	[build.1404-chef]
+		distro = "ubuntu"
+		description = "ubuntu LTS 1404 amd64 desktop build, minimal install w chef"
+	        arch = "amd64"
+	        release = "14.04"
+	        image = "server"
+	        builder_types = [
+				"virtualbox-iso"
+			]
+		post_processor_types = [
+			"vagrant"
+		]
+		provisioner_types = [
+			"chef-solo"
+		]
+		[build.1404-chef.builders]
+				[build.1404-chef.builders.virtualbox-iso.arrays]
+				vbox_manage = [
+					"memory=4096"
+				]
+
+		[build.1404-chef.post_processors]
+			[build.1404-chef.post_processors.vagrant]
+				[build.1404-chef.post_processors.vagrant.arrays]
+				except = [
+					"docker"
+				]
+				only = [
+					"virtualbox-iso"
+				]
+		[build.1404-chef.provisioners]
+			[build.1404-chef.provisioners.chef-solo]
+				[build.1404-chef.provisioners.chef-solo.arrays]
+				only = [
+					"virtualbox-iso"
+				]
+				cookbook_paths = [ 
+					":src_dir/cookbooks",
+				]
 
         [build.centos6]
 		distro = "centos"
