@@ -168,3 +168,34 @@
 					"skip_install = false",
 					"staging_directory = :out_dir/staging/"
 				]
+				
+	[build.wheezy-salt]
+		distro = "debian"
+		description = "debian wheezy w saltstack"
+	        arch = "amd64"
+	        builder_types = [
+				"virtualbox-iso"
+			]
+		post_processor_types = [
+			"vagrant"
+		]
+		provisioner_types = [
+			"shell-scripts"
+		]
+		[build.wheezy-salt.builders]
+				[build.wheezy-salt.builders.virtualbox-iso.arrays]
+				vbox_manage = [
+					"memory=4096"
+				]
+		[build.wheezy-salt.provisioners]
+			[build.wheezy-salt.provisioners.shell-scripts]
+				[build.wheezy-salt.provisioners.shell-scripts.arrays]
+					scripts = [ 
+						":scripts_dir/setup.sh",
+						":scripts_dir/sudoers.sh",
+						":scripts_dir/vagrant.sh",
+						":scripts_dir/dev_stuff.sh",
+						":scripts_dir/customize.sh",
+						":scripts_dir/install_salt.sh",
+						":scripts_dir/cleanup.sh",
+					]				
