@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mohae/deepcopy"
+	"github.com/mohae/utilitybelt/deepcopy"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -203,7 +203,7 @@ func (r *rawTemplate) createAnsibleLocal() (settings map[string]interface{}, var
 	}
 	// Process the Arrays.
 	for name, val := range r.Provisioners[AnsibleLocal.String()].Arrays {
-		array := deepcopy.InterfaceToStringSlice(val)
+		array := deepcopy.InterfaceToSliceOfStrings(val)
 		if array != nil {
 			settings[name] = array
 		}
@@ -358,7 +358,7 @@ func (r *rawTemplate) createShellScripts() (settings map[string]interface{}, var
 	for name, val := range r.Provisioners[ShellScripts.String()].Arrays {
 		if name == "scripts" {
 			hasScripts = true
-			sl := deepcopy.InterfaceToStringSlice(val)
+			sl := deepcopy.InterfaceToSliceOfStrings(val)
 			for i, v := range sl {
 				sl[i] = r.replaceVariables(v)
 			}

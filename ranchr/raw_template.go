@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mohae/deepcopy"
+	"github.com/mohae/utilitybelt/deepcopy"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -175,7 +175,7 @@ func (r *rawTemplate) ScriptNames() []string {
 	if !ok {
 		return nil
 	}
-	scrpts := deepcopy.InterfaceToStringSlice(r.Provisioners[ShellScripts.String()].Arrays[scripts])
+	scrpts := deepcopy.InterfaceToSliceOfStrings(r.Provisioners[ShellScripts.String()].Arrays[scripts])
 	names := make([]string, len(scrpts))
 	for i, scrpt := range scrpts {
 		so := reflect.ValueOf(scrpt)
