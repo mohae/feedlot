@@ -125,8 +125,8 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 			if err != nil {
 				return nil, nil, err
 			}
-		case ShellScripts:
-			tmpS, tmpVar, err = r.createShellScripts()
+		case Shell:
+			tmpS, tmpVar, err = r.createShell()
 			if err != nil {
 				return nil, nil, err
 			}
@@ -311,7 +311,7 @@ func (r *rawTemplate) createSaltMasterless() (settings map[string]interface{}, v
 	return settings, vars, nil
 }
 
-// createShellScripts() creates a map of settings for Packer's shell
+// createShell() creates a map of settings for Packer's shell
 // provisioner. Any values that aren't supported by the shell provisioner are
 // ignored. For more information, refer to
 // https://packer.io/docs/provisioners/shell.html
@@ -328,20 +328,20 @@ func (r *rawTemplate) createSaltMasterless() (settings map[string]interface{}, v
 //   inline_shebang			// string
 //   remote_path			// string
 //   start_retry_timeout	// string
-func (r *rawTemplate) createShellScripts() (settings map[string]interface{}, vars []string, err error) {
-	_, ok := r.Provisioners[ShellScripts.String()]
+func (r *rawTemplate) createShell() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[Shell.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration found for %q", ShellScripts.String())
+		err = fmt.Errorf("no configuration found for %q", Shell.String())
 		jww.ERROR.Print(err)
 		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
-	settings["type"] = ShellScripts.String()
+	settings["type"] = Shell.String()
 	// For each value, extract its key value pair and then process. Only
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
 	var k, v string
-	for _, s := range r.Provisioners[ShellScripts.String()].Settings {
+	for _, s := range r.Provisioners[Shell.String()].Settings {
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -350,12 +350,12 @@ func (r *rawTemplate) createShellScripts() (settings map[string]interface{}, var
 		case "binary":
 			settings[k], _ = strconv.ParseBool(v)
 		default:
-			jww.WARN.Println("unsupported " + ShellScripts.String() + " key was encountered: " + k)
+			jww.WARN.Println("unsupported " + Shell.String() + " key was encountered: " + k)
 		}
 	}
 	// Process the Arrays.
 	var hasScripts bool
-	for name, val := range r.Provisioners[ShellScripts.String()].Arrays {
+	for name, val := range r.Provisioners[Shell.String()].Arrays {
 		if name == "scripts" {
 			hasScripts = true
 			sl := deepcopy.InterfaceToSliceOfStrings(val)
@@ -371,7 +371,7 @@ func (r *rawTemplate) createShellScripts() (settings map[string]interface{}, var
 		}
 	}
 	if !hasScripts {
-		err := fmt.Errorf("\"scripts\" setting is required for shell-scripts, not found")
+		err := fmt.Errorf("\"scripts\" setting is required for shell, not found")
 		jww.ERROR.Println(err)
 		return nil, nil, err
 	}

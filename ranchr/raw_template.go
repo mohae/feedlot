@@ -166,16 +166,16 @@ func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
 func (r *rawTemplate) ScriptNames() []string {
 	scripts := "scripts"
 	// See if there is a shell provisioner
-	_, ok := r.Provisioners[ShellScripts.String()]
+	_, ok := r.Provisioners[Shell.String()]
 	if !ok {
 		return nil
 	}
 	// See if there shell provisioner array section contains scripts
-	_, ok = r.Provisioners[ShellScripts.String()].Arrays[scripts]
+	_, ok = r.Provisioners[Shell.String()].Arrays[scripts]
 	if !ok {
 		return nil
 	}
-	scrpts := deepcopy.InterfaceToSliceOfStrings(r.Provisioners[ShellScripts.String()].Arrays[scripts])
+	scrpts := deepcopy.InterfaceToSliceOfStrings(r.Provisioners[Shell.String()].Arrays[scripts])
 	names := make([]string, len(scrpts))
 	for i, scrpt := range scrpts {
 		so := reflect.ValueOf(scrpt)
