@@ -66,7 +66,7 @@
 		]
 		[build.1404-dev.builders]
 				[build.1404-dev.builders.virtualbox-iso.arrays]
-				vbox_manage = [
+				vboxmanage = [
 					"memory=4096"
 				]
 
@@ -114,7 +114,7 @@
 		]
 		[build.1404-go.builders]
 				[build.1404-go.builders.virtualbox-iso.arrays]
-				vbox_manage = [
+				vboxmanage = [
 					"memory=4096"
 				]
 
@@ -162,7 +162,7 @@
 		]
 		[build.1404-chef.builders]
 				[build.1404-chef.builders.virtualbox-iso.arrays]
-				vbox_manage = [
+				vboxmanage = [
 					"memory=4096"
 				]
 
@@ -271,7 +271,7 @@
 		]
 		[build.wheezy-salt.builders]
 				[build.wheezy-salt.builders.virtualbox-iso.arrays]
-				vbox_manage = [
+				vboxmanage = [
 					"memory=4096"
 				]
 		[build.wheezy-salt.provisioners]
