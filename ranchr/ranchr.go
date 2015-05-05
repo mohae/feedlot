@@ -203,7 +203,7 @@ const (
 	PuppetMasterless
 	PuppetServer
 	SaltMasterless
-	ShellScripts
+	Shell
 )
 
 // Provisioner is a packer supported provisioner
@@ -218,7 +218,7 @@ var provisioners = [...]string{
 	"puppet-masterless", //puppet-masterless is the name of the PuppetMasterless Provisioner
 	"puppet-server",     // puppet-server is the name of the PuppetServer Provisioner
 	"salt-masterless",   //salt is the name of the Salt Provisioner
-	"shell-scripts",     // ShellScripts is an alias for the Shell provisioner
+	"shell",             // shell is the name for the Shell provisioner
 }
 
 func (p Provisioner) String() string { return provisioners[p] }
@@ -242,8 +242,8 @@ func ProvisionerFromString(s string) Provisioner {
 		return PuppetServer
 	case "salt-masterless":
 		return SaltMasterless
-	case "shell-scripts":
-		return ShellScripts
+	case "shell":
+		return Shell
 	}
 	return UnsupportedProvisioner
 }

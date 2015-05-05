@@ -76,7 +76,7 @@
 			"vagrant",
 		]
 		provisioner_types = [
-			"shell-scripts",
+			"shell",
 			"file-uploads",
 		]
 		[distro.ubuntu.builders]
@@ -98,8 +98,8 @@
 						"virtualbox-iso",
 					]
 		[distro.ubuntu.provisioners]
-			[distro.ubuntu.provisioners.shell-scripts]
-				[distro.ubuntu.provisioners.shell-scripts.arrays]
+			[distro.ubuntu.provisioners.shell]
+				[distro.ubuntu.provisioners.shell.arrays]
 					only = [
 						"virtualbox-iso",
 					]				

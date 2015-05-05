@@ -31,7 +31,7 @@
 			"virtualbox-iso"
 		]
 		provisioner_types = [
-			"shell-scripts",
+			"shell",
 			"salt-masterless"
 		]
 		[build.1404-amd64-salt.builders]
@@ -62,7 +62,7 @@
 			"vagrant"
 		]
 		provisioner_types = [
-			"shell-scripts"
+			"shell"
 		]
 		[build.1404-dev.builders]
 				[build.1404-dev.builders.virtualbox-iso.arrays]
@@ -77,8 +77,8 @@
 					"virtualbox-iso"
 				]
 		[build.1404-dev.provisioners]
-			[build.1404-dev.provisioners.shell-scripts]
-				[build.1404-dev.provisioners.shell-scripts.arrays]
+			[build.1404-dev.provisioners.shell]
+				[build.1404-dev.provisioners.shell.arrays]
 				only = [
 					"virtualbox-iso"
 				]
@@ -104,7 +104,7 @@
 			"vagrant"
 		]
 		provisioner_types = [
-			"shell-scripts"
+			"shell"
 		]
 		[build.1404-go.builders]
 				[build.1404-go.builders.virtualbox-iso.arrays]
@@ -119,8 +119,8 @@
 					"virtualbox-iso"
 				]
 		[build.1404-go.provisioners]
-			[build.1404-go.provisioners.shell-scripts]
-				[build.1404-go.provisioners.shell-scripts.arrays]
+			[build.1404-go.provisioners.shell]
+				[build.1404-go.provisioners.shell.arrays]
 				only = [
 					"virtualbox-iso"
 				]
@@ -252,7 +252,7 @@
 			"vagrant"
 		]
 		provisioner_types = [
-			"shell-scripts"
+			"shell"
 		]
 		[build.wheezy-salt.builders]
 				[build.wheezy-salt.builders.virtualbox-iso.arrays]
@@ -260,8 +260,8 @@
 					"memory=4096"
 				]
 		[build.wheezy-salt.provisioners]
-			[build.wheezy-salt.provisioners.shell-scripts]
-				[build.wheezy-salt.provisioners.shell-scripts.arrays]
+			[build.wheezy-salt.provisioners.shell]
+				[build.wheezy-salt.provisioners.shell.arrays]
 					scripts = [ 
 						":scripts_dir/setup.sh",
 						":scripts_dir/sudoers.sh",
