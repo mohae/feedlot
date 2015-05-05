@@ -55,7 +55,7 @@
        		"amd64"
        	]
        	image = [
-			"desktop""
+			"desktop",
        		"server"
        	]
        	release = [
