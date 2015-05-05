@@ -40,10 +40,10 @@
 	        "xfce-CD-1"
 		]
 		release = [
-	       	"7"
+	       	"8"
 		]
 		default_image = [
-	    	"release = 7",
+	    	"release = 8",
     		"image = netinst",
     		"arch = amd64",
 		]
