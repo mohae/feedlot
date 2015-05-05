@@ -243,6 +243,8 @@ func (r *rawTemplate) mergeVariables() {
 
 // ISOInfo sets the ISO info for the template's supported distro type. This
 // also sets the builder specific string, when applicable.
+// TODO: these should use new functions in release.go. instead of creating the
+// structs here
 func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 	var k, v, checksumType string
 	var err error

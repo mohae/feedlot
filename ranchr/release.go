@@ -379,7 +379,7 @@ func (d *debian) SetISOInfo() error {
 // setISOChecksum: Set the checksum value for the iso.
 func (d *debian) setISOChecksum() error {
 	// Don't check for ReleaseFull existence since Release will also resolve
-	// for Ubuntu dl directories.
+	// for Debian dl directories.
 	var page string
 	var err error
 	page, err = getStringFromURL(appendSlash(d.BaseURL) + appendSlash(d.ReleaseFull) + "amd64/iso-cd/" + strings.ToUpper(d.ChecksumType) + "SUMS")
@@ -403,7 +403,7 @@ func (d *debian) setISOURL() error {
 	}
 
 	// Its ok to use Release in the directory path because Release will resolve
-	// correctly, at the directory level, for Ubuntu.
+	// correctly, at the directory level, for Debian.
 	d.isoURL = appendSlash(d.BaseURL) + appendSlash(d.ReleaseFull) + appendSlash(d.Arch) + appendSlash("iso-cd") + d.Name
 	// This never errors so return nil...error is needed for other
 	// implementations of the interface.
@@ -411,7 +411,7 @@ func (d *debian) setISOURL() error {
 }
 
 // findISOChecksum finds the checksum in the passed page string for the current
-// ISO image. This is for releases.ubuntu.com checksums which are in a plain
+// ISO image. This is for cdimage.debian.org/debian-cd/ checksums which are in a plain
 // text file with each line representing an iso image and checksum pair, each
 // line is in the format of:
 //      checksumText image.isoname
