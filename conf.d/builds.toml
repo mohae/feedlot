@@ -51,7 +51,7 @@
 		
 	[build.1404-dev]
 		distro = "ubuntu"
-		description = "ubuntu LTS 1404 amd64 desktop build, minimal install w go"
+		description = "ubuntu LTS 1404 amd64 desktop build, minimal install w stuff for development"
 	        arch = "amd64"
 	        release = "14.04"
 	        image = "server"
@@ -92,8 +92,56 @@
 					":scripts_dir/setup.sh",
 					":scripts_dir/sudoers.sh",
 					":scripts_dir/vagrant.sh",
-					":scripts_dir/dev_stuff.sh",
+					":scripts_dir/dev_stuff.sh",					
 					":scripts_dir/customize.sh",
+					":scripts_dir/cleanup.sh",
+				]
+
+	[build.1404-go]
+		distro = "ubuntu"
+		description = "ubuntu LTS 1404 amd64 desktop build, minimal install w go"
+	        arch = "amd64"
+	        release = "14.04"
+	        image = "server"
+	        builder_types = [
+				"virtualbox-iso"
+			]
+		post_processor_types = [
+			"vagrant"
+		]
+		provisioner_types = [
+			"shell-scripts"
+		]
+		[build.1404-go.builders]
+				[build.1404-go.builders.virtualbox-iso.arrays]
+				vbox_manage = [
+					"memory=4096"
+				]
+
+		[build.1404-go.post_processors]
+			[build.1404-go.post_processors.vagrant]
+				[build.1404-go.post_processors.vagrant.arrays]
+				except = [
+					"docker"
+				]
+				only = [
+					"virtualbox-iso"
+				]
+		[build.1404-go.provisioners]
+			[build.1404-go.provisioners.shell-scripts]
+				[build.1404-go.provisioners.shell-scripts.arrays]
+				except = [
+					"docker"
+				]
+				only = [
+					"virtualbox-iso"
+				]
+				scripts = [ 
+					":scripts_dir/setup.sh",
+					":scripts_dir/sudoers.sh",
+					":scripts_dir/vagrant.sh",
+					":scripts_dir/customize.sh",
+					":scripts_dir/go.sh",
 					":scripts_dir/cleanup.sh",
 				]
 
