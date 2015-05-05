@@ -73,18 +73,12 @@
 		[build.1404-dev.post_processors]
 			[build.1404-dev.post_processors.vagrant]
 				[build.1404-dev.post_processors.vagrant.arrays]
-				except = [
-					"docker"
-				]
 				only = [
 					"virtualbox-iso"
 				]
 		[build.1404-dev.provisioners]
 			[build.1404-dev.provisioners.shell-scripts]
 				[build.1404-dev.provisioners.shell-scripts.arrays]
-				except = [
-					"docker"
-				]
 				only = [
 					"virtualbox-iso"
 				]
@@ -121,18 +115,12 @@
 		[build.1404-go.post_processors]
 			[build.1404-go.post_processors.vagrant]
 				[build.1404-go.post_processors.vagrant.arrays]
-				except = [
-					"docker"
-				]
 				only = [
 					"virtualbox-iso"
 				]
 		[build.1404-go.provisioners]
 			[build.1404-go.provisioners.shell-scripts]
 				[build.1404-go.provisioners.shell-scripts.arrays]
-				except = [
-					"docker"
-				]
 				only = [
 					"virtualbox-iso"
 				]
@@ -169,9 +157,6 @@
 		[build.1404-chef.post_processors]
 			[build.1404-chef.post_processors.vagrant]
 				[build.1404-chef.post_processors.vagrant.arrays]
-				except = [
-					"docker"
-				]
 				only = [
 					"virtualbox-iso"
 				]
