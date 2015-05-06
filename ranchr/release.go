@@ -667,6 +667,7 @@ func (u *ubuntu) setISOName() {
 	buff.WriteString(u.Arch)
 	buff.WriteString(".iso")
 	u.Name = buff.String()
+	fmt.Printf("ubuntu iso: %s\n", u.Name)
 	return
 }
 

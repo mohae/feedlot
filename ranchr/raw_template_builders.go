@@ -699,7 +699,30 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 		jww.ERROR.Print(err)
 		return nil, nil, err
 	}
-	// Process arrays, iso_urls is only valid if iso_url is not set
+	// Process arrays, iso_urls is only valid if iso_url is not set so we first
+	// check to see if it has been set, and if not, if it's in this array prior
+	// to ranging through the rest of the elements. The range ignores iso_url
+	if tmpISOUrl != "" {
+		isoURL, ok := r.Builders[VirtualBoxISO.String()].Arrays["iso_url"].(string)
+		if !ok {
+			goto noISOURL
+		}
+		tmpISOUrl = isoURL
+		if tmpISOChecksum == "" {
+			err = fmt.Errorf("\"iso_url\" found for virtualbox-iso but no \"iso_checksum\" information was found")
+			jww.ERROR.Print(err)
+			return nil, nil, err
+		}
+		if tmpISOChecksumType == "" {
+			err = fmt.Errorf("\"iso_url\" found for virtualbox-iso but no \"iso_checksum_type\" information was found")
+			jww.ERROR.Print(err)
+			return nil, nil, err
+		}
+		settings["iso_url"] = isoURL
+	}
+
+noISOURL:
+
 	for name, val := range r.Builders[VirtualBoxISO.String()].Arrays {
 		switch name {
 		case "boot_command":
@@ -710,6 +733,8 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 			settings[name] = val
 		case "export_opts", "floppy_files":
 			settings[name] = val
+		case "iso_url":
+			continue // skip as it was processed before the range
 		case "iso_urls":
 			// these are only added if iso_url isn't set
 			if tmpISOUrl == "" {
@@ -771,7 +796,7 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 			settings["iso_checksum"] = r.releaseISO.(*debian).Checksum
 			settings["iso_checksum_type"] = r.releaseISO.(*debian).ChecksumType
 		case Ubuntu.String():
-			tmpISOUrl = r.releaseISO.(*ubuntu).isoURL
+			settings["iso_url"] = r.releaseISO.(*ubuntu).isoURL
 			settings["iso_checksum"] = r.releaseISO.(*ubuntu).Checksum
 			settings["iso_checksum_type"] = r.releaseISO.(*ubuntu).ChecksumType
 		default:
@@ -1173,7 +1198,7 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 			jww.ERROR.Print(err)
 			return nil, nil, err
 		case Ubuntu.String():
-			tmpISOUrl = r.releaseISO.(*ubuntu).isoURL
+			settings["iso_url"] = r.releaseISO.(*ubuntu).isoURL
 			settings["iso_checksum"] = r.releaseISO.(*ubuntu).Checksum
 			settings["iso_checksum_type"] = r.releaseISO.(*ubuntu).ChecksumType
 		default:

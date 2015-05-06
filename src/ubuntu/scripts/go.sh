@@ -42,3 +42,6 @@ run user -l vagrant -c 'echo export PATH=$PATH:$GOPATH/bin >> ~/.bashrc'
 
 # go get tools
 run user -l vagrant -c 'go get golang.org/x/tools/cmd/...'
+# vim-go
+run user -l vagrant -c 'git clone https://github.com/gmarik/Vundle.vim.git ~/.vim/bundle/Vundle.vim'
+
