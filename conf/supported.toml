@@ -55,15 +55,15 @@
        		"amd64"
        	]
        	image = [
-			"desktop",
+		"desktop",
        		"server"
        	]
        	release = [
        		"10.04",
        		"12.04",
-			"14.04",
-			"14.10",
-			"15.04"
+		"14.04",
+		"14.10",
+		"15.04"
        	]
        	default_image = [
        		"release = 14.04",
