@@ -19,7 +19,7 @@
 			]
 			[build.1204-amd64-server.builders.virtualbox-iso.arrays]
 			vboxmanage = [
-				"memory=4096"
+				"--memory=4096"
 			]
 	[build.1404-amd64-salt]
 		distro = "ubuntu"
@@ -41,7 +41,7 @@
 			]
 			[build.1404-amd64-salt.builders.virtualbox-iso.arrays]
 			vboxmanage = [
-				"memory=4096"
+				"--memory=4096"
 			]
 		[build.1404-amd64-salt.provisioners]
 			[build.1404-amd64-salt.provisioners.salt-masterless]
@@ -67,7 +67,7 @@
 		[build.1404-dev.builders]
 				[build.1404-dev.builders.virtualbox-iso.arrays]
 				vboxmanage = [
-					"memory=4096"
+					"--memory=4096"
 				]
 
 		[build.1404-dev.post_processors]
@@ -109,7 +109,7 @@
 		[build.1404-go.builders]
 				[build.1404-go.builders.virtualbox-iso.arrays]
 				vboxmanage = [
-					"memory=4096"
+					"--memory=4096"
 				]
 
 		[build.1404-go.post_processors]
@@ -151,7 +151,7 @@
 		[build.1404-chef.builders]
 				[build.1404-chef.builders.virtualbox-iso.arrays]
 				vboxmanage = [
-					"memory=4096"
+					"--memory=4096"
 				]
 
 		[build.1404-chef.post_processors]
@@ -257,7 +257,7 @@
 		[build.wheezy-salt.builders]
 				[build.wheezy-salt.builders.virtualbox-iso.arrays]
 				vboxmanage = [
-					"memory=4096"
+					"--memory=4096"
 				]
 		[build.wheezy-salt.provisioners]
 			[build.wheezy-salt.provisioners.shell]

@@ -89,8 +89,8 @@
 			[distro.ubuntu.builders.virtualbox-iso]
 				[distro.ubuntu.builders.virtualbox-iso.arrays]
 					vboxmanage = [
-						"cpus=2",
-						"memory=2048"
+						"--cpus=2",
+						"--memory=2048"
 					]
 		[distro.ubuntu.post_processors]
 			[distro.ubuntu.post_processors.vagrant]
