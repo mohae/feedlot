@@ -14,13 +14,14 @@
 		]
 		[build.1204-amd64-server.builders]
 			[build.1204-amd64-server.builders.common]
-			settings = [
-				"ssh_wait_timeout = 300m"
-			]
-			[build.1204-amd64-server.builders.virtualbox-iso.arrays]
-			vboxmanage = [
-				"memory=4096"
-			]
+				settings = [
+					"ssh_wait_timeout = 300m"
+				]
+				[build.1204-amd64-server.builders.virtualbox-iso.arrays]
+					vboxmanage = [
+						"--memory=4096"
+					]
+
 	[build.1404-amd64-salt]
 		distro = "ubuntu"
 		description = "ubuntu LTS 1404 amd64 server build, minimal salt install"
@@ -36,28 +37,28 @@
 		]
 		[build.1404-amd64-salt.builders]
 			[build.1404-amd64-salt.builders.common]
-			settings = [
-				"ssh_wait_timeout = 300m"
-			]
-			[build.1404-amd64-salt.builders.virtualbox-iso.arrays]
-			vboxmanage = [
-				"memory=4096"
-			]
+				settings = [
+					"ssh_wait_timeout = 300m"
+				]
+				[build.1404-amd64-salt.builders.virtualbox-iso.arrays]
+					vboxmanage = [
+						"--memory=4096"
+					]
 		[build.1404-amd64-salt.provisioners]
 			[build.1404-amd64-salt.provisioners.salt-masterless]
-			settings = [
-				"local_state_tree = ~/code/saltstack/saltbase/salt"
-			]
-		
+				settings = [
+					"local_state_tree = ~/code/saltstack/saltbase/salt"
+				]
+
 	[build.1404-dev]
 		distro = "ubuntu"
 		description = "ubuntu LTS 1404 amd64 desktop build, minimal install w stuff for development"
-	        arch = "amd64"
-	        release = "14.04"
-	        image = "server"
-	        builder_types = [
-				"virtualbox-iso"
-			]
+		arch = "amd64"
+		release = "14.04"
+		image = "server"
+		builder_types = [
+			"virtualbox-iso"
+		]
 		post_processor_types = [
 			"vagrant"
 		]
@@ -65,41 +66,40 @@
 			"shell"
 		]
 		[build.1404-dev.builders]
-				[build.1404-dev.builders.virtualbox-iso.arrays]
+			[build.1404-dev.builders.virtualbox-iso.arrays]
 				vboxmanage = [
-					"memory=4096"
+					"--memory=4096"
 				]
-
 		[build.1404-dev.post_processors]
 			[build.1404-dev.post_processors.vagrant]
 				[build.1404-dev.post_processors.vagrant.arrays]
-				only = [
-					"virtualbox-iso"
-				]
+					only = [
+						"virtualbox-iso"
+					]
 		[build.1404-dev.provisioners]
 			[build.1404-dev.provisioners.shell]
 				[build.1404-dev.provisioners.shell.arrays]
-				only = [
-					"virtualbox-iso"
-				]
-				scripts = [ 
-					":scripts_dir/setup.sh",
-					":scripts_dir/sudoers.sh",
-					":scripts_dir/vagrant.sh",
-					":scripts_dir/dev_stuff.sh",					
-					":scripts_dir/customize.sh",
-					":scripts_dir/cleanup.sh",
-				]
+					only = [
+						"virtualbox-iso"
+					]
+					scripts = [ 
+						":scripts_dir/setup.sh",
+						":scripts_dir/sudoers.sh",
+						":scripts_dir/vagrant.sh",
+						":scripts_dir/dev_stuff.sh",
+						":scripts_dir/customize.sh",
+						":scripts_dir/cleanup.sh",
+					]
 
 	[build.1404-go]
 		distro = "ubuntu"
 		description = "ubuntu LTS 1404 amd64 desktop build, minimal install w go"
-	        arch = "amd64"
-	        release = "14.04"
-	        image = "server"
-	        builder_types = [
-				"virtualbox-iso"
-			]
+		arch = "amd64"
+		release = "14.04"
+		image = "server"
+		builder_types = [
+			"virtualbox-iso"
+		]
 		post_processor_types = [
 			"vagrant"
 		]
@@ -107,41 +107,40 @@
 			"shell"
 		]
 		[build.1404-go.builders]
-				[build.1404-go.builders.virtualbox-iso.arrays]
+			[build.1404-go.builders.virtualbox-iso.arrays]
 				vboxmanage = [
-					"memory=4096"
+					"--memory=4096"
 				]
-
 		[build.1404-go.post_processors]
 			[build.1404-go.post_processors.vagrant]
 				[build.1404-go.post_processors.vagrant.arrays]
-				only = [
-					"virtualbox-iso"
-				]
+					only = [
+						"virtualbox-iso"
+					]
 		[build.1404-go.provisioners]
 			[build.1404-go.provisioners.shell]
 				[build.1404-go.provisioners.shell.arrays]
-				only = [
-					"virtualbox-iso"
-				]
-				scripts = [ 
-					":scripts_dir/setup.sh",
-					":scripts_dir/sudoers.sh",
-					":scripts_dir/vagrant.sh",
-					":scripts_dir/customize.sh",
-					":scripts_dir/go.sh",
-					":scripts_dir/cleanup.sh",
-				]
+					only = [
+						"virtualbox-iso"
+					]
+					scripts = [ 
+						":scripts_dir/setup.sh",
+						":scripts_dir/sudoers.sh",
+						":scripts_dir/vagrant.sh",
+						":scripts_dir/customize.sh",
+						":scripts_dir/go.sh",
+						":scripts_dir/cleanup.sh",
+					]
 
 	[build.1404-chef]
 		distro = "ubuntu"
 		description = "ubuntu LTS 1404 amd64 desktop build, minimal install w chef"
-	        arch = "amd64"
-	        release = "14.04"
-	        image = "server"
-	        builder_types = [
-				"virtualbox-iso"
-			]
+		arch = "amd64"
+		release = "14.04"
+		image = "server"
+		builder_types = [
+			"virtualbox-iso"
+		]
 		post_processor_types = [
 			"vagrant"
 		]
@@ -149,35 +148,34 @@
 			"chef-solo"
 		]
 		[build.1404-chef.builders]
-				[build.1404-chef.builders.virtualbox-iso.arrays]
+			[build.1404-chef.builders.virtualbox-iso.arrays]
 				vboxmanage = [
-					"memory=4096"
+					"--memory=4096"
 				]
-
 		[build.1404-chef.post_processors]
 			[build.1404-chef.post_processors.vagrant]
 				[build.1404-chef.post_processors.vagrant.arrays]
-				only = [
-					"virtualbox-iso"
-				]
+					only = [
+						"virtualbox-iso"
+					]
 		[build.1404-chef.provisioners]
 			[build.1404-chef.provisioners.chef-solo]
 				[build.1404-chef.provisioners.chef-solo.arrays]
-				only = [
-					"virtualbox-iso"
-				]
-				cookbook_paths = [ 
-					":src_dir/cookbooks",
-				]
+					only = [
+						"virtualbox-iso"
+					]
+					cookbook_paths = [ 
+						":src_dir/cookbooks",
+					]
 
-        [build.centos6]
+	[build.centos6]
 		distro = "centos"
 		description = "Centos 6 w virtualbox-iso only"
 		builder_types = [
 			"virtualbox-iso"
 		]
 
-        [build.centos6-salt]
+	[build.centos6-salt]
 		distro = "centos"
 		description = "Centos 6 with salt provisioning"
 		builder_types = [
@@ -190,7 +188,6 @@
 			settings = [
 				"local_state_tree = ~/saltstack/centos6/salt"
 			]
-			
 
 	[build.centos6-ansible]
 		distro = "centos"
@@ -240,28 +237,28 @@
 					"skip_install = false",
 					"staging_directory = :out_dir/staging/"
 				]
-				
-	[build.wheezy-salt]
+
+	[build.jessie-salt]
 		distro = "debian"
-		description = "debian wheezy w saltstack"
-	        arch = "amd64"
-	        builder_types = [
-				"virtualbox-iso"
-			]
+		description = "debian jessie w saltstack"
+		arch = "amd64"
+		builder_types = [
+			"virtualbox-iso"
+		]
 		post_processor_types = [
 			"vagrant"
 		]
 		provisioner_types = [
 			"shell"
 		]
-		[build.wheezy-salt.builders]
-				[build.wheezy-salt.builders.virtualbox-iso.arrays]
+		[build.jessie-salt.builders]
+			[build.jessie-salt.builders.virtualbox-iso.arrays]
 				vboxmanage = [
-					"memory=4096"
+					"--memory=4096"
 				]
-		[build.wheezy-salt.provisioners]
-			[build.wheezy-salt.provisioners.shell]
-				[build.wheezy-salt.provisioners.shell.arrays]
+		[build.jessie-salt.provisioners]
+			[build.jessie-salt.provisioners.shell]
+				[build.jessie-salt.provisioners.shell.arrays]
 					scripts = [ 
 						":scripts_dir/setup.sh",
 						":scripts_dir/sudoers.sh",
@@ -270,4 +267,4 @@
 						":scripts_dir/customize.sh",
 						":scripts_dir/install_salt.sh",
 						":scripts_dir/cleanup.sh",
-					]				
+					]
