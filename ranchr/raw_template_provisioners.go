@@ -344,8 +344,23 @@ func (r *rawTemplate) createShell() (settings map[string]interface{}, vars []str
 	for _, s := range r.Provisioners[Shell.String()].Settings {
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
+		fmt.Println("%s\t%s\n", k, v)
 		switch k {
-		case "execute_command", "inline_shebang", "remote_path", "start_retry_timeout":
+		case "execute_command":
+			// If the execute_command references a file, parse that for the command
+			// Otherwise assume that it contains the command
+			if strings.HasSuffix(v, ".command") {
+				var commands []string
+				commands, err = commandsFromFile(v)
+				if err != nil {
+					jww.ERROR.Println(err)
+					return nil, nil, err
+				}
+				settings[k] = commands
+				continue
+			}
+			settings[k] = v
+		case "inline_shebang", "remote_path", "start_retry_timeout":
 			settings[k] = v
 		case "binary":
 			settings[k], _ = strconv.ParseBool(v)
