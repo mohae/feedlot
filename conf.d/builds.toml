@@ -128,7 +128,6 @@
 						":scripts_dir/sudoers.sh",
 						":scripts_dir/vagrant.sh",
 						":scripts_dir/customize.sh",
-						":scripts_dir/go.sh",
 						":scripts_dir/cleanup.sh",
 					]
 

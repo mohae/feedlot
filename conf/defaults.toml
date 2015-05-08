@@ -58,7 +58,7 @@ provisioner_types = [
 				"virtualbox.iso"
 			]
 [provisioners]
-	[provisioners.shell-scripts]
+	[provisioners.shell]
 		settings = [
 			"execute_command = :commands_src_dir/execute.command"
 		]
