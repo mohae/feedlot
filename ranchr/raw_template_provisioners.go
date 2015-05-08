@@ -356,7 +356,7 @@ func (r *rawTemplate) createShell() (settings map[string]interface{}, vars []str
 					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
-				settings[k] = commands
+				settings[k] = commands[0] // for execute_command, only the first element is used
 				continue
 			}
 			settings[k] = v
