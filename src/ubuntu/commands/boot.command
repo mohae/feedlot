@@ -14,6 +14,7 @@
  keyboard-configuration/layout=USA<wait>
  keyboard-configuration/variant=USA<wait>
  locale=en_US<wait>
+ netcfg/get_hostname=vagrant<wait>
  netcfg/get_domain=vagrantup.com<wait>
  noapic<wait>
  preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg<wait>

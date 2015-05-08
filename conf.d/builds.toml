@@ -96,7 +96,7 @@
 		description = "ubuntu LTS 1404 amd64 desktop build, minimal install w go"
 	        arch = "amd64"
 	        release = "14.04"
-	        image = "desktop"
+	        image = "server"
 	        builder_types = [
 				"virtualbox-iso"
 			]
