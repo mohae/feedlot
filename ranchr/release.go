@@ -631,7 +631,6 @@ func (u *ubuntu) findChecksum(page string) (string, error) {
 		pos = strings.Index(page, u.Name)
 		if pos < 0 {
 			err := fmt.Errorf("unable to find %s's checksum", u.Name)
-			jww.ERROR.Println(err)
 			return "", err
 		}
 	}

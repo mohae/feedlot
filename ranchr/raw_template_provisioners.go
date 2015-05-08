@@ -344,7 +344,6 @@ func (r *rawTemplate) createShell() (settings map[string]interface{}, vars []str
 	for _, s := range r.Provisioners[Shell.String()].Settings {
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
-		fmt.Println("%s\t%s\n", k, v)
 		switch k {
 		case "execute_command":
 			// If the execute_command references a file, parse that for the command
