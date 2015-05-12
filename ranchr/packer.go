@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sync"
 	"time"
 
 	json "github.com/mohae/customjson"
@@ -30,20 +31,16 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, scripts []string) error 
 	}
 	// priorBuild handles both the archiving and deletion of the prior build, if it exists, i.e.
 	// if the build's output path exists.
+	var wg sync.WaitGroup
 	a := Archive{}
-	err = a.priorBuild(appendSlash(i.OutDir), "gzip")
+	wg.Add(1)
+	err = a.priorBuild(appendSlash(i.OutDir), "gzip", &wg)
+	wg.Wait()
 	if err != nil {
 		jww.ERROR.Print(err)
 		return err
 	}
-	// TODO This needs to be handled better...this is too long for most builds but if there are situations
-	// where there is a large archive this is not long enough.
-	time.Sleep(time.Millisecond * 2000)
-	err = copyFiles(scripts, i.ScriptsSrcDir, appendSlash(i.OutDir)+i.ScriptsDir)
-	if err != nil {
-		jww.ERROR.Println(err)
-		return err
-	}
+	// TODO: should this be moved?
 	err = copyDirContent(i.HTTPSrcDir, appendSlash(i.OutDir)+i.HTTPDir)
 	if err != nil {
 		jww.ERROR.Print(err)

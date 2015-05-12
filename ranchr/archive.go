@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sync"
 	"time"
 
 	jww "github.com/spf13/jwalterweatherman"
@@ -149,7 +150,8 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 // priorBuild handles archiving prior build artifacts, if it exists, and then
 // deleting those artifacts. This prevents any stale elements from persisting
 // to the new build.
-func (a *Archive) priorBuild(p string, t string) error {
+func (a *Archive) priorBuild(p string, t string, wg *sync.WaitGroup) error {
+	defer wg.Done()
 	// See if src exists, if it doesn't then don't do anything
 	_, err := os.Stat(p)
 	if err != nil {
