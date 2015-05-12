@@ -74,22 +74,3 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, scripts []string) error 
 	}
 	return nil
 }
-
-func copyFiles(files []string, src string, dest string) error {
-	var errCnt, okCnt int
-	var err error
-	for _, file := range files {
-		_, err = copyFile(file, src, dest)
-		if err != nil {
-			jww.ERROR.Print(err)
-			errCnt++
-			continue
-		}
-		okCnt++
-	}
-	if errCnt > 0 {
-		jww.ERROR.Print(fmt.Sprintf("copy of files for build had %d errors. There were %d files that were copied without error.", errCnt, okCnt))
-		return err
-	}
-	return nil
-}

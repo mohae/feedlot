@@ -1011,6 +1011,26 @@ func trimSuffix(s string, suffix string) string {
 	return s
 }
 
+// copy files copies the passed files from source to dest
+func copyFiles(files []string, src string, dest string) error {
+	var errCnt, okCnt int
+	var err error
+	for _, file := range files {
+		_, err = copyFile(file, src, dest)
+		if err != nil {
+			jww.ERROR.Print(err)
+			errCnt++
+			continue
+		}
+		okCnt++
+	}
+	if errCnt > 0 {
+		jww.ERROR.Print(fmt.Sprintf("copy of files for build had %d errors. There were %d files that were copied without error.", errCnt, okCnt))
+		return err
+	}
+	return nil
+}
+
 // copyFile copies a file from source directory to destination directory. It
 // returns either the number of bytes written or an error.
 func copyFile(file string, srcDir string, destDir string) (written int64, err error) {
