@@ -229,7 +229,6 @@ func (r *rawTemplate) ScriptNames() []string {
 //  provisioner. This is expected to be a directory within src_dir/distro/ or one of
 //  the subdirectories within that path that is part of rancher's search path.
 func (r *rawTemplate) mergeVariables() {
-	// check src_dir and out_dir first:
 	// Get the delim and set the replacement map, resolve name information
 	r.varVals = map[string]string{
 		r.delim + "distro":     r.Distro,
@@ -239,44 +238,81 @@ func (r *rawTemplate) mergeVariables() {
 		r.delim + "date":       r.date,
 		r.delim + "build_name": r.BuildName,
 	}
+	r.mergeSrcDir()
+	r.mergeOutDir()
+
 	r.Name = r.replaceVariables(r.Name)
-	// Src and Outdir are next, since they can be embedded too
-	r.varVals[r.delim+"name"] = r.Name
+	/*
+		// Src and Outdir are next, since they can be embedded too
+		r.varVals[r.delim+"name"] = r.Name
+		// Commands and scripts dir need to be resolved next
+		r.varVals[r.delim+"out_dir"] = r.OutDir
+		r.varVals[r.delim+"src_dir"] = r.SrcDir
+		r.CommandsSrcDir = trimSuffix(r.replaceVariables(r.CommandsSrcDir), "/")
+		r.HTTPDir = trimSuffix(r.replaceVariables(r.HTTPDir), "/")
+		r.HTTPSrcDir = trimSuffix(r.replaceVariables(r.HTTPSrcDir), "/")
+		r.OutDir = trimSuffix(r.replaceVariables(r.OutDir), "/")
+		r.ScriptsDir = trimSuffix(r.replaceVariables(r.ScriptsDir), "/")
+		r.ScriptsSrcDir = trimSuffix(r.replaceVariables(r.ScriptsSrcDir), "/")
+		r.SrcDir = trimSuffix(r.replaceVariables(r.SrcDir), "/")
+		// Create a full variable replacement map, know that the SrcDir and OutDir stuff are resolved.
+		// Rest of the replacements are done by the packerers.
+		r.varVals[r.delim+"commands_src_dir"] = r.CommandsSrcDir
+		r.varVals[r.delim+"http_dir"] = r.HTTPDir
+		r.varVals[r.delim+"http_src_dir"] = r.HTTPSrcDir
+		r.varVals[r.delim+"out_dir"] = r.OutDir
+		r.varVals[r.delim+"scripts_dir"] = r.ScriptsDir
+		r.varVals[r.delim+"scripts_src_dir"] = r.ScriptsSrcDir
+		r.varVals[r.delim+"src_dir"] = r.SrcDir
+		r.CommandsSrcDir = trimSuffix(r.replaceVariables(r.CommandsSrcDir), "/")
+		r.HTTPDir = trimSuffix(r.replaceVariables(r.HTTPDir), "/")
+		r.HTTPSrcDir = trimSuffix(r.replaceVariables(r.HTTPSrcDir), "/")
+		r.OutDir = trimSuffix(r.replaceVariables(r.OutDir), "/")
+		r.ScriptsDir = trimSuffix(r.replaceVariables(r.ScriptsDir), "/")
+		r.ScriptsSrcDir = trimSuffix(r.replaceVariables(r.ScriptsSrcDir), "/")
+		r.SrcDir = trimSuffix(r.replaceVariables(r.SrcDir), "/")
+		r.varVals[r.delim+"commands_src_dir"] = r.CommandsSrcDir
+		r.varVals[r.delim+"http_dir"] = r.HTTPDir
+		r.varVals[r.delim+"http_src_dir"] = r.HTTPSrcDir
+		r.varVals[r.delim+"out_dir"] = r.OutDir
+		r.varVals[r.delim+"scripts_dir"] = r.ScriptsDir
+		r.varVals[r.delim+"scripts_src_dir"] = r.ScriptsSrcDir
+		r.varVals[r.delim+"src_dir"] = r.SrcDir
+	*/
+}
+
+// mergeSrcDir resolves the src_dir for this template. If the build's custom_src_dir
+// == true or there are variables are specified in the src_dir, the resolved name is
+// used, otherwise the default of src_dir/:distro is used. if the custom_src_dir is
+// false, but variables were specified in the src_dir the custom_src_dir flag is set to
+// true.
+//
+// If the default was used, Rancher will also search within the src_dir for the
+// specified file, using the default src_dir/:distro/ as the last directory to check
+// for the file's existence.
+//
+// Search order:
+//    src_dir/:build_name
+//    src_dir/:distro/build_name
+//    src_dir/:distro/release/image/arch/
+//    src_dir/:distro/release/image/
+//    src_dir/:distro/release/arch/
+//    src_dir/:distro/release/
+//    src-dir/:distro/
+//    not found error
+func (r *rawTemplate) mergeSrcDir() {
+	// see if the use_custom flag is set
 	r.SrcDir = trimSuffix(r.replaceVariables(r.SrcDir), "/")
+
+}
+
+// mergeOutDir resolves the out_dir for this template.  If the build's custom_out_dir
+// == true or there are variables are specified in the out_dir, the resolved name is
+// used, otherwise the default of out_dir/:distro/:release/:build_name is used as the
+// output directory. If the custom_out_dir is false, but variables were specified in
+// the out_dir the custom_out_dir flag is set to true.
+func (r *rawTemplate) mergeOutDir() {
 	r.OutDir = trimSuffix(r.replaceVariables(r.OutDir), "/")
-	// Commands and scripts dir need to be resolved next
-	r.varVals[r.delim+"out_dir"] = r.OutDir
-	r.varVals[r.delim+"src_dir"] = r.SrcDir
-	r.CommandsSrcDir = trimSuffix(r.replaceVariables(r.CommandsSrcDir), "/")
-	r.HTTPDir = trimSuffix(r.replaceVariables(r.HTTPDir), "/")
-	r.HTTPSrcDir = trimSuffix(r.replaceVariables(r.HTTPSrcDir), "/")
-	r.OutDir = trimSuffix(r.replaceVariables(r.OutDir), "/")
-	r.ScriptsDir = trimSuffix(r.replaceVariables(r.ScriptsDir), "/")
-	r.ScriptsSrcDir = trimSuffix(r.replaceVariables(r.ScriptsSrcDir), "/")
-	r.SrcDir = trimSuffix(r.replaceVariables(r.SrcDir), "/")
-	// Create a full variable replacement map, know that the SrcDir and OutDir stuff are resolved.
-	// Rest of the replacements are done by the packerers.
-	r.varVals[r.delim+"commands_src_dir"] = r.CommandsSrcDir
-	r.varVals[r.delim+"http_dir"] = r.HTTPDir
-	r.varVals[r.delim+"http_src_dir"] = r.HTTPSrcDir
-	r.varVals[r.delim+"out_dir"] = r.OutDir
-	r.varVals[r.delim+"scripts_dir"] = r.ScriptsDir
-	r.varVals[r.delim+"scripts_src_dir"] = r.ScriptsSrcDir
-	r.varVals[r.delim+"src_dir"] = r.SrcDir
-	r.CommandsSrcDir = trimSuffix(r.replaceVariables(r.CommandsSrcDir), "/")
-	r.HTTPDir = trimSuffix(r.replaceVariables(r.HTTPDir), "/")
-	r.HTTPSrcDir = trimSuffix(r.replaceVariables(r.HTTPSrcDir), "/")
-	r.OutDir = trimSuffix(r.replaceVariables(r.OutDir), "/")
-	r.ScriptsDir = trimSuffix(r.replaceVariables(r.ScriptsDir), "/")
-	r.ScriptsSrcDir = trimSuffix(r.replaceVariables(r.ScriptsSrcDir), "/")
-	r.SrcDir = trimSuffix(r.replaceVariables(r.SrcDir), "/")
-	r.varVals[r.delim+"commands_src_dir"] = r.CommandsSrcDir
-	r.varVals[r.delim+"http_dir"] = r.HTTPDir
-	r.varVals[r.delim+"http_src_dir"] = r.HTTPSrcDir
-	r.varVals[r.delim+"out_dir"] = r.OutDir
-	r.varVals[r.delim+"scripts_dir"] = r.ScriptsDir
-	r.varVals[r.delim+"scripts_src_dir"] = r.ScriptsSrcDir
-	r.varVals[r.delim+"src_dir"] = r.SrcDir
 }
 
 // ISOInfo sets the ISO info for the template's supported distro type. This
