@@ -186,10 +186,48 @@ func (r *rawTemplate) ScriptNames() []string {
 	return names
 }
 
-// Set the src_dir and out_dir, in case there are variables embedded in them.
-// These can be embedded in other dynamic variables so they need to be resolved
-// first to avoid a mutation issue. Only Rancher static variables can be used
-// in these two Settings.
+// mergeVariables goes through the template variables and finalizes the values of any
+// :vars found within the strings.
+//
+// Supported:
+//  distro                   the name of the distro
+//  release                  the release version being used
+//  arch                     the target architecture for the build
+//  image                    the image used, e.g. server
+//  date                     the current datetime, time.Now()
+//  build_name               the name of the build template
+//  out_dir                  the directory to write the build output to
+//  src_dir                  the directory of any source files used in the build*
+//  commands_dir             ???
+//  commands_src_dir         the directory of any command files that the build template
+//                           uses**
+//  http_dir                 the http directory for the packer template, contains the
+//                           preseed.cfg
+//  http_src_dir             the source directory for the http_dir files***
+//  {{provisioner}}_dir      the provisioner specific directory for the packer
+//                           template, e.g. scripts, cookbooks, playbooks, states, etc.
+//  {{provisioner}}_src_dir  the source directory for the providioner specific files****
+//
+//  * src_dir must be set. Rancher searches for referenced files and uses src_dir/distro
+//    as the last search directory. This directory is also used as the base directory
+//    for any specified src directories.
+// TODO should there be a flag to not prefix src paths with src_dir to allow for
+// specification of files that are not in src? If the flag is set to not prepend
+// src_dir, src_dir could still be used by adding it to the specific variable.
+//
+//  ** commands_src_dir: if a value is not specified, Rancher will use "commands" as
+//  the commands_src_dir, which is expected to be a directory within src_dir/distro/
+//  or one of the subdirectories within that path that is part of rancher's search
+//  path.
+//
+//  ** http_src_dir: if a value is not specified, Rancher will use "http" as the
+//  http_src_dir, which is expected to be a directory within src_dir/distro/ or one of
+//  the subdirectories within that path that is part of rancher's search path.
+//
+//  ** {{provisioner}}_src_dir: if a value is not specified, Rancher will use Packer's
+//  provisioner name  as the {{provisioner}}_src_dir, e.g. "shell" for the shell
+//  provisioner. This is expected to be a directory within src_dir/distro/ or one of
+//  the subdirectories within that path that is part of rancher's search path.
 func (r *rawTemplate) mergeVariables() {
 	// check src_dir and out_dir first:
 	// Get the delim and set the replacement map, resolve name information

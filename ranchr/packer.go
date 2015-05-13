@@ -40,6 +40,12 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, scripts []string) error 
 		jww.ERROR.Print(err)
 		return err
 	}
+	// TODO: move this to shell provisioner, and add provisioner specific handling
+	err = copyFiles(scripts, i.ScriptsSrcDir, appendSlash(i.OutDir)+i.ScriptsDir)
+	if err != nil {
+		jww.ERROR.Println(err)
+		return err
+	}
 	// TODO: should this be moved?
 	err = copyDirContent(i.HTTPSrcDir, appendSlash(i.OutDir)+i.HTTPDir)
 	if err != nil {
