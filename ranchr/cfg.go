@@ -296,12 +296,26 @@ type IODirInf struct {
 	// The directory that is the source for files to be copied to the HTTP
 	// directory, HTTPDir
 	HTTPSrcDir string `toml:"http_src_dir"`
+	// flag for whether or not the out_dir is custom or not. If this resolves to true
+	// Rancher will not use append the specified out_dir with it's default out_dir
+	// path, instead it will use the out_dir as specified.  This can resolve
+	// to true by either specifiying true in the build template, or specifying a
+	// out_dir path that includes variables, which will cause Rancher to set this to
+	// true
+	CustomOutDir bool 'toml:"custom_outc_dir"'
 	// The directory that the output artifacts will be written to.
 	OutDir string `toml:"out_dir"`
 	// The directory that scripts for the Packer template will be copied to.
 	ScriptsDir string `toml:"scripts_dir"`
 	// The directory that contains the scripts that will be copied.
 	ScriptsSrcDir string `toml:"scripts_src_dir"`
+	// flag for whether or not the src_dir is custom or not. If this resolves to true
+	// Rancher will not use search for matching files based on its algorithm, instead
+	// Rancher will only look for the file in the specified src_dir. This can resolve
+	// to true by either specifiying true in the build template, or specifying a
+	// src_dir path that includes variables, which will cause Rancher to set this to
+	// true
+	CustomSrcDir bool 'toml:"custom_src_dir"'
 	// The directory that contains the source files for this build.
 	SrcDir string `toml:"src_dir"`
 }
