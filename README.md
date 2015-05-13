@@ -4,27 +4,28 @@ rancher
 > 
 >   -Douglas Adams, _Last chance to See_
 
+## Refactor in progress
+rancher is currently being refactored to simplify specification of resource locations, better support customized resources per build, release, arch, etc. The refactor will also enable proper support for provisioner specific resource handling, though the initial refactor will only move script location handling to the shell provisioner; originally script management was handled on a global level as the only supported provisioner, for a while, was the shell provisioner. This did not make sense once support for other provisioners were added. Proper resource support for the other supported provisioners will be added in the near future (hopefully).command
+
+While the specifications of resources will be simplified, in my mind, the logic that Rancher uses to find resources for builds will become more complex with support for both flags and a search order for specified resources.
+
+While this refactor is in progress, rancher will not be usable. I should have probably made a branch for this, but I didn't.
+
+
 Ranchers supply products to packers to process and package. Rancher creates Packer templates for Packer to process and generate artifacts. Ok, a bit of a stretch, but it's the best I could come up with and better than the other names I had thought of.
 
 Rancher has default settings for Packer template generation, `defaults.toml`. Each supported distribution has its own settings, found in `supported.toml` which are applied to created the distribution's default template settings. Both of these files are in the `conf/` directory.
 
 Custom Packer templates can be specified via Rancher builds, `builds.toml`. A build is a named specification for a Packer template. Rancher saves the results of a build to a directory of the same name within Rancher's output directory. This includes the .json file, referenced script files, and any other assets required for the Packer build. It does not include the `iso` file, if applicable, or any other referenced resources.
 
-If the output directory for a given build already contains artifacts, Rancher will archive the target directory and save it as a .tgz using the directory name and the current date and time in a slightly modified ISO 8601 format--the `:` are stripped from the time in the filename. The old artifacts will then be deleted so that Rancher can ensure that the output from the current build will have a clean directory to write to.
+If the output directory for a given build already contains artifacts, Rancher will archive the target directory and save it as a compressed tarball, .tgz, using the directory name and the current date and time in a slightly modified ISO 8601 format--the `:` are stripped from the time in the filename. The old artifacts will then be deleted so that Rancher can ensure that the output from the current build will have a clean directory to write to.
 
 ## Why rancher
 I originally started Rancher because I didn't like the looking up the iso and checksum information for my builds. I also wasn't happy about replicating setting values between builders as I was too likely to make a mistake. I naively thought generating Packer templates from pre-defined configurations would be easier. During which, I realized I'd have to support more than just builders, so Rancher evolved into generating the complete template. 
 
-The goal was to make it easier to create various configurations by minimally defining the differences between the named build and the distro's defaults.
+The goal was to make it easier to create various configurations by minimally defining the differences between the named build and the distro's defaults and to make it easy to generate updated templates as the releases that the templates depended on were updated.
 
-I chose TOML as the configuration file type, but there's no reason why YAML or something else couldn't be supported. 
-
-## Gotcha
-There is one problem with my approach, parts of the Packer template depend on order for execution, which isn't supported with Go's JSON, as maps are not ordered by definition. Now, this is techinically Packer not following the JSON standard, but it works when the JSON files are manually created. 
-
-As such, for now, if the order is important, you will have to manually re-order the sections within the generated JSON file. I have ideas on how to resolve this, which would involve using the order of the entries in the `*_type` arrays, outputting each JSON section separately to a temp file, and concatonating those files in the order defined by the `*_type` arrays. However that is not something I have done anything more than think about.
-
-This will not be an issue for most templates.
+I chose TOML as the configuration file type, but there's no reason why YAML or something else couldn't be supported.
 
 ## Supported Packer Section types
 Each supported Packer section type has various configuration options. Any required configuration option is supported and a missing required element will result in a processing error, with the information logged to the Log. Most optional configuration options are supported, any that are not will be listed under as a `not supported configuration option` in that section's comments. If there are any options defined in the template that either do not exist for or are not supported by that Packer section type, a warning message will be logged, but the processing of the template will continue.
@@ -59,9 +60,11 @@ Each supported Packer section type has various configuration options. Any requir
     * ansible-local
     * file-uploads
     * salt-masterless
-    * shell-scripts
+    * shell
 
 ## Rancher variable replacement
+### Warning: changes to this are in progress
+
 Rancher supports a limited number of variables in the toml configuration files. These are mostly used to allow for the path of files and names of things to be built based on other information within the configuration, e.g :distro is replaced by the name of the distro for which the Packer template is being built.
 
 Since Packer uses Go's template engine, Rancher variables are prefixed with a colon, `:`, to avoid collision with Go template conventions, `{{}}`. Using a `:` in non-variable values may lead to unexpected results, as such don't use it unless you are prefixing a variable. Please submit an issue if this is problematic for your use-case scenario.
