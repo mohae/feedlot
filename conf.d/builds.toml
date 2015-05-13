@@ -83,12 +83,12 @@
 						"virtualbox-iso"
 					]
 					scripts = [ 
-						":scripts_dir/setup.sh",
-						":scripts_dir/sudoers.sh",
-						":scripts_dir/vagrant.sh",
-						":scripts_dir/dev_stuff.sh",
-						":scripts_dir/customize.sh",
-						":scripts_dir/cleanup.sh",
+						"setup.sh",
+						"sudoers.sh",
+						"vagrant.sh",
+						"dev_stuff.sh",
+						"customize.sh",
+						"cleanup.sh",
 					]
 
 	[build.1404-go]
@@ -124,11 +124,11 @@
 						"virtualbox-iso"
 					]
 					scripts = [ 
-						":scripts_dir/setup.sh",
-						":scripts_dir/sudoers.sh",
-						":scripts_dir/vagrant.sh",
-						":scripts_dir/customize.sh",
-						":scripts_dir/cleanup.sh",
+						"setup.sh",
+						"sudoers.sh",
+						"vagrant.sh",
+						"customize.sh",
+						"cleanup.sh",
 					]
 
 	[build.1404-chef]
@@ -164,7 +164,7 @@
 						"virtualbox-iso"
 					]
 					cookbook_paths = [ 
-						":src_dir/cookbooks",
+						"cookbooks",
 					]
 
 	[build.centos6]
@@ -228,13 +228,13 @@
 					"config_template = chef.config.tpl",
 					"data_bags_path = data.bags.path",
 					"encrypted_data_bag_secret_path = encrypted.data.bag.secret.path",
-					"execute_command = :command_src_dir/:buildname/chef/execute.command",
-					"install_command = :command_src_dir/:buildname/chef/install.command",
-					"json = :src_dir/:buildname/chef/node_attributes.json",
+					"execute_command = chef/execute.command",
+					"install_command = chef/install.command",
+					"json = chef/node_attributes.json",
 					"prevent_sudo = false",
-					"roles_path = :src_dir/:buildname/roles",
+					"roles_path = roles/",
 					"skip_install = false",
-					"staging_directory = :out_dir/staging/"
+					"staging_directory = staging/"
 				]
 
 	[build.jessie-salt]
@@ -259,11 +259,11 @@
 			[build.jessie-salt.provisioners.shell]
 				[build.jessie-salt.provisioners.shell.arrays]
 					scripts = [ 
-						":scripts_dir/setup.sh",
-						":scripts_dir/sudoers.sh",
-						":scripts_dir/vagrant.sh",
-						":scripts_dir/dev_stuff.sh",
-						":scripts_dir/customize.sh",
-						":scripts_dir/install_salt.sh",
-						":scripts_dir/cleanup.sh",
+						"setup.sh",
+						"sudoers.sh",
+						"vagrant.sh",
+						"dev_stuff.sh",
+						"customize.sh",
+						"install_salt.sh",
+						"cleanup.sh",
 					]
