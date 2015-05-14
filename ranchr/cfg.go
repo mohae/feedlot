@@ -302,7 +302,7 @@ type IODirInf struct {
 	// to true by either specifiying true in the build template, or specifying a
 	// out_dir path that includes variables, which will cause Rancher to set this to
 	// true
-	CustomOutDir bool 'toml:"custom_outc_dir"'
+	CustomOutDir bool `toml:"custom_outc_dir"`
 	// The directory that the output artifacts will be written to.
 	OutDir string `toml:"out_dir"`
 	// The directory that scripts for the Packer template will be copied to.
@@ -315,7 +315,7 @@ type IODirInf struct {
 	// to true by either specifiying true in the build template, or specifying a
 	// src_dir path that includes variables, which will cause Rancher to set this to
 	// true
-	CustomSrcDir bool 'toml:"custom_src_dir"'
+	CustomSrcDir bool `toml:"custom_src_dir"`
 	// The directory that contains the source files for this build.
 	SrcDir string `toml:"src_dir"`
 }

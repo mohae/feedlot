@@ -230,14 +230,7 @@ func (r *rawTemplate) ScriptNames() []string {
 //  the subdirectories within that path that is part of rancher's search path.
 func (r *rawTemplate) mergeVariables() {
 	// Get the delim and set the replacement map, resolve name information
-	r.varVals = map[string]string{
-		r.delim + "distro":     r.Distro,
-		r.delim + "release":    r.Release,
-		r.delim + "arch":       r.Arch,
-		r.delim + "image":      r.Image,
-		r.delim + "date":       r.date,
-		r.delim + "build_name": r.BuildName,
-	}
+	r.setVarVals()
 	r.mergeSrcDir()
 	r.mergeOutDir()
 
@@ -281,6 +274,18 @@ func (r *rawTemplate) mergeVariables() {
 	*/
 }
 
+// setVarVals sets the varVals for the base variables
+func (r *rawTemplate) setVarVals() {
+	r.varVals = map[string]string{
+		r.delim + "distro":     r.Distro,
+		r.delim + "release":    r.Release,
+		r.delim + "arch":       r.Arch,
+		r.delim + "image":      r.Image,
+		r.delim + "date":       r.date,
+		r.delim + "build_name": r.BuildName,
+	}
+}
+
 // mergeSrcDir resolves the src_dir for this template. If the build's custom_src_dir
 // == true or there are variables are specified in the src_dir, the resolved name is
 // used, otherwise the default of src_dir/:distro is used. if the custom_src_dir is
@@ -301,9 +306,14 @@ func (r *rawTemplate) mergeVariables() {
 //    src-dir/:distro/
 //    not found error
 func (r *rawTemplate) mergeSrcDir() {
-	// see if the use_custom flag is set
-	r.SrcDir = trimSuffix(r.replaceVariables(r.SrcDir), "/")
-
+	// variable replacement is only necessary if the SrcDir has the variable delims
+	if !strings.Contains(r.SrcDir, r.delim) {
+		return
+	}
+	// this means that this is a custom src dir. It may also be set to true in the
+	// build template w or w/o variables
+	r.CustomSrcDir = true
+	r.SrcDir = r.replaceVariables(r.SrcDir)
 }
 
 // mergeOutDir resolves the out_dir for this template.  If the build's custom_out_dir
@@ -312,7 +322,14 @@ func (r *rawTemplate) mergeSrcDir() {
 // output directory. If the custom_out_dir is false, but variables were specified in
 // the out_dir the custom_out_dir flag is set to true.
 func (r *rawTemplate) mergeOutDir() {
-	r.OutDir = trimSuffix(r.replaceVariables(r.OutDir), "/")
+	// variable replacement is only necessary if the SrcDir has the variable delims
+	if !strings.Contains(r.OutDir, r.delim) {
+		return
+	}
+	// this means that this is a custom out dir. It may also be set to true in the
+	// build template w or w/o variables
+	r.CustomOutDir = true
+	r.OutDir = r.replaceVariables(r.OutDir)
 }
 
 // ISOInfo sets the ISO info for the template's supported distro type. This

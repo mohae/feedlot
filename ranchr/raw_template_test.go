@@ -635,3 +635,63 @@ func TestRawTemplateISOInfo(t *testing.T) {
 		}
 	}
 }
+
+func TestRawTemplateMergeSrcDir(t *testing.T) {
+	tests := []struct {
+		CustomSrcDir         bool
+		SrcDir               string
+		ExpectedCustomSrcDir bool
+		ExpectedSrcDir       string
+	}{
+		{false, "src/", false, "src/"},
+		{true, "src/custom/", true, "src/custom/"},
+		{true, "src/:distro/", true, "src/ubuntu/"},
+		{false, "src/:distro/", true, "src/ubuntu/"},
+		{false, "src/files/", false, "src/files/"},
+	}
+	rawTpl := newRawTemplate()
+	rawTpl.delim = ":"
+	rawTpl.Distro = "ubuntu"
+	rawTpl.setVarVals()
+	for i, test := range tests {
+		rawTpl.CustomSrcDir = test.CustomSrcDir
+		rawTpl.SrcDir = test.SrcDir
+		rawTpl.mergeSrcDir()
+		if rawTpl.CustomSrcDir != test.ExpectedCustomSrcDir {
+			t.Errorf("MergeSrcDir test %d: expected CustomSrcDir to be %t; got %t", i, test.ExpectedCustomSrcDir, rawTpl.CustomSrcDir)
+		}
+		if rawTpl.SrcDir != test.ExpectedSrcDir {
+			t.Errorf("MergeSrcDir test %d: expected SrcDir to be %s; got %s", i, test.ExpectedSrcDir, rawTpl.SrcDir)
+		}
+	}
+}
+
+func TestRawTemplateMergeOutDir(t *testing.T) {
+	tests := []struct {
+		CustomOutDir         bool
+		OutDir               string
+		ExpectedCustomOutDir bool
+		ExpectedOutDir       string
+	}{
+		{false, "out", false, "out"},
+		{true, "out/custom/", true, "out/custom/"},
+		{true, "out/:distro/", true, "out/ubuntu/"},
+		{false, "out/:distro/", true, "out/ubuntu/"},
+		{false, "out/files/", false, "out/files/"},
+	}
+	rawTpl := newRawTemplate()
+	rawTpl.delim = ":"
+	rawTpl.Distro = "ubuntu"
+	rawTpl.setVarVals()
+	for i, test := range tests {
+		rawTpl.CustomOutDir = test.CustomOutDir
+		rawTpl.OutDir = test.OutDir
+		rawTpl.mergeOutDir()
+		if rawTpl.CustomOutDir != test.ExpectedCustomOutDir {
+			t.Errorf("MergeOutDir test %d: expected CustomOutDir to be %t; got %t", i, test.ExpectedCustomOutDir, rawTpl.CustomOutDir)
+		}
+		if rawTpl.OutDir != test.ExpectedOutDir {
+			t.Errorf("MergeOutDirtest %d: expected OutDir to be %s; got %s", i, test.ExpectedOutDir, rawTpl.OutDir)
+		}
+	}
+}

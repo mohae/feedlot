@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 	"sync"
-	"time"
 
 	json "github.com/mohae/customjson"
 	jww "github.com/spf13/jwalterweatherman"
