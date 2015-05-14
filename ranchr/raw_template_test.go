@@ -1,8 +1,9 @@
 package ranchr
 
 import (
+	"strings"
 	"testing"
-	_ "time"
+	"time"
 )
 
 var testRawTpl = newRawTemplate()
@@ -644,15 +645,15 @@ func TestRawTemplateMergeSrcDir(t *testing.T) {
 		ExpectedSrcDir       string
 	}{
 		{false, "src/", false, "src/"},
-		{true, "src/custom/", true, "src/custom/"},
-		{true, "src/:distro/", true, "src/ubuntu/"},
-		{false, "src/:distro/", true, "src/ubuntu/"},
-		{false, "src/files/", false, "src/files/"},
+		{true, "src/custom/", true, "src/custom"},
+		{true, "src/:distro/", true, "src/ubuntu"},
+		{false, "src/:distro/", true, "src/ubuntu"},
+		{false, "src/files/", false, "src/files"},
 	}
 	rawTpl := newRawTemplate()
 	rawTpl.delim = ":"
 	rawTpl.Distro = "ubuntu"
-	rawTpl.setVarVals()
+	rawTpl.setBaseVarVals()
 	for i, test := range tests {
 		rawTpl.CustomSrcDir = test.CustomSrcDir
 		rawTpl.SrcDir = test.SrcDir
@@ -674,15 +675,15 @@ func TestRawTemplateMergeOutDir(t *testing.T) {
 		ExpectedOutDir       string
 	}{
 		{false, "out", false, "out"},
-		{true, "out/custom/", true, "out/custom/"},
-		{true, "out/:distro/", true, "out/ubuntu/"},
-		{false, "out/:distro/", true, "out/ubuntu/"},
-		{false, "out/files/", false, "out/files/"},
+		{true, "out/custom/", true, "out/custom"},
+		{true, "out/:distro/", true, "out/ubuntu"},
+		{false, "out/:distro/", true, "out/ubuntu"},
+		{false, "out/files/", false, "out/files"},
 	}
 	rawTpl := newRawTemplate()
 	rawTpl.delim = ":"
 	rawTpl.Distro = "ubuntu"
-	rawTpl.setVarVals()
+	rawTpl.setBaseVarVals()
 	for i, test := range tests {
 		rawTpl.CustomOutDir = test.CustomOutDir
 		rawTpl.OutDir = test.OutDir
@@ -695,3 +696,102 @@ func TestRawTemplateMergeOutDir(t *testing.T) {
 		}
 	}
 }
+
+func TestRawTemplateSetBaseVarVals(t *testing.T) {
+	now := time.Now()
+	splitDate := strings.Split(now.String(), " ")
+	tests := []struct {
+		Distro    string
+		Release   string
+		Arch      string
+		Image     string
+		BuildName string
+	}{
+		{"ubuntu", "14.04", "amd64", "server", "14.04-test"},
+		{"centos", "7", "x86_64", "minimal", "7-test"},
+	}
+
+	r := newRawTemplate()
+	r.delim = ":"
+	for i, test := range tests {
+		r.Distro = test.Distro
+		r.Release = test.Release
+		r.Arch = test.Arch
+		r.Image = test.Image
+		r.BuildName = test.BuildName
+		// make the map empty
+		r.varVals = map[string]string{}
+		r.setBaseVarVals()
+		tmp, ok := r.varVals[":distro"]
+		if !ok {
+			t.Errorf("%d: expected :distro to be in map, it wasn't", i)
+		} else {
+			if tmp != test.Distro {
+				t.Errorf("%d: expected :distro to be %q, got %q", test.Distro, tmp)
+			}
+		}
+		tmp, ok = r.varVals[":release"]
+		if !ok {
+			t.Errorf("%d: expected :release to be in map, it wasn't", i)
+		} else {
+			if tmp != test.Release {
+				t.Errorf("%d: expected :release to be %q, got %q", test.Release, tmp)
+			}
+		}
+		tmp, ok = r.varVals[":arch"]
+		if !ok {
+			t.Errorf("%d: expected :arch to be in map, it wasn't", i)
+		} else {
+			if tmp != test.Arch {
+				t.Errorf("%d: expected :arch to be %q, got %q", test.Arch, tmp)
+			}
+		}
+		tmp, ok = r.varVals[":image"]
+		if !ok {
+			t.Errorf("%d: expected :image to be in map, it wasn't", i)
+		} else {
+			if tmp != test.Image {
+				t.Errorf("%d: expected :image to be %q, got %q", test.Image, tmp)
+			}
+		}
+		tmp, ok = r.varVals[":date"]
+		if !ok {
+			t.Errorf("%d: expected :date to be in map, it wasn't", i)
+		} else {
+			if tmp != splitDate[0] {
+				t.Errorf("%d: expected :date to be %q, got %q", splitDate[0], tmp)
+			}
+		}
+		tmp, ok = r.varVals[":build_name"]
+		if !ok {
+			t.Errorf("%d: expected :build_name to be in map, it wasn't", i)
+		} else {
+			if tmp != test.BuildName {
+				t.Errorf("%d: expected :build_name to be %q, got %q", test.BuildName, tmp)
+			}
+		}
+	}
+}
+
+/*
+func TestRawTemplateMergeString(t *testing.t) {
+	tests := []struct{
+		value string
+		default string
+		expected string
+	}{
+		{"", "", ""},
+		{"", "http", "http"},
+		{"dir", "http", "dir"},
+		{"dir/", "http", "dir"},
+		{"dir", "", "dir"},
+	}
+	r := newRawTemplate()
+	for i, test := ragne tests {
+		v := r.mergeString(test.value, test.default)
+		if v != test.expected {
+			t.Errorf("mergeString %d: expected %q, got %q", test.expected, v)
+		}
+	}
+}
+*/

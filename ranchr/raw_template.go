@@ -40,7 +40,8 @@ type rawTemplate struct {
 	// dependent, however only version currently supported images that are
 	// available on the distro's download site are supported.
 	Release string
-	// Values for variables...currently not supported
+	// varVals is a variable replacement map used in finalizing the value of strings for
+	// which variable replacement is supported.
 	varVals map[string]string
 	// Variable name mapping...currently not supported
 	vars map[string]string
@@ -230,52 +231,36 @@ func (r *rawTemplate) ScriptNames() []string {
 //  the subdirectories within that path that is part of rancher's search path.
 func (r *rawTemplate) mergeVariables() {
 	// Get the delim and set the replacement map, resolve name information
-	r.setVarVals()
+	r.setBaseVarVals()
+	// get final value for name first
+	r.Name = r.replaceVariables(r.Name)
+	r.varVals[r.delim+"name"] = r.Name
+
+	// then merge the sourc and out dirs and set them
 	r.mergeSrcDir()
 	r.mergeOutDir()
+	r.varVals[r.delim+"out_dir"] = r.OutDir
+	r.varVals[r.delim+"src_dir"] = r.SrcDir
 
-	r.Name = r.replaceVariables(r.Name)
-	/*
-		// Src and Outdir are next, since they can be embedded too
-		r.varVals[r.delim+"name"] = r.Name
-		// Commands and scripts dir need to be resolved next
-		r.varVals[r.delim+"out_dir"] = r.OutDir
-		r.varVals[r.delim+"src_dir"] = r.SrcDir
-		r.CommandsSrcDir = trimSuffix(r.replaceVariables(r.CommandsSrcDir), "/")
-		r.HTTPDir = trimSuffix(r.replaceVariables(r.HTTPDir), "/")
-		r.HTTPSrcDir = trimSuffix(r.replaceVariables(r.HTTPSrcDir), "/")
-		r.OutDir = trimSuffix(r.replaceVariables(r.OutDir), "/")
-		r.ScriptsDir = trimSuffix(r.replaceVariables(r.ScriptsDir), "/")
-		r.ScriptsSrcDir = trimSuffix(r.replaceVariables(r.ScriptsSrcDir), "/")
-		r.SrcDir = trimSuffix(r.replaceVariables(r.SrcDir), "/")
-		// Create a full variable replacement map, know that the SrcDir and OutDir stuff are resolved.
-		// Rest of the replacements are done by the packerers.
-		r.varVals[r.delim+"commands_src_dir"] = r.CommandsSrcDir
-		r.varVals[r.delim+"http_dir"] = r.HTTPDir
-		r.varVals[r.delim+"http_src_dir"] = r.HTTPSrcDir
-		r.varVals[r.delim+"out_dir"] = r.OutDir
-		r.varVals[r.delim+"scripts_dir"] = r.ScriptsDir
-		r.varVals[r.delim+"scripts_src_dir"] = r.ScriptsSrcDir
-		r.varVals[r.delim+"src_dir"] = r.SrcDir
-		r.CommandsSrcDir = trimSuffix(r.replaceVariables(r.CommandsSrcDir), "/")
-		r.HTTPDir = trimSuffix(r.replaceVariables(r.HTTPDir), "/")
-		r.HTTPSrcDir = trimSuffix(r.replaceVariables(r.HTTPSrcDir), "/")
-		r.OutDir = trimSuffix(r.replaceVariables(r.OutDir), "/")
-		r.ScriptsDir = trimSuffix(r.replaceVariables(r.ScriptsDir), "/")
-		r.ScriptsSrcDir = trimSuffix(r.replaceVariables(r.ScriptsSrcDir), "/")
-		r.SrcDir = trimSuffix(r.replaceVariables(r.SrcDir), "/")
-		r.varVals[r.delim+"commands_src_dir"] = r.CommandsSrcDir
-		r.varVals[r.delim+"http_dir"] = r.HTTPDir
-		r.varVals[r.delim+"http_src_dir"] = r.HTTPSrcDir
-		r.varVals[r.delim+"out_dir"] = r.OutDir
-		r.varVals[r.delim+"scripts_dir"] = r.ScriptsDir
-		r.varVals[r.delim+"scripts_src_dir"] = r.ScriptsSrcDir
-		r.varVals[r.delim+"src_dir"] = r.SrcDir
-	*/
+	// set with default, if empty. The default must not have a trailing /
+	r.CommandsSrcDir = r.mergeString(r.CommandsSrcDir, "commands")
+	r.HTTPDir = r.mergeString(r.HTTPDir, "http")
+	r.HTTPSrcDir = r.mergeString(r.HTTPSrcDir, "http")
+	// this needs to be modified to handle provisioners in general
+	r.ScriptsDir = r.mergeString(r.ScriptsDir, "scripts")
+	r.ScriptsSrcDir = r.mergeString(r.ScriptsSrcDir, "scripts")
+
+	// Create a full variable replacement map, know that the SrcDir and OutDir stuff are resolved.
+	// Rest of the replacements are done by the packerers.
+	r.varVals[r.delim+"commands_src_dir"] = r.CommandsSrcDir
+	r.varVals[r.delim+"http_dir"] = r.HTTPDir
+	r.varVals[r.delim+"http_src_dir"] = r.HTTPSrcDir
+	r.varVals[r.delim+"scripts_dir"] = r.ScriptsDir
+	r.varVals[r.delim+"scripts_src_dir"] = r.ScriptsSrcDir
 }
 
-// setVarVals sets the varVals for the base variables
-func (r *rawTemplate) setVarVals() {
+// setBaseVarVals sets the varVals for the base variables
+func (r *rawTemplate) setBaseVarVals() {
 	r.varVals = map[string]string{
 		r.delim + "distro":     r.Distro,
 		r.delim + "release":    r.Release,
@@ -284,6 +269,15 @@ func (r *rawTemplate) setVarVals() {
 		r.delim + "date":       r.date,
 		r.delim + "build_name": r.BuildName,
 	}
+}
+
+// mergeVariable does a variable replacement on the passed string and returns the
+// finalized value. If the passed string is empty, the default value, d, is returned
+func (r *rawTemplate) mergeString(s, d string) string {
+	if s == "" {
+		return d
+	}
+	return strings.TrimSuffix(r.replaceVariables(s), "/")
 }
 
 // mergeSrcDir resolves the src_dir for this template. If the build's custom_src_dir
@@ -308,12 +302,15 @@ func (r *rawTemplate) setVarVals() {
 func (r *rawTemplate) mergeSrcDir() {
 	// variable replacement is only necessary if the SrcDir has the variable delims
 	if !strings.Contains(r.SrcDir, r.delim) {
+		// normalize to no ending /
+		r.SrcDir = strings.TrimSuffix(r.replaceVariables(r.SrcDir), "/")
 		return
 	}
 	// this means that this is a custom src dir. It may also be set to true in the
 	// build template w or w/o variables
 	r.CustomSrcDir = true
-	r.SrcDir = r.replaceVariables(r.SrcDir)
+	// normalize to no ending /
+	r.SrcDir = strings.TrimSuffix(r.replaceVariables(r.SrcDir), "/")
 }
 
 // mergeOutDir resolves the out_dir for this template.  If the build's custom_out_dir
@@ -324,12 +321,15 @@ func (r *rawTemplate) mergeSrcDir() {
 func (r *rawTemplate) mergeOutDir() {
 	// variable replacement is only necessary if the SrcDir has the variable delims
 	if !strings.Contains(r.OutDir, r.delim) {
+		// normalize to no ending /
+		r.OutDir = strings.TrimSuffix(r.replaceVariables(r.OutDir), "/")
 		return
 	}
 	// this means that this is a custom out dir. It may also be set to true in the
 	// build template w or w/o variables
 	r.CustomOutDir = true
-	r.OutDir = r.replaceVariables(r.OutDir)
+	// normalize to no ending /
+	r.OutDir = strings.TrimSuffix(r.replaceVariables(r.OutDir), "/")
 }
 
 // ISOInfo sets the ISO info for the template's supported distro type. This
