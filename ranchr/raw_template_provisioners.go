@@ -160,12 +160,12 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 // Required configuration options:
 //   playbook_file		// string
 // Optional configuration options:
-//   command			// string
-//   extra_arguments	// array of strings
+//   command			    // string
+//   extra_arguments	    // array of strings
 //   inventory_file		// string
 //   group_vars			// string
 //   host_vars			// string
-//   playbook_dir		// string
+//   playbook_dir	         // string
 //   playbook_paths		// array of strings
 //   role_paths			// array of strings
 //   staging_directory	// string
@@ -218,7 +218,7 @@ func (r *rawTemplate) createAnsibleLocal() (settings map[string]interface{}, var
 //
 //	Required configuration options:
 //   destination	// string
-//   source			// string
+//   source		// string
 func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.Provisioners[FileUploads.String()]
 	if !ok {
@@ -268,11 +268,11 @@ func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, vars
 // Required configuration options:
 //   local_state_tree		// string
 // Optional configuration options
-//   bootstrap_args			// string
-//   local_pillar_roots		// string
-//   minion_config			// string
-//   skip_bootstrap			// boolean
-//   temp_config_dir			// string
+//   bootstrap_args		// string
+//   local_pillar_roots	// string
+//   minion_config		// string
+//   skip_bootstrap		// boolean
+//   temp_config_dir		// string
 func (r *rawTemplate) createSaltMasterless() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.Provisioners[SaltMasterless.String()]
 	if !ok {
@@ -322,10 +322,10 @@ func (r *rawTemplate) createSaltMasterless() (settings map[string]interface{}, v
 // Required configuration options:
 //   scripts				// array of strings
 // Optional confinguration parameters:
-//   binary					// boolean
+//   binary				// boolean
 //   environment_vars		// array of strings
 //   execute_command		// string
-//   inline_shebang			// string
+//   inline_shebang		// string
 //   remote_path			// string
 //   start_retry_timeout	// string
 func (r *rawTemplate) createShell() (settings map[string]interface{}, vars []string, err error) {
