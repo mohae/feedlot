@@ -782,11 +782,10 @@ func TestCommandsFromFile(t *testing.T) {
 	}
 }
 
-/*
-func TestRawTemplateMergeString(t *testing.t) {
-	tests := []struct{
-		value string
-		default string
+func TestRawTemplateMergeString(t *testing.T) {
+	tests := []struct {
+		value    string
+		dflt     string
 		expected string
 	}{
 		{"", "", ""},
@@ -796,11 +795,10 @@ func TestRawTemplateMergeString(t *testing.t) {
 		{"dir", "", "dir"},
 	}
 	r := newRawTemplate()
-	for i, test := ragne tests {
-		v := r.mergeString(test.value, test.default)
+	for i, test := range tests {
+		v := r.mergeString(test.value, test.dflt)
 		if v != test.expected {
-			t.Errorf("mergeString %d: expected %q, got %q", test.expected, v)
+			t.Errorf("mergeString %d: expected %q, got %q", i, test.expected, v)
 		}
 	}
 }
-*/
