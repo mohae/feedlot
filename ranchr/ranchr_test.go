@@ -401,13 +401,6 @@ func TestbuildPackerTemplateFromNamedBuild(t *testing.T) {
 	close(doneCh)
 }
 
-func TestCommandsFromFile(t *testing.T) {
-	_, err := commandsFromFile("")
-	if err.Error() != "the passed Command filename was empty" {
-		t.Errorf("Expected \"the passed Command filename was empty\", got %q", err.Error())
-	}
-}
-
 func TestMergeSlices(t *testing.T) {
 	// The private implementation only merges two slices at a time.
 	var s1, s2, res []string

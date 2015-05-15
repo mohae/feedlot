@@ -350,7 +350,7 @@ func (r *rawTemplate) createShell() (settings map[string]interface{}, vars []str
 			// Otherwise assume that it contains the command
 			if strings.HasSuffix(v, ".command") {
 				var commands []string
-				commands, err = commandsFromFile(v)
+				commands, err = r.commandsFromFile(v)
 				if err != nil {
 					jww.ERROR.Println(err)
 					return nil, nil, err

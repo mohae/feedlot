@@ -3,8 +3,8 @@
 description = "Default Rancher template"
 name = ":build_name"
 http_dir = "http"
-out_dir = "out/"
-src_dir = "src/"
+out_dir = "out"
+src_dir = "src"
 scripts_dir = "scripts"
 min_packer_version = "0.4.0"
 builder_types = [

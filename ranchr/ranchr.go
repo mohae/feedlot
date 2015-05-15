@@ -12,7 +12,6 @@
 package ranchr
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"os"
@@ -715,41 +714,6 @@ func getSliceLenFromIface(v interface{}) (int, error) {
 		return sl.Len(), nil
 	}
 	return 0, fmt.Errorf("err: getSliceLenFromIface expected a slice, go" + reflect.TypeOf(v).Kind().String())
-}
-
-// Takes the name of the command file, including path, and returns a slice of
-// shell commands. Each command within the file is separated by a newline.
-// Returns error if an error occurs with the file.
-func commandsFromFile(name string) (commands []string, err error) {
-	if name == "" {
-		err = fmt.Errorf("the passed Command filename was empty")
-		jww.ERROR.Println(err)
-		return commands, err
-	}
-	f, err := os.Open(name)
-	if err != nil {
-		jww.ERROR.Println(err)
-		return commands, err
-	}
-	// always close what's been opened and check returned error
-	defer func() {
-		cerr := f.Close()
-		if cerr != nil && err == nil {
-			jww.WARN.Println(cerr)
-			err = cerr
-		}
-	}()
-	//New Reader for the string
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		commands = append(commands, scanner.Text())
-	}
-	err = scanner.Err()
-	if err != nil {
-		jww.WARN.Println(err)
-		return
-	}
-	return commands, nil
 }
 
 // MergeSlices takes a variadic input of []string and returns a string slice

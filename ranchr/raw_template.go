@@ -1,8 +1,10 @@
 package ranchr
 
 import (
+	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"time"
@@ -411,4 +413,93 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 		return err
 	}
 	return nil
+}
+
+// Takes the name of the command file, including path relative to the source_dir, and
+// returns a slice of shell commands. Each command within the file is separated by a
+// newline. Returns error if an error occurs with the file.
+//
+// Note: this searches for the appropriate command file using rancher's search
+// algorithm
+func (r *rawTemplate) commandsFromFile(name string) (commands []string, err error) {
+	if name == "" {
+		err = fmt.Errorf("the passed Command filename was empty")
+		jww.ERROR.Println(err)
+		return commands, err
+	}
+	// find the correct file location
+	path, err := r.findSourceFile(name)
+	if err != nil {
+		jww.ERROR.Println(err)
+		return commands, err
+	}
+	f, err := os.Open(path)
+	if err != nil {
+		jww.ERROR.Println(err)
+		return commands, err
+	}
+	// always close what's been opened and check returned error
+	defer func() {
+		cerr := f.Close()
+		if cerr != nil && err == nil {
+			jww.WARN.Println(cerr)
+			err = cerr
+		}
+	}()
+	//New Reader for the string
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		commands = append(commands, scanner.Text())
+	}
+	err = scanner.Err()
+	if err != nil {
+		jww.WARN.Println(err)
+		return
+	}
+	return commands, nil
+}
+
+// findSourcefile searches for the specified file using Rancher's algorithm for
+// finding the correct file. Passed filenames may include relative path information.
+// Search order:
+//	src_dir/buildname/
+//	src_dir/distro/release/arch/
+//	src_dir/distro/release/
+//	src_dir/distro/arch
+//	src_dir/distro/
+//	src_dir/
+//
+// If the passed file is not found, an error will be returned.
+func (r *rawTemplate) findSourceFile(s string) (string, error) {
+	tmpPath := filepath.Join(r.SrcDir, r.BuildName, s)
+	_, err := os.Stat(tmpPath)
+	if err == nil {
+		return tmpPath, nil
+	}
+	tmpPath = filepath.Join(r.SrcDir, r.Distro, r.Release, r.Arch, s)
+	_, err = os.Stat(tmpPath)
+	if err == nil {
+		return tmpPath, nil
+	}
+	tmpPath = filepath.Join(r.SrcDir, r.Distro, r.Release, s)
+	_, err = os.Stat(tmpPath)
+	if err == nil {
+		return tmpPath, nil
+	}
+	tmpPath = filepath.Join(r.SrcDir, r.Distro, r.Arch, s)
+	_, err = os.Stat(tmpPath)
+	if err == nil {
+		return tmpPath, nil
+	}
+	tmpPath = filepath.Join(r.SrcDir, r.Distro, s)
+	_, err = os.Stat(tmpPath)
+	if err == nil {
+		return tmpPath, nil
+	}
+	tmpPath = filepath.Join(r.SrcDir, s)
+	_, err = os.Stat(tmpPath)
+	if err == nil {
+		return tmpPath, nil
+	}
+	return "", fmt.Errorf("%s: file not found in %q or any of the inspected subdirectories", s, r.SrcDir)
 }
