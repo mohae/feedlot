@@ -50,6 +50,10 @@ type rawTemplate struct {
 	// Contains all the build information needed to create the target Packer
 	// template and its associated artifacts.
 	build
+	// files maps destination files to their sources. These are the actual file locations
+	// after they have been resolved. The destination file is the key, the source file
+	// is the value
+	files map[string]string
 }
 
 // mewRawTemplate returns a rawTemplate with current date in ISO 8601 format.
@@ -282,25 +286,8 @@ func (r *rawTemplate) mergeString(s, d string) string {
 	return strings.TrimSuffix(r.replaceVariables(s), "/")
 }
 
-// mergeSrcDir resolves the src_dir for this template. If the build's custom_src_dir
-// == true or there are variables are specified in the src_dir, the resolved name is
-// used, otherwise the default of src_dir/:distro is used. if the custom_src_dir is
-// false, but variables were specified in the src_dir the custom_src_dir flag is set to
-// true.
-//
-// If the default was used, Rancher will also search within the src_dir for the
-// specified file, using the default src_dir/:distro/ as the last directory to check
-// for the file's existence.
-//
-// Search order:
-//    src_dir/:build_name
-//    src_dir/:distro/build_name
-//    src_dir/:distro/release/image/arch/
-//    src_dir/:distro/release/image/
-//    src_dir/:distro/release/arch/
-//    src_dir/:distro/release/
-//    src-dir/:distro/
-//    not found error
+// mergeSrcDir sets whether or not a custom source directory was used, does any
+// necessary variable replacement, and normalizes the string to not end in /
 func (r *rawTemplate) mergeSrcDir() {
 	// variable replacement is only necessary if the SrcDir has the variable delims
 	if !strings.Contains(r.SrcDir, r.delim) {
