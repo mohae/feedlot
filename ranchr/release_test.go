@@ -486,7 +486,7 @@ func TestDebianSetISO(t *testing.T) {
 	}
 
 	d.setISOURL()
-	expected = "cdimage.debian.org/debian-cd/7.8.0/amd64/iso-cd/" + d.Name
+	expected = "http://cdimage.debian.org/debian-cd/7.8.0/amd64/iso-cd/" + d.Name
 	if d.isoURL != expected {
 		t.Errorf("Expected %q, got %q", expected, d.isoURL)
 	}

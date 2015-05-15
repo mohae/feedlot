@@ -524,13 +524,13 @@ func TestCreateProvisioners(t *testing.T) {
 		}
 	}
 
-	testRawTemplateWOSection.build.ProvisionerTypes[0] = "shell-scripts"
+	testRawTemplateWOSection.build.ProvisionerTypes[0] = "shell"
 	_, _, err = testRawTemplateWOSection.createProvisioners()
 	if err == nil {
-		t.Error("Expected error \"no configuration found for \"shell-scripts\"\", got nil")
+		t.Error("Expected error \"no configuration found for \"shell\"\", got nil")
 	} else {
-		if err.Error() != "no configuration found for \"shell-scripts\"" {
-			t.Errorf("Expected error \"no configuration found for \"shell-scripts\"\", got %q", err.Error())
+		if err.Error() != "no configuration found for \"shell\"" {
+			t.Errorf("Expected error \"no configuration found for \"shell\"\", got %q", err.Error())
 		}
 	}
 
@@ -603,7 +603,7 @@ func TestSaltProvisioner(t *testing.T) {
 	}
 }
 
-// YOFO: elided until refactor is done
+// TODO: elided until refactor is done
 /*
 func TestShellProvisioner(t *testing.T) {
 	expected := map[string]interface{}{

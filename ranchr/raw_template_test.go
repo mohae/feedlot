@@ -306,6 +306,7 @@ func TestRawTemplateUpdateBuildSettings(t *testing.T) {
 	}
 }
 
+/*
 func TestRawTemplateScriptNames(t *testing.T) {
 	r := testDistroDefaults.Templates[Ubuntu]
 	scripts := r.ScriptNames()
@@ -326,7 +327,7 @@ func TestRawTemplateScriptNames(t *testing.T) {
 		}
 	}
 }
-
+*/
 func TestMergeVariables(t *testing.T) {
 	r := testDistroDefaults.Templates[Ubuntu]
 	r.mergeVariables()
@@ -644,7 +645,7 @@ func TestRawTemplateMergeSrcDir(t *testing.T) {
 		ExpectedCustomSrcDir bool
 		ExpectedSrcDir       string
 	}{
-		{false, "src/", false, "src/"},
+		{false, "src/", false, "src"},
 		{true, "src/custom/", true, "src/custom"},
 		{true, "src/:distro/", true, "src/ubuntu"},
 		{false, "src/:distro/", true, "src/ubuntu"},
