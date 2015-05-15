@@ -169,30 +169,6 @@ func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
 	r.updateProvisioners(bld.Provisioners)
 }
 
-// Get a slice of script names from the shell provisioner, if any.
-func (r *rawTemplate) ScriptNames() []string {
-	scripts := "scripts"
-	// See if there is a shell provisioner
-	_, ok := r.Provisioners[Shell.String()]
-	if !ok {
-		return nil
-	}
-	// See if there shell provisioner array section contains scripts
-	_, ok = r.Provisioners[Shell.String()].Arrays[scripts]
-	if !ok {
-		return nil
-	}
-	scrpts := deepcopy.InterfaceToSliceOfStrings(r.Provisioners[Shell.String()].Arrays[scripts])
-	names := make([]string, len(scrpts))
-	for i, scrpt := range scrpts {
-		so := reflect.ValueOf(scrpt)
-		parts := strings.Split(so.Interface().(string), "/")
-		// the last element is the script name
-		names[i] = parts[len(parts)-1]
-	}
-	return names
-}
-
 // mergeVariables goes through the template variables and finalizes the values of any
 // :vars found within the strings.
 //

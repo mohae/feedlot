@@ -22,7 +22,7 @@ type packerTemplate struct {
 // create a Packer build template based on the current configuration. The
 // template is written to the output directory and any external resources that
 // the template requires is copied there.
-func (p *packerTemplate) create(i IODirInf, b BuildInf, scripts []string) error {
+func (p *packerTemplate) create(i IODirInf, b BuildInf, files map[string]string) error {
 	err := i.check()
 	if err != nil {
 		jww.ERROR.Println(err)
@@ -39,17 +39,13 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, scripts []string) error 
 		jww.ERROR.Print(err)
 		return err
 	}
-	// TODO: move this to shell provisioner, and add provisioner specific handling
-	err = copyFiles(scripts, i.ScriptsSrcDir, appendSlash(i.OutDir)+i.ScriptsDir)
-	if err != nil {
-		jww.ERROR.Println(err)
-		return err
-	}
-	// TODO: should this be moved?
-	err = copyDirContent(i.HTTPSrcDir, appendSlash(i.OutDir)+i.HTTPDir)
-	if err != nil {
-		jww.ERROR.Print(err)
-		return err
+	// copy the files associated with the template
+	for dst, src := range files {
+		err = copyFile(src, dst)
+		if err != nil {
+			jww.ERROR.Println(err)
+			return err
+		}
 	}
 	// Write it out as JSON
 	tplJSON, err := json.MarshalIndent(p, "", "\t")

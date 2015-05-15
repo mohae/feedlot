@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"reflect"
 	"strconv"
 	"strings"
@@ -583,13 +584,10 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 		jww.ERROR.Println(err)
 		return err
 	}
-	// Get the scripts for this build, if any.
-	var scripts []string
-	scripts = rTpl.ScriptNames()
 	// Create the JSON version of the Packer template. This also handles creation of
 	// the build directory and copying all files that the Packer template needs to the
 	// build directory.
-	err = pTpl.create(rTpl.IODirInf, rTpl.BuildInf, scripts)
+	err = pTpl.create(rTpl.IODirInf, rTpl.BuildInf, rTpl.files)
 	if err != nil {
 		jww.ERROR.Println(err)
 		return err
@@ -690,10 +688,7 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 		doneCh <- err
 		return
 	}
-	// Process the scripts for the Packer template.
-	var scripts []string
-	scripts = rTpl.ScriptNames()
-	err = pTpl.create(rTpl.IODirInf, rTpl.BuildInf, scripts)
+	err = pTpl.create(rTpl.IODirInf, rTpl.BuildInf, rTpl.files)
 	if err != nil {
 		jww.ERROR.Println(err)
 		doneCh <- err
@@ -976,65 +971,36 @@ func trimSuffix(s string, suffix string) string {
 	return s
 }
 
-// copy files copies the passed files from source to dest
-func copyFiles(files []string, src string, dest string) error {
-	var errCnt, okCnt int
-	var err error
-	for _, file := range files {
-		_, err = copyFile(file, src, dest)
-		if err != nil {
-			jww.ERROR.Print(err)
-			errCnt++
-			continue
-		}
-		okCnt++
+// copyFile copies a file the source file to the destination
+func copyFile(src string, dst string) (written int64, err error) {
+	// get the destination directory
+	dstDir := path.Dir(dst)
+	if dstDir == "" {
+		return 0, fmt.Errorf("file not copied, the passed destination, %q, did not include a directory".dst)
 	}
-	if errCnt > 0 {
-		jww.ERROR.Print(fmt.Sprintf("copy of files for build had %d errors. There were %d files that were copied without error.", errCnt, okCnt))
-		return err
-	}
-	return nil
-}
-
-// copyFile copies a file from source directory to destination directory. It
-// returns either the number of bytes written or an error.
-func copyFile(file string, srcDir string, destDir string) (written int64, err error) {
-	if srcDir == "" {
-		err = fmt.Errorf("no source directory received")
-		jww.ERROR.Println(err)
-		return 0, err
-	}
-	if destDir == "" {
-		err = fmt.Errorf("no destination directory received")
-		jww.ERROR.Println(err)
-		return 0, err
-	}
-	if file == "" {
-		err = fmt.Errorf("no filename received")
-		jww.ERROR.Println(err)
-		return 0, err
-	}
-	srcDir = appendSlash(srcDir)
-	destDir = appendSlash(destDir)
-	src := srcDir + file
-	dest := destDir + file
 	// Create the scripts dir and copy each script from sript_src to out_dir/scripts/
 	// while keeping track of success/failures.
-	err = os.MkdirAll(destDir, os.FileMode(0766))
+	err = os.MkdirAll(dstDir, os.FileMode(0766))
 	if err != nil {
 		jww.ERROR.Println(err)
 		return 0, err
 	}
 	var fs, fd *os.File
-	// Open the source script
+	// Open the source file
 	fs, err = os.Open(src)
 	if err != nil {
 		jww.ERROR.Println(err)
 		return 0, err
 	}
-	defer fs.Close()
+	defer func() {
+		cerr := fs.Close()
+		if cerr != nil && err == nil {
+			jww.WARN.Println(cerr)
+			err = cerr
+		}
+	}()
 	// Open the destination, create or truncate as needed.
-	fd, err = os.Create(dest)
+	fd, err = os.Create(dst)
 	if err != nil {
 		jww.ERROR.Println(err)
 		return 0, err
