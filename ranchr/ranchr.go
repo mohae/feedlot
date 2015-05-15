@@ -543,29 +543,29 @@ func BuildDistro(a ArgsFilter) error {
 
 // Create Packer templates from specified build templates.
 func buildPackerTemplateFromDistro(a ArgsFilter) error {
-	var t *rawTemplate
+	var rTpl *rawTemplate
 	if a.Distro == "" {
 		err := fmt.Errorf("cannot build a packer template because no target distro information was passed")
 		jww.ERROR.Println(err)
 		return err
 	}
 	// Get the default for this distro, if one isn't found then it isn't Supported.
-	t, err := DistroDefaults.GetTemplate(a.Distro)
+	rTpl, err := DistroDefaults.GetTemplate(a.Distro)
 	if err != nil {
 		jww.ERROR.Println(err)
 		return err
 	}
 	// If any overrides were passed, set them.
 	if a.Arch != "" {
-		t.Arch = a.Arch
+		rTpl.Arch = a.Arch
 	}
 	if a.Image != "" {
-		t.Image = a.Image
+		rTpl.Image = a.Image
 	}
 	if a.Release != "" {
-		t.Release = a.Release
+		rTpl.Release = a.Release
 	}
-	t.BuildName = ":type-:release-:arch-:image-rancher"
+	rTpl.BuildName = ":type-:release-:arch-:image-rancher"
 
 	//	// make a copy of the .
 	//	rTpl := newRawTemplate()
@@ -573,21 +573,23 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 
 	// Since distro builds don't actually have a build name, we create one
 	// out of the args used to create it.
-	t.BuildName = fmt.Sprintf("%s-%s-%s-%s", t.Distro, t.Release, t.Arch, t.Image)
+	// TODO: given the above, should this be done? Or should the buildname for distro
+	//       builds be merged later?
+	rTpl.BuildName = fmt.Sprintf("%s-%s-%s-%s", rTpl.Distro, rTpl.Release, rTpl.Arch, rTpl.Image)
 	pTpl := packerTemplate{}
 	// Now that the raw template has been made, create a Packer template out of it
-	pTpl, err = t.createPackerTemplate()
+	pTpl, err = rTpl.createPackerTemplate()
 	if err != nil {
 		jww.ERROR.Println(err)
 		return err
 	}
 	// Get the scripts for this build, if any.
 	var scripts []string
-	scripts = t.ScriptNames()
+	scripts = rTpl.ScriptNames()
 	// Create the JSON version of the Packer template. This also handles creation of
 	// the build directory and copying all files that the Packer template needs to the
 	// build directory.
-	err = pTpl.create(t.IODirInf, t.BuildInf, scripts)
+	err = pTpl.create(rTpl.IODirInf, rTpl.BuildInf, scripts)
 	if err != nil {
 		jww.ERROR.Println(err)
 		return err
@@ -646,12 +648,12 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 		doneCh <- err
 		return
 	}
-	var tpl, bld *rawTemplate
+	var rTpl, bTpl *rawTemplate
 	var ok bool
 	// Check the type and create the defaults for that type, if it doesn't already exist.
-	tpl = &rawTemplate{}
-	bld = &rawTemplate{}
-	bld, ok = Builds.Build[buildName]
+	rTpl = &rawTemplate{}
+	bTpl = &rawTemplate{}
+	bTpl, ok = Builds.Build[buildName]
 	if !ok {
 		err := fmt.Errorf("unable to build Packer Template: %q is not a valid build name", buildName)
 		jww.ERROR.Println(err)
@@ -659,40 +661,39 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 		return
 	}
 	// See if the distro default exists.
-	tpl, ok = DistroDefaults.Templates[DistroFromString(bld.Distro)]
+	rTpl, ok = DistroDefaults.Templates[DistroFromString(bTpl.Distro)]
 	if !ok {
-		err := fmt.Errorf("unsupported distro: %s", bld.Distro)
+		err := fmt.Errorf("unsupported distro: %s", bTpl.Distro)
 		jww.ERROR.Println(err)
 		doneCh <- err
 		return
 	}
 	// Set build iso information overrides, if any.
-	if bld.Arch != "" {
-		tpl.Arch = bld.Arch
+	if bTpl.Arch != "" {
+		rTpl.Arch = bTpl.Arch
 	}
-	if bld.Image != "" {
-		tpl.Image = bld.Image
+	if bTpl.Image != "" {
+		rTpl.Image = bTpl.Image
 	}
-	if bld.Release != "" {
-		tpl.Release = bld.Release
+	if bTpl.Release != "" {
+		rTpl.Release = bTpl.Release
 	}
-	bld.BuildName = buildName
+	bTpl.BuildName = buildName
 	// create build template() then call create packertemplate
-	tpl.build = DistroDefaults.Templates[DistroFromString(bld.Distro)].build
-	tpl.updateBuildSettings(bld)
+	rTpl.build = DistroDefaults.Templates[DistroFromString(bTpl.Distro)].build
+	rTpl.updateBuildSettings(bTpl)
 	pTpl := packerTemplate{}
 	var err error
-	pTpl, err = tpl.createPackerTemplate()
+	pTpl, err = rTpl.createPackerTemplate()
 	if err != nil {
 		jww.ERROR.Println(err)
 		doneCh <- err
 		return
 	}
-	_ = pTpl
 	// Process the scripts for the Packer template.
 	var scripts []string
-	scripts = tpl.ScriptNames()
-	err = pTpl.create(tpl.IODirInf, tpl.BuildInf, scripts)
+	scripts = rTpl.ScriptNames()
+	err = pTpl.create(rTpl.IODirInf, rTpl.BuildInf, scripts)
 	if err != nil {
 		jww.ERROR.Println(err)
 		doneCh <- err
