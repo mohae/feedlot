@@ -9,6 +9,61 @@ import (
 	jww "github.com/spf13/jwalterweatherman"
 )
 
+// PostProcessor constants
+const (
+	UnsupportedPostProcessor PostProcessor = iota
+	Compress
+	DockerImport
+	DockerPush
+	DockerSave
+	DockerTag
+	Vagrant
+	VagrantCloud
+	VSphere
+)
+
+// PostProcessor is a Packer supported post-processor.
+type PostProcessor int
+
+var postProcessors = [...]string{
+	"unsupported post-processor",
+	"compress",      // Compress is the name of the compress PostProcessor
+	"docker-import", // DockerImport is the name of the DockerImport PostProcessor
+	"docker-push",   // DockerPush is the name of the DockerPush PostProcessor
+	"docker-save",   // DockerSave is the name of the DockerSave PostProcessor
+	"docker-tag",    // DockerTag is the name of the DockerTag PostProcessor
+	"vagrant",       // Vagrant is the name of the Vagrant PostProcessor
+	"vagrant-cloud", // Vagrant is the name of the Vagrant CloudPostProcessor
+	"vsphere",       // VSphere is the name of the VSphere PostProcessor
+}
+
+func (p PostProcessor) String() string { return postProcessors[p] }
+
+// PostProcessorFromString returns the PostProcessor constant for the passed
+// string, or unsupported. All incoming strings are normalized to lowercase.
+func PostProcessorFromString(s string) PostProcessor {
+	s = strings.ToLower(s)
+	switch s {
+	case "compress":
+		return Compress
+	case "docker-import":
+		return DockerImport
+	case "docker-push":
+		return DockerPush
+	case "docker-save":
+		return DockerSave
+	case "docker-tag":
+		return DockerTag
+	case "vagrant":
+		return Vagrant
+	case "vagrant-cloud":
+		return VagrantCloud
+	case "vsphere":
+		return VSphere
+	}
+	return UnsupportedPostProcessor
+}
+
 // Merges the new config with the old. The updates occur as follows:
 //
 //	* The existing configuration is used when no `new` postProcessors are
