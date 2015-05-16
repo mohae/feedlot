@@ -27,8 +27,6 @@ var testDistroDefaultUbuntu = &rawTemplate{
 	PackerInf: PackerInf{MinPackerVersion: "0.4.0", Description: "Test supported distribution template"},
 	IODirInf: IODirInf{
 		CommandsSrcDir: "commands",
-		HTTPDir:        "http",
-		HTTPSrcDir:     "http",
 		OutDir:         "../test_files/out/:distro/:build_name",
 		SrcDir:         "../test_files/src/:distro",
 	},
@@ -158,8 +156,6 @@ var testDistroDefaultCentOS = &rawTemplate{
 	},
 	IODirInf: IODirInf{
 		CommandsSrcDir: "commands",
-		HTTPDir:        "http",
-		HTTPSrcDir:     "http",
 		OutDir:         "../test_files/out/:distro/:build_name",
 		SrcDir:         "../test_files/src/:distro",
 	},

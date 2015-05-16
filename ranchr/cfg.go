@@ -285,24 +285,12 @@ func (i *BuildInf) update(b BuildInf) {
 }
 
 // IODirInf is used to store information about where Rancher can find and put
-// things. Source files are always in a SrcDir, e.g. HTTPSrcDir is the source
-// directory for the HTTP directory. The destination directory is always a Dir,
-// e.g. HTTPDir is the destination directory for the HTTP directory.
+// things. Source files are always in a SrcDir.
 type IODirInf struct {
 	// The directory in which the command files are located
 	CommandsSrcDir string `toml:"commands_src_dir"`
-	// The directory that will be used for the HTTP setting.
-	HTTPDir string `toml:"http_dir"`
-	// The directory that is the source for files to be copied to the HTTP
-	// directory, HTTPDir
-	HTTPSrcDir string `toml:"http_src_dir"`
-	// flag for whether or not the out_dir is custom or not. If this resolves to true
-	// Rancher will not use append the specified out_dir with it's default out_dir
-	// path, instead it will use the out_dir as specified.  This can resolve
-	// to true by either specifiying true in the build template, or specifying a
-	// out_dir path that includes variables, which will cause Rancher to set this to
-	// true
-	CustomOutDir bool `toml:"custom_outc_dir"`
+	// Whether or not the OutDir is custom. TODO: is this necessary?
+	CustomOutDir bool `toml:"custom_out_dir"`
 	// The directory that the output artifacts will be written to.
 	OutDir string `toml:"out_dir"`
 	// flag for whether or not the src_dir is custom or not. If this resolves to true
@@ -310,7 +298,7 @@ type IODirInf struct {
 	// Rancher will only look for the file in the specified src_dir. This can resolve
 	// to true by either specifiying true in the build template, or specifying a
 	// src_dir path that includes variables, which will cause Rancher to set this to
-	// true
+	// true TODO: is this necessary?
 	CustomSrcDir bool `toml:"custom_src_dir"`
 	// The directory that contains the source files for this build.
 	SrcDir string `toml:"src_dir"`
@@ -319,12 +307,6 @@ type IODirInf struct {
 func (i *IODirInf) update(inf IODirInf) {
 	if inf.CommandsSrcDir != "" {
 		i.CommandsSrcDir = appendSlash(inf.CommandsSrcDir)
-	}
-	if inf.HTTPDir != "" {
-		i.HTTPDir = appendSlash(inf.HTTPDir)
-	}
-	if inf.HTTPSrcDir != "" {
-		i.HTTPSrcDir = appendSlash(inf.HTTPSrcDir)
 	}
 	if inf.OutDir != "" {
 		i.OutDir = appendSlash(inf.OutDir)
@@ -336,12 +318,6 @@ func (i *IODirInf) update(inf IODirInf) {
 
 // check to see if the dirinf is set, if not, set them to their defaults
 func (i *IODirInf) check() {
-	if i.HTTPDir == "" {
-		i.HTTPDir = "http"
-	}
-	if i.HTTPSrcDir == "" {
-		i.HTTPSrcDir = "http"
-	}
 	if i.OutDir == "" {
 		i.OutDir = os.Getenv(EnvParamDelimStart) + "build_name"
 	}

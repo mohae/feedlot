@@ -8,8 +8,6 @@ import (
 var testUbuntu = &rawTemplate{
 	IODirInf: IODirInf{
 		CommandsSrcDir: "commands",
-		HTTPDir:        "http",
-		HTTPSrcDir:     "http",
 		OutDir:         "../test_files/ubuntu/out/ubuntu",
 		SrcDir:         "../test_files/src/ubuntu",
 	},
@@ -111,8 +109,6 @@ var testUbuntu = &rawTemplate{
 var testCentOS = &rawTemplate{
 	IODirInf: IODirInf{
 		CommandsSrcDir: "commands",
-		HTTPDir:        "http",
-		HTTPSrcDir:     "http",
 		OutDir:         "../test_files/out/centos",
 		SrcDir:         "../test_files/src/centos",
 	},
@@ -245,8 +241,6 @@ var testCentOS = &rawTemplate{
 var testAllBuilders = &rawTemplate{
 	IODirInf: IODirInf{
 		CommandsSrcDir: "commands",
-		HTTPDir:        "http",
-		HTTPSrcDir:     "http",
 		OutDir:         "../test_files/out/ubuntu",
 		SrcDir:         "../test_files/src/ubuntu",
 	},
@@ -615,8 +609,6 @@ var testAllBuilders = &rawTemplate{
 var testDigtialOceanAPIV1 = &rawTemplate{
 	IODirInf: IODirInf{
 		CommandsSrcDir: "commands",
-		HTTPDir:        "http",
-		HTTPSrcDir:     "http",
 		OutDir:         "../test_files/ubuntu/out/ubuntu",
 		SrcDir:         "../test_files/src/ubuntu",
 	},
@@ -664,8 +656,6 @@ var testDigtialOceanAPIV1 = &rawTemplate{
 var testDigtialOceanNoAPI = &rawTemplate{
 	IODirInf: IODirInf{
 		CommandsSrcDir: "commands",
-		HTTPDir:        "http",
-		HTTPSrcDir:     "http",
 		OutDir:         "../test_files/ubuntu/out/ubuntu",
 		SrcDir:         "../test_files/src/ubuntu",
 	},

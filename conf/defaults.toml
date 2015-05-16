@@ -2,7 +2,6 @@
 # file with supported.toml provids the default settings for each distro.
 description = "Default Rancher template"
 name = ":build_name"
-#http_dir = "http"
 #command_dir = "commands"
 out_dir = "out/:build_name"
 src_dir = "src"
@@ -14,7 +13,7 @@ post_processor_types = [
 	"vagrant"
 ]
 provisioner_types = [
-	"shell-scripts"
+	"shell"
 ]
 [builders]
 	[builders.common]
@@ -61,9 +60,8 @@ provisioner_types = [
 		]
 		[provisioners.shell-scripts.arrays]
 			scripts = [ 
-				":scripts_dir/setup.sh",
-				":scripts_dir/vagrant.sh",
-				":scripts_dir/sudoers.sh",
-				":scripts_dir/cleanup.sh",
+				"setup.sh",
+				"vagrant.sh",
+				"sudoers.sh",
+				"cleanup.sh",
 			]
-

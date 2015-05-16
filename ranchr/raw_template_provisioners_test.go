@@ -12,8 +12,6 @@ var testRawTemplateProvisioner = &rawTemplate{
 	},
 	IODirInf: IODirInf{
 		CommandsSrcDir: "commands",
-		HTTPDir:        "http",
-		HTTPSrcDir:     "http",
 		OutDir:         "../test_files/out/:type/:build_name",
 		SrcDir:         "../test_files/src/:type",
 	},
@@ -157,8 +155,6 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 	},
 	IODirInf: IODirInf{
 		CommandsSrcDir: "commands",
-		HTTPDir:        "http",
-		HTTPSrcDir:     "http",
 		OutDir:         "../test_files/out/:type/:build_name",
 		SrcDir:         "../test_files/src/:type",
 	},

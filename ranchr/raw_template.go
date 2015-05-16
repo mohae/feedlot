@@ -182,11 +182,6 @@ func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
 //  commands_dir             ???
 //  commands_src_dir         the directory of any command files that the build template
 //                           uses**
-//  http_dir                 the http directory for the packer template, contains the
-//                           preseed.cfg
-//  http_src_dir             the source directory for the http_dir files***
-//  {{provisioner}}_dir      the provisioner specific directory for the packer
-//                           template, e.g. scripts, cookbooks, playbooks, states, etc.
 //
 //  * src_dir must be set. Rancher searches for referenced files and uses src_dir/distro
 //    as the last search directory. This directory is also used as the base directory
@@ -199,10 +194,6 @@ func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
 //  the commands_src_dir, which is expected to be a directory within src_dir/distro/
 //  or one of the subdirectories within that path that is part of rancher's search
 //  path.
-//
-//  ** http_src_dir: if a value is not specified, Rancher will use "http" as the
-//  http_src_dir, which is expected to be a directory within src_dir/distro/ or one of
-//  the subdirectories within that path that is part of rancher's search path.
 func (r *rawTemplate) mergeVariables() {
 	// Get the delim and set the replacement map, resolve name information
 	r.setBaseVarVals()
@@ -218,14 +209,10 @@ func (r *rawTemplate) mergeVariables() {
 
 	// set with default, if empty. The default must not have a trailing /
 	r.CommandsSrcDir = r.mergeString(r.CommandsSrcDir, "commands")
-	r.HTTPDir = r.mergeString(r.HTTPDir, "http")
-	r.HTTPSrcDir = r.mergeString(r.HTTPSrcDir, "http")
 
 	// Create a full variable replacement map, know that the SrcDir and OutDir stuff are resolved.
 	// Rest of the replacements are done by the packerers.
 	r.varVals[r.delim+"commands_src_dir"] = r.CommandsSrcDir
-	r.varVals[r.delim+"http_dir"] = r.HTTPDir
-	r.varVals[r.delim+"http_src_dir"] = r.HTTPSrcDir
 }
 
 // setBaseVarVals sets the varVals for the base variables

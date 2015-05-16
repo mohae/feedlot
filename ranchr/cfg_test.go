@@ -8,8 +8,6 @@ import (
 var testDefaults = &defaults{
 	IODirInf: IODirInf{
 		CommandsSrcDir: "commands",
-		HTTPDir:        "http",
-		HTTPSrcDir:     "http",
 		OutDir:         "../test_files/out/:distro/:build_name",
 		SrcDir:         "../test_files/src/:distro",
 	},
@@ -538,17 +536,11 @@ func TestBuildListsStuff(t *testing.T) {
 }
 
 func TestIODirInfUpdate(t *testing.T) {
-	oldIODirInf := IODirInf{CommandsSrcDir: "old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir: "old OutDir", SrcDir: "old SrcDir"}
+	oldIODirInf := IODirInf{CommandsSrcDir: "old CommandsSrcDir", OutDir: "old OutDir", SrcDir: "old SrcDir"}
 	newIODirInf := IODirInf{}
 	oldIODirInf.update(newIODirInf)
 	if oldIODirInf.CommandsSrcDir != "old CommandsSrcDir" {
 		t.Errorf("Expected \"old CommandsSrcDir\", got %q", oldIODirInf.CommandsSrcDir)
-	}
-	if oldIODirInf.HTTPDir != "old HTTPDir" {
-		t.Errorf("Expected \"old HTTPDir\", got %q", oldIODirInf.HTTPDir)
-	}
-	if oldIODirInf.HTTPSrcDir != "old HTTPSrcDir" {
-		t.Errorf("Expected \"old HTTPSrcDir\", got %q", oldIODirInf.HTTPSrcDir)
 	}
 	if oldIODirInf.OutDir != "old OutDir" {
 		t.Errorf("Expected \"old OutDir\", got %q", oldIODirInf.OutDir)
@@ -557,17 +549,11 @@ func TestIODirInfUpdate(t *testing.T) {
 		t.Errorf("Expected \"old SrcDir\", got %q", oldIODirInf.SrcDir)
 	}
 
-	oldIODirInf = IODirInf{CommandsSrcDir: "old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir: "old OutDir", SrcDir: "old SrcDir"}
-	newIODirInf = IODirInf{CommandsSrcDir: "new CommandsSrcDir", HTTPDir: "new HTTPDir", HTTPSrcDir: "new HTTPSrcDir", OutDir: "new OutDir", SrcDir: "new SrcDir"}
+	oldIODirInf = IODirInf{CommandsSrcDir: "old CommandsSrcDir", OutDir: "old OutDir", SrcDir: "old SrcDir"}
+	newIODirInf = IODirInf{CommandsSrcDir: "new CommandsSrcDir", OutDir: "new OutDir", SrcDir: "new SrcDir"}
 	oldIODirInf.update(newIODirInf)
 	if oldIODirInf.CommandsSrcDir != "new CommandsSrcDir/" {
 		t.Errorf("Expected \"new CommandsSrcDir/\", got %q", oldIODirInf.CommandsSrcDir)
-	}
-	if oldIODirInf.HTTPDir != "new HTTPDir/" {
-		t.Errorf("Expected \"new HTTPDir/\", got %q", oldIODirInf.HTTPDir)
-	}
-	if oldIODirInf.HTTPSrcDir != "new HTTPSrcDir/" {
-		t.Errorf("Expected \"new HTTPSrcDir/\", got %q", oldIODirInf.HTTPSrcDir)
 	}
 	if oldIODirInf.OutDir != "new OutDir/" {
 		t.Errorf("Expected \"new OutDir/\", got %q", oldIODirInf.OutDir)
@@ -576,18 +562,12 @@ func TestIODirInfUpdate(t *testing.T) {
 		t.Errorf("Expected \"new SrcDir/\", got %q", oldIODirInf.SrcDir)
 	}
 
-	oldIODirInf = IODirInf{CommandsSrcDir: "old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir: "old OutDir", SrcDir: "old SrcDir"}
+	oldIODirInf = IODirInf{CommandsSrcDir: "old CommandsSrcDir", OutDir: "old OutDir", SrcDir: "old SrcDir"}
 	newIODirInf = IODirInf{CommandsSrcDir: "CommandsSrcDir"}
 	oldIODirInf.update(newIODirInf)
 	if oldIODirInf.CommandsSrcDir != "CommandsSrcDir/" {
 		t.Errorf("Expected \"CommandsSrcDir/\", got %q", oldIODirInf.CommandsSrcDir)
 	}
-	if oldIODirInf.HTTPDir != "old HTTPDir" {
-		t.Errorf("Expected \"old HTTPDir\", got %q", oldIODirInf.HTTPDir)
-	}
-	if oldIODirInf.HTTPSrcDir != "old HTTPSrcDir" {
-		t.Errorf("Expected \"old HTTPSrcDir\", got %q", oldIODirInf.HTTPSrcDir)
-	}
 	if oldIODirInf.OutDir != "old OutDir" {
 		t.Errorf("Expected \"old OutDir\", got %q", oldIODirInf.OutDir)
 	}
@@ -595,55 +575,11 @@ func TestIODirInfUpdate(t *testing.T) {
 		t.Errorf("Expected \"old SrcDir\", got %q", oldIODirInf.SrcDir)
 	}
 
-	oldIODirInf = IODirInf{CommandsSrcDir: "old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir: "old OutDir", SrcDir: "old SrcDir"}
-	newIODirInf = IODirInf{HTTPDir: "HTTPDir"}
-	oldIODirInf.update(newIODirInf)
-	if oldIODirInf.CommandsSrcDir != "old CommandsSrcDir" {
-		t.Errorf("Expected \"old CommandsSrcDir\", got %q", oldIODirInf.CommandsSrcDir)
-	}
-	if oldIODirInf.HTTPDir != "HTTPDir/" {
-		t.Errorf("Expected \"HTTPDir/\", got %q", oldIODirInf.HTTPDir)
-	}
-	if oldIODirInf.HTTPSrcDir != "old HTTPSrcDir" {
-		t.Errorf("Expected \"old HTTPSrcDir\", got %q", oldIODirInf.HTTPSrcDir)
-	}
-	if oldIODirInf.OutDir != "old OutDir" {
-		t.Errorf("Expected \"old OutDir\", got %q", oldIODirInf.OutDir)
-	}
-	if oldIODirInf.SrcDir != "old SrcDir" {
-		t.Errorf("Expected \"old SrcDir\", got %q", oldIODirInf.SrcDir)
-	}
-
-	oldIODirInf = IODirInf{CommandsSrcDir: "old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir: "old OutDir", SrcDir: "old SrcDir"}
-	newIODirInf = IODirInf{HTTPSrcDir: "HTTPSrcDir"}
-	oldIODirInf.update(newIODirInf)
-	if oldIODirInf.CommandsSrcDir != "old CommandsSrcDir" {
-		t.Errorf("Expected \"old CommandsSrcDir\", got %q", oldIODirInf.CommandsSrcDir)
-	}
-	if oldIODirInf.HTTPDir != "old HTTPDir" {
-		t.Errorf("Expected \"old HTTPDir\", got %q", oldIODirInf.HTTPDir)
-	}
-	if oldIODirInf.HTTPSrcDir != "HTTPSrcDir/" {
-		t.Errorf("Expected \"HTTPSrcDir/\", got %q", oldIODirInf.HTTPSrcDir)
-	}
-	if oldIODirInf.OutDir != "old OutDir" {
-		t.Errorf("Expected \"old OutDir\", got %q", oldIODirInf.OutDir)
-	}
-	if oldIODirInf.SrcDir != "old SrcDir" {
-		t.Errorf("Expected \"old SrcDir\", got %q", oldIODirInf.SrcDir)
-	}
-
-	oldIODirInf = IODirInf{CommandsSrcDir: "old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir: "old OutDir", SrcDir: "old SrcDir"}
+	oldIODirInf = IODirInf{CommandsSrcDir: "old CommandsSrcDir", OutDir: "old OutDir", SrcDir: "old SrcDir"}
 	newIODirInf = IODirInf{OutDir: "OutDir"}
 	oldIODirInf.update(newIODirInf)
 	if oldIODirInf.CommandsSrcDir != "old CommandsSrcDir" {
 		t.Errorf("Expected \"old CommandsSrcDir\", got %q", oldIODirInf.CommandsSrcDir)
-	}
-	if oldIODirInf.HTTPDir != "old HTTPDir" {
-		t.Errorf("Expected \"old HTTPDir\", got %q", oldIODirInf.HTTPDir)
-	}
-	if oldIODirInf.HTTPSrcDir != "old HTTPSrcDir" {
-		t.Errorf("Expected \"old HTTPSrcDir\", got %q", oldIODirInf.HTTPSrcDir)
 	}
 	if oldIODirInf.OutDir != "OutDir/" {
 		t.Errorf("Expected \"OutDir/\", got %q", oldIODirInf.OutDir)

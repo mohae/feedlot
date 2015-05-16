@@ -174,8 +174,6 @@ var testRawTemplateBuilderOnly = &rawTemplate{
 	PackerInf: PackerInf{MinPackerVersion: "0.4.0", Description: "Test supported distribution template"},
 	IODirInf: IODirInf{
 		CommandsSrcDir: "commands",
-		HTTPDir:        "http",
-		HTTPSrcDir:     "http",
 		OutDir:         "../test_files/out/:distro/:build_name",
 		SrcDir:         "../test_files/src/:distro",
 	},
@@ -199,8 +197,6 @@ var testRawTemplateWOSection = &rawTemplate{
 	PackerInf: PackerInf{MinPackerVersion: "0.4.0", Description: "Test supported distribution template"},
 	IODirInf: IODirInf{
 		CommandsSrcDir: "commands",
-		HTTPDir:        "http",
-		HTTPSrcDir:     "http",
 		OutDir:         "../test_files/out/:distro/:build_name",
 		SrcDir:         "../test_files/src/:distro",
 	},
@@ -239,8 +235,6 @@ func TestReplaceVariables(t *testing.T) {
 	r.varVals = map[string]string{
 		":arch":            "amd64",
 		":command_src_dir": "commands",
-		":http_dir":        "http",
-		":http_src_dir":    "http",
 		":image":           "server",
 		":name":            ":distro-:release:-:image-:arch",
 		":out_dir":         "../test_files/out/:distro",
@@ -327,12 +321,6 @@ func TestMergeVariables(t *testing.T) {
 	r.mergeVariables()
 	if r.CommandsSrcDir != "commands" {
 		t.Errorf("Expected \"commands\", got %q", r.CommandsSrcDir)
-	}
-	if r.HTTPDir != "http" {
-		t.Errorf("Expected \"http\", got %q", r.HTTPDir)
-	}
-	if r.HTTPSrcDir != "http" {
-		t.Errorf("Expected \"http\", got %q", r.HTTPSrcDir)
 	}
 	if r.OutDir != "../test_files/out/ubuntu" {
 		t.Errorf("Expected \"../test_files/out/ubuntu\", got %q", r.OutDir)
@@ -599,10 +587,11 @@ func TestRawTemplateMergeString(t *testing.T) {
 		expected string
 	}{
 		{"", "", ""},
-		{"", "http", "http"},
-		{"dir", "http", "dir"},
-		{"dir/", "http", "dir"},
+		{"", "src", "src"},
+		{"dir", "src", "dir"},
+		{"dir/", "src", "dir"},
 		{"dir", "", "dir"},
+		{"dir/", "", "dir"},
 	}
 	r := newRawTemplate()
 	for i, test := range tests {
