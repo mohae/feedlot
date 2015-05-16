@@ -329,12 +329,6 @@ func (i *IODirInf) update(inf IODirInf) {
 	if inf.OutDir != "" {
 		i.OutDir = appendSlash(inf.OutDir)
 	}
-	if inf.ScriptsDir != "" {
-		i.ScriptsDir = appendSlash(inf.ScriptsDir)
-	}
-	if inf.ScriptsSrcDir != "" {
-		i.ScriptsSrcDir = appendSlash(inf.ScriptsSrcDir)
-	}
 	if inf.SrcDir != "" {
 		i.SrcDir = appendSlash(inf.SrcDir)
 	}
@@ -346,15 +340,14 @@ func (i *IODirInf) check() {
 		i.HTTPDir = "http"
 	}
 	if i.HTTPSrcDir == "" {
-		i.HTTPSrcDir == "http"
+		i.HTTPSrcDir = "http"
 	}
 	if i.OutDir == "" {
 		i.OutDir = os.Getenv(EnvParamDelimStart) + "build_name"
 	}
 	if i.SrcDir == "" {
-		i.SrcDir == "src"
+		i.SrcDir = "src"
 	}
-	return nil
 }
 
 // PackerInf is used to store information about a Packer Template. In Packer,

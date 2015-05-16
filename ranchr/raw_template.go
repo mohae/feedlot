@@ -226,17 +226,12 @@ func (r *rawTemplate) mergeVariables() {
 	r.CommandsSrcDir = r.mergeString(r.CommandsSrcDir, "commands")
 	r.HTTPDir = r.mergeString(r.HTTPDir, "http")
 	r.HTTPSrcDir = r.mergeString(r.HTTPSrcDir, "http")
-	// this needs to be modified to handle provisioners in general
-	r.ScriptsDir = r.mergeString(r.ScriptsDir, "scripts")
-	r.ScriptsSrcDir = r.mergeString(r.ScriptsSrcDir, "scripts")
 
 	// Create a full variable replacement map, know that the SrcDir and OutDir stuff are resolved.
 	// Rest of the replacements are done by the packerers.
 	r.varVals[r.delim+"commands_src_dir"] = r.CommandsSrcDir
 	r.varVals[r.delim+"http_dir"] = r.HTTPDir
 	r.varVals[r.delim+"http_src_dir"] = r.HTTPSrcDir
-	r.varVals[r.delim+"scripts_dir"] = r.ScriptsDir
-	r.varVals[r.delim+"scripts_src_dir"] = r.ScriptsSrcDir
 }
 
 // setBaseVarVals sets the varVals for the base variables

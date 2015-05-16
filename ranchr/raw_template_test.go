@@ -59,16 +59,16 @@ var comparePostProcessors = map[string]*postProcessor{
 }
 
 var compareProvisioners = map[string]*provisioner{
-	"shell-scripts": {
+	"shell": {
 		templateSection{
 			Settings: []string{
-				"execute_command = :commands_src_dir/execute_test.command",
+				"execute_command = execute_test.command",
 			},
 			Arrays: map[string]interface{}{
 				"scripts": []string{
-					":scripts_dir/setup_test.sh",
-					":scripts_dir/vagrant_test.sh",
-					":scripts_dir/cleanup_test.sh",
+					"setup_test.sh",
+					"vagrant_test.sh",
+					"cleanup_test.sh",
 				},
 				"except": []string{
 					"docker",
@@ -143,19 +143,19 @@ var testBuildNewTPL = &rawTemplate{
 			},
 		},
 		ProvisionerTypes: []string{
-			"shell-scripts",
+			"shell",
 		},
 		Provisioners: map[string]*provisioner{
-			"shell-scripts": {
+			"shell": {
 				templateSection{
 					Settings: []string{
-						"execute_command = :commands_src_dir/execute_test.command",
+						"execute_command = execute_test.command",
 					},
 					Arrays: map[string]interface{}{
 						"scripts": []string{
-							":scripts_dir/setup_test.sh",
-							":scripts_dir/vagrant_test.sh",
-							":scripts_dir/cleanup_test.sh",
+							"setup_test.sh",
+							"vagrant_test.sh",
+							"cleanup_test.sh",
 						},
 						"except": []string{
 							"docker",
@@ -173,12 +173,10 @@ var testBuildNewTPL = &rawTemplate{
 var testRawTemplateBuilderOnly = &rawTemplate{
 	PackerInf: PackerInf{MinPackerVersion: "0.4.0", Description: "Test supported distribution template"},
 	IODirInf: IODirInf{
-		CommandsSrcDir: ":src_dir/commands",
+		CommandsSrcDir: "commands",
 		HTTPDir:        "http",
-		HTTPSrcDir:     ":src_dir/http",
+		HTTPSrcDir:     "http",
 		OutDir:         "../test_files/out/:distro/:build_name",
-		ScriptsDir:     "scripts",
-		ScriptsSrcDir:  ":src_dir/scripts",
 		SrcDir:         "../test_files/src/:distro",
 	},
 	BuildInf: BuildInf{
@@ -200,12 +198,10 @@ var testRawTemplateBuilderOnly = &rawTemplate{
 var testRawTemplateWOSection = &rawTemplate{
 	PackerInf: PackerInf{MinPackerVersion: "0.4.0", Description: "Test supported distribution template"},
 	IODirInf: IODirInf{
-		CommandsSrcDir: ":src_dir/commands",
+		CommandsSrcDir: "commands",
 		HTTPDir:        "http",
-		HTTPSrcDir:     ":src_dir/http",
+		HTTPSrcDir:     "http",
 		OutDir:         "../test_files/out/:distro/:build_name",
-		ScriptsDir:     "scripts",
-		ScriptsSrcDir:  ":src_dir/scripts",
 		SrcDir:         "../test_files/src/:distro",
 	},
 	BuildInf: BuildInf{
@@ -242,15 +238,13 @@ func TestReplaceVariables(t *testing.T) {
 	r := newRawTemplate()
 	r.varVals = map[string]string{
 		":arch":            "amd64",
-		":command_src_dir": ":src_dir/commands",
+		":command_src_dir": "commands",
 		":http_dir":        "http",
-		":http_src_dir":    ":src_dir/http",
+		":http_src_dir":    "http",
 		":image":           "server",
 		":name":            ":distro-:release:-:image-:arch",
 		":out_dir":         "../test_files/out/:distro",
 		":release":         "14.04",
-		":scripts_dir":     "scripts",
-		":scripts_src_dir": ":src_dir/scripts",
 		":src_dir":         "../test_files/src/:distro",
 		":distro":          "ubuntu",
 	}
@@ -331,204 +325,20 @@ func TestRawTemplateScriptNames(t *testing.T) {
 func TestMergeVariables(t *testing.T) {
 	r := testDistroDefaults.Templates[Ubuntu]
 	r.mergeVariables()
-	if r.CommandsSrcDir != "../test_files/src/ubuntu/commands" {
-		t.Errorf("Expected \"../test_files/src/ubuntu/commands\", got %q", r.CommandsSrcDir)
+	if r.CommandsSrcDir != "commands" {
+		t.Errorf("Expected \"commands\", got %q", r.CommandsSrcDir)
 	}
 	if r.HTTPDir != "http" {
 		t.Errorf("Expected \"http\", got %q", r.HTTPDir)
 	}
-	if r.HTTPSrcDir != "../test_files/src/ubuntu/http" {
-		t.Errorf("Expected \"../test_files/src/ubuntu/http\", got %q", r.HTTPSrcDir)
+	if r.HTTPSrcDir != "http" {
+		t.Errorf("Expected \"http\", got %q", r.HTTPSrcDir)
 	}
 	if r.OutDir != "../test_files/out/ubuntu" {
 		t.Errorf("Expected \"../test_files/out/ubuntu\", got %q", r.OutDir)
 	}
-	if r.ScriptsDir != "scripts" {
-		t.Errorf("Expected \"scripts\", got %q", r.ScriptsDir)
-	}
-	if r.ScriptsSrcDir != "../test_files/src/ubuntu/scripts" {
-		t.Errorf("Expected \"../test_files/src/ubuntu/scripts\", got %q", r.ScriptsSrcDir)
-	}
 	if r.SrcDir != "../test_files/src/ubuntu" {
 		t.Errorf("Expected \"../test_files/src/ubuntu\", got %q", r.SrcDir)
-	}
-}
-
-func TestIODirInf(t *testing.T) {
-	oldIODirInf := IODirInf{CommandsSrcDir: "old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir: "old OutDir", ScriptsDir: "old ScriptsDir", ScriptsSrcDir: "old ScriptsSrcDir", SrcDir: "old SrcDir"}
-	newIODirInf := IODirInf{}
-	oldIODirInf.update(newIODirInf)
-	if oldIODirInf.CommandsSrcDir != "old CommandsSrcDir" {
-		t.Errorf("Expected \"old CommandsSrcDir\", got %q", oldIODirInf.CommandsSrcDir)
-	}
-	if oldIODirInf.HTTPDir != "old HTTPDir" {
-		t.Errorf("Expected \"old HTTPDir\", got %q", oldIODirInf.HTTPDir)
-	}
-	if oldIODirInf.HTTPSrcDir != "old HTTPSrcDir" {
-		t.Errorf("Expected \"old HTTPSrcDir\", got %q", oldIODirInf.HTTPSrcDir)
-	}
-	if oldIODirInf.OutDir != "old OutDir" {
-		t.Errorf("Expected \"old OutDir\", got %q", oldIODirInf.OutDir)
-	}
-	if oldIODirInf.ScriptsDir != "old ScriptsDir" {
-		t.Errorf("Expected \"old ScriptsDir\", got %q", oldIODirInf.ScriptsDir)
-	}
-	if oldIODirInf.ScriptsSrcDir != "old ScriptsSrcDir" {
-		t.Errorf("Expected \"old ScriptsSrcDir\", got %q", oldIODirInf.ScriptsSrcDir)
-	}
-	if oldIODirInf.SrcDir != "old SrcDir" {
-		t.Errorf("Expected \"old SrcDir\", got %q", oldIODirInf.SrcDir)
-	}
-
-	oldIODirInf = IODirInf{CommandsSrcDir: "old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir: "old OutDir", ScriptsDir: "old ScriptsDir", ScriptsSrcDir: "old ScriptsSrcDir", SrcDir: "old SrcDir"}
-	newIODirInf = IODirInf{CommandsSrcDir: "new CommandsSrcDir", HTTPDir: "new HTTPDir", HTTPSrcDir: "new HTTPSrcDir", OutDir: "new OutDir", ScriptsDir: "new ScriptsDir", ScriptsSrcDir: "new ScriptsSrcDir", SrcDir: "new SrcDir"}
-	oldIODirInf.update(newIODirInf)
-	if oldIODirInf.CommandsSrcDir != "new CommandsSrcDir/" {
-		t.Errorf("Expected \"new CommandsSrcDir/\", got %q", oldIODirInf.CommandsSrcDir)
-	}
-	if oldIODirInf.HTTPDir != "new HTTPDir/" {
-		t.Errorf("Expected \"new HTTPDir/\", got %q", oldIODirInf.HTTPDir)
-	}
-	if oldIODirInf.HTTPSrcDir != "new HTTPSrcDir/" {
-		t.Errorf("Expected \"new HTTPSrcDir/\", got %q", oldIODirInf.HTTPSrcDir)
-	}
-	if oldIODirInf.OutDir != "new OutDir/" {
-		t.Errorf("Expected \"new OutDir/\", got %q", oldIODirInf.OutDir)
-	}
-	if oldIODirInf.ScriptsDir != "new ScriptsDir/" {
-		t.Errorf("Expected \"new ScriptsDir/\", got %q", oldIODirInf.ScriptsDir)
-	}
-	if oldIODirInf.ScriptsSrcDir != "new ScriptsSrcDir/" {
-		t.Errorf("Expected \"new ScriptsSrcDir/\", got %q", oldIODirInf.ScriptsSrcDir)
-	}
-	if oldIODirInf.SrcDir != "new SrcDir/" {
-		t.Errorf("Expected \"new SrcDir/\", got %q", oldIODirInf.SrcDir)
-	}
-
-	oldIODirInf = IODirInf{CommandsSrcDir: "old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir: "old OutDir", ScriptsDir: "old ScriptsDir", ScriptsSrcDir: "old ScriptsSrcDir", SrcDir: "old SrcDir"}
-	newIODirInf = IODirInf{CommandsSrcDir: "CommandsSrcDir"}
-	oldIODirInf.update(newIODirInf)
-	if oldIODirInf.CommandsSrcDir != "CommandsSrcDir/" {
-		t.Errorf("Expected \"CommandsSrcDir/\", got %q", oldIODirInf.CommandsSrcDir)
-	}
-	if oldIODirInf.HTTPDir != "old HTTPDir" {
-		t.Errorf("Expected \"old HTTPDir\", got %q", oldIODirInf.HTTPDir)
-	}
-	if oldIODirInf.HTTPSrcDir != "old HTTPSrcDir" {
-		t.Errorf("Expected \"old HTTPSrcDir\", got %q", oldIODirInf.HTTPSrcDir)
-	}
-	if oldIODirInf.OutDir != "old OutDir" {
-		t.Errorf("Expected \"old OutDir\", got %q", oldIODirInf.OutDir)
-	}
-	if oldIODirInf.ScriptsDir != "old ScriptsDir" {
-		t.Errorf("Expected \"old ScriptsDir\", got %q", oldIODirInf.ScriptsDir)
-	}
-	if oldIODirInf.ScriptsSrcDir != "old ScriptsSrcDir" {
-		t.Errorf("Expected \"old ScriptsSrcDir\", got %q", oldIODirInf.ScriptsSrcDir)
-	}
-	if oldIODirInf.SrcDir != "old SrcDir" {
-		t.Errorf("Expected \"old SrcDir\", got %q", oldIODirInf.SrcDir)
-	}
-
-	oldIODirInf = IODirInf{CommandsSrcDir: "old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir: "old OutDir", ScriptsDir: "old ScriptsDir", ScriptsSrcDir: "old ScriptsSrcDir", SrcDir: "old SrcDir"}
-	newIODirInf = IODirInf{HTTPDir: "HTTPDir"}
-	oldIODirInf.update(newIODirInf)
-	if oldIODirInf.CommandsSrcDir != "old CommandsSrcDir" {
-		t.Errorf("Expected \"old CommandsSrcDir\", got %q", oldIODirInf.CommandsSrcDir)
-	}
-	if oldIODirInf.HTTPDir != "HTTPDir/" {
-		t.Errorf("Expected \"HTTPDir/\", got %q", oldIODirInf.HTTPDir)
-	}
-	if oldIODirInf.HTTPSrcDir != "old HTTPSrcDir" {
-		t.Errorf("Expected \"old HTTPSrcDir\", got %q", oldIODirInf.HTTPSrcDir)
-	}
-	if oldIODirInf.OutDir != "old OutDir" {
-		t.Errorf("Expected \"old OutDir\", got %q", oldIODirInf.OutDir)
-	}
-	if oldIODirInf.ScriptsDir != "old ScriptsDir" {
-		t.Errorf("Expected \"old ScriptsDir\", got %q", oldIODirInf.ScriptsDir)
-	}
-	if oldIODirInf.ScriptsSrcDir != "old ScriptsSrcDir" {
-		t.Errorf("Expected \"old ScriptsSrcDir\", got %q", oldIODirInf.ScriptsSrcDir)
-	}
-	if oldIODirInf.SrcDir != "old SrcDir" {
-		t.Errorf("Expected \"old SrcDir\", got %q", oldIODirInf.SrcDir)
-	}
-
-	oldIODirInf = IODirInf{CommandsSrcDir: "old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir: "old OutDir", ScriptsDir: "old ScriptsDir", ScriptsSrcDir: "old ScriptsSrcDir", SrcDir: "old SrcDir"}
-	newIODirInf = IODirInf{HTTPSrcDir: "HTTPSrcDir"}
-	oldIODirInf.update(newIODirInf)
-	if oldIODirInf.CommandsSrcDir != "old CommandsSrcDir" {
-		t.Errorf("Expected \"old CommandsSrcDir\", got %q", oldIODirInf.CommandsSrcDir)
-	}
-	if oldIODirInf.HTTPDir != "old HTTPDir" {
-		t.Errorf("Expected \"old HTTPDir\", got %q", oldIODirInf.HTTPDir)
-	}
-	if oldIODirInf.HTTPSrcDir != "HTTPSrcDir/" {
-		t.Errorf("Expected \"HTTPSrcDir/\", got %q", oldIODirInf.HTTPSrcDir)
-	}
-	if oldIODirInf.OutDir != "old OutDir" {
-		t.Errorf("Expected \"old OutDir\", got %q", oldIODirInf.OutDir)
-	}
-	if oldIODirInf.ScriptsDir != "old ScriptsDir" {
-		t.Errorf("Expected \"old ScriptsDir\", got %q", oldIODirInf.ScriptsDir)
-	}
-	if oldIODirInf.ScriptsSrcDir != "old ScriptsSrcDir" {
-		t.Errorf("Expected \"old ScriptsSrcDir\", got %q", oldIODirInf.ScriptsSrcDir)
-	}
-	if oldIODirInf.SrcDir != "old SrcDir" {
-		t.Errorf("Expected \"old SrcDir\", got %q", oldIODirInf.SrcDir)
-	}
-
-	oldIODirInf = IODirInf{CommandsSrcDir: "old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir: "old OutDir", ScriptsDir: "old ScriptsDir", ScriptsSrcDir: "old ScriptsSrcDir", SrcDir: "old SrcDir"}
-	newIODirInf = IODirInf{OutDir: "OutDir"}
-	oldIODirInf.update(newIODirInf)
-	if oldIODirInf.CommandsSrcDir != "old CommandsSrcDir" {
-		t.Errorf("Expected \"old CommandsSrcDir\", got %q", oldIODirInf.CommandsSrcDir)
-	}
-	if oldIODirInf.HTTPDir != "old HTTPDir" {
-		t.Errorf("Expected \"old HTTPDir\", got %q", oldIODirInf.HTTPDir)
-	}
-	if oldIODirInf.HTTPSrcDir != "old HTTPSrcDir" {
-		t.Errorf("Expected \"old HTTPSrcDir\", got %q", oldIODirInf.HTTPSrcDir)
-	}
-	if oldIODirInf.OutDir != "OutDir/" {
-		t.Errorf("Expected \"OutDir/\", got %q", oldIODirInf.OutDir)
-	}
-	if oldIODirInf.ScriptsDir != "old ScriptsDir" {
-		t.Errorf("Expected \"old ScriptsDi\", got %q", oldIODirInf.ScriptsDir)
-	}
-	if oldIODirInf.ScriptsSrcDir != "old ScriptsSrcDir" {
-		t.Errorf("Expected \"old ScriptsSrcDir\", got %q", oldIODirInf.ScriptsSrcDir)
-	}
-	if oldIODirInf.SrcDir != "old SrcDir" {
-		t.Errorf("Expected \"old SrcDir\", got %q", oldIODirInf.SrcDir)
-	}
-
-	oldIODirInf = IODirInf{CommandsSrcDir: "old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir: "old OutDir", ScriptsDir: "old ScriptsDir", ScriptsSrcDir: "old ScriptsSrcDir", SrcDir: "old SrcDir"}
-	newIODirInf = IODirInf{ScriptsDir: "ScriptsDir"}
-	oldIODirInf.update(newIODirInf)
-	if oldIODirInf.CommandsSrcDir != "old CommandsSrcDir" {
-		t.Errorf("Expected \"old CommandsSrcDir\", got %q", oldIODirInf.CommandsSrcDir)
-	}
-	if oldIODirInf.HTTPDir != "old HTTPDir" {
-		t.Errorf("Expected \"old HTTPDir\", got %q", oldIODirInf.HTTPDir)
-	}
-	if oldIODirInf.HTTPSrcDir != "old HTTPSrcDir" {
-		t.Errorf("Expected \"old HTTPSrcDir\", got %q", oldIODirInf.HTTPSrcDir)
-	}
-	if oldIODirInf.OutDir != "old OutDir" {
-		t.Errorf("Expected \"old OutDir\", got %q", oldIODirInf.OutDir)
-	}
-	if oldIODirInf.ScriptsDir != "ScriptsDir/" {
-		t.Errorf("Expected \"ScriptsDir/\", got %q", oldIODirInf.ScriptsDir)
-	}
-	if oldIODirInf.ScriptsSrcDir != "old ScriptsSrcDir" {
-		t.Errorf("Expected \"old ScriptsSrcDir\", got %q", oldIODirInf.ScriptsSrcDir)
-	}
-	if oldIODirInf.SrcDir != "old SrcDir" {
-		t.Errorf("Expected \"old SrcDir\", got %q", oldIODirInf.SrcDir)
-		t.Errorf("Expected \"old SrcDir\", got %q", oldIODirInf.SrcDir)
 	}
 }
 

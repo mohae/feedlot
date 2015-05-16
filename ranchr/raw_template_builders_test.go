@@ -7,12 +7,10 @@ import (
 
 var testUbuntu = &rawTemplate{
 	IODirInf: IODirInf{
-		CommandsSrcDir: "../test_files/ubuntu/src/commands",
+		CommandsSrcDir: "commands",
 		HTTPDir:        "http",
-		HTTPSrcDir:     "../test_files/ubuntu/src/http",
+		HTTPSrcDir:     "http",
 		OutDir:         "../test_files/ubuntu/out/ubuntu",
-		ScriptsDir:     "scripts",
-		ScriptsSrcDir:  "../test_files/src/ubuntu/scripts",
 		SrcDir:         "../test_files/src/ubuntu",
 	},
 	PackerInf: PackerInf{
@@ -37,12 +35,12 @@ var testUbuntu = &rawTemplate{
 			"common": {
 				templateSection{
 					Settings: []string{
-						"boot_command = ../test_files/src/ubuntu/commands/boot_test.command",
+						"boot_command = boot_test.command",
 						"boot_wait = 5s",
 						"disk_size = 20000",
 						"http_directory = http",
 						"iso_checksum_type = sha256",
-						"shutdown_command = ../test_files/src/ubuntu/commands/shutdown_test.command",
+						"shutdown_command = shutdown_test.command",
 						"ssh_password = vagrant",
 						"ssh_port = 22",
 						"ssh_username = vagrant",
@@ -87,21 +85,21 @@ var testUbuntu = &rawTemplate{
 			},
 		},
 		ProvisionerTypes: []string{
-			"shell-scripts",
+			"shell",
 		},
 		Provisioners: map[string]*provisioner{
-			"shell-scripts": {
+			"shell": {
 				templateSection{
 					Settings: []string{
-						"execute_command = ../test_files/src/ubuntu/commands/execute_test.command",
+						"execute_command = execute_test.command",
 					},
 					Arrays: map[string]interface{}{
 						"scripts": []string{
-							"../test_files/src/ubuntu/scripts/setup_test.sh",
-							"../test_files/src/ubuntu/scripts/base_test.sh",
-							"../test_files/src/ubuntu/scripts/vagrant_test.sh",
-							"../test_files/src/ubuntu/scripts/cleanup_test.sh",
-							"../test_files/src/ubuntu/scripts/zerodisk_test.sh",
+							"setup_test.sh",
+							"base_test.sh",
+							"vagrant_test.sh",
+							"cleanup_test.sh",
+							"zerodisk_test.sh",
 						},
 					},
 				},
@@ -112,12 +110,10 @@ var testUbuntu = &rawTemplate{
 
 var testCentOS = &rawTemplate{
 	IODirInf: IODirInf{
-		CommandsSrcDir: "../test_files/centos/src/commands",
+		CommandsSrcDir: "commands",
 		HTTPDir:        "http",
-		HTTPSrcDir:     "../test_files/centos/src/http",
+		HTTPSrcDir:     "http",
 		OutDir:         "../test_files/out/centos",
-		ScriptsDir:     "scripts",
-		ScriptsSrcDir:  "../test_files/centos/src/scripts",
 		SrcDir:         "../test_files/src/centos",
 	},
 	PackerInf: PackerInf{
@@ -144,12 +140,12 @@ var testCentOS = &rawTemplate{
 			"common": {
 				templateSection{
 					Settings: []string{
-						"boot_command = ../test_files/src/centos/commands/boot_test.command",
+						"boot_command = boot_test.command",
 						"boot_wait = 5s",
 						"disk_size = 20000",
 						"http_directory = http",
 						"iso_checksum_type = sha256",
-						"shutdown_command = ../test_files/src/centos/commands/shutdown_test.command",
+						"shutdown_command = shutdown_test.command",
 						"ssh_password = vagrant",
 						"ssh_port = 22",
 						"ssh_username = vagrant",
@@ -214,7 +210,7 @@ var testCentOS = &rawTemplate{
 			},
 		},
 		ProvisionerTypes: []string{
-			"shell-scripts",
+			"shell",
 			"salt",
 		},
 		Provisioners: map[string]*provisioner{
@@ -226,18 +222,18 @@ var testCentOS = &rawTemplate{
 					},
 				},
 			},
-			"shell-scripts": {
+			"shell": {
 				templateSection{
 					Settings: []string{
-						"execute_command = ../test_files/src/centos/commands/execute_test.command",
+						"execute_command = execute_test.command",
 					},
 					Arrays: map[string]interface{}{
 						"scripts": []string{
-							"../test_files/centos/src/scripts/setup_test.sh",
-							"../test_files/centos/src/scripts/base_test.sh",
-							"../test_files/centos/src/scripts/vagrant_test.sh",
-							"../test_files/centos/src/scripts/cleanup_test.sh",
-							"../test_files/centos/src/scripts/zerodisk_test.sh",
+							"setup_test.sh",
+							"base_test.sh",
+							"vagrant_test.sh",
+							"cleanup_test.sh",
+							"zerodisk_test.sh",
 						},
 					},
 				},
@@ -248,12 +244,10 @@ var testCentOS = &rawTemplate{
 
 var testAllBuilders = &rawTemplate{
 	IODirInf: IODirInf{
-		CommandsSrcDir: "../test_files/ubuntu/src/commands",
+		CommandsSrcDir: "commands",
 		HTTPDir:        "http",
-		HTTPSrcDir:     "../test_files/ubuntu/src/http",
+		HTTPSrcDir:     "http",
 		OutDir:         "../test_files/out/ubuntu",
-		ScriptsDir:     "scripts",
-		ScriptsSrcDir:  "../test_files/ubuntu/src/scripts",
 		SrcDir:         "../test_files/src/ubuntu",
 	},
 	PackerInf: PackerInf{
@@ -620,12 +614,10 @@ var testAllBuilders = &rawTemplate{
 
 var testDigtialOceanAPIV1 = &rawTemplate{
 	IODirInf: IODirInf{
-		CommandsSrcDir: "../test_files/ubuntu/src/commands",
+		CommandsSrcDir: "commands",
 		HTTPDir:        "http",
-		HTTPSrcDir:     "../test_files/ubuntu/src/http",
+		HTTPSrcDir:     "http",
 		OutDir:         "../test_files/ubuntu/out/ubuntu",
-		ScriptsDir:     "scripts",
-		ScriptsSrcDir:  "../test_files/src/ubuntu/scripts",
 		SrcDir:         "../test_files/src/ubuntu",
 	},
 	PackerInf: PackerInf{
@@ -671,12 +663,10 @@ var testDigtialOceanAPIV1 = &rawTemplate{
 
 var testDigtialOceanNoAPI = &rawTemplate{
 	IODirInf: IODirInf{
-		CommandsSrcDir: "../test_files/ubuntu/src/commands",
+		CommandsSrcDir: "commands",
 		HTTPDir:        "http",
-		HTTPSrcDir:     "../test_files/ubuntu/src/http",
+		HTTPSrcDir:     "http",
 		OutDir:         "../test_files/ubuntu/out/ubuntu",
-		ScriptsDir:     "scripts",
-		ScriptsSrcDir:  "../test_files/src/ubuntu/scripts",
 		SrcDir:         "../test_files/src/ubuntu",
 	},
 	PackerInf: PackerInf{
@@ -722,12 +712,12 @@ var builderOrig = map[string]*builder{
 	"common": {
 		templateSection{
 			Settings: []string{
-				"boot_command = ../test_files/src/ubuntu/commands/boot_test.command",
+				"boot_command = boot_test.command",
 				"boot_wait = 5s",
 				"disk_size = 20000",
 				"http_directory = http",
 				"iso_checksum_type = sha256",
-				"shutdown_command = ../test_files/src/ubuntu/commands/shutdown_test.command",
+				"shutdown_command = shutdown_test.command",
 				"ssh_password = vagrant",
 				"ssh_port = 22",
 				"ssh_username = vagrant",
@@ -763,12 +753,12 @@ var builderNew = map[string]*builder{
 	"common": {
 		templateSection{
 			Settings: []string{
-				"boot_command = ../test_files/src/ubuntu/commands/boot_test.command",
+				"boot_command = boot_test.command",
 				"boot_wait = 15s",
 				"disk_size = 20000",
 				"http_directory = http",
 				"iso_checksum_type = sha256",
-				"shutdown_command = ../test_files/src/ubuntu/commands/shutdown_test.command",
+				"shutdown_command = shutdown_test.command",
 				"ssh_password = vagrant",
 				"ssh_port = 22",
 				"ssh_username = vagrant",
@@ -792,12 +782,12 @@ var builderMerged = map[string]*builder{
 	"common": {
 		templateSection{
 			Settings: []string{
-				"boot_command = ../test_files/src/ubuntu/commands/boot_test.command",
+				"boot_command = boot_test.command",
 				"boot_wait = 15s",
 				"disk_size = 20000",
 				"http_directory = http",
 				"iso_checksum_type = sha256",
-				"shutdown_command = ../test_files/src/ubuntu/commands/shutdown_test.command",
+				"shutdown_command = shutdown_test.command",
 				"ssh_password = vagrant",
 				"ssh_port = 22",
 				"ssh_username = vagrant",

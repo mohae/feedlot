@@ -26,12 +26,10 @@ func stringSliceContains(sl []string, val string) bool {
 var testDistroDefaultUbuntu = &rawTemplate{
 	PackerInf: PackerInf{MinPackerVersion: "0.4.0", Description: "Test supported distribution template"},
 	IODirInf: IODirInf{
-		CommandsSrcDir: ":src_dir/commands",
+		CommandsSrcDir: "commands",
 		HTTPDir:        "http",
-		HTTPSrcDir:     ":src_dir/http",
+		HTTPSrcDir:     "http",
 		OutDir:         "../test_files/out/:distro/:build_name",
-		ScriptsDir:     "scripts",
-		ScriptsSrcDir:  ":src_dir/scripts",
 		SrcDir:         "../test_files/src/:distro",
 	},
 	BuildInf: BuildInf{
@@ -126,12 +124,12 @@ var testDistroDefaultUbuntu = &rawTemplate{
 				},
 			},
 		},
-		ProvisionerTypes: []string{"shell-scripts"},
+		ProvisionerTypes: []string{"shell"},
 		Provisioners: map[string]*provisioner{
-			"shell-scripts": {
+			"shell": {
 				templateSection{
 					Settings: []string{
-						"execute_command = :commands_src_dir/execute_test.command",
+						"execute_command = execute_test.command",
 					},
 					Arrays: map[string]interface{}{
 						"except": []string{
@@ -141,10 +139,10 @@ var testDistroDefaultUbuntu = &rawTemplate{
 							"virtualbox-iso",
 						},
 						"scripts": []string{
-							":scripts_dir/setup_test.sh",
-							":scripts_dir/vagrant_test.sh",
-							":scripts_dir/sudoers_test.sh",
-							":scripts_dir/cleanup_test.sh",
+							"setup_test.sh",
+							"vagrant_test.sh",
+							"sudoers_test.sh",
+							"cleanup_test.sh",
 						},
 					},
 				},
@@ -159,12 +157,10 @@ var testDistroDefaultCentOS = &rawTemplate{
 		Description:      "Test template config and Rancher options for CentOS",
 	},
 	IODirInf: IODirInf{
-		CommandsSrcDir: ":src_dir/commands",
+		CommandsSrcDir: "commands",
 		HTTPDir:        "http",
-		HTTPSrcDir:     ":src_dir/http",
+		HTTPSrcDir:     "http",
 		OutDir:         "../test_files/out/:distro/:build_name",
-		ScriptsDir:     "scripts",
-		ScriptsSrcDir:  ":src_dir/scripts",
 		SrcDir:         "../test_files/src/:distro",
 	},
 	BuildInf: BuildInf{
@@ -186,14 +182,14 @@ var testDistroDefaultCentOS = &rawTemplate{
 			"common": {
 				templateSection{
 					Settings: []string{
-						"boot_command = :commands_src_dir/boot_test.command",
+						"boot_command = boot_test.command",
 						"boot_wait = 5s",
 						"disk_size = 20000",
 						"guest_os_type = ",
 						"headless = true",
 						"http_directory = http",
 						"iso_checksum_type = sha256",
-						"shutdown_command = :commands_src_dir/shutdown_test.command",
+						"shutdown_command = shutdown_test.command",
 						"ssh_password = vagrant",
 						"ssh_port = 22",
 						"ssh_username = vagrant",
@@ -264,13 +260,13 @@ var testDistroDefaultCentOS = &rawTemplate{
 			},
 		},
 		ProvisionerTypes: []string{
-			"shell-scripts",
+			"shell",
 		},
 		Provisioners: map[string]*provisioner{
-			"shell-scripts": {
+			"shell": {
 				templateSection{
 					Settings: []string{
-						"execute_command = :commands_src_dir/execute_test.command",
+						"execute_command = execute_test.command",
 					},
 					Arrays: map[string]interface{}{
 						"except": []string{
@@ -280,10 +276,10 @@ var testDistroDefaultCentOS = &rawTemplate{
 							"virtualbox-iso",
 						},
 						"scripts": []string{
-							":scripts_dir/setup_test.sh",
-							":scripts_dir/vagrant_test.sh",
-							":scripts_dir/sudoers_test.sh",
-							":scripts_dir/cleanup_test.sh",
+							"setup_test.sh",
+							"vagrant_test.sh",
+							"sudoers_test.sh",
+							"cleanup_test.sh",
 						},
 					},
 				},

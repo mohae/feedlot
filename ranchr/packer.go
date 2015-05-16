@@ -23,17 +23,13 @@ type packerTemplate struct {
 // template is written to the output directory and any external resources that
 // the template requires is copied there.
 func (p *packerTemplate) create(i IODirInf, b BuildInf, files map[string]string) error {
-	err := i.check()
-	if err != nil {
-		jww.ERROR.Println(err)
-		return err
-	}
+	i.check()
 	// priorBuild handles both the archiving and deletion of the prior build, if it exists, i.e.
 	// if the build's output path exists.
 	var wg sync.WaitGroup
 	a := Archive{}
 	wg.Add(1)
-	err = a.priorBuild(appendSlash(i.OutDir), "gzip", &wg)
+	err := a.priorBuild(appendSlash(i.OutDir), "gzip", &wg)
 	wg.Wait()
 	if err != nil {
 		jww.ERROR.Print(err)

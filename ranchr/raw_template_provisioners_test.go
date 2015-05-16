@@ -11,12 +11,10 @@ var testRawTemplateProvisioner = &rawTemplate{
 		Description:      "Test template config and Rancher options for CentOS",
 	},
 	IODirInf: IODirInf{
-		CommandsSrcDir: ":src_dir/commands",
+		CommandsSrcDir: "commands",
 		HTTPDir:        "http",
-		HTTPSrcDir:     ":src_dir/http",
+		HTTPSrcDir:     "http",
 		OutDir:         "../test_files/out/:type/:build_name",
-		ScriptsDir:     "scripts",
-		ScriptsSrcDir:  ":src_dir/scripts",
 		SrcDir:         "../test_files/src/:type",
 	},
 	BuildInf: BuildInf{
@@ -38,14 +36,14 @@ var testRawTemplateProvisioner = &rawTemplate{
 			"common": {
 				templateSection{
 					Settings: []string{
-						"boot_command = :commands_src_dir/boot_test.command",
+						"boot_command = boot_test.command",
 						"boot_wait = 5s",
 						"disk_size = 20000",
 						"guest_os_type = ",
 						"headless = true",
 						"http_directory = http",
 						"iso_checksum_type = sha256",
-						"shutdown_command = :commands_src_dir/shutdown_test.command",
+						"shutdown_command = shutdown_test.command",
 						"ssh_password = vagrant",
 						"ssh_port = 22",
 						"ssh_username = vagrant",
@@ -114,14 +112,14 @@ var testRawTemplateProvisioner = &rawTemplate{
 			},
 		},
 		ProvisionerTypes: []string{
-			"shell-scripts",
+			"shell",
 			"file-uploads",
 		},
 		Provisioners: map[string]*provisioner{
-			"shell-scripts": {
+			"shell": {
 				templateSection{
 					Settings: []string{
-						"execute_command = :commands_src_dir/execute_test.command",
+						"execute_command = execute_test.command",
 					},
 					Arrays: map[string]interface{}{
 						"except": []string{
@@ -131,10 +129,10 @@ var testRawTemplateProvisioner = &rawTemplate{
 							"virtualbox-iso",
 						},
 						"scripts": []string{
-							":scripts_dir/setup_test.sh",
-							":scripts_dir/vagrant_test.sh",
-							":scripts_dir/sudoers_test.sh",
-							":scripts_dir/cleanup_test.sh",
+							"setup_test.sh",
+							"vagrant_test.sh",
+							"sudoers_test.sh",
+							"cleanup_test.sh",
 						},
 					},
 				},
@@ -158,12 +156,10 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 		Description:      "Test template config and Rancher options for CentOS",
 	},
 	IODirInf: IODirInf{
-		CommandsSrcDir: ":src_dir/commands",
+		CommandsSrcDir: "commands",
 		HTTPDir:        "http",
-		HTTPSrcDir:     ":src_dir/http",
+		HTTPSrcDir:     "http",
 		OutDir:         "../test_files/out/:type/:build_name",
-		ScriptsDir:     "scripts",
-		ScriptsSrcDir:  ":src_dir/scripts",
 		SrcDir:         "../test_files/src/:type",
 	},
 	BuildInf: BuildInf{
@@ -185,14 +181,14 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 			"common": {
 				templateSection{
 					Settings: []string{
-						"boot_command = :commands_src_dir/boot_test.command",
+						"boot_command = boot_test.command",
 						"boot_wait = 5s",
 						"disk_size = 20000",
 						"guest_os_type = ",
 						"headless = true",
 						"http_directory = http",
 						"iso_checksum_type = sha256",
-						"shutdown_command = :commands_src_dir/shutdown_test.command",
+						"shutdown_command = shutdown_test.command",
 						"ssh_password = vagrant",
 						"ssh_port = 22",
 						"ssh_username = vagrant",
@@ -263,19 +259,19 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 		ProvisionerTypes: []string{
 			"ansible-local",
 			"salt-masterless",
-			"shell-scripts",
+			"shell",
 			"file-uploads",
 		},
 		Provisioners: map[string]*provisioner{
 			"ansible-local": {
 				templateSection{
 					Settings: []string{
-						"playbook_file= :src_dir/ansible/playbook.yml",
-						"command =  :commands_src_dir/ansible_test.command",
-						"inventory_file = :src_dir/ansible/inventory_file",
+						"playbook_file= playbook.yml",
+						"command =  ansible_test.command",
+						"inventory_file = inventory_file",
 						"group_vars = groupvars",
 						"host_vars = hostvars",
-						"playbook_dir = :src_dir/ansible/playbooks",
+						"playbook_dir = playbooks",
 						"staging_directory = staging/directory",
 					},
 					Arrays: map[string]interface{}{
@@ -287,8 +283,8 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 							"../ansible/playbook/",
 						},
 						"role_paths": []string{
-							"../ansible/roles1",
-							"../ansible/roles2",
+							"roles1",
+							"roles2",
 						},
 					},
 				},
@@ -305,11 +301,11 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 					},
 				},
 			},
-			"shell-scripts": {
+			"shell": {
 				templateSection{
 					Settings: []string{
 						"binary = false",
-						"execute_command = :commands_src_dir/execute_test.command",
+						"execute_command = execute_test.command",
 						"inline_shebang = /bin/sh",
 						"remote_path = /tmp/script.sh",
 						"start_retry_timeout = 5m",
@@ -322,10 +318,10 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 							"virtualbox-iso",
 						},
 						"scripts": []string{
-							":scripts_dir/setup_test.sh",
-							":scripts_dir/vagrant_test.sh",
-							":scripts_dir/sudoers_test.sh",
-							":scripts_dir/cleanup_test.sh",
+							"setup_test.sh",
+							"vagrant_test.sh",
+							"sudoers_test.sh",
+							"cleanup_test.sh",
 						},
 					},
 				},
@@ -352,16 +348,16 @@ var pr = &provisioner{
 			"override": map[string]interface{}{
 				"virtualbox-iso": map[string]interface{}{
 					"scripts": []string{
-						"scripts/base.sh",
-						"scripts/vagrant.sh",
-						"scripts/virtualbox.sh",
-						"scripts/cleanup.sh",
+						"base.sh",
+						"vagrant.sh",
+						"virtualbox.sh",
+						"cleanup.sh",
 					},
 				},
 				"scripts": []string{
-					"scripts/base.sh",
-					"scripts/vagrant.sh",
-					"scripts/cleanup.sh",
+					"base.sh",
+					"vagrant.sh",
+					"cleanup.sh",
 				},
 			},
 		},
@@ -369,10 +365,10 @@ var pr = &provisioner{
 }
 
 var prOrig = map[string]*provisioner{
-	"shell-scripts": &provisioner{
+	"shell": &provisioner{
 		templateSection{
 			Settings: []string{
-				"execute_command = :commands_src_dir/execute_test.command",
+				"execute_command = execute_test.command",
 			},
 			Arrays: map[string]interface{}{
 				"except": []string{
@@ -382,10 +378,10 @@ var prOrig = map[string]*provisioner{
 					"virtualbox-iso",
 				},
 				"scripts": []string{
-					":scripts_dir/setup_test.sh",
-					":scripts_dir/vagrant_test.sh",
-					":scripts_dir/sudoers_test.sh",
-					":scripts_dir/cleanup_test.sh",
+					"setup_test.sh",
+					"vagrant_test.sh",
+					"sudoers_test.sh",
+					"cleanup_test.sh",
 				},
 			},
 		},
@@ -402,7 +398,7 @@ var prOrig = map[string]*provisioner{
 }
 
 var prNew = map[string]*provisioner{
-	"shell-scripts": &provisioner{
+	"shell": &provisioner{
 		templateSection{
 			Settings: []string{},
 			Arrays: map[string]interface{}{
@@ -412,18 +408,18 @@ var prNew = map[string]*provisioner{
 				"override": map[string]interface{}{
 					"vmware-iso": map[string]interface{}{
 						"scripts": []string{
-							":scripts_dir/setup_test.sh",
-							":scripts_dir/vagrant_test.sh",
-							":scripts_dir/vmware_test.sh",
-							":scripts_dir/cleanup_test.sh",
+							"setup_test.sh",
+							"vagrant_test.sh",
+							"vmware_test.sh",
+							"cleanup_test.sh",
 						},
 					},
 				},
 				"scripts": []string{
-					":scripts_dir/setup_test.sh",
-					":scripts_dir/vagrant_test.sh",
-					":scripts_dir/sudoers_test.sh",
-					":scripts_dir/cleanup_test.sh",
+					"setup_test.sh",
+					"vagrant_test.sh",
+					"sudoers_test.sh",
+					"cleanup_test.sh",
 				},
 			},
 		},
@@ -431,10 +427,10 @@ var prNew = map[string]*provisioner{
 }
 
 var prMerged = map[string]*provisioner{
-	"shell-scripts": &provisioner{
+	"shell": &provisioner{
 		templateSection{
 			Settings: []string{
-				"execute_command = :commands_src_dir/execute_test.command",
+				"execute_command = execute_test.command",
 			},
 			Arrays: map[string]interface{}{
 				"except": []string{
@@ -446,18 +442,18 @@ var prMerged = map[string]*provisioner{
 				"override": map[string]interface{}{
 					"vmware-iso": map[string]interface{}{
 						"scripts": []string{
-							":scripts_dir/setup_test.sh",
-							":scripts_dir/vagrant_test.sh",
-							":scripts_dir/vmware_test.sh",
-							":scripts_dir/cleanup_test.sh",
+							"setup_test.sh",
+							"vagrant_test.sh",
+							"vmware_test.sh",
+							"cleanup_test.sh",
 						},
 					},
 				},
 				"scripts": []string{
-					":scripts_dir/setup_test.sh",
-					":scripts_dir/vagrant_test.sh",
-					":scripts_dir/sudoers_test.sh",
-					":scripts_dir/cleanup_test.sh",
+					"setup_test.sh",
+					"vagrant_test.sh",
+					"sudoers_test.sh",
+					"cleanup_test.sh",
 				},
 			},
 		},
@@ -553,22 +549,22 @@ func TestProvisionersSettingsToMap(t *testing.T) {
 
 func TestAnsibleProvisioner(t *testing.T) {
 	expected := map[string]interface{}{
-		"command": ":commands_src_dir/ansible_test.command",
+		"command": "ansible_test.command",
 		"extra_arguments": []string{
 			"arg1",
 			"arg2",
 		},
 		"group_vars":     "groupvars",
 		"host_vars":      "hostvars",
-		"inventory_file": ":src_dir/ansible/inventory_file",
-		"playbook_dir":   ":src_dir/ansible/playbooks",
-		"playbook_file":  ":src_dir/ansible/playbook.yml",
+		"inventory_file": "inventory_file",
+		"playbook_dir":   "playbooks",
+		"playbook_file":  "playbook.yml",
 		"playbook_paths": []string{
 			"../ansible/playbook/",
 		},
 		"role_paths": []string{
-			"../ansible/roles1",
-			"../ansible/roles2",
+			"roles1",
+			"roles2",
 		},
 		"staging_directory": "staging/directory",
 		"type":              "ansible-local",

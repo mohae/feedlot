@@ -53,19 +53,19 @@ var testPostProcessorTemplate = &rawTemplate{
 			},
 		},
 		ProvisionerTypes: []string{
-			"shell-scripts",
+			"shell",
 		},
 		Provisioners: map[string]*provisioner{
-			"shell-scripts": {
+			"shell": {
 				templateSection{
 					Settings: []string{
-						"execute_command = :commands_src_dir/execute_test.command",
+						"execute_command = execute_test.command",
 					},
 					Arrays: map[string]interface{}{
 						"scripts": []string{
-							":scripts_dir/setup_test.sh",
-							":scripts_dir/vagrant_test.sh",
-							":scripts_dir/cleanup_test.sh",
+							"setup_test.sh",
+							"vagrant_test.sh",
+							"cleanup_test.sh",
 						},
 					},
 				},
@@ -202,19 +202,19 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 			},
 		},
 		ProvisionerTypes: []string{
-			"shell-scripts",
+			"shell",
 		},
 		Provisioners: map[string]*provisioner{
-			"shell-scripts": {
+			"shell": {
 				templateSection{
 					Settings: []string{
-						"execute_command = :commands_src_dir/execute_test.command",
+						"execute_command = execute_test.command",
 					},
 					Arrays: map[string]interface{}{
 						"scripts": []string{
-							":scripts_dir/setup_test.sh",
-							":scripts_dir/vagrant_test.sh",
-							":scripts_dir/cleanup_test.sh",
+							"setup_test.sh",
+							"vagrant_test.sh",
+							"cleanup_test.sh",
 						},
 					},
 				},

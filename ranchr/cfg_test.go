@@ -7,12 +7,10 @@ import (
 
 var testDefaults = &defaults{
 	IODirInf: IODirInf{
-		CommandsSrcDir: ":src_dir/commands",
+		CommandsSrcDir: "commands",
 		HTTPDir:        "http",
-		HTTPSrcDir:     ":src_dir/http",
+		HTTPSrcDir:     "http",
 		OutDir:         "../test_files/out/:distro/:build_name",
-		ScriptsDir:     "scripts",
-		ScriptsSrcDir:  ":src_dir/scripts",
 		SrcDir:         "../test_files/src/:distro",
 	},
 	PackerInf: PackerInf{
@@ -33,14 +31,14 @@ var testDefaults = &defaults{
 			"common": {
 				templateSection{
 					Settings: []string{
-						"boot_command = :commands_src_dir/boot_test.command",
+						"boot_command = boot_test.command",
 						"boot_wait = 5s",
 						"disk_size = 20000",
 						"guest_os_type = ",
 						"headless = true",
 						"http_directory = http",
 						"iso_checksum_type = sha256",
-						"shutdown_command = :commands_src_dir/shutdown_test.command",
+						"shutdown_command = shutdown_test.command",
 						"ssh_password = vagrant",
 						"ssh_port = 22",
 						"ssh_username = vagrant",
@@ -104,13 +102,13 @@ var testDefaults = &defaults{
 			},
 		},
 		ProvisionerTypes: []string{
-			"shell-scripts",
+			"shell",
 		},
 		Provisioners: map[string]*provisioner{
-			"shell-scripts": {
+			"shell": {
 				templateSection{
 					Settings: []string{
-						"execute_command = :commands_src_dir/execute_test.command",
+						"execute_command = execute_test.command",
 					},
 					Arrays: map[string]interface{}{
 						"except": []string{
@@ -120,10 +118,10 @@ var testDefaults = &defaults{
 							"virtualbox-iso",
 						},
 						"scripts": []string{
-							":scripts_dir/setup_test.sh",
-							":scripts_dir/vagrant_test.sh",
-							":scripts_dir/sudoers_test.sh",
-							":scripts_dir/cleanup_test.sh",
+							"setup_test.sh",
+							"vagrant_test.sh",
+							"sudoers_test.sh",
+							"cleanup_test.sh",
 						},
 					},
 				},
@@ -170,8 +168,8 @@ var testSupportedUbuntu = &distro{
 			"common": {
 				templateSection{
 					Settings: []string{
-						"boot_command = ../test_files/src/ubuntu/commands/boot_test.command",
-						"shutdown_command = :command_src_dir/shutdown_test.command",
+						"boot_command = boot_test.command",
+						"shutdown_command = shutdown_test.command",
 					},
 				},
 			},
@@ -203,22 +201,22 @@ var testSupportedUbuntu = &distro{
 			},
 		},
 		ProvisionerTypes: []string{
-			"shell-scripts",
+			"shell",
 			"file-uploads",
 		},
 		Provisioners: map[string]*provisioner{
-			"shell-scripts": {
+			"shell": {
 				templateSection{
 					Settings: []string{
-						"execute_command = :command_src_dir/execute_test.command",
+						"execute_command = execute_test.command",
 					},
 					Arrays: map[string]interface{}{
 						"scripts": []string{
-							":scripts_dir/setup_test.sh",
-							":scripts_dir/base_test.sh",
-							":scripts_dir/vagrant_test.sh",
-							":scripts_dir/sudoers_test.sh",
-							":scripts_dir/cleanup_test.sh",
+							"setup_test.sh",
+							"base_test.sh",
+							"vagrant_test.sh",
+							"sudoers_test.sh",
+							"cleanup_test.sh",
 						},
 					},
 				},
@@ -269,44 +267,44 @@ func TestTemplateSectionMergeArrays(t *testing.T) {
 	}
 
 	old := map[string]interface{}{
-		"type":            "shell-scripts",
+		"type":            "shell",
 		"execute_command": "echo 'vagrant'|sudo -S sh '{{.Path}}'",
 		"override": map[string]interface{}{
 			"virtualbox-iso": map[string]interface{}{
 				"scripts": []string{
-					"scripts/base.sh",
-					"scripts/vagrant.sh",
-					"scripts/vmware.sh",
-					"scripts/cleanup.sh",
+					"base.sh",
+					"vagrant.sh",
+					"vmware.sh",
+					"cleanup.sh",
 				},
 			},
 		},
 	}
 
 	nw := map[string]interface{}{
-		"type": "shell-scripts",
+		"type": "shell",
 		"override": map[string]interface{}{
 			"vmware-iso": map[string]interface{}{
 				"scripts": []string{
-					"scripts/base.sh",
-					"scripts/vagrant.sh",
-					"scripts/vmware.sh",
-					"scripts/cleanup.sh",
+					"base.sh",
+					"vagrant.sh",
+					"vmware.sh",
+					"cleanup.sh",
 				},
 			},
 		},
 	}
 
 	newold := map[string]interface{}{
-		"type":            "shell-scripts",
+		"type":            "shell",
 		"execute_command": "echo 'vagrant'|sudo -S sh '{{.Path}}'",
 		"override": map[string]interface{}{
 			"vmware-iso": map[string]interface{}{
 				"scripts": []string{
-					"scripts/base.sh",
-					"scripts/vagrant.sh",
-					"scripts/vmware.sh",
-					"scripts/cleanup.sh",
+					"base.sh",
+					"vagrant.sh",
+					"vmware.sh",
+					"cleanup.sh",
 				},
 			},
 		},
@@ -537,4 +535,120 @@ func TestBuildListsStuff(t *testing.T) {
 	}
 
 	os.Setenv(EnvBuildListsFile, tmpEnv)
+}
+
+func TestIODirInfUpdate(t *testing.T) {
+	oldIODirInf := IODirInf{CommandsSrcDir: "old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir: "old OutDir", SrcDir: "old SrcDir"}
+	newIODirInf := IODirInf{}
+	oldIODirInf.update(newIODirInf)
+	if oldIODirInf.CommandsSrcDir != "old CommandsSrcDir" {
+		t.Errorf("Expected \"old CommandsSrcDir\", got %q", oldIODirInf.CommandsSrcDir)
+	}
+	if oldIODirInf.HTTPDir != "old HTTPDir" {
+		t.Errorf("Expected \"old HTTPDir\", got %q", oldIODirInf.HTTPDir)
+	}
+	if oldIODirInf.HTTPSrcDir != "old HTTPSrcDir" {
+		t.Errorf("Expected \"old HTTPSrcDir\", got %q", oldIODirInf.HTTPSrcDir)
+	}
+	if oldIODirInf.OutDir != "old OutDir" {
+		t.Errorf("Expected \"old OutDir\", got %q", oldIODirInf.OutDir)
+	}
+	if oldIODirInf.SrcDir != "old SrcDir" {
+		t.Errorf("Expected \"old SrcDir\", got %q", oldIODirInf.SrcDir)
+	}
+
+	oldIODirInf = IODirInf{CommandsSrcDir: "old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir: "old OutDir", SrcDir: "old SrcDir"}
+	newIODirInf = IODirInf{CommandsSrcDir: "new CommandsSrcDir", HTTPDir: "new HTTPDir", HTTPSrcDir: "new HTTPSrcDir", OutDir: "new OutDir", SrcDir: "new SrcDir"}
+	oldIODirInf.update(newIODirInf)
+	if oldIODirInf.CommandsSrcDir != "new CommandsSrcDir/" {
+		t.Errorf("Expected \"new CommandsSrcDir/\", got %q", oldIODirInf.CommandsSrcDir)
+	}
+	if oldIODirInf.HTTPDir != "new HTTPDir/" {
+		t.Errorf("Expected \"new HTTPDir/\", got %q", oldIODirInf.HTTPDir)
+	}
+	if oldIODirInf.HTTPSrcDir != "new HTTPSrcDir/" {
+		t.Errorf("Expected \"new HTTPSrcDir/\", got %q", oldIODirInf.HTTPSrcDir)
+	}
+	if oldIODirInf.OutDir != "new OutDir/" {
+		t.Errorf("Expected \"new OutDir/\", got %q", oldIODirInf.OutDir)
+	}
+	if oldIODirInf.SrcDir != "new SrcDir/" {
+		t.Errorf("Expected \"new SrcDir/\", got %q", oldIODirInf.SrcDir)
+	}
+
+	oldIODirInf = IODirInf{CommandsSrcDir: "old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir: "old OutDir", SrcDir: "old SrcDir"}
+	newIODirInf = IODirInf{CommandsSrcDir: "CommandsSrcDir"}
+	oldIODirInf.update(newIODirInf)
+	if oldIODirInf.CommandsSrcDir != "CommandsSrcDir/" {
+		t.Errorf("Expected \"CommandsSrcDir/\", got %q", oldIODirInf.CommandsSrcDir)
+	}
+	if oldIODirInf.HTTPDir != "old HTTPDir" {
+		t.Errorf("Expected \"old HTTPDir\", got %q", oldIODirInf.HTTPDir)
+	}
+	if oldIODirInf.HTTPSrcDir != "old HTTPSrcDir" {
+		t.Errorf("Expected \"old HTTPSrcDir\", got %q", oldIODirInf.HTTPSrcDir)
+	}
+	if oldIODirInf.OutDir != "old OutDir" {
+		t.Errorf("Expected \"old OutDir\", got %q", oldIODirInf.OutDir)
+	}
+	if oldIODirInf.SrcDir != "old SrcDir" {
+		t.Errorf("Expected \"old SrcDir\", got %q", oldIODirInf.SrcDir)
+	}
+
+	oldIODirInf = IODirInf{CommandsSrcDir: "old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir: "old OutDir", SrcDir: "old SrcDir"}
+	newIODirInf = IODirInf{HTTPDir: "HTTPDir"}
+	oldIODirInf.update(newIODirInf)
+	if oldIODirInf.CommandsSrcDir != "old CommandsSrcDir" {
+		t.Errorf("Expected \"old CommandsSrcDir\", got %q", oldIODirInf.CommandsSrcDir)
+	}
+	if oldIODirInf.HTTPDir != "HTTPDir/" {
+		t.Errorf("Expected \"HTTPDir/\", got %q", oldIODirInf.HTTPDir)
+	}
+	if oldIODirInf.HTTPSrcDir != "old HTTPSrcDir" {
+		t.Errorf("Expected \"old HTTPSrcDir\", got %q", oldIODirInf.HTTPSrcDir)
+	}
+	if oldIODirInf.OutDir != "old OutDir" {
+		t.Errorf("Expected \"old OutDir\", got %q", oldIODirInf.OutDir)
+	}
+	if oldIODirInf.SrcDir != "old SrcDir" {
+		t.Errorf("Expected \"old SrcDir\", got %q", oldIODirInf.SrcDir)
+	}
+
+	oldIODirInf = IODirInf{CommandsSrcDir: "old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir: "old OutDir", SrcDir: "old SrcDir"}
+	newIODirInf = IODirInf{HTTPSrcDir: "HTTPSrcDir"}
+	oldIODirInf.update(newIODirInf)
+	if oldIODirInf.CommandsSrcDir != "old CommandsSrcDir" {
+		t.Errorf("Expected \"old CommandsSrcDir\", got %q", oldIODirInf.CommandsSrcDir)
+	}
+	if oldIODirInf.HTTPDir != "old HTTPDir" {
+		t.Errorf("Expected \"old HTTPDir\", got %q", oldIODirInf.HTTPDir)
+	}
+	if oldIODirInf.HTTPSrcDir != "HTTPSrcDir/" {
+		t.Errorf("Expected \"HTTPSrcDir/\", got %q", oldIODirInf.HTTPSrcDir)
+	}
+	if oldIODirInf.OutDir != "old OutDir" {
+		t.Errorf("Expected \"old OutDir\", got %q", oldIODirInf.OutDir)
+	}
+	if oldIODirInf.SrcDir != "old SrcDir" {
+		t.Errorf("Expected \"old SrcDir\", got %q", oldIODirInf.SrcDir)
+	}
+
+	oldIODirInf = IODirInf{CommandsSrcDir: "old CommandsSrcDir", HTTPDir: "old HTTPDir", HTTPSrcDir: "old HTTPSrcDir", OutDir: "old OutDir", SrcDir: "old SrcDir"}
+	newIODirInf = IODirInf{OutDir: "OutDir"}
+	oldIODirInf.update(newIODirInf)
+	if oldIODirInf.CommandsSrcDir != "old CommandsSrcDir" {
+		t.Errorf("Expected \"old CommandsSrcDir\", got %q", oldIODirInf.CommandsSrcDir)
+	}
+	if oldIODirInf.HTTPDir != "old HTTPDir" {
+		t.Errorf("Expected \"old HTTPDir\", got %q", oldIODirInf.HTTPDir)
+	}
+	if oldIODirInf.HTTPSrcDir != "old HTTPSrcDir" {
+		t.Errorf("Expected \"old HTTPSrcDir\", got %q", oldIODirInf.HTTPSrcDir)
+	}
+	if oldIODirInf.OutDir != "OutDir/" {
+		t.Errorf("Expected \"OutDir/\", got %q", oldIODirInf.OutDir)
+	}
+	if oldIODirInf.SrcDir != "old SrcDir" {
+		t.Errorf("Expected \"old SrcDir\", got %q", oldIODirInf.SrcDir)
+	}
 }
