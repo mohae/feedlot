@@ -2,6 +2,7 @@ package ranchr
 
 import (
 	"fmt"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -375,6 +376,11 @@ func (r *rawTemplate) createShell() (settings map[string]interface{}, vars []str
 			scripts = deepcopy.InterfaceToSliceOfStrings(val)
 			for i, v := range scripts {
 				scripts[i] = r.replaceVariables(v)
+				// if the scripts path doesn't contain a directory, use the provisioner
+				// name as the base dir
+				if path.Dir(scripts[i]) == "." {
+					scripts[i] = filepath.Join(Shell.String(), scripts[i])
+				}
 			}
 			fmt.Println(scripts)
 			settings[name] = scripts
@@ -393,7 +399,7 @@ func (r *rawTemplate) createShell() (settings map[string]interface{}, vars []str
 	// go through the scripts, find their source, and add to the files map. error if
 	// the script source cannot be deteremined.
 	for _, script := range scripts {
-		s, err := r.findSourceFile(filepath.Join(Shell.String(), script))
+		s, err := r.findSourceFile(script)
 		if err != nil {
 			jww.ERROR.Printf("error while adding file to file map: %s", err)
 			return nil, nil, err
