@@ -11,6 +11,61 @@ import (
 	jww "github.com/spf13/jwalterweatherman"
 )
 
+// Provisioner constants
+const (
+	UnsupportedProvisioner Provisioner = iota
+	AnsibleLocal
+	ChefClient
+	ChefSolo
+	FileUploads
+	PuppetMasterless
+	PuppetServer
+	SaltMasterless
+	Shell
+)
+
+// Provisioner is a packer supported provisioner
+type Provisioner int
+
+var provisioners = [...]string{
+	"unsupported provisioner",
+	"ansible-local",     //ansible is the name of the Ansible Provisioner
+	"chef-client",       //chef-client is the name of the ChefClient Provisioner
+	"chef-solo",         //chef-solo is the name of the ChefSolo Provisioner
+	"file-uploads",      //file-uploads is the name of the FileUploads Provisioner
+	"puppet-masterless", //puppet-masterless is the name of the PuppetMasterless Provisioner
+	"puppet-server",     // puppet-server is the name of the PuppetServer Provisioner
+	"salt-masterless",   //salt is the name of the Salt Provisioner
+	"shell",             // shell is the name for the Shell provisioner
+}
+
+func (p Provisioner) String() string { return provisioners[p] }
+
+// ProvisionerFromString returns the Provisioner constant for the passed string or
+// unsupported. All incoming strings are normalized to lowercase
+func ProvisionerFromString(s string) Provisioner {
+	s = strings.ToLower(s)
+	switch s {
+	case "ansible-local":
+		return AnsibleLocal
+	case "chef-client":
+		return ChefClient
+	case "chef-solo":
+		return ChefSolo
+	case "file-uploads":
+		return FileUploads
+	case "puppet-masterless":
+		return PuppetMasterless
+	case "puppet-server":
+		return PuppetServer
+	case "salt-masterless":
+		return SaltMasterless
+	case "shell":
+		return Shell
+	}
+	return UnsupportedProvisioner
+}
+
 // Merges the new config with the old. The updates occur as follows:
 //
 //	* The existing configuration is used when no `new` provisioners are
