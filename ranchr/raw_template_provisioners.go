@@ -2,6 +2,7 @@ package ranchr
 
 import (
 	"fmt"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -368,15 +369,15 @@ func (r *rawTemplate) createShell() (settings map[string]interface{}, vars []str
 		}
 	}
 	// Process the Arrays.
-	var hasScripts bool
+	var scripts []string
 	for name, val := range r.Provisioners[Shell.String()].Arrays {
 		if name == "scripts" {
-			hasScripts = true
-			sl := deepcopy.InterfaceToSliceOfStrings(val)
-			for i, v := range sl {
-				sl[i] = r.replaceVariables(v)
+			scripts = deepcopy.InterfaceToSliceOfStrings(val)
+			for i, v := range scripts {
+				scripts[i] = r.replaceVariables(v)
 			}
-			settings[name] = sl
+			fmt.Println(scripts)
+			settings[name] = scripts
 			continue
 		}
 		array := deepcopy.Iface(val)
@@ -384,10 +385,23 @@ func (r *rawTemplate) createShell() (settings map[string]interface{}, vars []str
 			settings[name] = array
 		}
 	}
-	if !hasScripts {
+	if len(scripts) == 0 {
 		err := fmt.Errorf("\"scripts\" setting is required for shell, not found")
 		jww.ERROR.Println(err)
 		return nil, nil, err
+	}
+	// go through the scripts, find their source, and add to the files map. error if
+	// the script source cannot be deteremined.
+	for _, script := range scripts {
+		s, err := r.findSourceFile(filepath.Join(Shell.String(), script))
+		if err != nil {
+			jww.ERROR.Printf("error while adding file to file map: %s", err)
+			return nil, nil, err
+		}
+		r.files[filepath.Join(r.OutDir, script)] = s
+	}
+	for k, v := range r.files {
+		fmt.Printf("%s: %s\n", k, v)
 	}
 	return settings, vars, nil
 }

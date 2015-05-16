@@ -2,10 +2,10 @@
 # file with supported.toml provids the default settings for each distro.
 description = "Default Rancher template"
 name = ":build_name"
-http_dir = "http"
-out_dir = "out"
+#http_dir = "http"
+#command_dir = "commands"
+out_dir = "out/:build_name"
 src_dir = "src"
-scripts_dir = "scripts"
 min_packer_version = "0.4.0"
 builder_types = [
     "virtualbox-iso",

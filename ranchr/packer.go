@@ -41,7 +41,7 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, files map[string]string)
 	}
 	// copy the files associated with the template
 	for dst, src := range files {
-		err = copyFile(src, dst)
+		_, err = copyFile(src, dst)
 		if err != nil {
 			jww.ERROR.Println(err)
 			return err

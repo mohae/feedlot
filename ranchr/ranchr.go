@@ -973,10 +973,16 @@ func trimSuffix(s string, suffix string) string {
 
 // copyFile copies a file the source file to the destination
 func copyFile(src string, dst string) (written int64, err error) {
+	if src == "" {
+		return 0, fmt.Errorf("copyfile error: source name was empty")
+	}
+	if dst == "" {
+		return 0, fmt.Errorf("copyfile error: destination name was empty")
+	}
 	// get the destination directory
 	dstDir := path.Dir(dst)
-	if dstDir == "" {
-		return 0, fmt.Errorf("file not copied, the passed destination, %q, did not include a directory".dst)
+	if dstDir == "." {
+		return 0, fmt.Errorf("copyfile error: destination name, %q, did not include a directory", dst)
 	}
 	// Create the scripts dir and copy each script from sript_src to out_dir/scripts/
 	// while keeping track of success/failures.
@@ -1015,6 +1021,7 @@ func copyFile(src string, dst string) (written int64, err error) {
 	return io.Copy(fd, fs)
 }
 
+/*
 // copyDirContent takes 2 directory paths and copies the contents from src to
 // dest get the contents of srcDir.
 func copyDirContent(srcDir string, destDir string) error {
@@ -1058,7 +1065,7 @@ func copyDirContent(srcDir string, destDir string) error {
 	}
 	return nil
 }
-
+*/
 // deleteDirContent deletes the contents of a directory.
 func deleteDirContent(dir string) error {
 	var dirs []string

@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"time"
 
-	"github.com/mohae/utilitybelt/deepcopy"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -62,7 +60,7 @@ func newRawTemplate() *rawTemplate {
 	// Set the date, formatted to ISO 8601
 	date := time.Now()
 	splitDate := strings.Split(date.String(), " ")
-	return &rawTemplate{date: splitDate[0], delim: os.Getenv(EnvParamDelimStart)}
+	return &rawTemplate{date: splitDate[0], delim: os.Getenv(EnvParamDelimStart), files: make(map[string]string)}
 }
 
 // r.createPackerTemplate creates a Packer template from the rawTemplate that
@@ -435,31 +433,37 @@ func (r *rawTemplate) commandsFromFile(name string) (commands []string, err erro
 // If the passed file is not found, an error will be returned.
 func (r *rawTemplate) findSourceFile(s string) (string, error) {
 	tmpPath := filepath.Join(r.SrcDir, r.BuildName, s)
+	fmt.Println(tmpPath)
 	_, err := os.Stat(tmpPath)
 	if err == nil {
 		return tmpPath, nil
 	}
 	tmpPath = filepath.Join(r.SrcDir, r.Distro, r.Release, r.Arch, s)
+	fmt.Println(tmpPath)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		return tmpPath, nil
 	}
 	tmpPath = filepath.Join(r.SrcDir, r.Distro, r.Release, s)
+	fmt.Println(tmpPath)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		return tmpPath, nil
 	}
 	tmpPath = filepath.Join(r.SrcDir, r.Distro, r.Arch, s)
+	fmt.Println(tmpPath)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		return tmpPath, nil
 	}
 	tmpPath = filepath.Join(r.SrcDir, r.Distro, s)
+	fmt.Println(tmpPath)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		return tmpPath, nil
 	}
 	tmpPath = filepath.Join(r.SrcDir, s)
+	fmt.Println(tmpPath)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		return tmpPath, nil
