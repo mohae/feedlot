@@ -187,7 +187,6 @@ func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
 //  http_src_dir             the source directory for the http_dir files***
 //  {{provisioner}}_dir      the provisioner specific directory for the packer
 //                           template, e.g. scripts, cookbooks, playbooks, states, etc.
-//  {{provisioner}}_src_dir  the source directory for the providioner specific files****
 //
 //  * src_dir must be set. Rancher searches for referenced files and uses src_dir/distro
 //    as the last search directory. This directory is also used as the base directory
@@ -203,11 +202,6 @@ func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
 //
 //  ** http_src_dir: if a value is not specified, Rancher will use "http" as the
 //  http_src_dir, which is expected to be a directory within src_dir/distro/ or one of
-//  the subdirectories within that path that is part of rancher's search path.
-//
-//  ** {{provisioner}}_src_dir: if a value is not specified, Rancher will use Packer's
-//  provisioner name  as the {{provisioner}}_src_dir, e.g. "shell" for the shell
-//  provisioner. This is expected to be a directory within src_dir/distro/ or one of
 //  the subdirectories within that path that is part of rancher's search path.
 func (r *rawTemplate) mergeVariables() {
 	// Get the delim and set the replacement map, resolve name information
