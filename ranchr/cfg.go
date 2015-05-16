@@ -305,10 +305,6 @@ type IODirInf struct {
 	CustomOutDir bool `toml:"custom_outc_dir"`
 	// The directory that the output artifacts will be written to.
 	OutDir string `toml:"out_dir"`
-	// The directory that scripts for the Packer template will be copied to.
-	ScriptsDir string `toml:"scripts_dir"`
-	// The directory that contains the scripts that will be copied.
-	ScriptsSrcDir string `toml:"scripts_src_dir"`
 	// flag for whether or not the src_dir is custom or not. If this resolves to true
 	// Rancher will not use search for matching files based on its algorithm, instead
 	// Rancher will only look for the file in the specified src_dir. This can resolve
@@ -344,37 +340,19 @@ func (i *IODirInf) update(inf IODirInf) {
 	}
 }
 
-// check to see if the dirinf is set
-func (i *IODirInf) check() error {
+// check to see if the dirinf is set, if not, set them to their defaults
+func (i *IODirInf) check() {
 	if i.HTTPDir == "" {
-		err := fmt.Errorf("HTTPDir directory not set")
-		jww.ERROR.Print(err)
-		return err
+		i.HTTPDir = "http"
 	}
 	if i.HTTPSrcDir == "" {
-		err := fmt.Errorf("HTTPSrcDir directory not set")
-		jww.ERROR.Print(err)
-		return err
+		i.HTTPSrcDir == "http"
 	}
 	if i.OutDir == "" {
-		err := fmt.Errorf("output directory not set")
-		jww.ERROR.Print(err)
-		return err
+		i.OutDir = os.Getenv(EnvParamDelimStart) + "build_name"
 	}
 	if i.SrcDir == "" {
-		err := fmt.Errorf("SrcDir directory not set")
-		jww.ERROR.Print(err)
-		return err
-	}
-	if i.ScriptsDir == "" {
-		err := fmt.Errorf("ScriptsDir directory not set")
-		jww.ERROR.Print(err.Error())
-		return err
-	}
-	if i.ScriptsSrcDir == "" {
-		err := fmt.Errorf("ScriptsSrcDir directory not set")
-		jww.ERROR.Print(err.Error())
-		return err
+		i.SrcDir == "src"
 	}
 	return nil
 }
