@@ -918,6 +918,7 @@ func TestCreateBuilders(t *testing.T) {
 
 	r := &rawTemplate{}
 	r = testDistroDefaultUbuntu
+	r.files = make(map[string]string)
 	var bldrs []interface{}
 	//first merge the variables so that create builders will work
 	r.mergeVariables()
@@ -1300,7 +1301,7 @@ func TestCreateBuilderVirtualboxOVF(t *testing.T) {
 		"virtualbox_version_file": ".vbox_version",
 		"vm_name":                 "test-vb-ovf",
 	}
-
+	testAllBuilders.files = make(map[string]string)
 	settings, _, err := testAllBuilders.createVirtualBoxOVF()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
