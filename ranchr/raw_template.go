@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -363,6 +364,12 @@ func (r *rawTemplate) commandsFromFile(name string) (commands []string, err erro
 		err = fmt.Errorf("the passed Command filename was empty")
 		jww.ERROR.Println(err)
 		return commands, err
+	}
+	// see if the passed name includes a directory, if not, prepend with command
+	dir := path.Dir(name)
+	if dir == "." {
+		// name did not include directory, prepend "commands"
+		name = filepath.Join("commands", name)
 	}
 	// find the correct file location
 	path, err := r.findSourceFile(name)

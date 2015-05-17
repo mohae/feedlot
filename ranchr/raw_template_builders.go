@@ -2,6 +2,7 @@ package ranchr
 
 import (
 	"fmt"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -800,6 +801,12 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 		settings["iso_url"] = isoURL
 	}
 
+	// make sure http_directory is set and add the preseed.cfg to files list
+	err = r.addPreseedCfg(settings)
+	if err != nil {
+		return nil, nil, err
+	}
+
 noISOURL:
 
 	for name, val := range r.Builders[VirtualBoxISO.String()].Arrays {
@@ -1027,6 +1034,13 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, va
 		jww.ERROR.Print(err)
 		return nil, nil, err
 	}
+
+	// make sure http_directory is set and add the preseed.cfg to files list
+	err = r.addPreseedCfg(settings)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	// Generate Packer Variables
 	// Generate builder specific section
 	for name, val := range r.Builders[VirtualBoxOVF.String()].Arrays {
@@ -1209,6 +1223,13 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 		jww.ERROR.Print(err)
 		return nil, nil, err
 	}
+
+	// make sure http_directory is set and add the preseed.cfg to files list
+	err = r.addPreseedCfg(settings)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	// Process arrays, iso_urls is only valid if iso_url is not set
 	for name, val := range r.Builders[VMWareISO.String()].Arrays {
 		switch name {
@@ -1423,6 +1444,13 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, vars [
 		jww.ERROR.Print(err)
 		return nil, nil, err
 	}
+
+	// make sure http_directory is set and add the preseed.cfg to files list
+	err = r.addPreseedCfg(settings)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	// Process arrays, iso_urls is only valid if iso_url is not set
 	for name, val := range r.Builders[VMWareVMX.String()].Arrays {
 		switch name {
@@ -1575,6 +1603,24 @@ func (r *rawTemplate) updateCommon(new *builder) {
 	// Otherwise merge the two
 	r.Builders[Common.String()].mergeSettings(new.Settings)
 	return
+}
+
+// addPreseedCfg adds the preseedCfg file to the files map. If the http_dir is not set,
+// the default value of "http" will be used
+func (r *rawTemplate) addPreseedCfg(m map[string]interface{}) error {
+	v, ok := m["http_directory"]
+	if !ok {
+		v = "http"
+		m["http_directory"] = v
+	}
+	dst := filepath.Join(v.(string), "preseed.cfg")
+	src, err := r.findSourceFile(dst)
+	if err != nil {
+		jww.ERROR.Print("unable to locate preseed.cfg source file")
+		return err
+	}
+	r.files[filepath.Join(r.OutDir, dst)] = src
+	return nil
 }
 
 // DeepCopyMapStringPBuilder makes a deep copy of each builder passed and
