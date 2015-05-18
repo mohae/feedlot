@@ -1,0 +1,2 @@
+﻿git:
+  pkg.installed
