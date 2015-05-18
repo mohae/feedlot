@@ -415,36 +415,49 @@ func (r *rawTemplate) commandsFromFile(name string) (commands []string, err erro
 //
 // If the passed file is not found, an error will be returned.
 func (r *rawTemplate) findSourceFile(s string) (string, error) {
+	// src_dir/:build_name/
 	tmpPath := filepath.Join(r.SrcDir, r.BuildName, s)
 	fmt.Println(tmpPath)
 	_, err := os.Stat(tmpPath)
 	if err == nil {
 		return tmpPath, nil
 	}
+	// src_dir/:distro/:build_name/
+	tmpPath := filepath.Join(r.SrcDir, r.Distro, r.BuildName, s)
+	fmt.Println(tmpPath)
+	_, err := os.Stat(tmpPath)
+	if err == nil {
+		return tmpPath, nil
+	}
+	// src_dir/:distro/:release/:arch/
 	tmpPath = filepath.Join(r.SrcDir, r.Distro, r.Release, r.Arch, s)
 	fmt.Println(tmpPath)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		return tmpPath, nil
 	}
+	// src_dir/:distro/:release/
 	tmpPath = filepath.Join(r.SrcDir, r.Distro, r.Release, s)
 	fmt.Println(tmpPath)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		return tmpPath, nil
 	}
+	// src_dir/:distro/:arch/
 	tmpPath = filepath.Join(r.SrcDir, r.Distro, r.Arch, s)
 	fmt.Println(tmpPath)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		return tmpPath, nil
 	}
+	// src_dir/:distro/
 	tmpPath = filepath.Join(r.SrcDir, r.Distro, s)
 	fmt.Println(tmpPath)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		return tmpPath, nil
 	}
+	// src_dir/
 	tmpPath = filepath.Join(r.SrcDir, s)
 	fmt.Println(tmpPath)
 	_, err = os.Stat(tmpPath)

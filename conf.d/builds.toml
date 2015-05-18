@@ -47,7 +47,7 @@
 		[build.1404-amd64-salt.provisioners]
 			[build.1404-amd64-salt.provisioners.salt-masterless]
 				settings = [
-					"local_state_tree = ~/code/saltstack/saltbase/salt"
+					"local_state_tree = salt-masterless/salt"
 				]
 
 	[build.1404-dev]
