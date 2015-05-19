@@ -294,6 +294,16 @@ func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, vars
 		v = r.replaceVariables(v)
 		switch k {
 		case "source":
+			// prepend the path with salt-masterless if there isn't a parent dir
+			v = setParentDir(FileUploads.String(), v)
+			// find the actual location and add it to the files map for copying
+			src, err := r.findSource(v)
+			if err != nil {
+				jww.ERROR.Println(err)
+				return nil, nil, err
+			}
+			// add to files
+			r.files[filepath.Join(r.OutDir, v)] = src
 			settings[k] = v
 			hasSource = true
 		case "destination":
