@@ -20,7 +20,7 @@ const (
 	PuppetMasterless
 	PuppetServer
 	SaltMasterless
-	Shell
+	ShellScript
 )
 
 // Provisioner is a packer supported provisioner
@@ -60,7 +60,7 @@ func ProvisionerFromString(s string) Provisioner {
 	case "salt-masterless":
 		return SaltMasterless
 	case "shell":
-		return Shell
+		return ShellScript
 	}
 	return UnsupportedProvisioner
 }
@@ -181,8 +181,8 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 			if err != nil {
 				return nil, nil, err
 			}
-		case Shell:
-			tmpS, tmpVar, err = r.createShell()
+		case ShellScript:
+			tmpS, tmpVar, err = r.createShellScript()
 			if err != nil {
 				return nil, nil, err
 			}
@@ -399,9 +399,9 @@ func (r *rawTemplate) createSaltMasterless() (settings map[string]interface{}, v
 	return settings, vars, nil
 }
 
-// createShell() creates a map of settings for Packer's shell
-// provisioner. Any values that aren't supported by the shell provisioner are
-// ignored. For more information, refer to
+// createShellScriptl() creates a map of settings for Packer's shell script
+// provisioner. Any values that aren't supported by the shell provisioner generate a
+// warning and are otherwise ignored. For more information, refer to
 // https://packer.io/docs/provisioners/shell.html
 //
 // Of the "inline", "script", and "scripts" options, only "scripts" is
@@ -416,20 +416,20 @@ func (r *rawTemplate) createSaltMasterless() (settings map[string]interface{}, v
 //   inline_shebang		// string
 //   remote_path			// string
 //   start_retry_timeout	// string
-func (r *rawTemplate) createShell() (settings map[string]interface{}, vars []string, err error) {
-	_, ok := r.Provisioners[Shell.String()]
+func (r *rawTemplate) createShellScript() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[ShellScript.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration found for %q", Shell.String())
+		err = fmt.Errorf("no configuration found for %q", ShellScript.String())
 		jww.ERROR.Print(err)
 		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
-	settings["type"] = Shell.String()
+	settings["type"] = ShellScript.String()
 	// For each value, extract its key value pair and then process. Only
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
 	var k, v string
-	for _, s := range r.Provisioners[Shell.String()].Settings {
+	for _, s := range r.Provisioners[ShellScript.String()].Settings {
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -452,19 +452,19 @@ func (r *rawTemplate) createShell() (settings map[string]interface{}, vars []str
 		case "binary":
 			settings[k], _ = strconv.ParseBool(v)
 		default:
-			jww.WARN.Println("unsupported " + Shell.String() + " key was encountered: " + k)
+			jww.WARN.Println("unsupported " + ShellScript.String() + " key was encountered: " + k)
 		}
 	}
 	// Process the Arrays.
 	var scripts []string
-	for name, val := range r.Provisioners[Shell.String()].Arrays {
+	for name, val := range r.Provisioners[ShellScript.String()].Arrays {
 		// if this is a scripts array, special processing needs to be done.
 		if name == "scripts" {
 			scripts = deepcopy.InterfaceToSliceOfStrings(val)
 			for i, v := range scripts {
 				v = r.replaceVariables(v)
 				// prepend the path with salt-masterless if there isn't a parent dir
-				scripts[i] = setParentDir(Shell.String(), v)
+				scripts[i] = setParentDir(ShellScript.String(), v)
 			}
 			settings[name] = scripts
 			continue

@@ -620,7 +620,7 @@ func TestShellProvisioner(t *testing.T) {
 		"start_retry_timeout": "5m",
 		"type":                "shell",
 	}
-	settings, _, err := testRawTemplateProvisionersAll.createShell()
+	settings, _, err := testRawTemplateProvisionersAll.createShellScript()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
