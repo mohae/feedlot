@@ -1614,7 +1614,7 @@ func (r *rawTemplate) addPreseedCfg(m map[string]interface{}) error {
 		m["http_directory"] = v
 	}
 	dst := filepath.Join(v.(string), "preseed.cfg")
-	src, err := r.findSourceFile(dst)
+	src, err := r.findSource(dst)
 	if err != nil {
 		jww.ERROR.Print("unable to locate preseed.cfg source file")
 		return err

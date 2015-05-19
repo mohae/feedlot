@@ -16,6 +16,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
@@ -398,7 +399,7 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	// Create the JSON version of the Packer template. This also handles creation of
 	// the build directory and copying all files that the Packer template needs to the
 	// build directory.
-	err = pTpl.create(rTpl.IODirInf, rTpl.BuildInf, rTpl.files)
+	err = pTpl.create(rTpl.IODirInf, rTpl.BuildInf, rTpl.dirs, rTpl.files)
 	if err != nil {
 		jww.ERROR.Println(err)
 		return err
@@ -499,7 +500,7 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 		doneCh <- err
 		return
 	}
-	err = pTpl.create(rTpl.IODirInf, rTpl.BuildInf, rTpl.files)
+	err = pTpl.create(rTpl.IODirInf, rTpl.BuildInf, rTpl.dirs, rTpl.files)
 	if err != nil {
 		jww.ERROR.Println(err)
 		doneCh <- err
@@ -832,10 +833,9 @@ func copyFile(src string, dst string) (written int64, err error) {
 	return io.Copy(fd, fs)
 }
 
-/*
-// copyDirContent takes 2 directory paths and copies the contents from src to
+// copyDir takes 2 directory paths and copies the contents from src to
 // dest get the contents of srcDir.
-func copyDirContent(srcDir string, destDir string) error {
+func copyDir(srcDir string, dstDir string) error {
 	exists, err := pathExists(srcDir)
 	if err != nil {
 		jww.ERROR.Print(err)
@@ -868,7 +868,7 @@ func copyDirContent(srcDir string, destDir string) error {
 			}
 			continue
 		}
-		_, err = copyFile(file.info.Name(), srcDir, destDir)
+		_, err = copyFile(filepath.Join(srcDir, file.p), filepath.Join(dstDir, file.p))
 		if err != nil {
 			jww.ERROR.Println(err)
 			return err
@@ -876,9 +876,9 @@ func copyDirContent(srcDir string, destDir string) error {
 	}
 	return nil
 }
-*/
-// deleteDirContent deletes the contents of a directory.
-func deleteDirContent(dir string) error {
+
+// deleteDir deletes the contents of a directory.
+func deleteDir(dir string) error {
 	var dirs []string
 	// see if the directory exists first, actually any error results in the
 	// same handling so just return on any error instead of doing an

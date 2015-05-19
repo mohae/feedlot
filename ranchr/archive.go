@@ -228,7 +228,7 @@ func (a *Archive) archivePriorBuild(p string, t string) error {
 
 func (a *Archive) deletePriorBuild(p string) error {
 	//delete the contents of the passed directory
-	return deleteDirContent(p)
+	return deleteDir(p)
 }
 
 func formattedNow() string {

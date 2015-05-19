@@ -53,6 +53,10 @@ type rawTemplate struct {
 	// after they have been resolved. The destination file is the key, the source file
 	// is the value
 	files map[string]string
+	// dirs maps destination directories to their source directories. Everything within
+	// the directory will be copied. The same resolution rules apply for dirs as for
+	// filies. The destination directory is the key, the source directory is the value
+	dirs map[string]string
 }
 
 // mewRawTemplate returns a rawTemplate with current date in ISO 8601 format.
@@ -61,7 +65,7 @@ func newRawTemplate() *rawTemplate {
 	// Set the date, formatted to ISO 8601
 	date := time.Now()
 	splitDate := strings.Split(date.String(), " ")
-	return &rawTemplate{date: splitDate[0], delim: os.Getenv(EnvParamDelimStart), files: make(map[string]string)}
+	return &rawTemplate{date: splitDate[0], delim: os.Getenv(EnvParamDelimStart), files: make(map[string]string), dirs: make(map[string]string)}
 }
 
 // r.createPackerTemplate creates a Packer template from the rawTemplate that
@@ -372,7 +376,7 @@ func (r *rawTemplate) commandsFromFile(name string) (commands []string, err erro
 		name = filepath.Join("commands", name)
 	}
 	// find the correct file location
-	path, err := r.findSourceFile(name)
+	path, err := r.findSource(name)
 	if err != nil {
 		jww.ERROR.Println(err)
 		return commands, err
@@ -403,18 +407,21 @@ func (r *rawTemplate) commandsFromFile(name string) (commands []string, err erro
 	return commands, nil
 }
 
-// findSourcefile searches for the specified file using Rancher's algorithm for
-// finding the correct file. Passed filenames may include relative path information.
+// findSource searches for the specified sub-path using Rancher's algorithm for finding
+// the correct location. Passed names may include relative path information and may be
+// either a filename or a directory
 // Search order:
-//	src_dir/buildname/
-//	src_dir/distro/release/arch/
-//	src_dir/distro/release/
-//	src_dir/distro/arch
-//	src_dir/distro/
-//	src_dir/
+//   src_dir/build_name/
+//   src_dir/distro/build_name/
+//   src_dir/distro/release/build_name/
+//   src_dir/distro/release/arch/
+//   src_dir/distro/release/
+//   src_dir/distro/arch
+//   src_dir/distro/
+//   src_dir/
 //
 // If the passed file is not found, an error will be returned.
-func (r *rawTemplate) findSourceFile(s string) (string, error) {
+func (r *rawTemplate) findSource(s string) (string, error) {
 	// src_dir/:build_name/
 	tmpPath := filepath.Join(r.SrcDir, r.BuildName, s)
 	fmt.Println(tmpPath)
@@ -423,9 +430,16 @@ func (r *rawTemplate) findSourceFile(s string) (string, error) {
 		return tmpPath, nil
 	}
 	// src_dir/:distro/:build_name/
-	tmpPath := filepath.Join(r.SrcDir, r.Distro, r.BuildName, s)
+	tmpPath = filepath.Join(r.SrcDir, r.Distro, r.BuildName, s)
 	fmt.Println(tmpPath)
-	_, err := os.Stat(tmpPath)
+	_, err = os.Stat(tmpPath)
+	if err == nil {
+		return tmpPath, nil
+	}
+	// src_dir/:distro/:release/:build_name/
+	tmpPath = filepath.Join(r.SrcDir, r.Distro, r.Release, r.BuildName, s)
+	fmt.Println(tmpPath)
+	_, err = os.Stat(tmpPath)
 	if err == nil {
 		return tmpPath, nil
 	}
@@ -464,5 +478,5 @@ func (r *rawTemplate) findSourceFile(s string) (string, error) {
 	if err == nil {
 		return tmpPath, nil
 	}
-	return "", fmt.Errorf("%s: file not found in %q or any of the inspected subdirectories", s, r.SrcDir)
+	return "", fmt.Errorf("%s: not found in %q or any of the inspected subdirectories", s, r.SrcDir)
 }

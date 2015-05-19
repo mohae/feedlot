@@ -327,6 +327,7 @@ func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, vars
 // Optional configuration options
 //   bootstrap_args		// string
 //   local_pillar_roots	// string
+//   local_state_tree     // string
 //   minion_config		// string
 //   skip_bootstrap		// boolean
 //   temp_config_dir		// string
@@ -349,9 +350,34 @@ func (r *rawTemplate) createSaltMasterless() (settings map[string]interface{}, v
 		v = r.replaceVariables(v)
 		switch k {
 		case "local_state_tree":
+			// find the actual location and add it to the files map for copying
+			src, err := r.findSource(v)
+			if err != nil {
+				jww.ERROR.Println(err)
+				return nil, nil, err
+			}
+			r.dirs[filepath.Join(r.OutDir, v)] = src
 			settings[k] = v
 			hasLocalStateTree = true
-		case "bootstrap_args", "local_pillar_roots", "minion_config", "temp_config_dir":
+		case "local_pillar_roots":
+			// find the actual location and add it to the files map for copying
+			src, err := r.findSource(v)
+			if err != nil {
+				jww.ERROR.Println(err)
+				return nil, nil, err
+			}
+			r.dirs[filepath.Join(r.OutDir, v)] = src
+			settings[k] = v
+		case "minion_config":
+			// find the actual location and add it to the files map for copying
+			src, err := r.findSource(filepath.Join(v, "minion"))
+			if err != nil {
+				jww.ERROR.Println(err)
+				return nil, nil, err
+			}
+			r.files[filepath.Join(r.OutDir, v, "minion")] = src
+			settings[k] = v
+		case "bootstrap_args", "temp_config_dir":
 			settings[k] = v
 		case "skip_bootstrap":
 			settings[k], _ = strconv.ParseBool(v)
@@ -454,7 +480,7 @@ func (r *rawTemplate) createShell() (settings map[string]interface{}, vars []str
 	// go through the scripts, find their source, and add to the files map. error if
 	// the script source cannot be deteremined.
 	for _, script := range scripts {
-		s, err := r.findSourceFile(script)
+		s, err := r.findSource(script)
 		if err != nil {
 			jww.ERROR.Printf("error while adding file to file map: %s", err)
 			return nil, nil, err
