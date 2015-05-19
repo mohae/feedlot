@@ -2,7 +2,6 @@ package ranchr
 
 import (
 	"fmt"
-	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -350,6 +349,8 @@ func (r *rawTemplate) createSaltMasterless() (settings map[string]interface{}, v
 		v = r.replaceVariables(v)
 		switch k {
 		case "local_state_tree":
+			// prepend the path with salt-masterless if there isn't a parent dir
+			v = setParentDir(SaltMasterless.String(), v)
 			// find the actual location and add it to the files map for copying
 			src, err := r.findSource(v)
 			if err != nil {
@@ -360,6 +361,8 @@ func (r *rawTemplate) createSaltMasterless() (settings map[string]interface{}, v
 			settings[k] = v
 			hasLocalStateTree = true
 		case "local_pillar_roots":
+			// prepend the path with salt-masterless if there isn't a parent dir
+			v = setParentDir(SaltMasterless.String(), v)
 			// find the actual location and add it to the files map for copying
 			src, err := r.findSource(v)
 			if err != nil {
@@ -369,6 +372,8 @@ func (r *rawTemplate) createSaltMasterless() (settings map[string]interface{}, v
 			r.dirs[filepath.Join(r.OutDir, v)] = src
 			settings[k] = v
 		case "minion_config":
+			// prepend the path with salt-masterless if there isn't a parent dir
+			v = setParentDir(SaltMasterless.String(), v)
 			// find the actual location and add it to the files map for copying
 			src, err := r.findSource(filepath.Join(v, "minion"))
 			if err != nil {
@@ -453,17 +458,14 @@ func (r *rawTemplate) createShell() (settings map[string]interface{}, vars []str
 	// Process the Arrays.
 	var scripts []string
 	for name, val := range r.Provisioners[Shell.String()].Arrays {
+		// if this is a scripts array, special processing needs to be done.
 		if name == "scripts" {
 			scripts = deepcopy.InterfaceToSliceOfStrings(val)
 			for i, v := range scripts {
-				scripts[i] = r.replaceVariables(v)
-				// if the scripts path doesn't contain a directory, use the provisioner
-				// name as the base dir
-				if path.Dir(scripts[i]) == "." {
-					scripts[i] = filepath.Join(Shell.String(), scripts[i])
-				}
+				v = r.replaceVariables(v)
+				// prepend the path with salt-masterless if there isn't a parent dir
+				scripts[i] = setParentDir(Shell.String(), v)
 			}
-			fmt.Println(scripts)
 			settings[name] = scripts
 			continue
 		}

@@ -7,11 +7,11 @@ import (
 // TODO rewrite with refactor
 func TestCreate(t *testing.T) {
 	p := packerTemplate{}
-	var scripts map[string]string
-	b := BuildInf{BuildName: "test build"}
-	i := IODirInf{}
-	err := p.create(i, b, scripts)
-	_ = err
+	//	var scripts map[string]string
+	//	b := BuildInf{BuildName: "test build"}
+	//	i := IODirInf{}
+	//	err := p.create(i, b, scripts)
+	_ = p
 	//	if err != nil {
 	//		t.Errorf("Expected no error, got %q", err)
 	//	}

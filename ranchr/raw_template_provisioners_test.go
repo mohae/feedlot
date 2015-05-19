@@ -12,8 +12,8 @@ var testRawTemplateProvisioner = &rawTemplate{
 	},
 	IODirInf: IODirInf{
 		CommandsSrcDir: "commands",
-		OutDir:         "../test_files/out/:type/:build_name",
-		SrcDir:         "../test_files/src/:type",
+		OutDir:         "../test_files/out/:build_name",
+		SrcDir:         "../test_files/src",
 	},
 	BuildInf: BuildInf{
 		Name:      ":build_name",
@@ -28,6 +28,8 @@ var testRawTemplateProvisioner = &rawTemplate{
 	Release: "6",
 	varVals: map[string]string{},
 	vars:    map[string]string{},
+	dirs:    map[string]string{},
+	files:   map[string]string{},
 	build: build{
 		BuilderTypes: []string{"virtualbox-iso", "vmware-iso"},
 		Builders: map[string]*builder{
@@ -155,8 +157,8 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 	},
 	IODirInf: IODirInf{
 		CommandsSrcDir: "commands",
-		OutDir:         "../test_files/out/:type/:build_name",
-		SrcDir:         "../test_files/src/:type",
+		OutDir:         "../test_files/out/:build_name",
+		SrcDir:         "../test_files/src",
 	},
 	BuildInf: BuildInf{
 		Name:      ":build_name",
@@ -171,6 +173,8 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 	Release: "6",
 	varVals: map[string]string{},
 	vars:    map[string]string{},
+	dirs:    map[string]string{},
+	files:   map[string]string{},
 	build: build{
 		BuilderTypes: []string{"virtualbox-iso", "vmware-iso"},
 		Builders: map[string]*builder{
@@ -289,9 +293,9 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 				templateSection{
 					Settings: []string{
 						"bootstrap_args = args",
-						"local_pillar_roots=/srv/pillar/",
-						"local_state_tree=/srv/salt/",
-						"minion_config=minion",
+						"local_pillar_roots=pillar",
+						"local_state_tree=salt",
+						"minion_config=salt",
 						"skip_bootstrap=false",
 						"temp_config_dir=/tmp",
 					},
@@ -578,9 +582,9 @@ func TestAnsibleProvisioner(t *testing.T) {
 func TestSaltProvisioner(t *testing.T) {
 	expected := map[string]interface{}{
 		"bootstrap_args":     "args",
-		"local_pillar_roots": "/srv/pillar/",
-		"local_state_tree":   "/srv/salt/",
-		"minion_config":      "minion",
+		"local_pillar_roots": "salt-masterless/pillar",
+		"local_state_tree":   "salt-masterless/salt",
+		"minion_config":      "salt-masterless/salt",
 		"skip_bootstrap":     false,
 		"temp_config_dir":    "/tmp",
 		"type":               "salt-masterless",

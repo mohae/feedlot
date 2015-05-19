@@ -965,3 +965,26 @@ func mergedKeysFromMaps(m ...map[string]interface{}) []string {
 	mergedKeys := MergeSlices(types...)
 	return mergedKeys
 }
+
+// setParentDir takes a directory name and and a path. If the path does not contain a
+// parent directory, the passed directory is prepended to the path and the new value is
+// returned, otherwise the path is returned; e.g. if "shell" and "script.sh" are passed
+// as the dir and path, the returned value will be "shell/script.sh", with the "/"
+// normalized to the os specific use. If "shell" and "scripts/script.sh" are passed as
+// the dir and path, the returned value will be "scripts/script.sh".
+//
+// An empty path will result in an empty string being returned.
+// An empty directory will result in the path being returned.
+func setParentDir(d, p string) string {
+	if p == "" {
+		return ""
+	}
+	if d == "" {
+		return p
+	}
+	dir := path.Dir(p)
+	if dir == "." {
+		return filepath.Join(d, p)
+	}
+	return p
+}

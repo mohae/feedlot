@@ -847,7 +847,7 @@ func TestDeleteDirContent(t *testing.T) {
 		testFile2.Close()
 	}
 
-	err = deleteDirContent(filepath.Join(tmpDir, "testtest"))
+	err = deleteDir(filepath.Join(tmpDir, "testtest"))
 	if err == nil {
 		t.Error("Expected an error, none occurred")
 	} else {
@@ -955,5 +955,24 @@ func TestMergedKeysFromMaps(t *testing.T) {
 			t.Error("expected merged keys to not have \"\", it was in merged keys slice")
 		}
 
+	}
+}
+
+func TestSetParentDir(t *testing.T) {
+	tests := []struct {
+		d        string
+		p        string
+		expected string
+	}{
+		{"", "", ""},
+		{"", "path", "path"},
+		{"dir", "path", filepath.Join("dir", "path")},
+		{"dir", "some/path", "some/path"},
+	}
+	for i, test := range tests {
+		r := setParentDir(test.d, test.p)
+		if r != test.expected {
+			t.Errorf("setParentDir %d: expected %q, got %q", i, test.expected, r)
+		}
 	}
 }
