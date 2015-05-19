@@ -281,7 +281,8 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 							"arg2",
 						},
 						"playbook_paths": []string{
-							"../ansible/playbook/",
+							"playbook1",
+							"playbook2",
 						},
 						"role_paths": []string{
 							"roles1",
@@ -555,17 +556,18 @@ func TestAnsibleProvisioner(t *testing.T) {
 			"arg1",
 			"arg2",
 		},
-		"group_vars":     "groupvars",
-		"host_vars":      "hostvars",
-		"inventory_file": "inventory_file",
-		"playbook_dir":   "playbooks",
-		"playbook_file":  "playbook.yml",
+		"group_vars":     "ansible-local/groupvars",
+		"host_vars":      "ansible-local/hostvars",
+		"inventory_file": "ansible-local/inventory_file",
+		"playbook_dir":   "ansible-local/playbooks",
+		"playbook_file":  "ansible-local/playbook.yml",
 		"playbook_paths": []string{
-			"../ansible/playbook/",
+			"ansible-local/playbook1",
+			"ansible-local/playbook2",
 		},
 		"role_paths": []string{
-			"roles1",
-			"roles2",
+			"ansible-local/roles1",
+			"ansible-local/roles2",
 		},
 		"staging_directory": "staging/directory",
 		"type":              "ansible-local",
@@ -634,7 +636,7 @@ func TestShellProvisioner(t *testing.T) {
 func TestFileUploadsProvisioner(t *testing.T) {
 	expected := map[string]interface{}{
 		"destination": "/tmp/app.tar.gz",
-		"source":      "app.tar.gz",
+		"source":      "file/app.tar.gz",
 		"type":        "file",
 	}
 	settings, _, err := testRawTemplateProvisionersAll.createFileUploads()

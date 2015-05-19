@@ -244,9 +244,40 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []s
 		v = r.replaceVariables(v)
 		switch k {
 		case "playbook_file":
+			// prepend the path with ansible-local if there isn't a parent dir
+			v = setParentDir(Ansible.String(), v)
+			// find the actual location and add it to the files map for copying
+			src, err := r.findSource(v)
+			if err != nil {
+				jww.ERROR.Println(err)
+				return nil, nil, err
+			}
+			r.files[filepath.Join(r.OutDir, v)] = src
 			settings[k] = v
 			hasPlaybook = true
-		case "command", "inventory_file", "group_vars", "host_vars", "playbook_dir", "staging_directory":
+		case "inventory_file":
+			// prepend the path with ansible-local if there isn't a parent dir
+			v = setParentDir(Ansible.String(), v)
+			// find the actual location and add it to the files map for copying
+			src, err := r.findSource(v)
+			if err != nil {
+				jww.ERROR.Println(err)
+				return nil, nil, err
+			}
+			r.files[filepath.Join(r.OutDir, v)] = src
+			settings[k] = v
+		case "playbook_dir", "host_vars", "group_vars":
+			// prepend the path with ansible-local if there isn't a parent dir
+			v = setParentDir(Ansible.String(), v)
+			// find the actual location and add it to the files map for copying
+			src, err := r.findSource(v)
+			if err != nil {
+				jww.ERROR.Println(err)
+				return nil, nil, err
+			}
+			r.dirs[filepath.Join(r.OutDir, v)] = src
+			settings[k] = v
+		case "command", "staging_directory":
 			settings[k] = v
 		default:
 			jww.WARN.Printf("unsupported %s key was encountered: %s", Ansible.String(), k)
@@ -259,10 +290,34 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []s
 	}
 	// Process the Arrays.
 	for name, val := range r.Provisioners[Ansible.String()].Arrays {
-		array := deepcopy.InterfaceToSliceOfStrings(val)
-		if array != nil {
+		// playbook_paths, role_paths
+		if name == "playbook_paths" || name == "role_paths" {
+			array := deepcopy.InterfaceToSliceOfStrings(val)
+			for i, v := range array {
+				v = r.replaceVariables(v)
+				// prepend the path with salt-masterless if there isn't a parent dir
+				v = setParentDir(Ansible.String(), v)
+				array[i] = v
+				s, err := r.findSource(v)
+				if err != nil {
+					jww.ERROR.Printf("error while adding file to file map: %s", err)
+					return nil, nil, err
+				}
+				r.files[filepath.Join(r.OutDir, v)] = s
+			}
 			settings[name] = array
+			continue
 		}
+
+		// extra_arguments
+		if name == "extra_arguments" {
+			array := deepcopy.InterfaceToSliceOfStrings(val)
+			if array != nil {
+				settings[name] = array
+			}
+			continue
+		}
+		jww.WARN.Printf("Invalid %s array: %s will be ignored", Ansible.String(), name)
 	}
 	return settings, vars, err
 }
