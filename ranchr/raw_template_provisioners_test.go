@@ -113,7 +113,7 @@ var testRawTemplateProvisioner = &rawTemplate{
 		},
 		ProvisionerTypes: []string{
 			"shell",
-			"file-uploads",
+			"file",
 		},
 		Provisioners: map[string]*provisioner{
 			"shell": {
@@ -141,7 +141,7 @@ var testRawTemplateProvisioner = &rawTemplate{
 				templateSection{
 					Settings: []string{
 						"source = app.tar.gz",
-						"destination = /tmp/app.tar/gz",
+						"destination = /tmp/app.tar.gz",
 					},
 					Arrays: map[string]interface{}{},
 				},
@@ -260,7 +260,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 			"ansible-local",
 			"salt-masterless",
 			"shell",
-			"file-uploads",
+			"file",
 		},
 		Provisioners: map[string]*provisioner{
 			"ansible-local": {
@@ -326,11 +326,11 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 					},
 				},
 			},
-			"file-uploads": {
+			"file": {
 				templateSection{
 					Settings: []string{
-						"source = /src/",
-						"destination = /dst/",
+						"source = app.tar.gz",
+						"destination = /tmp/app.tar.gz",
 					},
 				},
 			},
@@ -386,11 +386,11 @@ var prOrig = map[string]*provisioner{
 			},
 		},
 	},
-	"file-uploads": {
+	"file": {
 		templateSection{
 			Settings: []string{
-				"source = src/",
-				"destination = dst/",
+				"source = app.tar.gz",
+				"destination = /tmp/app.tar.gz",
 			},
 			Arrays: map[string]interface{}{},
 		},
@@ -458,11 +458,11 @@ var prMerged = map[string]*provisioner{
 			},
 		},
 	},
-	"file-uploads": {
+	"file": {
 		templateSection{
 			Settings: []string{
-				"source = src/",
-				"destination = dst/",
+				"source = app.tar.gz",
+				"destination = /tmp/app.tar.gz",
 			},
 			Arrays: map[string]interface{}{},
 		},
@@ -472,7 +472,7 @@ var prMerged = map[string]*provisioner{
 func TestRawTemplateUpdateProvisioners(t *testing.T) {
 	testRawTemplateProvisioner.updateProvisioners(nil)
 	if MarshalJSONToString.Get(testRawTemplateProvisioner.Provisioners) != MarshalJSONToString.Get(prOrig) {
-		t.Errorf("Got %q, want %q", MarshalJSONToString.Get(prOrig), MarshalJSONToString.Get(testRawTemplateProvisioner.Provisioners))
+		t.Errorf("Got %q, want %q", MarshalJSONToString.Get(testRawTemplateProvisioner.Provisioners), MarshalJSONToString.Get(prOrig))
 	}
 
 	testRawTemplateProvisioner.updateProvisioners(prNew)
@@ -500,13 +500,13 @@ func TestCreateProvisioners(t *testing.T) {
 		}
 	}
 
-	testRawTemplateWOSection.build.ProvisionerTypes[0] = "file-uploads"
+	testRawTemplateWOSection.build.ProvisionerTypes[0] = "file"
 	_, _, err = testRawTemplateWOSection.createProvisioners()
 	if err == nil {
-		t.Error("Expected error \"no configuration found for \"file-uploads\"\", got nil")
+		t.Error("Expected error \"no configuration found for \"file\"\", got nil")
 	} else {
-		if err.Error() != "no configuration found for \"file-uploads\"" {
-			t.Errorf("Expected error \"no configuration found for \"file-uploads\"\", got %q", err.Error())
+		if err.Error() != "no configuration found for \"file\"" {
+			t.Errorf("Expected error \"no configuration found for \"file\"\", got %q", err.Error())
 		}
 	}
 

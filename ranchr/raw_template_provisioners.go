@@ -31,7 +31,7 @@ var provisioners = [...]string{
 	"ansible-local",     //ansible is the name of the Ansible Provisioner
 	"chef-client",       //chef-client is the name of the ChefClient Provisioner
 	"chef-solo",         //chef-solo is the name of the ChefSolo Provisioner
-	"file-uploads",      //file-uploads is the name of the FileUploads Provisioner
+	"file",              //file is the name of the FileUploads Provisioner
 	"puppet-masterless", //puppet-masterless is the name of the PuppetMasterless Provisioner
 	"puppet-server",     // puppet-server is the name of the PuppetServer Provisioner
 	"salt-masterless",   //salt is the name of the Salt Provisioner
@@ -51,7 +51,7 @@ func ProvisionerFromString(s string) Provisioner {
 		return ChefClient
 	case "chef-solo":
 		return ChefSolo
-	case "file-uploads":
+	case "file":
 		return FileUploads
 	case "puppet-masterless":
 		return PuppetMasterless
@@ -304,12 +304,12 @@ func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, vars
 		}
 	}
 	if !hasSource {
-		err := fmt.Errorf("\"source\" setting is required for file-uploads, not found")
+		err := fmt.Errorf("\"source\" setting is required for %s, not found", FileUploads.String())
 		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	if !hasDestination {
-		err := fmt.Errorf("\"destination\" setting is required for file-uploads, not found")
+		err := fmt.Errorf("\"destination\" setting is required for %s, not found", FileUploads.String())
 		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
