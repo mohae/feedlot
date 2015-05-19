@@ -137,11 +137,11 @@ var testRawTemplateProvisioner = &rawTemplate{
 					},
 				},
 			},
-			"file-uploads": {
+			"file": {
 				templateSection{
 					Settings: []string{
-						"source = src/",
-						"destination = dst/",
+						"source = app.tar.gz",
+						"destination = /tmp/app.tar/gz",
 					},
 					Arrays: map[string]interface{}{},
 				},
@@ -632,9 +632,9 @@ func TestShellProvisioner(t *testing.T) {
 
 func TestFileUploadsProvisioner(t *testing.T) {
 	expected := map[string]interface{}{
-		"destination": "/dst/",
-		"source":      "/src/",
-		"type":        "file-uploads",
+		"destination": "/tmp/app.tar.gz",
+		"source":      "app.tar.gz",
+		"type":        "file",
 	}
 	settings, _, err := testRawTemplateProvisionersAll.createFileUploads()
 	if err != nil {
