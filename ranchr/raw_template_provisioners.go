@@ -19,7 +19,7 @@ const (
 	FileUploads
 	PuppetMasterless
 	PuppetServer
-	SaltMasterless
+	Salt
 	ShellScript
 )
 
@@ -58,7 +58,7 @@ func ProvisionerFromString(s string) Provisioner {
 	case "puppet-server":
 		return PuppetServer
 	case "salt-masterless":
-		return SaltMasterless
+		return Salt
 	case "shell":
 		return ShellScript
 	}
@@ -176,8 +176,8 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 			if err != nil {
 				return nil, nil, err
 			}
-		case SaltMasterless:
-			tmpS, tmpVar, err = r.createSaltMasterless()
+		case Salt:
+			tmpS, tmpVar, err = r.createSalt()
 			if err != nil {
 				return nil, nil, err
 			}
@@ -316,9 +316,9 @@ func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, vars
 	return settings, vars, nil
 }
 
-// createSaltMasterless() creates a map of settings for Packer's salt-masterless
-// provisioner. Any values that aren't supported by the salt-masterless
-// provisioner are ignored. For more information, refer to
+// createSalt() creates a map of settings for Packer's salt provisioner. Any values
+// that aren't supported by the salt provisioner are logged as a WARN and are then
+// ignored. For more information, refer to
 // https://packer.io/docs/provisioners/salt-masterless.html
 //
 // Required configuration options:
@@ -330,27 +330,27 @@ func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, vars
 //   minion_config		// string
 //   skip_bootstrap		// boolean
 //   temp_config_dir		// string
-func (r *rawTemplate) createSaltMasterless() (settings map[string]interface{}, vars []string, err error) {
-	_, ok := r.Provisioners[SaltMasterless.String()]
+func (r *rawTemplate) createSalt() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[Salt.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration found for %q", SaltMasterless.String())
+		err = fmt.Errorf("no configuration found for %q", Salt.String())
 		jww.ERROR.Print(err)
 		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
-	settings["type"] = SaltMasterless.String()
+	settings["type"] = Salt.String()
 	// For each value, extract its key value pair and then process. Only
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
 	var k, v string
 	var hasLocalStateTree bool
-	for _, s := range r.Provisioners[SaltMasterless.String()].Settings {
+	for _, s := range r.Provisioners[Salt.String()].Settings {
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
 		case "local_state_tree":
 			// prepend the path with salt-masterless if there isn't a parent dir
-			v = setParentDir(SaltMasterless.String(), v)
+			v = setParentDir(Salt.String(), v)
 			// find the actual location and add it to the files map for copying
 			src, err := r.findSource(v)
 			if err != nil {
@@ -362,7 +362,7 @@ func (r *rawTemplate) createSaltMasterless() (settings map[string]interface{}, v
 			hasLocalStateTree = true
 		case "local_pillar_roots":
 			// prepend the path with salt-masterless if there isn't a parent dir
-			v = setParentDir(SaltMasterless.String(), v)
+			v = setParentDir(Salt.String(), v)
 			// find the actual location and add it to the files map for copying
 			src, err := r.findSource(v)
 			if err != nil {
@@ -373,7 +373,7 @@ func (r *rawTemplate) createSaltMasterless() (settings map[string]interface{}, v
 			settings[k] = v
 		case "minion_config":
 			// prepend the path with salt-masterless if there isn't a parent dir
-			v = setParentDir(SaltMasterless.String(), v)
+			v = setParentDir(Salt.String(), v)
 			// find the actual location and add it to the files map for copying
 			src, err := r.findSource(filepath.Join(v, "minion"))
 			if err != nil {
@@ -387,15 +387,15 @@ func (r *rawTemplate) createSaltMasterless() (settings map[string]interface{}, v
 		case "skip_bootstrap":
 			settings[k], _ = strconv.ParseBool(v)
 		default:
-			jww.WARN.Println("unsupported " + SaltMasterless.String() + " key was encountered: " + k)
+			jww.WARN.Println("unsupported " + Salt.String() + " key was encountered: " + k)
 		}
 	}
 	if !hasLocalStateTree {
-		err := fmt.Errorf("\"local_state_tree\" setting is required for salt-masterless, not found")
+		err := fmt.Errorf("\"local_state_tree\" setting is required for salt, not found")
 		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
-	// salt-masterless does not have any arrays to support
+	// salt does not have any arrays to support
 	return settings, vars, nil
 }
 

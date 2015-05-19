@@ -589,7 +589,7 @@ func TestSaltProvisioner(t *testing.T) {
 		"temp_config_dir":    "/tmp",
 		"type":               "salt-masterless",
 	}
-	settings, _, err := testRawTemplateProvisionersAll.createSaltMasterless()
+	settings, _, err := testRawTemplateProvisionersAll.createSalt()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
