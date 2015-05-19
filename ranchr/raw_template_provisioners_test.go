@@ -2,6 +2,7 @@
 package ranchr
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -493,40 +494,40 @@ func TestCreateProvisioners(t *testing.T) {
 
 	_, _, err = testRawTemplateWOSection.createProvisioners()
 	if err == nil {
-		t.Error("Expected error \"no configuration found for \"ansible-local\"\", got nil")
+		t.Errorf("Expected error \"no configuration found for %q\", got nil", Ansible.String())
 	} else {
-		if err.Error() != "no configuration found for \"ansible-local\"" {
-			t.Errorf("Expected error \"no configuration found for \"ansible-local\"\", got %q", err.Error())
+		if err.Error() != fmt.Sprintf("no configuration found for %q", Ansible.String()) {
+			t.Errorf("Expected error \"no configuration found for %q\", got %q", Ansible.String(), err.Error())
 		}
 	}
 
-	testRawTemplateWOSection.build.ProvisionerTypes[0] = "file"
+	testRawTemplateWOSection.build.ProvisionerTypes[0] = FileUploads.String()
 	_, _, err = testRawTemplateWOSection.createProvisioners()
 	if err == nil {
-		t.Error("Expected error \"no configuration found for \"file\"\", got nil")
+		t.Errorf("Expected error \"no configuration found for %q\", got nil", FileUploads.String())
 	} else {
-		if err.Error() != "no configuration found for \"file\"" {
-			t.Errorf("Expected error \"no configuration found for \"file\"\", got %q", err.Error())
+		if err.Error() != fmt.Sprintf("no configuration found for %q", FileUploads.String()) {
+			t.Errorf("Expected error \"no configuration found for %q\", got %q", FileUploads.String(), err.Error())
 		}
 	}
 
-	testRawTemplateWOSection.build.ProvisionerTypes[0] = "salt-masterless"
+	testRawTemplateWOSection.build.ProvisionerTypes[0] = Salt.String()
 	_, _, err = testRawTemplateWOSection.createProvisioners()
 	if err == nil {
-		t.Error("Expected error \"no configuration found for \"salt-masterless\"\", got nil")
+		t.Errorf("Expected error \"no configuration found for %q\", got nil", Salt.String())
 	} else {
-		if err.Error() != "no configuration found for \"salt-masterless\"" {
-			t.Errorf("Expected error \"no configuration found for \"salt-masterless\"\", got %q", err.Error())
+		if err.Error() != fmt.Sprintf("no configuration found for %q", Salt.String()) {
+			t.Errorf("Expected error \"no configuration found for %q\", got %q", Salt.String(), err.Error())
 		}
 	}
 
-	testRawTemplateWOSection.build.ProvisionerTypes[0] = "shell"
+	testRawTemplateWOSection.build.ProvisionerTypes[0] = ShellScript.String()
 	_, _, err = testRawTemplateWOSection.createProvisioners()
 	if err == nil {
-		t.Error("Expected error \"no configuration found for \"shell\"\", got nil")
+		t.Errorf("Expected error \"no configuration found for %q\", got nil", ShellScript.String())
 	} else {
 		if err.Error() != "no configuration found for \"shell\"" {
-			t.Errorf("Expected error \"no configuration found for \"shell\"\", got %q", err.Error())
+			t.Errorf("Expected error \"no configuration found for %q\", got %q", ShellScript.String(), err.Error())
 		}
 	}
 
@@ -569,7 +570,7 @@ func TestAnsibleProvisioner(t *testing.T) {
 		"staging_directory": "staging/directory",
 		"type":              "ansible-local",
 	}
-	settings, _, err := testRawTemplateProvisionersAll.createAnsibleLocal()
+	settings, _, err := testRawTemplateProvisionersAll.createAnsible()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {

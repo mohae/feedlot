@@ -13,7 +13,7 @@ import (
 // Provisioner constants
 const (
 	UnsupportedProvisioner Provisioner = iota
-	AnsibleLocal
+	Ansible
 	ChefClient
 	ChefSolo
 	FileUploads
@@ -46,7 +46,7 @@ func ProvisionerFromString(s string) Provisioner {
 	s = strings.ToLower(s)
 	switch s {
 	case "ansible-local":
-		return AnsibleLocal
+		return Ansible
 	case "chef-client":
 		return ChefClient
 	case "chef-solo":
@@ -166,8 +166,8 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 		tmpS = make(map[string]interface{})
 		typ := ProvisionerFromString(pType)
 		switch typ {
-		case AnsibleLocal:
-			tmpS, tmpVar, err = r.createAnsibleLocal()
+		case Ansible:
+			tmpS, tmpVar, err = r.createAnsible()
 			if err != nil {
 				return nil, nil, err
 			}
@@ -208,9 +208,9 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 	return p, vars, nil
 }
 
-// createAnsibleLocal() creates a map of settings for Packer's ansible-local
-// provisioner. Any values that aren't supported by the file provisioner are
-// ignored. For more information, refer to
+// createAnsible() creates a map of settings for Packer's ansible-local
+// provisioner. Any values that aren't supported by the file provisioner are logged
+// as a WARN and then ignored. For more information, refer to
 // https://packer.io/docs/provisioners/ansible-local.html
 //
 // Required configuration options:
@@ -225,21 +225,21 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 //   playbook_paths		// array of strings
 //   role_paths			// array of strings
 //   staging_directory	// string
-func (r *rawTemplate) createAnsibleLocal() (settings map[string]interface{}, vars []string, err error) {
-	_, ok := r.Provisioners[AnsibleLocal.String()]
+func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[Ansible.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration found for %q", AnsibleLocal.String())
+		err = fmt.Errorf("no configuration found for %q", Ansible.String())
 		jww.ERROR.Print(err)
 		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
-	settings["type"] = AnsibleLocal.String()
+	settings["type"] = Ansible.String()
 	// For each value, extract its key value pair and then process. Only
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
 	var k, v string
 	var hasPlaybook bool
-	for _, s := range r.Provisioners[AnsibleLocal.String()].Settings {
+	for _, s := range r.Provisioners[Ansible.String()].Settings {
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -249,16 +249,16 @@ func (r *rawTemplate) createAnsibleLocal() (settings map[string]interface{}, var
 		case "command", "inventory_file", "group_vars", "host_vars", "playbook_dir", "staging_directory":
 			settings[k] = v
 		default:
-			jww.WARN.Printf("unsupported ansible-masterless key was encountered: %q" + k)
+			jww.WARN.Printf("unsupported %s key was encountered: %s", Ansible.String(), k)
 		}
 	}
 	if !hasPlaybook {
-		err := fmt.Errorf("\"playbook_file\" setting is required for ansible-local, not found")
+		err := fmt.Errorf("\"playbook_file\" setting is required for %s, not found", Ansible.String())
 		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	// Process the Arrays.
-	for name, val := range r.Provisioners[AnsibleLocal.String()].Arrays {
+	for name, val := range r.Provisioners[Ansible.String()].Arrays {
 		array := deepcopy.InterfaceToSliceOfStrings(val)
 		if array != nil {
 			settings[name] = array
