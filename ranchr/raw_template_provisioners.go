@@ -294,7 +294,7 @@ func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, vars
 		v = r.replaceVariables(v)
 		switch k {
 		case "source":
-			// prepend the path with salt-masterless if there isn't a parent dir
+			// prepend the path with file if there isn't a parent dir
 			v = setParentDir(FileUploads.String(), v)
 			// find the actual location and add it to the files map for copying
 			src, err := r.findSource(v)
