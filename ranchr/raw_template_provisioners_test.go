@@ -599,30 +599,28 @@ func TestSaltProvisioner(t *testing.T) {
 	}
 }
 
-// TODO: elided until refactor is done
-/*
 func TestShellProvisioner(t *testing.T) {
 	expected := map[string]interface{}{
 		"binary": false,
 		"except": []string{
 			"docker",
 		},
-		"execute_command": ":commands_src_dir/execute_test.command",
+		"execute_command": "echo 'vagrant'|sudo -S sh '{{.Path}}'",
 		"inline_shebang":  "/bin/sh",
 		"only": []string{
 			"virtualbox-iso",
 		},
 		"remote_path": "/tmp/script.sh",
 		"scripts": []string{
-			":scripts_dir/setup_test.sh",
-			":scripts_dir/vagrant_test.sh",
-			":scripts_dir/sudoers_test.sh",
-			":scripts_dir/cleanup_test.sh",
+			"shell/setup_test.sh",
+			"shell/vagrant_test.sh",
+			"shell/sudoers_test.sh",
+			"shell/cleanup_test.sh",
 		},
 		"start_retry_timeout": "5m",
-		"type":                "shell-scripts",
+		"type":                "shell",
 	}
-	settings, _, err := testRawTemplateProvisionersAll.createShellScripts()
+	settings, _, err := testRawTemplateProvisionersAll.createShell()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
@@ -631,7 +629,6 @@ func TestShellProvisioner(t *testing.T) {
 		}
 	}
 }
-*/
 
 func TestFileUploadsProvisioner(t *testing.T) {
 	expected := map[string]interface{}{
