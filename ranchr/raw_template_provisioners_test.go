@@ -259,6 +259,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 		},
 		ProvisionerTypes: []string{
 			"ansible-local",
+			"chef-client",
 			"salt-masterless",
 			"shell",
 			"file",
@@ -287,6 +288,31 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 						"role_paths": []string{
 							"roles1",
 							"roles2",
+						},
+					},
+				},
+			},
+			"chef-client": {
+				templateSection{
+					Settings: []string{
+						"chef_environment=web",
+						"config_template=chef.cfg",
+						"execute_command=execute.command",
+						"install_command=install.command",
+						"node_name=test-chef",
+						"prevent_sudo=false",
+						"server_url=https://mychefserver.com",
+						"skip_clean_client=true",
+						"skip_clean_node=false",
+						"skip_install=false",
+						"staging_directory=/tmp/chef/",
+						"validation_client_name=some_value",
+						"validation_key_path=chef-key",
+					},
+					Arrays: map[string]interface{}{
+						"run_list": []string{
+							"recipe[hello::default]",
+							"recipe[world::default]",
 						},
 					},
 				},
@@ -573,6 +599,37 @@ func TestAnsibleProvisioner(t *testing.T) {
 		"type":              "ansible-local",
 	}
 	settings, _, err := testRawTemplateProvisionersAll.createAnsible()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		}
+	}
+}
+
+func TestChefClientProvisioner(t *testing.T) {
+	expected := map[string]interface{}{
+		"chef_environment": "web",
+		"config_template":  "chef-client/chef.cfg",
+		"execute_command":  "{{if .Sudo}}sudo {{end}}chef-client --no-color -c {{.ConfigPath}} -j {{.JsonPath}}",
+		"install_command":  "curl -L https://www.opscode.com/chef/install.sh | {{if .Sudo}}sudo{{end}} bash",
+		"node_name":        "test-chef",
+		"prevent_sudo":     false,
+		"run_list": []string{
+			"recipe[hello::default]",
+			"recipe[world::default]",
+		},
+		"server_url":        "https://mychefserver.com",
+		"skip_clean_client": true,
+		"skip_clean_node":   false,
+		"skip_install":      false,
+		"staging_directory": "/tmp/chef/",
+		"type":              "chef-client",
+		"validation_client_name": "some_value",
+		"validation_key_path":    "chef-client/chef-key",
+	}
+	settings, _, err := testRawTemplateProvisionersAll.createChefClient()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {

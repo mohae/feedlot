@@ -574,7 +574,7 @@ func TestRawTemplateSetBaseVarVals(t *testing.T) {
 
 func TestCommandsFromFile(t *testing.T) {
 	r := newRawTemplate()
-	_, err := r.commandsFromFile("")
+	_, err := r.commandsFromFile("", "")
 	if err.Error() != "the passed Command filename was empty" {
 		t.Errorf("Expected \"the passed Command filename was empty\", got %q", err.Error())
 	}

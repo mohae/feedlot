@@ -186,9 +186,12 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 			if err != nil {
 				return nil, nil, err
 			}
+		case ChefClient:
+			tmpS, tmpVar, err = r.createChefClient()
+			if err != nil {
+				return nil, nil, err
+			}
 			/*
-				case ChefClient:
-					// not implemented
 				case ChefSolo:
 					// not implemented
 				case PuppetClient:
@@ -322,9 +325,98 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []s
 	return settings, vars, err
 }
 
+// createChefClient() creates a map of settings for Packer's chef-clien provisioner.
+// Any values that aren't supported by the chef client provisioner are logged with a
+// warning and ignored. For more information, refer to:
+//   https://www.packer.io/docs/provisioners/chef-client.html
+//
+// Required configuration options:
+//   none
+//
+// Optional configuraiton options:
+//   chef_environment        string
+//   config_template         string p
+//   execute_command         string p
+//   install_command         string p
+//   json                    object <- not supported
+///  node_name               string
+//   prevent_sudo            bool
+//   run_list                array of strings
+//   server_url              string
+//   skip_clean_client       bool
+//   skip_clean_node         bool
+//   skip_install            bool
+//   staging_directory       string
+//   validation_client_name  string
+//   validation_key_path     string p
+func (r *rawTemplate) createChefClient() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[ChefClient.String()]
+	if !ok {
+		err = fmt.Errorf("no configuration found for %q", ChefClient.String())
+		jww.ERROR.Print(err)
+		return nil, nil, err
+	}
+	settings = make(map[string]interface{})
+	settings["type"] = ChefClient.String()
+	// For each value, extract its key value pair and then process. Only
+	// process the supported keys. Key validation isn't done here, leaving
+	// that for Packer.
+	for _, s := range r.Provisioners[ChefClient.String()].Settings {
+		k, v := parseVar(s)
+		v = r.replaceVariables(v)
+		switch k {
+		case "chef_environment", "node_name", "server_url", "staging_directory", "validation_client_name":
+			settings[k] = v
+		case "prevent_sudo", "skip_clean_client", "skip_clean_node", "skip_install":
+			settings[k], _ = strconv.ParseBool(v)
+		case "config_template", "validation_key_path":
+			// prepend the path with chef-client if there isn't a parent dir
+			v = setParentDir(ChefClient.String(), v)
+			// find the actual location of the source file and add it to the files map for copying
+			src, err := r.findSource(v)
+			if err != nil {
+				jww.ERROR.Println(err)
+				return nil, nil, err
+			}
+			r.files[filepath.Join(r.OutDir, v)] = src
+			settings[k] = v
+		case "execute_command", "install_command":
+			// if the value ends with .command, find the referenced command file and use its
+			// contents as the command, otherwise just use the value
+			if strings.HasSuffix(v, ".command") {
+				commands, err := r.commandsFromFile(ChefClient.String(), v)
+				if err != nil {
+					jww.ERROR.Println(err)
+					return nil, nil, err
+				}
+				if len(commands) == 0 {
+					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", ChefClient.String(), k, v)
+					jww.ERROR.Println(err)
+					return nil, nil, err
+				}
+				settings[k] = commands[0]
+				continue
+			}
+			settings[k] = v
+		default:
+			jww.WARN.Printf("unsupported %s key was encountered: %s", ChefClient.String(), k)
+		}
+	}
+
+	for name, val := range r.Provisioners[ChefClient.String()].Arrays {
+		if name == "run_list" {
+			array := deepcopy.InterfaceToSliceOfStrings(val)
+			settings[name] = array
+			continue
+		}
+		jww.WARN.Printf("%s: unsupported array, %s, was encountered", ChefClient.String(), name)
+	}
+	return settings, vars, nil
+}
+
 // createFileUploads() creates a map of settings for Packer's file uploads
-// provisioner. Any values that aren't supported by the file provisioner are
-// ignored. For more information, refer to
+// provisioner. Any values that aren't supported by the file provisioner are logged
+// with a warning and ignored. For more information, refer to:
 // https://packer.io/docs/provisioners/file.html
 //
 //	Required configuration options:
@@ -339,6 +431,7 @@ func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, vars
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = FileUploads.String()
+
 	// For each value, extract its key value pair and then process. Only
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
