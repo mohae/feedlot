@@ -719,6 +719,11 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
+				if len(commands) == 0 {
+					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", VirtualBoxISO.String(), k, v)
+					jww.ERROR.Println(err)
+					return nil, nil, err
+				}
 				settings[k] = commands
 				bootCmdProcessed = true
 			}
@@ -728,6 +733,11 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
+					jww.ERROR.Println(err)
+					return nil, nil, err
+				}
+				if len(commands) == 0 {
+					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", VirtualBoxISO.String(), k, v)
 					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
@@ -980,6 +990,11 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, va
 					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
+				if len(commands) == 0 {
+					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", VirtualBoxOVF.String(), k, v)
+					jww.ERROR.Println(err)
+					return nil, nil, err
+				}
 				settings[k] = commands
 				bootCmdProcessed = true
 			}
@@ -1013,6 +1028,11 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, va
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
+					jww.ERROR.Println(err)
+					return nil, nil, err
+				}
+				if len(commands) == 0 {
+					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", VirtualBoxOVF.String(), k, v)
 					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
@@ -1162,6 +1182,11 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
+				if len(commands) == 0 {
+					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", VMWareISO.String(), k, v)
+					jww.ERROR.Println(err)
+					return nil, nil, err
+				}
 				settings[k] = commands
 				bootCmdProcessed = true
 			}
@@ -1171,6 +1196,11 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
+					jww.ERROR.Println(err)
+					return nil, nil, err
+				}
+				if len(commands) == 0 {
+					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", VMWareISO.String(), k, v)
 					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
@@ -1390,6 +1420,11 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, vars [
 					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
+				if len(commands) == 0 {
+					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", VMWareVMX.String(), k, v)
+					jww.ERROR.Println(err)
+					return nil, nil, err
+				}
 				settings[k] = commands
 				bootCmdProcessed = true
 			}
@@ -1399,6 +1434,11 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, vars [
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
+					jww.ERROR.Println(err)
+					return nil, nil, err
+				}
+				if len(commands) == 0 {
+					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", VMWareVMX.String(), k, v)
 					jww.ERROR.Println(err)
 					return nil, nil, err
 				}

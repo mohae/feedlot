@@ -601,6 +601,11 @@ func (r *rawTemplate) createShellScript() (settings map[string]interface{}, vars
 					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
+				if len(commands) == 0 {
+					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", ShellScript.String(), k, v)
+					jww.ERROR.Println(err)
+					return nil, nil, err
+				}
 				settings[k] = commands[0] // for execute_command, only the first element is used
 				continue
 			}
