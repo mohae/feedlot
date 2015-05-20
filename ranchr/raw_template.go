@@ -357,13 +357,18 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 	return nil
 }
 
-// Takes the name of the command file, including path relative to the source_dir, and
+// Takes the name of the command file, including path relative to the src_dir, and
 // returns a slice of shell commands. Each command within the file is separated by a
 // newline. Returns error if an error occurs with the file.
 //
+// The passed name is checked to see if it includes path information, if it does not
+// 'command' is prepended to it as the parent directory. If 'typ' is not empty, it is
+// then prepended to the command + name. Doing so supports provisioner specific
+// commands by placing the command file in provisioner_type/commands/ directory.
+//
 // Note: this searches for the appropriate command file using rancher's search
 // algorithm
-func (r *rawTemplate) commandsFromFile(name string) (commands []string, err error) {
+func (r *rawTemplate) commandsFromFile(typ, name string) (commands []string, err error) {
 	if name == "" {
 		err = fmt.Errorf("the passed Command filename was empty")
 		jww.ERROR.Println(err)
@@ -374,7 +379,13 @@ func (r *rawTemplate) commandsFromFile(name string) (commands []string, err erro
 	if dir == "." {
 		// name did not include directory, prepend "commands"
 		name = filepath.Join("commands", name)
+
+		// also prepend the type, if it's not empty
+		if typ != "" {
+			name = filepath.Join(typ, name)
+		}
 	}
+
 	// find the correct file location
 	path, err := r.findSource(name)
 	if err != nil {

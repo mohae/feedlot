@@ -503,7 +503,7 @@ func (r *rawTemplate) createShellScript() (settings map[string]interface{}, vars
 			// Otherwise assume that it contains the command
 			if strings.HasSuffix(v, ".command") {
 				var commands []string
-				commands, err = r.commandsFromFile(v)
+				commands, err = r.commandsFromFile(ShellScript.String(), v)
 				if err != nil {
 					jww.ERROR.Println(err)
 					return nil, nil, err

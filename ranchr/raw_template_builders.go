@@ -714,7 +714,7 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 			// boot_command in the array defined in the Arrays section.
 			if strings.HasSuffix(v, ".command") {
 				var commands []string
-				commands, err = r.commandsFromFile(v)
+				commands, err = r.commandsFromFile("", v)
 				if err != nil {
 					jww.ERROR.Println(err)
 					return nil, nil, err
@@ -726,7 +726,7 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 			//If it ends in .command, replace it with the command from the filepath
 			if strings.HasSuffix(v, ".command") {
 				var commands []string
-				commands, err = r.commandsFromFile(v)
+				commands, err = r.commandsFromFile("", v)
 				if err != nil {
 					jww.ERROR.Println(err)
 					return nil, nil, err
@@ -975,7 +975,7 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, va
 			// boot_command in the array defined in the Arrays section.
 			if strings.HasSuffix(v, ".command") {
 				var commands []string
-				commands, err = r.commandsFromFile(v)
+				commands, err = r.commandsFromFile("", v)
 				if err != nil {
 					jww.ERROR.Println(err)
 					return nil, nil, err
@@ -1011,7 +1011,7 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, va
 			if strings.HasSuffix(v, ".command") {
 				//If it ends in .command, replace it with the command from the filepath
 				var commands []string
-				commands, err = r.commandsFromFile(v)
+				commands, err = r.commandsFromFile("", v)
 				if err != nil {
 					jww.ERROR.Println(err)
 					return nil, nil, err
@@ -1157,7 +1157,7 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 			// boot_command in the array defined in the Arrays section.
 			if strings.HasSuffix(v, ".command") {
 				var commands []string
-				commands, err = r.commandsFromFile(v)
+				commands, err = r.commandsFromFile("", v)
 				if err != nil {
 					jww.ERROR.Println(err)
 					return nil, nil, err
@@ -1169,7 +1169,7 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 			//If it ends in .command, replace it with the command from the filepath
 			if strings.HasSuffix(v, ".command") {
 				var commands []string
-				commands, err = r.commandsFromFile(v)
+				commands, err = r.commandsFromFile("", v)
 				if err != nil {
 					jww.ERROR.Println(err)
 					return nil, nil, err
@@ -1385,7 +1385,7 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, vars [
 			// boot_command in the array defined in the Arrays section.
 			if strings.HasSuffix(v, ".command") {
 				var commands []string
-				commands, err = r.commandsFromFile(v)
+				commands, err = r.commandsFromFile("", v)
 				if err != nil {
 					jww.ERROR.Println(err)
 					return nil, nil, err
@@ -1397,7 +1397,7 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, vars [
 			//If it ends in .command, replace it with the command from the filepath
 			if strings.HasSuffix(v, ".command") {
 				var commands []string
-				commands, err = r.commandsFromFile(v)
+				commands, err = r.commandsFromFile("", v)
 				if err != nil {
 					jww.ERROR.Println(err)
 					return nil, nil, err
