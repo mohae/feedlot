@@ -260,6 +260,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 		ProvisionerTypes: []string{
 			"ansible-local",
 			"chef-client",
+			"chef-solo",
 			"salt-masterless",
 			"shell",
 			"file",
@@ -310,6 +311,36 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 						"validation_key_path=chef-key",
 					},
 					Arrays: map[string]interface{}{
+						"run_list": []string{
+							"recipe[hello::default]",
+							"recipe[world::default]",
+						},
+					},
+				},
+			},
+			"chef-solo": {
+				templateSection{
+					Settings: []string{
+						"config_template=chef.cfg",
+						"data_bags_path=data_bag",
+						"encrypted_data_bag_secret_path=secret_data_bag",
+						"environments_path=environments",
+						"execute_command=execute.command",
+						"install_command=install.command",
+						"prevent_sudo=false",
+						"roles_path=roles",
+						"skip_install=false",
+						"staging_directory=/tmp/chef/",
+					},
+					Arrays: map[string]interface{}{
+						"cookbook_paths": []string{
+							"cookbook1",
+							"cookbook2",
+						},
+						"remote_cookbook_paths": []string{
+							"remote/path1",
+							"remote/path2",
+						},
 						"run_list": []string{
 							"recipe[hello::default]",
 							"recipe[world::default]",
@@ -630,6 +661,42 @@ func TestChefClientProvisioner(t *testing.T) {
 		"validation_key_path":    "chef-client/chef-key",
 	}
 	settings, _, err := testRawTemplateProvisionersAll.createChefClient()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		}
+	}
+}
+
+func TestChefSoloProvisioner(t *testing.T) {
+	expected := map[string]interface{}{
+		"config_template": "chef-solo/chef.cfg",
+		"cookbook_paths": []string{
+			"chef-solo/cookbook1",
+			"chef-solo/cookbook2",
+		},
+		"data_bags_path":                 "chef-solo/data_bag",
+		"encrypted_data_bag_secret_path": "chef-solo/secret_data_bag",
+		"environments_path":              "chef-solo/environments",
+		"execute_command":                "{{if .Sudo}}sudo {{end}}chef-client --no-color -c {{.ConfigPath}} -j {{.JsonPath}}",
+		"install_command":                "curl -L https://www.opscode.com/chef/install.sh | {{if .Sudo}}sudo{{end}} bash",
+		"prevent_sudo":                   false,
+		"roles_path":                     "chef-solo/roles",
+		"remote_cookbook_paths": []string{
+			"remote/path1",
+			"remote/path2",
+		},
+		"run_list": []string{
+			"recipe[hello::default]",
+			"recipe[world::default]",
+		},
+		"skip_install":      false,
+		"staging_directory": "/tmp/chef/",
+		"type":              "chef-solo",
+	}
+	settings, _, err := testRawTemplateProvisionersAll.createChefSolo()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {

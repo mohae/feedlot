@@ -325,8 +325,8 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []s
 	return settings, vars, err
 }
 
-// createChefClient() creates a map of settings for Packer's chef-clien provisioner.
-// Any values that aren't supported by the chef client provisioner are logged with a
+// createChefClient() creates a map of settings for Packer's chef-client provisioner.
+// Any values that aren't supported by the chef-client provisioner are logged with a
 // warning and ignored. For more information, refer to:
 //   https://www.packer.io/docs/provisioners/chef-client.html
 //
@@ -335,9 +335,9 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []s
 //
 // Optional configuraiton options:
 //   chef_environment        string
-//   config_template         string p
-//   execute_command         string p
-//   install_command         string p
+//   config_template         string
+//   execute_command         string
+//   install_command         string
 //   json                    object <- not supported
 ///  node_name               string
 //   prevent_sudo            bool
@@ -348,7 +348,7 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []s
 //   skip_install            bool
 //   staging_directory       string
 //   validation_client_name  string
-//   validation_key_path     string p
+//   validation_key_path     string
 func (r *rawTemplate) createChefClient() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.Provisioners[ChefClient.String()]
 	if !ok {
@@ -410,6 +410,123 @@ func (r *rawTemplate) createChefClient() (settings map[string]interface{}, vars 
 			continue
 		}
 		jww.WARN.Printf("%s: unsupported array, %s, was encountered", ChefClient.String(), name)
+	}
+	return settings, vars, nil
+}
+
+// createChefSolo() creates a map of settings for Packer's chef-solo provisioner.
+// Any values that aren't supported by the chef-solo provisioner are logged with a
+// warning and ignored. For more information, refer to:
+//   https://www.packer.io/docs/provisioners/chef-solo.html
+//
+// Required configuration options:
+//   none
+//
+// Optional configuraiton options:
+//   config_template                 string
+//   cookbook_paths                  array of strings
+//   data_bags_path                  string
+//   encrypted_data_bag_secret_path  string
+//   environments_path               string
+//   execute_command                 string
+//   install_command                 string
+//   json                            object <- not supported
+//   prevent_sudo                    bool
+//   remote_cookbook_paths           array of strings
+//   roles_path                      string
+//   run_list                        array of strings
+//   skip_install                    bool
+//   staging_directory               string
+func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Provisioners[ChefSolo.String()]
+	if !ok {
+		err = fmt.Errorf("no configuration found for %q", ChefSolo.String())
+		jww.ERROR.Print(err)
+		return nil, nil, err
+	}
+	settings = make(map[string]interface{})
+	settings["type"] = ChefSolo.String()
+	// For each value, extract its key value pair and then process. Only
+	// process the supported keys. Key validation isn't done here, leaving
+	// that for Packer.
+	for _, s := range r.Provisioners[ChefSolo.String()].Settings {
+		k, v := parseVar(s)
+		v = r.replaceVariables(v)
+		switch k {
+		case "staging_directory":
+			settings[k] = v
+		case "prevent_sudo", "skip_install":
+			settings[k], _ = strconv.ParseBool(v)
+		case "config_template", "encrypted_data_bag_secret_path":
+			// prepend the path with chef-client if there isn't a parent dir
+			v = setParentDir(ChefSolo.String(), v)
+			// find the actual location of the source file and add it to the files map for copying
+			src, err := r.findSource(v)
+			if err != nil {
+				jww.ERROR.Println(err)
+				return nil, nil, err
+			}
+			r.files[filepath.Join(r.OutDir, v)] = src
+			settings[k] = v
+		case "data_bags_path", "environments_path", "roles_path":
+			// prepend the path with chef-client if there isn't a parent dir
+			v = setParentDir(ChefSolo.String(), v)
+			// find the actual location of the source file and add it to the files map for copying
+			src, err := r.findSource(v)
+			if err != nil {
+				jww.ERROR.Println(err)
+				return nil, nil, err
+			}
+			r.dirs[filepath.Join(r.OutDir, v)] = src
+			settings[k] = v
+		case "execute_command", "install_command":
+			// if the value ends with .command, find the referenced command file and use its
+			// contents as the command, otherwise just use the value
+			if strings.HasSuffix(v, ".command") {
+				commands, err := r.commandsFromFile(ChefSolo.String(), v)
+				if err != nil {
+					jww.ERROR.Println(err)
+					return nil, nil, err
+				}
+				if len(commands) == 0 {
+					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", ChefSolo.String(), k, v)
+					jww.ERROR.Println(err)
+					return nil, nil, err
+				}
+				settings[k] = commands[0]
+				continue
+			}
+			settings[k] = v
+		default:
+			jww.WARN.Printf("unsupported %s key was encountered: %s", ChefSolo.String(), k)
+		}
+	}
+
+	for name, val := range r.Provisioners[ChefSolo.String()].Arrays {
+		if name == "cookbook_paths" {
+			array := deepcopy.InterfaceToSliceOfStrings(val)
+			for i, v := range array {
+				v = r.replaceVariables(v)
+				// prepend the path with chef-solo if there isn't a parent dir
+				v = setParentDir(ChefSolo.String(), v)
+				// find the actual location and add it to the files map for copying
+				src, err := r.findSource(v)
+				if err != nil {
+					jww.ERROR.Println(err)
+					return nil, nil, err
+				}
+				array[i] = v
+				r.dirs[filepath.Join(r.OutDir, v)] = src
+			}
+			settings[name] = array
+			continue
+		}
+		if name == "run_list" || name == "remote_cookbook_paths" {
+			array := deepcopy.InterfaceToSliceOfStrings(val)
+			settings[name] = array
+			continue
+		}
+		jww.WARN.Printf("%s: unsupported array, %s, was encountered", ChefSolo.String(), name)
 	}
 	return settings, vars, nil
 }
