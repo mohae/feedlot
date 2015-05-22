@@ -361,41 +361,75 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 // returns a slice of shell commands. Each command within the file is separated by a
 // newline. Returns error if an error occurs with the file.
 //
-// The passed name is checked to see if it includes path information, if it does not
-// 'command' is prepended to it as the parent directory. If 'typ' is not empty, it is
-// then prepended to the command + name. Doing so supports provisioner specific
-// commands by placing the command file in provisioner_type/commands/ directory.
+// Multiple passes may be made in an attempt to find the requested command file. If a
+// matching file is found, the contents are read and parsed as the command(s) to be
+// returned. At minimum, a command file should have 1 line, though it may have more.
+// Each line in the file is an element in the returned slice. The caller is expected
+// to properly handle the returned results.
 //
-// Note: this searches for the appropriate command file using rancher's search
-// algorithm
-func (r *rawTemplate) commandsFromFile(typ, name string) (commands []string, err error) {
+// Because the passed name may or may not be the actual location of the requested
+// file, this method may check multiple sub-paths of the src_dir in an attempt to find
+// the correct one. The first encountered match is used. The source file search
+// algorithm is applied.
+//
+// This method will use the following as the path to search:
+//   If the name contains at least 1 directory in the path, that is searched first.
+//   commands/{typ}/{name}
+//   commands/{typ-base}/{name} <- if applicable
+//   commands/{name}
+//
+// If the typ includes a "-", the typ-base is the portion prior to the first -, e.g.
+//   the typ-base of chef-client is chef.
+//
+// If no match is found, an error is returned.
+func (r *rawTemplate) commandsFromFile(component, name string) (commands []string, err error) {
 	if name == "" {
 		err = fmt.Errorf("the passed Command filename was empty")
 		jww.ERROR.Println(err)
-		return commands, err
+		return nil, err
 	}
+	// findPath is what is actually being looked for. If the name doesn't include
+	// directory information, multiple paths patterns may be used, which is what
+	// findPath is used for. Initially set to name
+	findPath := name
 	// see if the passed name includes a directory, if not, prepend with command
 	dir := path.Dir(name)
 	if dir == "." {
 		// name did not include directory, prepend "commands"
-		name = filepath.Join("commands", name)
+		findPath = filepath.Join("commands", name)
 
 		// also prepend the type, if it's not empty
-		if typ != "" {
-			name = filepath.Join(typ, name)
+		if component != "" {
+			findPath = filepath.Join(component, findPath)
 		}
 	}
 
 	// find the correct file location
-	path, err := r.findSource(name)
+	// TODO finish rewrite
+	path, err := r.findSource(findPath)
+	// if not found and component information was passed, look for it without the component
+	if err != nil && component != "" {
+		// see if typ can be reduced to its base
+		componentParts := strings.Split(component, "-")
+		if len(componentParts) > 1 {
+			// the first element is the base, e.g. chef is the base of chef-client
+			findPath = filepath.Join(componentParts[0], "commands", name)
+		}
+		findPath = filepath.Join("commands", name)
+		path, err = r.findSource(findPath)
+		if err != nil {
+			return nil, err
+		}
+	}
 	if err != nil {
+		err = fmt.Errorf("%q not found in %q or any of its searched subdirectories", findPath, r.SrcDir)
 		jww.ERROR.Println(err)
-		return commands, err
+		return nil, err
 	}
 	f, err := os.Open(path)
 	if err != nil {
 		jww.ERROR.Println(err)
-		return commands, err
+		return nil, err
 	}
 	// always close what's been opened and check returned error
 	defer func() {
@@ -413,81 +447,175 @@ func (r *rawTemplate) commandsFromFile(typ, name string) (commands []string, err
 	err = scanner.Err()
 	if err != nil {
 		jww.WARN.Println(err)
-		return
+		return nil, err
 	}
 	return commands, nil
 }
 
+// findComponentSource attempts to locate the source file or directory referred to in
+// p for the requested component and return it's actual location within the src_dir.
+// If the component is not empty, it is added to the path to see if there are any
+// component specific files that match. If none are found, just the path is used.
+// Any match is returned, otherwise an os.ErrNotFound error is returned. An other
+// error encountered will also be returned.
+//
+// The search path is built, in order of precedence:
+//    component/path
+//    component-base/path
+//    path
+//
+//  component is the name of the packer component that this path belongs to, e.g
+//    vagrant, chef-client, shell, etc.
+//  component-base is the base name of the packer component that this path belongs
+//    to, if applicable, e.g. chef-client's base would be chef as would chef-solo's.
+func (r *rawTemplate) findComponentSource(component, p string) (string, error) {
+	var tmpPath string
+	var err error
+	// if len(cParts) > 1, there was a - and component-base processing should be done
+	if component != "" {
+		tmpPath = filepath.Join(component, p)
+		tmpPath, err = r.findSource(tmpPath)
+		if err != nil && err != os.ErrNotExist {
+			return "", err
+		}
+		if err == nil {
+			return tmpPath, nil
+		}
+		cParts := strings.Split(component, "-")
+		if len(cParts) > 1 {
+			// first element is the base
+			tmpPath = filepath.Join(cParts[0], p)
+			tmpPath, err = r.findSource(tmpPath)
+			if err != nil && err != os.ErrNotExist {
+				return "", err
+			}
+			if err == nil {
+				return tmpPath, nil
+			}
+		}
+	}
+	// look for the source as using just the passed path
+	tmpPath, err = r.findSource(p)
+	if err == nil {
+		return tmpPath, nil
+	}
+	return "", err
+}
+
 // findSource searches for the specified sub-path using Rancher's algorithm for finding
 // the correct location. Passed names may include relative path information and may be
-// either a filename or a directory
+// either a filename or a directory. Releases may have "."'s in them. In addition to
+// searching for the requested source within the point release, the "." are stripped
+// out and the resulting value is searched; e.g. 14.04 becomes 1404. The base release
+// number is also checked; e.g. 14 is searched for 14.04.
 // Search order:
-//   src_dir/build_name/
-//   src_dir/distro/build_name/
 //   src_dir/distro/release/build_name/
+//   src_dir/distro/releaseBase/build_name/
+//   src_dir/distro/build_name/
+//   src_dir/build_name/
 //   src_dir/distro/release/arch/
+//   src_dir/distro/releaseBase/arch/
 //   src_dir/distro/release/
+//   src_dir/distro/releaseBase/
 //   src_dir/distro/arch
 //   src_dir/distro/
 //   src_dir/
 //
-// If the passed file is not found, an error will be returned.
-func (r *rawTemplate) findSource(s string) (string, error) {
-	// src_dir/:build_name/
-	tmpPath := filepath.Join(r.SrcDir, r.BuildName, s)
-	fmt.Println(tmpPath)
+// If the passed poth is not found, an os.ErrNotExist will be returned
+func (r *rawTemplate) findSource(p string) (string, error) {
+	if p == "" {
+		return "", fmt.Errorf("cannot find source, no path received")
+	}
+	releaseParts := strings.Split(r.Release, ".")
+	var release string
+	if len(releaseParts) > 1 {
+		for _, v := range releaseParts {
+			release += v
+		}
+	}
+	// src_dir/:distro/:release/:build_name/p
+	tmpPath := filepath.Join(r.SrcDir, r.Distro, r.Release, r.BuildName, p)
 	_, err := os.Stat(tmpPath)
 	if err == nil {
 		return tmpPath, nil
 	}
-	// src_dir/:distro/:build_name/
-	tmpPath = filepath.Join(r.SrcDir, r.Distro, r.BuildName, s)
-	fmt.Println(tmpPath)
+	// src_dir/:distro/release/:build_name/p
+	tmpPath = filepath.Join(r.SrcDir, r.Distro, release, r.BuildName, p)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		return tmpPath, nil
 	}
-	// src_dir/:distro/:release/:build_name/
-	tmpPath = filepath.Join(r.SrcDir, r.Distro, r.Release, r.BuildName, s)
-	fmt.Println(tmpPath)
+	// src_dir/:distro/releaseBase/:build_name/p
+	tmpPath = filepath.Join(r.SrcDir, r.Distro, releaseParts[0], r.BuildName, p)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		return tmpPath, nil
 	}
-	// src_dir/:distro/:release/:arch/
-	tmpPath = filepath.Join(r.SrcDir, r.Distro, r.Release, r.Arch, s)
-	fmt.Println(tmpPath)
+	// src_dir/:distro/:build_name/p
+	tmpPath = filepath.Join(r.SrcDir, r.Distro, r.BuildName, p)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		return tmpPath, nil
 	}
-	// src_dir/:distro/:release/
-	tmpPath = filepath.Join(r.SrcDir, r.Distro, r.Release, s)
-	fmt.Println(tmpPath)
+	// src_dir/:build_name/p
+	tmpPath = filepath.Join(r.SrcDir, r.BuildName, p)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		return tmpPath, nil
 	}
-	// src_dir/:distro/:arch/
-	tmpPath = filepath.Join(r.SrcDir, r.Distro, r.Arch, s)
-	fmt.Println(tmpPath)
+	// src_dir/:distro/:release/:arch/p
+	tmpPath = filepath.Join(r.SrcDir, r.Distro, r.Release, r.Arch, p)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		return tmpPath, nil
 	}
-	// src_dir/:distro/
-	tmpPath = filepath.Join(r.SrcDir, r.Distro, s)
-	fmt.Println(tmpPath)
+	// src_dir/:distro/release/:arch/p
+	tmpPath = filepath.Join(r.SrcDir, r.Distro, release, r.Arch, p)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		return tmpPath, nil
 	}
-	// src_dir/
-	tmpPath = filepath.Join(r.SrcDir, s)
-	fmt.Println(tmpPath)
+	// src_dir/:distro/releaseBase/:arch/p
+	tmpPath = filepath.Join(r.SrcDir, r.Distro, releaseParts[0], r.Arch, p)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		return tmpPath, nil
 	}
-	return "", fmt.Errorf("%s: not found in %q or any of the inspected subdirectories", s, r.SrcDir)
+	// src_dir/:distro/:release/p
+	tmpPath = filepath.Join(r.SrcDir, r.Distro, r.Release, p)
+	_, err = os.Stat(tmpPath)
+	if err == nil {
+		return tmpPath, nil
+	}
+	// src_dir/:distro/release/p
+	tmpPath = filepath.Join(r.SrcDir, r.Distro, release, p)
+	_, err = os.Stat(tmpPath)
+	if err == nil {
+		return tmpPath, nil
+	}
+	// src_dir/:distro/releaseBase/p
+	tmpPath = filepath.Join(r.SrcDir, r.Distro, releaseParts[0], p)
+	_, err = os.Stat(tmpPath)
+	if err == nil {
+		return tmpPath, nil
+	}
+	// src_dir/:distro/:arch/p
+	tmpPath = filepath.Join(r.SrcDir, r.Distro, r.Arch, p)
+	_, err = os.Stat(tmpPath)
+	if err == nil {
+		return tmpPath, nil
+	}
+	// src_dir/:distro/p
+	tmpPath = filepath.Join(r.SrcDir, r.Distro, p)
+	_, err = os.Stat(tmpPath)
+	if err == nil {
+		return tmpPath, nil
+	}
+	// src_dir/p
+	tmpPath = filepath.Join(r.SrcDir, p)
+	_, err = os.Stat(tmpPath)
+	if err == nil {
+		return tmpPath, nil
+	}
+	return "", os.ErrNotExist
 }

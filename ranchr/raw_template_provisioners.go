@@ -247,38 +247,32 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []s
 		v = r.replaceVariables(v)
 		switch k {
 		case "playbook_file":
-			// prepend the path with ansible-local if there isn't a parent dir
-			v = setParentDir(Ansible.String(), v)
 			// find the actual location and add it to the files map for copying
-			src, err := r.findSource(v)
+			src, err := r.findComponentSource(Ansible.String(), v)
 			if err != nil {
 				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
-			r.files[filepath.Join(r.OutDir, v)] = src
+			r.files[filepath.Join(r.OutDir, Ansible.String(), v)] = src
 			settings[k] = v
 			hasPlaybook = true
 		case "inventory_file":
-			// prepend the path with ansible-local if there isn't a parent dir
-			v = setParentDir(Ansible.String(), v)
 			// find the actual location and add it to the files map for copying
-			src, err := r.findSource(v)
+			src, err := r.findComponentSource(Ansible.String(), v)
 			if err != nil {
 				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
-			r.files[filepath.Join(r.OutDir, v)] = src
+			r.files[filepath.Join(r.OutDir, Ansible.String(), v)] = src
 			settings[k] = v
 		case "playbook_dir", "host_vars", "group_vars":
-			// prepend the path with ansible-local if there isn't a parent dir
-			v = setParentDir(Ansible.String(), v)
 			// find the actual location and add it to the files map for copying
-			src, err := r.findSource(v)
+			src, err := r.findComponentSource(Ansible.String(), v)
 			if err != nil {
 				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
-			r.dirs[filepath.Join(r.OutDir, v)] = src
+			r.dirs[filepath.Join(r.OutDir, Ansible.String(), v)] = src
 			settings[k] = v
 		case "command", "staging_directory":
 			settings[k] = v
@@ -298,20 +292,17 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []s
 			array := deepcopy.InterfaceToSliceOfStrings(val)
 			for i, v := range array {
 				v = r.replaceVariables(v)
-				// prepend the path with salt-masterless if there isn't a parent dir
-				v = setParentDir(Ansible.String(), v)
 				array[i] = v
-				s, err := r.findSource(v)
+				s, err := r.findComponentSource(Ansible.String(), v)
 				if err != nil {
 					jww.ERROR.Printf("error while adding file to file map: %s", err)
 					return nil, nil, err
 				}
-				r.files[filepath.Join(r.OutDir, v)] = s
+				r.files[filepath.Join(r.OutDir, Ansible.String(), v)] = s
 			}
 			settings[name] = array
 			continue
 		}
-
 		// extra_arguments
 		if name == "extra_arguments" {
 			array := deepcopy.InterfaceToSliceOfStrings(val)
@@ -458,10 +449,8 @@ func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, vars []
 		case "prevent_sudo", "skip_install":
 			settings[k], _ = strconv.ParseBool(v)
 		case "config_template", "encrypted_data_bag_secret_path":
-			// prepend the path with chef-client if there isn't a parent dir
-			v = setParentDir(ChefSolo.String(), v)
-			// find the actual location of the source file and add it to the files map for copying
-			src, err := r.findSource(v)
+			// find the actual location and add it to the files map for copying
+			src, err := r.findComponentSource(ChefSolo.String(), v)
 			if err != nil {
 				jww.ERROR.Println(err)
 				return nil, nil, err
@@ -469,10 +458,7 @@ func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, vars []
 			r.files[filepath.Join(r.OutDir, v)] = src
 			settings[k] = v
 		case "data_bags_path", "environments_path", "roles_path":
-			// prepend the path with chef-client if there isn't a parent dir
-			v = setParentDir(ChefSolo.String(), v)
-			// find the actual location of the source file and add it to the files map for copying
-			src, err := r.findSource(v)
+			src, err := r.findComponentSource(ChefSolo.String(), v)
 			if err != nil {
 				jww.ERROR.Println(err)
 				return nil, nil, err
@@ -507,10 +493,8 @@ func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, vars []
 			array := deepcopy.InterfaceToSliceOfStrings(val)
 			for i, v := range array {
 				v = r.replaceVariables(v)
-				// prepend the path with chef-solo if there isn't a parent dir
-				v = setParentDir(ChefSolo.String(), v)
 				// find the actual location and add it to the files map for copying
-				src, err := r.findSource(v)
+				src, err := r.findComponentSource(ChefSolo.String(), v)
 				if err != nil {
 					jww.ERROR.Println(err)
 					return nil, nil, err
@@ -559,10 +543,8 @@ func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, vars
 		v = r.replaceVariables(v)
 		switch k {
 		case "source":
-			// prepend the path with file if there isn't a parent dir
-			v = setParentDir(FileUploads.String(), v)
 			// find the actual location and add it to the files map for copying
-			src, err := r.findSource(v)
+			src, err := r.findComponentSource(FileUploads.String(), v)
 			if err != nil {
 				jww.ERROR.Println(err)
 				return nil, nil, err
@@ -624,10 +606,8 @@ func (r *rawTemplate) createSalt() (settings map[string]interface{}, vars []stri
 		v = r.replaceVariables(v)
 		switch k {
 		case "local_state_tree":
-			// prepend the path with salt-masterless if there isn't a parent dir
-			v = setParentDir(Salt.String(), v)
 			// find the actual location and add it to the files map for copying
-			src, err := r.findSource(v)
+			src, err := r.findComponentSource(Salt.String(), v)
 			if err != nil {
 				jww.ERROR.Println(err)
 				return nil, nil, err
@@ -636,10 +616,8 @@ func (r *rawTemplate) createSalt() (settings map[string]interface{}, vars []stri
 			settings[k] = v
 			hasLocalStateTree = true
 		case "local_pillar_roots":
-			// prepend the path with salt-masterless if there isn't a parent dir
-			v = setParentDir(Salt.String(), v)
 			// find the actual location and add it to the files map for copying
-			src, err := r.findSource(v)
+			src, err := r.findComponentSource(Salt.String(), v)
 			if err != nil {
 				jww.ERROR.Println(err)
 				return nil, nil, err
@@ -647,10 +625,8 @@ func (r *rawTemplate) createSalt() (settings map[string]interface{}, vars []stri
 			r.dirs[filepath.Join(r.OutDir, v)] = src
 			settings[k] = v
 		case "minion_config":
-			// prepend the path with salt-masterless if there isn't a parent dir
-			v = setParentDir(Salt.String(), v)
 			// find the actual location and add it to the files map for copying
-			src, err := r.findSource(filepath.Join(v, "minion"))
+			src, err := r.findComponentSource(Salt.String(), filepath.Join(v, "minion"))
 			if err != nil {
 				jww.ERROR.Println(err)
 				return nil, nil, err
@@ -743,8 +719,8 @@ func (r *rawTemplate) createShellScript() (settings map[string]interface{}, vars
 			scripts = deepcopy.InterfaceToSliceOfStrings(val)
 			for i, v := range scripts {
 				v = r.replaceVariables(v)
-				// prepend the path with salt-masterless if there isn't a parent dir
-				scripts[i] = setParentDir(ShellScript.String(), v)
+				// prepend the path with shell if there isn't a parent dir
+				scripts[i] = v
 			}
 			settings[name] = scripts
 			continue
@@ -762,7 +738,7 @@ func (r *rawTemplate) createShellScript() (settings map[string]interface{}, vars
 	// go through the scripts, find their source, and add to the files map. error if
 	// the script source cannot be deteremined.
 	for _, script := range scripts {
-		s, err := r.findSource(script)
+		s, err := r.findComponentSource(ShellScript.String(), script)
 		if err != nil {
 			jww.ERROR.Printf("error while adding file to file map: %s", err)
 			return nil, nil, err

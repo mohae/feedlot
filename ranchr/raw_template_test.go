@@ -601,3 +601,94 @@ func TestRawTemplateMergeString(t *testing.T) {
 		}
 	}
 }
+
+func TestFindSource(t *testing.T) {
+	tests := []struct {
+		p           string
+		src         string
+		expectedErr string
+	}{
+		{"", "", "cannot find source, no path received"},
+		{"something", "", "file does not exist"},
+		{"http/preseed.cfg", "../test_files/src/ubuntu/http/preseed.cfg", ""},
+		{"chef-solo/cookbook1", "../test_files/src/chef-solo/cookbook1", ""},
+		{"14.04_ubuntu_build.txt", "../test_files/src/ubuntu/14.04/ubuntu_build/14.04_ubuntu_build.txt", ""},
+		{"1404_ubuntu_build.txt", "../test_files/src/ubuntu/1404/ubuntu_build/1404_ubuntu_build.txt", ""},
+		{"14_ubuntu_build.txt", "../test_files/src/ubuntu/14/ubuntu_build/14_ubuntu_build.txt", ""},
+		{"ubuntu_build_text.txt", "../test_files/src/ubuntu/ubuntu_build/ubuntu_build_text.txt", ""},
+		{"ubuntu_build.txt", "../test_files/src/ubuntu_build/ubuntu_build.txt", ""},
+		{"14.04_amd64_build_text.txt", "../test_files/src/ubuntu/14.04/amd64/14.04_amd64_build_text.txt", ""},
+		{"1404_amd64_build_text.txt", "../test_files/src/ubuntu/1404/amd64/1404_amd64_build_text.txt", ""},
+		{"14_amd64_build_text.txt", "../test_files/src/ubuntu/14/amd64/14_amd64_build_text.txt", ""},
+		{"14.04_text.txt", "../test_files/src/ubuntu/14.04/14.04_text.txt", ""},
+		{"1404_text.txt", "../test_files/src/ubuntu/1404/1404_text.txt", ""},
+		{"14_text.txt", "../test_files/src/ubuntu/14/14_text.txt", ""},
+		{"amd64_text.txt", "../test_files/src/ubuntu/amd64/amd64_text.txt", ""},
+		{"ubuntu_text.txt", "../test_files/src/ubuntu/ubuntu_text.txt", ""},
+	}
+	r := newRawTemplate()
+	r.Distro = "ubuntu"
+	r.Arch = "amd64"
+	r.Release = "14.04"
+	r.Image = "server"
+	r.SrcDir = "../test_files/src"
+	r.BuildName = "ubuntu_build"
+	for i, test := range tests {
+		src, err := r.findSource(test.p)
+		if err != nil {
+			if err.Error() != test.expectedErr {
+				t.Errorf("TestFindSource %d: expected %q got %q", i, test.expectedErr, err.Error())
+			}
+			continue
+		}
+		if test.expectedErr != "" {
+			t.Errorf("TestFindSource %d: expected %q, got no error", i, test.expectedErr)
+			continue
+		}
+		if test.src != src {
+			t.Errorf("TestFindSource %d: expected %q, got %q", i, test.src, src)
+		}
+	}
+}
+
+func TestFindComponentSource(t *testing.T) {
+	tests := []struct {
+		component   string
+		p           string
+		src         string
+		expectedErr string
+	}{
+		{"", "", "", "cannot find source, no path received"},
+		{"", "chef.cfg", "", "file does not exist"},
+		{"salt", "minion", "", "file does not exist"},
+		{"salt-masterless", "master", "", "file does not exist"},
+		{"chef-solo", "chef.cfg", "../test_files/src/chef-solo/chef.cfg", ""},
+		{"chef-client", "chef.cfg", "../test_files/src/chef-client/chef.cfg", ""},
+		{"chef", "chef.cfg", "../test_files/src/chef/chef.cfg", ""},
+		{"shell", "commands", "../test_files/src/shell/commands", ""},
+		{"", "ubuntu_build.txt", "../test_files/src/ubuntu_build/ubuntu_build.txt", ""},
+	}
+	r := newRawTemplate()
+	r.Distro = "ubuntu"
+	r.Arch = "amd64"
+	r.Release = "14.04"
+	r.Image = "server"
+	r.SrcDir = "../test_files/src"
+	r.BuildName = "ubuntu_build"
+	for i, test := range tests {
+		src, err := r.findComponentSource(test.component, test.p)
+		if err != nil {
+			if err.Error() != test.expectedErr {
+				t.Errorf("TestFindSource %d: expected %q got %q", i, test.expectedErr, err.Error())
+			}
+			continue
+		}
+		if test.expectedErr != "" {
+			t.Errorf("TestFindSource %d: expected %q, got no error", i, test.expectedErr)
+			continue
+		}
+		if test.src != src {
+			t.Errorf("TestFindSource %d: expected %q, got %q", i, test.src, src)
+		}
+	}
+}

@@ -1645,6 +1645,7 @@ func (r *rawTemplate) updateCommon(new *builder) {
 	return
 }
 
+// TODO this needs to be redone to handle preseed and ks. Also only certain builders;
 // addPreseedCfg adds the preseedCfg file to the files map. If the http_dir is not set,
 // the default value of "http" will be used
 func (r *rawTemplate) addPreseedCfg(m map[string]interface{}) error {
