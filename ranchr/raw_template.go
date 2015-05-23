@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -357,76 +356,15 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 	return nil
 }
 
-// Takes the name of the command file, including path relative to the src_dir, and
-// returns a slice of shell commands. Each command within the file is separated by a
-// newline. Returns error if an error occurs with the file.
-//
-// Multiple passes may be made in an attempt to find the requested command file. If a
-// matching file is found, the contents are read and parsed as the command(s) to be
-// returned. At minimum, a command file should have 1 line, though it may have more.
-// Each line in the file is an element in the returned slice. The caller is expected
-// to properly handle the returned results.
-//
-// Because the passed name may or may not be the actual location of the requested
-// file, this method may check multiple sub-paths of the src_dir in an attempt to find
-// the correct one. The first encountered match is used. The source file search
-// algorithm is applied.
-//
-// This method will use the following as the path to search:
-//   If the name contains at least 1 directory in the path, that is searched first.
-//   commands/{typ}/{name}
-//   commands/{typ-base}/{name} <- if applicable
-//   commands/{name}
-//
-// If the typ includes a "-", the typ-base is the portion prior to the first -, e.g.
-//   the typ-base of chef-client is chef.
-//
-// If no match is found, an error is returned.
+// commandsFromFile returns the commands within the requested file, if it can be found.
+// No validation of the contents is done.
 func (r *rawTemplate) commandsFromFile(component, name string) (commands []string, err error) {
-	if name == "" {
-		err = fmt.Errorf("the passed Command filename was empty")
-		jww.ERROR.Println(err)
-		return nil, err
-	}
-	// findPath is what is actually being looked for. If the name doesn't include
-	// directory information, multiple paths patterns may be used, which is what
-	// findPath is used for. Initially set to name
-	findPath := name
-	// see if the passed name includes a directory, if not, prepend with command
-	dir := path.Dir(name)
-	if dir == "." {
-		// name did not include directory, prepend "commands"
-		findPath = filepath.Join("commands", name)
-
-		// also prepend the type, if it's not empty
-		if component != "" {
-			findPath = filepath.Join(component, findPath)
-		}
-	}
-
-	// find the correct file location
-	// TODO finish rewrite
-	path, err := r.findSource(findPath)
-	// if not found and component information was passed, look for it without the component
-	if err != nil && component != "" {
-		// see if typ can be reduced to its base
-		componentParts := strings.Split(component, "-")
-		if len(componentParts) > 1 {
-			// the first element is the base, e.g. chef is the base of chef-client
-			findPath = filepath.Join(componentParts[0], "commands", name)
-		}
-		findPath = filepath.Join("commands", name)
-		path, err = r.findSource(findPath)
-		if err != nil {
-			return nil, err
-		}
-	}
+	// find the file
+	src, err := r.findCommandFile(component, name)
 	if err != nil {
-		err = fmt.Errorf("%q not found in %q or any of its searched subdirectories", findPath, r.SrcDir)
-		jww.ERROR.Println(err)
 		return nil, err
 	}
-	f, err := os.Open(path)
+	f, err := os.Open(src)
 	if err != nil {
 		jww.ERROR.Println(err)
 		return nil, err
@@ -450,6 +388,35 @@ func (r *rawTemplate) commandsFromFile(component, name string) (commands []strin
 		return nil, err
 	}
 	return commands, nil
+}
+
+// findCommandFile locates the requested command file. If a match cannot be found, an
+// os.ErrNotExist is returned. Any other errors will result in a termination of the
+// search.
+//
+// The request string is build with the following order:
+//    commands/{name}
+//    {name}
+//
+// findComponentSource is called to handle the actual location of the file. If no match
+// is found an os.ErrNotExist will be returned.
+func (r *rawTemplate) findCommandFile(component, name string) (string, error) {
+	if name == "" {
+		err := fmt.Errorf("the passed command filename was empty")
+		jww.ERROR.Println(err)
+		return "", err
+	}
+	findPath := filepath.Join("commands", name)
+	src, err := r.findComponentSource(component, findPath)
+	// return the error for any error other than ErrNotExist
+	if err != nil && err != os.ErrNotExist {
+		return "", err
+	}
+	// if err is nil, the source was found
+	if err == nil {
+		return src, nil
+	}
+	return r.findComponentSource(component, name)
 }
 
 // findComponentSource attempts to locate the source file or directory referred to in

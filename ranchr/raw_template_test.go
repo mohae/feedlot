@@ -572,14 +572,6 @@ func TestRawTemplateSetBaseVarVals(t *testing.T) {
 	}
 }
 
-func TestCommandsFromFile(t *testing.T) {
-	r := newRawTemplate()
-	_, err := r.commandsFromFile("", "")
-	if err.Error() != "the passed Command filename was empty" {
-		t.Errorf("Expected \"the passed Command filename was empty\", got %q", err.Error())
-	}
-}
-
 func TestRawTemplateMergeString(t *testing.T) {
 	tests := []struct {
 		value    string
@@ -691,4 +683,90 @@ func TestFindComponentSource(t *testing.T) {
 			t.Errorf("TestFindSource %d: expected %q, got %q", i, test.src, src)
 		}
 	}
+}
+
+func TestFindCommandFile(t *testing.T) {
+	tests := []struct {
+		component   string
+		p           string
+		src         string
+		expectedErr string
+	}{
+		{"", "", "", "the passed command filename was empty"},
+		{"", "test.command", "", "file does not exist"},
+		{"", "execute.command", "../test_files/src/commands/execute.command", ""},
+		{"shell", "execute_test.command", "../test_files/src/shell/commands/execute_test.command", ""},
+		{"chef-solo", "execute.command", "../test_files/src/chef-solo/commands/execute.command", ""},
+		{"chef-solo", "chef.command", "../test_files/src/chef/commands/chef.command", ""},
+		{"shell", "ubuntu-1404.command", "../test_files/src/ubuntu/1404/ubuntu-1404.command", ""},
+		{"shell", "ubuntu-14.command", "../test_files/src/ubuntu/14/commands/ubuntu-14.command", ""},
+	}
+	r := newRawTemplate()
+	r.Distro = "ubuntu"
+	r.Arch = "amd64"
+	r.Release = "14.04"
+	r.Image = "server"
+	r.SrcDir = "../test_files/src"
+	r.BuildName = "ubuntu_build"
+	for i, test := range tests {
+		src, err := r.findCommandFile(test.component, test.p)
+		if err != nil {
+			if err.Error() != test.expectedErr {
+				t.Errorf("TestFindCommandFile %d: expected %q got %q", i, test.expectedErr, err.Error())
+			}
+			continue
+		}
+		if test.expectedErr != "" {
+			t.Errorf("TestFindCommandFile %d: expected %q, got no error", i, test.expectedErr)
+			continue
+		}
+		if test.src != src {
+			t.Errorf("TestFindCommandFile %d: expected %q, got %q", i, test.src, src)
+		}
+	}
+}
+
+func TestCommandsFromFile(t *testing.T) {
+	tests := []struct {
+		component   string
+		p           string
+		expected    []string
+		expectedErr string
+	}{
+		{"", "", []string{}, "the passed command filename was empty"},
+		{"", "test.command", []string{}, "file does not exist"},
+		{"shell", "execute.command", []string{"echo 'vagrant'|sudo -S sh '{{.Path}}'"}, ""},
+		{"shell", "boot.command", []string{"<esc><wait>", "<esc><wait>", "<enter><wait>"}, ""},
+	}
+	r := newRawTemplate()
+	r.Distro = "ubuntu"
+	r.Arch = "amd64"
+	r.Release = "14.04"
+	r.Image = "server"
+	r.SrcDir = "../test_files/src"
+	r.BuildName = "ubuntu_build"
+	for i, test := range tests {
+		commands, err := r.commandsFromFile(test.component, test.p)
+		if err != nil {
+			if err.Error() != test.expectedErr {
+				t.Errorf("TestCommandsFromFile %d: expected %q got %q", i, test.expectedErr, err.Error())
+			}
+			continue
+		}
+		if test.expectedErr != "" {
+			t.Errorf("TestCommandsFromFile %d: expected %q, got no error", i, test.expectedErr)
+			continue
+		}
+		if len(commands) != len(test.expected) {
+			t.Errorf("TestCommandsFromFile %d: expected commands slice to have a len of %d got %d", i, len(test.expected), len(commands))
+			continue
+		}
+		for i, v := range commands {
+			if v != test.expected[i] {
+				t.Errorf("TestCommandsFromFile %D: expected commands slice to be %v, got %v", i, test.expected, commands)
+				break
+			}
+		}
+	}
+
 }
