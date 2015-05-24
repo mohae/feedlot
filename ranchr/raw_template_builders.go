@@ -218,6 +218,7 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 //   security_group_ids            array of strings
 //   spot_price                    string
 //   spot_price_auto_product       string
+//   shh_port
 //   ssh_private_key_file          string
 //   ssh_private_ip                bool
 //   ssh_timeout                   string
@@ -230,6 +231,7 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 // Not implemented configuration options:
 //   ami_block_device_mappings     array of block device mappings
 //   launch_block_device_mappings  array of block device mappings
+//   run_tags                      object of key/value strings
 //   tags                          object of key/value strings
 func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.Builders[AmazonEBS.String()]
@@ -281,8 +283,8 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, vars [
 			hasSSHUsername = true
 		case "ami_description", "availability_zone", "iam_instance_profile",
 			"security_group_id", "spot_price", "spot_price_auto_product",
-			"ssh_private_key_file", "ssh_timeout", "subnet_id", "token",
-			"user_data", "user_data_file", "vpc_id":
+			"ssh_timeout", "subnet_id", "temporary_key_pair_name",
+			"token", "user_data", "vpc_id":
 			settings[k] = v
 		case "ssh_port":
 			// only add if its an int
@@ -293,6 +295,14 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, vars [
 				return nil, nil, err
 			}
 			settings[k] = i
+		case "ssh_private_key_file", "user_data_file":
+			src, err := r.findComponentSource(AmazonEBS.String(), v)
+			if err != nil {
+				jww.ERROR.Println(err)
+				return nil, nil, err
+			}
+			r.files[filepath.Join(r.OutDir, Ansible.String(), v)] = src
+			settings[k] = src
 		case "associate_public_ip_address", "enhanced_networking", "ssh_private_ip":
 			settings[k], _ = strconv.ParseBool(v)
 		default:
