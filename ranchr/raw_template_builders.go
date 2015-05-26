@@ -301,7 +301,7 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, vars [
 				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
-			r.files[filepath.Join(r.OutDir, Ansible.String(), v)] = src
+			r.files[filepath.Join(r.OutDir, AmazonEBS.String(), v)] = src
 			settings[k] = src
 		case "associate_public_ip_address", "enhanced_networking", "ssh_private_ip":
 			settings[k], _ = strconv.ParseBool(v)
