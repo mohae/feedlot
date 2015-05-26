@@ -473,6 +473,12 @@ func (r *rawTemplate) createDigitalOcean() (settings map[string]interface{}, var
 //   run_command     array of strings
 // Not implemented configuration options:
 //   volumes         map of strings to strings
+//
+// Note: the run+command can either be specified in the settings section or as an array
+//       of commands in the arrays section. If it is in the settings section, it is
+//       expected to be a command file. The run_command can only appear in one section.
+//       An run_commands specified in the arrays section will take precedence; if the
+//       run_command is also in the settings section, it will be ignored.
 func (r *rawTemplate) createDocker() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.Builders[Docker.String()]
 	if !ok {
@@ -493,7 +499,8 @@ func (r *rawTemplate) createDocker() (settings map[string]interface{}, vars []st
 	}
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
-	var hasCommit, hasExportPath, hasImage bool
+	var hasCommit, hasExportPath, hasImage, hasRunCommandArray bool
+	var runCommandFile string
 	for _, s := range workSlice {
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
@@ -511,6 +518,9 @@ func (r *rawTemplate) createDocker() (settings map[string]interface{}, vars []st
 			hasCommit = true
 		case "login", "pull":
 			settings[k], _ = strconv.ParseBool(v)
+		case "run_command":
+			// if it's here, cache the value, delay processing until arrays section
+			runCommandFile = v
 		default:
 			jww.WARN.Printf("unsupported docker key was encountered: %q", k)
 		}
@@ -537,8 +547,21 @@ func (r *rawTemplate) createDocker() (settings map[string]interface{}, vars []st
 			if array != nil {
 				settings[name] = array
 			}
+			hasRunCommandArray = true
 		} else {
 			jww.WARN.Printf("unsupported docker array element was encountered: %q", name)
+		}
+	}
+	// if there wasn't an array of run commands, check to see if they should be loaded
+	// from a file
+	if !hasRunCommandArray {
+		if runCommandFile != "" {
+			commands, err := r.commandsFromFile(Docker.String(), runCommandFile)
+			if err != nil {
+				jww.ERROR.Println(err)
+				return nil, nil, err
+			}
+			settings["run_command"] = commands
 		}
 	}
 	return settings, nil, nil

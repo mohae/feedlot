@@ -252,7 +252,7 @@ var testAllBuilders = &rawTemplate{
 		Description:      "Test build template for all builders",
 	},
 	BuildInf: BuildInf{
-		Name:      ":type-:release-:image-:arch",
+		Name:      "docker-alt",
 		BuildName: "",
 		BaseURL:   "",
 	},
@@ -660,9 +660,8 @@ var testDigtialOceanAPIV1 = &rawTemplate{
 
 var testDigtialOceanNoAPI = &rawTemplate{
 	IODirInf: IODirInf{
-		CommandsSrcDir: "commands",
-		OutDir:         "../test_files/ubuntu/out/ubuntu",
-		SrcDir:         "../test_files/src/ubuntu",
+		OutDir: "../test_files/ubuntu/out/ubuntu",
+		SrcDir: "../test_files/src/ubuntu",
 	},
 	PackerInf: PackerInf{
 		MinPackerVersion: "",
@@ -702,7 +701,111 @@ var testDigtialOceanNoAPI = &rawTemplate{
 		},
 	},
 }
+var testDockerRunComandFile = &rawTemplate{
+	varVals: make(map[string]string),
+	vars:    make(map[string]string),
+	files:   make(map[string]string),
+	dirs:    make(map[string]string),
+	IODirInf: IODirInf{
+		OutDir: "../test_files/out",
+		SrcDir: "../test_files/src",
+	},
+	PackerInf: PackerInf{
+		MinPackerVersion: "",
+		Description:      "Test build template for all builders",
+	},
+	BuildInf: BuildInf{
+		Name:      ":type-:release-:image-:arch",
+		BuildName: "",
+		BaseURL:   "",
+	},
+	Distro:  "ubuntu",
+	Arch:    "amd64",
+	Image:   "minimal",
+	Release: "14.04",
+	build: build{
+		BuilderTypes: []string{
+			"docker",
+		},
+		Builders: map[string]*builder{
+			"docker": {
+				templateSection{
+					Settings: []string{
+						"commit=true",
+						"export_path=export/path",
+						"image=baseImage",
+						"login=true",
+						"login_email=test@test.com",
+						"login_username=username",
+						"login_password=password",
+						"login_server=127.0.0.1",
+						"pull=true",
+						"run_command=docker.command",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
+		},
+	},
+}
 
+// This should still result in only 1 command array, using the array value and not the
+// file
+var testDockerRunComand = &rawTemplate{
+	varVals: make(map[string]string),
+	vars:    make(map[string]string),
+	files:   make(map[string]string),
+	dirs:    make(map[string]string),
+	IODirInf: IODirInf{
+		OutDir: "../test_files/out",
+		SrcDir: "../test_files/src",
+	},
+	PackerInf: PackerInf{
+		MinPackerVersion: "",
+		Description:      "Test build template for all builders",
+	},
+	BuildInf: BuildInf{
+		Name:      ":type-:release-:image-:arch",
+		BuildName: "",
+		BaseURL:   "",
+	},
+	Distro:  "ubuntu",
+	Arch:    "amd64",
+	Image:   "minimal",
+	Release: "14.04",
+	build: build{
+		BuilderTypes: []string{
+			"docker",
+		},
+		Builders: map[string]*builder{
+			"docker": {
+				templateSection{
+					Settings: []string{
+						"commit=true",
+						"export_path=export/path",
+						"image=baseImage",
+						"login=true",
+						"login_email=test@test.com",
+						"login_username=username",
+						"login_password=password",
+						"login_server=127.0.0.1",
+						"pull=true",
+						"run_command=docker.command",
+					},
+					Arrays: map[string]interface{}{
+						"run_command": []string{
+							"-d",
+							"-i",
+							"-t",
+							"{{.Image}}",
+							"/bin/bash",
+						},
+					},
+				},
+			},
+		},
+	},
+}
 var builderOrig = map[string]*builder{
 	"common": {
 		templateSection{
@@ -1125,7 +1228,43 @@ func TestDockerBuilder(t *testing.T) {
 		},
 		"type": "docker",
 	}
+	expectedCommandFile := map[string]interface{}{
+		"commit":         true,
+		"export_path":    "export/path",
+		"image":          "baseImage",
+		"login":          true,
+		"login_email":    "test@test.com",
+		"login_username": "username",
+		"login_password": "password",
+		"login_server":   "127.0.0.1",
+		"pull":           true,
+		"run_command": []string{
+			"-d",
+			"-i",
+			"-t",
+			"{{.Image}}",
+			"/bin/bash",
+			"/invalid",
+		},
+		"type": "docker",
+	}
 	bldr, _, err := testAllBuilders.createDocker()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(bldr))
+		}
+	}
+	bldr, _, err = testDockerRunComandFile.createDocker()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedCommandFile) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedCommandFile), MarshalJSONToString.Get(bldr))
+		}
+	}
+	bldr, _, err = testDockerRunComand.createDocker()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
