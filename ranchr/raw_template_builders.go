@@ -676,6 +676,59 @@ func (r *rawTemplate) createGoogleCompute() (settings map[string]interface{}, va
 	return settings, nil, nil
 }
 
+// createNull creates a map of settings for Packer's null builder. Any  values that
+// aren't supported by the null builder are logged as a WARN and ignored.  Any
+// required settings that don't exist result in an error and processing of the
+// builder is stopped. For more information, refer to
+//https://packer.io/docs/builders/null.html
+//
+// Required configuration options:
+//   host string
+//   ssh_password string
+//   ssh_privateKey_file string
+//   ssh_username string
+// Optional configuration options:
+//   port            integer
+func (r *rawTemplate) createNull() (settings map[string]interface{}, vars []string, err error) {
+	_, ok := r.Builders[Null.String()]
+	if !ok {
+		err = fmt.Errorf("no configuration found for %q", Null.String())
+		jww.ERROR.Print(err.Error())
+		return nil, nil, err
+	}
+	settings = make(map[string]interface{})
+	// Each create function is responsible for setting its own type.
+	settings["type"] = Null.String()
+	// Merge the settings between common and this builders.
+	var workSlice []string
+	_, ok = r.Builders[Common.String()]
+	if ok {
+		workSlice = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[Null.String()].Settings)
+	} else {
+		workSlice = r.Builders[Null.String()].Settings
+	}
+	// Go through each element in the slice, only take the ones that matter
+	// to this builder.
+	for _, s := range workSlice {
+		k, v := parseVar(s)
+		v = r.replaceVariables(v)
+		switch k {
+		case "host", "ssh_password", "ssh_username":
+			settings[k] = v
+		case "ssh_private_key_file":
+			// if it's here, cache the value, delay processing until arrays section
+			src, err := r.findComponentSource(Null.String(), v)
+			if err != nil {
+				jww.ERROR.Println(err)
+				return nil, nil, err
+			}
+			settings[k] = src
+			r.files[filepath.Join(r.OutDir, Null.String(), v)] = src
+		}
+	}
+	return settings, nil, nil
+}
+
 // createVirtualBoxISO creates a map of settings for Packer's virtualbox-iso
 // builder.  Any values that aren't supported by the virtualbox-iso builder
 // are logged as a WARN and ignored.  Any required settings that don't exist

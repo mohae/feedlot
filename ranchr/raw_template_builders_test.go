@@ -266,6 +266,7 @@ var testAllBuilders = &rawTemplate{
 			"digitalocean",
 			"docker",
 			"googlecompute",
+			"null",
 			"virtualbox-iso",
 			"virtualbox-ovf",
 			"vmware-iso",
@@ -395,6 +396,15 @@ var testAllBuilders = &rawTemplate{
 							"tag1",
 						},
 					},
+				},
+			},
+			"null": {
+				templateSection{
+					Settings: []string{
+						"host=nullhost.com",
+						"ssh_private_key_file=myKey",
+					},
+					Arrays: map[string]interface{}{},
 				},
 			},
 			"virtualbox-iso": {
@@ -1131,7 +1141,7 @@ func TestAmazonEBSBuilder(t *testing.T) {
 		"spot_price_auto_product": "Linux/Unix",
 		"ssh_port":                22,
 		"ssh_username":            "ssh_user",
-		"ssh_private_key_file":    "../test_files/src/amazon-ebs/myKey",
+		"ssh_private_key_file":    "../test_files/src/myKey",
 		"ssh_timeout":             "5m",
 		"temporary_key_pair_name": "TMP_KEYPAIR",
 		"token":                   "AWS_SECURITY_TOKEN",
@@ -1297,6 +1307,24 @@ func TestDockerGoogleCompute(t *testing.T) {
 	}
 
 	bldr, _, err := testAllBuilders.createGoogleCompute()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(bldr))
+		}
+	}
+}
+
+func TestCreateBuilderNull(t *testing.T) {
+	expected := map[string]interface{}{
+		"host":                 "nullhost.com",
+		"ssh_password":         "vagrant",
+		"ssh_private_key_file": "../test_files/src/myKey",
+		"ssh_username":         "vagrant",
+		"type":                 "null",
+	}
+	bldr, _, err := testAllBuilders.createNull()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
