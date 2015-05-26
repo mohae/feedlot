@@ -141,7 +141,11 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 			if err != nil {
 				return nil, nil, err
 			}
-		//	case Null:
+		case Null:
+			tmpS, _, err = r.createNull()
+			if err != nil {
+				return nil, nil, err
+			}
 		//	case Openstack:
 		//	case ParallelsISO, ParallelsPVM:
 		//	case QEMU:
