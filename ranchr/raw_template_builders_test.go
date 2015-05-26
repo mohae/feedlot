@@ -1276,7 +1276,7 @@ func TestDockerBuilder(t *testing.T) {
 
 func TestDockerGoogleCompute(t *testing.T) {
 	expected := map[string]interface{}{
-		"account_file":      "account.json",
+		"account_file":      "../test_files/src/googlecompute/account.json",
 		"disk_size":         20000,
 		"image_name":        "packer-{{timestamp}}",
 		"image_description": "test image",

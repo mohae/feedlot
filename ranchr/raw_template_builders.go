@@ -626,9 +626,15 @@ func (r *rawTemplate) createGoogleCompute() (settings map[string]interface{}, va
 		case "zone":
 			settings[k] = v
 			hasZone = true
-		case "account_file", "image_name", "image_description", "instance_name",
+		case "image_name", "image_description", "instance_name",
 			"machine_type", "network", "ssh_timeout", "ssh_username", "state_timeout":
 			settings[k] = v
+		case "account_file":
+			settings[k], err = r.findComponentSource(GoogleCompute.String(), v)
+			if err != nil {
+				return nil, nil, err
+			}
+			r.files[filepath.Join(r.OutDir, GoogleCompute.String(), v)] = settings[k].(string)
 		case "disk_size", "ssh_port":
 			i, err := strconv.Atoi(v)
 			if err != nil {
