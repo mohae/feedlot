@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/mohae/utilitybelt/deepcopy"
-	jww "github.com/spf13/jwalterweatherman"
 )
 
 // Builder constants
@@ -90,19 +89,10 @@ func BuilderFromString(s string) Builder {
 }
 
 // r.createBuilders takes a raw builder and create the appropriate Packer
-// Builders along with a slice of variables for that section builder type.
-// Some Settings are in-lined instead of adding them to the variable section.
-//
-//
-// At this point, all of the settings
-//
-// * update CommonBuilder with the ne, as this may be used by any of the Packer
-// builders.
-// * For each Builder in the template, create it's Packer Template version
+// Builder
 func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]interface{}, err error) {
 	if r.BuilderTypes == nil || len(r.BuilderTypes) <= 0 {
 		err = fmt.Errorf("unable to create builders: none specified")
-		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	var tmpS map[string]interface{}
@@ -171,7 +161,6 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, vars map[string]int
 			}
 		default:
 			err = fmt.Errorf("Builder, %q, is not supported by Rancher", bType)
-			jww.ERROR.Println(err)
 			return nil, nil, err
 		}
 		bldrs[ndx] = tmpS
@@ -194,11 +183,11 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 	return m
 }
 
-// createAmazonEBS creates a map of settings for Packer's amazon-ebs builder.
-// Any values that aren't supported by the amazon-ebs builder are logged as a
-// WARN and are ignored. Any required settings that don't exist result in an
-// error and processing of the builder is stopped. For more information, refer
-// to https://packer.io/docs/builders/amazon-ebs.html
+// createAmazonEBS creates a map of settings for Packer's amazon-ebs builder.  Any
+// values that aren't supported by the amazon-ebs builder are ignored.  Any required
+// settings that doesn't exist result in an error and processing of the builder is
+// stopped.  For more information, refer to
+// https://packer.io/docs/builders/amazon-ebs.html
 //
 // Required configuration options:
 //   access_key                   string
@@ -241,7 +230,6 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, vars [
 	_, ok := r.Builders[AmazonEBS.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", AmazonEBS.String())
-		jww.ERROR.Print(err.Error())
 		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
@@ -295,57 +283,46 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, vars [
 			i, err := strconv.Atoi(v)
 			if err != nil {
 				err = fmt.Errorf("amazon-ebs builder error while trying to set %q to %q: %s", k, v, err)
-				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
 			settings[k] = i
 		case "ssh_private_key_file", "user_data_file":
 			src, err := r.findComponentSource(AmazonEBS.String(), v)
 			if err != nil {
-				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
 			r.files[filepath.Join(r.OutDir, AmazonEBS.String(), v)] = src
 			settings[k] = src
 		case "associate_public_ip_address", "enhanced_networking", "ssh_private_ip":
 			settings[k], _ = strconv.ParseBool(v)
-		default:
-			jww.WARN.Println("unsupported amazon-ebs key was encountered: " + k)
 		}
 	}
 	if !hasAccessKey {
 		err := fmt.Errorf("\"access_key\" setting is required for amazon-ebs, not found")
-		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	if !hasAmiName {
 		err := fmt.Errorf("\"ami_name\" setting is required for amazon-ebs, not found")
-		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	if !hasInstanceType {
 		err := fmt.Errorf("\"instance_type\" setting is required for amazon-ebs, not found")
-		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	if !hasRegion {
 		err := fmt.Errorf("\"region\" setting is required for amazon-ebs, not found")
-		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	if !hasSecretKey {
 		err := fmt.Errorf("\"secret_key\" setting is required for amazon-ebs, not found")
-		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	if !hasSourceAmi {
 		err := fmt.Errorf("\"source_ami\" setting is required for amazon-ebs, not found")
-		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	if !hasSSHUsername {
 		err := fmt.Errorf("\"ssh_username\" setting is required for amazon-ebs, not found")
-		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	// Process the Arrays.
@@ -358,18 +335,15 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, vars [
 			}
 			continue
 		}
-		err := fmt.Errorf("%q is not a supported array group for amazon-ebs", name)
-		jww.WARN.Print(err)
-
 	}
 	return settings, vars, nil
 }
 
-// createDigitalOcean creates a map of settings for Packer's digitalocean
-// builder. Any values that aren't supported by the digitalocean builder
-// are logged as a WARN and ignored.  Any required settings that don't exist
-// result in an error and processing of the builder is stopped. For more
-// information, refer to https://packer.io/docs/builders/digitalocean.html
+// createDigitalOcean creates a map of settings for Packer's digitalocean builder.
+// Any values that aren't supported by the digitalocean builder are ignored.  Any
+// required settings that doesn't exist result in an error and processing of the
+// builder is stopped.  For more information, refer to
+// https://packer.io/docs/builders/digitalocean.html
 //
 // NOTE: The deprecated image_id, region_id, and size_id options are not
 //       supported.
@@ -398,7 +372,6 @@ func (r *rawTemplate) createDigitalOcean() (settings map[string]interface{}, var
 	_, ok := r.Builders[DigitalOcean.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", DigitalOcean.String())
-		jww.ERROR.Print(err.Error())
 		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
@@ -438,12 +411,9 @@ func (r *rawTemplate) createDigitalOcean() (settings map[string]interface{}, var
 			i, err := strconv.Atoi(v)
 			if err != nil {
 				err = fmt.Errorf("An error occurred while trying to set %s to %s: %s", k, v, err)
-				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
 			settings[k] = i
-		default:
-			jww.WARN.Println("unsupported digitalocean key was encountered: " + k)
 		}
 	}
 	if hasApiToken {
@@ -453,15 +423,13 @@ func (r *rawTemplate) createDigitalOcean() (settings map[string]interface{}, var
 		return settings, nil, nil
 	}
 	err = fmt.Errorf("required Digital Ocean API information not set")
-	jww.ERROR.Print(err)
 	return nil, nil, err
 }
 
-// createDocker creates a map of settings for Packer's docker builder. Any
-// values that aren't supported by the digitalocean builder are logged as a
-// WARN and ignored.  Any required settings that don't exist result in an
-// error and processing of the builder is stopped. For more information, refer
-// to https://packer.io/docs/builders/docker.html
+// createDocker creates a map of settings for Packer's docker builder. Any values that
+// aren't supported by the digitalocean builder are ignored.  Any required settings
+// that doesn't exist result in an error and processing of the builder is stopped. For
+// more information, refer to https://packer.io/docs/builders/docker.html
 //
 // Required configuration options:
 //   commit         boolean
@@ -487,7 +455,6 @@ func (r *rawTemplate) createDocker() (settings map[string]interface{}, vars []st
 	_, ok := r.Builders[Docker.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", Docker.String())
-		jww.ERROR.Print(err.Error())
 		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
@@ -525,23 +492,18 @@ func (r *rawTemplate) createDocker() (settings map[string]interface{}, vars []st
 		case "run_command":
 			// if it's here, cache the value, delay processing until arrays section
 			runCommandFile = v
-		default:
-			jww.WARN.Printf("unsupported docker key was encountered: %q", k)
 		}
 	}
 	if !hasCommit {
 		err := fmt.Errorf("\"commit\" setting is required for docker, not found")
-		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	if !hasExportPath {
 		err := fmt.Errorf("\"export_path\" setting is required for docker, not found")
-		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	if !hasImage {
 		err := fmt.Errorf("\"image\" setting is required for docker, not found")
-		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	// Process the Arrays.
@@ -552,8 +514,6 @@ func (r *rawTemplate) createDocker() (settings map[string]interface{}, vars []st
 				settings[name] = array
 			}
 			hasRunCommandArray = true
-		} else {
-			jww.WARN.Printf("unsupported docker array element was encountered: %q", name)
 		}
 	}
 	// if there wasn't an array of run commands, check to see if they should be loaded
@@ -562,7 +522,6 @@ func (r *rawTemplate) createDocker() (settings map[string]interface{}, vars []st
 		if runCommandFile != "" {
 			commands, err := r.commandsFromFile(Docker.String(), runCommandFile)
 			if err != nil {
-				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
 			settings["run_command"] = commands
@@ -571,11 +530,11 @@ func (r *rawTemplate) createDocker() (settings map[string]interface{}, vars []st
 	return settings, nil, nil
 }
 
-// createGoogleCompute creates a map of settings for Packer's googlecompute
-// builder. Any values that aren't supported by the googlecompute builder are
-// logged as a WARN and ignored.  Any required settings that don't exist
-// result in an error and processing of the builder is stopped. For more
-// information, refer to https://packer.io/docs/builders/googlecompute.html
+// createGoogleCompute creates a map of settings for Packer's googlecompute builder.
+// Any values that aren't supported by the googlecompute builder are ignored.  Any
+// required settings that doesn't exist result in an error and processing of the
+// builder is stopped.  For more information, refer to
+// https://packer.io/docs/builders/googlecompute.html
 //
 // Required configuration options:
 //   project_id         string
@@ -600,7 +559,6 @@ func (r *rawTemplate) createGoogleCompute() (settings map[string]interface{}, va
 	_, ok := r.Builders[GoogleCompute.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", GoogleCompute.String())
-		jww.ERROR.Print(err.Error())
 		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
@@ -643,27 +601,21 @@ func (r *rawTemplate) createGoogleCompute() (settings map[string]interface{}, va
 			i, err := strconv.Atoi(v)
 			if err != nil {
 				err = fmt.Errorf("An error occurred while trying to set %s to %s: %s", k, v, err)
-				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
 			settings[k] = i
-		default:
-			jww.WARN.Printf("unsupported docker key was encountered: %q", k)
 		}
 	}
 	if !hasProjectID {
 		err := fmt.Errorf("\"project_id\" setting is required for googlecompute, not found")
-		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	if !hasSourceImage {
 		err := fmt.Errorf("\"source_image\" setting is required for googlecompute, not found")
-		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	if !hasZone {
 		err := fmt.Errorf("\"zone\" setting is required for googlecompute, not found")
-		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	// Process the Arrays.
@@ -673,18 +625,15 @@ func (r *rawTemplate) createGoogleCompute() (settings map[string]interface{}, va
 			if array != nil {
 				settings[name] = array
 			}
-		} else {
-			jww.WARN.Printf("unsupported googlecompute array element was encountered: %q", name)
 		}
 	}
 	return settings, nil, nil
 }
 
 // createNull creates a map of settings for Packer's null builder. Any  values that
-// aren't supported by the null builder are logged as a WARN and ignored.  Any
-// required settings that don't exist result in an error and processing of the
-// builder is stopped. For more information, refer to
-//https://packer.io/docs/builders/null.html
+// aren't supported by the null builder are ignored.  Any required settings that
+// doesn't exist result in an error and processing of the builder is stopped.  For
+// more information, refer to https://packer.io/docs/builders/null.html
 //
 // Required configuration options:
 //   host string
@@ -697,7 +646,6 @@ func (r *rawTemplate) createNull() (settings map[string]interface{}, vars []stri
 	_, ok := r.Builders[Null.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", Null.String())
-		jww.ERROR.Print(err.Error())
 		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
@@ -723,7 +671,6 @@ func (r *rawTemplate) createNull() (settings map[string]interface{}, vars []stri
 			// if it's here, cache the value, delay processing until arrays section
 			src, err := r.findComponentSource(Null.String(), v)
 			if err != nil {
-				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
 			settings[k] = src
@@ -733,11 +680,11 @@ func (r *rawTemplate) createNull() (settings map[string]interface{}, vars []stri
 	return settings, nil, nil
 }
 
-// createVirtualBoxISO creates a map of settings for Packer's virtualbox-iso
-// builder.  Any values that aren't supported by the virtualbox-iso builder
-// are logged as a WARN and ignored.  Any required settings that don't exist
-// result in an error and processing of the builder is stopped. For more
-// information, refer to https://packer.io/docs/builders/virtualbox-iso.html
+// createVirtualBoxISO creates a map of settings for Packer's virtualbox-iso builder.
+// Any values that aren't supported by the virtualbox-iso builder are ignored.  Any
+// required settings that doesn't exist result in an error and processing of the
+// builder is stopped. For more information, refer to
+// https://packer.io/docs/builders/virtualbox-iso.html
 //
 // Required configuration options:
 //   iso_checksum             string
@@ -780,7 +727,6 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 	_, ok := r.Builders[VirtualBoxISO.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", VirtualBoxISO.String())
-		jww.ERROR.Print(err.Error())
 		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
@@ -812,12 +758,10 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
 				if len(commands) == 0 {
 					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", VirtualBoxISO.String(), k, v)
-					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
 				settings[k] = commands
@@ -829,12 +773,10 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
 				if len(commands) == 0 {
 					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", VirtualBoxISO.String(), k, v)
-					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
 				// Assume it's the first element.
@@ -870,19 +812,15 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 			i, err := strconv.Atoi(v)
 			if err != nil {
 				err = fmt.Errorf("VirtualBoxISO: An error occurred while trying to set %q to %q: %s ", k, v, err)
-				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
 			settings[k] = i
-		default:
-			jww.WARN.Printf("unsupported virtualbox-iso setting was encountered: %q", k)
 		}
 	}
 
 	// Only check to see if the required ssh_username field was set. The required iso info is checked after Array processing
 	if !hasSSHUsername {
 		err = fmt.Errorf("\"ssh_username\" is a required setting for virtualbox-iso; not found")
-		jww.ERROR.Print(err)
 		return nil, nil, err
 	}
 	// Process arrays, iso_urls is only valid if iso_url is not set so we first
@@ -896,12 +834,10 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, va
 		tmpISOUrl = isoURL
 		if tmpISOChecksum == "" {
 			err = fmt.Errorf("\"iso_url\" found for virtualbox-iso but no \"iso_checksum\" information was found")
-			jww.ERROR.Print(err)
 			return nil, nil, err
 		}
 		if tmpISOChecksumType == "" {
 			err = fmt.Errorf("\"iso_url\" found for virtualbox-iso but no \"iso_checksum_type\" information was found")
-			jww.ERROR.Print(err)
 			return nil, nil, err
 		}
 		settings["iso_url"] = isoURL
@@ -919,7 +855,6 @@ noISOURL:
 		switch name {
 		case "boot_command":
 			if bootCmdProcessed {
-				jww.WARN.Print("\"boot_command\" array for virtualbox-iso was found; already processed from a file from the \"Settings\" section")
 				continue // if the boot command was already set, don't use this array
 			}
 			settings[name] = val
@@ -932,17 +867,13 @@ noISOURL:
 			if tmpISOUrl == "" {
 				if tmpISOChecksum == "" {
 					err = fmt.Errorf("\"iso_urls\" found for virtualbox-iso but no \"iso_checksum\" information was found")
-					jww.ERROR.Print(err)
 					return nil, nil, err
 				}
 				if tmpISOChecksumType == "" {
 					err = fmt.Errorf("\"iso_urls\" found for virtualbox-iso but no \"iso_checksum_type\" information was found")
-					jww.ERROR.Print(err)
 					return nil, nil, err
 				}
 				settings[name] = val
-			} else {
-				jww.WARN.Print("\"iso_urls\" array for virtualbox-iso was found; the iso_url was already set from the \"Settings\" section")
 			}
 		case "vboxmanage", "vboxmanage_post":
 			vms := deepcopy.InterfaceToSliceOfStrings(val)
@@ -957,15 +888,12 @@ noISOURL:
 				tmpVB[i][3] = vv
 			}
 			settings[name] = tmpVB
-		default:
-			jww.WARN.Printf("unsupported virtualbox-iso array key was encountered: %q", name)
 		}
 	}
 
 	if r.osType == "" { // if the os type hasn't been set, the ISO info hasn't been retrieved
 		err = r.ISOInfo(VirtualBoxISO, workSlice)
 		if err != nil {
-			jww.ERROR.Println(err)
 			return nil, nil, err
 		}
 	}
@@ -993,29 +921,26 @@ noISOURL:
 			settings["iso_checksum_type"] = r.releaseISO.(*ubuntu).ChecksumType
 		default:
 			err = fmt.Errorf("%q is not a supported Distro", r.Distro)
-			jww.ERROR.Println(err)
 			return nil, nil, err
 		}
 		return settings, nil, nil
 	}
 	if tmpISOChecksumType == "" {
 		err = fmt.Errorf("\"iso_url\" information was set for virtualbox-iso but the \"iso_checksum_type\" was not")
-		jww.ERROR.Print(err)
 		return nil, nil, err
 	}
 	if tmpISOChecksum == "" {
 		err = fmt.Errorf("\"iso_url\" information was set for virtualbox-iso but the \"iso_checksum\" was not")
-		jww.ERROR.Print(err)
 		return nil, nil, err
 	}
 	return settings, nil, nil
 }
 
-// createVirtualBoxOVF creates a map of settings for Packer's virtualbox-ovf
-// builder.  Any values that aren't supported by the virtualbox-ovf builder
-// are logged as a WARN and ignored.  Any required settings that don't exist
-// result in an error and processing of the builder is stopped. For more
-// information, refer to https://packer.io/docs/builders/virtualbox-ovf.html
+// createVirtualBoxOVF creates a map of settings for Packer's virtualbox-ovf builder.
+// Any values that aren't supported by the virtualbox-ovf builder are ignored.  Any
+// required settings that doesn't exist result in an error and processing of the
+// builder is stopped. For more information, refer to
+// https://packer.io/docs/builders/virtualbox-ovf.html
 //
 // Required configuration options:
 //   source_path              string
@@ -1053,7 +978,6 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, va
 	_, ok := r.Builders[VirtualBoxOVF.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", VirtualBoxOVF.String())
-		jww.ERROR.Print(err.Error())
 		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
@@ -1083,12 +1007,10 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, va
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
 				if len(commands) == 0 {
 					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", VirtualBoxOVF.String(), k, v)
-					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
 				settings[k] = commands
@@ -1114,7 +1036,6 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, va
 			i, err := strconv.Atoi(v)
 			if err != nil {
 				err = fmt.Errorf("VirtualBoxOVF error while trying to set %q to %q: %s", k, v, err)
-				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
 			settings[k] = i
@@ -1124,12 +1045,10 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, va
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
 				if len(commands) == 0 {
 					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", VirtualBoxOVF.String(), k, v)
-					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
 				// Assume it's the first element.
@@ -1142,12 +1061,10 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, va
 	// Check to see if the required info was processed.
 	if !hasSSHUsername {
 		err = fmt.Errorf("\"ssh_username\" is a required setting for virtualbox-ovf; not found")
-		jww.ERROR.Print(err)
 		return nil, nil, err
 	}
 	if !hasSourcePath {
 		err = fmt.Errorf("\"source_path\" is a required setting for virtualbox-ovf; not found")
-		jww.ERROR.Print(err)
 		return nil, nil, err
 	}
 
@@ -1163,7 +1080,6 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, va
 		switch name {
 		case "boot_command":
 			if bootCmdProcessed {
-				jww.WARN.Print("\"boot_command\" array for virtualbox-ovf was found; already processed from a file from the \"Settings\" section")
 				continue // if the boot command was already set, don't use this array
 			}
 			settings[name] = val
@@ -1182,18 +1098,16 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, va
 				tmpVB[i][3] = vv
 			}
 			settings[name] = tmpVB
-		default:
-			jww.WARN.Printf("unsupported virtualbox-ovf array key was encountered: %q", name)
 		}
 	}
 	return settings, nil, nil
 }
 
-// createVMWareISO creates a map of settings for Packer's vmware-iso builder.
-// Any values that aren't supported by the vmware-iso builder result in a
-// logged warning and are ignored. Any required settings that don't exist
-// result in an error and processing of the builder is stopped. For more
-// information, refer to https://packer.io/docs/builders/vmware-iso.html
+// createVMWareISO creates a map of settings for Packer's vmware-iso builder.  Any
+// values that aren't supported by the vmware-iso builder are ignored.  Any required
+// settings that don't exist result in an error and processing of the builder is
+// stopped. For more information, refer to
+// https://packer.io/docs/builders/vmware-iso.html
 //
 // Required configuration options:
 //   iso_checksum            string
@@ -1244,7 +1158,6 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 	_, ok := r.Builders[VMWareISO.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", VMWareISO.String())
-		jww.ERROR.Print(err.Error())
 		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
@@ -1275,12 +1188,10 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
 				if len(commands) == 0 {
 					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", VMWareISO.String(), k, v)
-					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
 				settings[k] = commands
@@ -1292,12 +1203,10 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
 				if len(commands) == 0 {
 					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", VMWareISO.String(), k, v)
-					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
 				// Assume it's the first element.
@@ -1334,19 +1243,15 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 			i, err := strconv.Atoi(v)
 			if err != nil {
 				err = fmt.Errorf("vmware-iso: An error occurred while trying to set %q to %q: %s ", k, v, err)
-				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
 			settings[k] = i
-		default:
-			jww.WARN.Printf("unsupported vmware-iso setting was encountered: %q", k)
 		}
 	}
 
 	// Only check to see if the required ssh_username field was set. The required iso info is checked after Array processing
 	if !hasSSHUsername {
 		err = fmt.Errorf("\"ssh_username\" is a required setting for virtualbox-iso; not found")
-		jww.ERROR.Print(err)
 		return nil, nil, err
 	}
 
@@ -1361,7 +1266,6 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 		switch name {
 		case "boot_command":
 			if bootCmdProcessed {
-				jww.WARN.Print("\"boot_command\" array for vmware-iso was found; already processed from a file from the \"Settings\" section")
 				continue // if the boot command was already set, don't use this array
 			}
 			settings[name] = val
@@ -1372,17 +1276,13 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 			if tmpISOUrl == "" {
 				if tmpISOChecksum == "" {
 					err = fmt.Errorf("\"iso_urls\" found for vmware-iso but no \"iso_checksum\" information was found")
-					jww.ERROR.Print(err)
 					return nil, nil, err
 				}
 				if tmpISOChecksumType == "" {
 					err = fmt.Errorf("\"iso_urls\" found for vmware-iso but no \"iso_checksum_type\" information was found")
-					jww.ERROR.Print(err)
 					return nil, nil, err
 				}
 				settings[name] = val
-			} else {
-				jww.WARN.Print("\"iso_urls\" array for vmware-iso was found; the iso_url was already set from the \"Settings\" section")
 			}
 		case "vmx_data", "vmx_data_post":
 			vms := deepcopy.InterfaceToSliceOfStrings(val)
@@ -1393,15 +1293,12 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 				tmpVM[k] = vv
 			}
 			settings[name] = tmpVM
-		default:
-			jww.WARN.Printf("unsupported vmware-iso array key was encountered: %q", name)
 		}
 	}
 
 	if r.osType == "" { // if the os type hasn't been set, the ISO info hasn't been retrieved
 		err = r.ISOInfo(VirtualBoxISO, workSlice)
 		if err != nil {
-			jww.ERROR.Println(err)
 			return nil, nil, err
 		}
 	}
@@ -1421,7 +1318,6 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 			settings["iso_checksum_type"] = r.releaseISO.(*centOS).ChecksumType
 		case Debian.String():
 			err = fmt.Errorf("automatic resolution of iso information for %q is not supported, the \"iso_url\" and \"iso_checksum\" settings must exist", r.Distro)
-			jww.ERROR.Print(err)
 			return nil, nil, err
 		case Ubuntu.String():
 			settings["iso_url"] = r.releaseISO.(*ubuntu).isoURL
@@ -1429,29 +1325,26 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, vars [
 			settings["iso_checksum_type"] = r.releaseISO.(*ubuntu).ChecksumType
 		default:
 			err = fmt.Errorf("%q is not a supported Distro", r.Distro)
-			jww.ERROR.Println(err)
 			return nil, nil, err
 		}
 		return settings, nil, nil
 	}
 	if tmpISOChecksumType == "" {
 		err = fmt.Errorf("\"iso_url\" information was set for vmware-iso but the \"iso_checksum_type\" was not")
-		jww.ERROR.Print(err)
 		return nil, nil, err
 	}
 	if tmpISOChecksum == "" {
 		err = fmt.Errorf("\"iso_url\" information was set for vmware-iso but the \"iso_checksum\" was not")
-		jww.ERROR.Print(err)
 		return nil, nil, err
 	}
 	return settings, nil, nil
 }
 
-// createVMWareVMX creates a map of settings for Packer's vmware-vmx builder.
-// Any values that aren't supported by the vmware-vmx builder result in a
-// logged warning and are ignored. Any required settings that don't exist
-// result in an error and processing of the builder is stopped. For more
-// information, refer to https://packer.io/docs/builders/vmware-vmx.html
+// createVMWareVMX creates a map of settings for Packer's vmware-vmx builder.  Any
+// values that aren't supported by the vmware-vmx builder are ignored.  Any required
+// settings that don't exist result in an error and processing of the builder is
+// stopped.  For more information, refer to
+// https://packer.io/docs/builders/vmware-vmx.html
 //
 // Required configuration options:
 //   source_name				// string
@@ -1483,7 +1376,6 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, vars [
 	_, ok := r.Builders[VMWareVMX.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", VMWareVMX.String())
-		jww.ERROR.Print(err.Error())
 		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
@@ -1513,12 +1405,10 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, vars [
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
 				if len(commands) == 0 {
 					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", VMWareVMX.String(), k, v)
-					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
 				settings[k] = commands
@@ -1530,12 +1420,10 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, vars [
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
 				if len(commands) == 0 {
 					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", VMWareVMX.String(), k, v)
-					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
 				// Assume it's the first element.
@@ -1561,23 +1449,18 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, vars [
 			i, err := strconv.Atoi(v)
 			if err != nil {
 				err = fmt.Errorf("vmware-vmx error while trying to set %q to %q: %s", k, v, err)
-				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
 			settings[k] = i
-		default:
-			jww.WARN.Printf("unsupported vmware-vmx setting was encountered: %q", k)
 		}
 	}
 	// Check if required fields were processed
 	if !hasSSHUsername {
 		err = fmt.Errorf("\"ssh_username\" is a required setting for vmware-vmx; not found")
-		jww.ERROR.Print(err)
 		return nil, nil, err
 	}
 	if !hasSourcePath {
 		err = fmt.Errorf("\"source_path\" is a required setting for vmware-vmx; not found")
-		jww.ERROR.Print(err)
 		return nil, nil, err
 	}
 
@@ -1592,7 +1475,6 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, vars [
 		switch name {
 		case "boot_command":
 			if bootCmdProcessed {
-				jww.WARN.Print("\"boot_command\" array for vmware-vmx was found; already processed from a file from the \"Settings\" section")
 				continue // if the boot command was already set, don't use this array
 			}
 			settings[name] = val
@@ -1607,41 +1489,34 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, vars [
 				tmpVM[k] = vv
 			}
 			settings[name] = tmpVM
-		default:
-			jww.WARN.Printf("unsupported vmware-vmx array key was encountered: %q", name)
 		}
 	}
 	return settings, nil, nil
 }
 
-// updateBuilders updates the rawTemplate's builders with the
-// passed new builder.
+// updateBuilders updates the rawTemplate's builders with the passed new builder.
 //
 // Builder Update rules:
-// 	* If r's old builder does not have a matching builder in the new
-// 	  builder map, new, nothing is done.
-//	* If the builder exists in both r and new, the new builder updates r's
-//	  builder.
-//	* If the new builder does not have a matching builder in r, the new
-//	  builder is added to r's builder map.
+// 	* If r's old builder does not have a matching builder in the new builder map,
+//    new, nothing is done.
+//	* If the builder exists in both r and new, the new builder updates r's builder.
+//	* If the new builder does not have a matching builder in r, the new builder is
+//    added to r's builder map.
 //
 // Settings update rules:
-//
-//	* If the setting exists in r's builder but not in new, nothing is done.
-//	  This means that deletion of settings via not having them exist in the
+//	* If the setting exists in r's builder but not in new, nothing is done.  This
+//    means that deletion of settings via not having them exist in the
 //	  new builder is not supported. This is to simplify overriding
 //	  templates in the configuration files.
-//	* If the setting exists in both r's builder and new, r's builder is
-//	  updated with new's value.
-//	* If the setting exists in new, but not r's builder, new's setting is
-//	  added to r's builder.
-//	* To unset a setting, specify the key, without a value:
-//	      `"key="`
-//	  In most situations, Rancher will interprete an key without a value as
-//	  a deletion of that key. There are exceptions:
-//
-//	  	* `guest_os_type`: This is generally set at Packer Template
-//		  generation time by Rancher.
+//	* If the setting exists in both r's builder and new, r's builder is updated with
+//    new's value.
+//	* If the setting exists in new, but not r's builder, new's setting is added to r's
+//    builder.
+//	* To unset a setting, specify the key, without a value: `"key="`
+//	  In most situations, Rancher will interpret an key without a value as a deletion
+//    of that key. There is an exception:
+//	  	* `guest_os_type`: This is generally set at Packer Template generation time
+//          by Rancher.
 func (r *rawTemplate) updateBuilders(newB map[string]*builder) {
 	// If there is nothing new, old equals merged.
 	if len(newB) <= 0 || newB == nil {
@@ -1650,28 +1525,21 @@ func (r *rawTemplate) updateBuilders(newB map[string]*builder) {
 	// Convert the existing Builders to interfaces.
 	var ifaceOld = make(map[string]interface{}, len(r.Builders))
 	ifaceOld = DeepCopyMapStringPBuilder(r.Builders)
-	//	for i, o := range r.Builders {
-	//		ifaceOld[i] = o
-	//	}
 	// Convert the new Builders to interfaces.
 	var ifaceNew = make(map[string]interface{}, len(newB))
 	ifaceNew = DeepCopyMapStringPBuilder(newB)
-	// Make the slice as long as the slices in both builders, odds are its
-	// shorter, but this is the worst case.
+	// Make the slice as long as the slices in both builders, odds are its shorter, but this is the worst case.
 	var keys []string
 	// Convert the keys to a map
 	keys = mergedKeysFromMaps(ifaceOld, ifaceNew)
-	// If there's a builder with the key CommonBuilder, merge them. This is
-	// a special case for builders only.
+	// If there's a builder with the key CommonBuilder, merge them. This is a special case for builders only.
 	_, ok := newB[Common.String()]
 	if ok {
 		r.updateCommon(newB[Common.String()])
 	}
-	//b := &builder{}
 	// Copy: if the key exists in the new builder only.
 	// Ignore: if the key does not exist in the new builder.
 	// Merge: if the key exists in both the new and old builder.
-	jww.TRACE.Println("keys", keys)
 	for _, v := range keys {
 		// If it doesn't exist in the old builder, add it.
 		_, ok := r.Builders[v]
@@ -1688,44 +1556,18 @@ func (r *rawTemplate) updateBuilders(newB map[string]*builder) {
 		b := r.Builders[v].DeepCopy()
 		b.mergeArrays(newB[v].Arrays)
 		r.Builders[v] = b
-		/*
-			for name, val := range b.Arrays {
-				// see if it exists in new
-				_, ok = newB[v].Arrays[name]
-				arrayVals := deepcopy.InterfaceToStringSlice(newB[v].Arrays[name])
-				// if there is anything to merge, do so
-				fmt.Println("b.Arrays[", name, "]:", b.Arrays[name])
-				fmt.Println("array vals", arrayVals)
-				if arrayVals != nil {
-					b.Arrays[name] = mergeArrays(newB[v].Arrays[name], b.Arrays[name])
-				}
-				r.Builders[v] = b
-				jww.TRACE.Println(name)
-				jww.TRACE.Printf("%#v\n", val)
-				jww.TRACE.Printf("%#v\n", r.Builders[v])
-			}
-			// TODO change to reflect new array handling
-			/*
-				vmSettings = deepcopy.InterfaceToStringSlice(new[v].Arrays[VMSettings])
-				// If there is anything to merge, do so
-				if vmSettings != nil {
-					b.Arrays[VMSettings] = vmSettings
-					r.Builders[v] = b
-				}
-		*/
 	}
 	return
 }
 
 // updateCommon updates rawTemplate's common builder settings
 // Update rules:
-//	* When both the existing common builder, r, and the new one, b, have the
-//	  same setting, b's value replaces r's; the new setting value replaces
-//        the existing.
-//	* When the setting in b is new, it is added to r: new settings are
-//	  inserted into r's CommonBuilder setting list.
-//	* When r has a setting that does not exist in b, nothing is done. This
-//	  method does not delete any settings that already exist in R.
+//	* When both the existing common builder, r, and the new one, b, have the same
+//    setting, b's value replaces r's; the new value replaces the existing value.
+//	* When the setting in b is new, it is added to r: new settings are inserted into
+//    r's CommonBuilder setting list.
+//	* When r has a setting that does not exist in b, nothing is done.  This method
+//    does not delete any settings that already exist in r.
 func (r *rawTemplate) updateCommon(new *builder) {
 	if r.Builders == nil {
 		r.Builders = map[string]*builder{}
@@ -1753,17 +1595,14 @@ func (r *rawTemplate) addPreseedCfg(m map[string]interface{}) error {
 	dst := filepath.Join(v.(string), "preseed.cfg")
 	src, err := r.findSource(dst)
 	if err != nil {
-		jww.ERROR.Print("unable to locate preseed.cfg source file")
 		return err
 	}
 	r.files[filepath.Join(r.OutDir, dst)] = src
 	return nil
 }
 
-// DeepCopyMapStringPBuilder makes a deep copy of each builder passed and
-// returns the copy map[string]*builder as a map[string]interface{}
-// notes:
-//	P means pointer
+// DeepCopyMapStringPBuilder makes a deep copy of each builder passed and returns the
+// copy map[string]*builder as a map[string]interface{}
 func DeepCopyMapStringPBuilder(b map[string]*builder) map[string]interface{} {
 	c := map[string]interface{}{}
 	for k, v := range b {
