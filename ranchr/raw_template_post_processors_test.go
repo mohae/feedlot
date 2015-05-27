@@ -82,6 +82,14 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 	Arch:    "amd64",
 	Image:   "server",
 	Release: "1204",
+	IODirInf: IODirInf{
+		OutDir: "../test_files/out/:build_name",
+		SrcDir: "../test_files/src",
+	},
+	varVals: map[string]string{},
+	vars:    map[string]string{},
+	dirs:    map[string]string{},
+	files:   map[string]string{},
 	build: build{
 		BuilderTypes: []string{
 			"virtualbox-iso",
@@ -163,8 +171,8 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 							"docker",
 						},
 						"include": []string{
-							"include/path1",
-							"include/path2",
+							"include/include1",
+							"include/include2",
 						},
 					},
 				},
@@ -517,8 +525,8 @@ func TestVagrantPostProcessor(t *testing.T) {
 			"docker",
 		},
 		"include": []string{
-			"include/path1",
-			"include/path2",
+			"include/include1",
+			"include/include2",
 		},
 		"keep_input_artifact":  false,
 		"output":               ":out_dir/packer.box",
