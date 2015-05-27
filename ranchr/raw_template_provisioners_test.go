@@ -156,9 +156,8 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 		Description:      "Test template config and Rancher options for CentOS",
 	},
 	IODirInf: IODirInf{
-		CommandsSrcDir: "commands",
-		OutDir:         "../test_files/out/:build_name",
-		SrcDir:         "../test_files/src",
+		OutDir: "../test_files/out/:build_name",
+		SrcDir: "../test_files/src",
 	},
 	BuildInf: BuildInf{
 		Name:      ":build_name",

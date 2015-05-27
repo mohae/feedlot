@@ -26,9 +26,8 @@ func stringSliceContains(sl []string, val string) bool {
 var testDistroDefaultUbuntu = &rawTemplate{
 	PackerInf: PackerInf{MinPackerVersion: "0.4.0", Description: "Test supported distribution template"},
 	IODirInf: IODirInf{
-		CommandsSrcDir: "commands",
-		OutDir:         "../test_files/out/:distro/:build_name",
-		SrcDir:         "../test_files/src/:distro",
+		OutDir: "../test_files/out/:distro/:build_name",
+		SrcDir: "../test_files/src/:distro",
 	},
 	BuildInf: BuildInf{
 		Name:      ":build_name",
@@ -155,9 +154,8 @@ var testDistroDefaultCentOS = &rawTemplate{
 		Description:      "Test template config and Rancher options for CentOS",
 	},
 	IODirInf: IODirInf{
-		CommandsSrcDir: "commands",
-		OutDir:         "../test_files/out/:distro/:build_name",
-		SrcDir:         "../test_files/src/:distro",
+		OutDir: "../test_files/out/:distro/:build_name",
+		SrcDir: "../test_files/src/:distro",
 	},
 	BuildInf: BuildInf{
 		Name:      ":build_name",

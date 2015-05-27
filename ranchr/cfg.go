@@ -287,27 +287,16 @@ func (i *BuildInf) update(b BuildInf) {
 // IODirInf is used to store information about where Rancher can find and put
 // things. Source files are always in a SrcDir.
 type IODirInf struct {
-	// The directory in which the command files are located
-	CommandsSrcDir string `toml:"commands_src_dir"`
-	// Whether or not the OutDir is custom. TODO: is this necessary?
-	CustomOutDir bool `toml:"custom_out_dir"`
+	// Include the packer component name in the path. If this is true, the component.String()
+	// value will be added as the parent of the output resource: i.e. OutDir/component.String()/resource_name
+	IncludeComponentString bool
 	// The directory that the output artifacts will be written to.
 	OutDir string `toml:"out_dir"`
-	// flag for whether or not the src_dir is custom or not. If this resolves to true
-	// Rancher will not use search for matching files based on its algorithm, instead
-	// Rancher will only look for the file in the specified src_dir. This can resolve
-	// to true by either specifiying true in the build template, or specifying a
-	// src_dir path that includes variables, which will cause Rancher to set this to
-	// true TODO: is this necessary?
-	CustomSrcDir bool `toml:"custom_src_dir"`
 	// The directory that contains the source files for this build.
 	SrcDir string `toml:"src_dir"`
 }
 
 func (i *IODirInf) update(inf IODirInf) {
-	if inf.CommandsSrcDir != "" {
-		i.CommandsSrcDir = appendSlash(inf.CommandsSrcDir)
-	}
 	if inf.OutDir != "" {
 		i.OutDir = appendSlash(inf.OutDir)
 	}

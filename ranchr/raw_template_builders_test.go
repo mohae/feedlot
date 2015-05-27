@@ -7,9 +7,8 @@ import (
 
 var testUbuntu = &rawTemplate{
 	IODirInf: IODirInf{
-		CommandsSrcDir: "commands",
-		OutDir:         "../test_files/ubuntu/out/ubuntu",
-		SrcDir:         "../test_files/src/ubuntu",
+		OutDir: "../test_files/ubuntu/out/ubuntu",
+		SrcDir: "../test_files/src/ubuntu",
 	},
 	PackerInf: PackerInf{
 		MinPackerVersion: "",
@@ -108,9 +107,8 @@ var testUbuntu = &rawTemplate{
 
 var testCentOS = &rawTemplate{
 	IODirInf: IODirInf{
-		CommandsSrcDir: "commands",
-		OutDir:         "../test_files/out/centos",
-		SrcDir:         "../test_files/src/centos",
+		OutDir: "../test_files/out/centos",
+		SrcDir: "../test_files/src/centos",
 	},
 	PackerInf: PackerInf{
 		MinPackerVersion: "",
@@ -624,9 +622,8 @@ var testAllBuilders = &rawTemplate{
 
 var testDigtialOceanAPIV1 = &rawTemplate{
 	IODirInf: IODirInf{
-		CommandsSrcDir: "commands",
-		OutDir:         "../test_files/ubuntu/out/ubuntu",
-		SrcDir:         "../test_files/src/ubuntu",
+		OutDir: "../test_files/ubuntu/out/ubuntu",
+		SrcDir: "../test_files/src/ubuntu",
 	},
 	PackerInf: PackerInf{
 		MinPackerVersion: "",

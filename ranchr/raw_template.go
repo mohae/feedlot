@@ -210,13 +210,6 @@ func (r *rawTemplate) mergeVariables() {
 	r.mergeOutDir()
 	r.varVals[r.delim+"out_dir"] = r.OutDir
 	r.varVals[r.delim+"src_dir"] = r.SrcDir
-
-	// set with default, if empty. The default must not have a trailing /
-	r.CommandsSrcDir = r.mergeString(r.CommandsSrcDir, "commands")
-
-	// Create a full variable replacement map, know that the SrcDir and OutDir stuff are resolved.
-	// Rest of the replacements are done by the packerers.
-	r.varVals[r.delim+"commands_src_dir"] = r.CommandsSrcDir
 }
 
 // setBaseVarVals sets the varVals for the base variables
@@ -249,9 +242,6 @@ func (r *rawTemplate) mergeSrcDir() {
 		r.SrcDir = strings.TrimSuffix(r.replaceVariables(r.SrcDir), "/")
 		return
 	}
-	// this means that this is a custom src dir. It may also be set to true in the
-	// build template w or w/o variables
-	r.CustomSrcDir = true
 	// normalize to no ending /
 	r.SrcDir = strings.TrimSuffix(r.replaceVariables(r.SrcDir), "/")
 }
@@ -268,9 +258,6 @@ func (r *rawTemplate) mergeOutDir() {
 		r.OutDir = strings.TrimSuffix(r.replaceVariables(r.OutDir), "/")
 		return
 	}
-	// this means that this is a custom out dir. It may also be set to true in the
-	// build template w or w/o variables
-	r.CustomOutDir = true
 	// normalize to no ending /
 	r.OutDir = strings.TrimSuffix(r.replaceVariables(r.OutDir), "/")
 }
@@ -585,4 +572,31 @@ func (r *rawTemplate) findSource(p string) (string, error) {
 		return tmpPath, nil
 	}
 	return "", os.ErrNotExist
+}
+
+// buildOutPath builds the full output path of the passed path, p, and returns that
+// value. If the template is set to include the component string as the parent
+// directory, it is added to the path. An empty path is an error
+func (r *rawTemplate) buildOutPath(component, p string) (string, error) {
+	if p == "" {
+		return "", fmt.Errorf("buildOutPath error: received path was empty")
+	}
+	if r.IncludeComponentString && component != "" {
+		return filepath.Join(r.OutDir, component, p), nil
+	}
+	return filepath.Join(r.OutDir, p), nil
+}
+
+// buildTemplateResourcePath builds the path that will be added to the Packer template
+// for the passed path, p, and returns that value. If the template is set to include
+// the component string as the parent directory, it is added to the path. An empty path
+// is an error.
+func (r *rawTemplate) buildTemplateResourcePath(component, p string) (string, error) {
+	if p == "" {
+		return "", fmt.Errorf("buildTemplateResourcePath error: received path was empty")
+	}
+	if r.IncludeComponentString && component != "" {
+		return filepath.Join(component, p), nil
+	}
+	return p, nil
 }

@@ -173,9 +173,8 @@ var testBuildNewTPL = &rawTemplate{
 var testRawTemplateBuilderOnly = &rawTemplate{
 	PackerInf: PackerInf{MinPackerVersion: "0.4.0", Description: "Test supported distribution template"},
 	IODirInf: IODirInf{
-		CommandsSrcDir: "commands",
-		OutDir:         "../test_files/out/:distro/:build_name",
-		SrcDir:         "../test_files/src/:distro",
+		OutDir: "../test_files/out/:distro/:build_name",
+		SrcDir: "../test_files/src/:distro",
 	},
 	BuildInf: BuildInf{
 		Name:      ":build_name",
@@ -196,9 +195,8 @@ var testRawTemplateBuilderOnly = &rawTemplate{
 var testRawTemplateWOSection = &rawTemplate{
 	PackerInf: PackerInf{MinPackerVersion: "0.4.0", Description: "Test supported distribution template"},
 	IODirInf: IODirInf{
-		CommandsSrcDir: "commands",
-		OutDir:         "../test_files/out/:distro/:build_name",
-		SrcDir:         "../test_files/src/:distro",
+		OutDir: "../test_files/out/:distro/:build_name",
+		SrcDir: "../test_files/src/:distro",
 	},
 	BuildInf: BuildInf{
 		Name:      ":build_name",
@@ -319,9 +317,6 @@ func TestRawTemplateScriptNames(t *testing.T) {
 func TestMergeVariables(t *testing.T) {
 	r := testDistroDefaults.Templates[Ubuntu]
 	r.mergeVariables()
-	if r.CommandsSrcDir != "commands" {
-		t.Errorf("Expected \"commands\", got %q", r.CommandsSrcDir)
-	}
 	if r.OutDir != "../test_files/out/ubuntu" {
 		t.Errorf("Expected \"../test_files/out/ubuntu\", got %q", r.OutDir)
 	}
@@ -438,28 +433,22 @@ func TestRawTemplateISOInfo(t *testing.T) {
 
 func TestRawTemplateMergeSrcDir(t *testing.T) {
 	tests := []struct {
-		CustomSrcDir         bool
-		SrcDir               string
-		ExpectedCustomSrcDir bool
-		ExpectedSrcDir       string
+		SrcDir         string
+		ExpectedSrcDir string
 	}{
-		{false, "src/", false, "src"},
-		{true, "src/custom/", true, "src/custom"},
-		{true, "src/:distro/", true, "src/ubuntu"},
-		{false, "src/:distro/", true, "src/ubuntu"},
-		{false, "src/files/", false, "src/files"},
+		{"src/", "src"},
+		{"src/custom/", "src/custom"},
+		{"src/:distro/", "src/ubuntu"},
+		{"src/:distro/", "src/ubuntu"},
+		{"src/files/", "src/files"},
 	}
 	rawTpl := newRawTemplate()
 	rawTpl.delim = ":"
 	rawTpl.Distro = "ubuntu"
 	rawTpl.setBaseVarVals()
 	for i, test := range tests {
-		rawTpl.CustomSrcDir = test.CustomSrcDir
 		rawTpl.SrcDir = test.SrcDir
 		rawTpl.mergeSrcDir()
-		if rawTpl.CustomSrcDir != test.ExpectedCustomSrcDir {
-			t.Errorf("MergeSrcDir test %d: expected CustomSrcDir to be %t; got %t", i, test.ExpectedCustomSrcDir, rawTpl.CustomSrcDir)
-		}
 		if rawTpl.SrcDir != test.ExpectedSrcDir {
 			t.Errorf("MergeSrcDir test %d: expected SrcDir to be %s; got %s", i, test.ExpectedSrcDir, rawTpl.SrcDir)
 		}
@@ -468,28 +457,22 @@ func TestRawTemplateMergeSrcDir(t *testing.T) {
 
 func TestRawTemplateMergeOutDir(t *testing.T) {
 	tests := []struct {
-		CustomOutDir         bool
-		OutDir               string
-		ExpectedCustomOutDir bool
-		ExpectedOutDir       string
+		OutDir         string
+		ExpectedOutDir string
 	}{
-		{false, "out", false, "out"},
-		{true, "out/custom/", true, "out/custom"},
-		{true, "out/:distro/", true, "out/ubuntu"},
-		{false, "out/:distro/", true, "out/ubuntu"},
-		{false, "out/files/", false, "out/files"},
+		{"out", "out"},
+		{"out/custom/", "out/custom"},
+		{"out/:distro/", "out/ubuntu"},
+		{"out/:distro/", "out/ubuntu"},
+		{"out/files/", "out/files"},
 	}
 	rawTpl := newRawTemplate()
 	rawTpl.delim = ":"
 	rawTpl.Distro = "ubuntu"
 	rawTpl.setBaseVarVals()
 	for i, test := range tests {
-		rawTpl.CustomOutDir = test.CustomOutDir
 		rawTpl.OutDir = test.OutDir
 		rawTpl.mergeOutDir()
-		if rawTpl.CustomOutDir != test.ExpectedCustomOutDir {
-			t.Errorf("MergeOutDir test %d: expected CustomOutDir to be %t; got %t", i, test.ExpectedCustomOutDir, rawTpl.CustomOutDir)
-		}
 		if rawTpl.OutDir != test.ExpectedOutDir {
 			t.Errorf("MergeOutDirtest %d: expected OutDir to be %s; got %s", i, test.ExpectedOutDir, rawTpl.OutDir)
 		}
@@ -766,6 +749,87 @@ func TestCommandsFromFile(t *testing.T) {
 				t.Errorf("TestCommandsFromFile %D: expected commands slice to be %v, got %v", i, test.expected, commands)
 				break
 			}
+		}
+	}
+
+}
+
+func TestBuildOutPath(t *testing.T) {
+	tests := []struct {
+		includeComponent bool
+		component        string
+		path             string
+		expectedErr      string
+		expected         string
+	}{
+		{false, "", "", "buildOutPath error: received path was empty", ""},
+		{true, "", "", "buildOutPath error: received path was empty", ""},
+		{false, "", "file.txt", "", "out/file.txt"},
+		{false, "", "path/to/file.txt", "", "out/path/to/file.txt"},
+		{false, "shell", "file.txt", "", "out/file.txt"},
+		{false, "shell", "path/to/file.txt", "", "out/path/to/file.txt"},
+		{true, "", "file.txt", "", "out/file.txt"},
+		{true, "", "path/to/file.txt", "", "out/path/to/file.txt"},
+		{true, "shell", "file.txt", "", "out/shell/file.txt"},
+		{true, "shell", "path/to/file.txt", "", "out/shell/path/to/file.txt"},
+	}
+	r := newRawTemplate()
+	r.OutDir = "out"
+	for i, test := range tests {
+		r.IncludeComponentString = test.includeComponent
+		p, err := r.buildOutPath(test.component, test.path)
+		if err != nil {
+			if err.Error() != test.expectedErr {
+				t.Errorf("TestBuildOutPath %d: expected %q, got %q", i, test.expectedErr, err.Error())
+				continue
+			}
+		}
+		if test.expectedErr != "" && err == nil {
+			t.Errorf("TestBuildOutPath %d: expected %q error, got none", i, test.expectedErr)
+			continue
+		}
+		if p != test.expected {
+			t.Errorf("TestBuildOutPath %d: expected %q, got %q", i, test.expected, p)
+		}
+	}
+}
+
+func TestBuildTemplateResourcePath(t *testing.T) {
+	tests := []struct {
+		includeComponent bool
+		component        string
+		path             string
+		expectedErr      string
+		expected         string
+	}{
+		{false, "", "", "buildTemplateResourcePath error: received path was empty", ""},
+		{true, "", "", "buildTemplateResourcePath error: received path was empty", ""},
+		{false, "", "file.txt", "", "file.txt"},
+		{false, "", "path/to/file.txt", "", "path/to/file.txt"},
+		{false, "shell", "file.txt", "", "file.txt"},
+		{false, "shell", "path/to/file.txt", "", "path/to/file.txt"},
+		{true, "", "file.txt", "", "file.txt"},
+		{true, "", "path/to/file.txt", "", "path/to/file.txt"},
+		{true, "shell", "file.txt", "", "shell/file.txt"},
+		{true, "shell", "path/to/file.txt", "", "shell/path/to/file.txt"},
+	}
+	r := newRawTemplate()
+	r.OutDir = "out"
+	for i, test := range tests {
+		r.IncludeComponentString = test.includeComponent
+		p, err := r.buildTemplateResourcePath(test.component, test.path)
+		if err != nil {
+			if err.Error() != test.expectedErr {
+				t.Errorf("TestBuildTemplateResourcePath %d: expected %q, got %q", i, test.expectedErr, err.Error())
+				continue
+			}
+		}
+		if test.expectedErr != "" && err == nil {
+			t.Errorf("TestBuildTemplateResourcePath %d: expected %q error, got none", i, test.expectedErr)
+			continue
+		}
+		if p != test.expected {
+			t.Errorf("TestBuildTemplateResourcePath %d: expected %q, got %q", i, test.expected, p)
 		}
 	}
 
