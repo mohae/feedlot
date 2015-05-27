@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/mohae/utilitybelt/deepcopy"
-	jww "github.com/spf13/jwalterweatherman"
 )
 
 // Provisioner constants
@@ -66,15 +65,11 @@ func ProvisionerFromString(s string) Provisioner {
 }
 
 // Merges the new config with the old. The updates occur as follows:
-//
-//	* The existing configuration is used when no `new` provisioners are
-//	  specified.
-//	* When 1 or more `new` provisioner are specified, they will replace all
-//	  existing provisioner. In this situation, if a provisioner exists in
-//	  the `old` map but it does not exist in the `new` map, that
-//	  provisioner will be orphaned.
-// If there isn't a new config, return the existing as there are no
-// overrides
+//	* The existing configuration is used when no `new` provisioners are specified.
+//	* When 1 or more `new` provisioner are specified, they will replace all existing
+//    provisioner. In this situation, if a provisioner exists in the `old` map but it
+//    does not exist in the `new` map, that provisioner will be orphaned.
+// If there isn't a new config, return the existing as there are no overrides.
 func (r *rawTemplate) updateProvisioners(new map[string]*provisioner) {
 	// If there is nothing new, old equals merged.
 	if len(new) <= 0 || new == nil {
@@ -145,11 +140,10 @@ func (p *provisioner) settingsToMap(Type string, r *rawTemplate) map[string]inte
 	return m
 }
 
-// r.createProvisioner creates the provisioners for a build.
+// createProvisioner creates the provisioners for a build.
 func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]interface{}, err error) {
 	if r.ProvisionerTypes == nil || len(r.ProvisionerTypes) <= 0 {
 		err = fmt.Errorf("unable to create provisioners: none specified")
-		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	var vrbls, tmpVar []string
@@ -201,7 +195,6 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 			*/
 		default:
 			err = fmt.Errorf("%s provisioner is not supported", pType)
-			jww.ERROR.Println(err)
 			return nil, nil, err
 		}
 		p[ndx] = tmpS
@@ -211,28 +204,26 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 	return p, vars, nil
 }
 
-// createAnsible() creates a map of settings for Packer's ansible-local
-// provisioner. Any values that aren't supported by the file provisioner are logged
-// as a WARN and then ignored. For more information, refer to
-// https://packer.io/docs/provisioners/ansible-local.html
+// createAnsible() creates a map of settings for Packer's ansible-local provisioner.
+// Any values that aren't supported by the file provisioner are ignored. For more
+// information, refer to https://packer.io/docs/provisioners/ansible-local.html
 //
 // Required configuration options:
-//   playbook_file		// string
+//   playbook_file      string
 // Optional configuration options:
-//   command			    // string
-//   extra_arguments	    // array of strings
-//   inventory_file		// string
-//   group_vars			// string
-//   host_vars			// string
-//   playbook_dir	         // string
-//   playbook_paths		// array of strings
-//   role_paths			// array of strings
-//   staging_directory	// string
+//   command            string
+//   extra_arguments    array of strings
+//   inventory_file     string
+//   group_vars         string
+//   host_vars          string
+//   playbook_dir	      string
+//   playbook_paths     array of strings
+//   role_paths         array of strings
+//   staging_directory  string
 func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.Provisioners[Ansible.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", Ansible.String())
-		jww.ERROR.Print(err)
 		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
@@ -250,7 +241,6 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []s
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(Ansible.String(), v)
 			if err != nil {
-				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
 			r.files[filepath.Join(r.OutDir, Ansible.String(), v)] = src
@@ -260,7 +250,6 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []s
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(Ansible.String(), v)
 			if err != nil {
-				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
 			r.files[filepath.Join(r.OutDir, Ansible.String(), v)] = src
@@ -269,20 +258,16 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []s
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(Ansible.String(), v)
 			if err != nil {
-				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
 			r.dirs[filepath.Join(r.OutDir, Ansible.String(), v)] = src
 			settings[k] = v
 		case "command", "staging_directory":
 			settings[k] = v
-		default:
-			jww.WARN.Printf("unsupported %s key was encountered: %s", Ansible.String(), k)
 		}
 	}
 	if !hasPlaybook {
 		err := fmt.Errorf("\"playbook_file\" setting is required for %s, not found", Ansible.String())
-		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	// Process the Arrays.
@@ -295,7 +280,6 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []s
 				array[i] = v
 				s, err := r.findComponentSource(Ansible.String(), v)
 				if err != nil {
-					jww.ERROR.Printf("error while adding file to file map: %s", err)
 					return nil, nil, err
 				}
 				r.files[filepath.Join(r.OutDir, Ansible.String(), v)] = s
@@ -311,25 +295,21 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []s
 			}
 			continue
 		}
-		jww.WARN.Printf("Invalid %s array: %s will be ignored", Ansible.String(), name)
 	}
 	return settings, vars, err
 }
 
 // createChefClient() creates a map of settings for Packer's chef-client provisioner.
-// Any values that aren't supported by the chef-client provisioner are logged with a
-// warning and ignored. For more information, refer to:
-//   https://www.packer.io/docs/provisioners/chef-client.html
+// Any values that aren't supported by the chef-client provisioner are ignored. For
+// more information, refer to: https://www.packer.io/docs/provisioners/chef-client.html
 //
 // Required configuration options:
 //   none
-//
 // Optional configuraiton options:
 //   chef_environment        string
 //   config_template         string
 //   execute_command         string
 //   install_command         string
-//   json                    object <- not supported
 ///  node_name               string
 //   prevent_sudo            bool
 //   run_list                array of strings
@@ -340,18 +320,18 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []s
 //   staging_directory       string
 //   validation_client_name  string
 //   validation_key_path     string
+// Unsopported configuration options:
+//   json                    object
 func (r *rawTemplate) createChefClient() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.Provisioners[ChefClient.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", ChefClient.String())
-		jww.ERROR.Print(err)
 		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = ChefClient.String()
-	// For each value, extract its key value pair and then process. Only
-	// process the supported keys. Key validation isn't done here, leaving
-	// that for Packer.
+	// For each value, extract its key value pair and then process. Only process the supported
+	// keys. Key validation isn't done here, leaving that for Packer.
 	for _, s := range r.Provisioners[ChefClient.String()].Settings {
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
@@ -366,7 +346,6 @@ func (r *rawTemplate) createChefClient() (settings map[string]interface{}, vars 
 			// find the actual location of the source file and add it to the files map for copying
 			src, err := r.findSource(v)
 			if err != nil {
-				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
 			r.files[filepath.Join(r.OutDir, v)] = src
@@ -377,20 +356,16 @@ func (r *rawTemplate) createChefClient() (settings map[string]interface{}, vars 
 			if strings.HasSuffix(v, ".command") {
 				commands, err := r.commandsFromFile(ChefClient.String(), v)
 				if err != nil {
-					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
 				if len(commands) == 0 {
 					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", ChefClient.String(), k, v)
-					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
 				settings[k] = commands[0]
 				continue
 			}
 			settings[k] = v
-		default:
-			jww.WARN.Printf("unsupported %s key was encountered: %s", ChefClient.String(), k)
 		}
 	}
 
@@ -400,19 +375,16 @@ func (r *rawTemplate) createChefClient() (settings map[string]interface{}, vars 
 			settings[name] = array
 			continue
 		}
-		jww.WARN.Printf("%s: unsupported array, %s, was encountered", ChefClient.String(), name)
 	}
 	return settings, vars, nil
 }
 
 // createChefSolo() creates a map of settings for Packer's chef-solo provisioner.
-// Any values that aren't supported by the chef-solo provisioner are logged with a
-// warning and ignored. For more information, refer to:
-//   https://www.packer.io/docs/provisioners/chef-solo.html
+// Any values that aren't supported by the chef-solo provisioner are ignored.  For
+// more information, refer to: https://www.packer.io/docs/provisioners/chef-solo.html
 //
 // Required configuration options:
 //   none
-//
 // Optional configuraiton options:
 //   config_template                 string
 //   cookbook_paths                  array of strings
@@ -421,18 +393,18 @@ func (r *rawTemplate) createChefClient() (settings map[string]interface{}, vars 
 //   environments_path               string
 //   execute_command                 string
 //   install_command                 string
-//   json                            object <- not supported
 //   prevent_sudo                    bool
 //   remote_cookbook_paths           array of strings
 //   roles_path                      string
 //   run_list                        array of strings
 //   skip_install                    bool
 //   staging_directory               string
+// Unsopported configuration options:
+//   json                            object
 func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.Provisioners[ChefSolo.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", ChefSolo.String())
-		jww.ERROR.Print(err)
 		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
@@ -452,7 +424,6 @@ func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, vars []
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(ChefSolo.String(), v)
 			if err != nil {
-				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
 			r.files[filepath.Join(r.OutDir, v)] = src
@@ -460,7 +431,6 @@ func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, vars []
 		case "data_bags_path", "environments_path", "roles_path":
 			src, err := r.findComponentSource(ChefSolo.String(), v)
 			if err != nil {
-				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
 			r.dirs[filepath.Join(r.OutDir, v)] = src
@@ -471,20 +441,16 @@ func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, vars []
 			if strings.HasSuffix(v, ".command") {
 				commands, err := r.commandsFromFile(ChefSolo.String(), v)
 				if err != nil {
-					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
 				if len(commands) == 0 {
 					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", ChefSolo.String(), k, v)
-					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
 				settings[k] = commands[0]
 				continue
 			}
 			settings[k] = v
-		default:
-			jww.WARN.Printf("unsupported %s key was encountered: %s", ChefSolo.String(), k)
 		}
 	}
 
@@ -496,7 +462,6 @@ func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, vars []
 				// find the actual location and add it to the files map for copying
 				src, err := r.findComponentSource(ChefSolo.String(), v)
 				if err != nil {
-					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
 				array[i] = v
@@ -510,32 +475,29 @@ func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, vars []
 			settings[name] = array
 			continue
 		}
-		jww.WARN.Printf("%s: unsupported array, %s, was encountered", ChefSolo.String(), name)
 	}
 	return settings, vars, nil
 }
 
 // createFileUploads() creates a map of settings for Packer's file uploads
-// provisioner. Any values that aren't supported by the file provisioner are logged
-// with a warning and ignored. For more information, refer to:
+// provisioner. Any values that aren't supported by the file provisioner are ignored.
+// For more information, refer to
 // https://packer.io/docs/provisioners/file.html
 //
-//	Required configuration options:
-//   destination	// string
-//   source		// string
+// Required configuration options:
+//   destination  string
+//   source       string
 func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.Provisioners[FileUploads.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", FileUploads.String())
-		jww.ERROR.Print(err)
 		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = FileUploads.String()
 
-	// For each value, extract its key value pair and then process. Only
-	// process the supported keys. Key validation isn't done here, leaving
-	// that for Packer.
+	// For each value, extract its key value pair and then process. Only process the supported
+	// keys. Key validation isn't done here, leaving that for Packer.
 	var k, v string
 	var hasSource, hasDestination bool
 	for _, s := range r.Provisioners[FileUploads.String()].Settings {
@@ -546,7 +508,6 @@ func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, vars
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(FileUploads.String(), v)
 			if err != nil {
-				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
 			// add to files
@@ -556,49 +517,42 @@ func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, vars
 		case "destination":
 			settings[k] = v
 			hasDestination = true
-		default:
-			jww.WARN.Printf("unsupported %s key was encountered: %q", FileUploads.String(), k)
 		}
 	}
 	if !hasSource {
 		err := fmt.Errorf("\"source\" setting is required for %s, not found", FileUploads.String())
-		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	if !hasDestination {
 		err := fmt.Errorf("\"destination\" setting is required for %s, not found", FileUploads.String())
-		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	return settings, vars, nil
 }
 
 // createSalt() creates a map of settings for Packer's salt provisioner. Any values
-// that aren't supported by the salt provisioner are logged as a WARN and are then
-// ignored. For more information, refer to
-// https://packer.io/docs/provisioners/salt-masterless.html
+// that aren't supported by the salt provisioner are ignored. For more information,
+// refer to https://packer.io/docs/provisioners/salt-masterless.html
 //
 // Required configuration options:
-//   local_state_tree		// string
+//   local_state_tree     string
 // Optional configuration options
-//   bootstrap_args		// string
-//   local_pillar_roots	// string
-//   local_state_tree     // string
-//   minion_config		// string
-//   skip_bootstrap		// boolean
-//   temp_config_dir		// string
+//   bootstrap_args       string
+//   local_pillar_roots   string
+//   local_state_tree     string
+//   minion_config        string
+//   skip_bootstrap       boolean
+//   temp_config_dir      string
 func (r *rawTemplate) createSalt() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.Provisioners[Salt.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", Salt.String())
-		jww.ERROR.Print(err)
 		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = Salt.String()
-	// For each value, extract its key value pair and then process. Only
-	// process the supported keys. Key validation isn't done here, leaving
-	// that for Packer.
+	// For each value, extract its key value pair and then process. Only process the supported
+	// keys. Key validation isn't done here, leaving that for Packer.
 	var k, v string
 	var hasLocalStateTree bool
 	for _, s := range r.Provisioners[Salt.String()].Settings {
@@ -609,7 +563,6 @@ func (r *rawTemplate) createSalt() (settings map[string]interface{}, vars []stri
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(Salt.String(), v)
 			if err != nil {
-				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
 			r.dirs[filepath.Join(r.OutDir, v)] = src
@@ -619,7 +572,6 @@ func (r *rawTemplate) createSalt() (settings map[string]interface{}, vars []stri
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(Salt.String(), v)
 			if err != nil {
-				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
 			r.dirs[filepath.Join(r.OutDir, v)] = src
@@ -628,7 +580,6 @@ func (r *rawTemplate) createSalt() (settings map[string]interface{}, vars []stri
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(Salt.String(), filepath.Join(v, "minion"))
 			if err != nil {
-				jww.ERROR.Println(err)
 				return nil, nil, err
 			}
 			r.files[filepath.Join(r.OutDir, v, "minion")] = src
@@ -637,13 +588,10 @@ func (r *rawTemplate) createSalt() (settings map[string]interface{}, vars []stri
 			settings[k] = v
 		case "skip_bootstrap":
 			settings[k], _ = strconv.ParseBool(v)
-		default:
-			jww.WARN.Println("unsupported " + Salt.String() + " key was encountered: " + k)
 		}
 	}
 	if !hasLocalStateTree {
 		err := fmt.Errorf("\"local_state_tree\" setting is required for salt, not found")
-		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	// salt does not have any arrays to support
@@ -651,34 +599,31 @@ func (r *rawTemplate) createSalt() (settings map[string]interface{}, vars []stri
 }
 
 // createShellScriptl() creates a map of settings for Packer's shell script
-// provisioner. Any values that aren't supported by the shell provisioner generate a
-// warning and are otherwise ignored. For more information, refer to
-// https://packer.io/docs/provisioners/shell.html
+// provisioner. Any values that aren't supported by the shell provisioner are ignored.
+// For more information, refer to https://packer.io/docs/provisioners/shell.html
 //
 // Of the "inline", "script", and "scripts" options, only "scripts" is
 // currently supported.
 //
 // Required configuration options:
-//   scripts				// array of strings
+//   scripts              array of strings
 // Optional confinguration parameters:
-//   binary				// boolean
-//   environment_vars		// array of strings
-//   execute_command		// string
-//   inline_shebang		// string
-//   remote_path			// string
-//   start_retry_timeout	// string
+//   binary               boolean
+//   environment_vars     array of strings
+//   execute_command      string
+//   inline_shebang       string
+//   remote_path          string
+//   start_retry_timeout  string
 func (r *rawTemplate) createShellScript() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.Provisioners[ShellScript.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", ShellScript.String())
-		jww.ERROR.Print(err)
 		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = ShellScript.String()
-	// For each value, extract its key value pair and then process. Only
-	// process the supported keys. Key validation isn't done here, leaving
-	// that for Packer.
+	// For each value, extract its key value pair and then process. Only process the supported
+	// keys. Key validation isn't done here, leaving that for Packer.
 	var k, v string
 	for _, s := range r.Provisioners[ShellScript.String()].Settings {
 		k, v = parseVar(s)
@@ -691,12 +636,10 @@ func (r *rawTemplate) createShellScript() (settings map[string]interface{}, vars
 				var commands []string
 				commands, err = r.commandsFromFile(ShellScript.String(), v)
 				if err != nil {
-					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
 				if len(commands) == 0 {
 					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", ShellScript.String(), k, v)
-					jww.ERROR.Println(err)
 					return nil, nil, err
 				}
 				settings[k] = commands[0] // for execute_command, only the first element is used
@@ -707,8 +650,6 @@ func (r *rawTemplate) createShellScript() (settings map[string]interface{}, vars
 			settings[k] = v
 		case "binary":
 			settings[k], _ = strconv.ParseBool(v)
-		default:
-			jww.WARN.Println("unsupported " + ShellScript.String() + " key was encountered: " + k)
 		}
 	}
 	// Process the Arrays.
@@ -732,7 +673,6 @@ func (r *rawTemplate) createShellScript() (settings map[string]interface{}, vars
 	}
 	if len(scripts) == 0 {
 		err := fmt.Errorf("\"scripts\" setting is required for shell, not found")
-		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	// go through the scripts, find their source, and add to the files map. error if
@@ -740,20 +680,15 @@ func (r *rawTemplate) createShellScript() (settings map[string]interface{}, vars
 	for _, script := range scripts {
 		s, err := r.findComponentSource(ShellScript.String(), script)
 		if err != nil {
-			jww.ERROR.Printf("error while adding file to file map: %s", err)
 			return nil, nil, err
 		}
 		r.files[filepath.Join(r.OutDir, script)] = s
-	}
-	for k, v := range r.files {
-		fmt.Printf("%s: %s\n", k, v)
 	}
 	return settings, vars, nil
 }
 
 // DeepCopyMapStringPProvisioner makes a deep copy of each builder passed and
 // returns the copie map[string]*provisioner as a map[string]interface{}
-// notes: This currently only supports string slices.
 func DeepCopyMapStringPProvisioner(p map[string]*provisioner) map[string]interface{} {
 	c := map[string]interface{}{}
 	for k, v := range p {
