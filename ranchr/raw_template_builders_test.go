@@ -402,6 +402,7 @@ var testAllBuilders = &rawTemplate{
 				templateSection{
 					Settings: []string{
 						"host=nullhost.com",
+						"port=22",
 						"ssh_private_key_file=myKey",
 					},
 					Arrays: map[string]interface{}{},
@@ -1319,6 +1320,7 @@ func TestDockerGoogleCompute(t *testing.T) {
 func TestCreateBuilderNull(t *testing.T) {
 	expected := map[string]interface{}{
 		"host":                 "nullhost.com",
+		"port":                 22,
 		"ssh_password":         "vagrant",
 		"ssh_private_key_file": "../test_files/src/myKey",
 		"ssh_username":         "vagrant",

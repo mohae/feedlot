@@ -667,6 +667,14 @@ func (r *rawTemplate) createNull() (settings map[string]interface{}, vars []stri
 		switch k {
 		case "host", "ssh_password", "ssh_username":
 			settings[k] = v
+		case "port":
+			// only add if its an int
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				err = fmt.Errorf("%s builder error while processing setting %q: %s", Null.String(), k, err)
+				return nil, nil, err
+			}
+			settings[k] = i
 		case "ssh_private_key_file":
 			// if it's here, cache the value, delay processing until arrays section
 			src, err := r.findComponentSource(Null.String(), v)
