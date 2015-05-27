@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/mohae/utilitybelt/deepcopy"
-	jww "github.com/spf13/jwalterweatherman"
 )
 
 // PostProcessor constants
@@ -149,7 +148,6 @@ func (p *postProcessor) settingsToMap(Type string, r *rawTemplate) map[string]in
 func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]interface{}, err error) {
 	if r.PostProcessorTypes == nil || len(r.PostProcessorTypes) <= 0 {
 		err = fmt.Errorf("unable to create post-processors: none specified")
-		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	var vrbls, tmpVar []string
@@ -209,7 +207,6 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]i
 			}
 		default:
 			err = fmt.Errorf("%s is not supported", pType)
-			jww.ERROR.Println(err)
 			return nil, nil, err
 		}
 		p[ndx] = tmpS
@@ -219,10 +216,9 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]i
 	return p, vars, nil
 }
 
-// createCompress() creates a map of settings for Packer's compress
-// post-processor.  Any values that aren't supported by the compress
-// post-processor are logged as a Warning and ignored. For more information
-// refer to https://packer.io/docs/post-processors/compress.html
+// createCompress() creates a map of settings for Packer's compress post-processor.
+//  Any values that aren't supported by the compress post-processor are ignored. For
+// more information refer to https://packer.io/docs/post-processors/compress.html
 //
 // Required configuration options:
 //		output	// string
@@ -232,7 +228,6 @@ func (r *rawTemplate) createCompress() (settings map[string]interface{}, vars []
 	_, ok := r.PostProcessors[Compress.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", Compress.String())
-		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
@@ -249,13 +244,10 @@ func (r *rawTemplate) createCompress() (settings map[string]interface{}, vars []
 		case "output":
 			settings[k] = v
 			hasOutput = true
-		default:
-			jww.WARN.Printf("unsupported key %q: ", k)
 		}
 	}
 	if !hasOutput {
 		err := fmt.Errorf("\"output\" setting is required for compress, not found")
-		jww.ERROR.Print()
 		return nil, nil, err
 	}
 	return settings, vars, nil
@@ -263,8 +255,8 @@ func (r *rawTemplate) createCompress() (settings map[string]interface{}, vars []
 
 // createDockerImport() creates a map of settings for Packer's docker-import
 // post-processor.  Any values that aren't supported by the docker-import
-// post-processor are logged as a Warning and ignored. For more information
-// refer to https://packer.io/docs/post-processors/docker-import.html.
+// post-processor are ignored. For more information refer to
+// https://packer.io/docs/post-processors/docker-import.html.
 //
 // Required configuration options:
 //		repository	// string
@@ -274,7 +266,6 @@ func (r *rawTemplate) createDockerImport() (settings map[string]interface{}, var
 	_, ok := r.PostProcessors[DockerImport.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", DockerImport.String())
-		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
@@ -293,13 +284,10 @@ func (r *rawTemplate) createDockerImport() (settings map[string]interface{}, var
 			hasRepository = true
 		case "tag":
 			settings[k] = v
-		default:
-			jww.WARN.Printf("unsupported key %q: ", k)
 		}
 	}
 	if !hasRepository {
 		err := fmt.Errorf("\"repository\" setting is required for docker-import, not found")
-		jww.ERROR.Print()
 		return nil, nil, err
 	}
 	return settings, vars, nil
@@ -307,8 +295,8 @@ func (r *rawTemplate) createDockerImport() (settings map[string]interface{}, var
 
 // createDockerPush() creates a map of settings for Packer's docker-push
 // post-processor.  Any values that aren't supported by the docker-push
-// post-processor are logged as a Warning and ignored. For more information
-// refer to https://packer.io/docs/post-processors/docker-push.html.
+// post-processor are ignored. For more information refer to
+// https://packer.io/docs/post-processors/docker-push.html.
 //
 // Required configuration options:
 //		none
@@ -322,7 +310,6 @@ func (r *rawTemplate) createDockerPush() (settings map[string]interface{}, vars 
 	_, ok := r.PostProcessors[DockerPush.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", DockerPush.String())
-		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
@@ -339,8 +326,6 @@ func (r *rawTemplate) createDockerPush() (settings map[string]interface{}, vars 
 			settings[k] = v
 		case "login":
 			settings[k], _ = strconv.ParseBool(v)
-		default:
-			jww.WARN.Printf("unsupported key %q: ", k)
 		}
 	}
 	return settings, vars, nil
@@ -348,8 +333,8 @@ func (r *rawTemplate) createDockerPush() (settings map[string]interface{}, vars 
 
 // createDockerSave() creates a map of settings for Packer's docker-save
 // post-processor.  Any values that aren't supported by the docker-save
-// post-processor are logged as a Warning and ignored. For more information
-// refer to https://packer.io/docs/post-processors/docker-save.html.
+// post-processor are ignored. For more information refer to
+// https://packer.io/docs/post-processors/docker-save.html.
 //
 // Required configuration options:
 //		path	// string
@@ -359,7 +344,6 @@ func (r *rawTemplate) createDockerSave() (settings map[string]interface{}, vars 
 	_, ok := r.PostProcessors[DockerSave.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", DockerSave.String())
-		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
@@ -376,13 +360,10 @@ func (r *rawTemplate) createDockerSave() (settings map[string]interface{}, vars 
 		case "path":
 			settings[k] = v
 			hasPath = true
-		default:
-			jww.WARN.Printf("unsupported key %q: ", k)
 		}
 	}
 	if !hasPath {
 		err := fmt.Errorf("\"path\" setting is required for docker-save, not found")
-		jww.ERROR.Print()
 		return nil, nil, err
 	}
 	return settings, vars, nil
@@ -390,8 +371,8 @@ func (r *rawTemplate) createDockerSave() (settings map[string]interface{}, vars 
 
 // createDockerTag() creates a map of settings for Packer's docker-tag
 // post-processor.  Any values that aren't supported by the docker-tag
-// post-processor are logged as a Warning and ignored. For more information
-// refer to https://packer.io/docs/post-processors/docker-tag.html.
+// post-processor are ignored. For more information refer to
+// https://packer.io/docs/post-processors/docker-tag.html.
 //
 // Required configuration options:
 //		repository  // string
@@ -401,7 +382,6 @@ func (r *rawTemplate) createDockerTag() (settings map[string]interface{}, vars [
 	_, ok := r.PostProcessors[DockerTag.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", DockerTag.String())
-		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
@@ -420,49 +400,37 @@ func (r *rawTemplate) createDockerTag() (settings map[string]interface{}, vars [
 			hasRepository = true
 		case "tag":
 			settings[k] = v
-		default:
-			jww.WARN.Printf("unsupported key %q: ", k)
 		}
 	}
 	if !hasRepository {
 		err := fmt.Errorf("\"repository\" setting is required for docker-tag, not found")
-		jww.ERROR.Print()
 		return nil, nil, err
 	}
 	return settings, vars, nil
 }
 
-// createVagrant() creates a map of settings for Packer's Vagrant
-// post-processor.  Any values that aren't supported by the Vagrant
-// post-processor are ignored. For more information refer to
-// https://packer.io/docs/post-processors/vagrant.html.
+// createVagrant() creates a map of settings for Packer's Vagrant post-processor.
+//  Any values that aren't supported by the Vagrant post-processor are ignored. For
+//  more information refer to https://packer.io/docs/post-processors/vagrant.html.
 //
 // Configuration options:
-//   compression_level		// integer
-//   include				// array of strings
-//   keep_input_artifact	// boolean
-//   output					// string
-//   vagrantfile_template	// string
+//   compression_level     // integer
+//   include               // array of strings
+//   keep_input_artifact   // boolean
+//   output                // string
+//   vagrantfile_template  // string
 // Provider-Specific Overrides:
-//   override				// specifies overrides by provider name
-//   Available override provider names:
-//     aws
-//     digitalocean
-//     parallels
-//     virtualbox
-//     vmware
+//   override	              // specifies overrides by provider name
 func (r *rawTemplate) createVagrant() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.PostProcessors[Vagrant.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", Vagrant.String())
-		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = Vagrant.String()
-	// For each value, extract its key value pair and then process. Only
-	// process the supported keys. Key validation isn't done here, leaving
-	// that for Packer.
+	// For each value, extract its key value pair and then process. Only process the supported keys.
+	// Key validation isn't done here, leaving that for Packer.
 	var k, v string
 	for _, s := range r.PostProcessors[Vagrant.String()].Settings {
 		k, v = parseVar(s)
@@ -476,13 +444,10 @@ func (r *rawTemplate) createVagrant() (settings map[string]interface{}, vars []s
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				err = fmt.Errorf("Vargrant builder error while trying to set %q to %q: %s", k, v, err)
-				jww.ERROR.Println(err)
+				err = fmt.Errorf("Vagrant builder error while trying to set %q to %q: %s", k, v, err)
 				return nil, nil, err
 			}
 			settings[k] = i
-		default:
-			jww.WARN.Printf("unsupported key %q: ", k)
 		}
 	}
 	// Process the Arrays.
@@ -501,19 +466,18 @@ func (r *rawTemplate) createVagrant() (settings map[string]interface{}, vars []s
 // https://packer.io/docs/post-processors/vagrant-cloud.html
 //
 // Required configuration options:
-//   access_token			// string
-//   box_tag				// string
-//   version				// string
+//   access_token         // string
+//   box_tag              // string
+//   version              // string
 // Optional configuration options
-//   no_release				// string
-//   vagrant_cloud_url		// string
-//   version_description	// string
-//   box_download_url		// string
+//   no_release           // string
+//   vagrant_cloud_url    // string
+//   version_description  // string
+//   box_download_url     // string
 func (r *rawTemplate) createVagrantCloud() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.PostProcessors[VagrantCloud.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", VagrantCloud.String())
-		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
@@ -534,32 +498,26 @@ func (r *rawTemplate) createVagrantCloud() (settings map[string]interface{}, var
 			hasVersion = true
 		case "box_download_url", "no_release", "vagrant_cloud_url", "version_description":
 			settings[k] = v
-		default:
-			jww.WARN.Printf("unsupported key: %q", k)
 		}
 	}
 	if !hasAccessToken {
 		err := fmt.Errorf("\"access_token\" setting is required for vagrant-cloud, not found")
-		jww.ERROR.Print(err)
 		return nil, nil, err
 	}
 	if !hasBoxTag {
 		err := fmt.Errorf("\"box_tag\" setting is required for vagrant-cloud, not found")
-		jww.ERROR.Print(err)
 		return nil, nil, err
 	}
 	if !hasVersion {
 		err := fmt.Errorf("\"version\" setting is required for vagrant-cloud, not found")
-		jww.ERROR.Print(err)
 		return nil, nil, err
 	}
 	return settings, nil, nil
 }
 
-// createvSphere() creates a map of settings for Packer's vSphere
-// post-processor.  Any values that aren't supported by the vSphere
-// post-processor are logged as a Warning and ignored. For more information
-// refer to https://packer.io/docs/post-processors/vsphere.html.
+// createvSphere() creates a map of settings for Packer's vSphere post-processor.
+// Any values that aren't supported by the vSphere post-processor are ignored. For
+// more information refer to https://packer.io/docs/post-processors/vsphere.html.
 //
 // Required configuration options:
 //   cluster         string
@@ -579,7 +537,6 @@ func (r *rawTemplate) createVSphere() (settings map[string]interface{}, vars []s
 	_, ok := r.PostProcessors[VSphere.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", VSphere.String())
-		jww.ERROR.Println(err)
 		return nil, nil, err
 	}
 	settings = make(map[string]interface{})
@@ -618,43 +575,34 @@ func (r *rawTemplate) createVSphere() (settings map[string]interface{}, vars []s
 			settings[k] = v
 		case "insecure":
 			settings[k], _ = strconv.ParseBool(v)
-		default:
-			jww.WARN.Printf("unsupported key %q: ", k)
 		}
 	}
 	if !hasCluster {
 		err := fmt.Errorf("\"cluster\" setting is required for vSphere, not found")
-		jww.ERROR.Print()
 		return nil, nil, err
 	}
 	if !hasDatacenter {
 		err := fmt.Errorf("\"datacenter\" setting is required for vSphere, not found")
-		jww.ERROR.Print()
 		return nil, nil, err
 	}
 	if !hasHost {
 		err := fmt.Errorf("\"host\" setting is required for vSphere, not found")
-		jww.ERROR.Print()
 		return nil, nil, err
 	}
 	if !hasPassword {
 		err := fmt.Errorf("\"password\" setting is required for vSphere, not found")
-		jww.ERROR.Print()
 		return nil, nil, err
 	}
 	if !hasResourcePool {
 		err := fmt.Errorf("\"resource_pool\" setting is required for vSphere, not found")
-		jww.ERROR.Print()
 		return nil, nil, err
 	}
 	if !hasUsername {
 		err := fmt.Errorf("\"username\" setting is required for vSphere, not found")
-		jww.ERROR.Print()
 		return nil, nil, err
 	}
 	if !hasVMName {
 		err := fmt.Errorf("\"vm_name\" setting is required for vSphere, not found")
-		jww.ERROR.Print()
 		return nil, nil, err
 	}
 	return settings, vars, nil
