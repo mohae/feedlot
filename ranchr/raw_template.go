@@ -576,27 +576,20 @@ func (r *rawTemplate) findSource(p string) (string, error) {
 
 // buildOutPath builds the full output path of the passed path, p, and returns that
 // value. If the template is set to include the component string as the parent
-// directory, it is added to the path. An empty path is an error
-func (r *rawTemplate) buildOutPath(component, p string) (string, error) {
-	if p == "" {
-		return "", fmt.Errorf("buildOutPath error: received path was empty")
-	}
+// directory, it is added to the path.
+func (r *rawTemplate) buildOutPath(component, p string) string {
 	if r.IncludeComponentString && component != "" {
-		return filepath.Join(r.OutDir, component, p), nil
+		return filepath.Join(r.OutDir, component, p)
 	}
-	return filepath.Join(r.OutDir, p), nil
+	return filepath.Join(r.OutDir, p)
 }
 
 // buildTemplateResourcePath builds the path that will be added to the Packer template
 // for the passed path, p, and returns that value. If the template is set to include
-// the component string as the parent directory, it is added to the path. An empty path
-// is an error.
-func (r *rawTemplate) buildTemplateResourcePath(component, p string) (string, error) {
-	if p == "" {
-		return "", fmt.Errorf("buildTemplateResourcePath error: received path was empty")
-	}
+// the component string as the parent directory, it is added to the path.
+func (r *rawTemplate) buildTemplateResourcePath(component, p string) string {
 	if r.IncludeComponentString && component != "" {
-		return filepath.Join(component, p), nil
+		return filepath.Join(component, p)
 	}
-	return p, nil
+	return p
 }
