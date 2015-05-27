@@ -221,9 +221,9 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]i
 // more information refer to https://packer.io/docs/post-processors/compress.html
 //
 // Required configuration options:
-//		output	// string
+//   output  string
 // Optional configuration options:
-//		none
+//   none
 func (r *rawTemplate) createCompress() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.PostProcessors[Compress.String()]
 	if !ok {
@@ -259,9 +259,9 @@ func (r *rawTemplate) createCompress() (settings map[string]interface{}, vars []
 // https://packer.io/docs/post-processors/docker-import.html.
 //
 // Required configuration options:
-//		repository	// string
+//   repository  string
 // Optional configuration options:
-//		tag         // string
+//   tag         string
 func (r *rawTemplate) createDockerImport() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.PostProcessors[DockerImport.String()]
 	if !ok {
@@ -299,13 +299,13 @@ func (r *rawTemplate) createDockerImport() (settings map[string]interface{}, var
 // https://packer.io/docs/post-processors/docker-push.html.
 //
 // Required configuration options:
-//		none
+//   none
 // Optional configuration options:
-//		login            // boolean
-//      login_email      // string
-//		login_username   // string
-//		login_password   // string
-//		login_server     // string
+//   login           boolean
+//   login_email     string
+//   login_username  string
+//   login_password  string
+//   login_server    string
 func (r *rawTemplate) createDockerPush() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.PostProcessors[DockerPush.String()]
 	if !ok {
@@ -337,9 +337,9 @@ func (r *rawTemplate) createDockerPush() (settings map[string]interface{}, vars 
 // https://packer.io/docs/post-processors/docker-save.html.
 //
 // Required configuration options:
-//		path	// string
+//   path  // string
 // Optional configuration options:
-//		none
+//   none
 func (r *rawTemplate) createDockerSave() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.PostProcessors[DockerSave.String()]
 	if !ok {
@@ -375,9 +375,9 @@ func (r *rawTemplate) createDockerSave() (settings map[string]interface{}, vars 
 // https://packer.io/docs/post-processors/docker-tag.html.
 //
 // Required configuration options:
-//		repository  // string
+//   repository  string
 // Optional configuration options:
-//		tag         // string
+//   tag         string
 func (r *rawTemplate) createDockerTag() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.PostProcessors[DockerTag.String()]
 	if !ok {
@@ -414,13 +414,13 @@ func (r *rawTemplate) createDockerTag() (settings map[string]interface{}, vars [
 //  more information refer to https://packer.io/docs/post-processors/vagrant.html.
 //
 // Configuration options:
-//   compression_level     // integer
-//   include               // array of strings
-//   keep_input_artifact   // boolean
-//   output                // string
-//   vagrantfile_template  // string
+//   compression_level     integer
+//   include               array of strings
+//   keep_input_artifact   boolean
+//   output                string
+//   vagrantfile_template  string
 // Provider-Specific Overrides:
-//   override	              // specifies overrides by provider name
+//   override	              array of strings
 func (r *rawTemplate) createVagrant() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.PostProcessors[Vagrant.String()]
 	if !ok {
@@ -466,14 +466,14 @@ func (r *rawTemplate) createVagrant() (settings map[string]interface{}, vars []s
 // https://packer.io/docs/post-processors/vagrant-cloud.html
 //
 // Required configuration options:
-//   access_token         // string
-//   box_tag              // string
-//   version              // string
+//   access_token         string
+//   box_tag              string
+//   version              string
 // Optional configuration options
-//   no_release           // string
-//   vagrant_cloud_url    // string
-//   version_description  // string
-//   box_download_url     // string
+//   no_release           string
+//   vagrant_cloud_url    string
+//   version_description  string
+//   box_download_url     string
 func (r *rawTemplate) createVagrantCloud() (settings map[string]interface{}, vars []string, err error) {
 	_, ok := r.PostProcessors[VagrantCloud.String()]
 	if !ok {
