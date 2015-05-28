@@ -18,7 +18,8 @@ import (
 	jww "github.com/spf13/jwalterweatherman"
 )
 
-// Contains most of the information for Packer templates within a Rancher Build.
+// Contains most of the information for Packer templates within a Rancher
+// Build.
 type build struct {
 	// Targeted builders: the values are consistent with Packer's, e.g.
 	// `virtualbox.iso` is used for VirtualBox.
@@ -128,7 +129,8 @@ func (b *builder) DeepCopy() *builder {
 	return c
 }
 
-// mergeSettings the settings section of a builder. New values supercede existing ones.
+// mergeSettings the settings section of a builder. New values supersede
+// existing ones.
 func (b *builder) mergeSettings(sl []string) {
 	if sl == nil {
 		return
@@ -141,7 +143,8 @@ func (b *builder) mergeArrays(m map[string]interface{}) {
 	b.Arrays = b.templateSection.mergeArrays(b.Arrays, m)
 }
 
-// mergeVMSettings Merge the VMSettings section of a builder. New values supercede existing ones.
+// mergeVMSettings Merge the VMSettings section of a builder. New values
+// supersede existing ones.
 // TODO update to work with new arrays processing
 /*
 func (b *builder) mergeVMSettings(new []string) []string {
@@ -163,7 +166,8 @@ type postProcessor struct {
 	templateSection
 }
 
-// postProcessor.DeepCopy copies the postProcessor values instead of the pointers.
+// postProcessor.DeepCopy copies the postProcessor values instead of the
+// pointers.
 func (p *postProcessor) DeepCopy() *postProcessor {
 	var c *postProcessor
 	c = &postProcessor{templateSection: templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
@@ -196,7 +200,8 @@ type provisioner struct {
 	templateSection
 }
 
-// postProcessor.DeepCopy copies the postProcessor values instead of the pointers.
+// postProcessor.DeepCopy copies the postProcessor values instead of the
+// pointers.
 func (p *provisioner) DeepCopy() *provisioner {
 	var c *provisioner
 	c = &provisioner{templateSection: templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
@@ -336,7 +341,7 @@ func (i *PackerInf) update(inf PackerInf) {
 // Struct to hold the details of supported distros. From this information a
 // user should be able to build a Packer template by only executing the
 // following, at minimum:
-//	$ rancher build -distro=ubuntu
+//   $ rancher build -distro=ubuntu
 // All settings can be overridden. The information here represents the standard
 // box configuration for its respective distribution.
 type distro struct {

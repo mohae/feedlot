@@ -65,15 +65,14 @@ func PostProcessorFromString(s string) PostProcessor {
 }
 
 // Merges the new config with the old. The updates occur as follows:
-//
-//	* The existing configuration is used when no `new` postProcessors are
-//	  specified.
-//	* When 1 or more `new` postProcessors are specified, they will replace
-//        all existing postProcessors. In this situation, if a postProcessor
-//	  exists in the `old` map but it does not exist in the `new` map, that
-//        postProcessor will be orphaned.
-// If there isn't a new config, return the existing as there are no
-// overrides
+//   * The existing configuration is used when no `new` postProcessors are
+//     specified.
+//   * When 1 or more `new` postProcessors are specified, they will replace all
+//     existing postProcessors.  In this situation, if a postProcessor exists
+//     in the `old` map but it does not exist in the `new` map, that
+//     postProcessor will be orphaned.
+//   * If there isn't a new config, return the existing as there are no
+//     overrides.
 func (r *rawTemplate) updatePostProcessors(new map[string]*postProcessor) {
 	// If there is nothing new, old equals merged.
 	if len(new) <= 0 || new == nil {
@@ -117,9 +116,9 @@ func (r *rawTemplate) updatePostProcessors(new map[string]*postProcessor) {
 	}
 }
 
-// Go through all of the Settings and convert them to a map. Each setting is parsed
-// into its constituent parts. The value then goes through variable replacement to
-// ensure that the settings are properly resolved.
+// Go through all of the Settings and convert them to a map. Each setting is
+// parsed into its constituent parts. The value then goes through variable
+// replacement to ensure that the settings are properly resolved.
 func (p *postProcessor) settingsToMap(Type string, r *rawTemplate) map[string]interface{} {
 	var k string
 	var v interface{}
@@ -202,9 +201,10 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, err error) {
 	return p, nil
 }
 
-// createCompress() creates a map of settings for Packer's compress post-processor.
-//  Any values that aren't supported by the compress post-processor are ignored. For
-// more information refer to https://packer.io/docs/post-processors/compress.html
+// createCompress() creates a map of settings for Packer's compress
+// post-processor.  Any values that aren't supported by the compress
+// post-processor are ignored. For more information refer to
+// https://packer.io/docs/post-processors/compress.html
 //
 // Required configuration options:
 //   output  string
@@ -280,7 +280,7 @@ func (r *rawTemplate) createDockerImport() (settings map[string]interface{}, err
 }
 
 // createDockerPush() creates a map of settings for Packer's docker-push
-//post-processor.  Any values that aren't supported by the docker-push
+// post-processor.  Any values that aren't supported by the docker-push
 // post-processor are ignored. For more information refer to
 // https://packer.io/docs/post-processors/docker-push.html.
 //
@@ -395,9 +395,10 @@ func (r *rawTemplate) createDockerTag() (settings map[string]interface{}, err er
 	return settings, nil
 }
 
-// createVagrant() creates a map of settings for Packer's Vagrant post-processor.
-//  Any values that aren't supported by the Vagrant post-processor are ignored. For
-//  more information refer to https://packer.io/docs/post-processors/vagrant.html.
+// createVagrant() creates a map of settings for Packer's Vagrant
+// post-processor.  Any values that aren't supported by the Vagrant
+// post-processor are ignored. For more information refer to
+// https://packer.io/docs/post-processors/vagrant.html.
 //
 // Configuration options:
 //   compression_level     integer
@@ -517,9 +518,10 @@ func (r *rawTemplate) createVagrantCloud() (settings map[string]interface{}, err
 	return settings, nil
 }
 
-// createVSphere() creates a map of settings for Packer's vSphere post-processor.
-// Any values that aren't supported by the vSphere post-processor are ignored. For
-// more information refer to https://packer.io/docs/post-processors/vsphere.html.
+// createVSphere() creates a map of settings for Packer's vSphere
+// post-processor.  Any values that aren't supported by the vSphere
+// post-processor are ignored. For more information refer to
+// https://packer.io/docs/post-processors/vsphere.html.
 //
 // Required configuration options:
 //   cluster         string
@@ -612,7 +614,7 @@ func (r *rawTemplate) createVSphere() (settings map[string]interface{}, err erro
 
 // DeepCopyMapStringPPostProcessor makes a deep copy of each builder passed and
 // returns the copie map[string]*builder as a map[string]interface{}
-// notes: This currently only supports string slices.
+// Note: This currently only supports string slices.
 func DeepCopyMapStringPPostProcessor(p map[string]*postProcessor) map[string]interface{} {
 	c := map[string]interface{}{}
 	for k, v := range p {

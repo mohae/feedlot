@@ -19,7 +19,7 @@ type packerTemplate struct {
 	Variables        map[string]interface{} `json:"variables,omitempty"`
 }
 
-// create a Packer build template based on the current configuration. The
+// create a Packer build template based on the current configuration. The 
 // template is written to the output directory and any external resources that
 // the template requires is copied there.
 func (p *packerTemplate) create(i IODirInf, b BuildInf, dirs, files map[string]string) error {

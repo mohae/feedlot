@@ -54,14 +54,14 @@ type release struct {
 // ISO image. This is for releases.ubuntu.com checksums which are in a plain
 // text file with each line representing an iso image and checksum pair, each
 // line is in the format of:
-//      checksumText image.isoname
+//     checksumText image.isoname
 //
 // Notes:
-//	\n separate lines
-//      since this is plain text processing we don't worry about runes
-//      Ubuntu LTS images can have an additional release number, which is
-//  	incremented each release. Because of this, a second search is performed
-//	if the first one fails to find a match.
+//   * \n separate lines
+//   * since this is plain text processing we don't worry about runes
+//   * Ubuntu LTS images can have an additional release number, which is
+//     incremented each release. Because of this, a second search is performed
+//     if the first one fails to find a match.
 
 // centOS wrapper to release.
 type centOS struct {
@@ -115,7 +115,7 @@ func (c *centOS) SetISOInfo() error {
 // setReleaseInfo makes sure that both c.Release and c.ReleaseFull are properly
 // set. The release number set in the file may be either the release or the
 // version.
-// For centOS, the Release is an int, e.g. 6 or 7 while the ReleaseFull is
+// For CentOS, the Release is an int, e.g. 6 or 7 while the ReleaseFull is
 // the current release version, e.g. 6,6. When only the Release number is
 // specified, Rancher will determine what the current version of the release
 // is and use that as the ReleaseFull.
@@ -220,8 +220,9 @@ func (c *centOS) checksumURL() string {
 	return buff.String()
 }
 
-// setISOURL sets the url of the ISO. If the BaseURL is set, that is used. If it
-// isn't set, a isoredirect url for the ISO will be randomly selected and used.
+// setISOURL sets the url of the ISO. If the BaseURL is set, that is used. If
+// it isn't set, a isoredirect url for the ISO will be randomly selected and
+// used.
 func (c *centOS) setISOURL() error {
 	if c.BaseURL != "" {
 		var buff bytes.Buffer
@@ -288,13 +289,15 @@ func (c *centOS) randomISOURL() (string, error) {
 	return url, nil
 }
 
+// Finds the line in the incoming string with the isoName requested, strips out
+// the checksum and returns it. This is for CentOS checksums which are in
+// plaintext and whose format is:
+//     checksumText  image.isoname
+//
+// Notes:
+//   * \n separate lines and two space separate the checksum and image name
+//   * since this is plain text processing we don't worry about runes
 func (c *centOS) findChecksum(page string) (string, error) {
-	// Finds the line in the incoming string with the isoName requested,
-	// strips out the checksum and returns it. This is for CentOS checksums
-	// which are in plaintext.
-	//      checksumText  image.isoname
-	// Notes: \n separate lines and two space separate the checksum and image name
-	//      since this is plain text processing we don't worry about runes
 	if page == "" {
 		err := fmt.Errorf("the string passed to centOS.findChecksum(s string) was empty; unable to process request")
 		jww.ERROR.Println(err)
@@ -411,14 +414,14 @@ func (d *debian) setISOURL() error {
 }
 
 // findISOChecksum finds the checksum in the passed page string for the current
-// ISO image. This is for cdimage.debian.org/debian-cd/ checksums which are in a plain
-// text file with each line representing an iso image and checksum pair, each
-// line is in the format of:
+// ISO image. This is for cdimage.debian.org/debian-cd/ checksums which are in
+// a plain text file with each line representing an iso image and checksum pair,
+// each line is in the format of:
 //      checksumText image.isoname
 //
 // Notes:
-//	\n separate lines
-//      since this is plain text processing we don't worry about runes
+//   * \n separate lines
+//   * since this is plain text processing we don't worry about runes
 func (d *debian) findISOChecksum(page string) (string, error) {
 	if page == "" {
 		err := fmt.Errorf("page to parse was empty; unable to process request for %s", d.Name)
@@ -489,10 +492,10 @@ func (d *debian) getOSType(buildType string) (string, error) {
 //
 // Note: This method assumes that the baseurl will resolve to a directory
 // listing that provide the information necessary to extract the current
-// release: e.g. http://cdimage.debian.org/debian-cd/. If a custom url
-// is being used, like for a mirror, either make sure that the releaseFull
-// is set or that the url resolves to a page from which the current version
-// cn be extracted.
+// release: e.g. http://cdimage.debian.org/debian-cd/. If a custom url is being
+// used, like for a mirror, either make sure that the releaseFull is set or
+// that the url resolves to a page from which the current version can be
+// extracted.
 func (d *debian) getReleaseVersion() error {
 	// if ReleaseFull is set, nothing to do
 	if d.ReleaseFull != "" {
@@ -512,8 +515,8 @@ func (d *debian) getReleaseVersion() error {
 }
 
 // Since only the release is specified, the current version needs to be
-// determined. For Debian, rancher can only grab the latest release as that
-// is all the Debian makes available on their cdimage site.
+// determined. For Debian, rancher can only grab the latest release as that is
+// all the Debian makes available on their cdimage site.
 func (d *debian) setReleaseInfo(s string) error {
 	// look for the first line that starts with debian-(release)
 	pos := strings.Index(s, fmt.Sprintf("a href=\"%s", d.Release))
@@ -591,14 +594,14 @@ func (u *ubuntu) setISOURL() error {
 // ISO image. This is for releases.ubuntu.com checksums which are in a plain
 // text file with each line representing an iso image and checksum pair, each
 // line is in the format of:
-//      checksumText image.isoname
+//     checksumText image.isoname
 //
 // Notes:
-//	\n separate lines
-//      since this is plain text processing we don't worry about runes
-//      Ubuntu LTS images can have an additional release number, which is
-//  	incremented each release. Because of this, a second search is performed
-//	if the first one fails to find a match.
+//   * \n separate lines
+//   * since this is plain text processing we don't worry about runes
+//   * Ubuntu LTS images can have an additional release number, which is
+//     incremented each release. Because of this, a second search is performed
+//     if the first one fails to find a match.
 func (u *ubuntu) findChecksum(page string) (string, error) {
 	if page == "" {
 		err := fmt.Errorf("page to parse was empty; unable to process request for %s", u.Name)

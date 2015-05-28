@@ -42,8 +42,8 @@ type file struct {
 	info os.FileInfo
 }
 
-// DirWalk walks the passed path, making a list of all the files that are children of
-// the path.
+// DirWalk walks the passed path, making a list of all the files that are
+// children of the path.
 func (d *directory) DirWalk(dirPath string) error {
 	// If the directory exists, create a list of its contents.
 	if dirPath == "" {

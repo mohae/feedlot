@@ -39,8 +39,8 @@ var provisioners = [...]string{
 
 func (p Provisioner) String() string { return provisioners[p] }
 
-// ProvisionerFromString returns the Provisioner constant for the passed string or
-// unsupported. All incoming strings are normalized to lowercase
+// ProvisionerFromString returns the Provisioner constant for the passed string
+// or unsupported. All incoming strings are normalized to lowercase
 func ProvisionerFromString(s string) Provisioner {
 	s = strings.ToLower(s)
 	switch s {
@@ -65,11 +65,14 @@ func ProvisionerFromString(s string) Provisioner {
 }
 
 // Merges the new config with the old. The updates occur as follows:
-//	* The existing configuration is used when no `new` provisioners are specified.
-//	* When 1 or more `new` provisioner are specified, they will replace all existing
-//    provisioner. In this situation, if a provisioner exists in the `old` map but it
-//    does not exist in the `new` map, that provisioner will be orphaned.
-// If there isn't a new config, return the existing as there are no overrides.
+//  * The existing configuration is used when no `new` provisioners are
+//    specified.
+//  * When 1 or more `new` provisioner are specified, they will replace all
+//    existing provisioners.  In this situation, if a provisioner exists in the
+//   `old` map but it does not exist in the `new` map, that provisioner will be
+//   orphaned.
+//  * If there isn't a new config, return the existing as there are no
+//    overrides.
 func (r *rawTemplate) updateProvisioners(new map[string]*provisioner) {
 	// If there is nothing new, old equals merged.
 	if len(new) <= 0 || new == nil {
@@ -113,9 +116,9 @@ func (r *rawTemplate) updateProvisioners(new map[string]*provisioner) {
 	}
 }
 
-// Go through all of the Settings and convert them to a map. Each setting
-// is parsed into its constituent parts. The value then goes through
-// variable replacement to ensure that the settings are properly resolved.
+// Go through all of the Settings and convert them to a map. Each setting is
+// parsed into its constituent parts. The value then goes through variable
+// replacement to ensure that the settings are properly resolved.
 func (p *provisioner) settingsToMap(Type string, r *rawTemplate) map[string]interface{} {
 	var k string
 	var v interface{}
@@ -197,9 +200,10 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 	return p, nil
 }
 
-// createAnsible() creates a map of settings for Packer's ansible-local provisioner.
-// Any values that aren't supported by the file provisioner are ignored. For more
-// information, refer to https://packer.io/docs/provisioners/ansible-local.html
+// createAnsible() creates a map of settings for Packer's ansible-local
+// provisioner.  Any values that aren't supported by the file provisioner are
+// ignored. For more information, refer to
+// https://packer.io/docs/provisioners/ansible-local.html
 //
 // Required configuration options:
 //   playbook_file      string
@@ -292,9 +296,10 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, err erro
 	return settings, err
 }
 
-// createChefClient() creates a map of settings for Packer's chef-client provisioner.
-// Any values that aren't supported by the chef-client provisioner are ignored. For
-// more information, refer to: https://www.packer.io/docs/provisioners/chef-client.html
+// createChefClient() creates a map of settings for Packer's chef-client
+// provisioner.  Any values that aren't supported by the chef-client
+// provisioner are ignored. For more information, refer to:
+// https://www.packer.io/docs/provisioners/chef-client.html
 //
 // Required configuration options:
 //   none
@@ -370,9 +375,10 @@ func (r *rawTemplate) createChefClient() (settings map[string]interface{}, err e
 	return settings, nil
 }
 
-// createChefSolo() creates a map of settings for Packer's chef-solo provisioner.
-// Any values that aren't supported by the chef-solo provisioner are ignored.  For
-// more information, refer to: https://www.packer.io/docs/provisioners/chef-solo.html
+// createChefSolo() creates a map of settings for Packer's chef-solo
+// provisioner.  Any values that aren't supported by the chef-solo provisioner
+// are ignored.  For more information, refer to
+// https://www.packer.io/docs/provisioners/chef-solo.html
 //
 // Required configuration options:
 //   none
@@ -471,8 +477,8 @@ func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, err err
 }
 
 // createFileUploads() creates a map of settings for Packer's file uploads
-// provisioner. Any values that aren't supported by the file provisioner are ignored.
-// For more information, refer to
+// provisioner. Any values that aren't supported by the file provisioner are
+// ignored. For more information, refer to
 // https://packer.io/docs/provisioners/file.html
 //
 // Required configuration options:
@@ -521,9 +527,10 @@ func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, err 
 	return settings, nil
 }
 
-// createSalt() creates a map of settings for Packer's salt provisioner. Any values
-// that aren't supported by the salt provisioner are ignored. For more information,
-// refer to https://packer.io/docs/provisioners/salt-masterless.html
+// createSalt() creates a map of settings for Packer's salt provisioner. Any
+// values that aren't supported by the salt provisioner are ignored. For more
+// information, refer to
+// https://packer.io/docs/provisioners/salt-masterless.html
 //
 // Required configuration options:
 //   local_state_tree     string
@@ -590,8 +597,9 @@ func (r *rawTemplate) createSalt() (settings map[string]interface{}, err error) 
 }
 
 // createShellScript() creates a map of settings for Packer's shell script
-// provisioner. Any values that aren't supported by the shell provisioner are ignored.
-// For more information, refer to https://packer.io/docs/provisioners/shell.html
+// provisioner. Any values that aren't supported by the shell provisioner are
+// ignored. For more information, refer to
+// https://packer.io/docs/provisioners/shell.html
 //
 // Of the "inline", "script", and "scripts" options, only "scripts" is
 // currently supported.

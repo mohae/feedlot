@@ -168,9 +168,9 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 	return bldrs, nil
 }
 
-// Go through all of the Settings and convert them to a map. Each setting
-// is parsed into its constituent parts. The value then goes through
-// variable replacement to ensure that the settings are properly resolved.
+// Go through all of the Settings and convert them to a map.  Each setting is
+// parsed into its constituent parts.  The value then goes through variable
+// replacement to ensure that the settings are properly resolved.
 func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 	var k, v string
 	m := make(map[string]interface{})
@@ -182,10 +182,10 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 	return m
 }
 
-// createAmazonEBS creates a map of settings for Packer's amazon-ebs builder.  Any
-// values that aren't supported by the amazon-ebs builder are ignored.  Any required
-// settings that doesn't exist result in an error and processing of the builder is
-// stopped.  For more information, refer to
+// createAmazonEBS creates a map of settings for Packer's amazon-ebs builder.
+// Any values that aren't supported by the amazon-ebs builder are ignored.  Any
+// required settings that don't exist result in an error and processing of the
+// builder is stopped.  For more information, refer to
 // https://packer.io/docs/builders/amazon-ebs.html
 //
 // Required configuration options:
@@ -339,10 +339,10 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, err er
 	return settings, nil
 }
 
-// createDigitalOcean creates a map of settings for Packer's digitalocean builder.
-// Any values that aren't supported by the digitalocean builder are ignored.  Any
-// required settings that doesn't exist result in an error and processing of the
-// builder is stopped.  For more information, refer to
+// createDigitalOcean creates a map of settings for Packer's digitalocean
+// builder.  Any values that aren't supported by the digitalocean builder are
+// ignored.  Any required settings that don't exist result in an error and
+// processing of the builder is stopped.  For more information, refer to
 // https://packer.io/docs/builders/digitalocean.html
 //
 // NOTE: The deprecated image_id, region_id, and size_id options are not
@@ -426,10 +426,11 @@ func (r *rawTemplate) createDigitalOcean() (settings map[string]interface{}, err
 	return nil, err
 }
 
-// createDocker creates a map of settings for Packer's docker builder. Any values that
-// aren't supported by the digitalocean builder are ignored.  Any required settings
-// that doesn't exist result in an error and processing of the builder is stopped. For
-// more information, refer to https://packer.io/docs/builders/docker.html
+// createDocker creates a map of settings for Packer's docker builder. Any
+// values that aren't supported by the digitalocean builder are ignored.  Any
+// required settings that don't exist result in an error and processing of the
+// builder is stopped. For more information, refer to
+// https://packer.io/docs/builders/docker.html
 //
 // Required configuration options:
 //   commit         boolean
@@ -446,11 +447,12 @@ func (r *rawTemplate) createDigitalOcean() (settings map[string]interface{}, err
 // Not implemented configuration options:
 //   volumes         map of strings to strings
 //
-// Note: the run+command can either be specified in the settings section or as an array
-//       of commands in the arrays section. If it is in the settings section, it is
-//       expected to be a command file. The run_command can only appear in one section.
-//       An run_commands specified in the arrays section will take precedence; if the
-//       run_command is also in the settings section, it will be ignored.
+// Note: the run+command can either be specified in the settings section or as
+// an array of commands in the arrays section.  If it is in the settings
+// section, it is expected to be a command file.  The run_command can only
+// appear in one section.  Any run_commands specified in the arrays section
+// will take precedence; if run_command is also in the settings section, it
+// will be ignored.
 func (r *rawTemplate) createDocker() (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[Docker.String()]
 	if !ok {
@@ -530,10 +532,10 @@ func (r *rawTemplate) createDocker() (settings map[string]interface{}, err error
 	return settings, nil
 }
 
-// createGoogleCompute creates a map of settings for Packer's googlecompute builder.
-// Any values that aren't supported by the googlecompute builder are ignored.  Any
-// required settings that doesn't exist result in an error and processing of the
-// builder is stopped.  For more information, refer to
+// createGoogleCompute creates a map of settings for Packer's googlecompute
+// builder.  Any values that aren't supported by the googlecompute builder are
+// ignored.  Any required settings that don't exist result in an error and
+// processing of the builder is stopped.  For more information, refer to
 // https://packer.io/docs/builders/googlecompute.html
 //
 // Required configuration options:
@@ -631,10 +633,11 @@ func (r *rawTemplate) createGoogleCompute() (settings map[string]interface{}, er
 	return settings, nil
 }
 
-// createNull creates a map of settings for Packer's null builder. Any  values that
-// aren't supported by the null builder are ignored.  Any required settings that
-// doesn't exist result in an error and processing of the builder is stopped.  For
-// more information, refer to https://packer.io/docs/builders/null.html
+// createNull creates a map of settings for Packer's null builder. Any  values
+// that aren't supported by the null builder are ignored.  Any required
+// settings that don't exist result in an error and processing of the builder
+// is stopped.  For more information, refer to
+// https://packer.io/docs/builders/null.html
 //
 // Required configuration options:
 //   host string
@@ -681,10 +684,10 @@ func (r *rawTemplate) createNull() (settings map[string]interface{}, err error) 
 	return settings, nil
 }
 
-// createVirtualBoxISO creates a map of settings for Packer's virtualbox-iso builder.
-// Any values that aren't supported by the virtualbox-iso builder are ignored.  Any
-// required settings that doesn't exist result in an error and processing of the
-// builder is stopped. For more information, refer to
+// createVirtualBoxISO creates a map of settings for Packer's virtualbox-iso
+// builder.  Any values that aren't supported by the virtualbox-iso builder are
+// ignored.  Any required settings that doesn't exist result in an error and
+// processing of the builder is stopped. For more information, refer to
 // https://packer.io/docs/builders/virtualbox-iso.html
 //
 // Required configuration options:
@@ -937,10 +940,10 @@ noISOURL:
 	return settings, nil
 }
 
-// createVirtualBoxOVF creates a map of settings for Packer's virtualbox-ovf builder.
-// Any values that aren't supported by the virtualbox-ovf builder are ignored.  Any
-// required settings that doesn't exist result in an error and processing of the
-// builder is stopped. For more information, refer to
+// createVirtualBoxOVF creates a map of settings for Packer's virtualbox-ovf
+// builder.  Any values that aren't supported by the virtualbox-ovf builder are
+// ignored.  Any required settings that don't exist result in an error and
+// processing of the builder is stopped. For more information, refer to
 // https://packer.io/docs/builders/virtualbox-ovf.html
 //
 // Required configuration options:
@@ -1109,10 +1112,10 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, er
 	return settings, nil
 }
 
-// createVMWareISO creates a map of settings for Packer's vmware-iso builder.  Any
-// values that aren't supported by the vmware-iso builder are ignored.  Any required
-// settings that don't exist result in an error and processing of the builder is
-// stopped. For more information, refer to
+// createVMWareISO creates a map of settings for Packer's vmware-iso builder.
+// Any values that aren't supported by the vmware-iso builder are ignored.  Any
+// required settings that don't exist result in an error and processing of the
+// builder is stopped. For more information, refer to
 // https://packer.io/docs/builders/vmware-iso.html
 //
 // Required configuration options:
@@ -1346,10 +1349,10 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, err er
 	return settings, nil
 }
 
-// createVMWareVMX creates a map of settings for Packer's vmware-vmx builder.  Any
-// values that aren't supported by the vmware-vmx builder are ignored.  Any required
-// settings that don't exist result in an error and processing of the builder is
-// stopped.  For more information, refer to
+// createVMWareVMX creates a map of settings for Packer's vmware-vmx builder.
+// Any values that aren't supported by the vmware-vmx builder are ignored.  Any
+// required settings that don't exist result in an error and processing of the
+// builder is stopped.  For more information, refer to
 // https://packer.io/docs/builders/vmware-vmx.html
 //
 // Required configuration options:
@@ -1505,29 +1508,30 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, err er
 	return settings, nil
 }
 
-// updateBuilders updates the rawTemplate's builders with the passed new builder.
-//
+// updateBuilders updates the rawTemplate's builders with the passed new
+// builder.
 // Builder Update rules:
-// 	* If r's old builder does not have a matching builder in the new builder map,
-//    new, nothing is done.
-//	* If the builder exists in both r and new, the new builder updates r's builder.
-//	* If the new builder does not have a matching builder in r, the new builder is
-//    added to r's builder map.
+//   * If r's old builder does not have a matching builder in the new builder
+//     map, new, nothing is done.
+//   * If the builder exists in both r and new, the new builder updates r's
+//     builder.
+//   * If the new builder does not have a matching builder in r, the new
+//     builder is added to r's builder map.
 //
 // Settings update rules:
-//	* If the setting exists in r's builder but not in new, nothing is done.  This
-//    means that deletion of settings via not having them exist in the
-//	  new builder is not supported. This is to simplify overriding
-//	  templates in the configuration files.
-//	* If the setting exists in both r's builder and new, r's builder is updated with
-//    new's value.
-//	* If the setting exists in new, but not r's builder, new's setting is added to r's
-//    builder.
-//	* To unset a setting, specify the key, without a value: `"key="`
-//	  In most situations, Rancher will interpret an key without a value as a deletion
-//    of that key. There is an exception:
-//	  	* `guest_os_type`: This is generally set at Packer Template generation time
-//          by Rancher.
+//   * If the setting exists in r's builder but not in new, nothing is done.
+//     This means that deletion of settings via not having them exist in the
+//     new builder is not supported. This is to simplify overriding templates
+//     in the configuration files.
+//   * If the setting exists in both r's builder and new, r's builder is
+//     updated with new's value.
+//   * If the setting exists in new, but not r's builder, new's setting is
+//     added to r's builder.
+//   * To unset a setting, specify the key, without a value: `"key="`.  In most
+//     situations, Rancher will interpret an key without a value as a deletion
+//     of that key. There is an exception:
+//   * `guest_os_type`: This is generally set at Packer Template generation
+//     time by Rancher.
 func (r *rawTemplate) updateBuilders(newB map[string]*builder) {
 	// If there is nothing new, old equals merged.
 	if len(newB) <= 0 || newB == nil {
@@ -1571,14 +1575,15 @@ func (r *rawTemplate) updateBuilders(newB map[string]*builder) {
 	return
 }
 
-// updateCommon updates rawTemplate's common builder settings
+// updateCommon updates rawTemplate's common builder settings.
 // Update rules:
-//	* When both the existing common builder, r, and the new one, b, have the same
-//    setting, b's value replaces r's; the new value replaces the existing value.
-//	* When the setting in b is new, it is added to r: new settings are inserted into
-//    r's CommonBuilder setting list.
-//	* When r has a setting that does not exist in b, nothing is done.  This method
-//    does not delete any settings that already exist in r.
+//   * When both the existing common builder, r, and the new one, b, have the
+//     same setting, b's value replaces r's; the new value replaces the
+//     existing value.
+//   * When the setting in b is new, it is added to r: new settings are
+//     inserted into r's CommonBuilder setting list.
+//   * When r has a setting that does not exist in b, nothing is done.  This
+//     method does not delete any settings that already exist in r.
 func (r *rawTemplate) updateCommon(new *builder) {
 	if r.Builders == nil {
 		r.Builders = map[string]*builder{}
@@ -1594,9 +1599,10 @@ func (r *rawTemplate) updateCommon(new *builder) {
 	return
 }
 
-// TODO this needs to be redone to handle preseed and ks. Also only certain builders;
-// addPreseedCfg adds the preseedCfg file to the files map. If the http_dir is not set,
-// the default value of "http" will be used
+// TODO this needs to be redone to handle preseed and ks. Also only certain
+// builders;
+// addPreseedCfg adds the preseedCfg file to the files map. If the http_dir is
+// not set, the default value of "http" will be used
 func (r *rawTemplate) addPreseedCfg(m map[string]interface{}) error {
 	v, ok := m["http_directory"]
 	if !ok {
@@ -1612,8 +1618,8 @@ func (r *rawTemplate) addPreseedCfg(m map[string]interface{}) error {
 	return nil
 }
 
-// DeepCopyMapStringPBuilder makes a deep copy of each builder passed and returns the
-// copy map[string]*builder as a map[string]interface{}
+// DeepCopyMapStringPBuilder makes a deep copy of each builder passed and
+// returns the copy map[string]*builder as a map[string]interface{}
 func DeepCopyMapStringPBuilder(b map[string]*builder) map[string]interface{} {
 	c := map[string]interface{}{}
 	for k, v := range b {

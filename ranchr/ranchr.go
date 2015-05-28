@@ -45,7 +45,9 @@ var distros = [...]string{
 
 func (d Distro) String() string { return distros[d] }
 
-// DistroFromString returns the Distro constant for the passed string or unsupported.
+// DistroFromString returns the Distro constant for the passed string or
+// unsupported.
+//
 // All incoming strings are normalized to lowercase.
 func DistroFromString(s string) Distro {
 	s = strings.ToLower(s)
@@ -84,14 +86,8 @@ const (
 	EnvLogLevelStdout = "RANCHER_LOG_LEVEL_STDOUT"
 )
 
-var (
-	// indent: default indent to use for marshal stuff
-	indent = "    "
-	//VMSettings is the var for builders with vm-settings
-//	VMSettings            = "vm_settings"
-//	typeOfSliceInterfaces = reflect.TypeOf([]interface{}(nil))
-//	typeOfSliceStrings    = reflect.TypeOf([]string(nil))
-)
+// indent: default indent to use for marshal stuff
+var indent = "    "
 
 // Defined builds
 var Builds *builds
@@ -317,8 +313,9 @@ func loadBuilds() error {
 }
 
 // BuildDistro creates a build based on the target distro's defaults. The
-// ArgsFilter contains information on the target distro and any overrides
-// that are to be applied to the build.
+// ArgsFilter contains information on the target distro and any overrides that
+// are to be applied to the build.
+//
 // Returns an error or nil if successful.
 func BuildDistro(a ArgsFilter) error {
 	if !DistroDefaults.IsSet {
@@ -408,9 +405,9 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 }
 
 // BuildBuilds manages the process of creating Packer Build templates out of
-// the passed build names. All builds are done concurrently.
-// Returns either a message providing information about the processing of the
-// requested builds or an error.
+// the passed build names. All builds are done concurrently.  Returns either a
+// message providing information about the processing of the requested builds
+// or an error.
 func BuildBuilds(buildNames ...string) (string, error) {
 	if buildNames[0] == "" {
 		err := fmt.Errorf("Nothing to build. No build name was passed")
@@ -544,8 +541,9 @@ func MergeSlices(s ...[]string) []string {
 	return merged
 }
 
-// mergeSlices Takes two slices and returns the de-duped, merged list. The elements are
-// returned in order of first encounter-duplicate keys are discarded.
+// mergeSlices Takes two slices and returns the de-duped, merged list. The
+// elements are returned in order of first encounter-duplicate keys are
+// discarded.
 func mergeSlices(s1 []string, s2 []string) []string {
 	// If nothing is received return nothing
 	if (s1 == nil || len(s1) <= 0) && (s2 == nil || len(s2) <= 0) {
@@ -591,9 +589,6 @@ func mergeSlices(s1 []string, s2 []string) []string {
 // Since settings use  embedded key=value pairs, the key is extracted from each
 // value and matches are performed on the key only as the value will be
 // different if the key appears in both slices.
-// Slice structure: ptr | len | cap
-// Copying a slice means the slice structure is copied but the underlying array
-// is not copied so now you have two slices that both point to the underlying array
 func mergeSettingsSlices(s1 []string, s2 []string) []string {
 	l1 := len(s1)
 	l2 := len(s2)
@@ -632,11 +627,10 @@ func mergeSettingsSlices(s1 []string, s2 []string) []string {
 			}
 			continue
 		}
-		// i is the index of the next element to add, a result of
-		// i being set to the count of the items copied, which is
-		// 1 greater than the index, or the index of the next item
-		// should it exist. Instead, it is updated after adding the
-		// new value as, after add, i points to the current element.
+		// i is the index of the next element to add, a result of i being set to the count
+		// of the items copied, which is 1 greater than the index, or the index of the next
+		// item, should it exist. Instead, it is updated after adding the new value as, after
+		// add, i points to the current element.
 		merged[i] = v
 		i++
 	}
@@ -647,7 +641,10 @@ func mergeSettingsSlices(s1 []string, s2 []string) []string {
 }
 
 // varMapFromSlice creates a map from the passed slice. A Rancher var string
-// contains a key=value string.
+// contains a key=value string. Whitespace before and after the key and value
+// are ignored, but whitespace within the key and value are preserved. The key
+// is everything up to the first '='. As such, a value may contain any number of
+// '=' tokends but the key may not contain any.
 func varMapFromSlice(vars []string) map[string]string {
 	if vars == nil {
 		jww.WARN.Println("unable to create a Packer Settings map because no variables were received")
@@ -662,7 +659,8 @@ func varMapFromSlice(vars []string) map[string]string {
 	return vmap
 }
 
-// parseVar: takes a string in the form of `key=value` and returns the key-value pair.
+// parseVar: takes a string in the form of `key=value` and returns the
+// key-value pair.
 func parseVar(s string) (k string, v string) {
 	if s == "" {
 		return
@@ -682,9 +680,9 @@ func parseVar(s string) (k string, v string) {
 	return k, v
 }
 
-// indexOfKeyInVarSlice searches for the passed key in the slice and returns its
-// index if found, or -1 if not found; 0 is a valid index on a slice. The string
-// to search is in the form of 'key=value'.
+// indexOfKeyInVarSlice searches for the passed key in the slice and returns
+// its index if found, or -1 if not found; 0 is a valid index on a slice. The
+// string to search is in the form of 'key=value'.
 func indexOfKeyInVarSlice(key string, sl []string) int {
 	//Go through the slice and find the matching key
 	for i, s := range sl {
@@ -726,14 +724,14 @@ func getDefaultISOInfo(d []string) (arch string, image string, release string) {
 	return arch, image, release
 }
 
-// merges the new config with the old. The updates occur as follows:
-//
-//	* The existing configuration is used when no `new` provisioners are
-//	  specified.
-//	* When 1 or more `new` provisioners are specified, they will replace
-//        all existing provisioners. In this situation, if a provisioners
-//	  exists in the `old` map but it does not exist in the `new` map, that
-//        provisioners will be orphaned.
+// getMergedProvisioners merges the new config with the old. The updates follow
+// these rules:
+//   * The existing configuration is used when no `new` provisioners are
+//     specified.
+//   * When 1 or more `new` provisioners are specified, they will replace all
+//     existing provisioners. In this situation, if a provisioners exists in
+//     the `old` map but it does not exist in the `new` map, that provisioners
+//     will be orphaned.
 func getMergedProvisioners(old map[string]provisioner, new map[string]provisioner) map[string]provisioner {
 	// If there is nothing new, old equals merged.
 	if len(new) <= 0 || new == nil {
@@ -833,8 +831,8 @@ func copyFile(src string, dst string) (written int64, err error) {
 	return io.Copy(fd, fs)
 }
 
-// copyDir takes 2 directory paths and copies the contents from src to
-// dest get the contents of srcDir.
+// copyDir takes 2 directory paths and copies the contents from src to dest get
+// the contents of srcDir.
 func copyDir(srcDir string, dstDir string) error {
 	exists, err := pathExists(srcDir)
 	if err != nil {
@@ -916,7 +914,7 @@ func deleteDir(dir string) error {
 	return nil
 }
 
-// Substring returns a substring of s starting at i for a length of l chars.
+// Substring returns a substring of s starting at i for a length of l chars. 
 // If the requested index + requested length is greater than the length of the
 // string, the string contents from the index to the end of the string will be
 // returned instead. Note this assumes UTF-8, i.e. uses rune.
@@ -946,8 +944,8 @@ func pathExists(p string) (bool, error) {
 	return false, err
 }
 
-// mergedKeysFromMaps takes a variadic array of maps and returns a merged
-// slice of keys for those maps.
+// mergedKeysFromMaps takes a variadic array of maps and returns a merged slice
+// of keys for those maps.
 func mergedKeysFromMaps(m ...map[string]interface{}) []string {
 	cnt := 0
 	types := make([][]string, len(m))
@@ -966,15 +964,16 @@ func mergedKeysFromMaps(m ...map[string]interface{}) []string {
 	return mergedKeys
 }
 
-// setParentDir takes a directory name and and a path. If the path does not contain a
-// parent directory, the passed directory is prepended to the path and the new value is
-// returned, otherwise the path is returned; e.g. if "shell" and "script.sh" are passed
-// as the dir and path, the returned value will be "shell/script.sh", with the "/"
-// normalized to the os specific use. If "shell" and "scripts/script.sh" are passed as
-// the dir and path, the returned value will be "scripts/script.sh".
-//
-// An empty path will result in an empty string being returned.
-// An empty directory will result in the path being returned.
+// setParentDir takes a directory name and and a path.
+//   * If the path does not contain a parent directory, the passed directory
+//     is prepended to the path and the new value is returned, otherwise the
+//     path is returned; e.g. if
+//   * "shell" and "script.sh" are passed as the dir and path, the returned
+//     value will be "shell/script.sh", with the "/" normalized to the os 
+//     specific use. If "shell" and "scripts/script.sh" are passed as the dir
+//     and path, the returned value will be "scripts/script.sh".
+//   * An empty path will result in an empty string being returned.
+//   * An empty directory will result in the path being returned.
 func setParentDir(d, p string) string {
 	if p == "" {
 		return ""

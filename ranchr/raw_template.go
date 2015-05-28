@@ -101,8 +101,8 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 	return p, nil
 }
 
-// replaceVariables checks incoming string for variables and replaces them
-// with their values.
+// replaceVariables checks incoming string for variables and replaces them with
+// their values.
 func (r *rawTemplate) replaceVariables(s string) string {
 	//see if the delim is in the string, if not, nothing to replace
 	if strings.Index(s, r.delim) < 0 {
@@ -145,8 +145,8 @@ func (r *rawTemplate) setDefaults(d *distro) {
 	return
 }
 
-// r.updateBuildSettings merges Settings between an old and new template. Note:
-// Arch, Image, and Release are not updated here as how these fields are
+// r.updateBuildSettings merges Settings between an old and new template. 
+// Note:  Arch, Image, and Release are not updated here as how these fields are
 // updated depends on whether this is a build from a distribution's default
 // template or from a defined build template.
 func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
@@ -171,8 +171,8 @@ func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
 	r.updateProvisioners(bld.Provisioners)
 }
 
-// mergeVariables goes through the template variables and finalizes the values of any
-// :vars found within the strings.
+// mergeVariables goes through the template variables and finalizes the values
+// of any :vars found within the strings.
 //
 // Supported:
 //  distro                   the name of the distro
@@ -183,28 +183,20 @@ func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
 //  build_name               the name of the build template
 //  out_dir                  the directory to write the build output to
 //  src_dir                  the directory of any source files used in the build*
-//  commands_dir             ???
-//  commands_src_dir         the directory of any command files that the build template
-//                           uses**
 //
-//  * src_dir must be set. Rancher searches for referenced files and uses src_dir/distro
-//    as the last search directory. This directory is also used as the base directory
-//    for any specified src directories.
+// Note: src_dir must be set. Rancher searches for referenced files and uses
+// src_dir/distro as the last search directory. This directory is also used as
+// the base directory for any specified src directories.
+//
 // TODO should there be a flag to not prefix src paths with src_dir to allow for
 // specification of files that are not in src? If the flag is set to not prepend
 // src_dir, src_dir could still be used by adding it to the specific variable.
-//
-//  ** commands_src_dir: if a value is not specified, Rancher will use "commands" as
-//  the commands_src_dir, which is expected to be a directory within src_dir/distro/
-//  or one of the subdirectories within that path that is part of rancher's search
-//  path.
 func (r *rawTemplate) mergeVariables() {
 	// Get the delim and set the replacement map, resolve name information
 	r.setBaseVarVals()
 	// get final value for name first
 	r.Name = r.replaceVariables(r.Name)
 	r.varVals[r.delim+"name"] = r.Name
-
 	// then merge the sourc and out dirs and set them
 	r.mergeSrcDir()
 	r.mergeOutDir()
@@ -224,8 +216,9 @@ func (r *rawTemplate) setBaseVarVals() {
 	}
 }
 
-// mergeVariable does a variable replacement on the passed string and returns the
-// finalized value. If the passed string is empty, the default value, d, is returned
+// mergeVariable does a variable replacement on the passed string and returns
+// the finalized value. If the passed string is empty, the default value, d, is
+// returned
 func (r *rawTemplate) mergeString(s, d string) string {
 	if s == "" {
 		return d
@@ -246,11 +239,7 @@ func (r *rawTemplate) mergeSrcDir() {
 	r.SrcDir = strings.TrimSuffix(r.replaceVariables(r.SrcDir), "/")
 }
 
-// mergeOutDir resolves the out_dir for this template.  If the build's custom_out_dir
-// == true or there are variables are specified in the out_dir, the resolved name is
-// used, otherwise the default of out_dir/:distro/:release/:build_name is used as the
-// output directory. If the custom_out_dir is false, but variables were specified in
-// the out_dir the custom_out_dir flag is set to true.
+// mergeOutDir resolves the out_dir for this template.
 func (r *rawTemplate) mergeOutDir() {
 	// variable replacement is only necessary if the SrcDir has the variable delims
 	if !strings.Contains(r.OutDir, r.delim) {
@@ -343,8 +332,8 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 	return nil
 }
 
-// commandsFromFile returns the commands within the requested file, if it can be found.
-// No validation of the contents is done.
+// commandsFromFile returns the commands within the requested file, if it can
+// be found. No validation of the contents is done.
 func (r *rawTemplate) commandsFromFile(component, name string) (commands []string, err error) {
 	// find the file
 	src, err := r.findCommandFile(component, name)
@@ -377,16 +366,16 @@ func (r *rawTemplate) commandsFromFile(component, name string) (commands []strin
 	return commands, nil
 }
 
-// findCommandFile locates the requested command file. If a match cannot be found, an
-// os.ErrNotExist is returned. Any other errors will result in a termination of the
-// search.
+// findCommandFile locates the requested command file. If a match cannot be
+// found, an os.ErrNotExist is returned. Any other errors will result in a
+// termination of the search.
 //
 // The request string is build with the following order:
 //    commands/{name}
 //    {name}
 //
-// findComponentSource is called to handle the actual location of the file. If no match
-// is found an os.ErrNotExist will be returned.
+// findComponentSource is called to handle the actual location of the file. If
+// no match is found an os.ErrNotExist will be returned.
 func (r *rawTemplate) findCommandFile(component, name string) (string, error) {
 	if name == "" {
 		err := fmt.Errorf("the passed command filename was empty")
@@ -406,22 +395,22 @@ func (r *rawTemplate) findCommandFile(component, name string) (string, error) {
 	return r.findComponentSource(component, name)
 }
 
-// findComponentSource attempts to locate the source file or directory referred to in
-// p for the requested component and return it's actual location within the src_dir.
-// If the component is not empty, it is added to the path to see if there are any
-// component specific files that match. If none are found, just the path is used.
-// Any match is returned, otherwise an os.ErrNotFound error is returned. An other
-// error encountered will also be returned.
+// findComponentSource attempts to locate the source file or directory referred
+// to in p for the requested component and return it's actual location within
+// the src_dir.  If the component is not empty, it is added to the path to see
+// if there are any component specific files that match.  If none are found,
+// just the path is used.  Any match is returned, otherwise an os.ErrNotFound
+// error is returned.  Any other error encountered will also be returned.
 //
 // The search path is built, in order of precedence:
 //    component/path
 //    component-base/path
 //    path
 //
-//  component is the name of the packer component that this path belongs to, e.g
-//    vagrant, chef-client, shell, etc.
-//  component-base is the base name of the packer component that this path belongs
-//    to, if applicable, e.g. chef-client's base would be chef as would chef-solo's.
+// Component is the name of the packer component that this path belongs to, 
+// e.g. vagrant, chef-client, shell, etc.  The component-base is the base name
+// of the packer component that this path belongs to, if applicable, e.g.
+// chef-client's base would be chef as would chef-solo's.
 func (r *rawTemplate) findComponentSource(component, p string) (string, error) {
 	var tmpPath string
 	var err error
@@ -456,12 +445,13 @@ func (r *rawTemplate) findComponentSource(component, p string) (string, error) {
 	return "", err
 }
 
-// findSource searches for the specified sub-path using Rancher's algorithm for finding
-// the correct location. Passed names may include relative path information and may be
-// either a filename or a directory. Releases may have "."'s in them. In addition to
-// searching for the requested source within the point release, the "." are stripped
-// out and the resulting value is searched; e.g. 14.04 becomes 1404. The base release
-// number is also checked; e.g. 14 is searched for 14.04.
+// findSource searches for the specified sub-path using Rancher's algorithm for
+// finding the correct location.  Passed names may include relative path
+// information and may be either a filename or a directory.  Releases may have
+// "."'s in them.  In addition to searching for the requested source within the
+// point release, the "." are stripped out and the resulting value is searched:
+// e.g. 14.04 becomes 1404.  The base release number is also checked: e.g. 14 is
+// searched for 14.04.
 // Search order:
 //   src_dir/distro/release/build_name/
 //   src_dir/distro/releaseBase/build_name/
@@ -475,7 +465,7 @@ func (r *rawTemplate) findComponentSource(component, p string) (string, error) {
 //   src_dir/distro/
 //   src_dir/
 //
-// If the passed poth is not found, an os.ErrNotExist will be returned
+// If the passed path is not found, an os.ErrNotExist will be returned
 func (r *rawTemplate) findSource(p string) (string, error) {
 	if p == "" {
 		return "", fmt.Errorf("cannot find source, no path received")
@@ -574,9 +564,9 @@ func (r *rawTemplate) findSource(p string) (string, error) {
 	return "", os.ErrNotExist
 }
 
-// buildOutPath builds the full output path of the passed path, p, and returns that
-// value. If the template is set to include the component string as the parent
-// directory, it is added to the path.
+// buildOutPath builds the full output path of the passed path, p, and returns
+// that value.  If the template is set to include the component string as the
+// parent directory, it is added to the path.
 func (r *rawTemplate) buildOutPath(component, p string) string {
 	if r.IncludeComponentString && component != "" {
 		return filepath.Join(r.OutDir, component, p)
@@ -584,9 +574,10 @@ func (r *rawTemplate) buildOutPath(component, p string) string {
 	return filepath.Join(r.OutDir, p)
 }
 
-// buildTemplateResourcePath builds the path that will be added to the Packer template
-// for the passed path, p, and returns that value. If the template is set to include
-// the component string as the parent directory, it is added to the path.
+// buildTemplateResourcePath builds the path that will be added to the Packer
+// template for the passed path, p, and returns that value.  If the template is
+// set to include the component string as the parent directory, it is added to
+// the path.
 func (r *rawTemplate) buildTemplateResourcePath(component, p string) string {
 	if r.IncludeComponentString && component != "" {
 		return filepath.Join(component, p)
