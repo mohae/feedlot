@@ -1,5 +1,5 @@
 // raw_template_builders_test.go: tests for builders.
-package ranchr
+package app
 
 import (
 	"testing"

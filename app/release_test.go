@@ -6,7 +6,7 @@
 // acceptable. If the destination url is no longer valid, or the assumptions
 // made in the code lead to error, this is fine as the code should be updated
 // to reflect the changes in remote.
-package ranchr
+package app
 
 import (
 	_ "net/url"

@@ -1,5 +1,5 @@
 // raw_template_post_processors_test.go: tests for post_processors.
-package ranchr
+package app
 
 import (
 	"testing"

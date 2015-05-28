@@ -76,8 +76,8 @@ func (c *BuildCommand) Run(args []string) int {
 	buildArgs := cmdFlags.Args()
 	// If the distro option was passed, create the Packer template from distro defaults
 	if distroFilter != "" {
-		args := ranchr.ArgsFilter{Arch: archFilter, Distro: distroFilter, Image: imageFilter, Release: releaseFilter}
-		err := ranchr.BuildDistro(args)
+		args := app.ArgsFilter{Arch: archFilter, Distro: distroFilter, Image: imageFilter, Release: releaseFilter}
+		err := app.BuildDistro(args)
 		if err != nil {
 			c.UI.Output(err.Error())
 			return 1
@@ -88,7 +88,7 @@ func (c *BuildCommand) Run(args []string) int {
 	if len(buildArgs) > 0 {
 		var message string
 		var err error
-		message, err = ranchr.BuildBuilds(buildArgs...)
+		message, err = app.BuildBuilds(buildArgs...)
 		if err != nil {
 			c.UI.Error(err.Error())
 			return 1

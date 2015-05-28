@@ -6,7 +6,7 @@
 
 // Package ranchr implements the creation of Packer templates from Rancher
 // build definitions.
-package ranchr
+package app
 
 import (
 	"fmt"

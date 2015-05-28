@@ -1,4 +1,4 @@
-package ranchr
+package app
 
 import (
 	"io/ioutil"

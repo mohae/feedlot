@@ -1,5 +1,5 @@
 // raw_template_provisioners_test.go: tests for provisioners.
-package ranchr
+package app
 
 import (
 	"fmt"

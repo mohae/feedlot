@@ -11,7 +11,7 @@ import (
 	"runtime"
 
 	"github.com/mohae/cli"
-	app "github.com/mohae/rancher/app"
+	"github.com/mohae/rancher/app"
 	jww "github.com/spf13/jwalterweatherman"
 )
 

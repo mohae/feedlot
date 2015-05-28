@@ -9,7 +9,7 @@
 
 // Package ranchr is a package for organizing Rancher code. It also contains the package
 // level variables and sets up logging.
-package ranchr
+package app
 
 import (
 	"fmt"

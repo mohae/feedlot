@@ -1,4 +1,4 @@
-package ranchr
+package app
 
 import (
 	jww "github.com/spf13/jwalterweatherman"
