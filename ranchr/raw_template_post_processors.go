@@ -117,9 +117,9 @@ func (r *rawTemplate) updatePostProcessors(new map[string]*postProcessor) {
 	}
 }
 
-// Go through all of the Settings and convert them to a map. Each setting
-// is parsed into its constituent parts. The value then goes through
-// variable replacement to ensure that the settings are properly resolved.
+// Go through all of the Settings and convert them to a map. Each setting is parsed
+// into its constituent parts. The value then goes through variable replacement to
+// ensure that the settings are properly resolved.
 func (p *postProcessor) settingsToMap(Type string, r *rawTemplate) map[string]interface{} {
 	var k string
 	var v interface{}
