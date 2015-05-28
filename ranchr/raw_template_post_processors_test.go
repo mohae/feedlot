@@ -341,7 +341,7 @@ var ppMerged = map[string]*postProcessor{
 }
 
 func TestCreatePostProcessors(t *testing.T) {
-	_, _, err := testRawTemplateBuilderOnly.createPostProcessors()
+	_, err := testRawTemplateBuilderOnly.createPostProcessors()
 	if err == nil {
 		t.Error("Expected error \"unable to create post-processors: none specified\", got nil")
 	} else {
@@ -350,7 +350,7 @@ func TestCreatePostProcessors(t *testing.T) {
 		}
 	}
 
-	_, _, err = testRawTemplateWOSection.createPostProcessors()
+	_, err = testRawTemplateWOSection.createPostProcessors()
 	if err == nil {
 		t.Error("Expected error \"no configuration found for \"compress\"\", got nil")
 	} else {
@@ -360,7 +360,7 @@ func TestCreatePostProcessors(t *testing.T) {
 	}
 
 	testRawTemplateWOSection.build.PostProcessorTypes[0] = "docker-import"
-	_, _, err = testRawTemplateWOSection.createPostProcessors()
+	_, err = testRawTemplateWOSection.createPostProcessors()
 	if err == nil {
 		t.Error("Expected error \"no configuration found for \"docker-import\"\", got nil")
 	} else {
@@ -370,7 +370,7 @@ func TestCreatePostProcessors(t *testing.T) {
 	}
 
 	testRawTemplateWOSection.build.PostProcessorTypes[0] = "docker-push"
-	_, _, err = testRawTemplateWOSection.createPostProcessors()
+	_, err = testRawTemplateWOSection.createPostProcessors()
 	if err == nil {
 		t.Error("Expected error \"no configuration found for \"docker-push\"\", got nil")
 	} else {
@@ -380,7 +380,7 @@ func TestCreatePostProcessors(t *testing.T) {
 	}
 
 	testRawTemplateWOSection.build.PostProcessorTypes[0] = "docker-save"
-	_, _, err = testRawTemplateWOSection.createPostProcessors()
+	_, err = testRawTemplateWOSection.createPostProcessors()
 	if err == nil {
 		t.Error("Expected error \"no configuration found for \"docker-save\"\", got nil")
 	} else {
@@ -390,7 +390,7 @@ func TestCreatePostProcessors(t *testing.T) {
 	}
 
 	testRawTemplateWOSection.build.PostProcessorTypes[0] = "docker-tag"
-	_, _, err = testRawTemplateWOSection.createPostProcessors()
+	_, err = testRawTemplateWOSection.createPostProcessors()
 	if err == nil {
 		t.Error("Expected error \"no configuration found for \"docker-tag\"\", got nil")
 	} else {
@@ -400,7 +400,7 @@ func TestCreatePostProcessors(t *testing.T) {
 	}
 
 	testRawTemplateWOSection.build.PostProcessorTypes[0] = "vagrant"
-	_, _, err = testRawTemplateWOSection.createPostProcessors()
+	_, err = testRawTemplateWOSection.createPostProcessors()
 	if err == nil {
 		t.Error("Expected error \"no configuration found for \"vagrant\"\", got nil")
 	} else {
@@ -410,7 +410,7 @@ func TestCreatePostProcessors(t *testing.T) {
 	}
 
 	testRawTemplateWOSection.build.PostProcessorTypes[0] = "vagrant-cloud"
-	_, _, err = testRawTemplateWOSection.createPostProcessors()
+	_, err = testRawTemplateWOSection.createPostProcessors()
 	if err == nil {
 		t.Error("Expected error \"no configuration found for \"vagrant-cloud\"\", got nil")
 	} else {
@@ -420,7 +420,7 @@ func TestCreatePostProcessors(t *testing.T) {
 	}
 
 	testRawTemplateWOSection.build.PostProcessorTypes[0] = "vsphere"
-	_, _, err = testRawTemplateWOSection.createPostProcessors()
+	_, err = testRawTemplateWOSection.createPostProcessors()
 	if err == nil {
 		t.Error("Expected error \"no configuration found for \"vsphere\"\", got nil")
 	} else {
@@ -455,7 +455,7 @@ func TestCompressPostProcessor(t *testing.T) {
 		"type":   "compress",
 	}
 
-	pp, _, err := testPostProcessorsAllTemplate.createCompress()
+	pp, err := testPostProcessorsAllTemplate.createCompress()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -475,7 +475,7 @@ func TestDockerPushPostProcessor(t *testing.T) {
 		"type":           "docker-push",
 	}
 
-	pp, _, err := testPostProcessorsAllTemplate.createDockerPush()
+	pp, err := testPostProcessorsAllTemplate.createDockerPush()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -491,7 +491,7 @@ func TestDockerSavePostProcessor(t *testing.T) {
 		"type": "docker-save",
 	}
 
-	pp, _, err := testPostProcessorsAllTemplate.createDockerSave()
+	pp, err := testPostProcessorsAllTemplate.createDockerSave()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -508,7 +508,7 @@ func TestDockerTagPostProcessor(t *testing.T) {
 		"type":       "docker-tag",
 	}
 
-	pp, _, err := testPostProcessorsAllTemplate.createDockerTag()
+	pp, err := testPostProcessorsAllTemplate.createDockerTag()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -534,7 +534,7 @@ func TestVagrantPostProcessor(t *testing.T) {
 		"vagrantfile_template": "template/path",
 	}
 
-	pp, _, err := testPostProcessorsAllTemplate.createVagrant()
+	pp, err := testPostProcessorsAllTemplate.createVagrant()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -556,7 +556,7 @@ func TestVagrantCloudPostProcessor(t *testing.T) {
 		"version_description": "initial",
 	}
 
-	pp, _, err := testPostProcessorsAllTemplate.createVagrantCloud()
+	pp, err := testPostProcessorsAllTemplate.createVagrantCloud()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -583,7 +583,7 @@ func TestVagrantVSphereProcessor(t *testing.T) {
 		"vm_network":    "vm-network",
 	}
 
-	pp, _, err := testPostProcessorsAllTemplate.createVSphere()
+	pp, err := testPostProcessorsAllTemplate.createVSphere()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {

@@ -84,7 +84,7 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 		return p, err
 	}
 	// Post-Processors
-	p.PostProcessors, _, err = r.createPostProcessors()
+	p.PostProcessors, err = r.createPostProcessors()
 	if err != nil {
 		jww.ERROR.Println(err)
 		return p, err

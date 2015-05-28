@@ -139,75 +139,67 @@ func (p *postProcessor) settingsToMap(Type string, r *rawTemplate) map[string]in
 }
 
 // r.createPostProcessors creates the PostProcessors for a build.
-func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]interface{}, err error) {
+func (r *rawTemplate) createPostProcessors() (p []interface{}, err error) {
 	if r.PostProcessorTypes == nil || len(r.PostProcessorTypes) <= 0 {
 		err = fmt.Errorf("unable to create post-processors: none specified")
-		return nil, nil, err
+		return nil, err
 	}
-	var vrbls, tmpVar []string
-	var tmpS map[string]interface{}
 	var ndx int
 	p = make([]interface{}, len(r.PostProcessorTypes))
 	// Generate the postProcessor for each postProcessor type.
 	for _, pType := range r.PostProcessorTypes {
-		// TODO calculate the length of the two longest Settings sections
-		// and make it that length. That will prevent a panic unless
-		// there are more than 50 options. Besides its stupid, on so many
-		// levels, to hard code this...which makes me...d'oh!
-		tmpVar = make([]string, 50)
-		tmpS = make(map[string]interface{})
+		tmpS := make(map[string]interface{})
 		typ := PostProcessorFromString(pType)
 		switch typ {
 		case Compress:
-			tmpS, tmpVar, err = r.createCompress()
+			tmpS, err = r.createCompress()
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 		case DockerImport:
-			tmpS, tmpVar, err = r.createDockerImport()
+			tmpS, err = r.createDockerImport()
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 		case DockerPush:
-			tmpS, tmpVar, err = r.createDockerPush()
+			tmpS, err = r.createDockerPush()
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 		case DockerSave:
-			tmpS, tmpVar, err = r.createDockerSave()
+			tmpS, err = r.createDockerSave()
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 		case DockerTag:
-			tmpS, tmpVar, err = r.createDockerTag()
+			tmpS, err = r.createDockerTag()
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 		case Vagrant:
-			tmpS, tmpVar, err = r.createVagrant()
+			tmpS, err = r.createVagrant()
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 		case VagrantCloud:
 			// Create the settings
-			tmpS, tmpVar, err = r.createVagrantCloud()
+			tmpS, err = r.createVagrantCloud()
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 		case VSphere:
-			tmpS, tmpVar, err = r.createVSphere()
+			tmpS, err = r.createVSphere()
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 		default:
 			err = fmt.Errorf("%s is not supported", pType)
-			return nil, nil, err
+			return nil, err
 		}
 		p[ndx] = tmpS
 		ndx++
-		vrbls = append(vrbls, tmpVar...)
 	}
-	return p, vars, nil
+	return p, nil
 }
 
 // createCompress() creates a map of settings for Packer's compress post-processor.
@@ -218,11 +210,11 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, vars map[string]i
 //   output  string
 // Optional configuration options:
 //   none
-func (r *rawTemplate) createCompress() (settings map[string]interface{}, vars []string, err error) {
+func (r *rawTemplate) createCompress() (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[Compress.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", Compress.String())
-		return nil, nil, err
+		return nil, err
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = Compress.String()
@@ -242,9 +234,9 @@ func (r *rawTemplate) createCompress() (settings map[string]interface{}, vars []
 	}
 	if !hasOutput {
 		err := fmt.Errorf("\"output\" setting is required for compress, not found")
-		return nil, nil, err
+		return nil, err
 	}
-	return settings, vars, nil
+	return settings, nil
 }
 
 // createDockerImport() creates a map of settings for Packer's docker-import
@@ -256,11 +248,11 @@ func (r *rawTemplate) createCompress() (settings map[string]interface{}, vars []
 //   repository  string
 // Optional configuration options:
 //   tag         string
-func (r *rawTemplate) createDockerImport() (settings map[string]interface{}, vars []string, err error) {
+func (r *rawTemplate) createDockerImport() (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[DockerImport.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", DockerImport.String())
-		return nil, nil, err
+		return nil, err
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = DockerImport.String()
@@ -282,13 +274,13 @@ func (r *rawTemplate) createDockerImport() (settings map[string]interface{}, var
 	}
 	if !hasRepository {
 		err := fmt.Errorf("\"repository\" setting is required for docker-import, not found")
-		return nil, nil, err
+		return nil, err
 	}
-	return settings, vars, nil
+	return settings, nil
 }
 
 // createDockerPush() creates a map of settings for Packer's docker-push
-// post-processor.  Any values that aren't supported by the docker-push
+//post-processor.  Any values that aren't supported by the docker-push
 // post-processor are ignored. For more information refer to
 // https://packer.io/docs/post-processors/docker-push.html.
 //
@@ -300,11 +292,11 @@ func (r *rawTemplate) createDockerImport() (settings map[string]interface{}, var
 //   login_username  string
 //   login_password  string
 //   login_server    string
-func (r *rawTemplate) createDockerPush() (settings map[string]interface{}, vars []string, err error) {
+func (r *rawTemplate) createDockerPush() (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[DockerPush.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", DockerPush.String())
-		return nil, nil, err
+		return nil, err
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = DockerPush.String()
@@ -322,7 +314,7 @@ func (r *rawTemplate) createDockerPush() (settings map[string]interface{}, vars 
 			settings[k], _ = strconv.ParseBool(v)
 		}
 	}
-	return settings, vars, nil
+	return settings, nil
 }
 
 // createDockerSave() creates a map of settings for Packer's docker-save
@@ -334,11 +326,11 @@ func (r *rawTemplate) createDockerPush() (settings map[string]interface{}, vars 
 //   path  // string
 // Optional configuration options:
 //   none
-func (r *rawTemplate) createDockerSave() (settings map[string]interface{}, vars []string, err error) {
+func (r *rawTemplate) createDockerSave() (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[DockerSave.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", DockerSave.String())
-		return nil, nil, err
+		return nil, err
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = DockerSave.String()
@@ -358,9 +350,9 @@ func (r *rawTemplate) createDockerSave() (settings map[string]interface{}, vars 
 	}
 	if !hasPath {
 		err := fmt.Errorf("\"path\" setting is required for docker-save, not found")
-		return nil, nil, err
+		return nil, err
 	}
-	return settings, vars, nil
+	return settings, nil
 }
 
 // createDockerTag() creates a map of settings for Packer's docker-tag
@@ -372,11 +364,11 @@ func (r *rawTemplate) createDockerSave() (settings map[string]interface{}, vars 
 //   repository  string
 // Optional configuration options:
 //   tag         string
-func (r *rawTemplate) createDockerTag() (settings map[string]interface{}, vars []string, err error) {
+func (r *rawTemplate) createDockerTag() (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[DockerTag.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", DockerTag.String())
-		return nil, nil, err
+		return nil, err
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = DockerTag.String()
@@ -398,9 +390,9 @@ func (r *rawTemplate) createDockerTag() (settings map[string]interface{}, vars [
 	}
 	if !hasRepository {
 		err := fmt.Errorf("\"repository\" setting is required for docker-tag, not found")
-		return nil, nil, err
+		return nil, err
 	}
-	return settings, vars, nil
+	return settings, nil
 }
 
 // createVagrant() creates a map of settings for Packer's Vagrant post-processor.
@@ -415,11 +407,11 @@ func (r *rawTemplate) createDockerTag() (settings map[string]interface{}, vars [
 //   vagrantfile_template  string
 // Provider-Specific Overrides:
 //   override	              array of strings
-func (r *rawTemplate) createVagrant() (settings map[string]interface{}, vars []string, err error) {
+func (r *rawTemplate) createVagrant() (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[Vagrant.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", Vagrant.String())
-		return nil, nil, err
+		return nil, err
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = Vagrant.String()
@@ -439,7 +431,7 @@ func (r *rawTemplate) createVagrant() (settings map[string]interface{}, vars []s
 			i, err := strconv.Atoi(v)
 			if err != nil {
 				err = fmt.Errorf("Vagrant builder error while trying to set %q to %q: %s", k, v, err)
-				return nil, nil, err
+				return nil, err
 			}
 			settings[k] = i
 		}
@@ -454,7 +446,7 @@ func (r *rawTemplate) createVagrant() (settings map[string]interface{}, vars []s
 				src, err := r.findComponentSource(Vagrant.String(), v)
 				if err != nil {
 					err = fmt.Errorf("%s: attempt to locate source file for %q: %s", Vagrant.String(), v, err)
-					return nil, nil, err
+					return nil, err
 				}
 				array[i] = v
 				r.files[filepath.Join(r.OutDir, Vagrant.String(), v)] = src
@@ -467,7 +459,7 @@ func (r *rawTemplate) createVagrant() (settings map[string]interface{}, vars []s
 			}
 		}
 	}
-	return settings, vars, nil
+	return settings, nil
 }
 
 // createVagrantCloud() creates a map of settings for Packer's Vagrant-Cloud
@@ -484,11 +476,11 @@ func (r *rawTemplate) createVagrant() (settings map[string]interface{}, vars []s
 //   vagrant_cloud_url    string
 //   version_description  string
 //   box_download_url     string
-func (r *rawTemplate) createVagrantCloud() (settings map[string]interface{}, vars []string, err error) {
+func (r *rawTemplate) createVagrantCloud() (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[VagrantCloud.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", VagrantCloud.String())
-		return nil, nil, err
+		return nil, err
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = VagrantCloud.String()
@@ -512,20 +504,20 @@ func (r *rawTemplate) createVagrantCloud() (settings map[string]interface{}, var
 	}
 	if !hasAccessToken {
 		err := fmt.Errorf("\"access_token\" setting is required for vagrant-cloud, not found")
-		return nil, nil, err
+		return nil, err
 	}
 	if !hasBoxTag {
 		err := fmt.Errorf("\"box_tag\" setting is required for vagrant-cloud, not found")
-		return nil, nil, err
+		return nil, err
 	}
 	if !hasVersion {
 		err := fmt.Errorf("\"version\" setting is required for vagrant-cloud, not found")
-		return nil, nil, err
+		return nil, err
 	}
-	return settings, nil, nil
+	return settings, nil
 }
 
-// createvSphere() creates a map of settings for Packer's vSphere post-processor.
+// createVSphere() creates a map of settings for Packer's vSphere post-processor.
 // Any values that aren't supported by the vSphere post-processor are ignored. For
 // more information refer to https://packer.io/docs/post-processors/vsphere.html.
 //
@@ -543,11 +535,11 @@ func (r *rawTemplate) createVagrantCloud() (settings map[string]interface{}, var
 //   insecure        boolean
 //   vm_folder       string
 //   vm_network      string
-func (r *rawTemplate) createVSphere() (settings map[string]interface{}, vars []string, err error) {
+func (r *rawTemplate) createVSphere() (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[VSphere.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", VSphere.String())
-		return nil, nil, err
+		return nil, err
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = VSphere.String()
@@ -589,33 +581,33 @@ func (r *rawTemplate) createVSphere() (settings map[string]interface{}, vars []s
 	}
 	if !hasCluster {
 		err := fmt.Errorf("\"cluster\" setting is required for vSphere, not found")
-		return nil, nil, err
+		return nil, err
 	}
 	if !hasDatacenter {
 		err := fmt.Errorf("\"datacenter\" setting is required for vSphere, not found")
-		return nil, nil, err
+		return nil, err
 	}
 	if !hasHost {
 		err := fmt.Errorf("\"host\" setting is required for vSphere, not found")
-		return nil, nil, err
+		return nil, err
 	}
 	if !hasPassword {
 		err := fmt.Errorf("\"password\" setting is required for vSphere, not found")
-		return nil, nil, err
+		return nil, err
 	}
 	if !hasResourcePool {
 		err := fmt.Errorf("\"resource_pool\" setting is required for vSphere, not found")
-		return nil, nil, err
+		return nil, err
 	}
 	if !hasUsername {
 		err := fmt.Errorf("\"username\" setting is required for vSphere, not found")
-		return nil, nil, err
+		return nil, err
 	}
 	if !hasVMName {
 		err := fmt.Errorf("\"vm_name\" setting is required for vSphere, not found")
-		return nil, nil, err
+		return nil, err
 	}
-	return settings, vars, nil
+	return settings, nil
 }
 
 // DeepCopyMapStringPPostProcessor makes a deep copy of each builder passed and
