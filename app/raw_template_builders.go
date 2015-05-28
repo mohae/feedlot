@@ -2,7 +2,6 @@ package ranchr
 
 import (
 	"fmt"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -847,8 +846,8 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, er
 		settings["iso_url"] = isoURL
 	}
 
-	// make sure http_directory is set and add the preseed.cfg to files list
-	err = r.addPreseedCfg(settings)
+	// make sure http_directory is set and add to dir list
+	err = r.setHTTP(VirtualBoxISO.String(), settings)
 	if err != nil {
 		return nil, err
 	}
@@ -1077,8 +1076,8 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, er
 		return nil, err
 	}
 
-	// make sure http_directory is set and add the preseed.cfg to files list
-	err = r.addPreseedCfg(settings)
+	// make sure http_directory is set and add to dir list
+	err = r.setHTTP(VirtualBoxOVF.String(), settings)
 	if err != nil {
 		return nil, err
 	}
@@ -1264,8 +1263,8 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, err er
 		return nil, err
 	}
 
-	// make sure http_directory is set and add the preseed.cfg to files list
-	err = r.addPreseedCfg(settings)
+	// make sure http_directory is set and add to dir list
+	err = r.setHTTP(VMWareISO.String(), settings)
 	if err != nil {
 		return nil, err
 	}
@@ -1477,9 +1476,8 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, err er
 		err = fmt.Errorf("\"source_path\" is a required setting for vmware-vmx; not found")
 		return nil, err
 	}
-
-	// make sure http_directory is set and add the preseed.cfg to files list
-	err = r.addPreseedCfg(settings)
+	// make sure http_directory is set and add to dir list
+	err = r.setHTTP(VMWareVMX.String(), settings)
 	if err != nil {
 		return nil, err
 	}
@@ -1599,22 +1597,19 @@ func (r *rawTemplate) updateCommon(new *builder) {
 	return
 }
 
-// TODO this needs to be redone to handle preseed and ks. Also only certain
-// builders;
-// addPreseedCfg adds the preseedCfg file to the files map. If the http_dir is
-// not set, the default value of "http" will be used
-func (r *rawTemplate) addPreseedCfg(m map[string]interface{}) error {
+// setHTTP ensures that http setting is set and adds it to the dirs info so that its
+// contents can be copied. If it is not set, http is assumed.
+func (r *rawTemplate) setHTTP(component string, m map[string]interface{}) error {
 	v, ok := m["http_directory"]
 	if !ok {
 		v = "http"
-		m["http_directory"] = v
 	}
-	dst := filepath.Join(v.(string), "preseed.cfg")
-	src, err := r.findSource(dst)
+	src, err := r.findComponentSource(component, v.(string))
 	if err != nil {
-		return err
+		return fmt.Errorf("setHTTP error for %s: %s", component, err)
 	}
-	r.files[filepath.Join(r.OutDir, dst)] = src
+	r.dirs[r.buildOutPath(component, v.(string))] = src
+	m["http_directory"] = r.buildTemplateResourcePath(component, v.(string))
 	return nil
 }
 

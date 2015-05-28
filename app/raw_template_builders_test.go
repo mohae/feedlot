@@ -6,6 +6,8 @@ import (
 )
 
 var testUbuntu = &rawTemplate{
+	files: make(map[string]string),
+	dirs:  make(map[string]string),
 	IODirInf: IODirInf{
 		OutDir: "../test_files/ubuntu/out/ubuntu",
 		SrcDir: "../test_files/src/ubuntu",
@@ -106,6 +108,8 @@ var testUbuntu = &rawTemplate{
 }
 
 var testCentOS = &rawTemplate{
+	files: make(map[string]string),
+	dirs:  make(map[string]string),
 	IODirInf: IODirInf{
 		OutDir: "../test_files/out/centos",
 		SrcDir: "../test_files/src/centos",
@@ -237,10 +241,8 @@ var testCentOS = &rawTemplate{
 }
 
 var testAllBuilders = &rawTemplate{
-	varVals: make(map[string]string),
-	vars:    make(map[string]string),
-	files:   make(map[string]string),
-	dirs:    make(map[string]string),
+	files: make(map[string]string),
+	dirs:  make(map[string]string),
 	IODirInf: IODirInf{
 		IncludeComponentString: true,
 		OutDir:                 "../test_files/out",
@@ -622,6 +624,8 @@ var testAllBuilders = &rawTemplate{
 }
 
 var testDigtialOceanAPIV1 = &rawTemplate{
+	files: make(map[string]string),
+	dirs:  make(map[string]string),
 	IODirInf: IODirInf{
 		OutDir: "../test_files/ubuntu/out/ubuntu",
 		SrcDir: "../test_files/src/ubuntu",
@@ -668,6 +672,8 @@ var testDigtialOceanAPIV1 = &rawTemplate{
 }
 
 var testDigtialOceanNoAPI = &rawTemplate{
+	files: make(map[string]string),
+	dirs:  make(map[string]string),
 	IODirInf: IODirInf{
 		OutDir: "../test_files/ubuntu/out/ubuntu",
 		SrcDir: "../test_files/src/ubuntu",
@@ -711,10 +717,8 @@ var testDigtialOceanNoAPI = &rawTemplate{
 	},
 }
 var testDockerRunComandFile = &rawTemplate{
-	varVals: make(map[string]string),
-	vars:    make(map[string]string),
-	files:   make(map[string]string),
-	dirs:    make(map[string]string),
+	files: make(map[string]string),
+	dirs:  make(map[string]string),
 	IODirInf: IODirInf{
 		OutDir: "../test_files/out",
 		SrcDir: "../test_files/src",
@@ -761,10 +765,8 @@ var testDockerRunComandFile = &rawTemplate{
 // This should still result in only 1 command array, using the array value and not the
 // file
 var testDockerRunComand = &rawTemplate{
-	varVals: make(map[string]string),
-	vars:    make(map[string]string),
-	files:   make(map[string]string),
-	dirs:    make(map[string]string),
+	files: make(map[string]string),
+	dirs:  make(map[string]string),
 	IODirInf: IODirInf{
 		OutDir: "../test_files/out",
 		SrcDir: "../test_files/src",
@@ -1433,7 +1435,7 @@ func TestCreateBuilderVirtualboxOVF(t *testing.T) {
 		"guest_additions_sha256": "89dac78769b26f8facf98ce85020a605b7601fec1946b0597e22ced5498b3597",
 		"guest_additions_url":    "file://guest-additions",
 		"headless":               true,
-		"http_directory":         "http",
+		"http_directory":         "virtualbox-ovf/http",
 		"http_port_max":          9000,
 		"http_port_min":          8000,
 		"import_opts":            "keepallmacs",
@@ -1502,7 +1504,7 @@ func TestCreateBuilderVMWareISO(t *testing.T) {
 		"fusion_app_path":        "/Applications/VMware Fusion.app",
 		"guest_os_type":          "Ubuntu_64",
 		"headless":               true,
-		"http_directory":         "http",
+		"http_directory":         "vmware-iso/http",
 		"http_port_max":          9000,
 		"http_port_min":          8000,
 		"iso_checksum":           "ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
@@ -1565,7 +1567,7 @@ func TestCreateBuilderVMWareVMX(t *testing.T) {
 		},
 		"fusion_app_path":      "/Applications/VMware Fusion.app",
 		"headless":             true,
-		"http_directory":       "http",
+		"http_directory":       "vmware-vmx/http",
 		"http_port_max":        9000,
 		"http_port_min":        8000,
 		"output_directory":     "out/dir",
