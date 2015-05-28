@@ -124,16 +124,10 @@ func (p *provisioner) settingsToMap(Type string, r *rawTemplate) map[string]inte
 	for _, s := range p.Settings {
 		k, v = parseVar(s)
 		switch k {
-		// If its not set to 'true' then false. This is a case insensitive
-		// comparison.
 		case "binary":
-			if strings.ToLower(fmt.Sprint(v)) == "true" {
-				v = true
-			} else {
-				v = false
-			}
+			v, _ = strconv.ParseBool(v.(string))
 		default:
-			v = r.replaceVariables(fmt.Sprint(v))
+			v = r.replaceVariables(v.(string))
 		}
 		m[k] = v
 	}
