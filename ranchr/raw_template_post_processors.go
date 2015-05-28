@@ -128,17 +128,10 @@ func (p *postProcessor) settingsToMap(Type string, r *rawTemplate) map[string]in
 	for _, s := range p.Settings {
 		k, v = parseVar(s)
 		switch k {
-		// If its not set to 'true' then false. This is a case insensitive
-		// comparison.
-		// TODO why am I using fmt.Sprint(v) here?
 		case "keep_input_artifact":
-			if strings.ToLower(fmt.Sprint(v)) == "true" {
-				v = true
-			} else {
-				v = false
-			}
+			v, _ = strconv.ParseBool(v.(string))
 		default:
-			v = r.replaceVariables(fmt.Sprint(v))
+			v = r.replaceVariables(v.(string))
 		}
 		m[k] = v
 	}
