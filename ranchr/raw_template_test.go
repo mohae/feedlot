@@ -761,10 +761,10 @@ func TestBuildOutPath(t *testing.T) {
 		path             string
 		expected         string
 	}{
-		{false, "", "", ""},
-		{true, "", "", ""},
-		{false, "vagrant", "", ""},
-		{true, "vagrant", "", "vagrant"},
+		{false, "", "", "out"},
+		{true, "", "", "out"},
+		{false, "vagrant", "", "out"},
+		{true, "vagrant", "", "out/vagrant"},
 		{false, "", "file.txt", "out/file.txt"},
 		{false, "", "path/to/file.txt", "out/path/to/file.txt"},
 		{false, "shell", "file.txt", "out/file.txt"},

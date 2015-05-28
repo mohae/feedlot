@@ -234,7 +234,7 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, err erro
 				return nil, err
 			}
 			r.files[filepath.Join(r.OutDir, Ansible.String(), v)] = src
-			settings[k] = v
+			settings[k] = r.buildTemplateResourcePath(Ansible.String(), v)
 			hasPlaybook = true
 		case "inventory_file":
 			// find the actual location and add it to the files map for copying
@@ -242,16 +242,16 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, err erro
 			if err != nil {
 				return nil, err
 			}
-			r.files[filepath.Join(r.OutDir, Ansible.String(), v)] = src
-			settings[k] = v
+			r.files[r.buildOutPath(Ansible.String(), v)] = src
+			settings[k] = r.buildTemplateResourcePath(Ansible.String(), v)
 		case "playbook_dir", "host_vars", "group_vars":
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(Ansible.String(), v)
 			if err != nil {
 				return nil, err
 			}
-			r.dirs[filepath.Join(r.OutDir, Ansible.String(), v)] = src
-			settings[k] = v
+			r.dirs[r.buildOutPath(Ansible.String(), v)] = src
+			settings[k] = r.buildTemplateResourcePath(Ansible.String(), v)
 		case "command", "staging_directory":
 			settings[k] = v
 		}
@@ -267,12 +267,12 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, err erro
 			array := deepcopy.InterfaceToSliceOfStrings(val)
 			for i, v := range array {
 				v = r.replaceVariables(v)
-				array[i] = v
 				s, err := r.findComponentSource(Ansible.String(), v)
 				if err != nil {
 					return nil, err
 				}
-				r.files[filepath.Join(r.OutDir, Ansible.String(), v)] = s
+				r.files[r.buildOutPath(Ansible.String(), v)] = s
+				array[i] = r.buildTemplateResourcePath(Ansible.String(), v)
 			}
 			settings[name] = array
 			continue
@@ -331,15 +331,13 @@ func (r *rawTemplate) createChefClient() (settings map[string]interface{}, err e
 		case "prevent_sudo", "skip_clean_client", "skip_clean_node", "skip_install":
 			settings[k], _ = strconv.ParseBool(v)
 		case "config_template", "validation_key_path":
-			// prepend the path with chef-client if there isn't a parent dir
-			v = setParentDir(ChefClient.String(), v)
 			// find the actual location of the source file and add it to the files map for copying
-			src, err := r.findSource(v)
+			src, err := r.findComponentSource(ChefClient.String(), v)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("createChefClient error finding source for %q: %s", v, err)
 			}
-			r.files[filepath.Join(r.OutDir, v)] = src
-			settings[k] = v
+			r.files[r.buildOutPath(ChefClient.String(), v)] = src
+			settings[k] = r.buildTemplateResourcePath(ChefClient.String(), v)
 		case "execute_command", "install_command":
 			// if the value ends with .command, find the referenced command file and use its
 			// contents as the command, otherwise just use the value
@@ -416,15 +414,15 @@ func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, err err
 			if err != nil {
 				return nil, err
 			}
-			r.files[filepath.Join(r.OutDir, v)] = src
-			settings[k] = v
+			r.files[r.buildOutPath(ChefSolo.String(), v)] = src
+			settings[k] = r.buildTemplateResourcePath(ChefSolo.String(), v)
 		case "data_bags_path", "environments_path", "roles_path":
 			src, err := r.findComponentSource(ChefSolo.String(), v)
 			if err != nil {
 				return nil, err
 			}
-			r.dirs[filepath.Join(r.OutDir, v)] = src
-			settings[k] = v
+			r.dirs[r.buildOutPath(ChefSolo.String(), v)] = src
+			settings[k] = r.buildTemplateResourcePath(ChefSolo.String(), v)
 		case "execute_command", "install_command":
 			// if the value ends with .command, find the referenced command file and use its
 			// contents as the command, otherwise just use the value
@@ -454,8 +452,8 @@ func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, err err
 				if err != nil {
 					return nil, err
 				}
-				array[i] = v
-				r.dirs[filepath.Join(r.OutDir, v)] = src
+				array[i] = r.buildTemplateResourcePath(ChefSolo.String(), v)
+				r.dirs[r.buildOutPath(ChefSolo.String(), v)] = src
 			}
 			settings[name] = array
 			continue
@@ -501,8 +499,8 @@ func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, err 
 				return nil, err
 			}
 			// add to files
-			r.files[filepath.Join(r.OutDir, v)] = src
-			settings[k] = v
+			r.files[r.buildOutPath(FileUploads.String(), v)] = src
+			settings[k] = r.buildTemplateResourcePath(FileUploads.String(), v)
 			hasSource = true
 		case "destination":
 			settings[k] = v
@@ -555,8 +553,8 @@ func (r *rawTemplate) createSalt() (settings map[string]interface{}, err error) 
 			if err != nil {
 				return nil, err
 			}
-			r.dirs[filepath.Join(r.OutDir, v)] = src
-			settings[k] = v
+			r.dirs[r.buildOutPath(Salt.String(), v)] = src
+			settings[k] = r.buildTemplateResourcePath(Salt.String(), v)
 			hasLocalStateTree = true
 		case "local_pillar_roots":
 			// find the actual location and add it to the files map for copying
@@ -564,16 +562,16 @@ func (r *rawTemplate) createSalt() (settings map[string]interface{}, err error) 
 			if err != nil {
 				return nil, err
 			}
-			r.dirs[filepath.Join(r.OutDir, v)] = src
-			settings[k] = v
+			r.dirs[r.buildOutPath(Salt.String(), v)] = src
+			settings[k] = r.buildTemplateResourcePath(Salt.String(), v)
 		case "minion_config":
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(Salt.String(), filepath.Join(v, "minion"))
 			if err != nil {
 				return nil, err
 			}
-			r.files[filepath.Join(r.OutDir, v, "minion")] = src
-			settings[k] = v
+			r.files[r.buildOutPath(Salt.String(), filepath.Join(v, "minion"))] = src
+			settings[k] = r.buildTemplateResourcePath(Salt.String(), v)
 		case "bootstrap_args", "temp_config_dir":
 			settings[k] = v
 		case "skip_bootstrap":
@@ -588,7 +586,7 @@ func (r *rawTemplate) createSalt() (settings map[string]interface{}, err error) 
 	return settings, nil
 }
 
-// createShellScriptl() creates a map of settings for Packer's shell script
+// createShellScript() creates a map of settings for Packer's shell script
 // provisioner. Any values that aren't supported by the shell provisioner are ignored.
 // For more information, refer to https://packer.io/docs/provisioners/shell.html
 //
@@ -651,7 +649,12 @@ func (r *rawTemplate) createShellScript() (settings map[string]interface{}, err 
 			for i, v := range scripts {
 				v = r.replaceVariables(v)
 				// prepend the path with shell if there isn't a parent dir
-				scripts[i] = v
+				s, err := r.findComponentSource(ShellScript.String(), v)
+				if err != nil {
+					return nil, err
+				}
+				r.files[r.buildOutPath(ShellScript.String(), v)] = s
+				scripts[i] = r.buildTemplateResourcePath(ShellScript.String(), v)
 			}
 			settings[name] = scripts
 			continue
@@ -664,15 +667,6 @@ func (r *rawTemplate) createShellScript() (settings map[string]interface{}, err 
 	if len(scripts) == 0 {
 		err := fmt.Errorf("\"scripts\" setting is required for shell, not found")
 		return nil, err
-	}
-	// go through the scripts, find their source, and add to the files map. error if
-	// the script source cannot be deteremined.
-	for _, script := range scripts {
-		s, err := r.findComponentSource(ShellScript.String(), script)
-		if err != nil {
-			return nil, err
-		}
-		r.files[filepath.Join(r.OutDir, script)] = s
 	}
 	return settings, nil
 }
