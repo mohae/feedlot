@@ -107,7 +107,7 @@ type appConfig struct {
 	LogLevelFile    string `toml:"log_level_file"`
 	LogLevelStdout  string `toml:"log_level_stdout"`
 	ParamDelimStart string `toml:"param_delim_start"`
-	SupportedFile   string `toml:"Supported_file"`
+	SupportedFile   string `toml:"supported_file"`
 }
 
 // ArgsFilter has all the valid commandline flags for the build-subcommand.
