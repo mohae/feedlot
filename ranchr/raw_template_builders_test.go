@@ -242,8 +242,9 @@ var testAllBuilders = &rawTemplate{
 	files:   make(map[string]string),
 	dirs:    make(map[string]string),
 	IODirInf: IODirInf{
-		OutDir: "../test_files/out",
-		SrcDir: "../test_files/src",
+		IncludeComponentString: true,
+		OutDir:                 "../test_files/out",
+		SrcDir:                 "../test_files/src",
 	},
 	PackerInf: PackerInf{
 		MinPackerVersion: "",
@@ -468,7 +469,7 @@ var testAllBuilders = &rawTemplate{
 						"iso_checksum=ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
 						"output_directory=out/dir",
 						"shutdown_timeout=5m",
-						"source_path=source/path",
+						"source_path=source.ova",
 						"ssh_host_port_min=22",
 						"ssh_host_port_max=40",
 						"ssh_key_path=key/path",
@@ -561,7 +562,7 @@ var testAllBuilders = &rawTemplate{
 						"output_directory=out/dir",
 						"shutdown_timeout=5m",
 						"skip_compaction=false",
-						"source_path=source/path/file.vmx",
+						"source_path=source.vmx",
 						"ssh_key_path=key/path",
 						"ssh_port=22",
 						"ssh_skip_request_pty=false",
@@ -1139,13 +1140,13 @@ func TestAmazonEBSBuilder(t *testing.T) {
 		"spot_price_auto_product": "Linux/Unix",
 		"ssh_port":                22,
 		"ssh_username":            "ssh_user",
-		"ssh_private_key_file":    "../test_files/src/myKey",
+		"ssh_private_key_file":    "myKey",
 		"ssh_timeout":             "5m",
 		"temporary_key_pair_name": "TMP_KEYPAIR",
 		"token":                   "AWS_SECURITY_TOKEN",
 		"type":                    "amazon-ebs",
 		"user_data":               "SOME_USER_DATA",
-		"user_data_file":          "../test_files/src/amazon-ebs/amazon.userdata",
+		"user_data_file":          "amazon-ebs/amazon.userdata",
 		"vpc_id":                  "VPC_ID",
 	}
 	bldr, _, err := testAllBuilders.createAmazonEBS()
@@ -1284,7 +1285,7 @@ func TestDockerBuilder(t *testing.T) {
 
 func TestDockerGoogleCompute(t *testing.T) {
 	expected := map[string]interface{}{
-		"account_file":      "../test_files/src/googlecompute/account.json",
+		"account_file":      "googlecompute/account.json",
 		"disk_size":         20000,
 		"image_name":        "packer-{{timestamp}}",
 		"image_description": "test image",
@@ -1319,7 +1320,7 @@ func TestCreateBuilderNull(t *testing.T) {
 		"host":                 "nullhost.com",
 		"port":                 22,
 		"ssh_password":         "vagrant",
-		"ssh_private_key_file": "../test_files/src/myKey",
+		"ssh_private_key_file": "myKey",
 		"ssh_username":         "vagrant",
 		"type":                 "null",
 	}
@@ -1439,7 +1440,7 @@ func TestCreateBuilderVirtualboxOVF(t *testing.T) {
 		"output_directory":       "out/dir",
 		"shutdown_command":       "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
 		"shutdown_timeout":       "5m",
-		"source_path":            "source/path",
+		"source_path":            "virtualbox-ovf/source.ova",
 		"ssh_host_port_max":      40,
 		"ssh_host_port_min":      22,
 		"ssh_key_path":           "key/path",
@@ -1571,7 +1572,7 @@ func TestCreateBuilderVMWareVMX(t *testing.T) {
 		"shutdown_command":     "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
 		"shutdown_timeout":     "5m",
 		"skip_compaction":      false,
-		"source_path":          "source/path/file.vmx",
+		"source_path":          "vmware-vmx/source.vmx",
 		"ssh_key_path":         "key/path",
 		"ssh_password":         "vagrant",
 		"ssh_port":             22,

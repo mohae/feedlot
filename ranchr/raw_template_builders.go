@@ -275,8 +275,9 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, vars [
 			hasSSHUsername = true
 		case "ami_description", "availability_zone", "iam_instance_profile",
 			"security_group_id", "spot_price", "spot_price_auto_product",
-			"ssh_timeout", "subnet_id", "temporary_key_pair_name",
-			"token", "user_data", "vpc_id":
+			"ssh_private_key_file", "ssh_timeout", "subnet_id",
+			"temporary_key_pair_name", "token", "user_data",
+			"vpc_id":
 			settings[k] = v
 		case "ssh_port":
 			// only add if its an int
@@ -286,13 +287,13 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, vars [
 				return nil, nil, err
 			}
 			settings[k] = i
-		case "ssh_private_key_file", "user_data_file":
+		case "user_data_file":
 			src, err := r.findComponentSource(AmazonEBS.String(), v)
 			if err != nil {
 				return nil, nil, err
 			}
-			r.files[filepath.Join(r.OutDir, AmazonEBS.String(), v)] = src
-			settings[k] = src
+			r.files[r.buildOutPath(AmazonEBS.String(), v)] = src
+			settings[k] = r.buildTemplateResourcePath(AmazonEBS.String(), v)
 		case "associate_public_ip_address", "enhanced_networking", "ssh_private_ip":
 			settings[k], _ = strconv.ParseBool(v)
 		}
@@ -592,11 +593,12 @@ func (r *rawTemplate) createGoogleCompute() (settings map[string]interface{}, va
 			"machine_type", "network", "ssh_timeout", "ssh_username", "state_timeout":
 			settings[k] = v
 		case "account_file":
-			settings[k], err = r.findComponentSource(GoogleCompute.String(), v)
+			src, err := r.findComponentSource(GoogleCompute.String(), v)
 			if err != nil {
 				return nil, nil, err
 			}
-			r.files[filepath.Join(r.OutDir, GoogleCompute.String(), v)] = settings[k].(string)
+			r.files[r.buildOutPath(GoogleCompute.String(), v)] = src
+			settings[k] = r.buildTemplateResourcePath(GoogleCompute.String(), v)
 		case "disk_size", "ssh_port":
 			i, err := strconv.Atoi(v)
 			if err != nil {
@@ -665,7 +667,7 @@ func (r *rawTemplate) createNull() (settings map[string]interface{}, vars []stri
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
-		case "host", "ssh_password", "ssh_username":
+		case "host", "ssh_password", "ssh_private_key_file", "ssh_username":
 			settings[k] = v
 		case "port":
 			// only add if its an int
@@ -675,14 +677,6 @@ func (r *rawTemplate) createNull() (settings map[string]interface{}, vars []stri
 				return nil, nil, err
 			}
 			settings[k] = i
-		case "ssh_private_key_file":
-			// if it's here, cache the value, delay processing until arrays section
-			src, err := r.findComponentSource(Null.String(), v)
-			if err != nil {
-				return nil, nil, err
-			}
-			settings[k] = src
-			r.files[filepath.Join(r.OutDir, Null.String(), v)] = src
 		}
 	}
 	return settings, nil, nil
@@ -1025,7 +1019,12 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, va
 				bootCmdProcessed = true
 			}
 		case "source_path":
-			settings[k] = v
+			src, err := r.findComponentSource(VirtualBoxOVF.String(), v)
+			if err != nil {
+				return nil, nil, err
+			}
+			settings[k] = r.buildTemplateResourcePath(VirtualBoxOVF.String(), v)
+			r.files[r.buildOutPath(VirtualBoxOVF.String(), v)] = src
 			hasSourcePath = true
 		case "ssh_username":
 			settings[k] = v
@@ -1440,7 +1439,12 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, vars [
 				settings[k] = v // the value is the command
 			}
 		case "source_path":
-			settings[k] = v
+			src, err := r.findComponentSource(VMWareVMX.String(), v)
+			if err != nil {
+				return nil, nil, err
+			}
+			r.files[r.buildOutPath(VMWareVMX.String(), v)] = src
+			settings[k] = r.buildTemplateResourcePath(VMWareVMX.String(), v)
 			hasSourcePath = true
 		case "ssh_username":
 			settings[k] = v
