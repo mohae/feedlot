@@ -90,7 +90,7 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 		return p, err
 	}
 	// Provisioners
-	p.Provisioners, _, err = r.createProvisioners()
+	p.Provisioners, err = r.createProvisioners()
 	if err != nil {
 		jww.ERROR.Println(err)
 		return p, err

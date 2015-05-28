@@ -539,7 +539,7 @@ func TestRawTemplateUpdateProvisioners(t *testing.T) {
 }
 
 func TestCreateProvisioners(t *testing.T) {
-	_, _, err := testRawTemplateBuilderOnly.createProvisioners()
+	_, err := testRawTemplateBuilderOnly.createProvisioners()
 	if err == nil {
 		t.Error("Expected error \"unable to create provisioners: none specified\", got nil")
 	} else {
@@ -548,7 +548,7 @@ func TestCreateProvisioners(t *testing.T) {
 		}
 	}
 
-	_, _, err = testRawTemplateWOSection.createProvisioners()
+	_, err = testRawTemplateWOSection.createProvisioners()
 	if err == nil {
 		t.Errorf("Expected error \"no configuration found for %q\", got nil", Ansible.String())
 	} else {
@@ -558,7 +558,7 @@ func TestCreateProvisioners(t *testing.T) {
 	}
 
 	testRawTemplateWOSection.build.ProvisionerTypes[0] = FileUploads.String()
-	_, _, err = testRawTemplateWOSection.createProvisioners()
+	_, err = testRawTemplateWOSection.createProvisioners()
 	if err == nil {
 		t.Errorf("Expected error \"no configuration found for %q\", got nil", FileUploads.String())
 	} else {
@@ -568,7 +568,7 @@ func TestCreateProvisioners(t *testing.T) {
 	}
 
 	testRawTemplateWOSection.build.ProvisionerTypes[0] = Salt.String()
-	_, _, err = testRawTemplateWOSection.createProvisioners()
+	_, err = testRawTemplateWOSection.createProvisioners()
 	if err == nil {
 		t.Errorf("Expected error \"no configuration found for %q\", got nil", Salt.String())
 	} else {
@@ -578,7 +578,7 @@ func TestCreateProvisioners(t *testing.T) {
 	}
 
 	testRawTemplateWOSection.build.ProvisionerTypes[0] = ShellScript.String()
-	_, _, err = testRawTemplateWOSection.createProvisioners()
+	_, err = testRawTemplateWOSection.createProvisioners()
 	if err == nil {
 		t.Errorf("Expected error \"no configuration found for %q\", got nil", ShellScript.String())
 	} else {
@@ -627,7 +627,7 @@ func TestAnsibleProvisioner(t *testing.T) {
 		"staging_directory": "staging/directory",
 		"type":              "ansible-local",
 	}
-	settings, _, err := testRawTemplateProvisionersAll.createAnsible()
+	settings, err := testRawTemplateProvisionersAll.createAnsible()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
@@ -658,7 +658,7 @@ func TestChefClientProvisioner(t *testing.T) {
 		"validation_client_name": "some_value",
 		"validation_key_path":    "chef-client/chef-key",
 	}
-	settings, _, err := testRawTemplateProvisionersAll.createChefClient()
+	settings, err := testRawTemplateProvisionersAll.createChefClient()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
@@ -694,7 +694,7 @@ func TestChefSoloProvisioner(t *testing.T) {
 		"staging_directory": "/tmp/chef/",
 		"type":              "chef-solo",
 	}
-	settings, _, err := testRawTemplateProvisionersAll.createChefSolo()
+	settings, err := testRawTemplateProvisionersAll.createChefSolo()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
@@ -714,7 +714,7 @@ func TestSaltProvisioner(t *testing.T) {
 		"temp_config_dir":    "/tmp",
 		"type":               "salt-masterless",
 	}
-	settings, _, err := testRawTemplateProvisionersAll.createSalt()
+	settings, err := testRawTemplateProvisionersAll.createSalt()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
@@ -745,7 +745,7 @@ func TestShellProvisioner(t *testing.T) {
 		"start_retry_timeout": "5m",
 		"type":                "shell",
 	}
-	settings, _, err := testRawTemplateProvisionersAll.createShellScript()
+	settings, err := testRawTemplateProvisionersAll.createShellScript()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
@@ -761,7 +761,7 @@ func TestFileUploadsProvisioner(t *testing.T) {
 		"source":      "file/app.tar.gz",
 		"type":        "file",
 	}
-	settings, _, err := testRawTemplateProvisionersAll.createFileUploads()
+	settings, err := testRawTemplateProvisionersAll.createFileUploads()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {

@@ -141,12 +141,11 @@ func (p *provisioner) settingsToMap(Type string, r *rawTemplate) map[string]inte
 }
 
 // createProvisioner creates the provisioners for a build.
-func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]interface{}, err error) {
+func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 	if r.ProvisionerTypes == nil || len(r.ProvisionerTypes) <= 0 {
 		err = fmt.Errorf("unable to create provisioners: none specified")
-		return nil, nil, err
+		return nil, err
 	}
-	var vrbls, tmpVar []string
 	var tmpS map[string]interface{}
 	var ndx int
 	p = make([]interface{}, len(r.ProvisionerTypes))
@@ -156,34 +155,32 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 		// and make it that length. That will prevent a panic unless
 		// there are more than 50 options. Besides its stupid, on so many
 		// levels, to hard code this...which makes me...d'oh!
-		tmpVar = make([]string, 50)
-		tmpS = make(map[string]interface{})
 		typ := ProvisionerFromString(pType)
 		switch typ {
 		case Ansible:
-			tmpS, tmpVar, err = r.createAnsible()
+			tmpS, err = r.createAnsible()
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 		case FileUploads:
-			tmpS, tmpVar, err = r.createFileUploads()
+			tmpS, err = r.createFileUploads()
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 		case Salt:
-			tmpS, tmpVar, err = r.createSalt()
+			tmpS, err = r.createSalt()
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 		case ShellScript:
-			tmpS, tmpVar, err = r.createShellScript()
+			tmpS, err = r.createShellScript()
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 		case ChefClient:
-			tmpS, tmpVar, err = r.createChefClient()
+			tmpS, err = r.createChefClient()
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 			/*
 				case ChefSolo:
@@ -195,13 +192,12 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 			*/
 		default:
 			err = fmt.Errorf("%s provisioner is not supported", pType)
-			return nil, nil, err
+			return nil, err
 		}
 		p[ndx] = tmpS
 		ndx++
-		vrbls = append(vrbls, tmpVar...)
 	}
-	return p, vars, nil
+	return p, nil
 }
 
 // createAnsible() creates a map of settings for Packer's ansible-local provisioner.
@@ -220,11 +216,11 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, vars map[string]int
 //   playbook_paths     array of strings
 //   role_paths         array of strings
 //   staging_directory  string
-func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []string, err error) {
+func (r *rawTemplate) createAnsible() (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[Ansible.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", Ansible.String())
-		return nil, nil, err
+		return nil, err
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = Ansible.String()
@@ -241,7 +237,7 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []s
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(Ansible.String(), v)
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 			r.files[filepath.Join(r.OutDir, Ansible.String(), v)] = src
 			settings[k] = v
@@ -250,7 +246,7 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []s
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(Ansible.String(), v)
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 			r.files[filepath.Join(r.OutDir, Ansible.String(), v)] = src
 			settings[k] = v
@@ -258,7 +254,7 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []s
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(Ansible.String(), v)
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 			r.dirs[filepath.Join(r.OutDir, Ansible.String(), v)] = src
 			settings[k] = v
@@ -268,7 +264,7 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []s
 	}
 	if !hasPlaybook {
 		err := fmt.Errorf("\"playbook_file\" setting is required for %s, not found", Ansible.String())
-		return nil, nil, err
+		return nil, err
 	}
 	// Process the Arrays.
 	for name, val := range r.Provisioners[Ansible.String()].Arrays {
@@ -280,7 +276,7 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []s
 				array[i] = v
 				s, err := r.findComponentSource(Ansible.String(), v)
 				if err != nil {
-					return nil, nil, err
+					return nil, err
 				}
 				r.files[filepath.Join(r.OutDir, Ansible.String(), v)] = s
 			}
@@ -296,7 +292,7 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []s
 			continue
 		}
 	}
-	return settings, vars, err
+	return settings, err
 }
 
 // createChefClient() creates a map of settings for Packer's chef-client provisioner.
@@ -322,11 +318,11 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, vars []s
 //   validation_key_path     string
 // Unsopported configuration options:
 //   json                    object
-func (r *rawTemplate) createChefClient() (settings map[string]interface{}, vars []string, err error) {
+func (r *rawTemplate) createChefClient() (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ChefClient.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", ChefClient.String())
-		return nil, nil, err
+		return nil, err
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = ChefClient.String()
@@ -346,7 +342,7 @@ func (r *rawTemplate) createChefClient() (settings map[string]interface{}, vars 
 			// find the actual location of the source file and add it to the files map for copying
 			src, err := r.findSource(v)
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 			r.files[filepath.Join(r.OutDir, v)] = src
 			settings[k] = v
@@ -356,11 +352,11 @@ func (r *rawTemplate) createChefClient() (settings map[string]interface{}, vars 
 			if strings.HasSuffix(v, ".command") {
 				commands, err := r.commandsFromFile(ChefClient.String(), v)
 				if err != nil {
-					return nil, nil, err
+					return nil, err
 				}
 				if len(commands) == 0 {
 					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", ChefClient.String(), k, v)
-					return nil, nil, err
+					return nil, err
 				}
 				settings[k] = commands[0]
 				continue
@@ -376,7 +372,7 @@ func (r *rawTemplate) createChefClient() (settings map[string]interface{}, vars 
 			continue
 		}
 	}
-	return settings, vars, nil
+	return settings, nil
 }
 
 // createChefSolo() creates a map of settings for Packer's chef-solo provisioner.
@@ -401,11 +397,11 @@ func (r *rawTemplate) createChefClient() (settings map[string]interface{}, vars 
 //   staging_directory               string
 // Unsopported configuration options:
 //   json                            object
-func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, vars []string, err error) {
+func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ChefSolo.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", ChefSolo.String())
-		return nil, nil, err
+		return nil, err
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = ChefSolo.String()
@@ -424,14 +420,14 @@ func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, vars []
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(ChefSolo.String(), v)
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 			r.files[filepath.Join(r.OutDir, v)] = src
 			settings[k] = v
 		case "data_bags_path", "environments_path", "roles_path":
 			src, err := r.findComponentSource(ChefSolo.String(), v)
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 			r.dirs[filepath.Join(r.OutDir, v)] = src
 			settings[k] = v
@@ -441,11 +437,11 @@ func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, vars []
 			if strings.HasSuffix(v, ".command") {
 				commands, err := r.commandsFromFile(ChefSolo.String(), v)
 				if err != nil {
-					return nil, nil, err
+					return nil, err
 				}
 				if len(commands) == 0 {
 					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", ChefSolo.String(), k, v)
-					return nil, nil, err
+					return nil, err
 				}
 				settings[k] = commands[0]
 				continue
@@ -462,7 +458,7 @@ func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, vars []
 				// find the actual location and add it to the files map for copying
 				src, err := r.findComponentSource(ChefSolo.String(), v)
 				if err != nil {
-					return nil, nil, err
+					return nil, err
 				}
 				array[i] = v
 				r.dirs[filepath.Join(r.OutDir, v)] = src
@@ -476,7 +472,7 @@ func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, vars []
 			continue
 		}
 	}
-	return settings, vars, nil
+	return settings, nil
 }
 
 // createFileUploads() creates a map of settings for Packer's file uploads
@@ -487,11 +483,11 @@ func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, vars []
 // Required configuration options:
 //   destination  string
 //   source       string
-func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, vars []string, err error) {
+func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[FileUploads.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", FileUploads.String())
-		return nil, nil, err
+		return nil, err
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = FileUploads.String()
@@ -508,7 +504,7 @@ func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, vars
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(FileUploads.String(), v)
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 			// add to files
 			r.files[filepath.Join(r.OutDir, v)] = src
@@ -521,13 +517,13 @@ func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, vars
 	}
 	if !hasSource {
 		err := fmt.Errorf("\"source\" setting is required for %s, not found", FileUploads.String())
-		return nil, nil, err
+		return nil, err
 	}
 	if !hasDestination {
 		err := fmt.Errorf("\"destination\" setting is required for %s, not found", FileUploads.String())
-		return nil, nil, err
+		return nil, err
 	}
-	return settings, vars, nil
+	return settings, nil
 }
 
 // createSalt() creates a map of settings for Packer's salt provisioner. Any values
@@ -543,11 +539,11 @@ func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, vars
 //   minion_config        string
 //   skip_bootstrap       boolean
 //   temp_config_dir      string
-func (r *rawTemplate) createSalt() (settings map[string]interface{}, vars []string, err error) {
+func (r *rawTemplate) createSalt() (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[Salt.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", Salt.String())
-		return nil, nil, err
+		return nil, err
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = Salt.String()
@@ -563,7 +559,7 @@ func (r *rawTemplate) createSalt() (settings map[string]interface{}, vars []stri
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(Salt.String(), v)
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 			r.dirs[filepath.Join(r.OutDir, v)] = src
 			settings[k] = v
@@ -572,7 +568,7 @@ func (r *rawTemplate) createSalt() (settings map[string]interface{}, vars []stri
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(Salt.String(), v)
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 			r.dirs[filepath.Join(r.OutDir, v)] = src
 			settings[k] = v
@@ -580,7 +576,7 @@ func (r *rawTemplate) createSalt() (settings map[string]interface{}, vars []stri
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(Salt.String(), filepath.Join(v, "minion"))
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 			r.files[filepath.Join(r.OutDir, v, "minion")] = src
 			settings[k] = v
@@ -592,10 +588,10 @@ func (r *rawTemplate) createSalt() (settings map[string]interface{}, vars []stri
 	}
 	if !hasLocalStateTree {
 		err := fmt.Errorf("\"local_state_tree\" setting is required for salt, not found")
-		return nil, nil, err
+		return nil, err
 	}
 	// salt does not have any arrays to support
-	return settings, vars, nil
+	return settings, nil
 }
 
 // createShellScriptl() creates a map of settings for Packer's shell script
@@ -614,11 +610,11 @@ func (r *rawTemplate) createSalt() (settings map[string]interface{}, vars []stri
 //   inline_shebang       string
 //   remote_path          string
 //   start_retry_timeout  string
-func (r *rawTemplate) createShellScript() (settings map[string]interface{}, vars []string, err error) {
+func (r *rawTemplate) createShellScript() (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ShellScript.String()]
 	if !ok {
 		err = fmt.Errorf("no configuration found for %q", ShellScript.String())
-		return nil, nil, err
+		return nil, err
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = ShellScript.String()
@@ -636,11 +632,11 @@ func (r *rawTemplate) createShellScript() (settings map[string]interface{}, vars
 				var commands []string
 				commands, err = r.commandsFromFile(ShellScript.String(), v)
 				if err != nil {
-					return nil, nil, err
+					return nil, err
 				}
 				if len(commands) == 0 {
 					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", ShellScript.String(), k, v)
-					return nil, nil, err
+					return nil, err
 				}
 				settings[k] = commands[0] // for execute_command, only the first element is used
 				continue
@@ -673,18 +669,18 @@ func (r *rawTemplate) createShellScript() (settings map[string]interface{}, vars
 	}
 	if len(scripts) == 0 {
 		err := fmt.Errorf("\"scripts\" setting is required for shell, not found")
-		return nil, nil, err
+		return nil, err
 	}
 	// go through the scripts, find their source, and add to the files map. error if
 	// the script source cannot be deteremined.
 	for _, script := range scripts {
 		s, err := r.findComponentSource(ShellScript.String(), script)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		r.files[filepath.Join(r.OutDir, script)] = s
 	}
-	return settings, vars, nil
+	return settings, nil
 }
 
 // DeepCopyMapStringPProvisioner makes a deep copy of each builder passed and
