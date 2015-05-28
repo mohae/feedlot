@@ -155,7 +155,9 @@ func (d *distroDefaults) GetTemplate(n string) (*rawTemplate, error) {
 	Copy.Arch = t.Arch
 	Copy.Image = t.Image
 	Copy.Release = t.Release
-	Copy.varVals = t.varVals
+	for k, v := range t.varVals {
+		Copy.varVals[k] = v
+	}
 	Copy.build = t.build.DeepCopy()
 	return Copy, nil
 }
