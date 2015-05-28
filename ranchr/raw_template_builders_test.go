@@ -945,7 +945,7 @@ var vbB = &builder{
 }
 
 func TestCreateBuilders(t *testing.T) {
-	_, _, err := testRawTemplateBuilderOnly.createBuilders()
+	_, err := testRawTemplateBuilderOnly.createBuilders()
 	if err == nil {
 		t.Error("Expected error \"unable to create builders: none specified\", got nil")
 	} else {
@@ -954,7 +954,7 @@ func TestCreateBuilders(t *testing.T) {
 		}
 	}
 
-	_, _, err = testRawTemplateWOSection.createBuilders()
+	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
 		t.Error("Expected error \"no configuration found for \"amazon-ebs\"\", got nil")
 	} else {
@@ -964,7 +964,7 @@ func TestCreateBuilders(t *testing.T) {
 	}
 
 	testRawTemplateWOSection.build.BuilderTypes[0] = "digitalocean"
-	_, _, err = testRawTemplateWOSection.createBuilders()
+	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
 		t.Error("Expected error \"no configuration found for \"digitalocean\"\", got nil")
 	} else {
@@ -974,7 +974,7 @@ func TestCreateBuilders(t *testing.T) {
 	}
 
 	testRawTemplateWOSection.build.BuilderTypes[0] = "docker"
-	_, _, err = testRawTemplateWOSection.createBuilders()
+	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
 		t.Error("Expected error \"no configuration found for \"docker\"\", got nil")
 	} else {
@@ -984,7 +984,7 @@ func TestCreateBuilders(t *testing.T) {
 	}
 
 	testRawTemplateWOSection.build.BuilderTypes[0] = "googlecompute"
-	_, _, err = testRawTemplateWOSection.createBuilders()
+	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
 		t.Error("Expected error \"no configuration found for \"googlecompute\"\", got nil")
 	} else {
@@ -994,7 +994,7 @@ func TestCreateBuilders(t *testing.T) {
 	}
 
 	testRawTemplateWOSection.build.BuilderTypes[0] = "virtualbox-iso"
-	_, _, err = testRawTemplateWOSection.createBuilders()
+	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
 		t.Error("Expected error \"no configuration found for \"virtualbox-iso\"\", got nil")
 	} else {
@@ -1004,7 +1004,7 @@ func TestCreateBuilders(t *testing.T) {
 	}
 
 	testRawTemplateWOSection.build.BuilderTypes[0] = "virtualbox-ovf"
-	_, _, err = testRawTemplateWOSection.createBuilders()
+	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
 		t.Error("Expected error \"no configuration found for \"virtualbox-ovf\"\", got nil")
 	} else {
@@ -1014,7 +1014,7 @@ func TestCreateBuilders(t *testing.T) {
 	}
 
 	testRawTemplateWOSection.build.BuilderTypes[0] = "vmware-iso"
-	_, _, err = testRawTemplateWOSection.createBuilders()
+	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
 		t.Error("Expected error \"no configuration found for \"vmware-iso\"\", got nil")
 	} else {
@@ -1024,7 +1024,7 @@ func TestCreateBuilders(t *testing.T) {
 	}
 
 	testRawTemplateWOSection.build.BuilderTypes[0] = "vmware-vmx"
-	_, _, err = testRawTemplateWOSection.createBuilders()
+	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
 		t.Error("Expected error \"no configuration found for \"vmware-vmx\"\", got nil")
 	} else {
@@ -1039,7 +1039,7 @@ func TestCreateBuilders(t *testing.T) {
 	var bldrs []interface{}
 	//first merge the variables so that create builders will work
 	r.mergeVariables()
-	bldrs, _, err = r.createBuilders()
+	bldrs, err = r.createBuilders()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	}
@@ -1055,7 +1055,7 @@ func TestCreateBuilders(t *testing.T) {
 	_ = bldrs
 
 	r.BuilderTypes[0] = "unsupported"
-	bldrs, _, err = r.createBuilders()
+	bldrs, err = r.createBuilders()
 	if err == nil {
 		t.Error("Expected an error, got nil")
 	} else {
@@ -1065,7 +1065,7 @@ func TestCreateBuilders(t *testing.T) {
 	}
 
 	r.BuilderTypes = nil
-	bldrs, _, err = r.createBuilders()
+	bldrs, err = r.createBuilders()
 	if err == nil {
 		t.Error("Expected an error, got nil")
 	} else {
@@ -1149,7 +1149,7 @@ func TestAmazonEBSBuilder(t *testing.T) {
 		"user_data_file":          "amazon-ebs/amazon.userdata",
 		"vpc_id":                  "VPC_ID",
 	}
-	bldr, _, err := testAllBuilders.createAmazonEBS()
+	bldr, err := testAllBuilders.createAmazonEBS()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -1191,7 +1191,7 @@ func TestDigitalOceanBuilder(t *testing.T) {
 		"state_timeout":      "6m",
 		"type":               "digitalocean",
 	}
-	bldr, _, err := testAllBuilders.createDigitalOcean()
+	bldr, err := testAllBuilders.createDigitalOcean()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -1199,7 +1199,7 @@ func TestDigitalOceanBuilder(t *testing.T) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedV2), MarshalJSONToString.Get(bldr))
 		}
 	}
-	bldr, _, err = testDigtialOceanAPIV1.createDigitalOcean()
+	bldr, err = testDigtialOceanAPIV1.createDigitalOcean()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -1207,7 +1207,7 @@ func TestDigitalOceanBuilder(t *testing.T) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedV1), MarshalJSONToString.Get(bldr))
 		}
 	}
-	_, _, err = testDigtialOceanNoAPI.createDigitalOcean()
+	_, err = testDigtialOceanNoAPI.createDigitalOcean()
 	if err == nil {
 		t.Errorf("Expected an error, got nil")
 	} else {
@@ -1257,7 +1257,7 @@ func TestDockerBuilder(t *testing.T) {
 		},
 		"type": "docker",
 	}
-	bldr, _, err := testAllBuilders.createDocker()
+	bldr, err := testAllBuilders.createDocker()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -1265,7 +1265,7 @@ func TestDockerBuilder(t *testing.T) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(bldr))
 		}
 	}
-	bldr, _, err = testDockerRunComandFile.createDocker()
+	bldr, err = testDockerRunComandFile.createDocker()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -1273,7 +1273,7 @@ func TestDockerBuilder(t *testing.T) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedCommandFile), MarshalJSONToString.Get(bldr))
 		}
 	}
-	bldr, _, err = testDockerRunComand.createDocker()
+	bldr, err = testDockerRunComand.createDocker()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -1305,7 +1305,7 @@ func TestDockerGoogleCompute(t *testing.T) {
 		"zone": "us-central1-a",
 	}
 
-	bldr, _, err := testAllBuilders.createGoogleCompute()
+	bldr, err := testAllBuilders.createGoogleCompute()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -1324,7 +1324,7 @@ func TestCreateBuilderNull(t *testing.T) {
 		"ssh_username":         "vagrant",
 		"type":                 "null",
 	}
-	bldr, _, err := testAllBuilders.createNull()
+	bldr, err := testAllBuilders.createNull()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -1402,7 +1402,7 @@ func TestCreateBuilderVirtualboxISO(t *testing.T) {
 		"vm_name":                 "test-vb-iso",
 	}
 
-	settings, _, err := testAllBuilders.createVirtualBoxISO()
+	settings, err := testAllBuilders.createVirtualBoxISO()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
@@ -1475,7 +1475,7 @@ func TestCreateBuilderVirtualboxOVF(t *testing.T) {
 		"vm_name":                 "test-vb-ovf",
 	}
 	testAllBuilders.files = make(map[string]string)
-	settings, _, err := testAllBuilders.createVirtualBoxOVF()
+	settings, err := testAllBuilders.createVirtualBoxOVF()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
@@ -1541,7 +1541,7 @@ func TestCreateBuilderVMWareISO(t *testing.T) {
 		"vnc_port_min":      5900,
 	}
 
-	settings, _, err := testAllBuilders.createVMWareISO()
+	settings, err := testAllBuilders.createVMWareISO()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
@@ -1593,7 +1593,7 @@ func TestCreateBuilderVMWareVMX(t *testing.T) {
 		"vnc_port_min": 5900,
 	}
 
-	settings, _, err := testAllBuilders.createVMWareVMX()
+	settings, err := testAllBuilders.createVMWareVMX()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {

@@ -78,7 +78,7 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 	p.MinPackerVersion = r.MinPackerVersion
 	p.Description = r.Description
 	// Builders
-	p.Builders, _, err = r.createBuilders()
+	p.Builders, err = r.createBuilders()
 	if err != nil {
 		jww.ERROR.Println(err)
 		return p, err
