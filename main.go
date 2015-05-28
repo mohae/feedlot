@@ -11,7 +11,7 @@ import (
 	"runtime"
 
 	"github.com/mohae/cli"
-	"github.com/mohae/rancher/ranchr"
+	"github.com/mohae/rancher/app"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -26,7 +26,7 @@ func main() {
 func realMain() int {
 	// runMain parses the Flag for glog, sets up CLI stuff for the supported
 	// subcommands and runs Rancher.
-	err := ranchr.SetEnv()
+	err := app.SetEnv()
 	if err != nil {
 		fmt.Printf("An error while processing Rancher Environment variables: %s\n", err)
 		return -1

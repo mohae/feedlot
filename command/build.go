@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/mitchellh/cli"
-	"github.com/mohae/rancher/ranchr"
+	"github.com/mohae/rancher/app"
 )
 
 // BuildCommand is a Command implementation that generates Packer templates
