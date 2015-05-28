@@ -479,86 +479,114 @@ func (r *rawTemplate) findSource(p string) (string, error) {
 	tmpPath := filepath.Join(r.SrcDir, r.Distro, r.Release, r.BuildName, p)
 	_, err := os.Stat(tmpPath)
 	if err == nil {
+		jww.TRACE.Printf("findSource:  %s found", tmpPath)
 		return tmpPath, nil
 	}
+	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	// src_dir/:distro/release/:build_name/p
 	tmpPath = filepath.Join(r.SrcDir, r.Distro, release, r.BuildName, p)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
+		jww.TRACE.Printf("findSource:  %s found", tmpPath)
 		return tmpPath, nil
 	}
+	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	// src_dir/:distro/releaseBase/:build_name/p
 	tmpPath = filepath.Join(r.SrcDir, r.Distro, releaseParts[0], r.BuildName, p)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
+		jww.TRACE.Printf("findSource:  %s found", tmpPath)
 		return tmpPath, nil
 	}
+	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	// src_dir/:distro/:build_name/p
 	tmpPath = filepath.Join(r.SrcDir, r.Distro, r.BuildName, p)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
+		jww.TRACE.Printf("findSource:  %s found", tmpPath)
 		return tmpPath, nil
 	}
+	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	// src_dir/:build_name/p
 	tmpPath = filepath.Join(r.SrcDir, r.BuildName, p)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
+		jww.TRACE.Printf("findSource:  %s found", tmpPath)
 		return tmpPath, nil
 	}
+	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	// src_dir/:distro/:release/:arch/p
 	tmpPath = filepath.Join(r.SrcDir, r.Distro, r.Release, r.Arch, p)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
+		jww.TRACE.Printf("findSource:  %s found", tmpPath)
 		return tmpPath, nil
 	}
+	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	// src_dir/:distro/release/:arch/p
 	tmpPath = filepath.Join(r.SrcDir, r.Distro, release, r.Arch, p)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
+		jww.TRACE.Printf("findSource:  %s found", tmpPath)
 		return tmpPath, nil
 	}
+	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	// src_dir/:distro/releaseBase/:arch/p
 	tmpPath = filepath.Join(r.SrcDir, r.Distro, releaseParts[0], r.Arch, p)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
+		jww.TRACE.Printf("findSource:  %s found", tmpPath)
 		return tmpPath, nil
 	}
+	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	// src_dir/:distro/:release/p
 	tmpPath = filepath.Join(r.SrcDir, r.Distro, r.Release, p)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
+		jww.TRACE.Printf("findSource:  %s found", tmpPath)
 		return tmpPath, nil
 	}
+	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	// src_dir/:distro/release/p
 	tmpPath = filepath.Join(r.SrcDir, r.Distro, release, p)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
+		jww.TRACE.Printf("findSource:  %s found", tmpPath)
 		return tmpPath, nil
 	}
+	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	// src_dir/:distro/releaseBase/p
 	tmpPath = filepath.Join(r.SrcDir, r.Distro, releaseParts[0], p)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
+		jww.TRACE.Printf("findSource:  %s found", tmpPath)
 		return tmpPath, nil
 	}
+	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	// src_dir/:distro/:arch/p
 	tmpPath = filepath.Join(r.SrcDir, r.Distro, r.Arch, p)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
+		jww.TRACE.Printf("findSource:  %s found", tmpPath)
 		return tmpPath, nil
 	}
+	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	// src_dir/:distro/p
 	tmpPath = filepath.Join(r.SrcDir, r.Distro, p)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
+		jww.TRACE.Printf("findSource:  %s found", tmpPath)
 		return tmpPath, nil
 	}
+	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	// src_dir/p
 	tmpPath = filepath.Join(r.SrcDir, p)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
+		jww.TRACE.Printf("findSource:  %s found", tmpPath)
 		return tmpPath, nil
 	}
+	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	return "", os.ErrNotExist
 }
 
