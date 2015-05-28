@@ -176,9 +176,12 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 			if err != nil {
 				return nil, err
 			}
+		case ChefSolo:
+			tmpS, err = r.createChefSolo()
+			if err != nil {
+				return nil, err
+			}
 			/*
-				case ChefSolo:
-					// not implemented
 				case PuppetClient:
 					// not implemented
 				case PuppetServer:
