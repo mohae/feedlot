@@ -89,6 +89,9 @@ var testBuildNewTPL = &rawTemplate{
 	Arch:    "amd64",
 	Image:   "server",
 	Release: "1204",
+	varVals: map[string]string{},
+	dirs:    map[string]string{},
+	files:   map[string]string{},
 	build: build{
 		BuilderTypes: []string{
 			"virtualbox-iso",
@@ -188,7 +191,8 @@ var testRawTemplateBuilderOnly = &rawTemplate{
 	Image:   "server",
 	Release: "12.04",
 	varVals: map[string]string{},
-	vars:    map[string]string{},
+	dirs:    map[string]string{},
+	files:   map[string]string{},
 	build:   build{},
 }
 
@@ -210,7 +214,8 @@ var testRawTemplateWOSection = &rawTemplate{
 	Image:   "server",
 	Release: "12.04",
 	varVals: map[string]string{},
-	vars:    map[string]string{},
+	dirs:    map[string]string{},
+	files:   map[string]string{},
 	build: build{
 		BuilderTypes:       []string{"amazon-ebs"},
 		Builders:           map[string]*builder{},

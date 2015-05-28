@@ -6,8 +6,6 @@ import (
 )
 
 var testUbuntu = &rawTemplate{
-	files: make(map[string]string),
-	dirs:  make(map[string]string),
 	IODirInf: IODirInf{
 		OutDir: "../test_files/ubuntu/out/ubuntu",
 		SrcDir: "../test_files/src/ubuntu",
@@ -25,6 +23,9 @@ var testUbuntu = &rawTemplate{
 	Arch:    "amd64",
 	Image:   "desktop",
 	Release: "12.04",
+	varVals: map[string]string{},
+	dirs:    map[string]string{},
+	files:   map[string]string{},
 	build: build{
 		BuilderTypes: []string{
 			"virtualbox-iso",
@@ -108,8 +109,6 @@ var testUbuntu = &rawTemplate{
 }
 
 var testCentOS = &rawTemplate{
-	files: make(map[string]string),
-	dirs:  make(map[string]string),
 	IODirInf: IODirInf{
 		OutDir: "../test_files/out/centos",
 		SrcDir: "../test_files/src/centos",
@@ -127,6 +126,9 @@ var testCentOS = &rawTemplate{
 	Arch:    "x86_64",
 	Image:   "minimal",
 	Release: "6",
+	varVals: map[string]string{},
+	dirs:    map[string]string{},
+	files:   map[string]string{},
 	build: build{
 		BuilderTypes: []string{
 			"virtualbox-iso",
@@ -241,8 +243,6 @@ var testCentOS = &rawTemplate{
 }
 
 var testAllBuilders = &rawTemplate{
-	files: make(map[string]string),
-	dirs:  make(map[string]string),
 	IODirInf: IODirInf{
 		IncludeComponentString: true,
 		OutDir:                 "../test_files/out",
@@ -261,6 +261,9 @@ var testAllBuilders = &rawTemplate{
 	Arch:    "amd64",
 	Image:   "minimal",
 	Release: "14.04",
+	varVals: map[string]string{},
+	dirs:    map[string]string{},
+	files:   map[string]string{},
 	build: build{
 		BuilderTypes: []string{
 			"amazon-ebs",
@@ -624,8 +627,6 @@ var testAllBuilders = &rawTemplate{
 }
 
 var testDigtialOceanAPIV1 = &rawTemplate{
-	files: make(map[string]string),
-	dirs:  make(map[string]string),
 	IODirInf: IODirInf{
 		OutDir: "../test_files/ubuntu/out/ubuntu",
 		SrcDir: "../test_files/src/ubuntu",
@@ -643,6 +644,9 @@ var testDigtialOceanAPIV1 = &rawTemplate{
 	Arch:    "amd64",
 	Image:   "desktop",
 	Release: "12.04",
+	varVals: map[string]string{},
+	dirs:    map[string]string{},
+	files:   map[string]string{},
 	build: build{
 		BuilderTypes: []string{
 			"digitalocean",
@@ -672,8 +676,6 @@ var testDigtialOceanAPIV1 = &rawTemplate{
 }
 
 var testDigtialOceanNoAPI = &rawTemplate{
-	files: make(map[string]string),
-	dirs:  make(map[string]string),
 	IODirInf: IODirInf{
 		OutDir: "../test_files/ubuntu/out/ubuntu",
 		SrcDir: "../test_files/src/ubuntu",
@@ -691,6 +693,9 @@ var testDigtialOceanNoAPI = &rawTemplate{
 	Arch:    "amd64",
 	Image:   "desktop",
 	Release: "12.04",
+	varVals: map[string]string{},
+	dirs:    map[string]string{},
+	files:   map[string]string{},
 	build: build{
 		BuilderTypes: []string{
 			"digitalocean",
@@ -717,8 +722,6 @@ var testDigtialOceanNoAPI = &rawTemplate{
 	},
 }
 var testDockerRunComandFile = &rawTemplate{
-	files: make(map[string]string),
-	dirs:  make(map[string]string),
 	IODirInf: IODirInf{
 		OutDir: "../test_files/out",
 		SrcDir: "../test_files/src",
@@ -736,6 +739,9 @@ var testDockerRunComandFile = &rawTemplate{
 	Arch:    "amd64",
 	Image:   "minimal",
 	Release: "14.04",
+	varVals: map[string]string{},
+	dirs:    map[string]string{},
+	files:   map[string]string{},
 	build: build{
 		BuilderTypes: []string{
 			"docker",
@@ -765,8 +771,6 @@ var testDockerRunComandFile = &rawTemplate{
 // This should still result in only 1 command array, using the array value and not the
 // file
 var testDockerRunComand = &rawTemplate{
-	files: make(map[string]string),
-	dirs:  make(map[string]string),
 	IODirInf: IODirInf{
 		OutDir: "../test_files/out",
 		SrcDir: "../test_files/src",
@@ -784,6 +788,9 @@ var testDockerRunComand = &rawTemplate{
 	Arch:    "amd64",
 	Image:   "minimal",
 	Release: "14.04",
+	varVals: map[string]string{},
+	dirs:    map[string]string{},
+	files:   map[string]string{},
 	build: build{
 		BuilderTypes: []string{
 			"docker",

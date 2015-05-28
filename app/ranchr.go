@@ -156,7 +156,6 @@ func (d *distroDefaults) GetTemplate(n string) (*rawTemplate, error) {
 	Copy.Image = t.Image
 	Copy.Release = t.Release
 	Copy.varVals = t.varVals
-	Copy.vars = t.vars
 	Copy.build = t.build.DeepCopy()
 	return Copy, nil
 }
@@ -914,7 +913,7 @@ func deleteDir(dir string) error {
 	return nil
 }
 
-// Substring returns a substring of s starting at i for a length of l chars. 
+// Substring returns a substring of s starting at i for a length of l chars.
 // If the requested index + requested length is greater than the length of the
 // string, the string contents from the index to the end of the string will be
 // returned instead. Note this assumes UTF-8, i.e. uses rune.
@@ -969,7 +968,7 @@ func mergedKeysFromMaps(m ...map[string]interface{}) []string {
 //     is prepended to the path and the new value is returned, otherwise the
 //     path is returned; e.g. if
 //   * "shell" and "script.sh" are passed as the dir and path, the returned
-//     value will be "shell/script.sh", with the "/" normalized to the os 
+//     value will be "shell/script.sh", with the "/" normalized to the os
 //     specific use. If "shell" and "scripts/script.sh" are passed as the dir
 //     and path, the returned value will be "scripts/script.sh".
 //   * An empty path will result in an empty string being returned.

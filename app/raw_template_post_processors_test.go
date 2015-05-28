@@ -13,6 +13,9 @@ var testPostProcessorTemplate = &rawTemplate{
 	Arch:    "amd64",
 	Image:   "server",
 	Release: "1204",
+	varVals: map[string]string{},
+	dirs:    map[string]string{},
+	files:   map[string]string{},
 	build: build{
 		BuilderTypes: []string{
 			"virtualbox-iso",
@@ -87,7 +90,6 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 		SrcDir: "../test_files/src",
 	},
 	varVals: map[string]string{},
-	vars:    map[string]string{},
 	dirs:    map[string]string{},
 	files:   map[string]string{},
 	build: build{

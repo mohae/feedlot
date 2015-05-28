@@ -27,7 +27,6 @@ var testRawTemplateProvisioner = &rawTemplate{
 	Image:   "minimal",
 	Release: "6",
 	varVals: map[string]string{},
-	vars:    map[string]string{},
 	dirs:    map[string]string{},
 	files:   map[string]string{},
 	build: build{
@@ -172,7 +171,6 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 	Image:   "minimal",
 	Release: "6",
 	varVals: map[string]string{},
-	vars:    map[string]string{},
 	dirs:    map[string]string{},
 	files:   map[string]string{},
 	build: build{

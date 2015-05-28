@@ -43,8 +43,6 @@ type rawTemplate struct {
 	// varVals is a variable replacement map used in finalizing the value of strings for
 	// which variable replacement is supported.
 	varVals map[string]string
-	// Variable name mapping...currently not supported
-	vars map[string]string
 	// Contains all the build information needed to create the target Packer
 	// template and its associated artifacts.
 	build
@@ -145,7 +143,7 @@ func (r *rawTemplate) setDefaults(d *distro) {
 	return
 }
 
-// r.updateBuildSettings merges Settings between an old and new template. 
+// r.updateBuildSettings merges Settings between an old and new template.
 // Note:  Arch, Image, and Release are not updated here as how these fields are
 // updated depends on whether this is a build from a distribution's default
 // template or from a defined build template.
@@ -407,7 +405,7 @@ func (r *rawTemplate) findCommandFile(component, name string) (string, error) {
 //    component-base/path
 //    path
 //
-// Component is the name of the packer component that this path belongs to, 
+// Component is the name of the packer component that this path belongs to,
 // e.g. vagrant, chef-client, shell, etc.  The component-base is the base name
 // of the packer component that this path belongs to, if applicable, e.g.
 // chef-client's base would be chef as would chef-solo's.

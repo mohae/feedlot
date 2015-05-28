@@ -40,8 +40,9 @@ var testDistroDefaultUbuntu = &rawTemplate{
 	Arch:    "amd64",
 	Image:   "server",
 	Release: "12.04",
-	files:   make(map[string]string),
-	dirs:    make(map[string]string),
+	varVals: map[string]string{},
+	dirs:    map[string]string{},
+	files:   map[string]string{},
 	build: build{
 		BuilderTypes: []string{"virtualbox-iso", "vmware-iso"},
 		Builders: map[string]*builder{
@@ -168,8 +169,9 @@ var testDistroDefaultCentOS = &rawTemplate{
 	Arch:    "x86_64",
 	Image:   "minimal",
 	Release: "6",
-	files:   make(map[string]string),
-	dirs:    make(map[string]string),
+	varVals: map[string]string{},
+	dirs:    map[string]string{},
+	files:   map[string]string{},
 	build: build{
 		BuilderTypes: []string{"virtualbox-iso", "vmware-iso"},
 		Builders: map[string]*builder{
