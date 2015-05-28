@@ -11,7 +11,7 @@ import (
 	"runtime"
 
 	"github.com/mohae/cli"
-	"github.com/mohae/rancher/app"
+	app "github.com/mohae/rancher/app"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -32,7 +32,7 @@ func realMain() int {
 		return -1
 	}
 	// Logging setup
-	ranchr.SetLogging()
+	app.SetLogging()
 	args := os.Args[1:]
 	cli := &cli.CLI{
 		Name:     "rancher",
