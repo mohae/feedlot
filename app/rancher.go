@@ -20,6 +20,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/BurntSushi/toml"
 	jww "github.com/spf13/jwalterweatherman"
@@ -217,9 +218,8 @@ func (d *distroDefaults) Set() error {
 // ENV variables are used by rancher for the location of its TOML files and
 // Rancher's logging settings.
 func SetEnv() error {
-	var err error
 	var tmp string
-	rancherCfg = os.Getenv(EnvRancherFile)
+	rancherCfg := os.Getenv(EnvRancherFile)
 	if rancherCfg == "" {
 		rancherCfg = "rancher.toml"
 	}
@@ -995,4 +995,75 @@ func setParentDir(d, p string) string {
 		return filepath.Join(d, p)
 	}
 	return p
+}
+
+// getUniqueFilename takes the path of the file to be created along with a date
+// layout and checks to see if it exists. If it doesn't exist, it is returned
+// as the filename to use. Otherwise, it goes through the steps below until an
+// "no such file or directory" error is returned. This is used for situations
+// where there might be a filename collision and the existing file is to be
+// preserved in some manner, e.g. archives or log files.
+//
+// If the filepath and name already exists, the current formatted date is
+// appended to it using the received layout.  If the file doesn't exist, this
+// filepath is returned.  If the layout is an empty string, this step is
+// skipped.
+//
+// Otherwise, a sequence number is appended to the filename with the date and
+// is checked for collision until no file is found. The first filename that
+// results in a "no such file or directory" error is returned as the filename
+// to use.
+//
+// Any non "no such file or directory" error is returned as an error.
+func getUniqueFilename(p, layout string) (string, error) {
+	_, err := os.Stat(p)
+	if err != nil {
+		if err.(*os.PathError).Err.Error() == "no such file or directory" {
+			return p, nil
+		}
+		return "", err
+	}
+
+	dir, file := path.Split(p)
+	parts := strings.Split(file, ".")
+	var newPath, basePath string
+	// If the path had multiple .'s append everything except last two elements
+	for i := 0; i < len(parts)-1; i++ {
+		newPath += parts[i]
+		if i < len(parts)-2 {
+			newPath += "."
+		}
+	}
+	newPath = filepath.Join(dir, newPath)
+	// cache the path fragment in case we need to use a sequence
+	basePath = newPath
+	if layout != "" {
+		now := time.Now().Format(layout)
+		newPath += "-" + now
+		// update basePath
+		basePath = newPath
+		newPath += "." + parts[len(parts)-1]
+		fmt.Println(newPath)
+		_, err = os.Stat(newPath)
+		if err != nil {
+			if err.(*os.PathError).Err.Error() == "no such file or directory" {
+				return newPath, nil
+			}
+			return "", err
+		}
+	}
+	// check for a unique name while appending a sequence.
+	i := 1
+	for {
+		newPath = basePath + "-" + strconv.Itoa(i) + "." + parts[len(parts)-1]
+		fmt.Println(newPath)
+		_, err = os.Stat(newPath)
+		if err != nil {
+			if err.(*os.PathError).Err.Error() == "no such file or directory" {
+				return newPath, nil
+			}
+			return "", err
+		}
+		i++
+	}
 }

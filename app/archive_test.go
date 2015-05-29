@@ -2,7 +2,6 @@ package app
 
 import (
 	"testing"
-	"time"
 )
 
 func TestDirWalk(t *testing.T) {
@@ -35,16 +34,5 @@ func TestAddFilename(t *testing.T) {
 		if "../test_files/src/ubuntu/scripts/dne_test_file.sh does not exist" != err.Error() {
 			t.Errorf("Expected \"../test_files/src/ubuntu/scripts/dne_test_file.sh does not exist\", got %q", err.Error())
 		}
-	}
-}
-
-func TestFormattedNow(t *testing.T) {
-	fmtDateTime := formattedNow()
-	// This doesn't feel right, as it just replicated the actual function
-	// but I don't know how else to generate the needed dynamic value
-	// and doing it this way will at least detect changes to the formula.
-	dateTime := time.Now().Local().Format("2006-01-02T150405Z0700")
-	if dateTime != fmtDateTime {
-		t.Errorf("Expected %v, got %v", fmtDateTime, dateTime)
 	}
 }

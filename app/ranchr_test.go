@@ -976,3 +976,38 @@ func TestSetParentDir(t *testing.T) {
 		}
 	}
 }
+
+func TestGetUniqueFilename(t *testing.T) {
+	tests := []struct {
+		filename    string
+		layout      string
+		expected    string
+		expectedErr string
+	}{
+		{"", "", "", ""},
+		{"../test_files/notthere.txt", "", "../test_files/notthere.txt", ""},
+		{"../test_files/notthere.txt", "2006", "../test_files/notthere.txt", ""},
+		{"../test_files/not.there.txt", "", "../test_files/not.there.txt", ""},
+		{"../test_files/not.there.txt", "2006", "../test_files/not.there.txt", ""},
+		{"../test_files/test.txt", "", "../test_files/test-3.txt", ""},
+		{"../test_files/test.txt", "2006", "../test_files/test-2015-2.txt", ""},
+		{"../test_files/test.file.txt", "", "../test_files/test.file-2.txt", ""},
+		{"../test_files/test.file.txt", "2006", "../test_files/test.file-2015-1.txt", ""},
+	}
+	for i, test := range tests {
+		f, err := getUniqueFilename(test.filename, test.layout)
+		if err != nil {
+			if err.Error() != test.expectedErr {
+				t.Errorf("TestGetUniqueFilename %d:  Expected error to be %q. got %q", i, test.expectedErr, err.Error())
+			}
+			continue
+		}
+		if test.expectedErr != "" {
+			t.Errorf("TestGetUniqueFilename %d: Expected no error, got %q", i, err.Error())
+			continue
+		}
+		if test.expected != f {
+			t.Errorf("TestGetUniqueFilename %d: Expected %q, got %q", i, test.expected, f)
+		}
+	}
+}

@@ -9,12 +9,9 @@ import (
 	"path"
 	"path/filepath"
 	"sync"
-	"time"
 
 	jww "github.com/spf13/jwalterweatherman"
 )
-
-var timeFormat = "2006-01-02T150405Z0700"
 
 // Archive holds information about an archive.
 type Archive struct {
@@ -188,13 +185,15 @@ func (a *Archive) archivePriorBuild(p string, t string) error {
 		// This isn't a real error, just log it and return a non-error state.
 		return nil
 	}
-	// Get the current date and time in a slightly modifie ISO 8601 format:
-	// the colons are stripped from the time.
-	nowF := formattedNow()
 	// Get the relative path so that it can be added to the tarball name.
 	relPath := path.Dir(p)
-	// The tarball's name is the directory name + current time + extensions.
-	tBName := fmt.Sprintf("%s%s-%s.tar.gz", relPath, a.Name, nowF)
+	// The tarball's name is the directory name + extensions.
+	tBName := fmt.Sprintf("%s%s-%s.tar.gz", relPath, a.Name)
+	// ensure the archive name is unique
+	tBName, err = getUniqueFilename(tBName, "2006-01-02")
+	if err != nil {
+		return fmt.Errorf("unable to archive prior build: %s", err)
+	}
 	// Create the new archive file.
 	tBall, err := os.Create(tBName)
 	if err != nil {
@@ -229,10 +228,4 @@ func (a *Archive) archivePriorBuild(p string, t string) error {
 func (a *Archive) deletePriorBuild(p string) error {
 	//delete the contents of the passed directory
 	return deleteDir(p)
-}
-
-func formattedNow() string {
-	// Time in ISO 8601 like format. The difference being the : have been
-	// removed from the time.
-	return time.Now().Local().Format(timeFormat)
 }
