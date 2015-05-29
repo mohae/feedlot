@@ -24,11 +24,10 @@ func main() {
 }
 
 func realMain() int {
-	// runMain parses the Flag for glog, sets up CLI stuff for the supported
-	// subcommands and runs Rancher.
+	// set the environment variables from the application configuration file, if applicable.
 	err := app.SetEnv()
 	if err != nil {
-		fmt.Printf("An error while processing Rancher Environment variables: %s\n", err)
+		fmt.Printf("An error while processing the Rancher file and Environment variables: %s\n", err)
 		return -1
 	}
 	// Logging setup

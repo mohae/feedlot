@@ -219,11 +219,19 @@ func (d *distroDefaults) Set() error {
 func SetEnv() error {
 	var err error
 	var tmp string
-	tmp = os.Getenv(EnvRancherFile)
-	if tmp == "" {
-		tmp = "rancher.toml"
+	rancherCfg = os.Getenv(EnvRancherFile)
+	if rancherCfg == "" {
+		rancherCfg = "rancher.toml"
 	}
-	_, err = toml.DecodeFile(tmp, &AppConfig)
+
+	// see if the rancherCfg file exists, if it doesn't nothing to do. Actual validation
+	// of these settings occurs after parsing the flags.
+	_, err := os.Stat(tmp)
+	if err != nil && err == os.ErrNotExist {
+		return nil
+	}
+	// Otherwise set the envs, if they aren't set.
+	_, err = toml.DecodeFile(rancherCfg, &AppConfig)
 	if err != nil {
 		jww.ERROR.Println(err)
 		return err
