@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mohae/contour"
 	json "github.com/mohae/customjson"
 )
 
@@ -318,17 +319,6 @@ func TestDistroDefaultsGetTemplate(t *testing.T) {
 	}
 }
 
-func TestSetEnv(t *testing.T) {
-	err := SetEnv()
-	if err == nil {
-		t.Error("Expected an error, was nil")
-	} else {
-		if err.Error() != "open rancher.toml: no such file or directory" {
-			t.Errorf("Expected \"open rancher.toml: no such file or directory\", %q", err.Error())
-		}
-	}
-}
-
 func TestbuildPackerTemplateFromDistros(t *testing.T) {
 	a := ArgsFilter{}
 	err := buildPackerTemplateFromDistro(a)
@@ -378,7 +368,7 @@ func TestbuildPackerTemplateFromNamedBuild(t *testing.T) {
 		}
 	}
 
-	os.Setenv(EnvBuildsFile, "../test_files/conf/builds_test.toml")
+	contour.RegisterString(BuildFile, "../test_files/conf/builds_test.toml")
 	go buildPackerTemplateFromNamedBuild("", doneCh)
 	err = <-doneCh
 	if err == nil {

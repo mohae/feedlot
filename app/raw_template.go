@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mohae/contour"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -62,7 +63,7 @@ func newRawTemplate() *rawTemplate {
 	// Set the date, formatted to ISO 8601
 	date := time.Now()
 	splitDate := strings.Split(date.String(), " ")
-	return &rawTemplate{date: splitDate[0], delim: os.Getenv(EnvParamDelimStart), files: make(map[string]string), dirs: make(map[string]string)}
+	return &rawTemplate{date: splitDate[0], delim: contour.GetString(ParamDelimStart), files: make(map[string]string), dirs: make(map[string]string)}
 }
 
 // r.createPackerTemplate creates a Packer template from the rawTemplate that

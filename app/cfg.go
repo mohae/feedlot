@@ -10,12 +10,11 @@ package app
 
 import (
 	"fmt"
-	"os"
 	"sync"
 
 	"github.com/BurntSushi/toml"
+	"github.com/mohae/contour"
 	"github.com/mohae/deepcopy"
-	jww "github.com/spf13/jwalterweatherman"
 )
 
 // Contains most of the information for Packer templates within a Rancher
@@ -237,7 +236,7 @@ type defaults struct {
 	build
 	load   sync.Once
 	loaded bool
-	err    string
+	err    error
 }
 
 // Ensures that the default configs get loaded once. Uses a mutex to prevent
@@ -246,26 +245,21 @@ type defaults struct {
 // when it hasn't been loaded.
 func (d *defaults) LoadOnce() error {
 	loadFunc := func() {
-		name := os.Getenv(EnvDefaultsFile)
+		name := contour.GetString(DefaultFile)
 		if name == "" {
-			d.err = fmt.Sprintf("unable to retrieve the default settings: %q was not set; check your \"rancher.toml\"", EnvBuildsFile)
-			jww.CRITICAL.Print(d.err)
+			d.err = filenameNotSetErr("default")
 			return
 		}
 		_, err := toml.DecodeFile(name, d)
 		if err != nil {
-			d.err = err.Error()
-			jww.CRITICAL.Print(err)
+			d.err = fmt.Errorf("load of default information failed: %s", err)
 			return
 		}
 		d.loaded = true
 		return
 	}
 	d.load.Do(loadFunc)
-	if d.err != "" {
-		return fmt.Errorf(d.err)
-	}
-	return nil
+	return d.err
 }
 
 // BuildInf is a container for information about a specific build.
@@ -313,7 +307,7 @@ func (i *IODirInf) update(inf IODirInf) {
 // check to see if the dirinf is set, if not, set them to their defaults
 func (i *IODirInf) check() {
 	if i.OutDir == "" {
-		i.OutDir = os.Getenv(EnvParamDelimStart) + "build_name"
+		i.OutDir = contour.GetString(ParamDelimStart) + "build_name"
 	}
 	if i.SrcDir == "" {
 		i.SrcDir = "src"
@@ -372,7 +366,7 @@ type supported struct {
 	Distro map[string]*distro
 	load   sync.Once
 	loaded bool
-	err    string
+	err    error
 }
 
 // Ensures that the supported distro information only get loaded once. Uses a
@@ -381,25 +375,21 @@ type supported struct {
 // needs to be called when it hasn't been loaded.
 func (s *supported) LoadOnce() error {
 	loadFunc := func() {
-		name := os.Getenv(EnvSupportedFile)
+		name := contour.GetString(SupportedFile)
 		if name == "" {
-			s.err = fmt.Sprintf("%s not set, unable to retrieve the Supported information", EnvSupportedFile)
-			jww.CRITICAL.Print(s.err)
+			s.err = filenameNotSetErr("supported")
+			return
 		}
 		_, err := toml.DecodeFile(name, &s)
 		if err != nil {
-			s.err = err.Error()
-			jww.CRITICAL.Print(err)
+			s.err = decodeErr(err)
 			return
 		}
 		s.loaded = true
 		return
 	}
 	s.load.Do(loadFunc)
-	if s.err != "" {
-		return fmt.Errorf(s.err)
-	}
-	return nil
+	return s.err
 }
 
 // Struct to hold the builds.
@@ -407,7 +397,7 @@ type builds struct {
 	Build  map[string]*rawTemplate
 	load   sync.Once
 	loaded bool
-	err    string
+	err    error
 }
 
 // Ensures that the build information only get loaded once. Uses a mutex to
@@ -415,28 +405,22 @@ type builds struct {
 // templates. When loaded, it sets the loaded boolean so that it only needs to
 // be called when it hasn't been loaded.
 func (b *builds) LoadOnce() error {
-	var err error
 	loadFunc := func() {
-		name := os.Getenv(EnvBuildsFile)
+		name := contour.GetString(BuildFile)
 		if name == "" {
-			b.err = fmt.Sprintf("%s not set, unable to retrieve the Build configurations", EnvBuildsFile)
-			jww.CRITICAL.Print(err)
+			b.err = filenameNotSetErr("build")
 			return
 		}
-		_, err = toml.DecodeFile(name, &b)
+		_, err := toml.DecodeFile(name, &b)
 		if err != nil {
-			jww.CRITICAL.Print(err)
-			b.err = err.Error()
+			b.err = decodeErr(err)
 			return
 		}
 		b.loaded = true
 		return
 	}
 	b.load.Do(loadFunc)
-	if b.err != "" {
-		return fmt.Errorf(b.err)
-	}
-	return nil
+	return b.err
 }
 
 // Contains lists of builds.
@@ -452,15 +436,20 @@ type list struct {
 // This is a normal load, no mutex, as this is only called once.
 func (b *buildLists) Load() error {
 	// Load the build lists.
-	name := os.Getenv(EnvBuildListsFile)
+	name := contour.GetString(BuildListFile)
 	if name == "" {
-		err := fmt.Errorf("%s not set, unable to retrieve the BuildLists file", EnvBuildListsFile)
-		jww.ERROR.Print(err)
-		return err
+		return filenameNotSetErr("build_list")
 	}
 	if _, err := toml.DecodeFile(name, &b); err != nil {
-		jww.ERROR.Print(err)
-		return err
+		return decodeErr(err)
 	}
 	return nil
+}
+
+func filenameNotSetErr(target string) error {
+	return fmt.Errorf("%q not set, unable to retrieve the %s file", target, target)
+}
+
+func decodeErr(err error) error {
+	return fmt.Errorf("decode failed: %s", err)
 }

@@ -6,7 +6,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"runtime"
 
@@ -24,14 +23,8 @@ func main() {
 }
 
 func realMain() int {
-	// set the environment variables from the application configuration file, if applicable.
-	err := app.SetEnv()
-	if err != nil {
-		fmt.Printf("An error while processing the Rancher file and Environment variables: %s\n", err)
-		return -1
-	}
-	// Logging setup
-	app.SetLogging()
+	// Logging to temp first
+	app.SetTempLogging()
 	args := os.Args[1:]
 	cli := &cli.CLI{
 		Name:     "rancher",

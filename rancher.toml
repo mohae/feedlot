@@ -11,7 +11,7 @@ build_lists_file        = "conf.d/build_lists.toml"
 
 ## Logging
 log_to_file		= true
-log_filename		= ""
+log_filename		= "rancher.log"
 log_level_file		= "INFO"
 log_level_stdout	= "TRACE"
 

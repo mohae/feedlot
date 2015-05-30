@@ -1,8 +1,9 @@
 package app
 
 import (
-	"os"
 	"testing"
+
+	"github.com/mohae/contour"
 )
 
 var testDefaults = &defaults{
@@ -453,85 +454,73 @@ func TestProvisionerMergeSettings(t *testing.T) {
 }
 
 func TestDefaults(t *testing.T) {
-	tmpEnvDefaultsFile := os.Getenv(EnvDefaultsFile)
+	contour.UpdateString(DefaultFile, "")
 	d := defaults{}
-	os.Setenv(EnvDefaultsFile, "")
 	err := d.LoadOnce()
 	if err == nil {
 		t.Error("Expected an error, got nil")
 	} else {
-		if err.Error() != "unable to retrieve the default settings: \"RANCHER_BUILDS_FILE\" was not set; check your \"rancher.toml\"" {
-			t.Errorf("Expected \"unable to retrieve the default settings: \"RANCHER_BUILDS_FILE\" was not set; check your \"rancher.toml\"\", got %q", err.Error())
+		if err.Error() != "\"default\" not set, unable to retrieve the default file" {
+			t.Errorf("Expected '\"default\" not set, unable to retrieve the default the file', got %q", err.Error())
 		} else {
 			if d.MinPackerVersion != "" {
 				t.Errorf("Expected \"\", got %q", d.MinPackerVersion)
 			}
 		}
 	}
-	os.Setenv(EnvDefaultsFile, tmpEnvDefaultsFile)
 }
 
 func TestSupported(t *testing.T) {
-	tmpEnv := os.Getenv(EnvSupportedFile)
+	contour.UpdateString(SupportedFile, "")
 	s := supported{}
-	os.Setenv(EnvSupportedFile, "")
 	err := s.LoadOnce()
 	if err == nil {
 		t.Errorf("expected error, none occurred")
 	} else {
-		if err.Error() != "open : no such file or directory" {
-			t.Errorf("expected \"open : no such file or directory\" got %q", err.Error())
+		if err.Error() != "\"supported\" not set, unable to retrieve the supported file" {
+			t.Errorf("expected '\"supported\" not set, unable to retrieve the supported file' got %q", err.Error())
 		}
 		if s.loaded {
-			t.Errorf("expected Supported info not to be loaded, but it was")
+			t.Errorf("expected Supported info not to be loaded, but it was true")
 		}
 	}
-	os.Setenv(EnvSupportedFile, tmpEnv)
 }
 
-func TestBuildsStuff(t *testing.T) {
+func TestBuildStuff(t *testing.T) {
+	contour.UpdateString(BuildFile, "")
 	b := builds{}
-	tmpEnv := os.Getenv(EnvBuildsFile)
-	os.Setenv(EnvBuildsFile, "")
 	b.LoadOnce()
 	if b.loaded == true {
-		t.Errorf("expected Build's loaded flag to be false, but it was")
+		t.Errorf("expected Build's loaded flag to be false, but it was true")
 	}
 
-	os.Setenv(EnvBuildsFile, "../test_files/notthere.toml")
 	b.LoadOnce()
 	if b.loaded == true {
-		t.Errorf("expected Build's loaded flag to be false, but it was")
+		t.Errorf("expected Build's loaded flag to be false, but it was true")
 	}
-
-	os.Setenv(EnvBuildsFile, tmpEnv)
 }
 
-func TestBuildListsStuff(t *testing.T) {
+func TestBuildListStuff(t *testing.T) {
+	contour.UpdateString(BuildListFile, "")
 	b := buildLists{}
-	tmpEnv := os.Getenv(EnvBuildListsFile)
-
-	os.Setenv(EnvBuildListsFile, "")
 	err := b.Load()
 	if err == nil {
 		t.Error("Expected an error, but none received")
 	} else {
-		if err.Error() != EnvBuildListsFile+" not set, unable to retrieve the BuildLists file" {
-			t.Errorf("Expected \"could not retrieve the BuildLists file because the "+EnvBuildListsFile+" environment variable was not set. Either set it or check your rancher.toml setting\", got %q", err.Error())
+		if err.Error() != "\"build_list\" not set, unable to retrieve the build_list file" {
+			t.Errorf("Expected '\"build_list\" not set, unable to retrieve the build_list file', got %q", err.Error())
 		}
 	}
 
-	os.Setenv(EnvBuildListsFile, "../test_files/notthere.toml")
+	contour.UpdateString(BuildListFile, "../test_files/notthere.toml")
 	err = b.Load()
 	if err == nil {
 		t.Error("Expected an error, but none received")
 	} else {
-		if err.Error() != "open ../test_files/notthere.toml: no such file or directory" {
-			t.Errorf("Expected \"open ../test_files/notthere.toml: no such file or directory\", got %q", err.Error())
+		if err.Error() != "decode failed: open ../test_files/notthere.toml: no such file or directory" {
+			t.Errorf("Expected \"decode failed: open ../test_files/notthere.toml: no such file or directory\", got %q", err.Error())
 		}
 	}
-
-	os.Setenv(EnvBuildListsFile, tmpEnv)
 }
 
 func TestIODirInfUpdate(t *testing.T) {

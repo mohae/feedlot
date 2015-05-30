@@ -1,33 +1,68 @@
 package app
 
 import (
+	"fmt"
+	"os"
+	"strconv"
+
+	"github.com/mohae/contour"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
+// holds the tmpLogFilename, not used after SetLogging()
+var tmpLogFile string
+
+// SetTempLogging creates a temp logfile in the /tmp and enables logging. This
+// is to support logging of operations prior to processing the command-line
+// flags, at which point SetLogging will either move this to the actual log
+// location or remove the temp logfile.
+func SetTempLogging() {
+	// use temp logfile
+	jww.UseTempLogFile("rancher")
+	jww.SetLogThreshold(getJWWLevel(contour.GetString(LogLevelFile)))
+	jww.SetStdoutThreshold(getJWWLevel(contour.GetString(LogLevelStdOut)))
+}
+
 // SetLogging sets application logging settings.
-func SetLogging() {
-	// By default, jww has sane log level config; e.g. only log Warn and Above when a
-	// io.writer is present. Error and above get printed to stdout. Info and lower
-	// get sent to /dev/null.
-	// Set custom levels for output, if they are set
-	if AppConfig.LogLevelStdout != "" {
-		res := getJWWLevel(AppConfig.LogLevelStdout)
-		jww.SetStdoutThreshold(res)
+func SetLogging() error {
+	// Check to see if logging is enabled, if not, discard the temp logfile and remove.
+	b, _ := strconv.ParseBool(contour.GetString(Log))
+	if !b {
+		tmpFile := jww.LogHandle.(*os.File).Name()
+		jww.FEEDBACK.Println(tmpFile)
+		jww.LogHandle.(*os.File).Close()
+		jww.DiscardLogging()
+		os.Remove(tmpFile)
+		return nil
 	}
-	if AppConfig.LogLevelFile != "" {
-		res := getJWWLevel(AppConfig.LogLevelFile)
-		jww.SetLogThreshold(res)
+	logfile := contour.GetString(LogFile)
+	fname, err := getUniqueFilename(logfile, "2006-01-02")
+	if err != nil {
+		err = fmt.Errorf("unable to continue: cannot obtain unique log filename: %s", err)
+		jww.FEEDBACK.Println(err.Error())
+		return err
 	}
-	// Take care of log output stuff
-	if AppConfig.LogToFile {
-		// if the filename isn't set, use a temp log file
-		if AppConfig.LogFilename == "" {
-			jww.UseTempLogFile("rancher")
-		} else {
-			jww.SetLogFile(AppConfig.LogFilename)
+	// if the names aren't the same, the logfile already exists. Rename it to the fname
+	if fname != logfile {
+		err := os.Rename(logfile, fname)
+		if err != nil {
+			err = fmt.Errorf("unable to continuecannot rename existing logfile: %s", err)
+			jww.FEEDBACK.Println(err.Error())
+			return err
 		}
 	}
-	return
+	// make the tmpLogFile the actual logfile
+	err = os.Rename(jww.LogHandle.(*os.File).Name(), logfile)
+	if err != nil {
+		err = fmt.Errorf("unable to contineu: cannot rename the temp log to %s", err)
+		jww.FEEDBACK.Println(err.Error())
+		return err
+	}
+
+	// Set LogLevels
+	jww.SetLogThreshold(getJWWLevel(contour.GetString(LogLevelFile)))
+	jww.SetStdoutThreshold(getJWWLevel(contour.GetString(LogLevelStdOut)))
+	return nil
 }
 
 func getJWWLevel(level string) jww.Level {

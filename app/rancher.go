@@ -22,7 +22,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/BurntSushi/toml"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -63,30 +62,6 @@ func DistroFromString(s string) Distro {
 	return UnsupportedDistro
 }
 
-// Environment variable name constants
-const (
-	// EnvRancherFile is the name of the environment variable name for Rancher's config file.
-	EnvRancherFile = "RANCHER_CONFIG"
-	// EnvBuildsFile is the name of the environment variable name for the builds file.
-	EnvBuildsFile = "RANCHER_BUILDS_FILE"
-	// EnvBuildListsFile is the name of the environment variable name for the build lists file.
-	EnvBuildListsFile = "RANCHER_BUILD_LISTS_FILE"
-	// EnvDefaultsFile is the name of the environment variable name for the defaults file.
-	EnvDefaultsFile = "RANCHER_DEFAULTS_FILE"
-	// EnvSupportedFile is the name of the environment variable name for the supported file.
-	EnvSupportedFile = "RANCHER_SUPPORTED_FILE"
-	// EnvParamDelimStart is the name of the environment variable name for the delimter that starts Rancher variables.
-	EnvParamDelimStart = "RANCHER_PARAM_DELIM_START"
-	// EnvLogToFile is the name of the environment variable name for whether or not Rancher logs to a file.
-	EnvLogToFile = "RANCHER_LOG_TO_FILE"
-	// EnvLogFilename is the name of the environment variable name for the log filename, if logging to file is enabled..
-	EnvLogFilename = "RANCHER_LOG_FILENAME"
-	// EnvLogLevelFile is the name of the environment variable name for the file output's log level.
-	EnvLogLevelFile = "RANCHER_LOG_LEVEL_FILE"
-	// EnvLogLevelStdout is the name of the environment variable name for stdout's log level.
-	EnvLogLevelStdout = "RANCHER_LOG_LEVEL_STDOUT"
-)
-
 // indent: default indent to use for marshal stuff
 var indent = "    "
 
@@ -95,37 +70,6 @@ var Builds *builds
 
 // Defaults for each supported distribution
 var DistroDefaults distroDefaults
-
-// AppConfig contains the current Rancher configuration...loaded at start-up.
-var AppConfig appConfig
-
-type appConfig struct {
-	BuildsFile      string `toml:"builds_file"`
-	BuildListsFile  string `toml:"build_lists_file"`
-	DefaultsFile    string `toml:"defaults_file"`
-	LogToFile       bool   `toml:"log_to_file"`
-	LogFilename     string `toml:"log_filename"`
-	LogLevelFile    string `toml:"log_level_file"`
-	LogLevelStdout  string `toml:"log_level_stdout"`
-	ParamDelimStart string `toml:"param_delim_start"`
-	SupportedFile   string `toml:"supported_file"`
-}
-
-// ArgsFilter has all the valid commandline flags for the build-subcommand.
-type ArgsFilter struct {
-	// Arch is a distribution specific string for the OS's target
-	// architecture.
-	Arch string
-	// Distro is the name of the distribution, this value is consistent
-	// with Packer.
-	Distro string
-	// Image is the type of ISO image that is to be used. This is a
-	// distribution specific value.
-	Image string
-	// Release is the release number or string of the ISO that is to be
-	// used. The valid values are distribution specific.
-	Release string
-}
 
 // distroDefaults contains the defaults for all supported distros and a flag
 // whether its been set or not.
@@ -204,109 +148,6 @@ func (d *distroDefaults) Set() error {
 		d.Templates[DistroFromString(k)] = tmp
 	}
 	DistroDefaults.IsSet = true
-	return nil
-}
-
-// SetEnv sets the environment variables, if they do not already exist.
-//
-// The location of the rancher.toml file can be overridden by setting its ENV
-// variable prior to running Rancher. In addition, any of the other Rancher
-// TOML file locations can be overridden by setting their corresponding ENV
-// variable prior to running Rancher. The settings in the rancher.toml file are
-// only used if their corresponding ENV variables aren't set.
-//
-// ENV variables are used by rancher for the location of its TOML files and
-// Rancher's logging settings.
-func SetEnv() error {
-	var tmp string
-	rancherCfg := os.Getenv(EnvRancherFile)
-	if rancherCfg == "" {
-		rancherCfg = "rancher.toml"
-	}
-
-	// see if the rancherCfg file exists, if it doesn't nothing to do. Actual validation
-	// of these settings occurs after parsing the flags.
-	_, err := os.Stat(tmp)
-	if err != nil && err == os.ErrNotExist {
-		return nil
-	}
-	// Otherwise set the envs, if they aren't set.
-	_, err = toml.DecodeFile(rancherCfg, &AppConfig)
-	if err != nil {
-		jww.ERROR.Println(err)
-		return err
-	}
-	tmp = os.Getenv(EnvBuildsFile)
-	if tmp == "" {
-		err = os.Setenv(EnvBuildsFile, AppConfig.BuildsFile)
-		if err != nil {
-			jww.ERROR.Println(err)
-			return err
-		}
-	}
-	tmp = os.Getenv(EnvBuildListsFile)
-	if tmp == "" {
-		err = os.Setenv(EnvBuildListsFile, AppConfig.BuildListsFile)
-		if err != nil {
-			jww.ERROR.Println(err)
-			return err
-		}
-	}
-	tmp = os.Getenv(EnvDefaultsFile)
-	if tmp == "" {
-		err = os.Setenv(EnvDefaultsFile, AppConfig.DefaultsFile)
-		if err != nil {
-			jww.ERROR.Println(err)
-			return err
-		}
-	}
-	tmp = os.Getenv(EnvLogToFile)
-	if tmp == "" {
-		err = os.Setenv(EnvLogToFile, strconv.FormatBool(AppConfig.LogToFile))
-		if err != nil {
-			jww.ERROR.Println(err)
-			return err
-		}
-	}
-	tmp = os.Getenv(EnvLogFilename)
-	if tmp == "" {
-		err = os.Setenv(EnvLogFilename, AppConfig.LogFilename)
-		if err != nil {
-			jww.ERROR.Println(err)
-			return err
-		}
-	}
-	tmp = os.Getenv(EnvLogLevelFile)
-	if tmp == "" {
-		err = os.Setenv(EnvLogLevelFile, AppConfig.LogLevelFile)
-		if err != nil {
-			jww.ERROR.Println(err)
-			return err
-		}
-	}
-	tmp = os.Getenv(EnvLogLevelStdout)
-	if tmp == "" {
-		err = os.Setenv(EnvLogLevelStdout, AppConfig.LogLevelStdout)
-		if err != nil {
-			jww.ERROR.Println(err)
-			return err
-		}
-	}
-	if tmp == "" {
-		err = os.Setenv(EnvParamDelimStart, AppConfig.ParamDelimStart)
-		if err != nil {
-			jww.ERROR.Println(err)
-			return err
-		}
-	}
-	tmp = os.Getenv(EnvSupportedFile)
-	if tmp == "" {
-		err = os.Setenv(EnvSupportedFile, AppConfig.SupportedFile)
-		if err != nil {
-			jww.ERROR.Println(err)
-			return err
-		}
-	}
 	return nil
 }
 
