@@ -40,7 +40,7 @@ type build struct {
 
 // build.DeepCopy makes a deep copy of the build and returns it.
 func (b *build) DeepCopy() build {
-	copy := &build{
+	newB := build{
 		BuilderTypes:       []string{},
 		Builders:           map[string]builder{},
 		PostProcessorTypes: []string{},
@@ -49,24 +49,27 @@ func (b *build) DeepCopy() build {
 		Provisioners:       map[string]provisioner{},
 	}
 	if b.BuilderTypes != nil || len(b.BuilderTypes) > 0 {
-		copy.BuilderTypes = b.BuilderTypes
+		newB.BuilderTypes = make([]string, len(b.BuilderTypes), len(b.BuilderTypes))
+		copy(newB.BuilderTypes, b.BuilderTypes)
 	}
 	if b.PostProcessorTypes != nil || len(b.PostProcessorTypes) > 0 {
-		copy.PostProcessorTypes = b.PostProcessorTypes
+		newB.PostProcessorTypes = make([]string, len(b.PostProcessorTypes), len(b.PostProcessorTypes))
+		copy(newB.PostProcessorTypes, b.PostProcessorTypes)
 	}
 	if b.ProvisionerTypes != nil || len(b.ProvisionerTypes) > 0 {
-		copy.ProvisionerTypes = b.ProvisionerTypes
+		newB.ProvisionerTypes = make([]string, len(b.ProvisionerTypes), len(b.ProvisionerTypes))
+		copy(newB.ProvisionerTypes, b.ProvisionerTypes)
 	}
 	for k, v := range b.Builders {
-		copy.Builders[k] = v.DeepCopy()
+		newB.Builders[k] = v.DeepCopy()
 	}
 	for k, v := range b.PostProcessors {
-		copy.PostProcessors[k] = v.DeepCopy()
+		newB.PostProcessors[k] = v.DeepCopy()
 	}
 	for k, v := range b.Provisioners {
-		copy.Provisioners[k] = v.DeepCopy()
+		newB.Provisioners[k] = v.DeepCopy()
 	}
-	return *copy
+	return newB
 }
 
 // templateSection is used as an embedded type.

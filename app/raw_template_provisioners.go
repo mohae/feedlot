@@ -80,10 +80,10 @@ func (r *rawTemplate) updateProvisioners(newP map[string]provisioner) {
 	}
 	// Convert the existing provisioners to interface.
 	var ifaceOld = make(map[string]interface{}, len(r.Provisioners))
-	ifaceOld = DeepCopyMapStringPProvisioner(r.Provisioners)
+	ifaceOld = DeepCopyMapStringProvisioner(r.Provisioners)
 	// Convert the new provisioners to interface.
 	var ifaceNew = make(map[string]interface{}, len(newP))
-	ifaceNew = DeepCopyMapStringPProvisioner(newP)
+	ifaceNew = DeepCopyMapStringProvisioner(newP)
 	// Get the all keys from both maps
 	var keys []string
 	keys = mergedKeysFromMaps(ifaceOld, ifaceNew)
@@ -678,9 +678,9 @@ func (r *rawTemplate) createShellScript() (settings map[string]interface{}, err 
 	return settings, nil
 }
 
-// DeepCopyMapStringPProvisioner makes a deep copy of each builder passed and
-// returns the copie map[string]*provisioner as a map[string]interface{}
-func DeepCopyMapStringPProvisioner(p map[string]provisioner) map[string]interface{} {
+// DeepCopyMapStringProvisioner makes a deep copy of each builder passed and
+// returns the copie map[string]provisioner as a map[string]interface{}
+func DeepCopyMapStringProvisioner(p map[string]provisioner) map[string]interface{} {
 	c := map[string]interface{}{}
 	for k, v := range p {
 		tmpP := provisioner{}

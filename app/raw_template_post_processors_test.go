@@ -595,8 +595,8 @@ func TestVagrantVSphereProcessor(t *testing.T) {
 	}
 }
 
-func TestDeepCopyMapStringPPostProcessor(t *testing.T) {
-	cpy := DeepCopyMapStringPPostProcessor(ppOrig)
+func TestDeepCopyMapStringPostProcessor(t *testing.T) {
+	cpy := DeepCopyMapStringPostProcessor(ppOrig)
 	if MarshalJSONToString.Get(cpy) != MarshalJSONToString.Get(ppOrig) {
 		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(ppOrig), MarshalJSONToString.Get(cpy))
 	}

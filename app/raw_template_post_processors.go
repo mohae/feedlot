@@ -79,10 +79,10 @@ func (r *rawTemplate) updatePostProcessors(newP map[string]postProcessor) {
 	}
 	// Convert the existing postProcessors to interface.
 	var ifaceOld = make(map[string]interface{}, len(r.PostProcessors))
-	ifaceOld = DeepCopyMapStringPPostProcessor(r.PostProcessors)
+	ifaceOld = DeepCopyMapStringPostProcessor(r.PostProcessors)
 	// Convert the new postProcessors to interfaces
 	var ifaceNew = make(map[string]interface{}, len(newP))
-	ifaceNew = DeepCopyMapStringPPostProcessor(newP)
+	ifaceNew = DeepCopyMapStringPostProcessor(newP)
 	// Get the all keys from both maps
 	var keys []string
 	keys = mergedKeysFromMaps(ifaceOld, ifaceNew)
@@ -607,10 +607,10 @@ func (r *rawTemplate) createVSphere() (settings map[string]interface{}, err erro
 	return settings, nil
 }
 
-// DeepCopyMapStringPPostProcessor makes a deep copy of each builder passed and
-// returns the copie map[string]*builder as a map[string]interface{}
+// DeepCopyMapStringPostProcessor makes a deep copy of each builder passed and
+// returns the copie map[string]postProcessor as a map[string]interface{}
 // Note: This currently only supports string slices.
-func DeepCopyMapStringPPostProcessor(p map[string]postProcessor) map[string]interface{} {
+func DeepCopyMapStringPostProcessor(p map[string]postProcessor) map[string]interface{} {
 	c := map[string]interface{}{}
 	for k, v := range p {
 		tmpP := postProcessor{}
