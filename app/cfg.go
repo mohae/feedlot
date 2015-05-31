@@ -380,33 +380,25 @@ func (s *supported) Load() error {
 
 // Struct to hold the builds.
 type builds struct {
-	Build  map[string]*rawTemplate
-	load   sync.Once
+	Build map[string]*rawTemplate
+	sync.Mutex
 	loaded bool
-	err    error
 }
 
-// Ensures that the build information only get loaded once. Uses a mutex to
-// prevent race conditions as there can be concurrent processing of Packer
-// templates. When loaded, it sets the loaded boolean so that it only needs to
-// be called when it hasn't been loaded.
-func (b *builds) LoadOnce() error {
-	loadFunc := func() {
-		name := contour.GetString(BuildFile)
-		if name == "" {
-			b.err = filenameNotSetErr("build")
-			return
-		}
-		_, err := toml.DecodeFile(name, &b)
-		if err != nil {
-			b.err = decodeErr(err)
-			return
-		}
-		b.loaded = true
-		return
+// Load the build information. If it has already been loaded, nothing will be done
+func (b *builds) Load() error {
+	b.Mutex.Lock()
+	defer b.Mutex.Unlock()
+	name := contour.GetString(BuildFile)
+	if name == "" {
+		return filenameNotSetErr("build")
 	}
-	b.load.Do(loadFunc)
-	return b.err
+	_, err := toml.DecodeFile(name, &b)
+	if err != nil {
+		return decodeErr(err)
+	}
+	b.loaded = true
+	return nil
 }
 
 // Contains lists of builds.

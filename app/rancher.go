@@ -154,7 +154,7 @@ func (d *distroDefaults) Set() error {
 // Set DistroDefaults
 func loadBuilds() error {
 	Builds = &builds{}
-	err := Builds.LoadOnce()
+	err := Builds.Load()
 	if err != nil {
 		jww.ERROR.Println(err)
 		return err

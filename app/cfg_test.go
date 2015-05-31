@@ -489,14 +489,29 @@ func TestSupported(t *testing.T) {
 func TestBuildStuff(t *testing.T) {
 	contour.UpdateString(BuildFile, "")
 	b := builds{}
-	b.LoadOnce()
-	if b.loaded == true {
-		t.Errorf("expected Build's loaded flag to be false, but it was true")
+	err := b.Load()
+	if err == nil {
+		t.Error("Expected an error, but none received")
+	} else {
+		if err.Error() != "\"build\" not set, unable to retrieve the build file" {
+			t.Errorf("Expected \"build\" not set, unable to retrieve the build file, got %q", err.Error())
+		}
+		if b.loaded == true {
+			t.Errorf("expected Build's loaded flag to be false, but it was true")
+		}
 	}
 
-	b.LoadOnce()
-	if b.loaded == true {
-		t.Errorf("expected Build's loaded flag to be false, but it was true")
+	contour.UpdateString(BuildFile, "../test_files/notthere.toml")
+	err = b.Load()
+	if err == nil {
+		t.Error("Expected an error, but none received")
+	} else {
+		if err.Error() != "decode failed: open ../test_files/notthere.toml: no such file or directory" {
+			t.Errorf("Expected \"decode failed: open ../test_files/notthere.toml: no such file or directory\", got %q", err.Error())
+		}
+		if b.loaded == true {
+			t.Errorf("expected Build's loaded flag to be false, but it was true")
+		}
 	}
 }
 
