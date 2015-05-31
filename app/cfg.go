@@ -359,32 +359,25 @@ type distro struct {
 // application.
 type supported struct {
 	Distro map[string]*distro
-	load   sync.Once
+	sync.Mutex
 	loaded bool
-	err    error
 }
 
-// Ensures that the supported distro information only get loaded once. Uses a
-// mutex to prevent race conditions as there can be concurrent processing of
-// Packer templates. When loaded, it sets the loaded boolean so that it only
-// needs to be called when it hasn't been loaded.
-func (s *supported) LoadOnce() error {
-	loadFunc := func() {
-		name := contour.GetString(SupportedFile)
-		if name == "" {
-			s.err = filenameNotSetErr("supported")
-			return
-		}
-		_, err := toml.DecodeFile(name, &s)
-		if err != nil {
-			s.err = decodeErr(err)
-			return
-		}
-		s.loaded = true
-		return
+// Load the supported distro info. If it has already been loaded, nothing is
+// done.
+func (s *supported) Load() error {
+	s.Mutex.Lock()
+	defer s.Mutex.Unlock()
+	name := contour.GetString(SupportedFile)
+	if name == "" {
+		return filenameNotSetErr("supported")
 	}
-	s.load.Do(loadFunc)
-	return s.err
+	_, err := toml.DecodeFile(name, &s)
+	if err != nil {
+		return decodeErr(err)
+	}
+	s.loaded = true
+	return nil
 }
 
 // Struct to hold the builds.

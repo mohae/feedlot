@@ -473,7 +473,7 @@ func TestDefaults(t *testing.T) {
 func TestSupported(t *testing.T) {
 	contour.UpdateString(SupportedFile, "")
 	s := supported{}
-	err := s.LoadOnce()
+	err := s.Load()
 	if err == nil {
 		t.Errorf("expected error, none occurred")
 	} else {

@@ -116,7 +116,7 @@ func (d *distroDefaults) Set() error {
 		return err
 	}
 	s := &supported{}
-	err = s.LoadOnce()
+	err = s.Load()
 	if err != nil {
 		jww.ERROR.Println(err)
 		return err
