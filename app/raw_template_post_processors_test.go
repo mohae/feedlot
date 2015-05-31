@@ -20,7 +20,7 @@ var testPostProcessorTemplate = &rawTemplate{
 		BuilderTypes: []string{
 			"virtualbox-iso",
 		},
-		Builders: map[string]*builder{
+		Builders: map[string]builder{
 			"common": {
 				templateSection{
 					Settings: []string{
@@ -41,7 +41,7 @@ var testPostProcessorTemplate = &rawTemplate{
 		PostProcessorTypes: []string{
 			"vagrant",
 		},
-		PostProcessors: map[string]*postProcessor{
+		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				templateSection{
 					Settings: []string{
@@ -58,7 +58,7 @@ var testPostProcessorTemplate = &rawTemplate{
 		ProvisionerTypes: []string{
 			"shell",
 		},
-		Provisioners: map[string]*provisioner{
+		Provisioners: map[string]provisioner{
 			"shell": {
 				templateSection{
 					Settings: []string{
@@ -96,7 +96,7 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 		BuilderTypes: []string{
 			"virtualbox-iso",
 		},
-		Builders: map[string]*builder{
+		Builders: map[string]builder{
 			"common": {
 				templateSection{
 					Settings: []string{
@@ -118,7 +118,7 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 			"compress",
 			"vagrant",
 		},
-		PostProcessors: map[string]*postProcessor{
+		PostProcessors: map[string]postProcessor{
 			"compress": {
 				templateSection{
 					Settings: []string{
@@ -214,7 +214,7 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 		ProvisionerTypes: []string{
 			"shell",
 		},
-		Provisioners: map[string]*provisioner{
+		Provisioners: map[string]provisioner{
 			"shell": {
 				templateSection{
 					Settings: []string{
@@ -249,7 +249,7 @@ var pp = &postProcessor{
 	},
 }
 
-var ppOrig = map[string]*postProcessor{
+var ppOrig = map[string]postProcessor{
 	"vagrant": {
 		templateSection{
 			Settings: []string{
@@ -281,7 +281,7 @@ var ppOrig = map[string]*postProcessor{
 	},
 }
 
-var ppNew = map[string]*postProcessor{
+var ppNew = map[string]postProcessor{
 	"vagrant": {
 		templateSection{
 			Settings: []string{
@@ -302,7 +302,7 @@ var ppNew = map[string]*postProcessor{
 	},
 }
 
-var ppMerged = map[string]*postProcessor{
+var ppMerged = map[string]postProcessor{
 	"vagrant": {
 		templateSection{
 			Settings: []string{

@@ -46,7 +46,7 @@ var testDistroDefaultUbuntu = &rawTemplate{
 	files:   map[string]string{},
 	build: build{
 		BuilderTypes: []string{"virtualbox-iso", "vmware-iso"},
-		Builders: map[string]*builder{
+		Builders: map[string]builder{
 			"common": {
 				templateSection{
 					Settings: []string{
@@ -95,7 +95,7 @@ var testDistroDefaultUbuntu = &rawTemplate{
 			"vagrant",
 			"vagrant-cloud",
 		},
-		PostProcessors: map[string]*postProcessor{
+		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				templateSection{
 					Settings: []string{
@@ -124,7 +124,7 @@ var testDistroDefaultUbuntu = &rawTemplate{
 			},
 		},
 		ProvisionerTypes: []string{"shell"},
-		Provisioners: map[string]*provisioner{
+		Provisioners: map[string]provisioner{
 			"shell": {
 				templateSection{
 					Settings: []string{
@@ -175,7 +175,7 @@ var testDistroDefaultCentOS = &rawTemplate{
 	files:   map[string]string{},
 	build: build{
 		BuilderTypes: []string{"virtualbox-iso", "vmware-iso"},
-		Builders: map[string]*builder{
+		Builders: map[string]builder{
 			"common": {
 				templateSection{
 					Settings: []string{
@@ -225,7 +225,7 @@ var testDistroDefaultCentOS = &rawTemplate{
 			"vagrant",
 			"vagrant-cloud",
 		},
-		PostProcessors: map[string]*postProcessor{
+		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				templateSection{
 					Settings: []string{
@@ -259,7 +259,7 @@ var testDistroDefaultCentOS = &rawTemplate{
 		ProvisionerTypes: []string{
 			"shell",
 		},
-		Provisioners: map[string]*provisioner{
+		Provisioners: map[string]provisioner{
 			"shell": {
 				templateSection{
 					Settings: []string{

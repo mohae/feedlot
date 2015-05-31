@@ -73,45 +73,41 @@ func ProvisionerFromString(s string) Provisioner {
 //   orphaned.
 //  * If there isn't a new config, return the existing as there are no
 //    overrides.
-func (r *rawTemplate) updateProvisioners(new map[string]*provisioner) {
+func (r *rawTemplate) updateProvisioners(newP map[string]provisioner) {
 	// If there is nothing new, old equals merged.
-	if len(new) <= 0 || new == nil {
+	if len(newP) <= 0 || newP == nil {
 		return
 	}
 	// Convert the existing provisioners to interface.
 	var ifaceOld = make(map[string]interface{}, len(r.Provisioners))
 	ifaceOld = DeepCopyMapStringPProvisioner(r.Provisioners)
 	// Convert the new provisioners to interface.
-	var ifaceNew = make(map[string]interface{}, len(new))
-	ifaceNew = DeepCopyMapStringPProvisioner(new)
+	var ifaceNew = make(map[string]interface{}, len(newP))
+	ifaceNew = DeepCopyMapStringPProvisioner(newP)
 	// Get the all keys from both maps
 	var keys []string
 	keys = mergedKeysFromMaps(ifaceOld, ifaceNew)
-	p := &provisioner{}
 	if r.Provisioners == nil {
-		r.Provisioners = map[string]*provisioner{}
+		r.Provisioners = map[string]provisioner{}
 	}
 	// Copy: if the key exists in the new provisioners only.
 	// Ignore: if the key does not exist in the new provisioners.
 	// Merge: if the key exists in both the new and old provisioners.
 	for _, v := range keys {
 		// If it doesn't exist in the old builder, add it.
-		_, ok := r.Provisioners[v]
+		p, ok := r.Provisioners[v]
 		if !ok {
-			r.Provisioners[v] = new[v].DeepCopy()
+			pp, _ := newP[v]
+			r.Provisioners[v] = pp.DeepCopy()
 			continue
 		}
 		// If the element for this key doesn't exist, skip it.
-		_, ok = new[v]
+		pp, ok := newP[v]
 		if !ok {
 			continue
 		}
-		p = r.Provisioners[v].DeepCopy()
-		if p == nil {
-			p = &provisioner{templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
-		}
-		p.mergeSettings(new[v].Settings)
-		p.mergeArrays(new[v].Arrays)
+		p.mergeSettings(pp.Settings)
+		p.mergeArrays(pp.Arrays)
 		r.Provisioners[v] = p
 	}
 }
@@ -684,10 +680,10 @@ func (r *rawTemplate) createShellScript() (settings map[string]interface{}, err 
 
 // DeepCopyMapStringPProvisioner makes a deep copy of each builder passed and
 // returns the copie map[string]*provisioner as a map[string]interface{}
-func DeepCopyMapStringPProvisioner(p map[string]*provisioner) map[string]interface{} {
+func DeepCopyMapStringPProvisioner(p map[string]provisioner) map[string]interface{} {
 	c := map[string]interface{}{}
 	for k, v := range p {
-		tmpP := &provisioner{}
+		tmpP := provisioner{}
 		tmpP = v.DeepCopy()
 		c[k] = tmpP
 	}

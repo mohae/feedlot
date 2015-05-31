@@ -25,7 +25,7 @@ var testDefaults = &defaults{
 			"virtualbox-iso",
 			"vmware-iso",
 		},
-		Builders: map[string]*builder{
+		Builders: map[string]builder{
 			"common": {
 				templateSection{
 					Settings: []string{
@@ -73,7 +73,7 @@ var testDefaults = &defaults{
 			"vagrant",
 			"vagrant-cloud",
 		},
-		PostProcessors: map[string]*postProcessor{
+		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				templateSection{
 					Settings: []string{
@@ -102,7 +102,7 @@ var testDefaults = &defaults{
 		ProvisionerTypes: []string{
 			"shell",
 		},
-		Provisioners: map[string]*provisioner{
+		Provisioners: map[string]provisioner{
 			"shell": {
 				templateSection{
 					Settings: []string{
@@ -162,7 +162,7 @@ var testSupportedUbuntu = &distro{
 			"virtualbox-iso",
 			"vmware-iso",
 		},
-		Builders: map[string]*builder{
+		Builders: map[string]builder{
 			"common": {
 				templateSection{
 					Settings: []string{
@@ -189,7 +189,7 @@ var testSupportedUbuntu = &distro{
 		PostProcessorTypes: []string{
 			"vagrant",
 		},
-		PostProcessors: map[string]*postProcessor{
+		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				templateSection{
 					Settings: []string{
@@ -202,7 +202,7 @@ var testSupportedUbuntu = &distro{
 			"shell",
 			"file-uploads",
 		},
-		Provisioners: map[string]*provisioner{
+		Provisioners: map[string]provisioner{
 			"shell": {
 				templateSection{
 					Settings: []string{

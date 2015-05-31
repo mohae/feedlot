@@ -31,7 +31,7 @@ var testUbuntu = &rawTemplate{
 			"virtualbox-iso",
 			"vmware-iso",
 		},
-		Builders: map[string]*builder{
+		Builders: map[string]builder{
 			"common": {
 				templateSection{
 					Settings: []string{
@@ -74,7 +74,7 @@ var testUbuntu = &rawTemplate{
 		PostProcessorTypes: []string{
 			"vagrant",
 		},
-		PostProcessors: map[string]*postProcessor{
+		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				templateSection{
 					Settings: []string{
@@ -87,7 +87,7 @@ var testUbuntu = &rawTemplate{
 		ProvisionerTypes: []string{
 			"shell",
 		},
-		Provisioners: map[string]*provisioner{
+		Provisioners: map[string]provisioner{
 			"shell": {
 				templateSection{
 					Settings: []string{
@@ -136,7 +136,7 @@ var testCentOS = &rawTemplate{
 			"vmware-iso",
 			"vmware-vmx",
 		},
-		Builders: map[string]*builder{
+		Builders: map[string]builder{
 			"common": {
 				templateSection{
 					Settings: []string{
@@ -199,7 +199,7 @@ var testCentOS = &rawTemplate{
 		PostProcessorTypes: []string{
 			"vagrant",
 		},
-		PostProcessors: map[string]*postProcessor{
+		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				templateSection{
 					Settings: []string{
@@ -213,7 +213,7 @@ var testCentOS = &rawTemplate{
 			"shell",
 			"salt",
 		},
-		Provisioners: map[string]*provisioner{
+		Provisioners: map[string]provisioner{
 			"salt": {
 				templateSection{
 					Settings: []string{
@@ -276,7 +276,7 @@ var testAllBuilders = &rawTemplate{
 			"vmware-iso",
 			"vmware-vmx",
 		},
-		Builders: map[string]*builder{
+		Builders: map[string]builder{
 			"common": {
 				templateSection{
 					Settings: []string{
@@ -600,7 +600,7 @@ var testAllBuilders = &rawTemplate{
 		PostProcessorTypes: []string{
 			"vagrant",
 		},
-		PostProcessors: map[string]*postProcessor{
+		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				templateSection{
 					Settings: []string{
@@ -613,7 +613,7 @@ var testAllBuilders = &rawTemplate{
 		ProvisionerTypes: []string{
 			"salt",
 		},
-		Provisioners: map[string]*provisioner{
+		Provisioners: map[string]provisioner{
 			"salt": {
 				templateSection{
 					Settings: []string{
@@ -651,7 +651,7 @@ var testDigtialOceanAPIV1 = &rawTemplate{
 		BuilderTypes: []string{
 			"digitalocean",
 		},
-		Builders: map[string]*builder{
+		Builders: map[string]builder{
 			"digitalocean": {
 				templateSection{
 					Settings: []string{
@@ -700,7 +700,7 @@ var testDigtialOceanNoAPI = &rawTemplate{
 		BuilderTypes: []string{
 			"digitalocean",
 		},
-		Builders: map[string]*builder{
+		Builders: map[string]builder{
 			"digitalocean": {
 				templateSection{
 					Settings: []string{
@@ -746,7 +746,7 @@ var testDockerRunComandFile = &rawTemplate{
 		BuilderTypes: []string{
 			"docker",
 		},
-		Builders: map[string]*builder{
+		Builders: map[string]builder{
 			"docker": {
 				templateSection{
 					Settings: []string{
@@ -795,7 +795,7 @@ var testDockerRunComand = &rawTemplate{
 		BuilderTypes: []string{
 			"docker",
 		},
-		Builders: map[string]*builder{
+		Builders: map[string]builder{
 			"docker": {
 				templateSection{
 					Settings: []string{
@@ -824,7 +824,7 @@ var testDockerRunComand = &rawTemplate{
 		},
 	},
 }
-var builderOrig = map[string]*builder{
+var builderOrig = map[string]builder{
 	"common": {
 		templateSection{
 			Settings: []string{
@@ -865,7 +865,7 @@ var builderOrig = map[string]*builder{
 	},
 }
 
-var builderNew = map[string]*builder{
+var builderNew = map[string]builder{
 	"common": {
 		templateSection{
 			Settings: []string{
@@ -894,7 +894,7 @@ var builderNew = map[string]*builder{
 	},
 }
 
-var builderMerged = map[string]*builder{
+var builderMerged = map[string]builder{
 	"common": {
 		templateSection{
 			Settings: []string{
@@ -914,7 +914,6 @@ var builderMerged = map[string]*builder{
 	},
 	"virtualbox-iso": {
 		templateSection{
-			Settings: []string{},
 			Arrays: map[string]interface{}{
 				"vm_settings": []string{
 					"cpus=1",

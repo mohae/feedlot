@@ -25,28 +25,28 @@ type build struct {
 	BuilderTypes []string `toml:"builder_types"`
 	// A map of builder configuration. There should always be a `common`
 	// builder, which has settings common to both VMWare and VirtualBox.
-	Builders map[string]*builder `toml:"builders"`
+	Builders map[string]builder `toml:"builders"`
 	// Targeted post-processors: the values are consistent with Packer's, e.g.
 	// `vagrant` is used for Vagrant.
 	PostProcessorTypes []string `toml:"post_processor_types"`
 	// A map of post-processor configurations.
-	PostProcessors map[string]*postProcessor `toml:"post_processors"`
+	PostProcessors map[string]postProcessor `toml:"post_processors"`
 	// Targeted provisioners: the values are consistent with Packer's, e.g.
 	// `shell` is used for shell.
 	ProvisionerTypes []string `toml:"provisioner_types"`
 	// A map of provisioner configurations.
-	Provisioners map[string]*provisioner `toml:"provisioners"`
+	Provisioners map[string]provisioner `toml:"provisioners"`
 }
 
 // build.DeepCopy makes a deep copy of the build and returns it.
 func (b *build) DeepCopy() build {
 	copy := &build{
 		BuilderTypes:       []string{},
-		Builders:           map[string]*builder{},
+		Builders:           map[string]builder{},
 		PostProcessorTypes: []string{},
-		PostProcessors:     map[string]*postProcessor{},
+		PostProcessors:     map[string]postProcessor{},
 		ProvisionerTypes:   []string{},
-		Provisioners:       map[string]*provisioner{},
+		Provisioners:       map[string]provisioner{},
 	}
 	if b.BuilderTypes != nil || len(b.BuilderTypes) > 0 {
 		copy.BuilderTypes = b.BuilderTypes
@@ -121,9 +121,8 @@ type builder struct {
 }
 
 // builder.DeepCopy copies the builder values instead of the pointers.
-func (b *builder) DeepCopy() *builder {
-	var c *builder
-	c = &builder{templateSection: templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
+func (b *builder) DeepCopy() builder {
+	c := builder{templateSection: templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
 	c.templateSection.DeepCopy(b.templateSection)
 	return c
 }
@@ -167,9 +166,8 @@ type postProcessor struct {
 
 // postProcessor.DeepCopy copies the postProcessor values instead of the
 // pointers.
-func (p *postProcessor) DeepCopy() *postProcessor {
-	var c *postProcessor
-	c = &postProcessor{templateSection: templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
+func (p *postProcessor) DeepCopy() postProcessor {
+	c := postProcessor{templateSection: templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
 	c.templateSection.DeepCopy(p.templateSection)
 	return c
 }
@@ -201,9 +199,8 @@ type provisioner struct {
 
 // postProcessor.DeepCopy copies the postProcessor values instead of the
 // pointers.
-func (p *provisioner) DeepCopy() *provisioner {
-	var c *provisioner
-	c = &provisioner{templateSection: templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
+func (p *provisioner) DeepCopy() provisioner {
+	c := provisioner{templateSection: templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
 	c.templateSection.DeepCopy(p.templateSection)
 	return c
 }

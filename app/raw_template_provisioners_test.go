@@ -31,7 +31,7 @@ var testRawTemplateProvisioner = &rawTemplate{
 	files:   map[string]string{},
 	build: build{
 		BuilderTypes: []string{"virtualbox-iso", "vmware-iso"},
-		Builders: map[string]*builder{
+		Builders: map[string]builder{
 			"common": {
 				templateSection{
 					Settings: []string{
@@ -80,7 +80,7 @@ var testRawTemplateProvisioner = &rawTemplate{
 			"vagrant",
 			"vagrant-cloud",
 		},
-		PostProcessors: map[string]*postProcessor{
+		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				templateSection{
 					Settings: []string{
@@ -114,7 +114,7 @@ var testRawTemplateProvisioner = &rawTemplate{
 			"shell",
 			"file",
 		},
-		Provisioners: map[string]*provisioner{
+		Provisioners: map[string]provisioner{
 			"shell": {
 				templateSection{
 					Settings: []string{
@@ -175,7 +175,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 	files:   map[string]string{},
 	build: build{
 		BuilderTypes: []string{"virtualbox-iso", "vmware-iso"},
-		Builders: map[string]*builder{
+		Builders: map[string]builder{
 			"common": {
 				templateSection{
 					Settings: []string{
@@ -224,7 +224,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 			"vagrant",
 			"vagrant-cloud",
 		},
-		PostProcessors: map[string]*postProcessor{
+		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				templateSection{
 					Settings: []string{
@@ -262,7 +262,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 			"shell",
 			"file",
 		},
-		Provisioners: map[string]*provisioner{
+		Provisioners: map[string]provisioner{
 			"ansible-local": {
 				templateSection{
 					Settings: []string{
@@ -420,8 +420,8 @@ var pr = &provisioner{
 	},
 }
 
-var prOrig = map[string]*provisioner{
-	"shell": &provisioner{
+var prOrig = map[string]provisioner{
+	"shell": provisioner{
 		templateSection{
 			Settings: []string{
 				"execute_command = execute_test.command",
@@ -453,8 +453,8 @@ var prOrig = map[string]*provisioner{
 	},
 }
 
-var prNew = map[string]*provisioner{
-	"shell": &provisioner{
+var prNew = map[string]provisioner{
+	"shell": provisioner{
 		templateSection{
 			Settings: []string{},
 			Arrays: map[string]interface{}{
@@ -482,8 +482,8 @@ var prNew = map[string]*provisioner{
 	},
 }
 
-var prMerged = map[string]*provisioner{
-	"shell": &provisioner{
+var prMerged = map[string]provisioner{
+	"shell": provisioner{
 		templateSection{
 			Settings: []string{
 				"execute_command = execute_test.command",

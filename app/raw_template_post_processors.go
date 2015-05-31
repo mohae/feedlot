@@ -71,47 +71,42 @@ func PostProcessorFromString(s string) PostProcessor {
 //     existing postProcessors.  In this situation, if a postProcessor exists
 //     in the `old` map but it does not exist in the `new` map, that
 //     postProcessor will be orphaned.
-//   * If there isn't a new config, return the existing as there are no
-//     overrides.
-func (r *rawTemplate) updatePostProcessors(new map[string]*postProcessor) {
+//   * If there isn't a new config, the existing one is used
+func (r *rawTemplate) updatePostProcessors(newP map[string]postProcessor) {
 	// If there is nothing new, old equals merged.
-	if len(new) <= 0 || new == nil {
+	if len(newP) == 0 || newP == nil {
 		return
 	}
 	// Convert the existing postProcessors to interface.
 	var ifaceOld = make(map[string]interface{}, len(r.PostProcessors))
 	ifaceOld = DeepCopyMapStringPPostProcessor(r.PostProcessors)
 	// Convert the new postProcessors to interfaces
-	var ifaceNew = make(map[string]interface{}, len(new))
-	ifaceNew = DeepCopyMapStringPPostProcessor(new)
+	var ifaceNew = make(map[string]interface{}, len(newP))
+	ifaceNew = DeepCopyMapStringPPostProcessor(newP)
 	// Get the all keys from both maps
 	var keys []string
 	keys = mergedKeysFromMaps(ifaceOld, ifaceNew)
-	p := &postProcessor{}
 	if r.PostProcessors == nil {
-		r.PostProcessors = map[string]*postProcessor{}
+		r.PostProcessors = map[string]postProcessor{}
 	}
 	// Copy: if the key exists in the new postProcessors only.
 	// Ignore: if the key does not exist in the new postProcessors.
 	// Merge: if the key exists in both the new and old postProcessors.
 	for _, v := range keys {
 		// If it doesn't exist in the old builder, add it.
-		_, ok := r.PostProcessors[v]
+		p, ok := r.PostProcessors[v]
 		if !ok {
-			r.PostProcessors[v] = new[v].DeepCopy()
+			pp, _ := newP[v]
+			r.PostProcessors[v] = pp.DeepCopy()
 			continue
 		}
 		// If the element for this key doesn't exist, skip it.
-		_, ok = new[v]
+		pp, ok := newP[v]
 		if !ok {
 			continue
 		}
-		p = r.PostProcessors[v].DeepCopy()
-		if p == nil {
-			p = &postProcessor{templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
-		}
-		p.mergeSettings(new[v].Settings)
-		p.mergeArrays(new[v].Arrays)
+		p.mergeSettings(pp.Settings)
+		p.mergeArrays(pp.Arrays)
 		r.PostProcessors[v] = p
 	}
 }
@@ -615,10 +610,10 @@ func (r *rawTemplate) createVSphere() (settings map[string]interface{}, err erro
 // DeepCopyMapStringPPostProcessor makes a deep copy of each builder passed and
 // returns the copie map[string]*builder as a map[string]interface{}
 // Note: This currently only supports string slices.
-func DeepCopyMapStringPPostProcessor(p map[string]*postProcessor) map[string]interface{} {
+func DeepCopyMapStringPPostProcessor(p map[string]postProcessor) map[string]interface{} {
 	c := map[string]interface{}{}
 	for k, v := range p {
-		tmpP := &postProcessor{}
+		tmpP := postProcessor{}
 		tmpP = v.DeepCopy()
 		c[k] = tmpP
 	}

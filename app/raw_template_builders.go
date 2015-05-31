@@ -1530,9 +1530,9 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, err er
 //     of that key. There is an exception:
 //   * `guest_os_type`: This is generally set at Packer Template generation
 //     time by Rancher.
-func (r *rawTemplate) updateBuilders(newB map[string]*builder) {
+func (r *rawTemplate) updateBuilders(newB map[string]builder) {
 	// If there is nothing new, old equals merged.
-	if len(newB) <= 0 || newB == nil {
+	if len(newB) == 0 || newB == nil {
 		return
 	}
 	// Convert the existing Builders to interfaces.
@@ -1555,19 +1555,19 @@ func (r *rawTemplate) updateBuilders(newB map[string]*builder) {
 	// Merge: if the key exists in both the new and old builder.
 	for _, v := range keys {
 		// If it doesn't exist in the old builder, add it.
-		_, ok := r.Builders[v]
+		b, ok := r.Builders[v]
 		if !ok {
-			r.Builders[v] = newB[v].DeepCopy()
+			bb, _ := newB[v]
+			r.Builders[v] = bb.DeepCopy()
 			continue
 		}
 		// If the element for this key doesn't exist, skip it.
-		_, ok = newB[v]
+		bb, ok := newB[v]
 		if !ok {
 			continue
 		}
-
-		b := r.Builders[v].DeepCopy()
-		b.mergeArrays(newB[v].Arrays)
+		b.mergeSettings(bb.Settings)
+		b.mergeArrays(bb.Arrays)
 		r.Builders[v] = b
 	}
 	return
@@ -1582,18 +1582,19 @@ func (r *rawTemplate) updateBuilders(newB map[string]*builder) {
 //     inserted into r's CommonBuilder setting list.
 //   * When r has a setting that does not exist in b, nothing is done.  This
 //     method does not delete any settings that already exist in r.
-func (r *rawTemplate) updateCommon(new *builder) {
+func (r *rawTemplate) updateCommon(newB builder) {
 	if r.Builders == nil {
-		r.Builders = map[string]*builder{}
+		r.Builders = map[string]builder{}
 	}
 	// If the existing builder doesn't have a CommonBuilder section, just add it
-	_, ok := r.Builders[Common.String()]
+	b, ok := r.Builders[Common.String()]
 	if !ok {
-		r.Builders[Common.String()] = &builder{templateSection: templateSection{Settings: new.Settings, Arrays: new.Arrays}}
+		r.Builders[Common.String()] = builder{templateSection: templateSection{Settings: newB.Settings, Arrays: newB.Arrays}}
 		return
 	}
 	// Otherwise merge the two
-	r.Builders[Common.String()].mergeSettings(new.Settings)
+	b.mergeSettings(b.Settings)
+	r.Builders[Common.String()] = b
 	return
 }
 
@@ -1615,10 +1616,10 @@ func (r *rawTemplate) setHTTP(component string, m map[string]interface{}) error 
 
 // DeepCopyMapStringPBuilder makes a deep copy of each builder passed and
 // returns the copy map[string]*builder as a map[string]interface{}
-func DeepCopyMapStringPBuilder(b map[string]*builder) map[string]interface{} {
+func DeepCopyMapStringPBuilder(b map[string]builder) map[string]interface{} {
 	c := map[string]interface{}{}
 	for k, v := range b {
-		tmpB := &builder{}
+		tmpB := builder{}
 		tmpB = v.DeepCopy()
 		c[k] = tmpB
 	}

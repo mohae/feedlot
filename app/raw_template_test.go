@@ -8,13 +8,12 @@ import (
 
 var testRawTpl = newRawTemplate()
 
-var updatedBuilders = map[string]*builder{
+var updatedBuilders = map[string]builder{
 	"common": {
 		templateSection{
 			Settings: []string{
 				"ssh_wait_timeout = 300m",
 			},
-			Arrays: map[string]interface{}{},
 		},
 	},
 	"virtualbox-iso": {
@@ -29,7 +28,7 @@ var updatedBuilders = map[string]*builder{
 	},
 }
 
-var comparePostProcessors = map[string]*postProcessor{
+var comparePostProcessors = map[string]postProcessor{
 	"vagrant": {
 		templateSection{
 			Settings: []string{
@@ -58,7 +57,7 @@ var comparePostProcessors = map[string]*postProcessor{
 	},
 }
 
-var compareProvisioners = map[string]*provisioner{
+var compareProvisioners = map[string]provisioner{
 	"shell": {
 		templateSection{
 			Settings: []string{
@@ -96,7 +95,7 @@ var testBuildNewTPL = &rawTemplate{
 		BuilderTypes: []string{
 			"virtualbox-iso",
 		},
-		Builders: map[string]*builder{
+		Builders: map[string]builder{
 			"common": {
 				templateSection{
 					Settings: []string{
@@ -118,7 +117,7 @@ var testBuildNewTPL = &rawTemplate{
 			"vagrant",
 			"vagrant-cloud",
 		},
-		PostProcessors: map[string]*postProcessor{
+		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				templateSection{
 					Settings: []string{
@@ -148,7 +147,7 @@ var testBuildNewTPL = &rawTemplate{
 		ProvisionerTypes: []string{
 			"shell",
 		},
-		Provisioners: map[string]*provisioner{
+		Provisioners: map[string]provisioner{
 			"shell": {
 				templateSection{
 					Settings: []string{
@@ -218,11 +217,11 @@ var testRawTemplateWOSection = &rawTemplate{
 	files:   map[string]string{},
 	build: build{
 		BuilderTypes:       []string{"amazon-ebs"},
-		Builders:           map[string]*builder{},
+		Builders:           map[string]builder{},
 		PostProcessorTypes: []string{"compress"},
-		PostProcessors:     map[string]*postProcessor{},
+		PostProcessors:     map[string]postProcessor{},
 		ProvisionerTypes:   []string{"ansible-local"},
-		Provisioners:       map[string]*provisioner{},
+		Provisioners:       map[string]provisioner{},
 	},
 }
 
