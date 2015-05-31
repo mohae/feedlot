@@ -231,32 +231,30 @@ type defaults struct {
 	PackerInf
 	BuildInf
 	build
-	load   sync.Once
+	sync.Mutex
 	loaded bool
-	err    error
 }
 
-// Ensures that the default configs get loaded once. Uses a mutex to prevent
-// race conditions as there can be concurrent processing of Packer templates.
-// When loaded, it sets the loaded boolean so that it only needs to be called
-// when it hasn't been loaded.
-func (d *defaults) LoadOnce() error {
-	loadFunc := func() {
-		name := contour.GetString(DefaultFile)
-		if name == "" {
-			d.err = filenameNotSetErr("default")
-			return
-		}
-		_, err := toml.DecodeFile(name, d)
-		if err != nil {
-			d.err = fmt.Errorf("load of default information failed: %s", err)
-			return
-		}
-		d.loaded = true
-		return
+// Load loads the defualt settings. If the defaults have already been loaded
+// nothing is done.
+func (d *defaults) Load() error {
+	d.Mutex.Lock()
+	defer d.Mutex.Unlock()
+	if d.loaded {
+		return nil
 	}
-	d.load.Do(loadFunc)
-	return d.err
+	name := contour.GetString(DefaultFile)
+	if name == "" {
+		err := filenameNotSetErr("default")
+		return err
+	}
+	_, err := toml.DecodeFile(name, d)
+	if err != nil {
+		err = fmt.Errorf("load of default information failed: %s", err)
+		return err
+	}
+	d.loaded = true
+	return nil
 }
 
 // BuildInf is a container for information about a specific build.

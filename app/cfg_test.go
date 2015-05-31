@@ -456,7 +456,7 @@ func TestProvisionerMergeSettings(t *testing.T) {
 func TestDefaults(t *testing.T) {
 	contour.UpdateString(DefaultFile, "")
 	d := defaults{}
-	err := d.LoadOnce()
+	err := d.Load()
 	if err == nil {
 		t.Error("Expected an error, got nil")
 	} else {

@@ -110,7 +110,7 @@ func (d *distroDefaults) GetTemplate(n string) (*rawTemplate, error) {
 // Set sets the default templates for each distro.
 func (d *distroDefaults) Set() error {
 	dflts := &defaults{}
-	err := dflts.LoadOnce()
+	err := dflts.Load()
 	if err != nil {
 		jww.ERROR.Println(err)
 		return err
