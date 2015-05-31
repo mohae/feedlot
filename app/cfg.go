@@ -245,13 +245,11 @@ func (d *defaults) Load() error {
 	}
 	name := contour.GetString(DefaultFile)
 	if name == "" {
-		err := filenameNotSetErr("default")
-		return err
+		return filenameNotSetErr("default")
 	}
 	_, err := toml.DecodeFile(name, d)
 	if err != nil {
-		err = fmt.Errorf("load of default information failed: %s", err)
-		return err
+		return fmt.Errorf("load of default information failed: %s", err)
 	}
 	d.loaded = true
 	return nil
