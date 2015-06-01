@@ -157,7 +157,7 @@ var testCentOS = &rawTemplate{
 				templateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
-							"cpus=1",
+							"--cpus=1",
 							"memory=4096",
 						},
 					},
@@ -168,7 +168,7 @@ var testCentOS = &rawTemplate{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
 							"cpus=1",
-							"memory=4096",
+							"--memory=4096",
 						},
 					},
 				},
@@ -451,7 +451,7 @@ var testAllBuilders = &rawTemplate{
 						},
 						"vboxmanage": []string{
 							"--cpus=1",
-							"--memory=4096",
+							"memory=4096",
 						},
 						"vboxmanage_post": []string{
 							"something=value",
@@ -496,7 +496,7 @@ var testAllBuilders = &rawTemplate{
 							"disk1",
 						},
 						"vboxmanage": []string{
-							"--cpus=1",
+							"cpus=1",
 							"--memory=4096",
 						},
 						"vboxmanage_post": []string{
@@ -1402,7 +1402,7 @@ func TestCreateBuilderVirtualboxISO(t *testing.T) {
 			[]string{
 				"modifyvm",
 				"{{.Name}}",
-				"something",
+				"--something",
 				"value",
 			},
 		},
@@ -1475,7 +1475,7 @@ func TestCreateBuilderVirtualboxOVF(t *testing.T) {
 			[]string{
 				"modifyvm",
 				"{{.Name}}",
-				"something",
+				"--something",
 				"value",
 			},
 		},

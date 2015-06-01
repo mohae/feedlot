@@ -1096,6 +1096,10 @@ func (r *rawTemplate) createVBoxManage(v interface{}) [][]string {
 	tmp := make([][]string, len(vms))
 	for i, v := range vms {
 		k, vv := parseVar(v)
+		// ensure that the key starts with --. A naive concatonation is done.
+		if !strings.HasPrefix(k, "--") {
+			k = "--" + k
+		}
 		vv = r.replaceVariables(vv)
 		tmp[i] = make([]string, 4)
 		tmp[i][0] = "modifyvm"
@@ -1288,18 +1292,7 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, err er
 				settings[name] = val
 			}
 		case "vmx_data", "vmx_data_post":
-			vms := deepcopy.InterfaceToSliceOfStrings(val)
-			tmpVM := make([][]string, len(vms))
-			for i, v := range vms {
-				k, vv := parseVar(v)
-				vv = r.replaceVariables(vv)
-				tmpVM[i] = make([]string, 4)
-				tmpVM[i][0] = "modifyvm"
-				tmpVM[i][1] = "{{.Name}}"
-				tmpVM[i][2] = "--" + k
-				tmpVM[i][3] = vv
-			}
-			settings[name] = tmpVM
+			settings[name] = r.createVMXData(val)
 		}
 	}
 
@@ -1492,17 +1485,21 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, err er
 		case "floppy_files":
 			settings[name] = val
 		case "vmx_data", "vmx_data_post":
-			vms := deepcopy.InterfaceToSliceOfStrings(val)
-			tmpVM := map[string]string{}
-			for _, v := range vms {
-				k, vv := parseVar(v)
-				vv = r.replaceVariables(vv)
-				tmpVM[k] = vv
-			}
-			settings[name] = tmpVM
+			settings[name] = r.createVMXData(val)
 		}
 	}
 	return settings, nil
+}
+
+func (r *rawTemplate) createVMXData(v interface{}) map[string]string {
+	vms := deepcopy.InterfaceToSliceOfStrings(v)
+	tmp := make(map[string]string, len(vms))
+	for _, v := range vms {
+		k, val := parseVar(v)
+		val = r.replaceVariables(val)
+		tmp[k] = val
+	}
+	return tmp
 }
 
 // updateBuilders updates the rawTemplate's builders with the passed new
