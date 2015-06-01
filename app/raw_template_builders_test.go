@@ -1610,8 +1610,8 @@ func TestCreateBuilderVMWareVMX(t *testing.T) {
 		}
 	}
 }
-func TestDeepCopyMapStringPBuilder(t *testing.T) {
-	cpy := DeepCopyMapStringPBuilder(testDistroDefaults.Templates[Ubuntu].Builders)
+func TestDeepCopyMapStringBuilder(t *testing.T) {
+	cpy := DeepCopyMapStringBuilder(testDistroDefaults.Templates[Ubuntu].Builders)
 	if MarshalJSONToString.Get(cpy["common"]) != MarshalJSONToString.Get(testDistroDefaults.Templates[Ubuntu].Builders["common"]) {
 		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testDistroDefaults.Templates[Ubuntu].Builders["common"]), MarshalJSONToString.Get(cpy["common"]))
 	}

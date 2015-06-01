@@ -879,18 +879,7 @@ noISOURL:
 				settings[name] = val
 			}
 		case "vboxmanage", "vboxmanage_post":
-			vms := deepcopy.InterfaceToSliceOfStrings(val)
-			tmpVB := make([][]string, len(vms))
-			for i, v := range vms {
-				k, vv := parseVar(v)
-				vv = r.replaceVariables(vv)
-				tmpVB[i] = make([]string, 4)
-				tmpVB[i][0] = "modifyvm"
-				tmpVB[i][1] = "{{.Name}}"
-				tmpVB[i][2] = k
-				tmpVB[i][3] = vv
-			}
-			settings[name] = tmpVB
+			settings[name] = r.createVBoxManage(val)
 		}
 	}
 
@@ -1094,21 +1083,27 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, er
 		case "export_opts", "floppy_files":
 			settings[name] = val
 		case "vboxmanage", "vboxmanage_post":
-			vms := deepcopy.InterfaceToSliceOfStrings(val)
-			tmpVM := make([][]string, len(vms))
-			for i, v := range vms {
-				k, vv := parseVar(v)
-				vv = r.replaceVariables(vv)
-				tmpVM[i] = make([]string, 4)
-				tmpVM[i][0] = "modifyvm"
-				tmpVM[i][1] = "{{.Name}}"
-				tmpVM[i][2] = "--" + k
-				tmpVM[i][3] = vv
-			}
-			settings[name] = tmpVB
+			settings[name] = r.createVBoxManage(val)
 		}
 	}
 	return settings, nil
+}
+
+// createVBoxManage creates the vboxmanage and vboxmanage_post arrays from the
+// received interface.
+func (r *rawTemplate) createVBoxManage(v interface{}) [][]string {
+	vms := deepcopy.InterfaceToSliceOfStrings(v)
+	tmp := make([][]string, len(vms))
+	for i, v := range vms {
+		k, vv := parseVar(v)
+		vv = r.replaceVariables(vv)
+		tmp[i] = make([]string, 4)
+		tmp[i][0] = "modifyvm"
+		tmp[i][1] = "{{.Name}}"
+		tmp[i][2] = k
+		tmp[i][3] = vv
+	}
+	return tmp
 }
 
 // createVMWareISO creates a map of settings for Packer's vmware-iso builder.
@@ -1541,10 +1536,10 @@ func (r *rawTemplate) updateBuilders(newB map[string]builder) {
 	}
 	// Convert the existing Builders to interfaces.
 	var ifaceOld = make(map[string]interface{}, len(r.Builders))
-	ifaceOld = DeepCopyMapStringPBuilder(r.Builders)
+	ifaceOld = DeepCopyMapStringBuilder(r.Builders)
 	// Convert the new Builders to interfaces.
 	var ifaceNew = make(map[string]interface{}, len(newB))
-	ifaceNew = DeepCopyMapStringPBuilder(newB)
+	ifaceNew = DeepCopyMapStringBuilder(newB)
 	// Make the slice as long as the slices in both builders, odds are its shorter, but this is the worst case.
 	var keys []string
 	// Convert the keys to a map
