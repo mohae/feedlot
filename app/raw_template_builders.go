@@ -1095,15 +1095,15 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, er
 			settings[name] = val
 		case "vboxmanage", "vboxmanage_post":
 			vms := deepcopy.InterfaceToSliceOfStrings(val)
-			tmpVB := make([][]string, len(vms))
+			tmpVM := make([][]string, len(vms))
 			for i, v := range vms {
 				k, vv := parseVar(v)
 				vv = r.replaceVariables(vv)
-				tmpVB[i] = make([]string, 4)
-				tmpVB[i][0] = "modifyvm"
-				tmpVB[i][1] = "{{.Name}}"
-				tmpVB[i][2] = k
-				tmpVB[i][3] = vv
+				tmpVM[i] = make([]string, 4)
+				tmpVM[i][0] = "modifyvm"
+				tmpVM[i][1] = "{{.Name}}"
+				tmpVM[i][2] = "--" + k
+				tmpVM[i][3] = vv
 			}
 			settings[name] = tmpVB
 		}
@@ -1294,11 +1294,15 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, err er
 			}
 		case "vmx_data", "vmx_data_post":
 			vms := deepcopy.InterfaceToSliceOfStrings(val)
-			tmpVM := map[string]string{}
-			for _, v := range vms {
+			tmpVM := make([][]string, len(vms))
+			for i, v := range vms {
 				k, vv := parseVar(v)
 				vv = r.replaceVariables(vv)
-				tmpVM[k] = vv
+				tmpVM[i] = make([]string, 4)
+				tmpVM[i][0] = "modifyvm"
+				tmpVM[i][1] = "{{.Name}}"
+				tmpVM[i][2] = "--" + k
+				tmpVM[i][3] = vv
 			}
 			settings[name] = tmpVM
 		}
@@ -1614,9 +1618,9 @@ func (r *rawTemplate) setHTTP(component string, m map[string]interface{}) error 
 	return nil
 }
 
-// DeepCopyMapStringPBuilder makes a deep copy of each builder passed and
-// returns the copy map[string]*builder as a map[string]interface{}
-func DeepCopyMapStringPBuilder(b map[string]builder) map[string]interface{} {
+// DeepCopyMapStringBuilder makes a deep copy of each builder passed and
+// returns the copy map[string]builder as a map[string]interface{}
+func DeepCopyMapStringBuilder(b map[string]builder) map[string]interface{} {
 	c := map[string]interface{}{}
 	for k, v := range b {
 		tmpB := builder{}
