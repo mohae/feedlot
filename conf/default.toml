@@ -1,19 +1,30 @@
 # Default builder variable settings for Rancher. Merging the contents of this
 # file with supported.toml provids the default settings for each distro.
+#
+# By default, the VMWare-iso and Virtualbox-iso builders are supported. If
+# you want the default templates to support only one, remove the other one from
+# the 'builder_type' section. If you wish to support something else, By
+# default, you will need to remove the builder types that you do not want to
+# support and add the builder type(s) that you do wish to support along with
+# the relevant builder settings.
+#
+# Only the Packer sections enumerated in the {packer-section}_type sections
+# are used by Rancher, any other sections defined within a template are ignored
+# during the Packer template build process.
+#
+# Most customizations should probably be done in rancher build templates, but
+# any settings that are going to be fairly consistent across builds should
+# probably be put in here; minimizing the things that need to be set in a 
+# specific build template.
 description = "Default Rancher template"
 name = ":build_name"
-#command_dir = "commands"
 out_dir = "out/:build_name"
 src_dir = "src"
-min_packer_version = "0.4.0"
+include_component_string = true
+min_packer_version = "0.5.0"
 builder_types = [
     "virtualbox-iso",
-]
-post_processor_types = [
-	"vagrant"
-]
-provisioner_types = [
-	"shell"
+	"vmware-iso",
 ]
 [builders]
 	[builders.common]
@@ -34,7 +45,6 @@ provisioner_types = [
 		]
 	[builders.virtualbox-iso]
 		settings = [
-			"guest_os_type = ",
 			"guest_additions_path = VBoxGuestAdditions_{{ .Version }}.iso",
 			"virtualbox_version_file = .vbox_version"
 		]
@@ -43,6 +53,19 @@ provisioner_types = [
 				"cpus=1",
 				"memory=1024"	
 			]
+	[builders.vmware-iso]
+		settings = [
+			"guest_additions_path = VBoxGuestAdditions_{{ .Version }}.iso",
+			"virtualbox_version_file = .vbox_version"
+		]
+		[builders.virtualbox-iso.arrays]
+			vboxmanage = [
+				"cpus=1",
+				"memory=1024"	
+			]
+post_processor_types = [
+	"vagrant"
+]
 [post_processors]
 	[post_processors.vagrant]
 		settings = [
@@ -50,10 +73,9 @@ provisioner_types = [
 			"keep_input_artifact = false",
 			"output =  :build_name.box"
 		]
-		[post_processors.vagrant.arrays]
-			only = [
-				"virtualbox.iso"
-			]
+provisioner_types = [
+	"shell"
+]
 [provisioners]
 	[provisioners.shell]
 		settings = [
