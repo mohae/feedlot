@@ -14,142 +14,17 @@ import (
 	"testing"
 )
 
-func newTestUbuntu() ubuntu {
-	u := ubuntu{release{Release: "14.04", Image: "server", Arch: "amd64"}}
-	u.ChecksumType = "sha256"
-	u.BaseURL = "http://releases.ubuntu.com/"
-	return u
-}
-
-func TestUbuntuFindChecksum(t *testing.T) {
-	u := newTestUbuntu()
-	s, err := u.findChecksum("")
-	if err == nil {
-		t.Error("Expected an error, got nil")
-	} else {
-		if err.Error() != "page to parse was empty; unable to process request for " {
-			t.Errorf("Expected \"page to parse was empty; unable to process request for \", got %q", err.Error())
-		}
-	}
-
-	checksumPage := `cab6b0458601520242eb0337ccc9797bf20ad08bf5b23926f354198928191da5 *ubuntu-14.04-desktop-amd64.iso
-207a53944d5e8bbb278f4e1d8797491bfbb759c2ebd4a162f41e1383bde38ab2 *ubuntu-14.04-desktop-i386.iso
-ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388 *ubuntu-14.04-server-amd64.iso
-85c738fefe7c9ff683f927c23f5aa82864866c2391aeb376abfec2dfc08ea873 *ubuntu-14.04-server-i386.iso
-bc3b20ad00f19d0169206af0df5a4186c61ed08812262c55dbca3b7b1f1c4a0b *wubi.exe`
-	u.Name = "ubuntu-14.03-whatever.iso"
-	u.Image = "whatever"
-	s, err = u.findChecksum(checksumPage)
-	if err == nil {
-		t.Error("Expected an error, got nil")
-	} else {
-		if err.Error() != "unable to find ubuntu-14.04-whatever-amd64.iso's checksum" {
-			t.Errorf("Expected \"unable to find ubuntu-14.04-whatever-amd64.iso's checksum\", got %q", err.Error())
-		}
-	}
-
-	u.Release = "14.04"
-	u.Image = "server"
-	u.Arch = "amd64"
-	s, err = u.findChecksum(checksumPage)
-	if err != nil {
-		t.Errorf("Expected no error, got %q", err.Error())
-	} else {
-		if s != "ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388" {
-			t.Errorf("Expected \"ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388\", got %q", s)
-		}
-	}
-
-	checksumPage = `3a80be812e7767e1e78b4e1aeab4becd11a677910877250076096fe3b470ba22 *ubuntu-12.04.4-alternate-amd64.iso
-bf48efb08cb1962bebaabeb81e4a0a00c6fd7dff5ff50927d0ba84923d0deed4 *ubuntu-12.04.4-alternate-i386.iso
-fa28d4b4821d6e8c5e5543f8d9f5ed8176400e078fe9177fa2774214b7296c84 *ubuntu-12.04.4-desktop-amd64.iso
-c0ba532d8fadaa3334023f96925b93804e859dba2b4c4e4cda335bd1ebe43064 *ubuntu-12.04.4-desktop-i386.iso
-3aeb42816253355394897ae80d99a9ba56217c0e98e05294b51f0f5b13bceb54 *ubuntu-12.04.4-server-amd64.iso
-fbe7f159337551cc5ce9f0ff72acefef567f3dcd30750425287588c554978501 *ubuntu-12.04.4-server-i386.iso
-2d92c01bcfcd0911c5e4256250647c30e3351f3190515f972f83027c4260e7e5 *ubuntu-12.04.4-wubi-amd64.tar.xz
-2bde9af4e9f8a6ce493955188a624cb3ffdf46294805605d9d51a1ee62997dcf *ubuntu-12.04.4-wubi-i386.tar.xz
-819f42fdd7cc431b6fd7fa5bae022b0a8c55a0f430eb3681e4750c4f1eceaf91 *wubi.exe`
-
-	u.Release = "12.04"
-	s, err = u.findChecksum(checksumPage)
-	if err != nil {
-		t.Errorf("Expected no error, got %q", err.Error())
-	} else {
-		if s != "3aeb42816253355394897ae80d99a9ba56217c0e98e05294b51f0f5b13bceb54" {
-			t.Errorf("Expected \"3aeb42816253355394897ae80d99a9ba56217c0e98e05294b51f0f5b13bceb54\", got %q", s)
-		}
-	}
-}
-
-func TestUbuntuGetOSType(t *testing.T) {
-	u := ubuntu{release{Arch: "amd64"}}
-	buildType := "vmware-iso"
-	res, err := u.getOSType(buildType)
-	if err != nil {
-		t.Errorf("Expected no error, got %q", err.Error())
-	} else {
-		if res != "ubuntu-64" {
-			t.Errorf("Expected \"3aeb42816253355394897ae80d99a9ba56217c0e98e05294b51f0f5b13bceb54\", got %q", res)
-		}
-	}
-
-	buildType = "virtualbox-iso"
-	res, err = u.getOSType(buildType)
-	if err != nil {
-		t.Errorf("Expected no error, got %q", err.Error())
-	} else {
-		if res != "Ubuntu_64" {
-			t.Errorf("Expected \"Ubuntu_64\", got %q", res)
-		}
-	}
-
-	u = ubuntu{release{Arch: "i386"}}
-	buildType = "vmware-iso"
-	res, err = u.getOSType(buildType)
-	if err != nil {
-		t.Errorf("Expected no error, got %q", err.Error())
-	} else {
-		if res != "ubuntu-32" {
-			t.Errorf("Expected \"ubuntu-32\", got %q", res)
-		}
-	}
-
-	buildType = "virtualbox-iso"
-	res, err = u.getOSType(buildType)
-	if err != nil {
-		t.Errorf("Expected no error, got %q", err.Error())
-	} else {
-		if res != "Ubuntu_32" {
-			t.Errorf("Expected \"Ubuntu_32\", got %q", res)
-		}
-	}
-
-	buildType = "voodoo"
-	res, err = u.getOSType(buildType)
-	if err == nil {
-		t.Error("Expected an error, received nil")
-	} else {
-		if err.Error() != " does not support the voodoo builder" {
-			t.Errorf("Expected \" does not support the voodoo builder\", got %q", err.Error())
-		}
-	}
-}
-
 func newTestCentOS() centOS {
 	c := centOS{release{Release: "6", Image: "minimal", Arch: "x86_64"}}
 	c.ChecksumType = "sha256"
 	return c
 }
 
-func TestCentOSsetReleaseNumber(t *testing.T) {
+func TestCentOSisoRedirectURL(t *testing.T) {
 	c := newTestCentOS()
-	err := c.setReleaseNumber()
-	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
-	} else {
-		if !strings.HasPrefix(c.ReleaseFull, "6.") {
-			t.Errorf("Expected %q to start with \"6.\"", c.ReleaseFull)
-		}
+	redirect := c.isoRedirectURL()
+	if redirect != "http://isoredirect.centos.org/centos/6/isos/x86_64/" {
+		t.Errorf("TestCentOSisoRedirectURL expected \"http://isoredirect.centos.org/centos/6/isos/x86_64/\", got %q", redirect)
 	}
 }
 
@@ -165,13 +40,15 @@ func TestCentOSsetReleaseInfo(t *testing.T) {
 	}
 }
 
-func TestCentOSSetISOName(t *testing.T) {
+func TestCentOSsetReleaseNumber(t *testing.T) {
 	c := newTestCentOS()
-	c.setReleaseInfo()
-	c.setISOName()
-	expected := "CentOS-" + c.ReleaseFull + "-" + c.Arch + "-" + c.Image + ".iso"
-	if c.Name != expected {
-		t.Errorf("Expected %q, got %q", expected, c.Name)
+	err := c.setReleaseNumber()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	} else {
+		if !strings.HasPrefix(c.ReleaseFull, "6.") {
+			t.Errorf("Expected %q to start with \"6.\"", c.ReleaseFull)
+		}
 	}
 }
 
@@ -229,7 +106,7 @@ func TestCentOSGetOSType(t *testing.T) {
 	}
 }
 
-func TestCentOSSetChecksum(t *testing.T) {
+func TestCentOSSetISOChecksum(t *testing.T) {
 	c := newTestCentOS()
 	c.setReleaseInfo()
 	//	c.SetISOInfo()
@@ -281,6 +158,50 @@ func TestCentOSChecksumURL(t *testing.T) {
 	}
 }
 
+func TestCentOSSetISOName(t *testing.T) {
+	c := newTestCentOS()
+	c.setReleaseInfo()
+	c.setISOName()
+	expected := "CentOS-" + c.ReleaseFull + "-" + c.Arch + "-" + c.Image + ".iso"
+	if c.Name != expected {
+		t.Errorf("Expected %q, got %q", expected, c.Name)
+	}
+}
+
+/*
+func TestCentOSSetISOInfo(t *testing.T) {
+	tests := []struct {
+		arch             string
+		release          string
+		expectedURL      string
+		expectedChecksum string
+		expectedErr      string
+	}{
+		{"", "", "", "", "centos SetISOInfo error: empty arch"},
+		{"x86_64", "", "", "", "centos SetISOInfo error: empty release"},
+		{"x86_64", "6", "", "", ""},
+	}
+	c := newTestCentOS()
+	for i, test := range tests {
+		c.Arch = test.arch
+		c.Release = test.release
+		err := c.SetISOInfo()
+		if err != nil {
+			if test.expectedErr != err.Error() {
+				t.Errorf("TestCentOSSetISOInfo %d: expected %q, got %q", i, test.expectedErr, err.Error())
+				continue
+			}
+		}
+		if test.expectedURL != c.isoURL {
+			t.Errorf("TestCentOSSetISOInfo %d: expected iso url to be %q, got %q", i, test.expectedURL, c.isoURL)
+		}
+		if test.expectedChecksum != c.Checksum {
+			t.Errorf("TestCentOSSetISOInfo %d: expected checksum to be %q, got %q", i, test.expectedChecksum, c.Checksum)
+		}
+	}
+}
+*/
+
 func TestCentOSsetISOURL(t *testing.T) {
 	c := newTestCentOS()
 	c.ReleaseFull = "6.6"
@@ -329,6 +250,53 @@ func TestCentOSrandomISOURL(t *testing.T) {
 	}
 }
 
+func TestCentOSFindISOChecksum(t *testing.T) {
+	tests := []struct {
+		release     string
+		arch        string
+		page        string
+		expected    string
+		expectedErr string
+	}{
+		{"6", "x86", "", "", "SetReleaseInfo: setReleaseNumber http://mirrorlist.centos.org/?release=6&arch=x86&repo=os: Bad arch - not in list - x86_64 alpha s390x ia64 s390 i386 "},
+		{"6", "x86_64",
+			`a63241b0f767afa1f9f7e59e6f0f00d6b8d19ed85936a7934222c03a92e61bf3  CentOS-6.6-x86_64-bin-DVD1.iso
+89dac78769b26f8facf98ce85020a605b7601fec1946b0597e22ced5498b3597  CentOS-6.6-x86_64-bin-DVD2.iso
+5458f357e8a55e3a866dd856896c7e0ac88e7f9220a3dd74c58a3b0acede8e4d  CentOS-6.6-x86_64-minimal.iso
+ad8f6de098503174c7609d172679fa0dd276f4b669708933d9c4927bd3fe1017  CentOS-6.6-x86_64-netinstall.iso`,
+			"5458f357e8a55e3a866dd856896c7e0ac88e7f9220a3dd74c58a3b0acede8e4d", ""},
+		{"6", "x86",
+			`a63241b0f767afa1f9f7e59e6f0f00d6b8d19ed85936a7934222c03a92e61bf3  CentOS-6.6-x86_64-bin-DVD1.iso
+89dac78769b26f8facf98ce85020a605b7601fec1946b0597e22ced5498b3597  CentOS-6.6-x86_64-bin-DVD2.iso
+5458f357e8a55e3a866dd856896c7e0ac88e7f9220a3dd74c58a3b0acede8e4d  CentOS-6.6-x86_64-minimal.iso
+ad8f6de098503174c7609d172679fa0dd276f4b669708933d9c4927bd3fe1017  CentOS-6.6-x86_64-netinstall.iso`,
+			"", "SetReleaseInfo: setReleaseNumber http://mirrorlist.centos.org/?release=6&arch=x86&repo=os: Bad arch - not in list - x86_64 alpha s390x ia64 s390 i386 "},
+	}
+	for i, test := range tests {
+		c := newTestCentOS()
+		c.Arch = test.arch
+		c.Release = test.release
+		err := c.setReleaseInfo()
+		if err != nil {
+			if err.Error() != test.expectedErr {
+				t.Errorf("TestCentOSFindISOChecksum %d: sexpected %q, got %q", i, test.expectedErr, err.Error())
+			}
+			continue
+		}
+		c.setISOName()
+		checksum, err := c.findISOChecksum(test.page)
+		if err != nil {
+			if err.Error() != test.expectedErr {
+				t.Errorf("TestCentOSFindISOChecksum %d: expected %q, got %q", i, test.expectedErr, err.Error())
+			}
+			continue
+		}
+		if test.expected != checksum {
+			t.Errorf("TestCentOSFindISOChecksum %d: expected %q, got %q", i, test.expected, checksum)
+		}
+	}
+}
+
 func TestDebianSetReleaseInfo(t *testing.T) {
 	page := `
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
@@ -338,13 +306,13 @@ func TestDebianSetReleaseInfo(t *testing.T) {
  </head>
  <body>
 <h1>Index of /debian-cd</h1>
-<pre><img src="/icons/blank.gif" alt="Icon "> <a href="?C=N;O=D">Name</a>                    <a href="?C=M;O=A">Last modified</a>      <a href="?C=S;O=A">Size</a>  <hr><img src="/icons/back.gif" alt="[PARENTDIR]"> <a href="/">Parent Directory</a>                             -   
-<img src="/icons/folder.gif" alt="[DIR]"> <a href="7.8.0-live/">7.8.0-live/</a>             2015-01-14 05:00    -   
-<img src="/icons/folder.gif" alt="[DIR]"> <a href="7.8.0/">7.8.0/</a>                  2015-01-12 03:07    -   
-<img src="/icons/folder.gif" alt="[DIR]"> <a href="current-live/">current-live/</a>           2015-01-14 05:00    -   
-<img src="/icons/folder.gif" alt="[DIR]"> <a href="current/">current/</a>                2015-01-12 03:07    -   
-<img src="/icons/folder.gif" alt="[DIR]"> <a href="project/">project/</a>                2005-05-23 18:50    -   
-<img src="/icons/compressed.gif" alt="[   ]"> <a href="ls-lR.gz">ls-lR.gz</a>                2015-03-05 03:12   39K  
+<pre><img src="/icons/blank.gif" alt="Icon "> <a href="?C=N;O=D">Name</a>                    <a href="?C=M;O=A">Last modified</a>      <a href="?C=S;O=A">Size</a>  <hr><img src="/icons/back.gif" alt="[PARENTDIR]"> <a href="/">Parent Directory</a>                             -
+<img src="/icons/folder.gif" alt="[DIR]"> <a href="7.8.0-live/">7.8.0-live/</a>             2015-01-14 05:00    -
+<img src="/icons/folder.gif" alt="[DIR]"> <a href="7.8.0/">7.8.0/</a>                  2015-01-12 03:07    -
+<img src="/icons/folder.gif" alt="[DIR]"> <a href="current-live/">current-live/</a>           2015-01-14 05:00    -
+<img src="/icons/folder.gif" alt="[DIR]"> <a href="current/">current/</a>                2015-01-12 03:07    -
+<img src="/icons/folder.gif" alt="[DIR]"> <a href="project/">project/</a>                2005-05-23 18:50    -
+<img src="/icons/compressed.gif" alt="[   ]"> <a href="ls-lR.gz">ls-lR.gz</a>                2015-03-05 03:12   39K
 <hr></pre>
 <address>Apache/2.4.10 (Unix) Server at cdimage.debian.org Port 80</address>
 </body></html>
@@ -362,71 +330,6 @@ func TestDebianSetReleaseInfo(t *testing.T) {
 	}
 }
 
-func TestCentOSFindChecksum(t *testing.T) {
-	var err error
-	var s string
-	c := newTestCentOS()
-	c.setReleaseInfo()
-	c.setISOName()
-	c.setISOURL()
-	s, err = c.findChecksum("")
-	if err == nil {
-		t.Error("Expected error to not be nil, it was")
-	} else {
-		if err.Error() != "the string passed to centOS.findChecksum(s string) was empty; unable to process request" {
-			t.Errorf("Expected \"the string passed to centOS.findChecksum(s string) was empty; unable to process request\", got %q", err.Error())
-		}
-	}
-
-	checksumPage := `c796ab378319393f47b29acd8ceaf21e1f48439570657945226db61702a4a2a1  CentOS-6.5-x86_64-bin-DVD1.iso
-afd2fc37e1597c64b3c3464083c0022f436757085d9916350fb8310467123f77  CentOS-6.5-x86_64-bin-DVD2.iso
-58b40b26415133ed2af8e2f53b73b5f2aa013723742ce17671b5bb1880a20a99  CentOS-6.5-x86_64-LiveCD.iso
-e3efa9a6ca6f58ac4be0a6cdb09cc4f19125040124e1c162bc5cfef26a8926f0  CentOS-6.5-x86_64-LiveDVD.iso
-f9d84907d77df62017944cb23cab66305e94ee6ae6c1126415b81cc5e999bdd0  CentOS-6.5-x86_64-minimal.iso
-d8aaf698408c0c01843446da4a20b1ac03d27f87aad3b3b7b7f42c6163be83b9  CentOS-6.5-x86_64-netinstall.iso`
-	c.Name = "CentOS-6.5-whatever.iso"
-	c.Image = "whatever"
-	s, err = c.findChecksum(checksumPage)
-	if err == nil {
-		t.Error("Expected error to not be nil, it was")
-	} else {
-		if err.Error() != "unable to find ISO information while looking for the release string on the CentOS checksums page" {
-			t.Errorf("Expected \"unable to find ISO information while looking for the release string on the CentOS checksums page\", got %q", err.Error())
-		}
-	}
-
-	checksumPage = `c796ab378319393f47b29acd8ceaf21e1f48439570657945226db61702a4a2a1  CentOS-6.5-x86_64-bin-DVD1.iso
-afd2fc37e1597c64b3c3464083c0022f436757085d9916350fb8310467123f77  CentOS-6.5-x86_64-bin-DVD2.iso
-58b40b26415133ed2af8e2f53b73b5f2aa013723742ce17671b5bb1880a20a99  CentOS-6.5-x86_64-LiveCD.iso
-e3efa9a6ca6f58ac4be0a6cdb09cc4f19125040124e1c162bc5cfef26a8926f0  CentOS-6.5-x86_64-LiveDVD.iso
-f9d84907d77df62017944cb23cab66305e94ee6ae6c1126415b81cc5e999bdd0  CentOS-6.5-x86_64-minimal.iso
-d8aaf698408c0c01843446da4a20b1ac03d27f87aad3b3b7b7f42c6163be83b9  CentOS-6.5-x86_64-netinstall.iso`
-	c.Release = "6"
-	c.ReleaseFull = "6.5"
-	c.Image = "minimal"
-	c.Name = "CentOS-6.5-x86_64-minimal.iso"
-	s, err = c.findChecksum(checksumPage)
-	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
-	} else {
-		if s != "f9d84907d77df62017944cb23cab66305e94ee6ae6c1126415b81cc5e999bdd0" {
-			t.Errorf("Expected \"f9d84907d77df62017944cb23cab66305e94ee6ae6c1126415b81cc5e999bdd0\", got %q", s)
-		}
-	}
-}
-
-func TestCentOSsetISOName(t *testing.T) {
-	c := newTestCentOS()
-	c.setReleaseInfo()
-	c.setISOName()
-	if !strings.HasPrefix(c.Name, "CentOS-") {
-		t.Errorf("Expected %q to start with \"CentOS-\", it didn't", c.Name)
-	}
-	if !strings.HasSuffix(c.Name, ".iso") {
-		t.Errorf("Expected %q to end with \".iso\", it didn't", c.Name)
-	}
-}
-
 func newTestDebian() debian {
 	d := debian{release{Release: "7", ReleaseFull: "7.8.0", Image: "netinst", Arch: "amd64"}}
 	d.ChecksumType = "sha256"
@@ -439,8 +342,8 @@ func TestDebianFindISOChecksum(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, got nil")
 	} else {
-		if err.Error() != "page to parse was empty; unable to process request for " {
-			t.Errorf("Expected \"page to parse was empty; unable to process request for \", got %q", err.Error())
+		if err.Error() != " findISOChecksum error: page was empty" {
+			t.Errorf(" findISOChecksum error: page was empty", err.Error())
 		}
 	}
 
@@ -458,8 +361,8 @@ fb1c1c30815da3e7189d44b6699cf9114b16e44ea139f0cd4df5f1dde3659272  debian-7.8.0-a
 	if err == nil {
 		t.Error("Expected an error, got nil")
 	} else {
-		if err.Error() != "unable to find debian-7.8.0-amd64-whatever.iso's checksum" {
-			t.Errorf("Expected \"unable to find debian-7.8.0-amd64-whatever.iso's checksum\", got %q", err.Error())
+		if err.Error() != "debian-7.8.0-amd64-whatever.iso findISOChecksum error: checksum not found on page" {
+			t.Errorf("TestDebianFindISOChecksum: expected \"debian-7.8.0-amd64-whatever.iso findISOChecksum error: checksum not found on page\", got %q", err.Error())
 		}
 	}
 
@@ -543,6 +446,203 @@ func TestDebianGetOSType(t *testing.T) {
 	} else {
 		if err.Error() != " does not support the voodoo builder" {
 			t.Errorf("Expected \" does not support the voodoo builder\", got %q", err.Error())
+		}
+	}
+}
+
+func newTestUbuntu() ubuntu {
+	u := ubuntu{release{Release: "14.04", Image: "server", Arch: "amd64"}}
+	u.ChecksumType = "sha256"
+	u.BaseURL = "http://releases.ubuntu.com/"
+	return u
+}
+
+func TestUbuntuFindISOChecksum(t *testing.T) {
+	u := newTestUbuntu()
+	s, err := u.findISOChecksum("")
+	if err == nil {
+		t.Error("Expected an error, got nil")
+	} else {
+		if err.Error() != " findISOChecksum error: page was empty" {
+			t.Errorf("TestUbuntuFindISOChecksum: expected \" findISOChecksum error: page was empty\", got %q", err.Error())
+		}
+	}
+
+	checksumPage := `cab6b0458601520242eb0337ccc9797bf20ad08bf5b23926f354198928191da5 *ubuntu-14.04-desktop-amd64.iso
+207a53944d5e8bbb278f4e1d8797491bfbb759c2ebd4a162f41e1383bde38ab2 *ubuntu-14.04-desktop-i386.iso
+ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388 *ubuntu-14.04-server-amd64.iso
+85c738fefe7c9ff683f927c23f5aa82864866c2391aeb376abfec2dfc08ea873 *ubuntu-14.04-server-i386.iso
+bc3b20ad00f19d0169206af0df5a4186c61ed08812262c55dbca3b7b1f1c4a0b *wubi.exe`
+	u.Name = "ubuntu-14.03-whatever.iso"
+	u.Image = "whatever"
+	s, err = u.findISOChecksum(checksumPage)
+	if err == nil {
+		t.Error("Expected an error, got nil")
+	} else {
+		if err.Error() != "ubuntu-14.04-whatever-amd64.iso findISOChecksum error: checksum not found on page" {
+			t.Errorf("TestUbuntuFindISOChecksum: expected \"ubuntu-14.04-whatever-amd64.iso findISOChecksum error: checksum not found on page\", got %q", err.Error())
+		}
+	}
+
+	u.Release = "14.04"
+	u.Image = "server"
+	u.Arch = "amd64"
+	s, err = u.findISOChecksum(checksumPage)
+	if err != nil {
+		t.Errorf("Expected no error, got %q", err.Error())
+	} else {
+		if s != "ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388" {
+			t.Errorf("Expected \"ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388\", got %q", s)
+		}
+	}
+
+	checksumPage = `3a80be812e7767e1e78b4e1aeab4becd11a677910877250076096fe3b470ba22 *ubuntu-12.04.4-alternate-amd64.iso
+bf48efb08cb1962bebaabeb81e4a0a00c6fd7dff5ff50927d0ba84923d0deed4 *ubuntu-12.04.4-alternate-i386.iso
+fa28d4b4821d6e8c5e5543f8d9f5ed8176400e078fe9177fa2774214b7296c84 *ubuntu-12.04.4-desktop-amd64.iso
+c0ba532d8fadaa3334023f96925b93804e859dba2b4c4e4cda335bd1ebe43064 *ubuntu-12.04.4-desktop-i386.iso
+3aeb42816253355394897ae80d99a9ba56217c0e98e05294b51f0f5b13bceb54 *ubuntu-12.04.4-server-amd64.iso
+fbe7f159337551cc5ce9f0ff72acefef567f3dcd30750425287588c554978501 *ubuntu-12.04.4-server-i386.iso
+2d92c01bcfcd0911c5e4256250647c30e3351f3190515f972f83027c4260e7e5 *ubuntu-12.04.4-wubi-amd64.tar.xz
+2bde9af4e9f8a6ce493955188a624cb3ffdf46294805605d9d51a1ee62997dcf *ubuntu-12.04.4-wubi-i386.tar.xz
+819f42fdd7cc431b6fd7fa5bae022b0a8c55a0f430eb3681e4750c4f1eceaf91 *wubi.exe`
+
+	u.Release = "12.04"
+	s, err = u.findISOChecksum(checksumPage)
+	if err != nil {
+		t.Errorf("Expected no error, got %q", err.Error())
+	} else {
+		if s != "3aeb42816253355394897ae80d99a9ba56217c0e98e05294b51f0f5b13bceb54" {
+			t.Errorf("Expected \"3aeb42816253355394897ae80d99a9ba56217c0e98e05294b51f0f5b13bceb54\", got %q", s)
+		}
+	}
+}
+
+func TestUbuntuGetOSType(t *testing.T) {
+	u := ubuntu{release{Arch: "amd64"}}
+	buildType := "vmware-iso"
+	res, err := u.getOSType(buildType)
+	if err != nil {
+		t.Errorf("Expected no error, got %q", err.Error())
+	} else {
+		if res != "ubuntu-64" {
+			t.Errorf("Expected \"3aeb42816253355394897ae80d99a9ba56217c0e98e05294b51f0f5b13bceb54\", got %q", res)
+		}
+	}
+
+	buildType = "virtualbox-iso"
+	res, err = u.getOSType(buildType)
+	if err != nil {
+		t.Errorf("Expected no error, got %q", err.Error())
+	} else {
+		if res != "Ubuntu_64" {
+			t.Errorf("Expected \"Ubuntu_64\", got %q", res)
+		}
+	}
+
+	u = ubuntu{release{Arch: "i386"}}
+	buildType = "vmware-iso"
+	res, err = u.getOSType(buildType)
+	if err != nil {
+		t.Errorf("Expected no error, got %q", err.Error())
+	} else {
+		if res != "ubuntu-32" {
+			t.Errorf("Expected \"ubuntu-32\", got %q", res)
+		}
+	}
+
+	buildType = "virtualbox-iso"
+	res, err = u.getOSType(buildType)
+	if err != nil {
+		t.Errorf("Expected no error, got %q", err.Error())
+	} else {
+		if res != "Ubuntu_32" {
+			t.Errorf("Expected \"Ubuntu_32\", got %q", res)
+		}
+	}
+
+	buildType = "voodoo"
+	res, err = u.getOSType(buildType)
+	if err == nil {
+		t.Error("Expected an error, received nil")
+	} else {
+		if err.Error() != " does not support the voodoo builder" {
+			t.Errorf("Expected \" does not support the voodoo builder\", got %q", err.Error())
+		}
+	}
+}
+
+func TestNoArchError(t *testing.T) {
+	tests := []struct {
+		name     string
+		expected string
+	}{
+		{"", " SetISOInfo error: empty arch"},
+		{"CentOS", "CentOS SetISOInfo error: empty arch"},
+		{"CentOS", "CentOS SetISOInfo error: empty arch"},
+	}
+	for i, test := range tests {
+		err := NoArchError(test.name)
+		if err.Error() != test.expected {
+			t.Errorf("TestNoArchError %d: expected %q, got %q", i, test.expected, err.Error())
+		}
+	}
+}
+
+func TestNoReleaseError(t *testing.T) {
+	tests := []struct {
+		name     string
+		expected string
+	}{
+		{"", " SetISOInfo error: empty release"},
+		{"CentOS", "CentOS SetISOInfo error: empty release"},
+		{"CentOS", "CentOS SetISOInfo error: empty release"},
+	}
+	for i, test := range tests {
+		err := NoReleaseError(test.name)
+		if err.Error() != test.expected {
+			t.Errorf("TestNoReleaseError %d: expected %q, got %q", i, test.expected, err.Error())
+		}
+	}
+}
+
+func TestEmptyPageError(t *testing.T) {
+	tests := []struct {
+		name      string
+		operation string
+		expected  string
+	}{
+		{"", "", "  error: page was empty"},
+		{"", "test", " test error: page was empty"},
+		{"CentOS-6.6-x86_64-minimal.iso", "", "CentOS-6.6-x86_64-minimal.iso  error: page was empty"},
+		{"CentOS-6.6-x86_64-minimal.iso", "find something", "CentOS-6.6-x86_64-minimal.iso find something error: page was empty"},
+		{"CentOS-6.5-whatever.iso", "", "CentOS-6.5-whatever.iso  error: page was empty"},
+		{"CentOS-6.5-whatever.iso", "test", "CentOS-6.5-whatever.iso test error: page was empty"},
+	}
+	for i, test := range tests {
+		err := EmptyPageError(test.name, test.operation)
+		if err.Error() != test.expected {
+			t.Errorf("TestEmptyPageError %d: expected %q, got %q", i, test.expected, err.Error())
+		}
+	}
+}
+
+func TestChecksumNotFoundError(t *testing.T) {
+	tests := []struct {
+		name      string
+		operation string
+		expected  string
+	}{
+		{"", "", "  error: checksum not found on page"},
+		{"", "test", " test error: checksum not found on page"},
+		{"CentOS-6.6-x86_64-minimal.iso", "", "CentOS-6.6-x86_64-minimal.iso  error: checksum not found on page"},
+		{"CentOS-6.6-x86_64-minimal.iso", "checksum search", "CentOS-6.6-x86_64-minimal.iso checksum search error: checksum not found on page"},
+		{"CentOS-6.5-whatever.iso", "", "CentOS-6.5-whatever.iso  error: checksum not found on page"},
+		{"CentOS-6.5-whatever.iso", "checksum parse", "CentOS-6.5-whatever.iso checksum parse error: checksum not found on page"},
+	}
+	for i, test := range tests {
+		err := ChecksumNotFoundError(test.name, test.operation)
+		if err.Error() != test.expected {
+			t.Errorf("TestChecksumNotFoundError %d: expected %q, got %q", i, test.expected, err.Error())
 		}
 	}
 }

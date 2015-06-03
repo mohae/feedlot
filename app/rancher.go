@@ -62,6 +62,17 @@ func DistroFromString(s string) Distro {
 	return UnsupportedDistro
 }
 
+type RancherError struct {
+	BuildName string
+	Distro    string
+	Operation string
+	Problem   string
+}
+
+func (e RancherError) Error() string {
+	return fmt.Sprintf("%s: %s %s, %s", e.BuildName, e.Distro, e.Operation, e.Problem)
+}
+
 // indent: default indent to use for marshal stuff
 var indent = "    "
 

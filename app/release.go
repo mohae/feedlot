@@ -10,12 +10,21 @@ import (
 	"time"
 
 	"code.google.com/p/go.net/html"
-	jww "github.com/spf13/jwalterweatherman"
 )
 
 func init() {
 	// Psuedo-random is fine here
 	rand.Seed(time.Now().UTC().UnixNano())
+}
+
+type ReleaseError struct {
+	Name      string
+	Operation string
+	Problem   string
+}
+
+func (r ReleaseError) Error() string {
+	return fmt.Sprintf("%s %s error: %s", r.Name, r.Operation, r.Problem)
 }
 
 // Distro Iso information
@@ -50,19 +59,6 @@ type release struct {
 	ReleaseFull string
 }
 
-// findChecksum finds the checksum in the passed page string for the current
-// ISO image. This is for releases.ubuntu.com checksums which are in a plain
-// text file with each line representing an iso image and checksum pair, each
-// line is in the format of:
-//     checksumText image.isoname
-//
-// Notes:
-//   * \n separate lines
-//   * since this is plain text processing we don't worry about runes
-//   * Ubuntu LTS images can have an additional release number, which is
-//     incremented each release. Because of this, a second search is performed
-//     if the first one fails to find a match.
-
 // centOS wrapper to release.
 type centOS struct {
 	release
@@ -82,34 +78,25 @@ func (c *centOS) isoRedirectURL() string {
 // Sets the ISO information for a Packer template.
 func (c *centOS) SetISOInfo() error {
 	if c.Arch == "" {
-		err := fmt.Errorf("arch for %s was empty, unable to continue", c.Name)
-		jww.ERROR.Println(err)
-		return err
+		return NoArchError(CentOS.String())
 	}
 	if c.Release == "" {
-		err := fmt.Errorf("release for %s was empty, unable to continue", c.Name)
-		jww.ERROR.Println(err)
-		return err
+		return NoReleaseError(CentOS.String())
 	}
 	// Make sure that the version and release are set, Release and FullRelease
 	// respectively. Make sure they are both set properly.
 	err := c.setReleaseInfo()
 	if err != nil {
-		jww.ERROR.Println(err)
 		return err
 	}
 	c.setISOName()
 	err = c.setISOURL()
 	if err != nil {
-		jww.ERROR.Println(err)
 		return err
 	}
 	// Set the Checksum information for the ISO image.
-	if err := c.setISOChecksum(); err != nil {
-		jww.ERROR.Println(err)
-		return err
-	}
-	return nil
+	err = c.setISOChecksum()
+	return err
 }
 
 // setReleaseInfo makes sure that both c.Release and c.ReleaseFull are properly
@@ -131,8 +118,7 @@ func (c *centOS) setReleaseInfo() error {
 	// will give us that information.
 	err := c.setReleaseNumber()
 	if err != nil {
-		jww.ERROR.Println(err)
-		return err
+		return fmt.Errorf("SetReleaseInfo: %s", err.Error())
 	}
 	return nil
 }
@@ -151,13 +137,16 @@ func (c *centOS) setReleaseNumber() error {
 	mirrorURL := buff.String()
 	page, err = getStringFromURL(mirrorURL)
 	if err != nil {
-		jww.ERROR.Println(err)
 		return err
 	}
 	// Could just parse the string, but breaking it up is simpler.
 	lines := strings.Split(page, "\n")
 	// Each line is an URL, split the first one to make it easier to get the version.
 	urlParts := strings.Split(lines[0], "/")
+	// if there aren't sufficient parts, generate an error from the first message
+	if len(urlParts) < 4 {
+		return fmt.Errorf("setReleaseNumber %s: %s", mirrorURL, urlParts[0])
+	}
 	// The release is 3rd from last.
 	c.ReleaseFull = urlParts[len(urlParts)-4]
 	return nil
@@ -183,28 +172,23 @@ func (c *centOS) getOSType(buildType string) (string, error) {
 		}
 	}
 	// Shouldn't get here unless the buildType passed is an unsupported one.
-	err := fmt.Errorf("%s does not support the %s builder", c.Distro, buildType)
-	return "", err
+	return "", fmt.Errorf("%s does not support the %s builder", c.Distro, buildType)
 }
 
 // setISOChecksum finds the URL for the checksum page for the current mirror,
 // retrieves the page, and finds the checksum for the release ISO.
 func (c *centOS) setISOChecksum() error {
 	if c.ChecksumType == "" {
-		err := fmt.Errorf("Checksum Type not set")
-		jww.ERROR.Println(err)
-		return err
+		return fmt.Errorf("checksum type not set")
 	}
 	url := c.checksumURL()
 	page, err := getStringFromURL(url)
 	if err != nil {
-		jww.ERROR.Println(err)
 		return err
 	}
 	// Now that we have a page...we need to find the checksum and set it
-	c.Checksum, err = c.findChecksum(page)
+	c.Checksum, err = c.findISOChecksum(page)
 	if err != nil {
-		jww.ERROR.Println(err)
 		return err
 	}
 	return nil
@@ -241,8 +225,7 @@ func (c *centOS) setISOURL() error {
 	var err error
 	c.isoURL, err = c.randomISOURL()
 	if err != nil {
-		jww.ERROR.Println(err)
-		return err
+		return ReleaseError{Name: c.Name, Operation: "setISOURL", Problem: err.Error()}
 	}
 	return nil
 }
@@ -252,12 +235,10 @@ func (c *centOS) randomISOURL() (string, error) {
 	redirectURL := c.isoRedirectURL()
 	page, err := getStringFromURL(redirectURL)
 	if err != nil {
-		jww.ERROR.Println(err)
 		return "", err
 	}
 	doc, err := html.Parse(strings.NewReader(page))
 	if err != nil {
-		jww.ERROR.Println(err)
 		return "", err
 	}
 	var f func(*html.Node)
@@ -289,25 +270,22 @@ func (c *centOS) randomISOURL() (string, error) {
 	return url, nil
 }
 
-// Finds the line in the incoming string with the isoName requested, strips out
-// the checksum and returns it. This is for CentOS checksums which are in
-// plaintext and whose format is:
-//     checksumText  image.isoname
+// findISOChecksum finds the checksum in the passed page string for the current
+// ISO image. This is for releases.ubuntu.com checksums which are in a plain
+// text file with each line representing an iso image and checksum pair, each
+// line is in the format of:
+//     checksumText image.isoname
 //
 // Notes:
-//   * \n separate lines and two space separate the checksum and image name
+//   * \n separate lines
 //   * since this is plain text processing we don't worry about runes
-func (c *centOS) findChecksum(page string) (string, error) {
+func (c *centOS) findISOChecksum(page string) (string, error) {
 	if page == "" {
-		err := fmt.Errorf("the string passed to centOS.findChecksum(s string) was empty; unable to process request")
-		jww.ERROR.Println(err)
-		return "", err
+		return "", EmptyPageError(c.Name, "findISOChecksum")
 	}
 	pos := strings.Index(page, c.Name)
 	if pos < 0 {
-		err := fmt.Errorf("unable to find ISO information while looking for the release string on the CentOS checksums page")
-		jww.ERROR.Println(err)
-		return "", err
+		return "", ChecksumNotFoundError(c.Name, "findISOChecksum")
 	}
 	tmpRel := page[:pos]
 	tmpSl := strings.Split(tmpRel, "\n")
@@ -338,17 +316,11 @@ type debian struct {
 // Sets the ISO information for a Packer template.
 func (d *debian) SetISOInfo() error {
 	if d.Arch == "" {
-		err := fmt.Errorf("arch for %s was empty, unable to continue", d.Name)
-		jww.ERROR.Println(err)
-		return err
+		return NoArchError(Debian.String())
 	}
-
 	if d.Release == "" {
-		err := fmt.Errorf("release for %s was empty, unable to continue", d.Name)
-		jww.ERROR.Println(err)
-		return err
+		return NoReleaseError(Debian.String())
 	}
-
 	// Make sure that the version and release are set, Release and FullRelease
 	// respectively. Make sure they are both set properly.
 	//err := d.setReleaseInfo()
@@ -359,24 +331,13 @@ func (d *debian) SetISOInfo() error {
 	// set ReleaseFull. if needed
 	err := d.getReleaseVersion()
 	if err != nil {
-		jww.ERROR.Print(err)
-		return err
+		return ReleaseError{Name: d.Name, Operation: "SetISOInfo", Problem: err.Error()}
 	}
-
 	d.setISOName()
-
-	err = d.setISOURL()
-	if err != nil {
-		jww.ERROR.Println(err)
-		return err
-	}
-
+	d.setISOURL()
 	// Set the Checksum information for the ISO image.
-	if err := d.setISOChecksum(); err != nil {
-		jww.ERROR.Println(err)
-		return err
-	}
-	return nil
+	err = d.setISOChecksum()
+	return err
 }
 
 // setISOChecksum: Set the checksum value for the iso.
@@ -387,16 +348,11 @@ func (d *debian) setISOChecksum() error {
 	var err error
 	page, err = getStringFromURL(appendSlash(d.BaseURL) + appendSlash(d.ReleaseFull) + "amd64/iso-cd/" + strings.ToUpper(d.ChecksumType) + "SUMS")
 	if err != nil {
-		jww.ERROR.Println(err)
-		return err
+		return ReleaseError{Name: d.Name, Operation: "setISOChecksum", Problem: err.Error()}
 	}
 	// Now that we have a page...we need to find the checksum and set it
 	d.Checksum, err = d.findISOChecksum(page)
-	if err != nil {
-		jww.ERROR.Println(err)
-		return err
-	}
-	return nil
+	return err
 }
 
 func (d *debian) setISOURL() error {
@@ -404,12 +360,10 @@ func (d *debian) setISOURL() error {
 	if d.BaseURL == "" {
 		d.BaseURL = "http://cdimage.debian.org/debian-cd/"
 	}
-
 	// Its ok to use Release in the directory path because Release will resolve
 	// correctly, at the directory level, for Debian.
 	d.isoURL = appendSlash(d.BaseURL) + appendSlash(d.ReleaseFull) + appendSlash(d.Arch) + appendSlash("iso-cd") + d.Name
-	// This never errors so return nil...error is needed for other
-	// implementations of the interface.
+	// This never errors so return nil...error is needed for other implementations
 	return nil
 }
 
@@ -424,19 +378,14 @@ func (d *debian) setISOURL() error {
 //   * since this is plain text processing we don't worry about runes
 func (d *debian) findISOChecksum(page string) (string, error) {
 	if page == "" {
-		err := fmt.Errorf("page to parse was empty; unable to process request for %s", d.Name)
-		jww.ERROR.Println(err)
-		return "", err
+		return "", EmptyPageError(d.Name, "findISOChecksum")
 	}
 	pos := strings.Index(page, d.Name)
 	if pos < 0 {
-		err := fmt.Errorf("unable to find %s's checksum", d.Name)
-		jww.ERROR.Println(err)
-		return "", err
+		return "", ChecksumNotFoundError(d.Name, "findISOChecksum")
 	}
 	tmpRel := page[:pos]
 	tmpSl := strings.Split(tmpRel, "\n")
-
 	// The checksum we want is the last element in the array
 	checksum := strings.TrimSpace(tmpSl[len(tmpSl)-1])
 	return checksum, nil
@@ -481,7 +430,6 @@ func (d *debian) getOSType(buildType string) (string, error) {
 	}
 	// Shouldn't get here unless the buildType passed is an unsupported one.
 	err := fmt.Errorf("%s does not support the %s builder", d.Distro, buildType)
-	jww.ERROR.Println(err)
 	return "", err
 }
 
@@ -503,14 +451,12 @@ func (d *debian) getReleaseVersion() error {
 	}
 	p, err := getStringFromURL(d.BaseURL)
 	if err != nil {
-		jww.ERROR.Println(err)
+		return err
 	}
-
 	err = d.setReleaseInfo(p)
 	if err != nil {
-		jww.ERROR.Print(err)
+		return err
 	}
-
 	return err
 }
 
@@ -521,9 +467,7 @@ func (d *debian) setReleaseInfo(s string) error {
 	// look for the first line that starts with debian-(release)
 	pos := strings.Index(s, fmt.Sprintf("a href=\"%s", d.Release))
 	if pos < 0 {
-		err := fmt.Errorf("unable to determine the current debian version: search string 'a href =\"%s not found", d.Release)
-		jww.ERROR.Print(err)
-		return err
+		return fmt.Errorf("version search string 'a href =\"%s not found", d.Release)
 	}
 	// remove everything before that
 	s = s[pos+8:]
@@ -534,9 +478,7 @@ func (d *debian) setReleaseInfo(s string) error {
 	}
 	// take the next 5 chars as the release full, e.g. 7.8.0
 	if len(s) < 5 {
-		err := fmt.Errorf("unable to determine the current debian version: the version string is less than the expected 5 chars")
-		jww.ERROR.Print(err)
-		return err
+		return fmt.Errorf("expected version string to be 5 chars: got %s", s)
 	}
 	d.ReleaseFull = s[:5]
 	return nil
@@ -547,13 +489,19 @@ type ubuntu struct {
 	release
 }
 
-// Sets the ISO information for a Packer template.
+// SetISOInfo sets the ISO information for a Packer template.
 func (u *ubuntu) SetISOInfo() error {
+	if u.Arch == "" {
+		return NoArchError(Ubuntu.String())
+	}
+	if u.Release == "" {
+		return NoReleaseError(Ubuntu.String())
+	}
 	// Set the ISO name.
 	u.setISOName()
 	// Set the Checksum information for this ISO.
-	if err := u.setISOChecksum(); err != nil {
-		jww.ERROR.Println(err)
+	err := u.setISOChecksum()
+	if err != nil {
 		return err
 	}
 	// Set the URL for the ISO image.
@@ -569,13 +517,11 @@ func (u *ubuntu) setISOChecksum() error {
 	var err error
 	page, err = getStringFromURL(appendSlash(u.BaseURL) + appendSlash(u.Release) + strings.ToUpper(u.ChecksumType) + "SUMS")
 	if err != nil {
-		jww.ERROR.Println(err)
-		return err
+		return ReleaseError{Name: u.Name, Operation: "setISOChecksum", Problem: err.Error()}
 	}
 	// Now that we have a page...we need to find the checksum and set it
-	u.Checksum, err = u.findChecksum(page)
+	u.Checksum, err = u.findISOChecksum(page)
 	if err != nil {
-		jww.ERROR.Println(err)
 		return err
 	}
 	return nil
@@ -590,7 +536,7 @@ func (u *ubuntu) setISOURL() error {
 	return nil
 }
 
-// findChecksum finds the checksum in the passed page string for the current
+// findISOChecksum finds the checksum in the passed page string for the current
 // ISO image. This is for releases.ubuntu.com checksums which are in a plain
 // text file with each line representing an iso image and checksum pair, each
 // line is in the format of:
@@ -602,11 +548,9 @@ func (u *ubuntu) setISOURL() error {
 //   * Ubuntu LTS images can have an additional release number, which is
 //     incremented each release. Because of this, a second search is performed
 //     if the first one fails to find a match.
-func (u *ubuntu) findChecksum(page string) (string, error) {
+func (u *ubuntu) findISOChecksum(page string) (string, error) {
 	if page == "" {
-		err := fmt.Errorf("page to parse was empty; unable to process request for %s", u.Name)
-		jww.ERROR.Println(err)
-		return "", err
+		return "", EmptyPageError(u.Name, "findISOChecksum")
 	}
 	pos := strings.Index(page, u.Name)
 	if pos <= 0 {
@@ -616,32 +560,25 @@ func (u *ubuntu) findChecksum(page string) (string, error) {
 		// Substring the release string and explode it on '-'. Update isoName
 		pos = strings.Index(page, ".iso")
 		if pos < 0 {
-			err := fmt.Errorf("unable to find ISO information while looking for the release string on the Ubuntu checksums page")
-			jww.ERROR.Println(err)
-			return "", err
+			return "", ReleaseError{Name: u.Name, Operation: "findISOChecksum", Problem: fmt.Sprintf("iso information not found on checksum page")}
 		}
 		tmpRel := page[:pos]
 		tmpSl := strings.Split(tmpRel, "-")
 		// 3 is just an arbitrarily small number as there should always
 		// be more than 3 elements in the split slice.
 		if len(tmpSl) < 3 {
-			err := fmt.Errorf("unable to parse release information for %s", u.Name)
-			jww.ERROR.Println(err)
-			return "", err
+			return "", ReleaseError{Name: u.Name, Operation: "findISOChecksum", Problem: fmt.Sprintf("cannot parse checksum page")}
 		}
 		u.ReleaseFull = tmpSl[1]
 		u.setISOName()
 		pos = strings.Index(page, u.Name)
 		if pos < 0 {
-			err := fmt.Errorf("unable to find %s's checksum", u.Name)
-			return "", err
+			return "", ChecksumNotFoundError(u.Name, "findISOChecksum")
 		}
 	}
 	// Safety check...should never occur, but sanity check it anyways.
 	if len(page) < pos-2 {
-		err := fmt.Errorf("unable to retrieve checksum information for %s", u.Name)
-		jww.ERROR.Println(err)
-		return "", err
+		return "", ChecksumNotFoundError(u.Name, "findISOChecksum")
 	}
 	// Get the checksum string. If the substring request goes beyond the
 	// variable boundary, be safe and make the request equal to the length
@@ -694,7 +631,6 @@ func (u *ubuntu) getOSType(buildType string) (string, error) {
 	}
 	// Shouldn't get here unless the buildType passed is an unsupported one.
 	err := fmt.Errorf("%s does not support the %s builder", u.Distro, buildType)
-	jww.ERROR.Println(err)
 	return "", err
 }
 
@@ -703,7 +639,6 @@ func getStringFromURL(url string) (string, error) {
 	// Get the URL resource
 	res, err := http.Get(url)
 	if err != nil {
-		jww.ERROR.Println(err)
 		return "", err
 	}
 	// Close the response body--its idiomatic to defer it right away
@@ -711,9 +646,28 @@ func getStringFromURL(url string) (string, error) {
 	// Read the resoponse body into page
 	page, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		jww.ERROR.Print(err)
 		return "", err
 	}
+	p := string(page)
+	if len(p) == 0 {
+		return "", EmptyPageError(url, "getSTringFromURL")
+	}
 	//convert the page to a string and return it
-	return string(page), nil
+	return p, nil
+}
+
+func NoArchError(name string) error {
+	return ReleaseError{Name: name, Operation: "SetISOInfo", Problem: "empty arch"}
+}
+
+func NoReleaseError(name string) error {
+	return ReleaseError{Name: name, Operation: "SetISOInfo", Problem: "empty release"}
+}
+
+func EmptyPageError(name, operation string) error {
+	return ReleaseError{Name: name, Operation: operation, Problem: "page was empty"}
+}
+
+func ChecksumNotFoundError(name, operation string) error {
+	return ReleaseError{Name: name, Operation: operation, Problem: "checksum not found on page"}
 }
