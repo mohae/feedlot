@@ -32,15 +32,15 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, dirs, files map[string]s
 	err := a.priorBuild(appendSlash(i.OutDir), "gzip", &wg)
 	wg.Wait()
 	if err != nil {
-		jww.ERROR.Print(err)
-		return err
+		jww.ERROR.Println(err)
+		return PackerCreateErr(b.BuildName, err)
 	}
 	// copy any directories associated with the template
 	for dst, src := range dirs {
 		err = copyDir(src, dst)
 		if err != nil {
 			jww.ERROR.Println(err)
-			return err
+			return PackerCreateErr(b.BuildName, err)
 		}
 	}
 	// copy the files associated with the template
@@ -48,31 +48,35 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, dirs, files map[string]s
 		_, err = copyFile(src, dst)
 		if err != nil {
 			jww.ERROR.Println(err)
-			return err
+			return PackerCreateErr(b.BuildName, err)
 		}
 	}
 	// Write it out as JSON
 	tplJSON, err := json.MarshalIndent(p, "", "\t")
 	if err != nil {
 		jww.ERROR.Print(err)
-		return err
+		return PackerCreateErr(b.BuildName, err)
 	}
 	f, err := os.Create(appendSlash(i.OutDir) + fmt.Sprintf("%s.json", b.Name))
 	if err != nil {
 		jww.ERROR.Print(err)
-		return err
+		return PackerCreateErr(b.BuildName, err)
 	}
 	// Close the file with error handling
 	defer func() {
 		if cerr := f.Close(); cerr != nil && err == nil {
 			jww.ERROR.Print(err)
-			err = cerr
+			err = PackerCreateErr(b.BuildName, err)
 		}
 	}()
 	_, err = io.WriteString(f, string(tplJSON[:]))
 	if err != nil {
 		jww.ERROR.Print(err)
-		return err
+		return PackerCreateErr(b.BuildName, err)
 	}
 	return nil
+}
+
+func PackerCreateErr(name string, err error) error {
+	return fmt.Errorf("create of Packer template for %q failed: %s", name, err.Error())
 }

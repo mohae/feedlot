@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -77,4 +78,15 @@ func TestCreate(t *testing.T) {
 			}
 		}
 	*/
+}
+
+func TestPackerCreateErr(t *testing.T) {
+	err := PackerCreateErr("test", fmt.Errorf("this is an error message"))
+	if err == nil {
+		t.Errorf("Expected an error, got nil")
+	} else {
+		if err.Error() != "create of Packer template for \"test\" failed: this is an error message" {
+			t.Errorf("Expected \"create of Packer template for \"test\" failed: this is an error message\", got %q", err.Error())
+		}
+	}
 }
