@@ -140,12 +140,12 @@ func (a *Archive) priorBuild(p string, t string, wg *sync.WaitGroup) error {
 		if os.IsNotExist(err) {
 			return nil
 		}
-		return archivePriorBuildError(err.Error())
+		return archivePriorBuildError(err)
 	}
 	// Archive the old artifacts.
 	err = a.archivePriorBuild(p, t)
 	if err != nil {
-		return err
+		return archivePriorBuildeError(err)
 	}
 	// Delete the old artifacts.
 	err = a.deletePriorBuild(p)
@@ -172,18 +172,18 @@ func (a *Archive) archivePriorBuild(p string, t string) error {
 	// ensure the archive name is unique
 	tBName, err = getUniqueFilename(tBName, "2006-01-02")
 	if err != nil {
-		return archivePriorBuildError(err.Error())
+		return err
 	}
 	// Create the new archive file.
 	tBall, err := os.Create(tBName)
 	if err != nil {
-		return archivePriorBuildError(err.Error())
+		return err
 	}
 	// Close the file with error handling
 	defer func() {
 		cerr := tBall.Close()
 		if cerr != nil && err == nil {
-			err = archivePriorBuildError(err.Error())
+			err = err
 		}
 	}()
 	// The tarball gets compressed with gzip
@@ -204,11 +204,15 @@ func (a *Archive) archivePriorBuild(p string, t string) error {
 
 func (a *Archive) deletePriorBuild(p string) error {
 	//delete the contents of the passed directory
-	return deleteDir(p)
+	err := deleteDir(p)
+	if err != nil {
+		return fmt.Errorf("deletePriorBuild failed: %s", err.Error())
+	}
+	nil
 }
 
 // archivePriorBuildError is a helper function to help generate consistent
 // errors
-func archivePriorBuildError(s string) error {
-	return fmt.Errorf("archive of prior build failed: %s", s)
+func archivePriorBuildError(err error) error {
+	return fmt.Errorf("archive of prior build failed: %s", err.Error())
 }

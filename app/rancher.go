@@ -741,8 +741,7 @@ func deleteDir(dir string) error {
 	_, err := os.Stat(dir)
 	if err != nil {
 		if os.IsNotExist(err) {
-			jww.ERROR.Println(err)
-			return err
+			return fmt.Errorf("deleteDir: %s", err.Error())
 		}
 	}
 	dirInf := directory{}
@@ -755,8 +754,7 @@ func deleteDir(dir string) error {
 		}
 		err := os.Remove(dir + file.p)
 		if err != nil {
-			jww.ERROR.Println(err)
-			return err
+			return fmt.Errorf("deleteDir: %s", err)
 		}
 	}
 	// all the files should now be deleted so its safe to delete the directories
@@ -764,8 +762,7 @@ func deleteDir(dir string) error {
 	for i := len(dirs) - 1; i >= 0; i-- {
 		err = os.Remove(dirs[i])
 		if err != nil {
-			jww.ERROR.Println(err)
-			return err
+			return fmt.Errorf("deleteDir: %s", err.Error())
 		}
 	}
 	return nil
