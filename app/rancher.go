@@ -732,42 +732,6 @@ func copyDir(srcDir string, dstDir string) error {
 	return nil
 }
 
-// deleteDir deletes the contents of a directory.
-func deleteDir(dir string) error {
-	var dirs []string
-	// see if the directory exists first, actually any error results in the
-	// same handling so just return on any error instead of doing an
-	// os.IsNotExist(err)
-	_, err := os.Stat(dir)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return fmt.Errorf("deleteDir: %s", err.Error())
-		}
-	}
-	dirInf := directory{}
-	dirInf.DirWalk(dir)
-	dir = appendSlash(dir)
-	for _, file := range dirInf.Files {
-		if file.info.IsDir() {
-			dirs = append(dirs, dir+file.p)
-			continue
-		}
-		err := os.Remove(dir + file.p)
-		if err != nil {
-			return fmt.Errorf("deleteDir: %s", err)
-		}
-	}
-	// all the files should now be deleted so its safe to delete the directories
-	// do this in reverse order
-	for i := len(dirs) - 1; i >= 0; i-- {
-		err = os.Remove(dirs[i])
-		if err != nil {
-			return fmt.Errorf("deleteDir: %s", err.Error())
-		}
-	}
-	return nil
-}
-
 // Substring returns a substring of s starting at i for a length of l chars.
 // If the requested index + requested length is greater than the length of the
 // string, the string contents from the index to the end of the string will be
