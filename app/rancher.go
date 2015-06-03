@@ -135,7 +135,7 @@ func (d *distroDefaults) Set() error {
 	d.Templates = map[Distro]*rawTemplate{}
 	// Generate the default settings for each distro.
 	for k, v := range s.Distro {
-		// See if the base url exists for non cento distros
+		// See if the base url exists for non centos distros
 		// It isn't required for debian because automatic resolution of iso
 		// information is not supported.
 		if v.BaseURL == "" && k != CentOS.String() {
@@ -216,7 +216,7 @@ func BuildDistro(a ArgsFilter) error {
 func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	var rTpl *rawTemplate
 	if a.Distro == "" {
-		err := fmt.Errorf("cannot build a packer template because no target distro information was passed")
+		err := fmt.Errorf("cannot build a Packer template because no there wasn't a value for the distro flag")
 		jww.ERROR.Println(err)
 		return err
 	}
@@ -271,7 +271,7 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 // or an error.
 func BuildBuilds(buildNames ...string) (string, error) {
 	if buildNames[0] == "" {
-		err := fmt.Errorf("Nothing to build. No build name was passed")
+		err := fmt.Errorf("Nothing to build, no build name was received")
 		jww.ERROR.Println(err)
 		return "", err
 	}
@@ -299,6 +299,7 @@ func BuildBuilds(buildNames ...string) (string, error) {
 	for i := 0; i < nBuilds; i++ {
 		err := <-doneCh
 		if err != nil {
+			jww.ERROR.Println(err)
 			errorCount++
 		} else {
 			builtCount++
@@ -311,8 +312,7 @@ func BuildBuilds(buildNames ...string) (string, error) {
 // artifacts for the passed build.
 func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 	if buildName == "" {
-		err := fmt.Errorf("unable to build Packer Template: no build name was passed")
-		jww.ERROR.Println(err)
+		err := fmt.Errorf("unable to build Packer Template: no build name was received")
 		doneCh <- err
 		return
 	}
@@ -324,15 +324,13 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 	bTpl, ok = Builds.Build[buildName]
 	if !ok {
 		err := fmt.Errorf("unable to build Packer Template: %q is not a valid build name", buildName)
-		jww.ERROR.Println(err)
 		doneCh <- err
 		return
 	}
 	// See if the distro default exists.
 	rTpl, ok = DistroDefaults.Templates[DistroFromString(bTpl.Distro)]
 	if !ok {
-		err := fmt.Errorf("unsupported distro: %s", bTpl.Distro)
-		jww.ERROR.Println(err)
+		err := fmt.Errorf("unsupported distro for %s: %s", buildName, bTpl.Distro)
 		doneCh <- err
 		return
 	}
@@ -354,13 +352,11 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 	var err error
 	pTpl, err = rTpl.createPackerTemplate()
 	if err != nil {
-		jww.ERROR.Println(err)
 		doneCh <- err
 		return
 	}
 	err = pTpl.create(rTpl.IODirInf, rTpl.BuildInf, rTpl.dirs, rTpl.files)
 	if err != nil {
-		jww.ERROR.Println(err)
 		doneCh <- err
 		return
 	}
@@ -379,7 +375,7 @@ func getSliceLenFromIface(v interface{}) (int, error) {
 		sl := reflect.ValueOf(v)
 		return sl.Len(), nil
 	}
-	return 0, fmt.Errorf("err: getSliceLenFromIface expected a slice, go" + reflect.TypeOf(v).Kind().String())
+	return 0, fmt.Errorf("err: getSliceLenFromIface expected a slice, got %q", reflect.TypeOf(v).Kind().String())
 }
 
 // MergeSlices takes a variadic input of []string and returns a string slice
