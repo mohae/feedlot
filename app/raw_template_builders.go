@@ -237,7 +237,11 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, err er
 	var workSlice []string
 	_, ok = r.Builders[Common.String()]
 	if ok {
-		workSlice = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[AmazonEBS.String()].Settings)
+		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[AmazonEBS.String()].Settings)
+		if err != nil {
+			return nil, fmt.Errorf("createAmazonEBS failed: %s", err.Error())
+		}
+
 	} else {
 		workSlice = r.Builders[AmazonEBS.String()].Settings
 	}
@@ -380,7 +384,10 @@ func (r *rawTemplate) createDigitalOcean() (settings map[string]interface{}, err
 	_, ok = r.Builders[Common.String()]
 	var workSlice []string
 	if ok {
-		workSlice = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[DigitalOcean.String()].Settings)
+		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[DigitalOcean.String()].Settings)
+		if err != nil {
+			return nil, fmt.Errorf("createDigitalOcean failed: %s", err.Error())
+		}
 	} else {
 		workSlice = r.Builders[DigitalOcean.String()].Settings
 	}
@@ -465,7 +472,10 @@ func (r *rawTemplate) createDocker() (settings map[string]interface{}, err error
 	var workSlice []string
 	_, ok = r.Builders[Common.String()]
 	if ok {
-		workSlice = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[Docker.String()].Settings)
+		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[Docker.String()].Settings)
+		if err != nil {
+			return nil, fmt.Errorf("createDocker failed: %s", err.Error())
+		}
 	} else {
 		workSlice = r.Builders[Docker.String()].Settings
 	}
@@ -569,7 +579,10 @@ func (r *rawTemplate) createGoogleCompute() (settings map[string]interface{}, er
 	var workSlice []string
 	_, ok = r.Builders[Common.String()]
 	if ok {
-		workSlice = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[GoogleCompute.String()].Settings)
+		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[GoogleCompute.String()].Settings)
+		if err != nil {
+			return nil, fmt.Errorf("createGoogleCompute failed: %s", err.Error())
+		}
 	} else {
 		workSlice = r.Builders[GoogleCompute.String()].Settings
 	}
@@ -658,7 +671,10 @@ func (r *rawTemplate) createNull() (settings map[string]interface{}, err error) 
 	var workSlice []string
 	_, ok = r.Builders[Common.String()]
 	if ok {
-		workSlice = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[Null.String()].Settings)
+		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[Null.String()].Settings)
+		if err != nil {
+			return nil, fmt.Errorf("createNull failed: %s", err.Error())
+		}
 	} else {
 		workSlice = r.Builders[Null.String()].Settings
 	}
@@ -739,7 +755,10 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, er
 	var workSlice []string
 	_, ok = r.Builders[Common.String()]
 	if ok {
-		workSlice = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[VirtualBoxISO.String()].Settings)
+		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[VirtualBoxISO.String()].Settings)
+		if err != nil {
+			return nil, fmt.Errorf("createVirtualBoxISO failed: %s", err.Error())
+		}
 	} else {
 		workSlice = r.Builders[VirtualBoxISO.String()].Settings
 	}
@@ -979,7 +998,10 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, er
 	var workSlice []string
 	_, ok = r.Builders[Common.String()]
 	if ok {
-		workSlice = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[VirtualBoxOVF.String()].Settings)
+		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[VirtualBoxOVF.String()].Settings)
+		if err != nil {
+			return nil, fmt.Errorf("createVirtualBoxOVF failed: %s", err.Error())
+		}
 	} else {
 		workSlice = r.Builders[VirtualBoxOVF.String()].Settings
 	}
@@ -1174,7 +1196,10 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, err er
 	var workSlice []string
 	_, ok = r.Builders[Common.String()]
 	if ok {
-		workSlice = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[VMWareISO.String()].Settings)
+		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[VMWareISO.String()].Settings)
+		if err != nil {
+			return nil, fmt.Errorf("createVMWareISO failed: %s", err.Error())
+		}
 	} else {
 		workSlice = r.Builders[VMWareISO.String()].Settings
 	}
@@ -1385,7 +1410,10 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, err er
 	var workSlice []string
 	_, ok = r.Builders[Common.String()]
 	if ok {
-		workSlice = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[VMWareVMX.String()].Settings)
+		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[VMWareVMX.String()].Settings)
+		if err != nil {
+			return nil, fmt.Errorf("createVMWareVMX failed: %s", err.Error())
+		}
 	} else {
 		workSlice = r.Builders[VMWareVMX.String()].Settings
 	}
@@ -1526,10 +1554,10 @@ func (r *rawTemplate) createVMXData(v interface{}) map[string]string {
 //     of that key. There is an exception:
 //   * `guest_os_type`: This is generally set at Packer Template generation
 //     time by Rancher.
-func (r *rawTemplate) updateBuilders(newB map[string]builder) {
+func (r *rawTemplate) updateBuilders(newB map[string]builder) error {
 	// If there is nothing new, old equals merged.
 	if len(newB) == 0 || newB == nil {
-		return
+		return nil
 	}
 	// Convert the existing Builders to interfaces.
 	var ifaceOld = make(map[string]interface{}, len(r.Builders))
@@ -1562,11 +1590,14 @@ func (r *rawTemplate) updateBuilders(newB map[string]builder) {
 		if !ok {
 			continue
 		}
-		b.mergeSettings(bb.Settings)
+		err := b.mergeSettings(bb.Settings)
+		if err != nil {
+			return fmt.Errorf("merge builder settings failed: %s", err.Error())
+		}
 		b.mergeArrays(bb.Arrays)
 		r.Builders[v] = b
 	}
-	return
+	return nil
 }
 
 // updateCommon updates rawTemplate's common builder settings.
@@ -1578,7 +1609,7 @@ func (r *rawTemplate) updateBuilders(newB map[string]builder) {
 //     inserted into r's CommonBuilder setting list.
 //   * When r has a setting that does not exist in b, nothing is done.  This
 //     method does not delete any settings that already exist in r.
-func (r *rawTemplate) updateCommon(newB builder) {
+func (r *rawTemplate) updateCommon(newB builder) error {
 	if r.Builders == nil {
 		r.Builders = map[string]builder{}
 	}
@@ -1586,12 +1617,15 @@ func (r *rawTemplate) updateCommon(newB builder) {
 	b, ok := r.Builders[Common.String()]
 	if !ok {
 		r.Builders[Common.String()] = builder{templateSection: templateSection{Settings: newB.Settings, Arrays: newB.Arrays}}
-		return
+		return nil
 	}
 	// Otherwise merge the two
-	b.mergeSettings(b.Settings)
+	err := b.mergeSettings(b.Settings)
+	if err != nil {
+		return fmt.Errorf("ipdate common settings failed: %s", err.Error())
+	}
 	r.Builders[Common.String()] = b
-	return
+	return nil
 }
 
 // setHTTP ensures that http setting is set and adds it to the dirs info so that its

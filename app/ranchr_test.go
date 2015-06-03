@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -560,13 +561,20 @@ func TestMergeSlices(t *testing.T) {
 
 func TestMergeSettingsSlices(t *testing.T) {
 	var s1, s2, res []string
-	res = mergeSettingsSlices(s1, s2)
+	var err error
+	res, err = mergeSettingsSlices(s1, s2)
+	if err != nil {
+		t.Errorf("expected error to be nil, got %q", err.Error())
+	}
 	if res != nil {
 		t.Errorf("expected nil, got %+v", res)
 	}
 
 	s1 = []string{"key1=value1", "key2=value2", "key3=value3"}
-	res = mergeSettingsSlices(s1, s2)
+	res, err = mergeSettingsSlices(s1, s2)
+	if err != nil {
+		t.Errorf("expected error to be nil, got %q", err.Error())
+	}
 	if res == nil {
 		t.Error("Expected a non-nil slice, got nil")
 	} else {
@@ -585,7 +593,10 @@ func TestMergeSettingsSlices(t *testing.T) {
 	}
 
 	s2 = []string{"key1=value1", "key2=value2", "key3=value3"}
-	res = mergeSettingsSlices(s1, s2)
+	res, err = mergeSettingsSlices(s1, s2)
+	if err != nil {
+		t.Errorf("expected error to be nil, got %q", err.Error())
+	}
 	if res == nil {
 		t.Error("Expected a non-nil slice, got nil")
 	} else {
@@ -605,7 +616,10 @@ func TestMergeSettingsSlices(t *testing.T) {
 
 	s1 = []string{"key1=value1", "key2=value2", "key3=value3"}
 	s2 = []string{"key2=value22", "key4=value4"}
-	res = mergeSettingsSlices(s1, s2)
+	res, err = mergeSettingsSlices(s1, s2)
+	if err != nil {
+		t.Errorf("expected error to be nil, got %q", err.Error())
+	}
 	if res == nil {
 		t.Error("Expected a non-nil slice, got nil")
 	} else {
@@ -841,8 +855,8 @@ func TestDeleteDirContent(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, none occurred")
 	} else {
-		if err.Error() != "stat "+tmpDir+"/testtest: no such file or directory" {
-			t.Errorf("expected \"stat "+tmpDir+"/testtest: no such file or directory\", got %q", err.Error())
+		if err.Error() != fmt.Sprintf("deleteDir: stat %s/testtest: no such file or directory", tmpDir) {
+			t.Errorf("expected \"deleteDir: stat "+tmpDir+"/testtest: no such file or directory\", got %q", err.Error())
 		}
 	}
 

@@ -433,12 +433,18 @@ func TestCreatePostProcessors(t *testing.T) {
 }
 
 func TestRawTemplateUpdatePostProcessors(t *testing.T) {
-	testDistroDefaults.Templates[CentOS].updatePostProcessors(nil)
+	err := testDistroDefaults.Templates[CentOS].updatePostProcessors(nil)
+	if err != nil {
+		t.Errorf("expected error to be nil, got %q", err.Error())
+	}
 	if MarshalJSONToString.Get(testDistroDefaults.Templates[CentOS].PostProcessors) != MarshalJSONToString.Get(ppOrig) {
 		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(ppOrig), MarshalJSONToString.Get(testDistroDefaults.Templates[CentOS].PostProcessors))
 	}
 
-	testDistroDefaults.Templates[CentOS].updatePostProcessors(ppNew)
+	err = testDistroDefaults.Templates[CentOS].updatePostProcessors(ppNew)
+	if err != nil {
+		t.Errorf("expected error to be nil, got %q", err.Error())
+	}
 	if MarshalJSONToString.Get(testDistroDefaults.Templates[CentOS].PostProcessors) != MarshalJSONToString.Get(ppMerged) {
 		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(ppMerged), MarshalJSONToString.Get(testDistroDefaults.Templates[CentOS].PostProcessors))
 	}

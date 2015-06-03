@@ -96,7 +96,7 @@ func (d *distroDefaults) GetTemplate(n string) (*rawTemplate, error) {
 	var ok bool
 	t, ok = d.Templates[DistroFromString(n)]
 	if !ok {
-		err := fmt.Errorf("GetTemplate: unsupported distro: %s", n)
+		err := fmt.Errorf("unsupported distro: %s", n)
 		jww.ERROR.Println(err)
 		return t, err
 	}
@@ -155,7 +155,12 @@ func (d *distroDefaults) Set() error {
 		// Now update it with the distro settings.
 		tmp.BaseURL = appendSlash(v.BaseURL)
 		tmp.Arch, tmp.Image, tmp.Release = getDefaultISOInfo(v.DefImage)
-		tmp.setDefaults(v)
+		err = tmp.setDefaults(v)
+		if err != nil {
+			err = fmt.Errorf("setting of distro defaults failed: %s", err.Error())
+			jww.ERROR.Print(err.Error())
+			return err
+		}
 		d.Templates[DistroFromString(k)] = tmp
 	}
 	DistroDefaults.IsSet = true
@@ -309,10 +314,10 @@ func BuildBuilds(buildNames ...string) (string, error) {
 		}
 	}
 	if nBuilds == 1 {
-		if buildCount > 0 {
-			return fmt.Sprintf("%s was successfully processed and its Packer template was created", buildNames[0])
+		if builtCount > 0 {
+			return fmt.Sprintf("%s was successfully processed and its Packer template was created", buildNames[0]), nil
 		}
-		return fmt.Sprintf("Processing of the %s build failed with an error.", buildNames[0])
+		return fmt.Sprintf("Processing of the %s build failed with an error.", buildNames[0]), nil
 	}
 	return fmt.Sprintf("BuildBuilds: %v Builds were successfully processed and their Packer templates were created, %v Builds were unsucessfully process and resulted in errors..", builtCount, errorCount), nil
 }
@@ -455,26 +460,24 @@ func mergeSlices(s1 []string, s2 []string) []string {
 // Since settings use  embedded key=value pairs, the key is extracted from each
 // value and matches are performed on the key only as the value will be
 // different if the key appears in both slices.
-func mergeSettingsSlices(s1 []string, s2 []string) []string {
-	l1 := len(s1)
-	l2 := len(s2)
-	if l1 == 0 && l2 == 0 {
-		return nil
+func mergeSettingsSlices(s1 []string, s2 []string) ([]string, error) {
+	if len(s1) == 0 && len(s2) == 0 {
+		return nil, nil
 	}
 	// Make a slice with a length equal to the sum of the two input slices.
-	merged := make([]string, l1+l2)
+	merged := make([]string, len(s1)+len(s2))
 	// Copy the first slice.
 	i := copy(merged, s1)
 	// if nothing was copied, i == 0 , just copy the 2nd slice.
 	if i == 0 {
 		copy(merged, s2)
-		return merged
+		return merged, nil
 	}
 	ms1 := map[string]string{}
 	// Create a map of variables from the first slice for comparison reasons.
 	ms1 = varMapFromSlice(s1)
 	if ms1 == nil {
-		jww.CRITICAL.Println("Unable to create a variable map from the passed slice.")
+		return nil, fmt.Errorf("mergeSettingsSlices could not create a variable map from the passed slice.")
 	}
 	// For each element in the second slice, get the key. If it already
 	// exists, update the existing value, otherwise add it to the merged
@@ -486,9 +489,7 @@ func mergeSettingsSlices(s1 []string, s2 []string) []string {
 		if _, ok := ms1[key]; ok {
 			// This key already exists. Find it and update it.
 			indx = indexOfKeyInVarSlice(key, merged)
-			if indx < 0 {
-				jww.WARN.Printf("%q, was not updated to %q because it was not found in the target", key, v)
-			} else {
+			if indx >= 0 {
 				merged[indx] = v
 			}
 			continue
@@ -503,7 +504,7 @@ func mergeSettingsSlices(s1 []string, s2 []string) []string {
 	// Shrink the slice back down to == its length
 	ret := make([]string, i)
 	copy(ret, merged)
-	return ret
+	return ret, nil
 }
 
 // varMapFromSlice creates a map from the passed slice. A Rancher var string

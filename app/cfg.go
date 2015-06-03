@@ -132,11 +132,16 @@ func (b *builder) DeepCopy() builder {
 
 // mergeSettings the settings section of a builder. New values supersede
 // existing ones.
-func (b *builder) mergeSettings(sl []string) {
+func (b *builder) mergeSettings(sl []string) error {
 	if sl == nil {
-		return
+		return nil
 	}
-	b.Settings = mergeSettingsSlices(b.Settings, sl)
+	var err error
+	b.Settings, err = mergeSettingsSlices(b.Settings, sl)
+	if err != nil {
+		return fmt.Errorf("merge of builder settings failed: %s", err.Error())
+	}
+	return nil
 }
 
 // mergeArrays merges the arrays section of a template builder
@@ -177,16 +182,21 @@ func (p *postProcessor) DeepCopy() postProcessor {
 
 // postProcessor.mergeSettings  merges the settings section of a post-processor
 // with the passed slice of settings. New values supercede existing ones.
-func (p *postProcessor) mergeSettings(sl []string) {
+func (p *postProcessor) mergeSettings(sl []string) error {
 	if sl == nil {
-		return
+		return nil
 	}
 	if p.Settings == nil {
 		p.Settings = sl
-		return
+		return nil
 	}
 	// merge the keys
-	p.Settings = mergeSettingsSlices(p.Settings, sl)
+	var err error
+	p.Settings, err = mergeSettingsSlices(p.Settings, sl)
+	if err != nil {
+		return fmt.Errorf("merge of post-processor settings failed: %s", err.Error())
+	}
+	return nil
 }
 
 // postProcessor.mergeArrays wraps templateSection.mergeArrays
@@ -210,16 +220,21 @@ func (p *provisioner) DeepCopy() provisioner {
 
 // provisioner.mergeSettings  merges the settings section of a post-processor
 // with the passed slice of settings. New values supercede existing ones.
-func (p *provisioner) mergeSettings(sl []string) {
+func (p *provisioner) mergeSettings(sl []string) error {
 	if sl == nil {
-		return
+		return nil
 	}
 	if p.Settings == nil {
 		p.Settings = sl
-		return
+		return nil
 	}
 	// merge the keys
-	p.Settings = mergeSettingsSlices(p.Settings, sl)
+	var err error
+	p.Settings, err = mergeSettingsSlices(p.Settings, sl)
+	if err != nil {
+		return fmt.Errorf("merge of provisioner settings failed: %s", err.Error())
+	}
+	return nil
 }
 
 // provisioner.mergeArrays wraps templateSection.mergeArrays

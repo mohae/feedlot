@@ -117,7 +117,7 @@ func (r *rawTemplate) replaceVariables(s string) string {
 // r.setDefaults takes the incoming distro settings and merges them with its
 // existing settings, which are set to rancher's defaults, to create the
 // default template.
-func (r *rawTemplate) setDefaults(d *distro) {
+func (r *rawTemplate) setDefaults(d *distro) error {
 	// merges Settings between an old and new template.
 	// Note: Arch, Image, and Release are not updated here as how these fields
 	// are updated depends on whether this is a build from a distribution's
@@ -138,10 +138,19 @@ func (r *rawTemplate) setDefaults(d *distro) {
 		r.ProvisionerTypes = d.ProvisionerTypes
 	}
 	// merge the build portions.
-	r.updateBuilders(d.Builders)
-	r.updatePostProcessors(d.PostProcessors)
-	r.updateProvisioners(d.Provisioners)
-	return
+	err := r.updateBuilders(d.Builders)
+	if err != nil {
+		return err
+	}
+	err = r.updatePostProcessors(d.PostProcessors)
+	if err != nil {
+		return err
+	}
+	err = r.updateProvisioners(d.Provisioners)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // r.updateBuildSettings merges Settings between an old and new template.

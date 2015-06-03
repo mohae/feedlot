@@ -1084,12 +1084,18 @@ func TestCreateBuilders(t *testing.T) {
 }
 
 func TestRawTemplateUpdatebuilders(t *testing.T) {
-	testUbuntu.updateBuilders(nil)
+	err := testUbuntu.updateBuilders(nil)
+	if err != nil {
+		t.Errorf("expected error to be nil, got %q", err.Error())
+	}
 	if MarshalJSONToString.Get(testUbuntu.Builders) != MarshalJSONToString.Get(builderOrig) {
 		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(builderOrig), MarshalJSONToString.Get(testUbuntu.Builders))
 	}
 
-	testUbuntu.updateBuilders(builderNew)
+	err = testUbuntu.updateBuilders(builderNew)
+	if err != nil {
+		t.Errorf("expected error to be nil, got %q", err.Error())
+	}
 	if MarshalJSONToString.Get(testUbuntu.Builders) != MarshalJSONToString.Get(builderMerged) {
 		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(builderMerged), MarshalJSONToString.Get(testUbuntu.Builders))
 	}

@@ -73,10 +73,10 @@ func ProvisionerFromString(s string) Provisioner {
 //   orphaned.
 //  * If there isn't a new config, return the existing as there are no
 //    overrides.
-func (r *rawTemplate) updateProvisioners(newP map[string]provisioner) {
+func (r *rawTemplate) updateProvisioners(newP map[string]provisioner) error {
 	// If there is nothing new, old equals merged.
 	if len(newP) <= 0 || newP == nil {
-		return
+		return nil
 	}
 	// Convert the existing provisioners to interface.
 	var ifaceOld = make(map[string]interface{}, len(r.Provisioners))
@@ -106,10 +106,14 @@ func (r *rawTemplate) updateProvisioners(newP map[string]provisioner) {
 		if !ok {
 			continue
 		}
-		p.mergeSettings(pp.Settings)
+		err := p.mergeSettings(pp.Settings)
+		if err != nil {
+			return fmt.Errorf("merge of provisioner settings failed: %s", err.Error())
+		}
 		p.mergeArrays(pp.Arrays)
 		r.Provisioners[v] = p
 	}
+	return nil
 }
 
 // Go through all of the Settings and convert them to a map. Each setting is

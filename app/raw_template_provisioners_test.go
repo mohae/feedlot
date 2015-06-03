@@ -526,12 +526,18 @@ var prMerged = map[string]provisioner{
 }
 
 func TestRawTemplateUpdateProvisioners(t *testing.T) {
-	testRawTemplateProvisioner.updateProvisioners(nil)
+	err := testRawTemplateProvisioner.updateProvisioners(nil)
+	if err != nil {
+		t.Errorf("expected error to be nil, got %q", err.Error())
+	}
 	if MarshalJSONToString.Get(testRawTemplateProvisioner.Provisioners) != MarshalJSONToString.Get(prOrig) {
 		t.Errorf("Got %q, want %q", MarshalJSONToString.Get(testRawTemplateProvisioner.Provisioners), MarshalJSONToString.Get(prOrig))
 	}
 
-	testRawTemplateProvisioner.updateProvisioners(prNew)
+	err = testRawTemplateProvisioner.updateProvisioners(prNew)
+	if err != nil {
+		t.Errorf("expected error to be nil, got %q", err.Error())
+	}
 	if MarshalJSONToString.GetIndented(testRawTemplateProvisioner.Provisioners) != MarshalJSONToString.GetIndented(prMerged) {
 		t.Errorf("Got %q, want %q", MarshalJSONToString.GetIndented(prMerged), MarshalJSONToString.GetIndented(testRawTemplateProvisioner.Provisioners))
 	}

@@ -72,10 +72,10 @@ func PostProcessorFromString(s string) PostProcessor {
 //     in the `old` map but it does not exist in the `new` map, that
 //     postProcessor will be orphaned.
 //   * If there isn't a new config, the existing one is used
-func (r *rawTemplate) updatePostProcessors(newP map[string]postProcessor) {
+func (r *rawTemplate) updatePostProcessors(newP map[string]postProcessor) error {
 	// If there is nothing new, old equals merged.
 	if len(newP) == 0 || newP == nil {
-		return
+		return nil
 	}
 	// Convert the existing postProcessors to interface.
 	var ifaceOld = make(map[string]interface{}, len(r.PostProcessors))
@@ -105,10 +105,14 @@ func (r *rawTemplate) updatePostProcessors(newP map[string]postProcessor) {
 		if !ok {
 			continue
 		}
-		p.mergeSettings(pp.Settings)
+		err := p.mergeSettings(pp.Settings)
+		if err != nil {
+			return fmt.Errorf("merge of post-processor settings failed: %s", err.Error())
+		}
 		p.mergeArrays(pp.Arrays)
 		r.PostProcessors[v] = p
 	}
+	return nil
 }
 
 // Go through all of the Settings and convert them to a map. Each setting is

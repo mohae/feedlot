@@ -49,14 +49,14 @@ func (d *directory) DirWalk(dirPath string) error {
 	// See if the path exists
 	exists, err := pathExists(dirPath)
 	if err != nil {
-		return err
+		return archivePriorBuildErr(err)
 	}
 	if !exists {
-		return archivePriorBuildError(fmt.Sprintf("%s does not exist", dirPath))
+		return archivePriorBuildErr(fmt.Errorf("%s does not exist", dirPath))
 	}
 	fullPath, err := filepath.Abs(dirPath)
 	if err != nil {
-		return archivePriorBuildError(err.Error())
+		return archivePriorBuildErr(err)
 	}
 	// Set up the call back function.
 	callback := func(p string, fi os.FileInfo, err error) error {
@@ -76,12 +76,12 @@ func (d *directory) addFilename(root string, p string, fi os.FileInfo, err error
 		return err
 	}
 	if !exists {
-		return archivePriorBuildError(fmt.Sprintf("%s does not exist", p))
+		return archivePriorBuildErr(fmt.Errorf("%s does not exist", p))
 	}
 	// Get the relative information.
 	rel, err := filepath.Rel(root, p)
 	if err != nil {
-		return archivePriorBuildError(err.Error())
+		return archivePriorBuildErr(err)
 	}
 	if rel == "." {
 		return nil
@@ -97,13 +97,13 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 	// TODO check ownership/permissions
 	file, err := os.Open(filename)
 	if err != nil {
-		return archivePriorBuildError(err.Error())
+		return archivePriorBuildErr(err)
 	}
 	defer file.Close()
 	var fileStat os.FileInfo
 	fileStat, err = file.Stat()
 	if err != nil {
-		return archivePriorBuildError(err.Error())
+		return archivePriorBuildErr(err)
 	}
 	// Don't add directories--they result in tar header errors.
 	fileMode := fileStat.Mode()
@@ -119,12 +119,12 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 	// Write the file header to the tarball.
 	err = tW.WriteHeader(tH)
 	if err != nil {
-		return archivePriorBuildError(err.Error())
+		return archivePriorBuildErr(err)
 	}
 	// Add the file to the tarball.
 	_, err = io.Copy(tW, file)
 	if err != nil {
-		return archivePriorBuildError(err.Error())
+		return archivePriorBuildErr(err)
 	}
 	return nil
 }
@@ -140,12 +140,12 @@ func (a *Archive) priorBuild(p string, t string, wg *sync.WaitGroup) error {
 		if os.IsNotExist(err) {
 			return nil
 		}
-		return archivePriorBuildError(err)
+		return archivePriorBuildErr(err)
 	}
 	// Archive the old artifacts.
 	err = a.archivePriorBuild(p, t)
 	if err != nil {
-		return archivePriorBuildeError(err)
+		return archivePriorBuildErr(err)
 	}
 	// Delete the old artifacts.
 	err = a.deletePriorBuild(p)
@@ -208,12 +208,12 @@ func (a *Archive) deletePriorBuild(p string) error {
 	if err != nil {
 		return fmt.Errorf("deletePriorBuild failed: %s", err.Error())
 	}
-	nil
+	return nil
 }
 
-// archivePriorBuildError is a helper function to help generate consistent
+// archivePriorBuildErr is a helper function to help generate consistent
 // errors
-func archivePriorBuildError(err error) error {
+func archivePriorBuildErr(err error) error {
 	return fmt.Errorf("archive of prior build failed: %s", err.Error())
 }
 
