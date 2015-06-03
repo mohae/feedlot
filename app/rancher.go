@@ -96,7 +96,7 @@ func (d *distroDefaults) GetTemplate(n string) (*rawTemplate, error) {
 	var ok bool
 	t, ok = d.Templates[DistroFromString(n)]
 	if !ok {
-		err := fmt.Errorf("unsupported distro: %s", n)
+		err := fmt.Errorf("GetTemplate: unsupported distro: %s", n)
 		jww.ERROR.Println(err)
 		return t, err
 	}
@@ -140,7 +140,7 @@ func (d *distroDefaults) Set() error {
 		// information is not supported.
 		if v.BaseURL == "" && k != CentOS.String() {
 			err = fmt.Errorf("%s requires a BaseURL, none provided", k)
-			jww.CRITICAL.Println(err)
+			jww.ERROR.Println(err)
 			return err
 
 		}
@@ -182,12 +182,14 @@ func BuildDistro(a ArgsFilter) error {
 	if !DistroDefaults.IsSet {
 		err := DistroDefaults.Set()
 		if err != nil {
+			err = fmt.Errorf("BuildDistro failed: %s", err.Error())
 			jww.ERROR.Println(err)
 			return err
 		}
 	}
 	err := buildPackerTemplateFromDistro(a)
 	if err != nil {
+		err = fmt.Errorf("BuildDistro failed: %s", err.Error())
 		jww.ERROR.Println(err)
 		return err
 	}
@@ -271,7 +273,7 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 // or an error.
 func BuildBuilds(buildNames ...string) (string, error) {
 	if buildNames[0] == "" {
-		err := fmt.Errorf("Nothing to build, no build name was received")
+		err := fmt.Errorf("BuildBuilds failed: no build name was received")
 		jww.ERROR.Println(err)
 		return "", err
 	}
@@ -281,6 +283,7 @@ func BuildBuilds(buildNames ...string) (string, error) {
 	if !DistroDefaults.IsSet {
 		err := DistroDefaults.Set()
 		if err != nil {
+			fmt.Errorf("BuildBuilds failed: %s", err.Error())
 			jww.ERROR.Println(err)
 			return "", err
 		}
@@ -305,14 +308,20 @@ func BuildBuilds(buildNames ...string) (string, error) {
 			builtCount++
 		}
 	}
-	return fmt.Sprintf("Create Packer templates from named builds: %v Builds were successfully processed and %v Builds resulted in an error.", builtCount, errorCount), nil
+	if nBuilds == 1 {
+		if buildCount > 0 {
+			return fmt.Sprintf("%s was successfully processed and its Packer template was created", buildNames[0])
+		}
+		return fmt.Sprintf("Processing of the %s build failed with an error.", buildNames[0])
+	}
+	return fmt.Sprintf("BuildBuilds: %v Builds were successfully processed and their Packer templates were created, %v Builds were unsucessfully process and resulted in errors..", builtCount, errorCount), nil
 }
 
 // buildPackerTemplateFromNamedBuild creates a Packer tmeplate and associated
 // artifacts for the passed build.
 func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 	if buildName == "" {
-		err := fmt.Errorf("unable to build Packer Template: no build name was received")
+		err := fmt.Errorf("unable to build Packer template: no build name was received")
 		doneCh <- err
 		return
 	}
@@ -323,14 +332,14 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 	bTpl = &rawTemplate{}
 	bTpl, ok = Builds.Build[buildName]
 	if !ok {
-		err := fmt.Errorf("unable to build Packer Template: %q is not a valid build name", buildName)
+		err := fmt.Errorf("unable to build Packer template: %q is not a valid build name", buildName)
 		doneCh <- err
 		return
 	}
 	// See if the distro default exists.
 	rTpl, ok = DistroDefaults.Templates[DistroFromString(bTpl.Distro)]
 	if !ok {
-		err := fmt.Errorf("unsupported distro for %s: %s", buildName, bTpl.Distro)
+		err := fmt.Errorf("building Packer template for %s failed: an unsupported distro, %s, was specified", buildName, bTpl.Distro)
 		doneCh <- err
 		return
 	}
@@ -375,7 +384,7 @@ func getSliceLenFromIface(v interface{}) (int, error) {
 		sl := reflect.ValueOf(v)
 		return sl.Len(), nil
 	}
-	return 0, fmt.Errorf("err: getSliceLenFromIface expected a slice, got %q", reflect.TypeOf(v).Kind().String())
+	return 0, fmt.Errorf("getSliceLenFromIface expected a slice, got %q", reflect.TypeOf(v).Kind().String())
 }
 
 // MergeSlices takes a variadic input of []string and returns a string slice
@@ -693,17 +702,19 @@ func copyFile(src string, dst string) (written int64, err error) {
 func copyDir(srcDir string, dstDir string) error {
 	exists, err := pathExists(srcDir)
 	if err != nil {
+		err = fmt.Errorf("copyDir error: %s", err.Error())
 		jww.ERROR.Print(err)
 		return err
 	}
 	if !exists {
-		err = fmt.Errorf("nothing copied: the source, %s, does not exist", srcDir)
+		err = fmt.Errorf("copyDir error: nothing copied, the source, %s, does not exist", srcDir)
 		jww.ERROR.Println(err)
 		return err
 	}
 	dir := Archive{}
 	err = dir.DirWalk(srcDir)
 	if err != nil {
+		err = fmt.Errorf("copyDir error while walking source: %s", err.Error())
 		jww.ERROR.Print(err)
 		return err
 	}
@@ -711,13 +722,14 @@ func copyDir(srcDir string, dstDir string) error {
 		if file.info == nil {
 			// if the info is empty, whatever this entry represents
 			// doesn't actually exist.
-			err := fmt.Errorf("%s does not exist", file.p)
+			err := fmt.Errorf("copyDir error: %s does not exist", file.p)
 			jww.ERROR.Println(err)
 			return err
 		}
 		if file.info.IsDir() {
 			err = os.MkdirAll(file.p, os.FileMode(0766))
 			if err != nil {
+				err = fmt.Errorf("copyDir error while making target directory: %s", err.Error())
 				jww.ERROR.Println(err)
 				return err
 			}
@@ -725,6 +737,7 @@ func copyDir(srcDir string, dstDir string) error {
 		}
 		_, err = copyFile(filepath.Join(srcDir, file.p), filepath.Join(dstDir, file.p))
 		if err != nil {
+			err = fmt.Errorf("copyDir error while copying file: %s", err.Error())
 			jww.ERROR.Println(err)
 			return err
 		}
