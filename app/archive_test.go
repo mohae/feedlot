@@ -19,8 +19,8 @@ func TestDirWalk(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, got nil")
 	} else {
-		if err.Error() != "invalid/path/to/archive does not exist" {
-			t.Errorf("Expected \"invalid/path/to/archive does not exist\", got %q", err.Error())
+		if err.Error() != "archive of prior build failed: invalid/path/to/archive does not exist" {
+			t.Errorf("Expected \"archive of prior build failed: invalid/path/to/archive does not exist\", got %q", err.Error())
 		}
 	}
 }
@@ -31,8 +31,8 @@ func TestAddFilename(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, got nil")
 	} else {
-		if "../test_files/src/ubuntu/scripts/dne_test_file.sh does not exist" != err.Error() {
-			t.Errorf("Expected \"../test_files/src/ubuntu/scripts/dne_test_file.sh does not exist\", got %q", err.Error())
+		if "archive of prior build failed: ../test_files/src/ubuntu/scripts/dne_test_file.sh does not exist" != err.Error() {
+			t.Errorf("Expected \"archive of prior build failed: ../test_files/src/ubuntu/scripts/dne_test_file.sh does not exist\", got %q", err.Error())
 		}
 	}
 }

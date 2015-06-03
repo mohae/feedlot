@@ -9,8 +9,6 @@ import (
 	"path"
 	"path/filepath"
 	"sync"
-
-	jww "github.com/spf13/jwalterweatherman"
 )
 
 // Archive holds information about an archive.
@@ -46,24 +44,19 @@ func (d *directory) DirWalk(dirPath string) error {
 	if dirPath == "" {
 		// If nothing was passed, do nothing. This is not an error.
 		// However archive.Files will be nil
-		jww.WARN.Println("No path information was received.")
 		return nil
 	}
 	// See if the path exists
 	exists, err := pathExists(dirPath)
 	if err != nil {
-		jww.ERROR.Println(err)
 		return err
 	}
 	if !exists {
-		err = fmt.Errorf("%s does not exist", dirPath)
-		jww.ERROR.Println(err)
-		return err
+		return archivePriorBuildError(fmt.Sprintf("%s does not exist", dirPath))
 	}
 	fullPath, err := filepath.Abs(dirPath)
 	if err != nil {
-		jww.ERROR.Println(err)
-		return err
+		return archivePriorBuildError(err.Error())
 	}
 	// Set up the call back function.
 	callback := func(p string, fi os.FileInfo, err error) error {
@@ -80,19 +73,15 @@ func (d *directory) addFilename(root string, p string, fi os.FileInfo, err error
 	var exists bool
 	exists, err = pathExists(p)
 	if err != nil {
-		jww.ERROR.Println(err)
 		return err
 	}
 	if !exists {
-		err = fmt.Errorf("%s does not exist", p)
-		jww.ERROR.Println(err)
-		return err
+		return archivePriorBuildError(fmt.Sprintf("%s does not exist", p))
 	}
 	// Get the relative information.
 	rel, err := filepath.Rel(root, p)
 	if err != nil {
-		jww.ERROR.Println(err)
-		return err
+		return archivePriorBuildError(err.Error())
 	}
 	if rel == "." {
 		return nil
@@ -108,15 +97,13 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 	// TODO check ownership/permissions
 	file, err := os.Open(filename)
 	if err != nil {
-		jww.ERROR.Println(err)
-		return err
+		return archivePriorBuildError(err.Error())
 	}
 	defer file.Close()
 	var fileStat os.FileInfo
 	fileStat, err = file.Stat()
 	if err != nil {
-		jww.ERROR.Println(err)
-		return err
+		return archivePriorBuildError(err.Error())
 	}
 	// Don't add directories--they result in tar header errors.
 	fileMode := fileStat.Mode()
@@ -132,14 +119,12 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 	// Write the file header to the tarball.
 	err = tW.WriteHeader(tH)
 	if err != nil {
-		jww.ERROR.Println(err)
-		return err
+		return archivePriorBuildError(err.Error())
 	}
 	// Add the file to the tarball.
 	_, err = io.Copy(tW, file)
 	if err != nil {
-		jww.ERROR.Println(err)
-		return err
+		return archivePriorBuildError(err.Error())
 	}
 	return nil
 }
@@ -153,22 +138,18 @@ func (a *Archive) priorBuild(p string, t string, wg *sync.WaitGroup) error {
 	_, err := os.Stat(p)
 	if err != nil {
 		if os.IsNotExist(err) {
-			jww.TRACE.Printf("processing of prior build run not needed because %s does not exist", p)
 			return nil
 		}
-		jww.ERROR.Println(err)
-		return err
+		return archivePriorBuildError(err.Error())
 	}
 	// Archive the old artifacts.
 	err = a.archivePriorBuild(p, t)
 	if err != nil {
-		jww.ERROR.Println(err)
 		return err
 	}
 	// Delete the old artifacts.
 	err = a.deletePriorBuild(p)
 	if err != nil {
-		jww.ERROR.Println(err)
 		return err
 	}
 	return nil
@@ -178,7 +159,6 @@ func (a *Archive) archivePriorBuild(p string, t string) error {
 	// Get a list of directory contents
 	err := a.DirWalk(p)
 	if err != nil {
-		jww.ERROR.Println(err)
 		return err
 	}
 	if len(a.Files) <= 1 {
@@ -192,20 +172,18 @@ func (a *Archive) archivePriorBuild(p string, t string) error {
 	// ensure the archive name is unique
 	tBName, err = getUniqueFilename(tBName, "2006-01-02")
 	if err != nil {
-		return fmt.Errorf("unable to archive prior build: %s", err)
+		return archivePriorBuildError(err.Error())
 	}
 	// Create the new archive file.
 	tBall, err := os.Create(tBName)
 	if err != nil {
-		jww.CRITICAL.Println(err)
-		return err
+		return archivePriorBuildError(err.Error())
 	}
 	// Close the file with error handling
 	defer func() {
 		cerr := tBall.Close()
 		if cerr != nil && err == nil {
-			jww.ERROR.Print(cerr)
-			err = cerr
+			err = archivePriorBuildError(err.Error())
 		}
 	}()
 	// The tarball gets compressed with gzip
@@ -218,7 +196,6 @@ func (a *Archive) archivePriorBuild(p string, t string) error {
 	for _, f := range a.Files {
 		err := a.addFile(tW, filepath.Join(relPath, f.p))
 		if err != nil {
-			jww.CRITICAL.Println(err)
 			return err
 		}
 	}
@@ -228,4 +205,10 @@ func (a *Archive) archivePriorBuild(p string, t string) error {
 func (a *Archive) deletePriorBuild(p string) error {
 	//delete the contents of the passed directory
 	return deleteDir(p)
+}
+
+// archivePriorBuildError is a helper function to help generate consistent
+// errors
+func archivePriorBuildError(s string) error {
+	return fmt.Errorf("archive of prior build failed: %s", s)
 }
