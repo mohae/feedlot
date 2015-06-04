@@ -110,29 +110,29 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 		case AmazonEBS:
 			tmpS, err = r.createAmazonEBS()
 			if err != nil {
-				return nil, err
+				return nil, builderErr(AmazonEBS.String(), err)
 			}
 		// AmazonInstance, AmazonChroot:
 		// not implemented
 		case DigitalOcean:
 			tmpS, err = r.createDigitalOcean()
 			if err != nil {
-				return nil, err
+				return nil, builderErr(DigitalOcean.String(), err)
 			}
 		case Docker:
 			tmpS, err = r.createDocker()
 			if err != nil {
-				return nil, err
+				return nil, builderErr(Docker.String(), err)
 			}
 		case GoogleCompute:
 			tmpS, err = r.createGoogleCompute()
 			if err != nil {
-				return nil, err
+				return nil, builderErr(GoogleCompute.String(), err)
 			}
 		case Null:
 			tmpS, err = r.createNull()
 			if err != nil {
-				return nil, err
+				return nil, builderErr(Null.String(), err)
 			}
 		//	case Openstack:
 		//	case ParallelsISO, ParallelsPVM:
@@ -140,25 +140,25 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 		case VMWareISO:
 			tmpS, err = r.createVMWareISO()
 			if err != nil {
-				return nil, err
+				return nil, builderErr(VMWareISO.String(), err)
 			}
 		case VMWareVMX:
 			tmpS, err = r.createVMWareVMX()
 			if err != nil {
-				return nil, err
+				return nil, builderErr(VMWareVMX.String(), err)
 			}
 		case VirtualBoxISO:
 			tmpS, err = r.createVirtualBoxISO()
 			if err != nil {
-				return nil, err
+				return nil, builderErr(VirtualBoxISO.String(), err)
 			}
 		case VirtualBoxOVF:
 			tmpS, err = r.createVirtualBoxOVF()
 			if err != nil {
-				return nil, err
+				return nil, builderErr(VirtualBoxOVF.String(), err)
 			}
 		default:
-			err = fmt.Errorf("Builder, %q, is not supported by Rancher", bType)
+			err = fmt.Errorf("builder %q is not supported", bType)
 			return nil, err
 		}
 		bldrs[ndx] = tmpS
@@ -227,8 +227,7 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[AmazonEBS.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration found for %q", AmazonEBS.String())
-		return nil, err
+		return nil, configNotFoundErr()
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -239,7 +238,7 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, err er
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[AmazonEBS.String()].Settings)
 		if err != nil {
-			return nil, fmt.Errorf("createAmazonEBS failed: %s", err.Error())
+			return nil, mergeCommonSettingsErr(err)
 		}
 
 	} else {
@@ -285,14 +284,13 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, err er
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				err = fmt.Errorf("amazon-ebs builder error while trying to set %q to %q: %s", k, v, err)
-				return nil, err
+				return nil, settingErr("ssh_port", err)
 			}
 			settings[k] = i
 		case "user_data_file":
 			src, err := r.findComponentSource(AmazonEBS.String(), v)
 			if err != nil {
-				return nil, err
+				return nil, settingErr("user_data_file", err)
 			}
 			r.files[r.buildOutPath(AmazonEBS.String(), v)] = src
 			settings[k] = r.buildTemplateResourcePath(AmazonEBS.String(), v)
@@ -301,32 +299,25 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, err er
 		}
 	}
 	if !hasAccessKey {
-		err := fmt.Errorf("\"access_key\" setting is required for amazon-ebs, not found")
-		return nil, err
+		return nil, requiredSettingErr("access_key")
 	}
 	if !hasAmiName {
-		err := fmt.Errorf("\"ami_name\" setting is required for amazon-ebs, not found")
-		return nil, err
+		return nil, requiredSettingErr("ami_name")
 	}
 	if !hasInstanceType {
-		err := fmt.Errorf("\"instance_type\" setting is required for amazon-ebs, not found")
-		return nil, err
+		return nil, requiredSettingErr("instance_type")
 	}
 	if !hasRegion {
-		err := fmt.Errorf("\"region\" setting is required for amazon-ebs, not found")
-		return nil, err
+		return nil, requiredSettingErr("region")
 	}
 	if !hasSecretKey {
-		err := fmt.Errorf("\"secret_key\" setting is required for amazon-ebs, not found")
-		return nil, err
+		return nil, requiredSettingErr("secret_key")
 	}
 	if !hasSourceAmi {
-		err := fmt.Errorf("\"source_ami\" setting is required for amazon-ebs, not found")
-		return nil, err
+		return nil, requiredSettingErr("source_ami")
 	}
 	if !hasSSHUsername {
-		err := fmt.Errorf("\"ssh_username\" setting is required for amazon-ebs, not found")
-		return nil, err
+		return nil, requiredSettingErr("ssh_username")
 	}
 	// Process the Arrays.
 	for name, val := range r.Builders[AmazonEBS.String()].Arrays {
@@ -374,8 +365,7 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, err er
 func (r *rawTemplate) createDigitalOcean() (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[DigitalOcean.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration found for %q", DigitalOcean.String())
-		return nil, err
+		return nil, configNotFoundErr()
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -386,7 +376,7 @@ func (r *rawTemplate) createDigitalOcean() (settings map[string]interface{}, err
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[DigitalOcean.String()].Settings)
 		if err != nil {
-			return nil, fmt.Errorf("createDigitalOcean failed: %s", err.Error())
+			return nil, mergeCommonSettingsErr(err)
 		}
 	} else {
 		workSlice = r.Builders[DigitalOcean.String()].Settings
@@ -416,8 +406,7 @@ func (r *rawTemplate) createDigitalOcean() (settings map[string]interface{}, err
 		case "ssh_port":
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				err = fmt.Errorf("An error occurred while trying to set %s to %s: %s", k, v, err)
-				return nil, err
+				return nil, settingErr(k, err)
 			}
 			settings[k] = i
 		}
@@ -428,7 +417,7 @@ func (r *rawTemplate) createDigitalOcean() (settings map[string]interface{}, err
 	if hasApiKey && hasClientID {
 		return settings, nil
 	}
-	err = fmt.Errorf("required Digital Ocean API information not set")
+	err = requiredSettingErr("either api_token or (api_key && client_id)")
 	return nil, err
 }
 
@@ -462,8 +451,7 @@ func (r *rawTemplate) createDigitalOcean() (settings map[string]interface{}, err
 func (r *rawTemplate) createDocker() (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[Docker.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration found for %q", Docker.String())
-		return nil, err
+		return nil, configNotFoundErr()
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -474,7 +462,7 @@ func (r *rawTemplate) createDocker() (settings map[string]interface{}, err error
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[Docker.String()].Settings)
 		if err != nil {
-			return nil, fmt.Errorf("createDocker failed: %s", err.Error())
+			return nil, mergeCommonSettingsErr(err)
 		}
 	} else {
 		workSlice = r.Builders[Docker.String()].Settings
@@ -506,15 +494,15 @@ func (r *rawTemplate) createDocker() (settings map[string]interface{}, err error
 		}
 	}
 	if !hasCommit {
-		err := fmt.Errorf("\"commit\" setting is required for docker, not found")
+		err := requiredSettingErr("commit")
 		return nil, err
 	}
 	if !hasExportPath {
-		err := fmt.Errorf("\"export_path\" setting is required for docker, not found")
+		err := requiredSettingErr("export_path")
 		return nil, err
 	}
 	if !hasImage {
-		err := fmt.Errorf("\"image\" setting is required for docker, not found")
+		err := requiredSettingErr("image")
 		return nil, err
 	}
 	// Process the Arrays.
@@ -533,7 +521,10 @@ func (r *rawTemplate) createDocker() (settings map[string]interface{}, err error
 		if runCommandFile != "" {
 			commands, err := r.commandsFromFile(Docker.String(), runCommandFile)
 			if err != nil {
-				return nil, err
+				return nil, commandFileErr("run_command", runCommandFile, err)
+			}
+			if len(commands) == 0 {
+				return nil, noCommandsFoundErr("run_command", runCommandFile)
 			}
 			settings["run_command"] = commands
 		}
@@ -569,8 +560,7 @@ func (r *rawTemplate) createDocker() (settings map[string]interface{}, err error
 func (r *rawTemplate) createGoogleCompute() (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[GoogleCompute.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration found for %q", GoogleCompute.String())
-		return nil, err
+		return nil, configNotFoundErr()
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -581,7 +571,7 @@ func (r *rawTemplate) createGoogleCompute() (settings map[string]interface{}, er
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[GoogleCompute.String()].Settings)
 		if err != nil {
-			return nil, fmt.Errorf("createGoogleCompute failed: %s", err.Error())
+			return nil, mergeCommonSettingsErr(err)
 		}
 	} else {
 		workSlice = r.Builders[GoogleCompute.String()].Settings
@@ -615,23 +605,19 @@ func (r *rawTemplate) createGoogleCompute() (settings map[string]interface{}, er
 		case "disk_size", "ssh_port":
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				err = fmt.Errorf("An error occurred while trying to set %s to %s: %s", k, v, err)
-				return nil, err
+				return nil, settingErr(k, err)
 			}
 			settings[k] = i
 		}
 	}
 	if !hasProjectID {
-		err := fmt.Errorf("\"project_id\" setting is required for googlecompute, not found")
-		return nil, err
+		return nil, requiredSettingErr("project_id")
 	}
 	if !hasSourceImage {
-		err := fmt.Errorf("\"source_image\" setting is required for googlecompute, not found")
-		return nil, err
+		return nil, requiredSettingErr("source_image")
 	}
 	if !hasZone {
-		err := fmt.Errorf("\"zone\" setting is required for googlecompute, not found")
-		return nil, err
+		return nil, requiredSettingErr("zone")
 	}
 	// Process the Arrays.
 	for name, val := range r.Builders[GoogleCompute.String()].Arrays {
@@ -661,8 +647,7 @@ func (r *rawTemplate) createGoogleCompute() (settings map[string]interface{}, er
 func (r *rawTemplate) createNull() (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[Null.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration found for %q", Null.String())
-		return nil, err
+		return nil, configNotFoundErr()
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -673,7 +658,7 @@ func (r *rawTemplate) createNull() (settings map[string]interface{}, err error) 
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[Null.String()].Settings)
 		if err != nil {
-			return nil, fmt.Errorf("createNull failed: %s", err.Error())
+			return nil, mergeCommonSettingsErr(err)
 		}
 	} else {
 		workSlice = r.Builders[Null.String()].Settings
@@ -690,8 +675,7 @@ func (r *rawTemplate) createNull() (settings map[string]interface{}, err error) 
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				err = fmt.Errorf("%s builder error while processing setting %q: %s", Null.String(), k, err)
-				return nil, err
+				return nil, settingErr(k, err)
 			}
 			settings[k] = i
 		}
@@ -745,8 +729,7 @@ func (r *rawTemplate) createNull() (settings map[string]interface{}, err error) 
 func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[VirtualBoxISO.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration found for %q", VirtualBoxISO.String())
-		return nil, err
+		return nil, configNotFoundErr()
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -757,7 +740,7 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, er
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[VirtualBoxISO.String()].Settings)
 		if err != nil {
-			return nil, fmt.Errorf("createVirtualBoxISO failed: %s", err.Error())
+			return nil, mergeCommonSettingsErr(err)
 		}
 	} else {
 		workSlice = r.Builders[VirtualBoxISO.String()].Settings
@@ -780,11 +763,10 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, er
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					return nil, err
+					return nil, commandFileErr(k, v, err)
 				}
 				if len(commands) == 0 {
-					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", VirtualBoxISO.String(), k, v)
-					return nil, err
+					return nil, noCommandsFoundErr(k, v)
 				}
 				settings[k] = commands
 				bootCmdProcessed = true
@@ -795,11 +777,10 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, er
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					return nil, err
+					return nil, commandFileErr(k, v, err)
 				}
 				if len(commands) == 0 {
-					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", VirtualBoxISO.String(), k, v)
-					return nil, err
+					return nil, noCommandsFoundErr(k, v)
 				}
 				// Assume it's the first element.
 				settings[k] = commands[0]
@@ -833,8 +814,7 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, er
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				err = fmt.Errorf("VirtualBoxISO: An error occurred while trying to set %q to %q: %s ", k, v, err)
-				return nil, err
+				return nil, settingErr(k, err)
 			}
 			settings[k] = i
 		}
@@ -842,8 +822,7 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, er
 
 	// Only check to see if the required ssh_username field was set. The required iso info is checked after Array processing
 	if !hasSSHUsername {
-		err = fmt.Errorf("\"ssh_username\" is a required setting for virtualbox-iso; not found")
-		return nil, err
+		return nil, requiredSettingErr("ssh_username")
 	}
 	// Process arrays, iso_urls is only valid if iso_url is not set so we first
 	// check to see if it has been set, and if not, if it's in this array prior
@@ -855,12 +834,10 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, er
 		}
 		tmpISOUrl = isoURL
 		if tmpISOChecksum == "" {
-			err = fmt.Errorf("\"iso_url\" found for virtualbox-iso but no \"iso_checksum\" information was found")
-			return nil, err
+			return nil, dependentSettingErr("iso_url", "iso_checksum")
 		}
 		if tmpISOChecksumType == "" {
-			err = fmt.Errorf("\"iso_url\" found for virtualbox-iso but no \"iso_checksum_type\" information was found")
-			return nil, err
+			return nil, dependentSettingErr("iso_url", "iso_checksum_type")
 		}
 		settings["iso_url"] = isoURL
 	}
@@ -888,12 +865,10 @@ noISOURL:
 			// these are only added if iso_url isn't set
 			if tmpISOUrl == "" {
 				if tmpISOChecksum == "" {
-					err = fmt.Errorf("\"iso_urls\" found for virtualbox-iso but no \"iso_checksum\" information was found")
-					return nil, err
+					return nil, dependentSettingErr("iso_urls", "iso_checksum")
 				}
 				if tmpISOChecksumType == "" {
-					err = fmt.Errorf("\"iso_urls\" found for virtualbox-iso but no \"iso_checksum_type\" information was found")
-					return nil, err
+					return nil, dependentSettingErr("iso_urls", "iso_checksum_type")
 				}
 				settings[name] = val
 			}
@@ -936,13 +911,11 @@ noISOURL:
 		}
 		return settings, nil
 	}
-	if tmpISOChecksumType == "" {
-		err = fmt.Errorf("\"iso_url\" information was set for virtualbox-iso but the \"iso_checksum_type\" was not")
-		return nil, err
-	}
 	if tmpISOChecksum == "" {
-		err = fmt.Errorf("\"iso_url\" information was set for virtualbox-iso but the \"iso_checksum\" was not")
-		return nil, err
+		return nil, dependentSettingErr("iso_url", "iso_checksum")
+	}
+	if tmpISOChecksumType == "" {
+		return nil, dependentSettingErr("iso_url", "iso_checksum_type")
 	}
 	return settings, nil
 }
@@ -988,8 +961,7 @@ noISOURL:
 func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[VirtualBoxOVF.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration found for %q", VirtualBoxOVF.String())
-		return nil, err
+		return nil, configNotFoundErr()
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -1000,7 +972,7 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, er
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[VirtualBoxOVF.String()].Settings)
 		if err != nil {
-			return nil, fmt.Errorf("createVirtualBoxOVF failed: %s", err.Error())
+			return nil, mergeCommonSettingsErr(err)
 		}
 	} else {
 		workSlice = r.Builders[VirtualBoxOVF.String()].Settings
@@ -1021,11 +993,10 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, er
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					return nil, err
+					return nil, commandFileErr(k, v, err)
 				}
 				if len(commands) == 0 {
-					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", VirtualBoxOVF.String(), k, v)
-					return nil, err
+					return nil, noCommandsFoundErr(k, v)
 				}
 				settings[k] = commands
 				bootCmdProcessed = true
@@ -1054,7 +1025,7 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, er
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				err = fmt.Errorf("VirtualBoxOVF error while trying to set %q to %q: %s", k, v, err)
+				err = settingErr(k, err)
 				return nil, err
 			}
 			settings[k] = i
@@ -1064,11 +1035,10 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, er
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					return nil, err
+					return nil, commandFileErr(k, v, err)
 				}
 				if len(commands) == 0 {
-					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", VirtualBoxOVF.String(), k, v)
-					return nil, err
+					return nil, noCommandsFoundErr(k, v)
 				}
 				// Assume it's the first element.
 				settings[k] = commands[0]
@@ -1079,12 +1049,10 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, er
 	}
 	// Check to see if the required info was processed.
 	if !hasSSHUsername {
-		err = fmt.Errorf("\"ssh_username\" is a required setting for virtualbox-ovf; not found")
-		return nil, err
+		return nil, requiredSettingErr("ssh_username")
 	}
 	if !hasSourcePath {
-		err = fmt.Errorf("\"source_path\" is a required setting for virtualbox-ovf; not found")
-		return nil, err
+		return nil, requiredSettingErr("source_path")
 	}
 
 	// make sure http_directory is set and add to dir list
@@ -1186,8 +1154,7 @@ func (r *rawTemplate) createVBoxManage(v interface{}) [][]string {
 func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[VMWareISO.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration found for %q", VMWareISO.String())
-		return nil, err
+		return nil, configNotFoundErr()
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -1198,7 +1165,7 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, err er
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[VMWareISO.String()].Settings)
 		if err != nil {
-			return nil, fmt.Errorf("createVMWareISO failed: %s", err.Error())
+			return nil, mergeCommonSettingsErr(err)
 		}
 	} else {
 		workSlice = r.Builders[VMWareISO.String()].Settings
@@ -1220,11 +1187,10 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, err er
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					return nil, err
+					return nil, commandFileErr(k, v, err)
 				}
 				if len(commands) == 0 {
-					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", VMWareISO.String(), k, v)
-					return nil, err
+					return nil, noCommandsFoundErr(k, v)
 				}
 				settings[k] = commands
 				bootCmdProcessed = true
@@ -1235,11 +1201,10 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, err er
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					return nil, err
+					return nil, commandFileErr(k, v, err)
 				}
 				if len(commands) == 0 {
-					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", VMWareISO.String(), k, v)
-					return nil, err
+					return nil, noCommandsFoundErr(k, v)
 				}
 				// Assume it's the first element.
 				settings[k] = commands[0]
@@ -1274,8 +1239,7 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, err er
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				err = fmt.Errorf("vmware-iso: An error occurred while trying to set %q to %q: %s ", k, v, err)
-				return nil, err
+				return nil, settingErr(k, err)
 			}
 			settings[k] = i
 		}
@@ -1283,8 +1247,7 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, err er
 
 	// Only check to see if the required ssh_username field was set. The required iso info is checked after Array processing
 	if !hasSSHUsername {
-		err = fmt.Errorf("\"ssh_username\" is a required setting for virtualbox-iso; not found")
-		return nil, err
+		return nil, requiredSettingErr("ssh_username")
 	}
 
 	// make sure http_directory is set and add to dir list
@@ -1308,11 +1271,10 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, err er
 			if tmpISOUrl == "" {
 				if tmpISOChecksum == "" {
 					err = fmt.Errorf("\"iso_urls\" found for vmware-iso but no \"iso_checksum\" information was found")
-					return nil, err
+					return nil, dependentSettingErr("iso_urls", "iso_checksum")
 				}
 				if tmpISOChecksumType == "" {
-					err = fmt.Errorf("\"iso_urls\" found for vmware-iso but no \"iso_checksum_type\" information was found")
-					return nil, err
+					return nil, dependentSettingErr("iso_urls", "iso_checksum")
 				}
 				settings[name] = val
 			}
@@ -1354,13 +1316,11 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, err er
 		}
 		return settings, nil
 	}
-	if tmpISOChecksumType == "" {
-		err = fmt.Errorf("\"iso_url\" information was set for vmware-iso but the \"iso_checksum_type\" was not")
-		return nil, err
-	}
 	if tmpISOChecksum == "" {
-		err = fmt.Errorf("\"iso_url\" information was set for vmware-iso but the \"iso_checksum\" was not")
-		return nil, err
+		return nil, dependentSettingErr("iso_url", "iso_checksum")
+	}
+	if tmpISOChecksumType == "" {
+		return nil, dependentSettingErr("iso_url", "iso_checksum_type")
 	}
 	return settings, nil
 }
@@ -1400,8 +1360,7 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, err er
 func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[VMWareVMX.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration found for %q", VMWareVMX.String())
-		return nil, err
+		return nil, configNotFoundErr()
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -1412,7 +1371,7 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, err er
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[VMWareVMX.String()].Settings)
 		if err != nil {
-			return nil, fmt.Errorf("createVMWareVMX failed: %s", err.Error())
+			return nil, mergeCommonSettingsErr(err)
 		}
 	} else {
 		workSlice = r.Builders[VMWareVMX.String()].Settings
@@ -1433,11 +1392,10 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, err er
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					return nil, err
+					return nil, commandFileErr(k, v, err)
 				}
 				if len(commands) == 0 {
-					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", VMWareVMX.String(), k, v)
-					return nil, err
+					return nil, noCommandsFoundErr(k, v)
 				}
 				settings[k] = commands
 				bootCmdProcessed = true
@@ -1448,11 +1406,10 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, err er
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					return nil, err
+					return nil, commandFileErr(k, v, err)
 				}
 				if len(commands) == 0 {
-					err = fmt.Errorf("%s: error getting %s from %s file, no commands were found", VMWareVMX.String(), k, v)
-					return nil, err
+					return nil, noCommandsFoundErr(k, v)
 				}
 				// Assume it's the first element.
 				settings[k] = commands[0]
@@ -1481,20 +1438,17 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, err er
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				err = fmt.Errorf("vmware-vmx error while trying to set %q to %q: %s", k, v, err)
-				return nil, err
+				return nil, settingErr(k, err)
 			}
 			settings[k] = i
 		}
 	}
 	// Check if required fields were processed
 	if !hasSSHUsername {
-		err = fmt.Errorf("\"ssh_username\" is a required setting for vmware-vmx; not found")
-		return nil, err
+		return nil, requiredSettingErr("ssh_username")
 	}
 	if !hasSourcePath {
-		err = fmt.Errorf("\"source_path\" is a required setting for vmware-vmx; not found")
-		return nil, err
+		return nil, requiredSettingErr("source_path")
 	}
 	// make sure http_directory is set and add to dir list
 	err = r.setHTTP(VMWareVMX.String(), settings)
@@ -1592,7 +1546,7 @@ func (r *rawTemplate) updateBuilders(newB map[string]builder) error {
 		}
 		err := b.mergeSettings(bb.Settings)
 		if err != nil {
-			return fmt.Errorf("merge builder settings failed: %s", err.Error())
+			return fmt.Errorf("merge of settings failed: %s", err.Error())
 		}
 		b.mergeArrays(bb.Arrays)
 		r.Builders[v] = b
@@ -1622,7 +1576,7 @@ func (r *rawTemplate) updateCommon(newB builder) error {
 	// Otherwise merge the two
 	err := b.mergeSettings(b.Settings)
 	if err != nil {
-		return fmt.Errorf("ipdate common settings failed: %s", err.Error())
+		return mergeCommonSettingsErr(err)
 	}
 	r.Builders[Common.String()] = b
 	return nil
@@ -1637,7 +1591,7 @@ func (r *rawTemplate) setHTTP(component string, m map[string]interface{}) error 
 	}
 	src, err := r.findComponentSource(component, v.(string))
 	if err != nil {
-		return fmt.Errorf("setHTTP error for %s: %s", component, err)
+		return fmt.Errorf("setHTTP error: %s", err)
 	}
 	r.dirs[r.buildOutPath(component, v.(string))] = src
 	m["http_directory"] = r.buildTemplateResourcePath(component, v.(string))
@@ -1654,4 +1608,36 @@ func DeepCopyMapStringBuilder(b map[string]builder) map[string]interface{} {
 		c[k] = tmpB
 	}
 	return c
+}
+
+func builderErr(b string, err error) error {
+	return fmt.Errorf("%s builder error: %s", b, err.Error())
+}
+
+func commandFileErr(s, path string, err error) error {
+	return fmt.Errorf("extracting commands for %s from %s failed: %s", s, path, err.Error())
+}
+
+func configNotFoundErr() error {
+	return fmt.Errorf("configuration not found")
+}
+
+func dependentSettingErr(s1, s2 string) error {
+	return fmt.Errorf("setting %s found but setting %s was not found-both are required", s1, s2)
+}
+
+func mergeCommonSettingsErr(err error) error {
+	return fmt.Errorf("merge of common settings failed: %s", err.Error())
+}
+
+func noCommandsFoundErr(s, path string) error {
+	return fmt.Errorf("no commands for %s were found in %s", s, path)
+}
+
+func requiredSettingErr(s string) error {
+	return fmt.Errorf("required setting not found: %s", s)
+}
+
+func settingErr(s string, err error) error {
+	return fmt.Errorf("encountered a problem processing the %s setting: %s", s, err.Error())
 }

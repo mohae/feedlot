@@ -2,6 +2,7 @@
 package app
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -964,80 +965,80 @@ func TestCreateBuilders(t *testing.T) {
 
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
-		t.Error("Expected error \"no configuration found for \"amazon-ebs\"\", got nil")
+		t.Error("Expected \"amazon-ebs builder error: configuration not found\", got nil")
 	} else {
-		if err.Error() != "no configuration found for \"amazon-ebs\"" {
-			t.Errorf("Expected error \"no configuration found for \"amazon-ebs\"\", got %q", err.Error())
+		if err.Error() != "amazon-ebs builder error: configuration not found" {
+			t.Errorf("Expected \"amazon-ebs builder error: configuration not found\", got %q", err.Error())
 		}
 	}
 
 	testRawTemplateWOSection.build.BuilderTypes[0] = "digitalocean"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
-		t.Error("Expected error \"no configuration found for \"digitalocean\"\", got nil")
+		t.Error("Expected \"digitalocean builder error: configuration not found\", got nil")
 	} else {
-		if err.Error() != "no configuration found for \"digitalocean\"" {
-			t.Errorf("Expected error \"no configuration found for \"digitalocean\"\", got %q", err.Error())
+		if err.Error() != "digitalocean builder error: configuration not found" {
+			t.Errorf("Expected digitalocean builder error: configuration not found\", got %q", err.Error())
 		}
 	}
 
 	testRawTemplateWOSection.build.BuilderTypes[0] = "docker"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
-		t.Error("Expected error \"no configuration found for \"docker\"\", got nil")
+		t.Error("Expected \"docker builder error: configuration not found\", got nil")
 	} else {
-		if err.Error() != "no configuration found for \"docker\"" {
-			t.Errorf("Expected error \"no configuration found for \"docker\"\", got %q", err.Error())
+		if err.Error() != "docker builder error: configuration not found" {
+			t.Errorf("Expected \"docker builder error: configuration not found\", got %q", err.Error())
 		}
 	}
 
 	testRawTemplateWOSection.build.BuilderTypes[0] = "googlecompute"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
-		t.Error("Expected error \"no configuration found for \"googlecompute\"\", got nil")
+		t.Error("Expected \"googlecompute builder error: configuration not found\", got nil")
 	} else {
-		if err.Error() != "no configuration found for \"googlecompute\"" {
-			t.Errorf("Expected error \"no configuration found for \"googlecompute\"\", got %q", err.Error())
+		if err.Error() != "googlecompute builder error: configuration not found" {
+			t.Errorf("Expected \"googlecompute builder error: configuration not found\", got %q", err.Error())
 		}
 	}
 
 	testRawTemplateWOSection.build.BuilderTypes[0] = "virtualbox-iso"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
-		t.Error("Expected error \"no configuration found for \"virtualbox-iso\"\", got nil")
+		t.Error("Expected \"virtualbox-iso builder error: configuration not found\", got nil")
 	} else {
-		if err.Error() != "no configuration found for \"virtualbox-iso\"" {
-			t.Errorf("Expected error \"no configuration found for \"virtualbox-iso\"\", got %q", err.Error())
+		if err.Error() != "virtualbox-iso builder error: configuration not found" {
+			t.Errorf("Expected \"virtualbox-iso builder error: configuration not found\", got %q", err.Error())
 		}
 	}
 
 	testRawTemplateWOSection.build.BuilderTypes[0] = "virtualbox-ovf"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
-		t.Error("Expected error \"no configuration found for \"virtualbox-ovf\"\", got nil")
+		t.Error("Expected \"virtualbox-ovf builder error: configuration not found\", got nil")
 	} else {
-		if err.Error() != "no configuration found for \"virtualbox-ovf\"" {
-			t.Errorf("Expected error \"no configuration found for \"virtualbox-ovf\"\", got %q", err.Error())
+		if err.Error() != "virtualbox-ovf builder error: configuration not found" {
+			t.Errorf("Expected \"virtualbox-ovf builder error: configuration not found\", got %q", err.Error())
 		}
 	}
 
 	testRawTemplateWOSection.build.BuilderTypes[0] = "vmware-iso"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
-		t.Error("Expected error \"no configuration found for \"vmware-iso\"\", got nil")
+		t.Error("Expected \"vmware-iso builder error: configuration not found\", got nil")
 	} else {
-		if err.Error() != "no configuration found for \"vmware-iso\"" {
-			t.Errorf("Expected error \"no configuration found for \"vmware-iso\"\", got %q", err.Error())
+		if err.Error() != "vmware-iso builder error: configuration not found" {
+			t.Errorf("Expected \"vmware-iso builder error: configuration not found\", got %q", err.Error())
 		}
 	}
 
 	testRawTemplateWOSection.build.BuilderTypes[0] = "vmware-vmx"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
-		t.Error("Expected error \"no configuration found for \"vmware-vmx\"\", got nil")
+		t.Error("Expected \"vmware-vmx builder error: configuration not found\", got nil")
 	} else {
-		if err.Error() != "no configuration found for \"vmware-vmx\"" {
-			t.Errorf("Expected error \"no configuration found for \"vmware-vmx\"\", got %q", err.Error())
+		if err.Error() != "vmware-vmx builder error: configuration not found" {
+			t.Errorf("Expected \"vmware-vmx builder error: configuration not found\", got %q", err.Error())
 		}
 	}
 
@@ -1067,8 +1068,8 @@ func TestCreateBuilders(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, got nil")
 	} else {
-		if err.Error() != "Builder, \"unsupported\", is not supported by Rancher" {
-			t.Errorf("Expected \"tBuilder, \"unsupported\", is not supported by Rancher\"), got %q", err.Error())
+		if err.Error() != "builder \"unsupported\" is not supported" {
+			t.Errorf("Expected \"builder \"unsupported\" is not supported\"), got %q", err.Error())
 		}
 	}
 
@@ -1225,8 +1226,8 @@ func TestDigitalOceanBuilder(t *testing.T) {
 	if err == nil {
 		t.Errorf("Expected an error, got nil")
 	} else {
-		if err.Error() != "required Digital Ocean API information not set" {
-			t.Errorf("Expected \"required Digital Ocean API information not set\", got %q", err.Error())
+		if err.Error() != "required setting not found: either api_token or (api_key && client_id)" {
+			t.Errorf("Expected \"required setting not found: either api_token or (api_key && client_id)\", got %q", err.Error())
 		}
 	}
 }
@@ -1616,9 +1617,59 @@ func TestCreateBuilderVMWareVMX(t *testing.T) {
 		}
 	}
 }
+
 func TestDeepCopyMapStringBuilder(t *testing.T) {
 	cpy := DeepCopyMapStringBuilder(testDistroDefaults.Templates[Ubuntu].Builders)
 	if MarshalJSONToString.Get(cpy["common"]) != MarshalJSONToString.Get(testDistroDefaults.Templates[Ubuntu].Builders["common"]) {
 		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testDistroDefaults.Templates[Ubuntu].Builders["common"]), MarshalJSONToString.Get(cpy["common"]))
+	}
+}
+
+func TestBuilderErr(t *testing.T) {
+	err := builderErr("test-builder", fmt.Errorf("error foo bar"))
+	if err.Error() != "test-builder builder error: error foo bar" {
+		t.Errorf("Expected \"test-builder builder error: error foo bar\", got %q", err.Error())
+	}
+}
+
+func TestCommandFileErr(t *testing.T) {
+	err := commandFileErr("test_command", "test/file.command", fmt.Errorf("error foo bar"))
+	if err.Error() != "extracting commands for test_command from test/file.command failed: error foo bar" {
+		t.Errorf("Expected \"extracting commands for test_command from test/file.command failed: error foo bar\", got %q", err.Error())
+	}
+}
+
+func TestDependentSettingErr(t *testing.T) {
+	err := dependentSettingErr("foo", "bar")
+	if err.Error() != "setting foo found but setting bar was not found-both are required" {
+		t.Errorf("Expected \"setting foo found but setting bar was not found-both are required\", got %q", err.Error())
+	}
+}
+
+func TestMergeCommonSettingsErr(t *testing.T) {
+	err := mergeCommonSettingsErr(fmt.Errorf("error foo bar"))
+	if err.Error() != "merge of common settings failed: error foo bar" {
+		t.Errorf("Expected \"merge of common settings failed: error foo bar\", got %q", err.Error())
+	}
+}
+
+func TestNoCommandsFoundErr(t *testing.T) {
+	err := noCommandsFoundErr("test_setting", "test/file.command")
+	if err.Error() != "no commands for test_setting were found in test/file.command" {
+		t.Errorf("no commands for test_setting were found in test/file.command\", got %q", err.Error())
+	}
+}
+
+func TestRequiredSettingErr(t *testing.T) {
+	err := requiredSettingErr("test_setting")
+	if err.Error() != "required setting not found: test_setting" {
+		t.Errorf("Expected \"required setting not found: test_setting\", got %q", err.Error())
+	}
+}
+
+func TestSettingErr(t *testing.T) {
+	err := settingErr("test_setting", fmt.Errorf("error foo bar"))
+	if err.Error() != "encountered a problem processing the test_setting setting: error foo bar" {
+		t.Errorf("Expected \"encountered a problem processing the test_setting setting: error foo bar\", got %q", err.Error())
 	}
 }
