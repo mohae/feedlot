@@ -1068,8 +1068,8 @@ func TestCreateBuilders(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, got nil")
 	} else {
-		if err.Error() != "builder \"unsupported\" is not supported" {
-			t.Errorf("Expected \"builder \"unsupported\" is not supported\"), got %q", err.Error())
+		if err.Error() != "unsupported builder error: \"unsupported\" is not supported" {
+			t.Errorf("Expected \"unsupported builder error: \"unsupported\" is not supported\"), got %q", err.Error())
 		}
 	}
 
@@ -1626,9 +1626,9 @@ func TestDeepCopyMapStringBuilder(t *testing.T) {
 }
 
 func TestBuilderErr(t *testing.T) {
-	err := builderErr("test-builder", fmt.Errorf("error foo bar"))
-	if err.Error() != "test-builder builder error: error foo bar" {
-		t.Errorf("Expected \"test-builder builder error: error foo bar\", got %q", err.Error())
+	err := builderErr(Null, fmt.Errorf("error foo bar"))
+	if err.Error() != "null builder error: error foo bar" {
+		t.Errorf("Expected \"null builder error: error foo bar\", got %q", err.Error())
 	}
 }
 

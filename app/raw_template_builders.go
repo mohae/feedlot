@@ -31,7 +31,7 @@ const (
 type Builder int
 
 var builders = [...]string{
-	"unsupported Builder",
+	"unsupported",
 	"common",         // Common is the name of the common builder
 	"custom",         // custom is the name of the custom builder
 	"amazon-ebs",     // AmazonEBS is the name of the amazon-ebs backed builder
@@ -110,29 +110,29 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 		case AmazonEBS:
 			tmpS, err = r.createAmazonEBS()
 			if err != nil {
-				return nil, builderErr(AmazonEBS.String(), err)
+				return nil, builderErr(AmazonEBS, err)
 			}
 		// AmazonInstance, AmazonChroot:
 		// not implemented
 		case DigitalOcean:
 			tmpS, err = r.createDigitalOcean()
 			if err != nil {
-				return nil, builderErr(DigitalOcean.String(), err)
+				return nil, builderErr(DigitalOcean, err)
 			}
 		case Docker:
 			tmpS, err = r.createDocker()
 			if err != nil {
-				return nil, builderErr(Docker.String(), err)
+				return nil, builderErr(Docker, err)
 			}
 		case GoogleCompute:
 			tmpS, err = r.createGoogleCompute()
 			if err != nil {
-				return nil, builderErr(GoogleCompute.String(), err)
+				return nil, builderErr(GoogleCompute, err)
 			}
 		case Null:
 			tmpS, err = r.createNull()
 			if err != nil {
-				return nil, builderErr(Null.String(), err)
+				return nil, builderErr(Null, err)
 			}
 		//	case Openstack:
 		//	case ParallelsISO, ParallelsPVM:
@@ -140,26 +140,25 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 		case VMWareISO:
 			tmpS, err = r.createVMWareISO()
 			if err != nil {
-				return nil, builderErr(VMWareISO.String(), err)
+				return nil, builderErr(VMWareISO, err)
 			}
 		case VMWareVMX:
 			tmpS, err = r.createVMWareVMX()
 			if err != nil {
-				return nil, builderErr(VMWareVMX.String(), err)
+				return nil, builderErr(VMWareVMX, err)
 			}
 		case VirtualBoxISO:
 			tmpS, err = r.createVirtualBoxISO()
 			if err != nil {
-				return nil, builderErr(VirtualBoxISO.String(), err)
+				return nil, builderErr(VirtualBoxISO, err)
 			}
 		case VirtualBoxOVF:
 			tmpS, err = r.createVirtualBoxOVF()
 			if err != nil {
-				return nil, builderErr(VirtualBoxOVF.String(), err)
+				return nil, builderErr(VirtualBoxOVF, err)
 			}
 		default:
-			err = fmt.Errorf("builder %q is not supported", bType)
-			return nil, err
+			return nil, builderErr(UnsupportedBuilder, fmt.Errorf("%q is not supported", bType))
 		}
 		bldrs[ndx] = tmpS
 		ndx++
@@ -1610,8 +1609,8 @@ func DeepCopyMapStringBuilder(b map[string]builder) map[string]interface{} {
 	return c
 }
 
-func builderErr(b string, err error) error {
-	return fmt.Errorf("%s builder error: %s", b, err.Error())
+func builderErr(b Builder, err error) error {
+	return fmt.Errorf("%s builder error: %s", b.String(), err.Error())
 }
 
 func commandFileErr(s, path string, err error) error {
