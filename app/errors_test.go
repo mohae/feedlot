@@ -54,6 +54,13 @@ func TestProvisionerErr(t *testing.T) {
 	}
 }
 
+func TestPostProcessorErr(t *testing.T) {
+	err := postProcessorErr(Vagrant, fmt.Errorf("error foo bar"))
+	if err.Error() != fmt.Sprintf("%s post-processor error: error foo bar", Vagrant.String()) {
+		t.Errorf("expected \"%s builder post-processor: error foo bar\" got %q", Vagrant.String(), err.Error())
+	}
+}
+
 func TestRequiredSettingErr(t *testing.T) {
 	err := requiredSettingErr("test_setting")
 	if err.Error() != "required setting not found: test_setting" {

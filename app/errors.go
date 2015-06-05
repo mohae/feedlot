@@ -36,6 +36,10 @@ func provisionerErr(p Provisioner, err error) error {
 	return fmt.Errorf("%s provisioner error: %s", p.String(), err.Error())
 }
 
+func postProcessorErr(p PostProcessor, err error) error {
+	return fmt.Errorf("%s post-processor error: %s", p.String(), err.Error())
+}
+
 func requiredSettingErr(s string) error {
 	return fmt.Errorf("required setting not found: %s", s)
 }

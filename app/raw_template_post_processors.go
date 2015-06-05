@@ -26,7 +26,7 @@ const (
 type PostProcessor int
 
 var postProcessors = [...]string{
-	"unsupported post-processor",
+	"unsupported",
 	"compress",      // Compress is the name of the compress PostProcessor
 	"docker-import", // DockerImport is the name of the DockerImport PostProcessor
 	"docker-push",   // DockerPush is the name of the DockerPush PostProcessor
@@ -107,7 +107,7 @@ func (r *rawTemplate) updatePostProcessors(newP map[string]postProcessor) error 
 		}
 		err := p.mergeSettings(pp.Settings)
 		if err != nil {
-			return fmt.Errorf("merge of post-processor settings failed: %s", err.Error())
+			return mergeSettingsErr(err)
 		}
 		p.mergeArrays(pp.Arrays)
 		r.PostProcessors[v] = p
@@ -115,32 +115,10 @@ func (r *rawTemplate) updatePostProcessors(newP map[string]postProcessor) error 
 	return nil
 }
 
-// Go through all of the Settings and convert them to a map. Each setting is
-// parsed into its constituent parts. The value then goes through variable
-// replacement to ensure that the settings are properly resolved.
-func (p *postProcessor) settingsToMap(Type string, r *rawTemplate) map[string]interface{} {
-	var k string
-	var v interface{}
-	m := make(map[string]interface{}, len(p.Settings))
-	m["type"] = Type
-	for _, s := range p.Settings {
-		k, v = parseVar(s)
-		switch k {
-		case "keep_input_artifact":
-			v, _ = strconv.ParseBool(v.(string))
-		default:
-			v = r.replaceVariables(v.(string))
-		}
-		m[k] = v
-	}
-	return m
-}
-
 // r.createPostProcessors creates the PostProcessors for a build.
 func (r *rawTemplate) createPostProcessors() (p []interface{}, err error) {
 	if r.PostProcessorTypes == nil || len(r.PostProcessorTypes) <= 0 {
-		err = fmt.Errorf("unable to create post-processors: none specified")
-		return nil, err
+		return nil, configNotFoundErr()
 	}
 	var ndx int
 	p = make([]interface{}, len(r.PostProcessorTypes))
@@ -152,47 +130,46 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, err error) {
 		case Compress:
 			tmpS, err = r.createCompress()
 			if err != nil {
-				return nil, err
+				return nil, postProcessorErr(Compress, err)
 			}
 		case DockerImport:
 			tmpS, err = r.createDockerImport()
 			if err != nil {
-				return nil, err
+				return nil, postProcessorErr(DockerImport, err)
 			}
 		case DockerPush:
 			tmpS, err = r.createDockerPush()
 			if err != nil {
-				return nil, err
+				return nil, postProcessorErr(DockerPush, err)
 			}
 		case DockerSave:
 			tmpS, err = r.createDockerSave()
 			if err != nil {
-				return nil, err
+				return nil, postProcessorErr(DockerSave, err)
 			}
 		case DockerTag:
 			tmpS, err = r.createDockerTag()
 			if err != nil {
-				return nil, err
+				return nil, postProcessorErr(DockerTag, err)
 			}
 		case Vagrant:
 			tmpS, err = r.createVagrant()
 			if err != nil {
-				return nil, err
+				return nil, postProcessorErr(Vagrant, err)
 			}
 		case VagrantCloud:
 			// Create the settings
 			tmpS, err = r.createVagrantCloud()
 			if err != nil {
-				return nil, err
+				return nil, postProcessorErr(VagrantCloud, err)
 			}
 		case VSphere:
 			tmpS, err = r.createVSphere()
 			if err != nil {
-				return nil, err
+				return nil, postProcessorErr(VSphere, err)
 			}
 		default:
-			err = fmt.Errorf("%s is not supported", pType)
-			return nil, err
+			return nil, postProcessorErr(UnsupportedPostProcessor, fmt.Errorf("%q is not supported", pType))
 		}
 		p[ndx] = tmpS
 		ndx++
@@ -212,8 +189,7 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, err error) {
 func (r *rawTemplate) createCompress() (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[Compress.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration found for %q", Compress.String())
-		return nil, err
+		return nil, configNotFoundErr()
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = Compress.String()
@@ -232,8 +208,7 @@ func (r *rawTemplate) createCompress() (settings map[string]interface{}, err err
 		}
 	}
 	if !hasOutput {
-		err := fmt.Errorf("\"output\" setting is required for compress, not found")
-		return nil, err
+		return nil, requiredSettingErr("output")
 	}
 	return settings, nil
 }
@@ -250,8 +225,7 @@ func (r *rawTemplate) createCompress() (settings map[string]interface{}, err err
 func (r *rawTemplate) createDockerImport() (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[DockerImport.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration found for %q", DockerImport.String())
-		return nil, err
+		return nil, configNotFoundErr()
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = DockerImport.String()
@@ -272,8 +246,7 @@ func (r *rawTemplate) createDockerImport() (settings map[string]interface{}, err
 		}
 	}
 	if !hasRepository {
-		err := fmt.Errorf("\"repository\" setting is required for docker-import, not found")
-		return nil, err
+		return nil, requiredSettingErr("repository")
 	}
 	return settings, nil
 }
@@ -294,8 +267,7 @@ func (r *rawTemplate) createDockerImport() (settings map[string]interface{}, err
 func (r *rawTemplate) createDockerPush() (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[DockerPush.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration found for %q", DockerPush.String())
-		return nil, err
+		return nil, configNotFoundErr()
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = DockerPush.String()
@@ -328,8 +300,7 @@ func (r *rawTemplate) createDockerPush() (settings map[string]interface{}, err e
 func (r *rawTemplate) createDockerSave() (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[DockerSave.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration found for %q", DockerSave.String())
-		return nil, err
+		return nil, configNotFoundErr()
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = DockerSave.String()
@@ -348,8 +319,7 @@ func (r *rawTemplate) createDockerSave() (settings map[string]interface{}, err e
 		}
 	}
 	if !hasPath {
-		err := fmt.Errorf("\"path\" setting is required for docker-save, not found")
-		return nil, err
+		return nil, requiredSettingErr("path")
 	}
 	return settings, nil
 }
@@ -366,8 +336,7 @@ func (r *rawTemplate) createDockerSave() (settings map[string]interface{}, err e
 func (r *rawTemplate) createDockerTag() (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[DockerTag.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration found for %q", DockerTag.String())
-		return nil, err
+		return nil, configNotFoundErr()
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = DockerTag.String()
@@ -388,8 +357,7 @@ func (r *rawTemplate) createDockerTag() (settings map[string]interface{}, err er
 		}
 	}
 	if !hasRepository {
-		err := fmt.Errorf("\"repository\" setting is required for docker-tag, not found")
-		return nil, err
+		return nil, requiredSettingErr("repository")
 	}
 	return settings, nil
 }
@@ -410,8 +378,7 @@ func (r *rawTemplate) createDockerTag() (settings map[string]interface{}, err er
 func (r *rawTemplate) createVagrant() (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[Vagrant.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration found for %q", Vagrant.String())
-		return nil, err
+		return nil, configNotFoundErr()
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = Vagrant.String()
@@ -430,8 +397,7 @@ func (r *rawTemplate) createVagrant() (settings map[string]interface{}, err erro
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				err = fmt.Errorf("Vagrant builder error while trying to set %q to %q: %s", k, v, err)
-				return nil, err
+				return nil, settingErr(k, err)
 			}
 			settings[k] = i
 		}
@@ -445,8 +411,7 @@ func (r *rawTemplate) createVagrant() (settings map[string]interface{}, err erro
 				v = r.replaceVariables(v)
 				src, err := r.findComponentSource(Vagrant.String(), v)
 				if err != nil {
-					err = fmt.Errorf("%s: attempt to locate source file for %q: %s", Vagrant.String(), v, err)
-					return nil, err
+					return nil, settingErr(v, err)
 				}
 				array[i] = v
 				r.files[filepath.Join(r.OutDir, Vagrant.String(), v)] = src
@@ -479,8 +444,7 @@ func (r *rawTemplate) createVagrant() (settings map[string]interface{}, err erro
 func (r *rawTemplate) createVagrantCloud() (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[VagrantCloud.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration found for %q", VagrantCloud.String())
-		return nil, err
+		return nil, configNotFoundErr()
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = VagrantCloud.String()
@@ -503,16 +467,13 @@ func (r *rawTemplate) createVagrantCloud() (settings map[string]interface{}, err
 		}
 	}
 	if !hasAccessToken {
-		err := fmt.Errorf("\"access_token\" setting is required for vagrant-cloud, not found")
-		return nil, err
+		return nil, requiredSettingErr("access_token")
 	}
 	if !hasBoxTag {
-		err := fmt.Errorf("\"box_tag\" setting is required for vagrant-cloud, not found")
-		return nil, err
+		return nil, requiredSettingErr("box_tag")
 	}
 	if !hasVersion {
-		err := fmt.Errorf("\"version\" setting is required for vagrant-cloud, not found")
-		return nil, err
+		return nil, requiredSettingErr("version")
 	}
 	return settings, nil
 }
@@ -539,8 +500,7 @@ func (r *rawTemplate) createVagrantCloud() (settings map[string]interface{}, err
 func (r *rawTemplate) createVSphere() (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[VSphere.String()]
 	if !ok {
-		err = fmt.Errorf("no configuration found for %q", VSphere.String())
-		return nil, err
+		return nil, configNotFoundErr()
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = VSphere.String()
@@ -581,34 +541,48 @@ func (r *rawTemplate) createVSphere() (settings map[string]interface{}, err erro
 		}
 	}
 	if !hasCluster {
-		err := fmt.Errorf("\"cluster\" setting is required for vSphere, not found")
-		return nil, err
+		return nil, requiredSettingErr("cluster")
 	}
 	if !hasDatacenter {
-		err := fmt.Errorf("\"datacenter\" setting is required for vSphere, not found")
-		return nil, err
+		return nil, requiredSettingErr("datacenter")
 	}
 	if !hasHost {
-		err := fmt.Errorf("\"host\" setting is required for vSphere, not found")
-		return nil, err
+		return nil, requiredSettingErr("host")
 	}
 	if !hasPassword {
-		err := fmt.Errorf("\"password\" setting is required for vSphere, not found")
-		return nil, err
+		return nil, requiredSettingErr("password")
 	}
 	if !hasResourcePool {
-		err := fmt.Errorf("\"resource_pool\" setting is required for vSphere, not found")
-		return nil, err
+		return nil, requiredSettingErr("resource_pool")
 	}
 	if !hasUsername {
-		err := fmt.Errorf("\"username\" setting is required for vSphere, not found")
-		return nil, err
+		return nil, requiredSettingErr("username")
 	}
 	if !hasVMName {
-		err := fmt.Errorf("\"vm_name\" setting is required for vSphere, not found")
-		return nil, err
+		return nil, requiredSettingErr("vm_name")
 	}
 	return settings, nil
+}
+
+// Go through all of the Settings and convert them to a map. Each setting is
+// parsed into its constituent parts. The value then goes through variable
+// replacement to ensure that the settings are properly resolved.
+func (p *postProcessor) settingsToMap(Type string, r *rawTemplate) map[string]interface{} {
+	var k string
+	var v interface{}
+	m := make(map[string]interface{}, len(p.Settings))
+	m["type"] = Type
+	for _, s := range p.Settings {
+		k, v = parseVar(s)
+		switch k {
+		case "keep_input_artifact":
+			v, _ = strconv.ParseBool(v.(string))
+		default:
+			v = r.replaceVariables(v.(string))
+		}
+		m[k] = v
+	}
+	return m
 }
 
 // DeepCopyMapStringPostProcessor makes a deep copy of each builder passed and
