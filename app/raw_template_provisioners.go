@@ -673,11 +673,3 @@ func DeepCopyMapStringProvisioner(p map[string]provisioner) map[string]interface
 	}
 	return c
 }
-
-func provisionerErr(p Provisioner, err error) error {
-	return fmt.Errorf("%s provisioner error: %s", p.String(), err.Error())
-}
-
-func mergeSettingsErr(err error) error {
-	return fmt.Errorf("merge of section settings failed: %s", err.Error())
-}
