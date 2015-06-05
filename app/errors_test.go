@@ -35,8 +35,8 @@ func TestMergeCommonSettingsErr(t *testing.T) {
 
 func TestMergeSettingsErr(t *testing.T) {
 	err := mergeSettingsErr(fmt.Errorf("error foo bar"))
-	if err.Error() != "merge of settings failed: error foo bar" {
-		t.Errorf("Expected \"merge of settings failed: error foo bar\", got %q", err.Error())
+	if err.Error() != "merge of section settings failed: error foo bar" {
+		t.Errorf("Expected \"merge of section settings failed: error foo bar\", got %q", err.Error())
 	}
 }
 
@@ -49,15 +49,15 @@ func TestNoCommandsFoundErr(t *testing.T) {
 
 func TestProvisionerErr(t *testing.T) {
 	err := provisionerErr(ShellScript, fmt.Errorf("error foo bar"))
-	if err.Error() != fmt.Sprintf("%s builder error: error foo bar", ShellScript.String()) {
-		t.Errorf("expected \"%s builder error: error foo bar\" got %q", ShellScript.String(), err.Error())
+	if err.Error() != fmt.Sprintf("%s provisioner error: error foo bar", ShellScript.String()) {
+		t.Errorf("expected \"%s provisioner error: error foo bar\" got %q", ShellScript.String(), err.Error())
 	}
 }
 
 func TestPostProcessorErr(t *testing.T) {
 	err := postProcessorErr(Vagrant, fmt.Errorf("error foo bar"))
 	if err.Error() != fmt.Sprintf("%s post-processor error: error foo bar", Vagrant.String()) {
-		t.Errorf("expected \"%s builder post-processor: error foo bar\" got %q", Vagrant.String(), err.Error())
+		t.Errorf("expected \"%s post-processor: error foo bar\" got %q", Vagrant.String(), err.Error())
 	}
 }
 

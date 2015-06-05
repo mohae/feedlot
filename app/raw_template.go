@@ -350,14 +350,12 @@ func (r *rawTemplate) commandsFromFile(component, name string) (commands []strin
 	}
 	f, err := os.Open(src)
 	if err != nil {
-		jww.ERROR.Println(err)
 		return nil, err
 	}
 	// always close what's been opened and check returned error
 	defer func() {
 		cerr := f.Close()
 		if cerr != nil && err == nil {
-			jww.WARN.Println(cerr)
 			err = cerr
 		}
 	}()
@@ -368,7 +366,6 @@ func (r *rawTemplate) commandsFromFile(component, name string) (commands []strin
 	}
 	err = scanner.Err()
 	if err != nil {
-		jww.WARN.Println(err)
 		return nil, err
 	}
 	return commands, nil
@@ -386,9 +383,7 @@ func (r *rawTemplate) commandsFromFile(component, name string) (commands []strin
 // no match is found an os.ErrNotExist will be returned.
 func (r *rawTemplate) findCommandFile(component, name string) (string, error) {
 	if name == "" {
-		err := fmt.Errorf("the passed command filename was empty")
-		jww.ERROR.Println(err)
-		return "", err
+		return "", fmt.Errorf("the passed command filename was empty")
 	}
 	findPath := filepath.Join("commands", name)
 	src, err := r.findComponentSource(component, findPath)

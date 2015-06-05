@@ -477,7 +477,7 @@ func mergeSettingsSlices(s1 []string, s2 []string) ([]string, error) {
 	// Create a map of variables from the first slice for comparison reasons.
 	ms1 = varMapFromSlice(s1)
 	if ms1 == nil {
-		return nil, fmt.Errorf("mergeSettingsSlices could not create a variable map from the passed slice.")
+		return nil, fmt.Errorf("could not create the merge comparison maps")
 	}
 	// For each element in the second slice, get the key. If it already
 	// exists, update the existing value, otherwise add it to the merged
@@ -665,33 +665,28 @@ func copyFile(src string, dst string) (written int64, err error) {
 	// while keeping track of success/failures.
 	err = os.MkdirAll(dstDir, os.FileMode(0766))
 	if err != nil {
-		jww.ERROR.Println(err)
 		return 0, err
 	}
 	var fs, fd *os.File
 	// Open the source file
 	fs, err = os.Open(src)
 	if err != nil {
-		jww.ERROR.Println(err)
 		return 0, err
 	}
 	defer func() {
 		cerr := fs.Close()
 		if cerr != nil && err == nil {
-			jww.WARN.Println(cerr)
 			err = cerr
 		}
 	}()
 	// Open the destination, create or truncate as needed.
 	fd, err = os.Create(dst)
 	if err != nil {
-		jww.ERROR.Println(err)
 		return 0, err
 	}
 	defer func() {
 		cerr := fd.Close()
 		if cerr != nil && err == nil {
-			jww.WARN.Println(cerr)
 			err = cerr
 		}
 	}()
@@ -703,44 +698,31 @@ func copyFile(src string, dst string) (written int64, err error) {
 func copyDir(srcDir string, dstDir string) error {
 	exists, err := pathExists(srcDir)
 	if err != nil {
-		err = fmt.Errorf("copyDir error: %s", err.Error())
-		jww.ERROR.Print(err)
-		return err
+		return fmt.Errorf("copyDir error: %s", err.Error())
 	}
 	if !exists {
-		err = fmt.Errorf("copyDir error: nothing copied, the source, %s, does not exist", srcDir)
-		jww.ERROR.Println(err)
-		return err
+		return fmt.Errorf("copyDir error: %s does not exist", srcDir)
 	}
 	dir := Archive{}
 	err = dir.DirWalk(srcDir)
 	if err != nil {
-		err = fmt.Errorf("copyDir error while walking source: %s", err.Error())
-		jww.ERROR.Print(err)
-		return err
+		return fmt.Errorf("copyDir dirWalk error: %s", err.Error())
 	}
 	for _, file := range dir.Files {
 		if file.info == nil {
-			// if the info is empty, whatever this entry represents
-			// doesn't actually exist.
-			err := fmt.Errorf("copyDir error: %s does not exist", file.p)
-			jww.ERROR.Println(err)
-			return err
+			return fmt.Errorf("copyDir error: %s does not exist", file.p)
 		}
 		if file.info.IsDir() {
 			err = os.MkdirAll(file.p, os.FileMode(0766))
 			if err != nil {
-				err = fmt.Errorf("copyDir error while making target directory: %s", err.Error())
-				jww.ERROR.Println(err)
-				return err
+				return fmt.Errorf("copyDir errorL %s", err.Error())
 			}
 			continue
 		}
 		_, err = copyFile(filepath.Join(srcDir, file.p), filepath.Join(dstDir, file.p))
 		if err != nil {
-			err = fmt.Errorf("copyDir error while copying file: %s", err.Error())
-			jww.ERROR.Println(err)
-			return err
+			return fmt.Errorf("copyDir errorL %s", err.Error())
+
 		}
 	}
 	return nil
