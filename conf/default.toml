@@ -58,7 +58,7 @@ builder_types = [
 			"guest_additions_path = VBoxGuestAdditions_{{ .Version }}.iso",
 			"virtualbox_version_file = .vbox_version"
 		]
-		[builders.virtualbox-iso.arrays]
+		[builders.vmware-iso.arrays]
 			vboxmanage = [
 				"cpus=1",
 				"memory=1024"	

@@ -12,7 +12,7 @@ const (
 	CfgFilename string = "rancher.toml"
 )
 
-// Constants for names of configuration options. Constants that end in Flag are
+// Constants for names of cfguration options. Constants that end in Flag are
 // not available as Envorinment variables. All of the following constants are
 // exposed as flags too.
 const (
@@ -33,10 +33,10 @@ const (
 	SupportedFile     = "rancher_supportedfile"
 )
 
-// AppConfig contains the current Rancher configuration...loaded at start-up.
-var AppConfig appConfig
+// AppCfg contains the current Rancher cfguration...loaded at start-up.
+var AppCfg appCfg
 
-type appConfig struct {
+type appCfg struct {
 	BuildFile       string `toml:"build_file"`
 	BuildListFile   string `toml:"build_list_file"`
 	DefaultFile     string `toml:"default_file"`
@@ -70,29 +70,34 @@ func init() {
 	if cfgFilename == "" {
 		cfgFilename = CfgFilename
 	}
+	contour.SetName(Name)
+	contour.SetUseEnv(true)
 	contour.RegisterCfgFile(CfgFile, cfgFilename)
 	contour.RegisterStringCore("name", Name)
-	contour.RegisterBoolFlag(ArchivePriorBuild, "v", "rancher_prior_build", false, "false", "archive prior build before writing new packer template files")
-	contour.RegisterBoolFlag(Log, "l", true, "true", "rancher_log", "enable/disable logging")
-	contour.RegisterStringFlag(BuildFile, "", "rancher_build_file". "conf.d/build.toml", "conf.d/build.toml", "location of the build configuration file")
-	contour.RegisterStringFlag(BuildListFile, "", "rancher_build_list_file", "conf.d/build_list.toml", "conf.d/build_list.toml", "location of the build list configuration file")
-	contour.RegisterStringFlag(DefaultFile, "", "rancher_default_file", "conf/default.toml", "conf/default.toml", "location of the default configuration file")
-	contour.RegisterStringFlag(SupportedFile, "", "rancher_supported_file", "conf/supported.toml", "conf/supported.toml", "location of the supported distros configuration file")
-	contour.RegisterStringFlag(ParamDelimStart, "p", "rancher_param_delim_start", ":", ":", "the start delimiter for template variabes")
-	contour.RegisterStringFlag(LogFile, "n", "rancher_log_file", "rancher.log", "rancher.log", "log filename")
-	contour.RegisterStringFlag(LogLevelFile, "f", "rancher_log_level_file", "WARN", "WARN", "log level for writing to the log file")
-	contour.RegisterStringFlag(LogLevelStdOut, "s", "rancher_log_level_std_out", "ERROR", "ERROR", "log level for writing to stdout")
-	contour.RegisterStringFlag(DistroFlag, "d", "", "", "", "distro override for default builds")
-	contour.RegisterStringFlag(ArchFlag, "a", "", "", "", "os arch override for default builds")
-	contour.RegisterStringFlag(ImageFlag, "i", "", "", "", "os image override for default builds")
-	contour.RegisterStringFlag(ReleaseFlag, "r", "", "", "", "os release override for default builds")
+	contour.RegisterBoolFlag(ArchivePriorBuild, "v", false, "false", "archive prior build before writing new packer template files")
+	contour.RegisterBoolFlag(Log, "l", true, "true", "enable/disable logging")
+	contour.RegisterStringFlag(BuildFile, "", "conf.d/build.toml", "conf.d/build.toml", "location of the build cfguration file")
+	contour.RegisterStringFlag(BuildListFile, "", "conf.d/build_list.toml", "conf.d/build_list.toml", "location of the build list cfguration file")
+	contour.RegisterStringFlag(DefaultFile, "", "conf/default.toml", "conf/default.toml", "location of the default cfguration file")
+	contour.RegisterStringFlag(SupportedFile, "", "conf/supported.toml", "conf/supported.toml", "location of the supported distros cfguration file")
+	contour.RegisterStringFlag(ParamDelimStart, "p", ":", ":", "the start delimiter for template variabes")
+	contour.RegisterStringFlag(LogFile, "n", "rancher.log", "rancher.log", "log filename")
+	contour.RegisterStringFlag(LogLevelFile, "f", "WARN", "WARN", "log level for writing to the log file")
+	contour.RegisterStringFlag(LogLevelStdOut, "s", "ERROR", "ERROR", "log level for writing to stdout")
+	contour.RegisterStringFlag(DistroFlag, "d", "", "", "distro override for default builds")
+	contour.RegisterStringFlag(ArchFlag, "a", "", "", "os arch override for default builds")
+	contour.RegisterStringFlag(ImageFlag, "i", "", "", "os image override for default builds")
+	contour.RegisterStringFlag(ReleaseFlag, "r", "", "", "os release override for default builds")
 }
 
-// After this, only overrides can occur via command flags.
+// SetCfg set's the appCFg from the app's cfg file and then applies any
+// env vars that have been set. After this, settings can only be updated
+// programmatically or via command-line flags.
 func SetCfg() error {
 	err := contour.SetCfg()
 	if err != nil {
 		jww.ERROR.Print(err)
+		jww.FEEDBACK.Println(err)
 		return err
 	}
 	return nil
