@@ -36,3 +36,4 @@ out/*.tar
 # output handling gets expanded, or it may be deleted
 *.json
 test_files/out/**
+rancher.toml
