@@ -6,6 +6,8 @@ import (
 	"github.com/mohae/cli"
 	"github.com/mohae/contour"
 	"github.com/mohae/rancher/app"
+
+	//jww "github.com/spf13/jwalterweatherman"
 )
 
 // BuildCommand is a Command implementation that generates Packer templates
@@ -67,7 +69,17 @@ func (c *BuildCommand) Run(args []string) int {
 		c.UI.Error(err.Error())
 		return 1
 	}
-
+	/*
+		jww.FEEDBACK.Printf("%#v\n", filteredArgs)
+		b, _ := contour.GetBoolE("log")
+		jww.FEEDBACK.Printf("log: %v\n", b)
+		s, _ := contour.GetStringE("log_level_stdout")
+		jww.FEEDBACK.Printf("log_level_stdout: %s\n", s)
+		s, _ = contour.GetStringE("log_level_file")
+		jww.FEEDBACK.Printf("log_level_file: %s\n", s)
+		s, _ = contour.GetStringE("build_file")
+		jww.FEEDBACK.Printf("build_file: %s\n", s)
+	*/
 	message, err := app.BuildBuilds(filteredArgs...)
 	if err != nil {
 		c.UI.Error(err.Error())

@@ -25,6 +25,10 @@ func main() {
 func realMain() int {
 	// Logging to temp first
 	app.SetTempLogging()
+	err := app.SetCfg()
+	if err != nil {
+		jww.ERROR.Printf("%s", err.Error())
+	}
 	args := os.Args[1:]
 	cli := &cli.CLI{
 		Name:     "rancher",
@@ -35,7 +39,7 @@ func realMain() int {
 	}
 	exitCode, err := cli.Run()
 	if err != nil {
-		jww.ERROR.Printf("Rancher encountered an error: %s\n", err)
+		jww.ERROR.Printf("Rancher encountered an error: %s", err.Error())
 
 	}
 	return exitCode

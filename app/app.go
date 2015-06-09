@@ -8,29 +8,17 @@ import (
 )
 
 const (
-	Name               = "rancher"
-	CfgFilename string = "rancher.toml"
-)
-
-// Constants for names of cfguration options. Constants that end in Flag are
-// not available as Envorinment variables. All of the following constants are
-// exposed as flags too.
-const (
-	ArchFlag          = "arch"
-	ArchivePriorBuild = "rancher_archivepriorbuild"
-	BuildFile         = "rancher_buildfile"
-	BuildListFile     = "rancher_buildlistfile"
-	CfgFile           = "rancher_cfgfile"
-	DefaultFile       = "rancher_defaultFile"
-	DistroFlag        = "distro"
-	ImageFlag         = "image"
-	Log               = "rancher_log"
-	LogFile           = "rancher_logfile"
-	LogLevelFile      = "rancher_loglevelfile"
-	LogLevelStdOut    = "rancher_loglevelstdout"
-	ParamDelimStart   = "rancher_paramdelimstart"
-	ReleaseFlag       = "release"
-	SupportedFile     = "rancher_supportedfile"
+	Name            = "rancher"
+	BuildFile       = "build_file"
+	BuildListFile   = "build_list_file"
+	CfgFilename     = "rancher.toml"
+	DefaultFile     = "default_file"
+	Log             = "log"
+	LogFile         = "log_file"
+	LogLevelFile    = "log_level_file"
+	LogLevelStdOut  = "log_level_stdout"
+	ParamDelimStart = "param_delim_start"
+	SupportedFile   = "supported_file"
 )
 
 // AppCfg contains the current Rancher cfguration...loaded at start-up.
@@ -65,29 +53,29 @@ type ArgsFilter struct {
 }
 
 func init() {
-	cfgFilename := os.Getenv(CfgFile)
+	cfgFilename := os.Getenv(contour.GetEnvName(contour.CfgFile))
 	// if it's not set, use the application default
 	if cfgFilename == "" {
 		cfgFilename = CfgFilename
 	}
 	contour.SetName(Name)
 	contour.SetUseEnv(true)
-	contour.RegisterCfgFile(CfgFile, cfgFilename)
-	contour.RegisterStringCore("name", Name)
-	contour.RegisterBoolFlag(ArchivePriorBuild, "v", false, "false", "archive prior build before writing new packer template files")
+	contour.RegisterCfgFile(contour.CfgFile, CfgFilename)
+	// shortcuts used: a, d, f, i, l, n, p, r, s, v
+	contour.RegisterBoolFlag("archive_prior_build", "v", false, "false", "archive prior build before writing new packer template files")
 	contour.RegisterBoolFlag(Log, "l", true, "true", "enable/disable logging")
 	contour.RegisterStringFlag(BuildFile, "", "conf.d/build.toml", "conf.d/build.toml", "location of the build cfguration file")
 	contour.RegisterStringFlag(BuildListFile, "", "conf.d/build_list.toml", "conf.d/build_list.toml", "location of the build list cfguration file")
 	contour.RegisterStringFlag(DefaultFile, "", "conf/default.toml", "conf/default.toml", "location of the default cfguration file")
 	contour.RegisterStringFlag(SupportedFile, "", "conf/supported.toml", "conf/supported.toml", "location of the supported distros cfguration file")
 	contour.RegisterStringFlag(ParamDelimStart, "p", ":", ":", "the start delimiter for template variabes")
-	contour.RegisterStringFlag(LogFile, "n", "rancher.log", "rancher.log", "log filename")
+	contour.RegisterStringFlag(LogFile, "", "rancher.log", "rancher.log", "log filename")
 	contour.RegisterStringFlag(LogLevelFile, "f", "WARN", "WARN", "log level for writing to the log file")
 	contour.RegisterStringFlag(LogLevelStdOut, "s", "ERROR", "ERROR", "log level for writing to stdout")
-	contour.RegisterStringFlag(DistroFlag, "d", "", "", "distro override for default builds")
-	contour.RegisterStringFlag(ArchFlag, "a", "", "", "os arch override for default builds")
-	contour.RegisterStringFlag(ImageFlag, "i", "", "", "os image override for default builds")
-	contour.RegisterStringFlag(ReleaseFlag, "r", "", "", "os release override for default builds")
+	contour.RegisterStringFlag("distro", "d", "", "", "distro override for default builds")
+	contour.RegisterStringFlag("arch", "a", "", "", "os arch override for default builds")
+	contour.RegisterStringFlag("image", "i", "", "", "os image override for default builds")
+	contour.RegisterStringFlag("release", "r", "", "", "os release override for default builds")
 }
 
 // SetCfg set's the appCFg from the app's cfg file and then applies any
@@ -97,7 +85,7 @@ func SetCfg() error {
 	err := contour.SetCfg()
 	if err != nil {
 		jww.ERROR.Print(err)
-		jww.FEEDBACK.Println(err)
+		jww.FEEDBACK.Printf("SetCfg: %s", err.Error())
 		return err
 	}
 	return nil
