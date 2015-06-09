@@ -818,7 +818,6 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, er
 			settings[k] = i
 		}
 	}
-
 	// Only check to see if the required ssh_username field was set. The required iso info is checked after Array processing
 	if !hasSSHUsername {
 		return nil, requiredSettingErr("ssh_username")
@@ -840,7 +839,6 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, er
 		}
 		settings["iso_url"] = isoURL
 	}
-
 	// make sure http_directory is set and add to dir list
 	err = r.setHTTP(VirtualBoxISO.String(), settings)
 	if err != nil {
@@ -873,6 +871,8 @@ noISOURL:
 			}
 		case "vboxmanage", "vboxmanage_post":
 			settings[name] = r.createVBoxManage(val)
+		case "scripts":
+
 		}
 	}
 
@@ -1243,18 +1243,15 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, err er
 			settings[k] = i
 		}
 	}
-
 	// Only check to see if the required ssh_username field was set. The required iso info is checked after Array processing
 	if !hasSSHUsername {
 		return nil, requiredSettingErr("ssh_username")
 	}
-
 	// make sure http_directory is set and add to dir list
 	err = r.setHTTP(VMWareISO.String(), settings)
 	if err != nil {
 		return nil, err
 	}
-
 	// Process arrays, iso_urls is only valid if iso_url is not set
 	for name, val := range r.Builders[VMWareISO.String()].Arrays {
 		switch name {
@@ -1281,7 +1278,6 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, err er
 			settings[name] = r.createVMXData(val)
 		}
 	}
-
 	if r.osType == "" { // if the os type hasn't been set, the ISO info hasn't been retrieved
 		err = r.ISOInfo(VirtualBoxISO, workSlice)
 		if err != nil {
@@ -1293,7 +1289,6 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, err er
 		tmpGuestOSType = r.osType
 	}
 	settings["guest_os_type"] = tmpGuestOSType
-
 	// If the iso info wasn't set from the Settings, get it from the distro's release
 	if tmpISOUrl == "" {
 		//handle iso lookup vs set in file
@@ -1454,7 +1449,6 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, err er
 	if err != nil {
 		return nil, err
 	}
-
 	// Process arrays, iso_urls is only valid if iso_url is not set
 	for name, val := range r.Builders[VMWareVMX.String()].Arrays {
 		switch name {

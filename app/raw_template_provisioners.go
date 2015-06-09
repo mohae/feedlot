@@ -282,7 +282,6 @@ func (r *rawTemplate) createChefClient() (settings map[string]interface{}, err e
 			settings[k] = v
 		}
 	}
-
 	for name, val := range r.Provisioners[ChefClient.String()].Arrays {
 		if name == "run_list" {
 			array := deepcopy.InterfaceToSliceOfStrings(val)
@@ -366,7 +365,6 @@ func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, err err
 			settings[k] = v
 		}
 	}
-
 	for name, val := range r.Provisioners[ChefSolo.String()].Arrays {
 		if name == "cookbook_paths" {
 			array := deepcopy.InterfaceToSliceOfStrings(val)
