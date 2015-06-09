@@ -168,7 +168,8 @@ func (a *Archive) archivePriorBuild(p string, t string) error {
 	// Get the relative path so that it can be added to the tarball name.
 	relPath := path.Dir(p)
 	// The tarball's name is the directory name + extensions.
-	tBName := fmt.Sprintf("%s%s-%s.tar.gz", relPath, a.Name)
+	tBName := filepath.Join(relPath, a.Name) + ".tar.gz"
+
 	// ensure the archive name is unique
 	tBName, err = getUniqueFilename(tBName, "2006-01-02")
 	if err != nil {
