@@ -599,7 +599,7 @@ func (r *rawTemplate) findSource(p string) (string, error) {
 // that value.  If the template is set to include the component string as the
 // parent directory, it is added to the path.
 func (r *rawTemplate) buildOutPath(component, p string) string {
-	if r.IncludeComponentString && component != "" {
+	if r.includeComponentString() && component != "" {
 		return filepath.Join(r.OutDir, component, p)
 	}
 	return filepath.Join(r.OutDir, p)
@@ -610,7 +610,7 @@ func (r *rawTemplate) buildOutPath(component, p string) string {
 // set to include the component string as the parent directory, it is added to
 // the path.
 func (r *rawTemplate) buildTemplateResourcePath(component, p string) string {
-	if r.IncludeComponentString && component != "" {
+	if r.includeComponentString() && component != "" {
 		return filepath.Join(component, p)
 	}
 	return p

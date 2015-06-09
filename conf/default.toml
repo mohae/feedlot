@@ -20,7 +20,7 @@ description = "Default Rancher template"
 name = ":build_name"
 out_dir = "out/:build_name"
 src_dir = "src"
-include_component_string = true
+include_component_string = "true"
 min_packer_version = "0.5.0"
 builder_types = [
     "virtualbox-iso",

@@ -10,6 +10,7 @@ package app
 
 import (
 	"fmt"
+	"strconv"
 	"sync"
 
 	"github.com/BurntSushi/toml"
@@ -297,9 +298,13 @@ func (i *BuildInf) update(b BuildInf) {
 // IODirInf is used to store information about where Rancher can find and put
 // things. Source files are always in a SrcDir.
 type IODirInf struct {
-	// Include the packer component name in the path. If this is true, the component.String()
-	// value will be added as the parent of the output resource: i.e. OutDir/component.String()/resource_name
-	IncludeComponentString bool
+	// Include the packer component name in the path. Even though it is used as a bool,
+	// it is defined as a string so that it makes absense from a template detectable.
+	// Any value that strconv.ParseBool can parse to true is accepted as true. If the
+	// value is empty, parsed to false, or cannot be properly parsed, false is assumed.
+	// If this is true, the component.String() value will be added as the parent of the
+	// output resource: i.e. OutDir/component.String()/resource_name
+	IncludeComponentString string `toml:"include_component_string"`
 	// The directory that the output artifacts will be written to.
 	OutDir string `toml:"out_dir"`
 	// The directory that contains the source files for this build.
@@ -313,6 +318,21 @@ func (i *IODirInf) update(inf IODirInf) {
 	if inf.SrcDir != "" {
 		i.SrcDir = appendSlash(inf.SrcDir)
 	}
+	if inf.IncludeComponentString != "" {
+		i.IncludeComponentString = inf.IncludeComponentString
+	}
+}
+
+// includeComponentString returns whether, or not, the name of the component
+// should be included. Any string that results in a parse error will be
+// evaluated as false, otherwise any string that strconv.ParseBool() can parse
+// is valid.
+func (i *IODirInf) includeComponentString() bool {
+	b, err := strconv.ParseBool(i.IncludeComponentString)
+	if err != nil {
+		return false
+	}
+	return b
 }
 
 // check to see if the dirinf is set, if not, set them to their defaults

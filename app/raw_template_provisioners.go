@@ -522,6 +522,7 @@ func (r *rawTemplate) createSalt() (settings map[string]interface{}, err error) 
 //   remote_path          string
 //   start_retry_timeout  string
 func (r *rawTemplate) createShellScript() (settings map[string]interface{}, err error) {
+	fmt.Println(r.IncludeComponentString)
 	_, ok := r.Provisioners[ShellScript.String()]
 	if !ok {
 		return nil, configNotFoundErr()
@@ -565,7 +566,7 @@ func (r *rawTemplate) createShellScript() (settings map[string]interface{}, err 
 			scripts = deepcopy.InterfaceToSliceOfStrings(val)
 			for i, v := range scripts {
 				v = r.replaceVariables(v)
-				// prepend the path with shell if there isn't a parent dir
+				// find the source
 				s, err := r.findComponentSource(ShellScript.String(), v)
 				if err != nil {
 					return nil, settingErr(k, err)

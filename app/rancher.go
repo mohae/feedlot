@@ -358,6 +358,7 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 	if bTpl.Release != "" {
 		rTpl.Release = bTpl.Release
 	}
+	fmt.Printf("%+v\n", bTpl)
 	bTpl.BuildName = buildName
 	// create build template() then call create packertemplate
 	rTpl.build = DistroDefaults.Templates[DistroFromString(bTpl.Distro)].build
