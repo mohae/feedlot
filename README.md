@@ -277,6 +277,7 @@ This is useful for keeping various packer resources in separate directories by u
 
 __Example:__
 In a Rancher build template, a list of shell scripts may be:
+```
     [provisioners.shell.arrays]
 		scripts = [ 
 			"setup.sh",
@@ -284,8 +285,9 @@ In a Rancher build template, a list of shell scripts may be:
 			"sudoers.sh",
 			"cleanup.sh",
 		]
-    
+```
 With `include_component_string` set to true, the Packer template section would look like:
+```
     "provisioners": [
      	{
       		"type": "shell",
@@ -297,14 +299,16 @@ With `include_component_string` set to true, the Packer template section would l
 			]
 		}
 	]
-
+```
 And the files would be copied to:
+```
     packer_template/shell/setup.sh
 	packer_template/shell/vagrant.sh
 	packer_template/shell/sudoers.sh
 	packer_template/shell/cleanup
-	
+```	
 With `include_component_string` set to false, the Packer template section would look like:
+```
     "provisioners": [
      	{
       		"type": "shell",
@@ -316,12 +320,14 @@ With `include_component_string` set to false, the Packer template section would 
 			]
 		}
 	]
-
+```
 And the files would be copied to:
-    packer_template/setup.sh
+```
+	packer_template/setup.sh
 	packer_template/vagrant.sh
 	packer_template/sudoers.sh
 	packer_template/cleanup
+```
 
 ### Specifying your own iso information
 For builders that require the `iso` information, you can specify your own information by populating the `iso_url` or `iso_urls`, `iso_checksum`, and `iso_checksum_type` settings. If these settings are not set, Rancher will look-up the information for you. For CentOS, this will result in a random mirror being chosen, unless you have specified the mirror in the `base_url` field.
