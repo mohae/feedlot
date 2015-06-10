@@ -275,7 +275,7 @@ The `include_component_string` is a Rancher build setting that controls whether 
 
 This is useful for keeping various packer resources in separate directories by usage. It also makes specifying the resource within the build template easier. One drawback to this is that the component name may not be the desired value, but it will still work, e.g. `scripts` is a more common name for the directory within a Packer template containing the shell scripts, using the component name, the directory would be `shell` instead.
 
-__Example:__
+__Example:__  
 In a Rancher build template, a list of shell scripts may be:
 ```
     [provisioners.shell.arrays]
