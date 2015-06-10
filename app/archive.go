@@ -184,7 +184,7 @@ func (a *Archive) archivePriorBuild(p string, t string) error {
 	defer func() {
 		cerr := tBall.Close()
 		if cerr != nil && err == nil {
-			err = err
+			err = cerr
 		}
 	}()
 	// The tarball gets compressed with gzip

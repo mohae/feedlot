@@ -513,7 +513,7 @@ func TestRawTemplateSetBaseVarVals(t *testing.T) {
 			t.Errorf("%d: expected :distro to be in map, it wasn't", i)
 		} else {
 			if tmp != test.Distro {
-				t.Errorf("%d: expected :distro to be %q, got %q", test.Distro, tmp)
+				t.Errorf("%d: expected :distro to be %q, got %q", i, test.Distro, tmp)
 			}
 		}
 		tmp, ok = r.varVals[":release"]
@@ -521,7 +521,7 @@ func TestRawTemplateSetBaseVarVals(t *testing.T) {
 			t.Errorf("%d: expected :release to be in map, it wasn't", i)
 		} else {
 			if tmp != test.Release {
-				t.Errorf("%d: expected :release to be %q, got %q", test.Release, tmp)
+				t.Errorf("%d: expected :release to be %q, got %q", i, test.Release, tmp)
 			}
 		}
 		tmp, ok = r.varVals[":arch"]
@@ -529,7 +529,7 @@ func TestRawTemplateSetBaseVarVals(t *testing.T) {
 			t.Errorf("%d: expected :arch to be in map, it wasn't", i)
 		} else {
 			if tmp != test.Arch {
-				t.Errorf("%d: expected :arch to be %q, got %q", test.Arch, tmp)
+				t.Errorf("%d: expected :arch to be %q, got %q", i, test.Arch, tmp)
 			}
 		}
 		tmp, ok = r.varVals[":image"]
@@ -537,7 +537,7 @@ func TestRawTemplateSetBaseVarVals(t *testing.T) {
 			t.Errorf("%d: expected :image to be in map, it wasn't", i)
 		} else {
 			if tmp != test.Image {
-				t.Errorf("%d: expected :image to be %q, got %q", test.Image, tmp)
+				t.Errorf("%d: expected :image to be %q, got %q", i, test.Image, tmp)
 			}
 		}
 		tmp, ok = r.varVals[":date"]
@@ -545,7 +545,7 @@ func TestRawTemplateSetBaseVarVals(t *testing.T) {
 			t.Errorf("%d: expected :date to be in map, it wasn't", i)
 		} else {
 			if tmp != splitDate[0] {
-				t.Errorf("%d: expected :date to be %q, got %q", splitDate[0], tmp)
+				t.Errorf("%d: expected :date to be %q, got %q", i, splitDate[0], tmp)
 			}
 		}
 		tmp, ok = r.varVals[":build_name"]
@@ -553,7 +553,7 @@ func TestRawTemplateSetBaseVarVals(t *testing.T) {
 			t.Errorf("%d: expected :build_name to be in map, it wasn't", i)
 		} else {
 			if tmp != test.BuildName {
-				t.Errorf("%d: expected :build_name to be %q, got %q", test.BuildName, tmp)
+				t.Errorf("%d: expected :build_name to be %q, got %q", i, test.BuildName, tmp)
 			}
 		}
 	}
@@ -750,7 +750,7 @@ func TestCommandsFromFile(t *testing.T) {
 		}
 		for i, v := range commands {
 			if v != test.expected[i] {
-				t.Errorf("TestCommandsFromFile %D: expected commands slice to be %v, got %v", i, test.expected, commands)
+				t.Errorf("TestCommandsFromFile %d: expected commands slice to be %v, got %v", i, test.expected, commands)
 				break
 			}
 		}

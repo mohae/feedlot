@@ -11,7 +11,7 @@ func TestDirWalk(t *testing.T) {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
 		if tst.Files != nil {
-			t.Error("Expected Archive.Files to be empty, got %q", tst.Files)
+			t.Errorf("Expected Archive.Files to be empty, got %q", tst.Files)
 		}
 	}
 

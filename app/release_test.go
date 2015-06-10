@@ -343,7 +343,7 @@ func TestDebianFindISOChecksum(t *testing.T) {
 		t.Error("Expected an error, got nil")
 	} else {
 		if err.Error() != " findISOChecksum error: page was empty" {
-			t.Errorf(" findISOChecksum error: page was empty", err.Error())
+			t.Errorf("expected \"findISOChecksum error: page was empty\", got %q ", err.Error())
 		}
 	}
 
