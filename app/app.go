@@ -11,6 +11,7 @@ const (
 	Name            = "rancher"
 	BuildFile       = "build_file"
 	BuildListFile   = "build_list_file"
+	CfgFile         = "cfg_file"
 	CfgFilename     = "rancher.toml"
 	DefaultFile     = "default_file"
 	Log             = "log"
@@ -53,14 +54,16 @@ type ArgsFilter struct {
 }
 
 func init() {
-	cfgFilename := os.Getenv(contour.GetEnvName(contour.CfgFile))
+	cfgFilename := os.Getenv(contour.GetEnvName(CfgFile))
 	// if it's not set, use the application default
 	if cfgFilename == "" {
 		cfgFilename = CfgFilename
 	}
 	contour.SetName(Name)
 	contour.SetUseEnv(true)
-	contour.RegisterCfgFile(contour.CfgFile, CfgFilename)
+	// missing main application cfg isn't considered an error state.
+	contour.SetErrOnMissingCfg(false)
+	contour.RegisterCfgFile(CfgFile, CfgFilename)
 	// shortcuts used: a, d, f, i, l, n, p, r, s, v
 	contour.RegisterBoolFlag("archive_prior_build", "v", false, "false", "archive prior build before writing new packer template files")
 	contour.RegisterBoolFlag(Log, "l", true, "true", "enable/disable logging")
