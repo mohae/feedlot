@@ -760,23 +760,23 @@ func TestCommandsFromFile(t *testing.T) {
 
 func TestBuildOutPath(t *testing.T) {
 	tests := []struct {
-		includeComponent bool
+		includeComponent string
 		component        string
 		path             string
 		expected         string
 	}{
-		{false, "", "", "out"},
-		{true, "", "", "out"},
-		{false, "vagrant", "", "out"},
-		{true, "vagrant", "", "out/vagrant"},
-		{false, "", "file.txt", "out/file.txt"},
-		{false, "", "path/to/file.txt", "out/path/to/file.txt"},
-		{false, "shell", "file.txt", "out/file.txt"},
-		{false, "shell", "path/to/file.txt", "out/path/to/file.txt"},
-		{true, "", "file.txt", "out/file.txt"},
-		{true, "", "path/to/file.txt", "out/path/to/file.txt"},
-		{true, "shell", "file.txt", "out/shell/file.txt"},
-		{true, "shell", "path/to/file.txt", "out/shell/path/to/file.txt"},
+		{"false", "", "", "out"},
+		{"true", "", "", "out"},
+		{"false", "vagrant", "", "out"},
+		{"true", "vagrant", "", "out/vagrant"},
+		{"false", "", "file.txt", "out/file.txt"},
+		{"false", "", "path/to/file.txt", "out/path/to/file.txt"},
+		{"false", "shell", "file.txt", "out/file.txt"},
+		{"false", "shell", "path/to/file.txt", "out/path/to/file.txt"},
+		{"true", "", "file.txt", "out/file.txt"},
+		{"true", "", "path/to/file.txt", "out/path/to/file.txt"},
+		{"true", "shell", "file.txt", "out/shell/file.txt"},
+		{"true", "shell", "path/to/file.txt", "out/shell/path/to/file.txt"},
 	}
 	r := newRawTemplate()
 	r.OutDir = "out"
@@ -791,23 +791,23 @@ func TestBuildOutPath(t *testing.T) {
 
 func TestBuildTemplateResourcePath(t *testing.T) {
 	tests := []struct {
-		includeComponent bool
+		includeComponent string
 		component        string
 		path             string
 		expected         string
 	}{
-		{false, "", "", ""},
-		{true, "", "", ""},
-		{false, "vagrant", "", ""},
-		{true, "vagrant", "", "vagrant"},
-		{false, "", "file.txt", "file.txt"},
-		{false, "", "path/to/file.txt", "path/to/file.txt"},
-		{false, "shell", "file.txt", "file.txt"},
-		{false, "shell", "path/to/file.txt", "path/to/file.txt"},
-		{true, "", "file.txt", "file.txt"},
-		{true, "", "path/to/file.txt", "path/to/file.txt"},
-		{true, "shell", "file.txt", "shell/file.txt"},
-		{true, "shell", "path/to/file.txt", "shell/path/to/file.txt"},
+		{"false", "", "", ""},
+		{"true", "", "", ""},
+		{"false", "vagrant", "", ""},
+		{"true", "vagrant", "", "vagrant"},
+		{"false", "", "file.txt", "file.txt"},
+		{"false", "", "path/to/file.txt", "path/to/file.txt"},
+		{"false", "shell", "file.txt", "file.txt"},
+		{"false", "shell", "path/to/file.txt", "path/to/file.txt"},
+		{"true", "", "file.txt", "file.txt"},
+		{"true", "", "path/to/file.txt", "path/to/file.txt"},
+		{"true", "shell", "file.txt", "shell/file.txt"},
+		{"true", "shell", "path/to/file.txt", "shell/path/to/file.txt"},
 	}
 	r := newRawTemplate()
 	r.OutDir = "out"

@@ -155,7 +155,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 		Description:      "Test template config and Rancher options for CentOS",
 	},
 	IODirInf: IODirInf{
-		IncludeComponentString: true,
+		IncludeComponentString: "true",
 		OutDir:                 "../test_files/out/:build_name",
 		SrcDir:                 "../test_files/src",
 	},

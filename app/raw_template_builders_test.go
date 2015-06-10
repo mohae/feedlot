@@ -244,7 +244,7 @@ var testCentOS = &rawTemplate{
 
 var testAllBuilders = &rawTemplate{
 	IODirInf: IODirInf{
-		IncludeComponentString: true,
+		IncludeComponentString: "true",
 		OutDir:                 "../test_files/out",
 		SrcDir:                 "../test_files/src",
 	},
