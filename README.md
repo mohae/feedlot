@@ -5,37 +5,38 @@ rancher
 >   -Douglas Adams, _Last chance to See_
 
 ## About Rancher
-Ranchers supply products to packers to process and package. Rancher creates Packer templates for Packer to process and generate artifacts. Ok, a bit of a stretch, but it's the best I could come up with and better than the other names I had thought of.
+Ranchers supply products to packers to process and package.  Rancher creates Packer templates for Packer to process and generate artifacts.  Ok, a bit of a stretch, but it's the best I could come up with and better than the other names I had thought of.
 
 Rancher was created to make it easier to generate reproducable Packer templates and create updated Packer templates when new distro isos come out.
 
-When creating Packer templates, Rancher will ensure that all of the resources required by that template are part of the generated Packer template. The Rancher templates can contain information about the resources that they require and the actual resources will be located and made part of the Packer template. If the referenced resource cannot be located, an error will occur and the requested Packer template will not be generated.
+When creating Packer templates, Rancher will ensure that all of the resources required by that template are part of the generated Packer template.  The Rancher templates can contain information about the resources that they require and the actual resources will be located and made part of the Packer template.  If the referenced resource cannot be located, an error will occur and the requested Packer template will not be generated.
 
-Rancher builds Packer templates from either Rancher build templates or, for quick flag based builds, from the Rancher default settings.
+Rancher builds Packer templates from either Rancher build templates or, for quick flag based builds, from the supported distro defaults and Rancher build defaults.
 
 ## Why rancher
-I originally started Rancher because I didn't like the looking up the iso and checksum information for my builds. I also wasn't happy about replicating setting values between builders as I was too likely to make a mistake. I naively thought generating Packer templates from pre-defined configurations would be easier. During which, I realized I'd have to support more than just builders, so Rancher evolved into generating the complete template. 
+I originally started Rancher because I didn't like looking up the iso and checksum information for my Packer templates.  I also wasn't happy about replicating setting values between builders as I was too likely to make a mistake.  Overall, I found the process, though easy enough, more cumbersome than I would like.  I naively thought generating Packer templates from pre-defined configurations would be easier.  During which, I realized I'd have to support more than just builders, so Rancher evolved into generating a more complete template. 
 
-The goal was to make it easier to create various configurations by minimally defining the differences between the named build and the distro's defaults and to make it easy to generate updated templates as the releases that the templates depended on were updated.
+The goal was to make it easier to create various configurations by minimally defining the differences between the named build and the distro's defaults; making it easier to generate updated templates as the releases that the templates depended on were updated.
 
-I chose TOML as the configuration file type, but there's no reason why YAML or something else couldn't be supported.
+I'm not sure if I achieved my goals, or if I just added complexity to different parts that didn't need to be there.
+
+I chose TOML as the configuration file type, but there's no reason why YAML or something else couldn't be supported. It just hasn't been implemented.
 
 ## Rancher is cross-platform
-Because Rancher uses Go, it can be compiled for cross-platform use. It has been tested on Linux and Windows.
+Because Rancher uses Go, it can be compiled for cross-platform use.  It has been tested on Linux and Windows.
 
 ## Using Rancher
-Currently, no pre-compiled versions of Rancher are made available. To use Rancher, on must `go get` the repo and build it with `go build`.
-
+Currently, no pre-compiled versions of Rancher are made available.  To use Rancher, on must `go get` the repo and build it with `go build`.
 
     $ go get github.com/mohae/rancher
     $ cd GOPATH/src/github.com/mohae/rancher
     $ go build
 	
-You can either run the application from there, or move it somewhere in your path. If you move `rancher`, make sure that your `out_dir` and `src_dir` settings are findable by the Rancher executable. If you are using a custom application configuration file, make sure it's either in the application directory or the "RANCHER_CFG_FILE" environment variable is set with its location. 
+You can either run the application from there, or move it somewhere in your path.  If you move `rancher`, make sure that your `out_dir` and `src_dir` settings are findable by the Rancher executable.  If you are using a custom application configuration file, make sure it's either in the application directory or the `RANCHER_CFG_FILE` environment variable is set with its location. 
 
-Once built, Packer templates can be generated using the `rancher build` command. This command accepts 0 or more build names and generates a Packer template for each named Rancher build template. If no build name is passed, the `-distro` flag must be passed, at minimum. The `-distro` flag specifies which distro to use for Rancher's default build and generates a Packer template for that distro using the Rancher defaults found in `defaults.toml`. The specified distro must be supported.toml
+Once built, Packer templates can be generated using the `rancher build` command.  This command accepts 0 or more build names and generates a Packer template for each named Rancher build template.  If no build name is passed, the `-distro` flag must be passed, at minimum. The `-distro` flag specifies which distro to use for Rancher's default build and generates a Packer template for that distro using that distro's defaults along with the Rancher defaults found in `defaults.toml`.  The specified distro must be supported.toml
 
-### Basic Rancher command examples:
+### Basic Rancher command examples:  
 Build a Packer template for CentOS using the distro defaults:
 
 	rancher build -distro=centos
@@ -52,21 +53,21 @@ Build a Packer template for Ubuntu using the distro defaults and from more than 
 	
 	rancher build -distro=ubuntu -arch=i386 1404-dev 1204-amd64-server
 
-## Configuration
-The configuration directories and files are listed as they exist in the repo and represent the application default locations. These files can be placed anywhere as long as the Rancher configuration has been updated, whether via the application configuration file or by environment variables.
+## Configuration  
+The configuration directories and files are listed as they exist in the repo and represent the application default locations.  These files can be placed anywhere as long as the Rancher configuration has been updated, whether via the application configuration file or by environment variables.
 
-### application configuration
-The `rancher.toml` file is the default core configuration file for Rancher. It contains the default locations for all of the TOML files that Rancher uses. Environment variables are supported. Rancher will first check to see if the environment variable is set. If it is empty, the relevant `rancher.toml` setting will be used.
+### application configuration  
+The `rancher.toml` file is the default core configuration file for Rancher.  It contains the default locations for all of the TOML files that Rancher uses. Environment variables are supported.  Rancher will first check to see if the environment variable is set.  If it is empty, the relevant `rancher.toml` setting will be used.
 
 The `RANCHER_CONFIG` environment variable can be used to specify a different file and location for Rancher's configuration, otherwise the `rancher.toml` file will be used by default.
 
-__Configuration file settings__
+__Configuration file settings__  
 Check the `rancher.toml.example` file for the config setting names and their application default values.
 
-### Environment Variables
-Rancher supports using environment variables for configuration settings. The environment variable name will always be upper-case and prefixed with `RANCHER_`. The rest of the environment variable name will be the name of the configuration setting for which it applies. 
+### Environment Variables  
+Rancher supports using environment variables for configuration settings.  The environment variable name will always be upper-case and prefixed with `RANCHER_`.  The rest of the environment variable name will be the name of the configuration setting for which it applies. 
 
-When an environment variable is set, it will override both the application default and configuration file values. Only command-line flags can override environment variables.
+When an environment variable is set, it will override both the application default and configuration file values.  Only command-line flags can override environment variables.
 
 #### Environment variable names for Rancher config files:
 
@@ -76,55 +77,55 @@ When an environment variable is set, it will override both the application defau
     RANCHER_BUILD_FILE       // location of the file defining Rancher build templates
     RANCHER_BUILD_LIST_FILE  // location of the file defining sets of Rancher build templates
 
-### `conf/`
+### `conf/`  
 The `conf/` subdirectory holds the default configuration for Rancher builds, `default.toml`, and information about supported distros, `supported.toml`. 
 
-#### `supported.toml`
-The `supported.toml` file defines the supported operating systems, referred to as distros or distributions, and their settings, including any distro specific overrides. Because Rancher does distro specific processing, like ISO information look-up, Packer templates can be generated for supported distributions only and only for releases that that distribution currently supports.
+#### `supported.toml`  
+The `supported.toml` file defines the supported operating systems, referred to as distros or distributions, and their settings, including any distro specific overrides.  Because Rancher does distro specific processing, like ISO information look-up, Packer templates can be generated for supported distributions only and only for releases that that distribution currently supports.
 
-Each supported distro has a `defaults` section, which defines the default `architecture`, `image`, and `release` for the distro. These defaults define the target ISO to use unless the defaults are overridden by either flags or configuration.
+Each supported distro has a `defaults` section, which defines the default `arch`, `image`, and `release` for the distro.  These defaults define the target ISO to use unless the defaults are overridden by either flags or configuration.
 
-__Supported Distros:__
+__Supported Distros:__   
 
     * CentOS
     * Debian
     * Ubuntu
 
-#### `default.toml`
-The `default.toml` holds all the default settings for Rancher build templates. A few settings that only apply at the distro level, like `base_url`, are not set here. Unless a Rancher build template explicitly defines a setting, the values within the `default.toml` will be applied to all templates. Ideally, Rancher build templates should only specify overrides to default settings and new settings, esp. Packer sections. 
+#### `default.toml`  
+The `default.toml` holds all the default settings for Rancher build templates.  A few settings that only apply at the distro level, like `base_url`, are not set here.  Unless a Rancher build template explicitly defines a setting, the values within the `default.toml` will be applied to all templates.  Ideally, Rancher build templates should only specify overrides to default settings and new settings, esp. Packer sections. 
 
 The defaults are also used when Rancher templates are generated with a build template being specified:
 
 TODO complete this example
 
-### `conf.d/`
-The `conf.d/` subdirectory holds the configuration files for Rancher build templates and lists of builds. These files are the ones that will be most commonly modified.
+### `conf.d/`  
+The `conf.d/` subdirectory holds the configuration files for Rancher build templates and lists of builds.  These files are the ones that will be most commonly modified.
 
-#### `build.toml`
-The `build.toml` contains named Rancher build templates. A build template is a named specification for a Packer template and contains the settings and Packer sections that will apply to it. When a Packer template is succesfully generated, the resulting `json` file, along with all resources. other than isos and certain files, will be copied to the output directory. If a directory already exists in the target location and Rancher is set to archive prior builds, a compressed tarball will be created out of it, otherwise, the existing directory will be removed. In either case, a new directory will be created and the artifacts of the Packer template will be placed within.
+#### `build.toml`  
+The `build.toml` contains named Rancher build templates.  A build template is a named specification for a Packer template and contains the settings and Packer sections that will apply to it.  When a Packer template is succesfully generated, the resulting `json` file, along with all resources, other than isos and certain files, will be copied to the output directory.  If a directory already exists in the target location and Rancher is set to archive prior builds, a compressed tarball will be created out of it, otherwise, the existing directory will be removed.  In either case, a new directory will be created and the artifacts of the Packer template will be placed within.
 
-## Rancher build templates
-Rancher build templates, along with the underlying default and supported distro defaults, define what the resulting Packer template will consist of. Each build template `builder`, `provisioner`, and `post-processor` section correspond to the Packer components in the same category. In addition to these, Rancher templates also have some template settings and will have component type sections. 
+## Rancher build templates  
+Rancher build templates, along with the underlying default and supported distro defaults, define what the resulting Packer template will consist of.  Each build template `builder`, `provisioner`, and `post-processor` section correspond to the Packer components in the same category.  In addition to these, Rancher templates also have some template settings and will have component type sections. 
 
-### Rancher build template settings
-Rancher build template settings provide information that Rancher uses to help it create the build template's Packer template. These settings usually only exist when there is a need to override the default setting. Setting Rancher build template settings at the per build level also makes certain things more explicit.
+### Rancher build template settings  
+Rancher build template settings provide information that Rancher uses to help it create the build template's Packer template.  These settings usually only exist when there is a need to override the default setting.  Setting Rancher build template settings at the per build level also makes certain things more explicit.
 
-`description`: corresponds to the Packer template _description_ setting.
-`name`: corresponds to the Packer template _name_ setting, by default, the build template name is used.
-`out_dir`: the directory to which the Packer template is written to and its resources copied to.
-`src_dir`: the directory which contains the source and resource files the build template references.
-`include_component_string`: a boolean as a string. Any value that Go's `strconv.ParseBool()` supports is allowed. Any unsupported character results in this setting being evaluated to false. Please check the _notes_ section for more info.
-`min_packer_version`: corresponds to the Packer template *min_packer_version* setting.
+`description`: corresponds to the Packer template _description_ setting.  
+`name`: corresponds to the Packer template _name_ setting, by default, the build template name is used.  
+`out_dir`: the directory to which the Packer template is written to and its resources copied to.  
+`src_dir`: the directory which contains the source and resource files the build template references.  
+`include_component_string`: a boolean as a string. Any value that Go's `strconv.ParseBool()` supports is allowed.   Any unsupported character results in this setting being evaluated to false. Please check the _notes_ section for more info.  
+`min_packer_version`: corresponds to the Packer template *min_packer_version* setting.  
 
-### Packer component type sections
-Each Packer section also has a `_type`, e.g. builders have a `builder_type`. This is a list of types that apply to the template being built. Each type must have a corresponding section defined. Only sections with a matching entry in the `_type` section will be processed by Rancher. These sections exist because the merged template may have more types defined than you want processed for a particular Packer template; by specifying the Packer section types that the build template will use the other definitions will be ignored.
+### Packer component type sections  
+Each Packer section also has a `_type`, e.g. builders have a `builder_type`.  This is a list of types that apply to the template being built.  Each type must have a corresponding section defined.  Only sections with a matching entry in the `_type` section will be processed by Rancher.  These sections exist because the merged template may have more types defined than you want processed for a particular Packer template; by specifying the Packer section types that the build template will use the other definitions will be ignored.
 
-The `provisioner_type` and `post-processor_type` sections are optional as their respective sections are optional in Packe.
+The `provisioner_type` and `post-processor_type` sections are optional as their respective sections are optional in Packer.
 
-### Rancher variable replacement
-Rancher supports a limited number of variables in the toml configuration files. These are mostly used to allow for the path of files and names of things to be built based on other information within the configuration, e.g :distro is replaced by the name of the distro for which the Packer template is being built.
+### Rancher variable replacement  
+Rancher supports a limited number of variables in the toml configuration files.  These are mostly used to allow for the path of files and names of things to be built based on other information within the configuration, e.g :distro is replaced by the name of the distro for which the Packer template is being built.  
 
-Since Packer uses Go's template engine, Rancher variables are prefixed with a colon, `:`, to avoid collision with Go template conventions, `{{}}`. Using a `:` in non-variable values may lead to unexpected results, as such don't use it unless you are prefixing a variable. A different delimiter can be specified in the Rancher configuration file by modifying the `param_delim_start` setting. By using a different delimiter for Rancher, your build templates can still contain Packer variables.
+Since Packer uses Go's template engine, Rancher variables are prefixed with a colon, `:`, to avoid collision with Go template conventions, `{{}}`.  Using a `:` in non-variable values may lead to unexpected results, as such don't use it unless you are prefixing a variable.  A different delimiter can be specified in the Rancher configuration file by modifying the `param_delim_start` setting.  By using a different delimiter for Rancher, your build templates can still contain Packer variables.
 
 Current Rancher variable replacement is dumb, it will look for the variables that it can replace and do so. A setting string may have contain multiple variables, in which case it replaces them as encountered, with the exception of `src_dir` and `out_dir`, which are resolved before any other directory path variables. This is because most path settings will start with either `src_dir` or `out_dir`.
 
