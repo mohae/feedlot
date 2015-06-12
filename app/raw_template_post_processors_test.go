@@ -2,7 +2,6 @@
 package app
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -13,7 +12,7 @@ var testPostProcessorTemplate = &rawTemplate{
 	Distro:  "ubuntu",
 	Arch:    "amd64",
 	Image:   "server",
-	Release: "1204",
+	Release: "12.04",
 	varVals: map[string]string{},
 	dirs:    map[string]string{},
 	files:   map[string]string{},
@@ -85,7 +84,7 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 	Distro:  "ubuntu",
 	Arch:    "amd64",
 	Image:   "server",
-	Release: "1204",
+	Release: "12.04",
 	IODirInf: IODirInf{
 		OutDir: "../test_files/out/:build_name",
 		SrcDir: "../test_files/src",
@@ -341,97 +340,6 @@ var ppMerged = map[string]postProcessor{
 			Arrays: map[string]interface{}{},
 		},
 	},
-}
-
-func TestCreatePostProcessors(t *testing.T) {
-	_, err := testRawTemplateBuilderOnly.createPostProcessors()
-	if err == nil {
-		t.Error("Expected error \"configuration not found\", got nil")
-	} else {
-		if err.Error() != "configuration not found" {
-			t.Errorf("Expected \"configuration not found\", got %q", err.Error())
-		}
-	}
-
-	_, err = testRawTemplateWOSection.createPostProcessors()
-	if err == nil {
-		t.Errorf("Expected error \"%s post-processor error: configuration not found\", got nil", Compress.String())
-	} else {
-		if err.Error() != fmt.Sprintf("%s post-processor error: configuration not found", Compress.String()) {
-			t.Errorf("Expected error \"%s post-processor error: configuration not found\", got %q", Compress.String(), err.Error())
-		}
-	}
-
-	testRawTemplateWOSection.build.PostProcessorTypes[0] = "docker-import"
-	_, err = testRawTemplateWOSection.createPostProcessors()
-	if err == nil {
-		t.Errorf("Expected error \"%s post-processor error: configuration not found\", got nil", DockerImport.String())
-	} else {
-		if err.Error() != fmt.Sprintf("%s post-processor error: configuration not found", DockerImport.String()) {
-			t.Errorf("Expected error \"%s post-processor error: configuration not found\", got %q", DockerImport.String(), err.Error())
-		}
-	}
-
-	testRawTemplateWOSection.build.PostProcessorTypes[0] = "docker-push"
-	_, err = testRawTemplateWOSection.createPostProcessors()
-	if err == nil {
-		t.Errorf("Expected error \"%s post-processor error: configuration not found\", got nil", DockerPush.String())
-	} else {
-		if err.Error() != fmt.Sprintf("%s post-processor error: configuration not found", DockerPush.String()) {
-			t.Errorf("Expected error \"%s post-processor error: configuration not found\", got %q", DockerPush.String(), err.Error())
-		}
-	}
-
-	testRawTemplateWOSection.build.PostProcessorTypes[0] = "docker-save"
-	_, err = testRawTemplateWOSection.createPostProcessors()
-	if err == nil {
-		t.Errorf("Expected error \"%s post-processor error: configuration not found\", got nil", DockerSave.String())
-	} else {
-		if err.Error() != fmt.Sprintf("%s post-processor error: configuration not found", DockerSave.String()) {
-			t.Errorf("Expected error \"%s post-processor error: configuration not found\", got %q", DockerSave.String(), err.Error())
-		}
-	}
-
-	testRawTemplateWOSection.build.PostProcessorTypes[0] = "docker-tag"
-	_, err = testRawTemplateWOSection.createPostProcessors()
-	if err == nil {
-		t.Errorf("Expected error \"%s post-processor error: configuration not found\", got nil", DockerTag.String())
-	} else {
-		if err.Error() != fmt.Sprintf("%s post-processor error: configuration not found", DockerTag.String()) {
-			t.Errorf("Expected error \"%s post-processor error: configuration not found\", got %q", DockerTag.String(), err.Error())
-		}
-	}
-
-	testRawTemplateWOSection.build.PostProcessorTypes[0] = "vagrant"
-	_, err = testRawTemplateWOSection.createPostProcessors()
-	if err == nil {
-		t.Errorf("Expected error \"%s post-processor error: configuration not found\", got nil", Vagrant.String())
-	} else {
-		if err.Error() != fmt.Sprintf("%s post-processor error: configuration not found", Vagrant.String()) {
-			t.Errorf("Expected error \"%s post-processor error: configuration not found\", got %q", Vagrant.String(), err.Error())
-		}
-	}
-
-	testRawTemplateWOSection.build.PostProcessorTypes[0] = "vagrant-cloud"
-	_, err = testRawTemplateWOSection.createPostProcessors()
-	if err == nil {
-		t.Errorf("Expected error \"%s post-processor error: configuration not found\", got nil", VagrantCloud.String())
-	} else {
-		if err.Error() != fmt.Sprintf("%s post-processor error: configuration not found", VagrantCloud.String()) {
-			t.Errorf("Expected error \"%s post-processor error: configuration not found\", got %q", VagrantCloud.String(), err.Error())
-		}
-	}
-
-	testRawTemplateWOSection.build.PostProcessorTypes[0] = "vsphere"
-	_, err = testRawTemplateWOSection.createPostProcessors()
-	if err == nil {
-		t.Errorf("Expected error \"%s post-processor error: configuration not found\", got nil", VSphere.String())
-	} else {
-		if err.Error() != fmt.Sprintf("%s post-processor error: configuration not found", VSphere.String()) {
-			t.Errorf("Expected error \"%s post-processor error: configuration not found\", got %q", VSphere.String(), err.Error())
-		}
-	}
-
 }
 
 func TestRawTemplateUpdatePostProcessors(t *testing.T) {

@@ -3,4 +3,4 @@
 [list]
 
 	[list.ubuntu]
-	builds = ["1204-amd64-server", "1310-amd64-desktop"]
+	builds = ["1404-amd64", "jessie-amd64", "centos6-amd64"]

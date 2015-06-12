@@ -87,7 +87,7 @@ var testBuildNewTPL = &rawTemplate{
 	Distro:  "ubuntu",
 	Arch:    "amd64",
 	Image:   "server",
-	Release: "1204",
+	Release: "12.04",
 	varVals: map[string]string{},
 	dirs:    map[string]string{},
 	files:   map[string]string{},
@@ -296,28 +296,6 @@ func TestRawTemplateUpdateBuildSettings(t *testing.T) {
 	}
 }
 
-/*
-func TestRawTemplateScriptNames(t *testing.T) {
-	r := testDistroDefaults.Templates[Ubuntu]
-	scripts := r.ScriptNames()
-	if scripts == nil {
-		t.Error("Expected scripts to not be nil, it was")
-	} else {
-		if !stringSliceContains(scripts, "setup_test.sh") {
-			t.Errorf("Expected slice to contain \"setup_test.sh\", not found")
-		}
-		if !stringSliceContains(scripts, "vagrant_test.sh") {
-			t.Errorf("Expected slice to contain \"vagrant_test.sh\", not found")
-		}
-		if !stringSliceContains(scripts, "sudoers_test.sh") {
-			t.Errorf("Expected slice to contain \"sudoers_test.sh\", not found")
-		}
-		if !stringSliceContains(scripts, "cleanup_test.sh") {
-			t.Errorf("Expected slice to contain \"cleanup_test.sh\", not found")
-		}
-	}
-}
-*/
 func TestMergeVariables(t *testing.T) {
 	r := testDistroDefaults.Templates[Ubuntu]
 	r.mergeVariables()
@@ -399,39 +377,6 @@ func TestBuildInf(t *testing.T) {
 	}
 	if oldBuildInf.BuildName != "new BuildName" {
 		t.Errorf("Expected \"new BuildName\", got %q", oldBuildInf.BuildName)
-	}
-}
-
-func TestRawTemplateISOInfo(t *testing.T) {
-	err := testDistroDefaultUbuntu.ISOInfo(VirtualBoxISO, []string{"iso_checksum_type = sha256", "http_directory=http"})
-	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
-	} else {
-		if testDistroDefaultUbuntu.BaseURL != "http://releases.ubuntu.org/" {
-			t.Errorf("Expected \"http://releases.ubuntu.org\", got %q", testDistroDefaultUbuntu.BaseURL)
-		}
-		if testDistroDefaultUbuntu.releaseISO.(*ubuntu).ChecksumType != "sha256" {
-			t.Errorf("Expected \"sha256\", got %q", testDistroDefaultUbuntu.releaseISO.(*ubuntu).ChecksumType)
-		}
-		if testDistroDefaultUbuntu.releaseISO.(*ubuntu).Name != "ubuntu-12.04-server-amd64.iso" {
-			t.Errorf("Expected \"ubuntu-12.04-server-amd64.iso\", got %q", testDistroDefaultUbuntu.releaseISO.(*ubuntu).Name)
-		}
-	}
-
-	err = testDistroDefaultCentOS.ISOInfo(VirtualBoxOVF, []string{"iso_checksum_type = sha256", "http_directory=http"})
-	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
-	} else {
-		if testDistroDefaultCentOS.BaseURL != "" {
-			t.Errorf("Expected \"\", got %q", testDistroDefaultCentOS.BaseURL)
-		}
-		if testDistroDefaultCentOS.releaseISO.(*centOS).ChecksumType != "sha256" {
-			t.Errorf("Expected \"sha256\", got %q", testDistroDefaultCentOS.releaseISO.(*centOS).ChecksumType)
-		}
-		// TODO, the actual release number may change, split on . and compare parts, stripping the port up to - in the second element
-		if testDistroDefaultCentOS.releaseISO.(*centOS).Name != "CentOS-6.6-x86_64-minimal.iso" {
-			t.Errorf("Expected \"CentOS-6.6-x86_64-minimal.iso\", got %q", testDistroDefaultCentOS.releaseISO.(*centOS).Name)
-		}
 	}
 }
 

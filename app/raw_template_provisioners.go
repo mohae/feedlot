@@ -67,8 +67,7 @@ func ProvisionerFromString(s string) Provisioner {
 // createProvisioner creates the provisioners for a build.
 func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 	if r.ProvisionerTypes == nil || len(r.ProvisionerTypes) <= 0 {
-		err = fmt.Errorf("unable to create provisioners: none specified")
-		return nil, err
+		return nil, nil
 	}
 	var tmpS map[string]interface{}
 	var ndx int

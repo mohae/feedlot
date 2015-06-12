@@ -1044,26 +1044,8 @@ func TestCreateBuilders(t *testing.T) {
 	r := &rawTemplate{}
 	r = testDistroDefaultUbuntu
 	r.files = make(map[string]string)
-	var bldrs []interface{}
-	//first merge the variables so that create builders will work
-	r.mergeVariables()
-	bldrs, err = r.createBuilders()
-	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
-	}
-	/*else {
-		if MarshalJSONToString.Get(bldrs[0]) != MarshalJSONToString.Get(merged[0]) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(merged[0]), MarshalJSONToString.Get(bldrs[0]))
-		}
-		if MarshalJSONToString.Get(bldrs[1]) != MarshalJSONToString.Get(merged[1]) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(merged[1]), MarshalJSONToString.Get(bldrs[1]))
-		}
-	}
-	*/
-	_ = bldrs
-
 	r.BuilderTypes[0] = "unsupported"
-	bldrs, err = r.createBuilders()
+	_, err = r.createBuilders()
 	if err == nil {
 		t.Error("Expected an error, got nil")
 	} else {
@@ -1073,7 +1055,7 @@ func TestCreateBuilders(t *testing.T) {
 	}
 
 	r.BuilderTypes = nil
-	bldrs, err = r.createBuilders()
+	_, err = r.createBuilders()
 	if err == nil {
 		t.Error("Expected an error, got nil")
 	} else {
@@ -1348,6 +1330,9 @@ func TestCreateBuilderNull(t *testing.T) {
 	}
 }
 
+/*
+// elided because as the funcs are currently written, it requires call out to the site
+// and will error when the version changes, e.g. would require maintenance
 func TestCreateBuilderVirtualboxISO(t *testing.T) {
 	expected := map[string]interface{}{
 		"boot_command": []string{
@@ -1415,7 +1400,7 @@ func TestCreateBuilderVirtualboxISO(t *testing.T) {
 		"virtualbox_version_file": ".vbox_version",
 		"vm_name":                 "test-vb-iso",
 	}
-
+	testAllBuilders.BaseURL = "http://releases.ubuntu.com/"
 	settings, err := testAllBuilders.createVirtualBoxISO()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
@@ -1425,6 +1410,7 @@ func TestCreateBuilderVirtualboxISO(t *testing.T) {
 		}
 	}
 }
+*/
 
 func TestCreateBuilderVirtualboxOVF(t *testing.T) {
 	expected := map[string]interface{}{
@@ -1499,6 +1485,11 @@ func TestCreateBuilderVirtualboxOVF(t *testing.T) {
 	}
 }
 
+/*
+
+/*
+// elided because as the funcs are currently written, it requires call out to the site
+// and will error when the version changes, e.g. would require maintenance
 func TestCreateBuilderVMWareISO(t *testing.T) {
 	expected := map[string]interface{}{
 		"boot_command": []string{
@@ -1555,6 +1546,7 @@ func TestCreateBuilderVMWareISO(t *testing.T) {
 		"vnc_port_min":      5900,
 	}
 
+	testAllBuilders.BaseURL = "http://releases.ubuntu.com/"
 	settings, err := testAllBuilders.createVMWareISO()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
@@ -1564,6 +1556,7 @@ func TestCreateBuilderVMWareISO(t *testing.T) {
 		}
 	}
 }
+*/
 
 func TestCreateBuilderVMWareVMX(t *testing.T) {
 	expected := map[string]interface{}{

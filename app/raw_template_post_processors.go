@@ -118,7 +118,7 @@ func (r *rawTemplate) updatePostProcessors(newP map[string]postProcessor) error 
 // r.createPostProcessors creates the PostProcessors for a build.
 func (r *rawTemplate) createPostProcessors() (p []interface{}, err error) {
 	if r.PostProcessorTypes == nil || len(r.PostProcessorTypes) <= 0 {
-		return nil, configNotFoundErr()
+		return nil, nil
 	}
 	var ndx int
 	p = make([]interface{}, len(r.PostProcessorTypes))

@@ -2,7 +2,6 @@
 package app
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -541,57 +540,6 @@ func TestRawTemplateUpdateProvisioners(t *testing.T) {
 	if MarshalJSONToString.GetIndented(testRawTemplateProvisioner.Provisioners) != MarshalJSONToString.GetIndented(prMerged) {
 		t.Errorf("Got %q, want %q", MarshalJSONToString.GetIndented(prMerged), MarshalJSONToString.GetIndented(testRawTemplateProvisioner.Provisioners))
 	}
-}
-
-func TestCreateProvisioners(t *testing.T) {
-	_, err := testRawTemplateBuilderOnly.createProvisioners()
-	if err == nil {
-		t.Error("Expected error \"unable to create provisioners: none specified\", got nil")
-	} else {
-		if err.Error() != "unable to create provisioners: none specified" {
-			t.Errorf("Expected \"unable to create provisioners: none specified\", got %q", err.Error())
-		}
-	}
-
-	_, err = testRawTemplateWOSection.createProvisioners()
-	if err == nil {
-		t.Errorf("Expected error \"%s provisioner error: configuration not found\", got nil", Ansible.String())
-	} else {
-		if err.Error() != fmt.Sprintf("%s provisioner error: configuration not found", Ansible.String()) {
-			t.Errorf("Expected error \"%s provisioner error: configuration not found\", got %q", Ansible.String(), err.Error())
-		}
-	}
-
-	testRawTemplateWOSection.build.ProvisionerTypes[0] = FileUploads.String()
-	_, err = testRawTemplateWOSection.createProvisioners()
-	if err == nil {
-		t.Errorf("Expected error \"%s provisioner error: configuration not found\", got nil", FileUploads.String())
-	} else {
-		if err.Error() != fmt.Sprintf("%s provisioner error: configuration not found", FileUploads.String()) {
-			t.Errorf("Expected error \"%s provisioner error: configuration not found\", got %q", FileUploads.String(), err.Error())
-		}
-	}
-
-	testRawTemplateWOSection.build.ProvisionerTypes[0] = Salt.String()
-	_, err = testRawTemplateWOSection.createProvisioners()
-	if err == nil {
-		t.Errorf("Expected error \"%s provisioner error: configuration not found\", got nil", Salt.String())
-	} else {
-		if err.Error() != fmt.Sprintf("%s provisioner error: configuration not found", Salt.String()) {
-			t.Errorf("Expected error \"%s provisioner error: configuration not found\", got %q", Salt.String(), err.Error())
-		}
-	}
-
-	testRawTemplateWOSection.build.ProvisionerTypes[0] = ShellScript.String()
-	_, err = testRawTemplateWOSection.createProvisioners()
-	if err == nil {
-		t.Errorf("Expected error \"%s provisioner error: configuration not found\", got nil", ShellScript.String())
-	} else {
-		if err.Error() != fmt.Sprintf("%s provisioner error: configuration not found", ShellScript.String()) {
-			t.Errorf("Expected error \"%s provisioner error: configuration not found\", got %q", ShellScript.String(), err.Error())
-		}
-	}
-
 }
 
 func TestProvisionersSettingsToMap(t *testing.T) {

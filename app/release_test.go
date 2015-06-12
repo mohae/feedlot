@@ -14,23 +14,15 @@ import (
 	"testing"
 )
 
-func newTestCentOS() centOS {
-	c := centOS{release{Release: "6", Image: "minimal", Arch: "x86_64"}}
+func newTestCentOS() centos {
+	c := centos{release{Release: "6", Image: "minimal", Arch: "x86_64"}, ""}
 	c.ChecksumType = "sha256"
 	return c
 }
 
-func TestCentOSisoRedirectURL(t *testing.T) {
-	c := newTestCentOS()
-	redirect := c.isoRedirectURL()
-	if redirect != "http://isoredirect.centos.org/centos/6/isos/x86_64/" {
-		t.Errorf("TestCentOSisoRedirectURL expected \"http://isoredirect.centos.org/centos/6/isos/x86_64/\", got %q", redirect)
-	}
-}
-
 func TestCentOSsetReleaseInfo(t *testing.T) {
 	c := newTestCentOS()
-	err := c.setReleaseInfo()
+	err := c.setVersionInfo()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
@@ -40,20 +32,8 @@ func TestCentOSsetReleaseInfo(t *testing.T) {
 	}
 }
 
-func TestCentOSsetReleaseNumber(t *testing.T) {
-	c := newTestCentOS()
-	err := c.setReleaseNumber()
-	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
-	} else {
-		if !strings.HasPrefix(c.ReleaseFull, "6.") {
-			t.Errorf("Expected %q to start with \"6.\"", c.ReleaseFull)
-		}
-	}
-}
-
 func TestCentOSGetOSType(t *testing.T) {
-	c := centOS{release{Arch: "x86_64"}}
+	c := centos{release{Arch: "x86_64"}, ""}
 	buildType := "vmware-iso"
 	res, err := c.getOSType(buildType)
 	if err != nil {
@@ -74,7 +54,7 @@ func TestCentOSGetOSType(t *testing.T) {
 		}
 	}
 
-	c = centOS{release{Arch: "x386"}}
+	c = centos{release{Arch: "x386"}, ""}
 	buildType = "vmware-iso"
 	res, err = c.getOSType(buildType)
 	if err != nil {
@@ -100,38 +80,28 @@ func TestCentOSGetOSType(t *testing.T) {
 	if err == nil {
 		t.Error("Expected error to not be nil, it was")
 	} else {
-		if err.Error() != " does not support the voodoo builder" {
-			t.Errorf("Expected \" does not support the voodoo builder\", got %q", err.Error())
+		if err.Error() != "centos getOSType error: voodoo is not supported by this distro" {
+			t.Errorf("Expected \"centos getOSType error: voodoo is not supported by this distro\", got %q", err.Error())
 		}
 	}
 }
 
 func TestCentOSSetISOChecksum(t *testing.T) {
 	c := newTestCentOS()
-	c.setReleaseInfo()
-	//	c.SetISOInfo()
+	c.setVersionInfo()
+	c.ChecksumType = ""
 	err := c.setISOChecksum()
 	if err == nil {
-		t.Error("Expected error to not be nil, it was")
+		t.Error("Expected \"centos 6 setISOChecksum error: checksum not set\", got nil")
 	} else {
-		if err.Error() != "Get sha256sum.txt: unsupported protocol scheme \"\"" {
-			t.Errorf("expected \"Get sha256sum.txt: unsupported protocol scheme \"\"\", got %q", err.Error())
-		}
-	}
-
-	c.Arch = ""
-	err = c.setISOChecksum()
-	if err == nil {
-		t.Error("Expected error to not be nil, it was")
-	} else {
-		if err.Error() != "Get sha256sum.txt: unsupported protocol scheme \"\"" {
-			t.Errorf("Expected \"Get sha256sum.txt: unsupported protocol scheme \"\"\", got %q", err.Error())
+		if err.Error() != "centos 6 setISOChecksum error: checksum not set" {
+			t.Errorf("expected \"centos 6 setISOChecksum error: checksum not set\", got %q", err.Error())
 		}
 	}
 
 	c = newTestCentOS()
 	c.Arch = "x86_64"
-	c.setReleaseInfo()
+	c.setVersionInfo()
 	c.setISOName()
 	c.SetISOInfo()
 	err = c.setISOChecksum()
@@ -144,15 +114,15 @@ func TestCentOSSetISOChecksum(t *testing.T) {
 	}
 }
 
-func TestCentOSChecksumURL(t *testing.T) {
+func TestCentOSSetChecksumURL(t *testing.T) {
 	c := newTestCentOS()
-	c.setReleaseInfo()
-	c.setISOURL()
+	c.setVersionInfo()
+	c.SetISOInfo()
 	checksumURL := c.checksumURL()
 	if !strings.HasPrefix(checksumURL, "http://") {
 		t.Errorf("Expected %q to start with \"http://\", it did not.", checksumURL)
 	}
-	expected := c.ReleaseFull + "/isos/" + c.Arch + "/sha256sum.txt"
+	expected := c.FullVersion + "/isos/" + c.Arch + "/sha256sum.txt"
 	if !strings.HasSuffix(checksumURL, expected) {
 		t.Errorf("Expected %q to end with %q, it did not.", checksumURL, expected)
 	}
@@ -160,93 +130,35 @@ func TestCentOSChecksumURL(t *testing.T) {
 
 func TestCentOSSetISOName(t *testing.T) {
 	c := newTestCentOS()
-	c.setReleaseInfo()
+	c.setVersionInfo()
 	c.setISOName()
-	expected := "CentOS-" + c.ReleaseFull + "-" + c.Arch + "-" + c.Image + ".iso"
+	expected := "CentOS-" + c.FullVersion + "-" + c.Arch + "-" + c.Image + ".iso"
 	if c.Name != expected {
 		t.Errorf("Expected %q, got %q", expected, c.Name)
 	}
 }
 
-/*
-func TestCentOSSetISOInfo(t *testing.T) {
-	tests := []struct {
-		arch             string
-		release          string
-		expectedURL      string
-		expectedChecksum string
-		expectedErr      string
-	}{
-		{"", "", "", "", "centos SetISOInfo error: empty arch"},
-		{"x86_64", "", "", "", "centos SetISOInfo error: empty release"},
-		{"x86_64", "6", "", "", ""},
-	}
-	c := newTestCentOS()
-	for i, test := range tests {
-		c.Arch = test.arch
-		c.Release = test.release
-		err := c.SetISOInfo()
-		if err != nil {
-			if test.expectedErr != err.Error() {
-				t.Errorf("TestCentOSSetISOInfo %d: expected %q, got %q", i, test.expectedErr, err.Error())
-				continue
-			}
-		}
-		if test.expectedURL != c.isoURL {
-			t.Errorf("TestCentOSSetISOInfo %d: expected iso url to be %q, got %q", i, test.expectedURL, c.isoURL)
-		}
-		if test.expectedChecksum != c.Checksum {
-			t.Errorf("TestCentOSSetISOInfo %d: expected checksum to be %q, got %q", i, test.expectedChecksum, c.Checksum)
-		}
-	}
-}
-*/
-
 func TestCentOSsetISOURL(t *testing.T) {
 	c := newTestCentOS()
-	c.ReleaseFull = "6.6"
-	c.BaseURL = "http://mirror.cogentco.com/pub/linux/centos/"
+	c.FullVersion = "6.6"
+	c.BaseURL = "http://bay.uchicago.edu/centos/6.6/isos/x86_64/ "
+	c.ReleaseURL = c.BaseURL
 	c.setISOName()
-	err := c.setISOURL()
-	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
-	} else {
-		if !strings.HasPrefix(c.isoURL, "http://") {
-			t.Errorf("Expected %q to have a prefix of \"http://\", it didn't", c.isoURL)
-		}
-		expected := c.BaseURL + c.ReleaseFull + "/isos/" + c.Arch + "/CentOS-" + c.ReleaseFull + "-" + c.Arch + "-" + c.Image + ".iso"
-		if c.isoURL != expected {
-			t.Errorf("Expected %q, got %q", expected, c.isoURL)
-		}
+	url := c.imageURL()
+	if !strings.HasPrefix(url, "http://") {
+		t.Errorf("Expected %q to have a prefix of \"http://\", it didn't", url)
+	}
+	expected := c.BaseURL + "CentOS-" + c.FullVersion + "-" + c.Arch + "-" + c.Image + ".iso"
+	if url != expected {
+		t.Errorf("Expected %q, got %q", expected, url)
 	}
 
 	c.BaseURL = "http://example.com/"
-	err = c.setISOURL()
-	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
-	} else {
-		expected := "http://example.com/" + c.ReleaseFull + "/isos/" + c.Arch + "/CentOS-" + c.ReleaseFull + "-" + c.Arch + "-" + c.Image + ".iso"
-		if c.isoURL != expected {
-			t.Errorf("Expected %q, got %q", expected, c.isoURL)
-		}
-	}
-}
-
-func TestCentOSrandomISOURL(t *testing.T) {
-	c := newTestCentOS()
-	c.setReleaseInfo()
-	c.setISOName()
-	randomURL, err := c.randomISOURL()
-	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
-	} else {
-		if !strings.HasPrefix(randomURL, "http://") {
-			t.Errorf("Expected URL to start with \"http://\", got %q", randomURL)
-		}
-		expected := c.ReleaseFull + "/isos/" + c.Arch + "/CentOS-" + c.ReleaseFull + "-" + c.Arch + "-" + c.Image + ".iso"
-		if !strings.HasSuffix(randomURL, expected) {
-			t.Errorf("Expected %q, got %q", expected, randomURL)
-		}
+	c.ReleaseURL = c.BaseURL
+	url = c.imageURL()
+	expected = "http://example.com/" + "CentOS-" + c.FullVersion + "-" + c.Arch + "-" + c.Image + ".iso"
+	if url != expected {
+		t.Errorf("Expected %q, got %q", expected, url)
 	}
 }
 
@@ -258,7 +170,7 @@ func TestCentOSFindISOChecksum(t *testing.T) {
 		expected    string
 		expectedErr string
 	}{
-		{"6", "x86", "", "", "SetReleaseInfo: setReleaseNumber http://mirrorlist.centos.org/?release=6&arch=x86&repo=os: Bad arch - not in list - x86_64 alpha s390x ia64 s390 i386 "},
+		{"6", "x86", "", "", "CentOS-6.6-x86-minimal.iso findISOChecksum error: page was empty"},
 		{"6", "x86_64",
 			`a63241b0f767afa1f9f7e59e6f0f00d6b8d19ed85936a7934222c03a92e61bf3  CentOS-6.6-x86_64-bin-DVD1.iso
 89dac78769b26f8facf98ce85020a605b7601fec1946b0597e22ced5498b3597  CentOS-6.6-x86_64-bin-DVD2.iso
@@ -270,29 +182,27 @@ ad8f6de098503174c7609d172679fa0dd276f4b669708933d9c4927bd3fe1017  CentOS-6.6-x86
 89dac78769b26f8facf98ce85020a605b7601fec1946b0597e22ced5498b3597  CentOS-6.6-x86_64-bin-DVD2.iso
 5458f357e8a55e3a866dd856896c7e0ac88e7f9220a3dd74c58a3b0acede8e4d  CentOS-6.6-x86_64-minimal.iso
 ad8f6de098503174c7609d172679fa0dd276f4b669708933d9c4927bd3fe1017  CentOS-6.6-x86_64-netinstall.iso`,
-			"", "SetReleaseInfo: setReleaseNumber http://mirrorlist.centos.org/?release=6&arch=x86&repo=os: Bad arch - not in list - x86_64 alpha s390x ia64 s390 i386 "},
+			"", "CentOS-6.6-x86-minimal.iso findISOChecksum error: checksum not found on page"},
 	}
 	for i, test := range tests {
 		c := newTestCentOS()
 		c.Arch = test.arch
 		c.Release = test.release
-		err := c.setReleaseInfo()
-		if err != nil {
-			if err.Error() != test.expectedErr {
-				t.Errorf("TestCentOSFindISOChecksum %d: sexpected %q, got %q", i, test.expectedErr, err.Error())
-			}
-			continue
-		}
+		c.FullVersion = "6.6"
+		c.MinorVersion = "6"
+		c.MajorVersion = "6"
+		c.BaseURL = "http://bay.uchicago.edu/centos/6.6/isos/x86_64/"
+		c.ReleaseURL = c.BaseURL
 		c.setISOName()
-		checksum, err := c.findISOChecksum(test.page)
+		err := c.findISOChecksum(test.page)
 		if err != nil {
 			if err.Error() != test.expectedErr {
 				t.Errorf("TestCentOSFindISOChecksum %d: expected %q, got %q", i, test.expectedErr, err.Error())
 			}
 			continue
 		}
-		if test.expected != checksum {
-			t.Errorf("TestCentOSFindISOChecksum %d: expected %q, got %q", i, test.expected, checksum)
+		if test.expected != c.Checksum {
+			t.Errorf("TestCentOSFindISOChecksum %d: expected %q, got %q", i, test.expected, c.Checksum)
 		}
 	}
 }
@@ -319,26 +229,26 @@ func TestDebianSetReleaseInfo(t *testing.T) {
 
 `
 	d := newTestDebian()
-	d.ReleaseFull = ""
+	d.FullVersion = ""
 	err := d.setReleaseInfo(page)
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	}
 	expected := "7.8.0"
-	if d.ReleaseFull != expected {
-		t.Errorf("Expected %q, got %q", expected, d.ReleaseFull)
+	if d.FullVersion != expected {
+		t.Errorf("Expected %q, got %q", expected, d.FullVersion)
 	}
 }
 
 func newTestDebian() debian {
-	d := debian{release{Release: "7", ReleaseFull: "7.8.0", Image: "netinst", Arch: "amd64"}}
+	d := debian{release{Release: "7", FullVersion: "7.8.0", Image: "netinst", Arch: "amd64"}}
 	d.ChecksumType = "sha256"
 	return d
 }
 
 func TestDebianFindISOChecksum(t *testing.T) {
 	d := newTestDebian()
-	s, err := d.findISOChecksum("")
+	err := d.findISOChecksum("")
 	if err == nil {
 		t.Error("Expected an error, got nil")
 	} else {
@@ -357,7 +267,7 @@ fb1c1c30815da3e7189d44b6699cf9114b16e44ea139f0cd4df5f1dde3659272  debian-7.8.0-a
 `
 	d.Name = "debian-7.8.0-amd64-whatever.iso"
 	d.Image = "whatever"
-	s, err = d.findISOChecksum(checksumPage)
+	err = d.findISOChecksum(checksumPage)
 	if err == nil {
 		t.Error("Expected an error, got nil")
 	} else {
@@ -366,16 +276,16 @@ fb1c1c30815da3e7189d44b6699cf9114b16e44ea139f0cd4df5f1dde3659272  debian-7.8.0-a
 		}
 	}
 
-	d.ReleaseFull = "7.8.0"
+	d.FullVersion = "7.8.0"
 	d.Name = "debian-7.8.0-amd64-netinst.iso"
 	d.Image = "netinst"
 	d.Arch = "amd64"
-	s, err = d.findISOChecksum(checksumPage)
+	err = d.findISOChecksum(checksumPage)
 	if err != nil {
 		t.Errorf("Expected no error, got %q", err.Error())
 	} else {
-		if s != "e39c36d6adc0fd86c6edb0e03e22919086c883b37ca194d063b8e3e8f6ff6a3a" {
-			t.Errorf("Expected \"e39c36d6adc0fd86c6edb0e03e22919086c883b37ca194d063b8e3e8f6ff6a3a\", got %q", s)
+		if d.Checksum != "e39c36d6adc0fd86c6edb0e03e22919086c883b37ca194d063b8e3e8f6ff6a3a" {
+			t.Errorf("Expected \"e39c36d6adc0fd86c6edb0e03e22919086c883b37ca194d063b8e3e8f6ff6a3a\", got %q", d.Checksum)
 		}
 	}
 }
@@ -387,11 +297,11 @@ func TestDebianSetISO(t *testing.T) {
 	if d.Name != expected {
 		t.Errorf("Expected %q, got %q", expected, d.Name)
 	}
-
-	d.setISOURL()
+	d.ReleaseURL = "http://cdimage.debian.org/debian-cd/7.8.0/amd64/iso-cd/"
+	url := d.imageURL()
 	expected = "http://cdimage.debian.org/debian-cd/7.8.0/amd64/iso-cd/" + d.Name
-	if d.isoURL != expected {
-		t.Errorf("Expected %q, got %q", expected, d.isoURL)
+	if url != expected {
+		t.Errorf("Expected %q, got %q", expected, url)
 	}
 
 }
@@ -444,8 +354,8 @@ func TestDebianGetOSType(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, received nil")
 	} else {
-		if err.Error() != " does not support the voodoo builder" {
-			t.Errorf("Expected \" does not support the voodoo builder\", got %q", err.Error())
+		if err.Error() != "debian getOSType error: voodoo is not supported by this distro" {
+			t.Errorf("Expected \"debian getOSType error: voodoo is not supported by this distro\", got %q", err.Error())
 		}
 	}
 }
@@ -459,7 +369,7 @@ func newTestUbuntu() ubuntu {
 
 func TestUbuntuFindISOChecksum(t *testing.T) {
 	u := newTestUbuntu()
-	s, err := u.findISOChecksum("")
+	err := u.findISOChecksum("")
 	if err == nil {
 		t.Error("Expected an error, got nil")
 	} else {
@@ -473,26 +383,27 @@ func TestUbuntuFindISOChecksum(t *testing.T) {
 ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388 *ubuntu-14.04-server-amd64.iso
 85c738fefe7c9ff683f927c23f5aa82864866c2391aeb376abfec2dfc08ea873 *ubuntu-14.04-server-i386.iso
 bc3b20ad00f19d0169206af0df5a4186c61ed08812262c55dbca3b7b1f1c4a0b *wubi.exe`
-	u.Name = "ubuntu-14.03-whatever.iso"
+	u.Name = "ubuntu-14.04-whatever.iso"
 	u.Image = "whatever"
-	s, err = u.findISOChecksum(checksumPage)
+	err = u.findISOChecksum(checksumPage)
 	if err == nil {
 		t.Error("Expected an error, got nil")
 	} else {
-		if err.Error() != "ubuntu-14.04-whatever-amd64.iso findISOChecksum error: checksum not found on page" {
-			t.Errorf("TestUbuntuFindISOChecksum: expected \"ubuntu-14.04-whatever-amd64.iso findISOChecksum error: checksum not found on page\", got %q", err.Error())
+		if err.Error() != "ubuntu-14.04-whatever.iso findISOChecksum error: checksum not found on page" {
+			t.Errorf("TestUbuntuFindISOChecksum: expected \"ubuntu-14.04-whatever.iso findISOChecksum error: checksum not found on page\", got %q", err.Error())
 		}
 	}
 
 	u.Release = "14.04"
 	u.Image = "server"
 	u.Arch = "amd64"
-	s, err = u.findISOChecksum(checksumPage)
+	u.Name = "ubuntu-14.04-server-amd64.iso"
+	err = u.findISOChecksum(checksumPage)
 	if err != nil {
 		t.Errorf("Expected no error, got %q", err.Error())
 	} else {
-		if s != "ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388" {
-			t.Errorf("Expected \"ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388\", got %q", s)
+		if u.Checksum != "ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388" {
+			t.Errorf("Expected \"ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388\", got %q", u.Checksum)
 		}
 	}
 
@@ -507,12 +418,13 @@ fbe7f159337551cc5ce9f0ff72acefef567f3dcd30750425287588c554978501 *ubuntu-12.04.4
 819f42fdd7cc431b6fd7fa5bae022b0a8c55a0f430eb3681e4750c4f1eceaf91 *wubi.exe`
 
 	u.Release = "12.04"
-	s, err = u.findISOChecksum(checksumPage)
+	u.Name = "ubuntu-12.04.4-server-amd64.iso"
+	err = u.findISOChecksum(checksumPage)
 	if err != nil {
 		t.Errorf("Expected no error, got %q", err.Error())
 	} else {
-		if s != "3aeb42816253355394897ae80d99a9ba56217c0e98e05294b51f0f5b13bceb54" {
-			t.Errorf("Expected \"3aeb42816253355394897ae80d99a9ba56217c0e98e05294b51f0f5b13bceb54\", got %q", s)
+		if u.Checksum != "3aeb42816253355394897ae80d99a9ba56217c0e98e05294b51f0f5b13bceb54" {
+			t.Errorf("Expected \"3aeb42816253355394897ae80d99a9ba56217c0e98e05294b51f0f5b13bceb54\", got %q", u.Checksum)
 		}
 	}
 }
@@ -565,8 +477,8 @@ func TestUbuntuGetOSType(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, received nil")
 	} else {
-		if err.Error() != " does not support the voodoo builder" {
-			t.Errorf("Expected \" does not support the voodoo builder\", got %q", err.Error())
+		if err.Error() != "ubuntu getOSType error: voodoo is not supported by this distro" {
+			t.Errorf("Expected \"ubuntu getOSType error: voodoo is not supported by this distro\", got %q", err.Error())
 		}
 	}
 }
@@ -576,12 +488,12 @@ func TestNoArchError(t *testing.T) {
 		name     string
 		expected string
 	}{
-		{"", " SetISOInfo error: empty arch"},
-		{"CentOS", "CentOS SetISOInfo error: empty arch"},
-		{"CentOS", "CentOS SetISOInfo error: empty arch"},
+		{"", " SetISOInfo error: arch was not set"},
+		{"CentOS", "CentOS SetISOInfo error: arch was not set"},
+		{"CentOS", "CentOS SetISOInfo error: arch was not set"},
 	}
 	for i, test := range tests {
-		err := NoArchError(test.name)
+		err := noArchErr(test.name)
 		if err.Error() != test.expected {
 			t.Errorf("TestNoArchError %d: expected %q, got %q", i, test.expected, err.Error())
 		}
@@ -593,12 +505,12 @@ func TestNoReleaseError(t *testing.T) {
 		name     string
 		expected string
 	}{
-		{"", " SetISOInfo error: empty release"},
-		{"CentOS", "CentOS SetISOInfo error: empty release"},
-		{"CentOS", "CentOS SetISOInfo error: empty release"},
+		{"", " SetISOInfo error: release was not set"},
+		{"CentOS", "CentOS SetISOInfo error: release was not set"},
+		{"CentOS", "CentOS SetISOInfo error: release was not set"},
 	}
 	for i, test := range tests {
-		err := NoReleaseError(test.name)
+		err := noReleaseErr(test.name)
 		if err.Error() != test.expected {
 			t.Errorf("TestNoReleaseError %d: expected %q, got %q", i, test.expected, err.Error())
 		}
@@ -619,7 +531,7 @@ func TestEmptyPageError(t *testing.T) {
 		{"CentOS-6.5-whatever.iso", "test", "CentOS-6.5-whatever.iso test error: page was empty"},
 	}
 	for i, test := range tests {
-		err := EmptyPageError(test.name, test.operation)
+		err := emptyPageErr(test.name, test.operation)
 		if err.Error() != test.expected {
 			t.Errorf("TestEmptyPageError %d: expected %q, got %q", i, test.expected, err.Error())
 		}
@@ -640,7 +552,7 @@ func TestChecksumNotFoundError(t *testing.T) {
 		{"CentOS-6.5-whatever.iso", "checksum parse", "CentOS-6.5-whatever.iso checksum parse error: checksum not found on page"},
 	}
 	for i, test := range tests {
-		err := ChecksumNotFoundError(test.name, test.operation)
+		err := checksumNotFoundErr(test.name, test.operation)
 		if err.Error() != test.expected {
 			t.Errorf("TestChecksumNotFoundError %d: expected %q, got %q", i, test.expected, err.Error())
 		}

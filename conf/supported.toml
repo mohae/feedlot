@@ -15,8 +15,7 @@
 			"x86_64"
 		]
 		image = [
-			"minimal",
-			"netinstall"
+			"minimal"
 		]
 		release = [
 			"5",
@@ -36,9 +35,7 @@
 			"amd64"
 		]
 		image = [
-			"lxde-CD-1",
-			"netinst",
-			"xfce-CD-1"
+			"netinst"
 		]
 		release = [
 			"8"

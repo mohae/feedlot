@@ -276,7 +276,7 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 	}
 	switch r.Distro {
 	case CentOS.String():
-		r.releaseISO = &centOS{
+		r.releaseISO = &centos{
 			release: release{
 				iso: iso{
 					BaseURL:      r.BaseURL,
@@ -288,8 +288,17 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 				Release: r.Release,
 			},
 		}
-		r.releaseISO.SetISOInfo()
-		r.osType, err = r.releaseISO.(*centOS).getOSType(builderType.String())
+		err = r.releaseISO.setVersionInfo()
+		if err != nil {
+			jww.ERROR.Println(err)
+			return err
+		}
+		err = r.releaseISO.SetISOInfo()
+		if err != nil {
+			jww.ERROR.Println(err)
+			return err
+		}
+		r.osType, err = r.releaseISO.(*centos).getOSType(builderType.String())
 		if err != nil {
 			jww.ERROR.Println(err)
 			return err
@@ -307,7 +316,16 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 				Release: r.Release,
 			},
 		}
-		r.releaseISO.SetISOInfo()
+		err = r.releaseISO.setVersionInfo()
+		if err != nil {
+			jww.ERROR.Println(err)
+			return err
+		}
+		err = r.releaseISO.SetISOInfo()
+		if err != nil {
+			jww.ERROR.Println(err)
+			return err
+		}
 		r.osType, err = r.releaseISO.(*debian).getOSType(builderType.String())
 		if err != nil {
 			jww.ERROR.Println(err)
@@ -326,7 +344,16 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 				Release: r.Release,
 			},
 		}
-		r.releaseISO.SetISOInfo()
+		err = r.releaseISO.setVersionInfo()
+		if err != nil {
+			jww.ERROR.Println(err)
+			return err
+		}
+		err = r.releaseISO.SetISOInfo()
+		if err != nil {
+			jww.ERROR.Println(err)
+			return err
+		}
 		r.osType, err = r.releaseISO.(*ubuntu).getOSType(builderType.String())
 		if err != nil {
 			jww.ERROR.Println(err)

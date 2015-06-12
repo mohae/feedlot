@@ -875,7 +875,6 @@ noISOURL:
 
 		}
 	}
-
 	if r.osType == "" { // if the os type hasn't been set, the ISO info hasn't been retrieved
 		err = r.ISOInfo(VirtualBoxISO, workSlice)
 		if err != nil {
@@ -887,21 +886,21 @@ noISOURL:
 		tmpGuestOSType = r.osType
 	}
 	settings["guest_os_type"] = tmpGuestOSType
-
 	// If the iso info wasn't set from the Settings, get it from the distro's release
 	if tmpISOUrl == "" {
 		//handle iso lookup vs set in file
 		switch r.Distro {
 		case CentOS.String():
-			settings["iso_url"] = r.releaseISO.(*centOS).isoURL
-			settings["iso_checksum"] = r.releaseISO.(*centOS).Checksum
-			settings["iso_checksum_type"] = r.releaseISO.(*centOS).ChecksumType
+			settings["iso_url"] = r.releaseISO.(*centos).imageURL()
+			settings["iso_checksum"] = r.releaseISO.(*centos).Checksum
+			settings["iso_checksum_type"] = r.releaseISO.(*centos).ChecksumType
 		case Debian.String():
-			settings["iso_url"] = r.releaseISO.(*debian).isoURL
+			settings["iso_url"] = r.releaseISO.(*debian).imageURL()
 			settings["iso_checksum"] = r.releaseISO.(*debian).Checksum
 			settings["iso_checksum_type"] = r.releaseISO.(*debian).ChecksumType
+
 		case Ubuntu.String():
-			settings["iso_url"] = r.releaseISO.(*ubuntu).isoURL
+			settings["iso_url"] = r.releaseISO.(*ubuntu).imageURL()
 			settings["iso_checksum"] = r.releaseISO.(*ubuntu).Checksum
 			settings["iso_checksum_type"] = r.releaseISO.(*ubuntu).ChecksumType
 		default:
@@ -1294,14 +1293,15 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, err er
 		//handle iso lookup vs set in file
 		switch r.Distro {
 		case CentOS.String():
-			settings["iso_url"] = r.releaseISO.(*centOS).isoURL
-			settings["iso_checksum"] = r.releaseISO.(*centOS).Checksum
-			settings["iso_checksum_type"] = r.releaseISO.(*centOS).ChecksumType
+			settings["iso_url"] = r.releaseISO.(*centos).imageURL()
+			settings["iso_checksum"] = r.releaseISO.(*centos).Checksum
+			settings["iso_checksum_type"] = r.releaseISO.(*centos).ChecksumType
 		case Debian.String():
-			err = fmt.Errorf("automatic resolution of iso information for %q is not supported, the \"iso_url\" and \"iso_checksum\" settings must exist", r.Distro)
-			return nil, err
+			settings["iso_url"] = r.releaseISO.(*debian).imageURL()
+			settings["iso_checksum"] = r.releaseISO.(*debian).Checksum
+			settings["iso_checksum_type"] = r.releaseISO.(*debian).ChecksumType
 		case Ubuntu.String():
-			settings["iso_url"] = r.releaseISO.(*ubuntu).isoURL
+			settings["iso_url"] = r.releaseISO.(*ubuntu).imageURL()
 			settings["iso_checksum"] = r.releaseISO.(*ubuntu).Checksum
 			settings["iso_checksum_type"] = r.releaseISO.(*ubuntu).ChecksumType
 		default:

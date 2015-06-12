@@ -27,144 +27,197 @@ func (r ReleaseError) Error() string {
 	return fmt.Sprintf("%s %s error: %s", r.Name, r.Operation, r.Problem)
 }
 
-// Distro Iso information
+// Iso image information
 type iso struct {
-	// The BaseURL for download url formation. Usage of this is distro
+	// The baseURL for download url formation. Usage of this is distro
 	// specific.
 	BaseURL string
+	// The url for the checksum page
+	ReleaseURL string
 	// The actual checksum for the ISO file that this struct represents.
 	Checksum string
 	// The type of the Checksum.
 	ChecksumType string
 	// Name of the ISO.
 	Name string
-	// The URL of the ISO
-	isoURL string
+}
+
+func (i iso) imageURL() string {
+	return fmt.Sprintf("%s%s", i.ReleaseURL, i.Name)
 }
 
 type releaser interface {
 	SetISOInfo() error
 	setISOChecksum() error
-	setISOURL() error
+	setReleaseURL()
+	setVersionInfo() error
 }
 
 // Release information. Usage of Release and ReleaseFull, along with what
 // constitutes valid values, are distro dependent.
 type release struct {
 	iso
-	Arch        string
-	Distro      string
-	Image       string
-	Release     string
-	ReleaseFull string
+	Arch         string // iso architecture
+	Distro       string // iso distro
+	Image        string // iso image
+	Release      string // release is the string used for the build
+	MajorVersion string // iso major version
+	MinorVersion string // iso minor version
+	FixVersion   string // iso fix version, if applicable
+	FullVersion  string // the full version number. See CentOS for example
 }
 
-// centOS wrapper to release.
-type centOS struct {
+// centos wrapper to release.
+type centos struct {
 	release
+	isoredirectURL string
 }
 
 // isoRedirectURL returns the currect url for the desired version and architecture.
-func (c *centOS) isoRedirectURL() string {
+func (r *centos) setISORedirectURL() {
 	var buff bytes.Buffer
 	buff.WriteString("http://isoredirect.centos.org/centos/")
-	buff.WriteString(c.Release)
+	buff.WriteString(r.Release)
 	buff.WriteString("/isos/")
-	buff.WriteString(c.Arch)
+	buff.WriteString(r.Arch)
 	buff.WriteString("/")
-	return buff.String()
+	r.isoredirectURL = buff.String()
+}
+
+// setVersionInfo makes sure that the version info is properly set. Pre=CentOS
+// 7, the version is in the form of a point release number. With CentOS 7,
+// a monthstamp was added. This func determines the current minor version and
+// full version for the release.
+//
+// The point version may not exist. It is only populated if it is found in the
+// iso name string.
+func (r *centos) setVersionInfo() error {
+	if r.Release == "" {
+		return noReleaseErr(Debian.String())
+	}
+	r.setISORedirectURL()
+	tokens, err := tokensFromURL(r.isoredirectURL)
+	if err != nil {
+		return setVersionInfoErr(r.isoredirectURL, fmt.Errorf("could not tokenize release page: %s", err.Error()))
+	}
+	links := inlineElementsFromTokens("a", "href", tokens)
+	if len(links) == 0 || links == nil {
+		return setVersionInfoErr(r.isoredirectURL, fmt.Errorf("could not extract links from release page"))
+	}
+	// filter out non-http mirror links
+	links = filterLinksHasPrefix(links, []string{"http://www.", "ftp:", "http://wiki", "http://bugs", "http://bittorrent", "/"})
+	if len(links) == 0 {
+		return setVersionInfoErr(r.isoredirectURL, fmt.Errorf("filter of links from release page failed"))
+	}
+	r.BaseURL = strings.TrimSpace(links[rand.Intn(len(links)-1)])
+	if strings.HasPrefix(r.Release, "6") {
+		err = r.setVersion6Info()
+		return err
+	}
+	return unsupportedReleaseErr(r.Release)
+}
+
+func (r *centos) setVersion6Info() error {
+	parts := strings.Split(r.BaseURL, "/")
+	if len(parts) < 7 {
+		return ReleaseError{Name: CentOS.String(), Operation: "setVersion6Info", Problem: fmt.Sprintf("could not determine the current release of version %s", r.Release)}
+	}
+	// go through each part until we get to the version
+	for _, part := range parts {
+		if strings.HasPrefix(part, r.Release) {
+			r.FullVersion = part
+			break
+		}
+	}
+	if r.FullVersion == "" {
+		return ReleaseError{Name: CentOS.String(), Operation: "setVersion6Info", Problem: fmt.Sprintf("could not find the current point release for %s", r.Release)}
+	}
+	nums := strings.Split(r.FullVersion, ".")
+	r.MajorVersion = nums[0]
+	if len(nums) > 1 {
+		r.MinorVersion = nums[1]
+	}
+	return nil
 }
 
 // Sets the ISO information for a Packer template.
-func (c *centOS) SetISOInfo() error {
-	if c.Arch == "" {
-		return NoArchError(CentOS.String())
+func (r *centos) SetISOInfo() error {
+	if r.Arch == "" {
+		return noArchErr(CentOS.String())
 	}
-	if c.Release == "" {
-		return NoReleaseError(CentOS.String())
-	}
-	// Make sure that the version and release are set, Release and FullRelease
-	// respectively. Make sure they are both set properly.
-	err := c.setReleaseInfo()
-	if err != nil {
-		return err
-	}
-	c.setISOName()
-	err = c.setISOURL()
-	if err != nil {
-		return err
-	}
-	// Set the Checksum information for the ISO image.
-	err = c.setISOChecksum()
-	return err
+	r.setISOName()
+	r.setReleaseURL()
+	return r.setISOChecksum()
 }
 
-// setReleaseInfo makes sure that both c.Release and c.ReleaseFull are properly
-// set. The release number set in the file may be either the release or the
-// version.
-// For CentOS, the Release is an int, e.g. 6 or 7 while the ReleaseFull is
-// the current release version, e.g. 6,6. When only the Release number is
-// specified, Rancher will determine what the current version of the release
-// is and use that as the ReleaseFull.
-func (c *centOS) setReleaseInfo() error {
-	version := strings.Split(c.Release, ".")
-	// If this was a release string, it will have two parts.
-	if len(version) > 1 {
-		c.ReleaseFull = c.Release // Set release full with the release number
-		c.Release = version[0]
-		return nil
-	}
-	// Otherwise, figure out what the current release is. The mirrorlist
-	// will give us that information.
-	err := c.setReleaseNumber()
-	if err != nil {
-		return fmt.Errorf("SetReleaseInfo: %s", err.Error())
-	}
-	return nil
-}
-
-// releaseNumber checks the mirrorlist for the current version and arch. It
-// extracts the release number, using it to set ReleaseFull.
-func (c *centOS) setReleaseNumber() error {
-	var page string
-	var err error
+// setISOName() sets the name of the iso for the release specified.
+func (r *centos) setISOName() {
 	var buff bytes.Buffer
-	buff.WriteString("http://mirrorlist.centos.org/?release=")
-	buff.WriteString(c.Release)
-	buff.WriteString("&arch=")
-	buff.WriteString(c.Arch)
-	buff.WriteString("&repo=os")
-	mirrorURL := buff.String()
-	page, err = getStringFromURL(mirrorURL)
+	buff.WriteString("CentOS-")
+	buff.WriteString(r.FullVersion)
+	buff.WriteString("-")
+	buff.WriteString(r.Arch)
+	buff.WriteString("-")
+	buff.WriteString(r.Image)
+	buff.WriteString(".iso")
+	r.Name = buff.String()
+}
+
+// setISOChecksum finds the URL for the checksum page for the current mirror,
+// retrieves the page, and finds the checksum for the release ISO.
+func (r *centos) setISOChecksum() error {
+	if r.ChecksumType == "" {
+		return checksumNotSetErr(fmt.Sprintf("%s %s", CentOS.String(), r.Release))
+	}
+	url := r.checksumURL()
+	page, err := bodyStringFromURL(url)
 	if err != nil {
 		return err
 	}
-	// Could just parse the string, but breaking it up is simpler.
-	lines := strings.Split(page, "\n")
-	// Each line is an URL, split the first one to make it easier to get the version.
-	urlParts := strings.Split(lines[0], "/")
-	// if there aren't sufficient parts, generate an error from the first message
-	if len(urlParts) < 4 {
-		return fmt.Errorf("setReleaseNumber %s: %s", mirrorURL, urlParts[0])
+	// Now that we have a page...we need to find the checksum and set it
+	err = r.findISOChecksum(page)
+	if err != nil {
+		return err
 	}
-	// The release is 3rd from last.
-	c.ReleaseFull = urlParts[len(urlParts)-4]
 	return nil
+}
+
+func (r *centos) findISOChecksum(page string) error {
+	if page == "" {
+		return emptyPageErr(r.Name, "findISOChecksum")
+	}
+	pos := strings.Index(page, r.Name)
+	if pos < 0 {
+		return checksumNotFoundErr(r.Name, "findISOChecksum")
+	}
+	tmpRel := page[:pos]
+	tmpSl := strings.Split(tmpRel, "\n")
+	// The checksum we want is the last element in the array
+	r.Checksum = strings.TrimSpace(tmpSl[len(tmpSl)-1])
+	return nil
+}
+
+func (r *centos) checksumURL() string {
+	return fmt.Sprintf("%s%ssum.txt", r.BaseURL, strings.ToLower(r.ChecksumType))
+}
+
+func (r *centos) setReleaseURL() {
+	r.ReleaseURL = r.BaseURL
 }
 
 // getOSType returns the OSType string for the provided builder. The OS Type
 // varies by distro, arch, and builder.
-func (c *centOS) getOSType(buildType string) (string, error) {
+func (r *centos) getOSType(buildType string) (string, error) {
 	switch buildType {
 	case "vmware-iso", "vmware-vmx":
-		switch c.Arch {
+		switch r.Arch {
 		case "x86_64":
 			return "centos-64", nil
 		case "x386":
 			return "centos-32", nil
 		}
 	case "virtualbox-iso", "virtualbox-ovf":
-		switch c.Arch {
+		switch r.Arch {
 		case "x86_64":
 			return "RedHat_64", nil
 		case "x386":
@@ -172,140 +225,7 @@ func (c *centOS) getOSType(buildType string) (string, error) {
 		}
 	}
 	// Shouldn't get here unless the buildType passed is an unsupported one.
-	return "", fmt.Errorf("%s does not support the %s builder", c.Distro, buildType)
-}
-
-// setISOChecksum finds the URL for the checksum page for the current mirror,
-// retrieves the page, and finds the checksum for the release ISO.
-func (c *centOS) setISOChecksum() error {
-	if c.ChecksumType == "" {
-		return fmt.Errorf("checksum type not set")
-	}
-	url := c.checksumURL()
-	page, err := getStringFromURL(url)
-	if err != nil {
-		return err
-	}
-	// Now that we have a page...we need to find the checksum and set it
-	c.Checksum, err = c.findISOChecksum(page)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// checksumURL returns the url of the checksum page for the ISO.
-func (c *centOS) checksumURL() string {
-	// The base url is the same as the ISO's so strip the name and add the checksum page.
-	var buff bytes.Buffer
-	buff.WriteString(trimSuffix(c.isoURL, c.Name))
-	buff.WriteString(strings.ToLower(c.ChecksumType))
-	buff.WriteString("sum.txt")
-	return buff.String()
-}
-
-// setISOURL sets the url of the ISO. If the BaseURL is set, that is used. If
-// it isn't set, a isoredirect url for the ISO will be randomly selected and
-// used.
-func (c *centOS) setISOURL() error {
-	if c.BaseURL != "" {
-		var buff bytes.Buffer
-		buff.WriteString(c.BaseURL)
-		if !strings.HasSuffix(c.BaseURL, "/") {
-			buff.WriteString("/")
-		}
-		buff.WriteString(c.ReleaseFull)
-		buff.WriteString("/isos/")
-		buff.WriteString(c.Arch)
-		buff.WriteString("/")
-		buff.WriteString(c.Name)
-		c.isoURL = buff.String()
-		return nil
-	}
-	var err error
-	c.isoURL, err = c.randomISOURL()
-	if err != nil {
-		return ReleaseError{Name: c.Name, Operation: "setISOURL", Problem: err.Error()}
-	}
-	return nil
-}
-
-// randomISOURL gets a random url for the current ISO.
-func (c *centOS) randomISOURL() (string, error) {
-	redirectURL := c.isoRedirectURL()
-	page, err := getStringFromURL(redirectURL)
-	if err != nil {
-		return "", err
-	}
-	doc, err := html.Parse(strings.NewReader(page))
-	if err != nil {
-		return "", err
-	}
-	var f func(*html.Node)
-	var isoURLs []string
-	f = func(n *html.Node) {
-		if n.Type == html.ElementNode && n.Data == "a" {
-			for _, a := range n.Attr {
-				if a.Key == "href" {
-					// Only add iso urls that aren't ftp, since we aren't supporting
-					// checksum retrieval via ftp
-					if strings.Contains(a.Val, c.Arch) && !strings.Contains(a.Val, "ftp://") {
-						isoURLs = append(isoURLs, a.Val)
-					}
-					break
-				}
-			}
-		}
-		for c := n.FirstChild; c != nil; c = c.NextSibling {
-			f(c)
-		}
-		return
-	}
-	f(doc)
-	if len(isoURLs) < 1 {
-		return "", fmt.Errorf("no valid iso URLs were found")
-	}
-	// Randomly choose from the slice.
-	url := trimSuffix(isoURLs[rand.Intn(len(isoURLs)-1)], "\n") + c.Name
-	return url, nil
-}
-
-// findISOChecksum finds the checksum in the passed page string for the current
-// ISO image. This is for releases.ubuntu.com checksums which are in a plain
-// text file with each line representing an iso image and checksum pair, each
-// line is in the format of:
-//     checksumText image.isoname
-//
-// Notes:
-//   * \n separate lines
-//   * since this is plain text processing we don't worry about runes
-func (c *centOS) findISOChecksum(page string) (string, error) {
-	if page == "" {
-		return "", EmptyPageError(c.Name, "findISOChecksum")
-	}
-	pos := strings.Index(page, c.Name)
-	if pos < 0 {
-		return "", ChecksumNotFoundError(c.Name, "findISOChecksum")
-	}
-	tmpRel := page[:pos]
-	tmpSl := strings.Split(tmpRel, "\n")
-	// The checksum we want is the last element in the array
-	checksum := strings.TrimSpace(tmpSl[len(tmpSl)-1])
-	return checksum, nil
-}
-
-// Set the name of the ISO.
-func (c *centOS) setISOName() {
-	var buff bytes.Buffer
-	buff.WriteString("CentOS-")
-	buff.WriteString(c.ReleaseFull)
-	buff.WriteString("-")
-	buff.WriteString(c.Arch)
-	buff.WriteString("-")
-	buff.WriteString(c.Image)
-	buff.WriteString(".iso")
-	c.Name = buff.String()
-	return
+	return "", osTypeBuilderErr(CentOS.String(), buildType)
 }
 
 // An Debian specific wrapper to release
@@ -313,58 +233,93 @@ type debian struct {
 	release
 }
 
-// Sets the ISO information for a Packer template.
-func (d *debian) SetISOInfo() error {
-	if d.Arch == "" {
-		return NoArchError(Debian.String())
+// setVersionInfo set the release information for debian. In Rancher, debian
+// releases are specified as just the major version, so r.Release will have the
+// same value as r.MajorVersion. Images use major.minor.fix numbering system.
+func (r *debian) setVersionInfo() error {
+	if r.Release == "" {
+		return noReleaseErr(Debian.String())
 	}
-	if d.Release == "" {
-		return NoReleaseError(Debian.String())
-	}
-	// Make sure that the version and release are set, Release and FullRelease
-	// respectively. Make sure they are both set properly.
-	//err := d.setReleaseInfo()
-	//if err != nil {
-	//	jww.ERROR.Println(err)
-	//	return err
-	//}
-	// set ReleaseFull. if needed
-	err := d.getReleaseVersion()
+	// to find the current release number, get the index of debian-cd
+	tokens, err := tokensFromURL(r.BaseURL)
 	if err != nil {
-		return ReleaseError{Name: d.Name, Operation: "SetISOInfo", Problem: err.Error()}
+		return setVersionInfoErr(r.BaseURL, err)
 	}
-	d.setISOName()
-	d.setISOURL()
-	// Set the Checksum information for the ISO image.
-	err = d.setISOChecksum()
-	return err
+	hrefs := inlineElementsFromTokens("a", "href", tokens)
+	if len(hrefs) == 0 || hrefs == nil {
+		return setVersionInfoErr(r.BaseURL, fmt.Errorf("could not tokenize release page: %s", err.Error()))
+	}
+	for _, href := range hrefs {
+		if strings.HasPrefix(href, r.Release) {
+			parts := strings.Split(href, "-")
+			r.FullVersion = parts[0]
+			nums := strings.Split(parts[0], ".")
+			if len(nums) != 3 {
+				return setVersionInfoErr(r.Release, fmt.Errorf("unable to parse release number into its parts"))
+			}
+			r.MajorVersion = nums[0]
+			r.MinorVersion = nums[1]
+			r.FixVersion = strings.TrimSuffix(nums[2], "/")
+			break
+		}
+	}
+	if r.FullVersion == "" {
+		return setVersionInfoErr(r.Release, fmt.Errorf("could not set the current release number"))
+	}
+	r.setReleaseURL()
+	return nil
+}
+
+// setReleaseURL set's the
+func (r *debian) setReleaseURL() {
+	var buff bytes.Buffer
+	buff.WriteString(r.BaseURL)
+	buff.WriteString(r.FullVersion)
+	buff.WriteByte('/')
+	buff.WriteString(r.Arch)
+	buff.WriteString("/iso-cd/")
+	r.ReleaseURL = buff.String()
+}
+
+func (r *debian) checksumURL() string {
+	return fmt.Sprintf("%s%sSUMS", r.ReleaseURL, strings.ToUpper(r.ChecksumType))
+}
+
+// Sets the ISO information for a Packer template.
+func (r *debian) SetISOInfo() error {
+	if r.Arch == "" {
+		return noArchErr(Debian.String())
+	}
+	r.setISOName()
+	r.setReleaseURL()
+	return r.setISOChecksum()
+}
+
+// setISOName() sets the name of the iso for the release specified.
+func (r *debian) setISOName() {
+	var buff bytes.Buffer
+	buff.WriteString("debian-")
+	buff.WriteString(r.FullVersion)
+	buff.WriteString("-")
+	buff.WriteString(r.Arch)
+	buff.WriteString("-")
+	buff.WriteString(r.Image)
+	buff.WriteString(".iso")
+	r.Name = buff.String()
+	return
 }
 
 // setISOChecksum: Set the checksum value for the iso.
-func (d *debian) setISOChecksum() error {
-	// Don't check for ReleaseFull existence since Release will also resolve
-	// for Debian dl directories.
-	var page string
-	var err error
-	page, err = getStringFromURL(appendSlash(d.BaseURL) + appendSlash(d.ReleaseFull) + "amd64/iso-cd/" + strings.ToUpper(d.ChecksumType) + "SUMS")
+func (r *debian) setISOChecksum() error {
+	if r.ChecksumType == "" {
+		return checksumNotSetErr(fmt.Sprintf("%s %s", Debian.String(), r.Release))
+	}
+	page, err := bodyStringFromURL(r.checksumURL())
 	if err != nil {
-		return ReleaseError{Name: d.Name, Operation: "setISOChecksum", Problem: err.Error()}
+		return ReleaseError{Name: r.Name, Operation: "setISOChecksum", Problem: err.Error()}
 	}
 	// Now that we have a page...we need to find the checksum and set it
-	d.Checksum, err = d.findISOChecksum(page)
-	return err
-}
-
-func (d *debian) setISOURL() error {
-	// If the base isn't set, use cdimage.debian.org
-	if d.BaseURL == "" {
-		d.BaseURL = "http://cdimage.debian.org/debian-cd/"
-	}
-	// Its ok to use Release in the directory path because Release will resolve
-	// correctly, at the directory level, for Debian.
-	d.isoURL = appendSlash(d.BaseURL) + appendSlash(d.ReleaseFull) + appendSlash(d.Arch) + appendSlash("iso-cd") + d.Name
-	// This never errors so return nil...error is needed for other implementations
-	return nil
+	return r.findISOChecksum(page)
 }
 
 // findISOChecksum finds the checksum in the passed page string for the current
@@ -376,52 +331,34 @@ func (d *debian) setISOURL() error {
 // Notes:
 //   * \n separate lines
 //   * since this is plain text processing we don't worry about runes
-func (d *debian) findISOChecksum(page string) (string, error) {
+func (r *debian) findISOChecksum(page string) error {
 	if page == "" {
-		return "", EmptyPageError(d.Name, "findISOChecksum")
+		return emptyPageErr(r.Name, "findISOChecksum")
 	}
-	pos := strings.Index(page, d.Name)
+	pos := strings.Index(page, r.Name)
 	if pos < 0 {
-		return "", ChecksumNotFoundError(d.Name, "findISOChecksum")
+		return checksumNotFoundErr(r.Name, "findISOChecksum")
 	}
 	tmpRel := page[:pos]
 	tmpSl := strings.Split(tmpRel, "\n")
 	// The checksum we want is the last element in the array
-	checksum := strings.TrimSpace(tmpSl[len(tmpSl)-1])
-	return checksum, nil
-}
-
-// setISOName() sets the name of the iso for the release specified.
-func (d *debian) setISOName() {
-	// ReleaseFull is set on LTS, otherwise just set it equal to the Release.
-	if d.ReleaseFull == "" {
-		d.ReleaseFull = d.Release
-	}
-	var buff bytes.Buffer
-	buff.WriteString("debian-")
-	buff.WriteString(d.ReleaseFull)
-	buff.WriteString("-")
-	buff.WriteString(d.Arch)
-	buff.WriteString("-")
-	buff.WriteString(d.Image)
-	buff.WriteString(".iso")
-	d.Name = buff.String()
-	return
+	r.Checksum = strings.TrimSpace(tmpSl[len(tmpSl)-1])
+	return nil
 }
 
 // getOSType returns the OSType string for the provided builder. The OS Type
 // varies by distro, arch, and builder.
-func (d *debian) getOSType(buildType string) (string, error) {
+func (r *debian) getOSType(buildType string) (string, error) {
 	switch buildType {
 	case "vmware-iso", "vmware-vmx":
-		switch d.Arch {
+		switch r.Arch {
 		case "amd64":
 			return "debian-64", nil
 		case "i386":
 			return "debian-32", nil
 		}
 	case "virtualbox-iso", "vmware-ovf":
-		switch d.Arch {
+		switch r.Arch {
 		case "amd64":
 			return "Debian_64", nil
 		case "i386":
@@ -429,13 +366,12 @@ func (d *debian) getOSType(buildType string) (string, error) {
 		}
 	}
 	// Shouldn't get here unless the buildType passed is an unsupported one.
-	err := fmt.Errorf("%s does not support the %s builder", d.Distro, buildType)
-	return "", err
+	return "", osTypeBuilderErr(Debian.String(), buildType)
 }
 
 // getReleaseVersion() get's the directory info so that the current version
 // of the release can be extracted. This is abstracted out from
-// d.getReleaseInfo() so that d.setReleaseInfo() can be tested. This method is
+// d.getReleaseInfo() so that r.setReleaseInfo() can be tested. This method is
 // not tested by the tests.
 //
 // Note: This method assumes that the baseurl will resolve to a directory
@@ -444,16 +380,16 @@ func (d *debian) getOSType(buildType string) (string, error) {
 // used, like for a mirror, either make sure that the releaseFull is set or
 // that the url resolves to a page from which the current version can be
 // extracted.
-func (d *debian) getReleaseVersion() error {
-	// if ReleaseFull is set, nothing to do
-	if d.ReleaseFull != "" {
+func (r *debian) getReleaseVersion() error {
+	// if FullVersion is set, nothing to do
+	if r.FullVersion != "" {
 		return nil
 	}
-	p, err := getStringFromURL(d.BaseURL)
+	p, err := bodyStringFromURL(r.BaseURL)
 	if err != nil {
 		return err
 	}
-	err = d.setReleaseInfo(p)
+	err = r.setReleaseInfo(p)
 	if err != nil {
 		return err
 	}
@@ -463,11 +399,11 @@ func (d *debian) getReleaseVersion() error {
 // Since only the release is specified, the current version needs to be
 // determined. For Debian, rancher can only grab the latest release as that is
 // all the Debian makes available on their cdimage site.
-func (d *debian) setReleaseInfo(s string) error {
+func (r *debian) setReleaseInfo(s string) error {
 	// look for the first line that starts with debian-(release)
-	pos := strings.Index(s, fmt.Sprintf("a href=\"%s", d.Release))
+	pos := strings.Index(s, fmt.Sprintf("a href=\"%s", r.Release))
 	if pos < 0 {
-		return fmt.Errorf("version search string 'a href =\"%s not found", d.Release)
+		return fmt.Errorf("version search string 'a href =\"%s not found", r.Release)
 	}
 	// remove everything before that
 	s = s[pos+8:]
@@ -480,7 +416,7 @@ func (d *debian) setReleaseInfo(s string) error {
 	if len(s) < 5 {
 		return fmt.Errorf("expected version string to be 5 chars: got %s", s)
 	}
-	d.ReleaseFull = s[:5]
+	r.FullVersion = s[:5]
 	return nil
 }
 
@@ -489,153 +425,156 @@ type ubuntu struct {
 	release
 }
 
-// SetISOInfo sets the ISO information for a Packer template.
-func (u *ubuntu) SetISOInfo() error {
-	if u.Arch == "" {
-		return NoArchError(Ubuntu.String())
+// setVersionInfo set's the release's Version fields. Ubuntu uses a
+// major.minor.seq version number, but the release number, major.minor is
+// usually sufficient to get the current release as it is an alias of the full
+// version number in Ubuntu release URLs.
+func (r *ubuntu) setVersionInfo() error {
+	if r.Release == "" {
+		return noReleaseErr(Ubuntu.String())
 	}
-	if u.Release == "" {
-		return NoReleaseError(Ubuntu.String())
+	// get the major version from the release
+	parts := strings.Split(r.Release, ".")
+	if len(parts) != 2 {
+		return setVersionInfoErr(Ubuntu.String(), fmt.Errorf("cannot parse %q into version info", r.Release))
+	}
+	r.MajorVersion = parts[0]
+	r.MinorVersion = parts[1]
+	// Get the page for the release and extract the full version number from the
+	// title. LTS support versions also have a fix number, this will ensure that
+	// the correct one is obtained.
+	r.setReleaseURL()
+	tokens, err := tokensFromURL(r.ReleaseURL)
+	if err != nil {
+		return setVersionInfoErr(Ubuntu.String(), err)
+	}
+	elements := elementsFromTokens("title", tokens)
+	if len(elements) == 0 {
+		return setVersionInfoErr(Ubuntu.String(), fmt.Errorf("cannot find title on %s", r.ReleaseURL))
+	}
+	// get the full version from the title:
+	parts = strings.Split(elements[0], " ")
+	if len(parts) < 5 {
+		// it's not lts
+		r.FullVersion = r.Release
+		return nil
+	}
+	// For lts, the version is part 2 of the title
+	r.FullVersion = parts[1]
+	return nil
+}
+
+// SetISOInfo set the ISO URL and ISO checksum information.
+func (r *ubuntu) SetISOInfo() error {
+	if r.Arch == "" {
+		return noArchErr(Ubuntu.String())
 	}
 	// Set the ISO name.
-	u.setISOName()
+	r.setISOName()
+	// set the ISO URL
+	r.setReleaseURL()
 	// Set the Checksum information for this ISO.
-	err := u.setISOChecksum()
-	if err != nil {
-		return err
-	}
-	// Set the URL for the ISO image.
-	u.setISOURL()
-	return nil
+	return r.setISOChecksum()
 }
 
-// setISOChecksum: Set the checksum value for the iso.
-func (u *ubuntu) setISOChecksum() error {
-	// Don't check for ReleaseFull existence since Release will also resolve
-	// for Ubuntu dl directories.
-	var page string
-	var err error
-	page, err = getStringFromURL(appendSlash(u.BaseURL) + appendSlash(u.Release) + strings.ToUpper(u.ChecksumType) + "SUMS")
-	if err != nil {
-		return ReleaseError{Name: u.Name, Operation: "setISOChecksum", Problem: err.Error()}
+// setISOName() sets the name of the iso for the release specified.
+func (r *ubuntu) setISOName() {
+	var buff bytes.Buffer
+	buff.WriteString("ubuntu-")
+	buff.WriteString(r.FullVersion)
+	buff.WriteString("-")
+	buff.WriteString(r.Image)
+	buff.WriteString("-")
+	buff.WriteString(r.Arch)
+	buff.WriteString(".iso")
+	r.Name = buff.String()
+	return
+}
+
+func (r *ubuntu) setReleaseURL() {
+	var buff bytes.Buffer
+	buff.WriteString(appendSlash(r.BaseURL))
+	buff.WriteString(r.Release)
+	buff.WriteByte('/')
+	r.ReleaseURL = buff.String()
+}
+
+// setISOChecksum: Set the checksum value for the iso. Most of the actual work
+// is done in findISOChecksum for testability reasons.
+func (r *ubuntu) setISOChecksum() error {
+	if r.ChecksumType == "" {
+		return checksumNotSetErr(fmt.Sprintf("%s %s", Ubuntu.String(), r.Release))
 	}
+	page, err := bodyStringFromURL(r.checksumURL())
+	if err != nil {
+		return ReleaseError{Name: r.Name, Operation: "setISOChecksum", Problem: err.Error()}
+	}
+	return r.findISOChecksum(page)
+}
+
+func (r *ubuntu) findISOChecksum(page string) error {
 	// Now that we have a page...we need to find the checksum and set it
-	u.Checksum, err = u.findISOChecksum(page)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (u *ubuntu) setISOURL() error {
-	// Its ok to use Release in the directory path because Release will resolve
-	// correctly, at the directory level, for Ubuntu.
-	u.isoURL = appendSlash(u.BaseURL) + appendSlash(u.Release) + u.Name
-	// This never errors so return nil...error is needed for other
-	// implementations of the interface.
-	return nil
-}
-
-// findISOChecksum finds the checksum in the passed page string for the current
-// ISO image. This is for releases.ubuntu.com checksums which are in a plain
-// text file with each line representing an iso image and checksum pair, each
-// line is in the format of:
-//     checksumText image.isoname
-//
-// Notes:
-//   * \n separate lines
-//   * since this is plain text processing we don't worry about runes
-//   * Ubuntu LTS images can have an additional release number, which is
-//     incremented each release. Because of this, a second search is performed
-//     if the first one fails to find a match.
-func (u *ubuntu) findISOChecksum(page string) (string, error) {
 	if page == "" {
-		return "", EmptyPageError(u.Name, "findISOChecksum")
+		return emptyPageErr(r.Name, "findISOChecksum")
 	}
-	pos := strings.Index(page, u.Name)
+	pos := strings.Index(page, r.Name)
 	if pos <= 0 {
-		// if it wasn't found, there's a chance that there's an extension on the release number
-		// e.g. 12.04.4 instead of 12.04. This should only be true for LTS releases.
-		// For this look for a line  that contains .iso.
-		// Substring the release string and explode it on '-'. Update isoName
-		pos = strings.Index(page, ".iso")
-		if pos < 0 {
-			return "", ReleaseError{Name: u.Name, Operation: "findISOChecksum", Problem: fmt.Sprintf("iso information not found on checksum page")}
-		}
-		tmpRel := page[:pos]
-		tmpSl := strings.Split(tmpRel, "-")
-		// 3 is just an arbitrarily small number as there should always
-		// be more than 3 elements in the split slice.
-		if len(tmpSl) < 3 {
-			return "", ReleaseError{Name: u.Name, Operation: "findISOChecksum", Problem: fmt.Sprintf("cannot parse checksum page")}
-		}
-		u.ReleaseFull = tmpSl[1]
-		u.setISOName()
-		pos = strings.Index(page, u.Name)
-		if pos < 0 {
-			return "", ChecksumNotFoundError(u.Name, "findISOChecksum")
-		}
+		return checksumNotFoundErr(r.Name, "findISOChecksum")
+	}
+	tmpRel := page[:pos]
+	tmpSl := strings.Split(tmpRel, "-")
+	// the slice should contain 4 elements, unless Ubuntu has changed their naming
+	// pattern .
+	if len(tmpSl) < 4 {
+		return checksumNotFoundErr(r.Name, "findISOChecksum")
+	}
+	pos = strings.Index(page, r.Name)
+	if pos < 0 {
+		return checksumNotFoundErr(r.Name, "findISOChecksum")
 	}
 	// Safety check...should never occur, but sanity check it anyways.
 	if len(page) < pos-2 {
-		return "", ChecksumNotFoundError(u.Name, "findISOChecksum")
+		return checksumNotFoundErr(r.Name, "findISOChecksum")
 	}
 	// Get the checksum string. If the substring request goes beyond the
 	// variable boundary, be safe and make the request equal to the length
 	// of the string.
 	if pos-66 < 1 {
-		u.Checksum = page[:pos-2]
+		r.Checksum = page[:pos-2]
 	} else {
-		u.Checksum = page[pos-66 : pos-2]
+		r.Checksum = page[pos-66 : pos-2]
 	}
-	return u.Checksum, nil
+	return nil
 }
 
-// setISOName() sets the name of the iso for the release specified.
-func (u *ubuntu) setISOName() {
-	// ReleaseFull is set on LTS, otherwise just set it equal to the Release.
-	if u.ReleaseFull == "" {
-		u.ReleaseFull = u.Release
-	}
-	var buff bytes.Buffer
-	buff.WriteString("ubuntu-")
-	buff.WriteString(u.ReleaseFull)
-	buff.WriteString("-")
-	buff.WriteString(u.Image)
-	buff.WriteString("-")
-	buff.WriteString(u.Arch)
-	buff.WriteString(".iso")
-	u.Name = buff.String()
-	fmt.Printf("ubuntu iso: %s\n", u.Name)
-	return
+func (r *ubuntu) checksumURL() string {
+	return fmt.Sprintf("%s%sSUMS", r.ReleaseURL, strings.ToUpper(r.ChecksumType))
 }
 
 // getOSType returns the OSType string for the provided builder. The OS Type
 // varies by distro, arch, and builder.
-func (u *ubuntu) getOSType(buildType string) (string, error) {
+func (r *ubuntu) getOSType(buildType string) (string, error) {
 	switch buildType {
 	case "vmware-iso", "vmware-vmx":
-		switch u.Arch {
+		switch r.Arch {
 		case "amd64":
 			return "ubuntu-64", nil
 		case "i386":
 			return "ubuntu-32", nil
 		}
 	case "virtualbox-iso", "vmware-ovf":
-		switch u.Arch {
+		switch r.Arch {
 		case "amd64":
 			return "Ubuntu_64", nil
 		case "i386":
 			return "Ubuntu_32", nil
 		}
 	}
-	// Shouldn't get here unless the buildType passed is an unsupported one.
-	err := fmt.Errorf("%s does not support the %s builder", u.Distro, buildType)
-	return "", err
+	return "", osTypeBuilderErr(Ubuntu.String(), buildType)
 }
 
-// getStringFromURL returns the response body for the passed url as a string.
-func getStringFromURL(url string) (string, error) {
+// bodyStringFromURL returns the response body for the passed url as a string.
+func bodyStringFromURL(url string) (string, error) {
 	// Get the URL resource
 	res, err := http.Get(url)
 	if err != nil {
@@ -643,31 +582,126 @@ func getStringFromURL(url string) (string, error) {
 	}
 	// Close the response body--its idiomatic to defer it right away
 	defer res.Body.Close()
-	// Read the resoponse body into page
+	// Read the response body into page
 	page, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return "", err
 	}
-	p := string(page)
-	if len(p) == 0 {
-		return "", EmptyPageError(url, "getSTringFromURL")
+	if len(page) == 0 {
+		return "", emptyPageErr(url, "bodyStringFromURL")
 	}
-	//convert the page to a string and return it
-	return p, nil
+	return string(page), nil
 }
 
-func NoArchError(name string) error {
-	return ReleaseError{Name: name, Operation: "SetISOInfo", Problem: "empty arch"}
+// tokensFromURL returns a slice of tokens from the specified url, or an error.
+func tokensFromURL(url string) ([]html.Token, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	// probably unnecessary, but we know that, unless there was a problem, the
+	// number of tokens will always be > than 64
+	tokens := make([]html.Token, 0, 64)
+	tizer := html.NewTokenizer(resp.Body)
+	for {
+		typ := tizer.Next()
+		if typ == html.ErrorToken {
+			return tokens, nil
+		}
+		tokens = append(tokens, tizer.Token())
+	}
 }
 
-func NoReleaseError(name string) error {
-	return ReleaseError{Name: name, Operation: "SetISOInfo", Problem: "empty release"}
+// elementsFromTokens will return the contents of the specified html tag as
+// a list. This function assumes that an element has its begin tag, content,
+// and end tag separated by a newline; each is its own token. It does not
+// handle inline elements,  elements whose begin tag, content, and end tag are
+// all part of the same line, or token.
+func elementsFromTokens(name string, tokens []html.Token) []string {
+	var content []string
+	for i, token := range tokens {
+		if token.Type == html.StartTagToken && token.DataAtom.String() == name {
+			// the next token is the content of the token
+			content = append(content, tokens[i+1].Data)
+		}
+	}
+	return content
 }
 
-func EmptyPageError(name, operation string) error {
+func inlineElementsFromTokens(element, attrVal string, tokens []html.Token) []string {
+	var found []string
+	for _, token := range tokens {
+		if token.Type == html.StartTagToken && token.DataAtom.String() == element {
+			// if we aren't filtering by the attribute, just grab the value
+			for _, attr := range token.Attr {
+				if attrVal != "" {
+					if attr.Key != attrVal {
+						continue
+					}
+					found = append(found, attr.Val)
+				}
+			}
+		}
+	}
+	return found
+}
+
+// filterLinksHasPrefix filters out links that start with the exclude pattern
+func filterLinksHasPrefix(links, prefixes []string) []string {
+	var filtered []string
+	for _, link := range links {
+		for _, prefix := range prefixes {
+			if strings.HasPrefix(link, prefix) {
+				goto nextLink
+			}
+		}
+		filtered = append(filtered, link)
+	nextLink:
+	}
+	return filtered
+}
+
+func emptyPageErr(name, operation string) error {
 	return ReleaseError{Name: name, Operation: operation, Problem: "page was empty"}
 }
 
-func ChecksumNotFoundError(name, operation string) error {
+func checksumNotFoundErr(name, operation string) error {
 	return ReleaseError{Name: name, Operation: operation, Problem: "checksum not found on page"}
+}
+
+func checksumNotSetErr(name string) error {
+	return ReleaseError{Name: name, Operation: "setISOChecksum", Problem: "checksum not set"}
+}
+
+func noArchErr(name string) error {
+	return ReleaseError{Name: name, Operation: "SetISOInfo", Problem: "arch was not set"}
+}
+
+func noFullVersionErr(name string) error {
+	return ReleaseError{Name: name, Operation: "SetISOInfo", Problem: "full version was not set"}
+}
+
+func noMajorVersionErr(name string) error {
+	return ReleaseError{Name: name, Operation: "SetISOInfo", Problem: "major version was not set"}
+}
+
+func noMinorVersionErr(name string) error {
+	return ReleaseError{Name: name, Operation: "SetISOInfo", Problem: "minor version was not set"}
+}
+
+func noReleaseErr(name string) error {
+	return ReleaseError{Name: name, Operation: "SetISOInfo", Problem: "release was not set"}
+}
+
+func setVersionInfoErr(name string, err error) error {
+	return ReleaseError{Name: name, Operation: "SetVersionInfo", Problem: err.Error()}
+}
+
+func unsupportedReleaseErr(name string) error {
+	return ReleaseError{Name: name, Operation: "SetVersionInfo", Problem: "release is unsupported"}
+}
+
+func osTypeBuilderErr(name, typ string) error {
+	return ReleaseError{Name: name, Operation: "getOSType", Problem: fmt.Sprintf("%s is not supported by this distro", typ)}
 }

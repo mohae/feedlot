@@ -3,25 +3,63 @@
 # generated Packer template will be the result of merging the settings within the
 # build configuration with the Rancher and distro defaults.
 [build] 
-	[build.1204-amd64-server]
+	[build.1404-amd64]
 		distro = "ubuntu"
-		description = "ubuntu LTS 1204 amd64 server build, minimal install"
+		description = "ubuntu LTS 1404 amd64 vagrant build"
 		arch = "amd64"
 		image = "server"
-		release = "12.04"
+		release = "14.04"
 		builder_types = [
 			"virtualbox-iso"
 		]
-		[build.1204-amd64-server.builders]
-			[build.1204-amd64-server.builders.common]
+		[build.1404-amd64.builders]
+			[build.1204-amd64.builders.common]
 				settings = [
 					"ssh_wait_timeout = 300m"
 				]
-				[build.1204-amd64-server.builders.virtualbox-iso.arrays]
+				[build.1404-amd64.builders.virtualbox-iso.arrays]
 					vboxmanage = [
 						"--memory=4096"
 					]
 
+	[build.centos6-x86_64]
+		distro = "centos"
+		description = "centos 6 vagrant build"
+		arch = "x86_64"
+		image = "minimal"
+		release = "6"
+		builder_types = [
+			"virtualbox-iso"
+		]
+		[build.centos6-x86_64.builders]
+			[build.centos6-x86_64.builders.common]
+				settings = [
+					"ssh_wait_timeout = 300m"
+				]
+				[build.centos6-x86_64.builders.virtualbox-iso.arrays]
+					vboxmanage = [
+						"--memory=4096"
+					]
+	
+	[build.jessie-amd64]
+		distro = "debian"
+		description = "debian 8 vagrant build"
+		arch = "amd64"
+		image = "netinst"
+		release = "8"
+		builder_types = [
+			"virtualbox-iso"
+		]
+		[build.jessie-amd64.builders]
+			[build.jessie-amd64.builders.common]
+				settings = [
+					"ssh_wait_timeout = 300m"
+				]
+				[build.jessie-amd64.builders.virtualbox-iso.arrays]
+					vboxmanage = [
+						"--memory=4096"
+					]
+		
 	[build.1404-salt]
 		distro = "ubuntu"
 		description = "ubuntu LTS 1404 amd64 server build, minimal salt install"
