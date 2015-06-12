@@ -141,7 +141,8 @@ func TestCentOSSetISOName(t *testing.T) {
 func TestCentOSsetISOURL(t *testing.T) {
 	c := newTestCentOS()
 	c.FullVersion = "6.6"
-	c.BaseURL = "http://bay.uchicago.edu/centos/6.6/isos/x86_64/ "
+	c.MajorVersion = "6"
+	c.BaseURL = "http://bay.uchicago.edu/centos/6.6/isos/x86_64/"
 	c.ReleaseURL = c.BaseURL
 	c.setISOName()
 	url := c.imageURL()

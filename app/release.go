@@ -114,13 +114,17 @@ func (r *centos) setVersionInfo() error {
 		err = r.setVersion6Info()
 		return err
 	}
+	if strings.HasPrefix(r.Release, "7") {
+		err = r.setVersion7Info()
+		return err
+	}
 	return unsupportedReleaseErr(r.Release)
 }
 
 func (r *centos) setVersion6Info() error {
 	parts := strings.Split(r.BaseURL, "/")
 	if len(parts) < 7 {
-		return ReleaseError{Name: CentOS.String(), Operation: "setVersion6Info", Problem: fmt.Sprintf("could not determine the current release of version %s", r.Release)}
+		return ReleaseError{Name: CentOS.String(), Operation: "setVersion7Info", Problem: fmt.Sprintf("could not determine the current release of version %s", r.Release)}
 	}
 	// go through each part until we get to the version
 	for _, part := range parts {
@@ -130,12 +134,40 @@ func (r *centos) setVersion6Info() error {
 		}
 	}
 	if r.FullVersion == "" {
-		return ReleaseError{Name: CentOS.String(), Operation: "setVersion6Info", Problem: fmt.Sprintf("could not find the current point release for %s", r.Release)}
+		return ReleaseError{Name: CentOS.String(), Operation: "setVersion7Info", Problem: fmt.Sprintf("could not find the current point release for %s", r.Release)}
 	}
 	nums := strings.Split(r.FullVersion, ".")
 	r.MajorVersion = nums[0]
 	if len(nums) > 1 {
 		r.MinorVersion = nums[1]
+	}
+	return nil
+}
+
+func (r *centos) setVersion7Info() error {
+	// get the page from the url
+	tokens, err := tokensFromURL(r.BaseURL)
+	if err != nil {
+		return setVersionInfoErr(r.isoredirectURL, fmt.Errorf("could not tokenize release page: %s", err.Error()))
+	}
+	links := inlineElementsFromTokens("a", "href", tokens)
+	if len(links) == 0 || links == nil {
+		return setVersionInfoErr(r.isoredirectURL, fmt.Errorf("could not extract links from release page"))
+	}
+	links = extractLinksHasPrefix(links, []string{fmt.Sprintf("CentOS-7-%s-%s", r.Arch, r.Image)})
+	if len(links) == 0 {
+		return setVersionInfoErr(r.isoredirectURL, fmt.Errorf("extract of links from release page failed"))
+	}
+	// extract the monthstamp and fix number this may or may not include a fix number
+	parts := strings.Split(links[0], "-")
+	r.MajorVersion = parts[1]
+	if len(parts) > 5 {
+		monthstamp := parts[4]
+		tmp := strings.Split(parts[5], ".")
+		r.MinorVersion = fmt.Sprintf("%s-%s", monthstamp, tmp[0])
+	} else {
+		tmp := strings.Split(parts[4], ".")
+		r.MinorVersion = tmp[0]
 	}
 	return nil
 }
@@ -152,13 +184,35 @@ func (r *centos) SetISOInfo() error {
 
 // setISOName() sets the name of the iso for the release specified.
 func (r *centos) setISOName() {
+	if r.MajorVersion == "6" {
+		r.setISOName6()
+		return
+	}
+	r.setISOName7()
+}
+
+func (r *centos) setISOName6() {
 	var buff bytes.Buffer
 	buff.WriteString("CentOS-")
 	buff.WriteString(r.FullVersion)
-	buff.WriteString("-")
+	buff.WriteByte('-')
 	buff.WriteString(r.Arch)
-	buff.WriteString("-")
+	buff.WriteByte('-')
 	buff.WriteString(r.Image)
+	buff.WriteString(".iso")
+	r.Name = buff.String()
+}
+
+func (r *centos) setISOName7() {
+	var buff bytes.Buffer
+	buff.WriteString("CentOS-")
+	buff.WriteString(r.MajorVersion)
+	buff.WriteByte('-')
+	buff.WriteString(r.Arch)
+	buff.WriteByte('-')
+	buff.WriteString(r.Image)
+	buff.WriteByte('-')
+	buff.WriteString(r.MinorVersion)
 	buff.WriteString(".iso")
 	r.Name = buff.String()
 }
@@ -660,6 +714,19 @@ func filterLinksHasPrefix(links, prefixes []string) []string {
 	nextLink:
 	}
 	return filtered
+}
+
+// extractLinksHasPrefix filters out links that start with the exclude pattern
+func extractLinksHasPrefix(links, prefixes []string) []string {
+	var extracted []string
+	for _, link := range links {
+		for _, prefix := range prefixes {
+			if strings.HasPrefix(link, prefix) {
+				extracted = append(extracted, link)
+			}
+		}
+	}
+	return extracted
 }
 
 func emptyPageErr(name, operation string) error {
