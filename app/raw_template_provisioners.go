@@ -111,9 +111,11 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 			if err != nil {
 				return nil, provisionerErr(PuppetMasterless, err)
 			}
-			/*	case PuppetServer:
-				// not implemented
-			*/
+		case PuppetServer:
+			tmpS, err = r.createPuppetServer()
+			if err != nil {
+				return nil, provisionerErr(PuppetServer, err)
+			}
 		default:
 			return nil, provisionerErr(UnsupportedProvisioner, fmt.Errorf("%s is not supported", pType))
 		}
@@ -473,6 +475,45 @@ func (r *rawTemplate) createPuppetMasterless() (settings map[string]interface{},
 	for name, val := range r.Provisioners[PuppetMasterless.String()].Arrays {
 		if name == "module_paths" {
 			settings[name] = val
+		}
+	}
+	return settings, nil
+}
+
+// createPuppetServer() creates a map of settings for Packer's puppet-client
+// provisioner.  Any values that aren't supported by the puppet-client
+// provisioner are ignored. For more information, refer to:
+// https://www.packer.io/docs/provisioners/chef-client.html
+//
+// Required configuration options:
+//  none
+// Optional configuraiton options:
+//   client_cert_path         string
+//   client_private_key_path  string
+//   options                  string
+//   prevent_sudo             bool
+//   puppet_node              string
+//   puppet_server            string
+//   staging_directroy        string
+// Unsopported configuration options:
+//   facter                   hash
+func (r *rawTemplate) createPuppetServer() (settings map[string]interface{}, err error) {
+	_, ok := r.Provisioners[PuppetServer.String()]
+	if !ok {
+		return nil, configNotFoundErr()
+	}
+	settings = make(map[string]interface{})
+	settings["type"] = PuppetServer.String()
+	// For each value, extract its key value pair and then process. Only process the supported
+	// keys. Key validation isn't done here, leaving that for Packer.
+	for _, s := range r.Provisioners[PuppetServer.String()].Settings {
+		k, v := parseVar(s)
+		v = r.replaceVariables(v)
+		switch k {
+		case "client_cert_path", "client_private_key_path", "options", "puppet_node", "puppet_server", "staging_directory":
+			settings[k] = v
+		case "prevent_sudo":
+			settings[k], _ = strconv.ParseBool(v)
 		}
 	}
 	return settings, nil

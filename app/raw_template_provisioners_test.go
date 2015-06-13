@@ -364,6 +364,19 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 					},
 				},
 			},
+			"puppet-server": {
+				templateSection{
+					Settings: []string{
+						"client_cert_path = /etc/puppet/client.pem",
+						"client_private_key_path=/home/puppet/.ssh/puppet_id_rsa",
+						"options=-v --detailed-exitcodes",
+						"prevent_sudo= false",
+						"puppet_node=vagrant-puppet-srv01",
+						"puppet_server=server",
+						"staging_directory=/tmp/puppet-server",
+					},
+				},
+			},
 			"salt-masterless": {
 				templateSection{
 					Settings: []string{
@@ -692,6 +705,27 @@ func TestPuppetMasterlessProvisioner(t *testing.T) {
 		"type":              "puppet-masterless",
 	}
 	settings, err := testRawTemplateProvisionersAll.createPuppetMasterless()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		}
+	}
+}
+
+func TestPuppetServerProvisioner(t *testing.T) {
+	expected := map[string]interface{}{
+		"client_cert_path":        "/etc/puppet/client.pem",
+		"client_private_key_path": "/home/puppet/.ssh/puppet_id_rsa",
+		"options":                 "-v --detailed-exitcodes",
+		"prevent_sudo":            false,
+		"puppet_node":             "vagrant-puppet-srv01",
+		"puppet_server":           "server",
+		"staging_directory":       "/tmp/puppet-server",
+		"type":                    "puppet-server",
+	}
+	settings, err := testRawTemplateProvisionersAll.createPuppetServer()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
