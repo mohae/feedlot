@@ -106,11 +106,13 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 			if err != nil {
 				return nil, provisionerErr(ChefSolo, err)
 			}
-			/*
-				case PuppetClient:
-					// not implemented
-				case PuppetServer:
-					// not implemented
+		case PuppetMasterless:
+			tmpS, err = r.createPuppetMasterless()
+			if err != nil {
+				return nil, provisionerErr(PuppetMasterless, err)
+			}
+			/*	case PuppetServer:
+				// not implemented
 			*/
 		default:
 			return nil, provisionerErr(UnsupportedProvisioner, fmt.Errorf("%s is not supported", pType))
@@ -384,6 +386,93 @@ func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, err err
 			array := deepcopy.InterfaceToSliceOfStrings(val)
 			settings[name] = array
 			continue
+		}
+	}
+	return settings, nil
+}
+
+// createPuppetMasterless() creates a map of settings for Packer's puppet-client
+// provisioner.  Any values that aren't supported by the puppet-client
+// provisioner are ignored. For more information, refer to:
+// https://www.packer.io/docs/provisioners/chef-client.html
+//
+// Required configuration options:
+//   manifest_file
+// Optional configuraiton options:
+//   execute_command    string
+//   hiera_config_path  string
+//   manifest_dir       string
+//   module_paths       array of strings
+//   prevent_sudo       bool
+//   staging_directroy  string
+// Unsopported configuration options:
+//   facter             object, string key and values
+func (r *rawTemplate) createPuppetMasterless() (settings map[string]interface{}, err error) {
+	_, ok := r.Provisioners[PuppetMasterless.String()]
+	if !ok {
+		return nil, configNotFoundErr()
+	}
+	settings = make(map[string]interface{})
+	settings["type"] = PuppetMasterless.String()
+	var hasManifestFile bool
+	// For each value, extract its key value pair and then process. Only process the supported
+	// keys. Key validation isn't done here, leaving that for Packer.
+	for _, s := range r.Provisioners[PuppetMasterless.String()].Settings {
+		k, v := parseVar(s)
+		v = r.replaceVariables(v)
+		switch k {
+		case "manifest_file":
+			src, err := r.findComponentSource(PuppetMasterless.String(), v)
+			if err != nil {
+				return nil, settingErr(k, err)
+			}
+			r.files[r.buildOutPath(PuppetMasterless.String(), v)] = src
+			settings[k] = r.buildTemplateResourcePath(PuppetMasterless.String(), v)
+			hasManifestFile = true
+		case "staging_directory":
+			settings[k] = v
+		case "prevent_sudo":
+			settings[k], _ = strconv.ParseBool(v)
+		case "hiera_config_path":
+			// find the actual location of the source file and add it to the files map for copying
+			src, err := r.findComponentSource(PuppetMasterless.String(), v)
+			if err != nil {
+				return nil, settingErr(k, err)
+			}
+			r.files[r.buildOutPath(PuppetMasterless.String(), v)] = src
+			settings[k] = r.buildTemplateResourcePath(PuppetMasterless.String(), v)
+		case "manifest_dir":
+			// find the actual location of the directory and add it to the dir map for copying contents
+			src, err := r.findComponentSource(PuppetMasterless.String(), v)
+			if err != nil {
+				return nil, settingErr(k, err)
+			}
+			r.dirs[r.buildOutPath(PuppetMasterless.String(), v)] = src
+			settings[k] = r.buildTemplateResourcePath(PuppetMasterless.String(), v)
+		case "execute_command":
+			// if the value ends with .command, find the referenced command file and use its
+			// contents as the command, otherwise just use the value
+			if strings.HasSuffix(v, ".command") {
+				commands, err := r.commandsFromFile(PuppetMasterless.String(), v)
+				if err != nil {
+					return nil, commandFileErr(k, v, err)
+				}
+				if len(commands) == 0 {
+					return nil, noCommandsFoundErr(k, v)
+				}
+				settings[k] = commands[0]
+				continue
+			}
+			settings[k] = v
+		}
+	}
+	if !hasManifestFile {
+		return nil, requiredSettingErr("manifest_file")
+	}
+	// just copy the array
+	for name, val := range r.Provisioners[PuppetMasterless.String()].Arrays {
+		if name == "module_paths" {
+			settings[name] = val
 		}
 	}
 	return settings, nil
