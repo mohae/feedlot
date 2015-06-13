@@ -255,11 +255,12 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 		},
 		ProvisionerTypes: []string{
 			"ansible-local",
+			"file",
 			"chef-client",
 			"chef-solo",
+			"puppet-client",
 			"salt-masterless",
 			"shell",
-			"file",
 		},
 		Provisioners: map[string]provisioner{
 			"ansible-local": {
@@ -340,6 +341,25 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 						"run_list": []string{
 							"recipe[hello::default]",
 							"recipe[world::default]",
+						},
+					},
+				},
+			},
+			"puppet-masterless": {
+				templateSection{
+					Settings: []string{
+						"manifest_filet=site.pp",
+						"execute_command=execute.command",
+						"hiera_config_path=hiera.yaml",
+						"manifest_dir=manifests",
+						"manifest_file=site.pp",
+						"prevent_sudo=false",
+						"staging_directory=/tmp/puppet-masterless",
+					},
+					Arrays: map[string]interface{}{
+						"module_paths": []string{
+							"/etc/puppetlabs/puppet/modules",
+							"/opt/puppet/share/puppet/modules",
 						},
 					},
 				},
@@ -648,6 +668,30 @@ func TestChefSoloProvisioner(t *testing.T) {
 		"type":              "chef-solo",
 	}
 	settings, err := testRawTemplateProvisionersAll.createChefSolo()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		}
+	}
+}
+
+func TestPuppetMasterlessProvisioner(t *testing.T) {
+	expected := map[string]interface{}{
+		"execute_command":   "echo 'vagrant'|sudo -S sh '{{.Path}}'",
+		"hiera_config_path": "puppet-masterless/hiera.yaml",
+		"manifest_dir":      "puppet-masterless/manifests",
+		"manifest_file":     "puppet-masterless/site.pp",
+		"module_paths": []string{
+			"/etc/puppetlabs/puppet/modules",
+			"/opt/puppet/share/puppet/modules",
+		},
+		"prevent_sudo":      false,
+		"staging_directory": "/tmp/puppet-masterless",
+		"type":              "puppet-masterless",
+	}
+	settings, err := testRawTemplateProvisionersAll.createPuppetMasterless()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
