@@ -32,20 +32,20 @@ type Builder int
 
 var builders = [...]string{
 	"unsupported",
-	"common",         // Common is the name of the common builder
-	"custom",         // custom is the name of the custom builder
-	"amazon-ebs",     // AmazonEBS is the name of the amazon-ebs backed builder
-	"digitalocean",   // DigitalOcean is the name of the Digital Ocean builder
-	"docker",         // Docker is the name of the Docker builder
-	"googlecompute",  // GoogleComputeEngine is the name of the Google Compute Engine builder
-	"null",           // Null is the name of the Null
-	"openstack",      // Openstack is the name of the Openstack
-	"parallels",      // Parallels is the name of the Parallels builder
-	"qemu",           // QEMU is the name of the QEMU builder
-	"virtualbox-iso", // VirtualBoxISO is the name of the VirtualBox ISO builder
-	"virtualbox-ovf", // VirtualBoxOVF is the name of the VirtualBox OVF builder
-	"vmware-iso",     // VMWareISO is the name of the VMWare ISO builder
-	"vmware-vmx",     // VMWareVMX is the name of the VMWare VMX builder
+	"common",
+	"custom",
+	"amazon-ebs",
+	"digitalocean",
+	"docker",
+	"googlecompute",
+	"null",
+	"openstack",
+	"parallels",
+	"qemu",
+	"virtualbox-iso",
+	"virtualbox-ovf",
+	"vmware-iso",
+	"vmware-vmx",
 }
 
 func (b Builder) String() string { return builders[b] }

@@ -27,14 +27,14 @@ type PostProcessor int
 
 var postProcessors = [...]string{
 	"unsupported",
-	"compress",      // Compress is the name of the compress PostProcessor
-	"docker-import", // DockerImport is the name of the DockerImport PostProcessor
-	"docker-push",   // DockerPush is the name of the DockerPush PostProcessor
-	"docker-save",   // DockerSave is the name of the DockerSave PostProcessor
-	"docker-tag",    // DockerTag is the name of the DockerTag PostProcessor
-	"vagrant",       // Vagrant is the name of the Vagrant PostProcessor
-	"vagrant-cloud", // Vagrant is the name of the Vagrant CloudPostProcessor
-	"vsphere",       // VSphere is the name of the VSphere PostProcessor
+	"compress",
+	"docker-import",
+	"docker-push",
+	"docker-save",
+	"docker-tag",
+	"vagrant",
+	"vagrant-cloud",
+	"vsphere",
 }
 
 func (p PostProcessor) String() string { return postProcessors[p] }

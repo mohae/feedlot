@@ -27,14 +27,14 @@ type Provisioner int
 
 var provisioners = [...]string{
 	"unsupported",
-	"ansible-local",     //ansible is the name of the Ansible Provisioner
-	"chef-client",       //chef-client is the name of the ChefClient Provisioner
-	"chef-solo",         //chef-solo is the name of the ChefSolo Provisioner
-	"file",              //file is the name of the FileUploads Provisioner
-	"puppet-masterless", //puppet-masterless is the name of the PuppetMasterless Provisioner
-	"puppet-server",     // puppet-server is the name of the PuppetServer Provisioner
-	"salt-masterless",   //salt is the name of the Salt Provisioner
-	"shell",             // shell is the name for the Shell provisioner
+	"ansible-local",
+	"chef-client",
+	"chef-solo",
+	"file",
+	"puppet-masterless",
+	"puppet-server",
+	"salt-masterless",
+	"shell",
 }
 
 func (p Provisioner) String() string { return provisioners[p] }
