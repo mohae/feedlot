@@ -267,6 +267,7 @@ var testAllBuilders = &rawTemplate{
 	build: build{
 		BuilderTypes: []string{
 			"amazon-ebs",
+			"amazon-instance",
 			"digitalocean",
 			"docker",
 			"googlecompute",
@@ -318,6 +319,62 @@ var testAllBuilders = &rawTemplate{
 						"user_data=SOME_USER_DATA",
 						"user_data_file=amazon.userdata",
 						"vpc_id=VPC_ID",
+					},
+					Arrays: map[string]interface{}{
+						"ami_groups": []string{
+							"AGroup",
+						},
+						"ami_product_codes": []string{
+							"ami-d4e356aa",
+						},
+						"ami_regions": []string{
+							"us-east-1",
+						},
+						"ami_users": []string{
+							"ami-account",
+						},
+						"security_group_ids": []string{
+							"SECURITY_GROUP",
+						},
+					},
+				},
+			},
+			"amazon-instance": {
+				templateSection{
+					Settings: []string{
+						"access_key=AWS_ACCESS_KEY",
+						"account_id=YOUR_ACCOUNT_ID",
+						"ami_description=AMI_DESCRIPTION",
+						"ami_name=AMI_NAME",
+						"associate_public_ip_address=false",
+						"availability_zone=us-east-1b",
+						"bundle_destination=/tmp",
+						"bundle_prefix=image--{{timestamp}}",
+						"bundle_upload_command=bundle_upload.command",
+						"bundle_vol_command=bundle_vol.command",
+						"enhanced_networking=false",
+						"instance_type=m3.medium",
+						"iam_instance_profile=INSTANCE_PROFILE",
+						"region=us-east-1",
+						"s3_bucket=packer_bucket",
+						"secret_key=AWS_SECRET_ACCESS_KEY",
+						"security_group_id=GROUP_ID",
+						"source_ami=SOURCE_AMI",
+						"spot_price=auto",
+						"spot_price_auto_product=Linux/Unix",
+						"ssh_port=22",
+						"ssh_username=ssh_user",
+						"ssh_private_key_file=myKey",
+						"ssh_timeout=5m",
+						"subnet_id=subnet-12345def",
+						"temporary_key_pair_name=TMP_KEYPAIR",
+						"token=AWS_SECURITY_TOKEN",
+						"user_data=SOME_USER_DATA",
+						"user_data_file=amazon.userdata",
+						"vpc_id=VPC_ID",
+						"x509_cert_path=/path/to/x509/cert",
+						"x509_key_path=/path/to/x509/key",
+						"x509_upload_path=/etc/x509",
 					},
 					Arrays: map[string]interface{}{
 						"ami_groups": []string{
@@ -1146,6 +1203,68 @@ func TestAmazonEBSBuilder(t *testing.T) {
 		"vpc_id":                  "VPC_ID",
 	}
 	bldr, err := testAllBuilders.createAmazonEBS()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(bldr))
+		}
+	}
+}
+
+func TestAmazonInstanceBuilder(t *testing.T) {
+	expected := map[string]interface{}{
+		"access_key":      "AWS_ACCESS_KEY",
+		"account_id":      "YOUR_ACCOUNT_ID",
+		"ami_description": "AMI_DESCRIPTION",
+		"ami_groups": []string{
+			"AGroup",
+		},
+		"ami_name": "AMI_NAME",
+		"ami_product_codes": []string{
+			"ami-d4e356aa",
+		},
+		"ami_regions": []string{
+			"us-east-1",
+		},
+		"ami_users": []string{
+			"ami-account",
+		},
+		"associate_public_ip_address": false,
+		"availability_zone":           "us-east-1b",
+		"bundle_destination":          "/tmp",
+		"bundle_prefix":               "image--{{timestamp}}",
+		"enhanced_networking":         false,
+		"bundle_upload_command":       "sudo -n ec2-bundle-vol -k {{.KeyPath}} -u {{.AccountId}} -c {{.CertPath}} -r {{.Architecture}} -e {{.PrivatePath}} -d {{.Destination}} -p {{.Prefix}} --batch --no-filter",
+		"bundle_vol_command":          "sudo -n ec2-upload-bundle -b {{.BucketName}} -m {{.ManifestPath}} -a {{.AccessKey}} -s {{.SecretKey}} -d {{.BundleDirectory}} --batch --region {{.Region}} --retry",
+		"iam_instance_profile":        "INSTANCE_PROFILE",
+		"instance_type":               "m3.medium",
+		"region":                      "us-east-1",
+		"s3_bucket":                   "packer_bucket",
+		"secret_key":                  "AWS_SECRET_ACCESS_KEY",
+		"security_group_id":           "GROUP_ID",
+		"security_group_ids": []string{
+			"SECURITY_GROUP",
+		},
+		"source_ami":              "SOURCE_AMI",
+		"spot_price":              "auto",
+		"spot_price_auto_product": "Linux/Unix",
+		"ssh_port":                22,
+		"ssh_username":            "ssh_user",
+		"ssh_private_key_file":    "myKey",
+		"ssh_timeout":             "5m",
+		"subnet_id":               "subnet-12345def",
+		"temporary_key_pair_name": "TMP_KEYPAIR",
+		"token":                   "AWS_SECURITY_TOKEN",
+		"type":                    "amazon-instance",
+		"user_data":               "SOME_USER_DATA",
+		"user_data_file":          "amazon-instance/amazon.userdata",
+		"vpc_id":                  "VPC_ID",
+		"x509_cert_path":          "/path/to/x509/cert",
+		"x509_key_path":           "/path/to/x509/key",
+		"x509_upload_path":        "/etc/x509",
+	}
+	bldr, err := testAllBuilders.createAmazonInstance()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {

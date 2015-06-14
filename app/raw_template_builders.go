@@ -14,6 +14,7 @@ const (
 	Common
 	Custom
 	AmazonEBS
+	AmazonInstance
 	DigitalOcean
 	Docker
 	GoogleCompute
@@ -35,6 +36,7 @@ var builders = [...]string{
 	"common",
 	"custom",
 	"amazon-ebs",
+	"amazon-instance",
 	"digitalocean",
 	"docker",
 	"googlecompute",
@@ -61,6 +63,8 @@ func BuilderFromString(s string) Builder {
 		return Custom
 	case "amazon-ebs":
 		return AmazonEBS
+	case "amazon-instance":
+		return AmazonInstance
 	case "digitalocean":
 		return DigitalOcean
 	case "docker":
@@ -112,7 +116,12 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 			if err != nil {
 				return nil, builderErr(AmazonEBS, err)
 			}
-		// AmazonInstance, AmazonChroot:
+		case AmazonInstance:
+			tmpS, err = r.createAmazonInstance()
+			if err != nil {
+				return nil, builderErr(AmazonInstance, err)
+			}
+		// case AmazonChroot:
 		// not implemented
 		case DigitalOcean:
 			tmpS, err = r.createDigitalOcean()
@@ -322,6 +331,202 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, err er
 	for name, val := range r.Builders[AmazonEBS.String()].Arrays {
 		// if it's not a supported array group, log a warning and move on
 		if name == "ami_groups" || name == "ami_product_codes" || name == "ami_regions" || name == "security_group_ids" {
+			array := deepcopy.Iface(val)
+			if array != nil {
+				settings[name] = array
+			}
+			continue
+		}
+	}
+	return settings, nil
+}
+
+// createAmazonInstance creates a map of settings for Packer's amazon-instance
+// builder.  Any values that aren't supported by the amazon-ebs builder are
+// ignored.  Any required settings that don't exist result in an error and
+// processing of the builder is stopped.  For more information, refer to
+// https://packer.io/docs/builders/amazon-ebs.html
+//
+// Required configuration options:
+//   access_key                    string
+//   account_id                    string
+//   ami_name                      string
+//   instance_type                 string
+//   region                        string
+//   s3_bucket                     string
+//   secret_key                    string
+//   source_ami                    string
+//   ssh_username                  string
+//   x509_cert_path                string
+//   x509_key_path                 string
+// Optional configuration options:
+//   ami_description               string
+//   ami_groups                    array of strings
+//   ami_product_codes             array of strings
+//   ami_regions                   array of strings
+//   ami_users                     array of strings
+//   associate_public_ip_address   boolean
+//   availability_zone             string
+//   bundle_destination            string
+//   bundle_prefix                 string
+//   bundle_upload_command         string
+//   bundle_vol_command            string
+//   enhanced_networking           bool
+//   iam_instance_profile          string
+//   security_group_id             string
+//   security_group_ids            array of strings
+//   spot_price                    string
+//   spot_price_auto_product       string
+//   shh_port                      integer
+//   ssh_private_key_file          string
+//   ssh_private_ip                bool
+//   ssh_timeout                   string
+//   subnet_id                     string
+//   temporary_key_pair_name       string
+//   user_data                     string
+//   user_data_file                string
+//   vpc_id                        string
+//   x509_upload_path              string
+// Not implemented configuration options:
+//   ami_block_device_mappings     array of block device mappings
+//   launch_block_device_mappings  array of block device mappings
+//   run_tags                      object of key/value strings
+//   tags                          object of key/value strings
+func (r *rawTemplate) createAmazonInstance() (settings map[string]interface{}, err error) {
+	_, ok := r.Builders[AmazonEBS.String()]
+	if !ok {
+		return nil, configNotFoundErr()
+	}
+	settings = make(map[string]interface{})
+	// Each create function is responsible for setting its own type.
+	settings["type"] = AmazonInstance.String()
+	// Merge the settings between common and this builders.
+	var workSlice []string
+	_, ok = r.Builders[Common.String()]
+	if ok {
+		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[AmazonInstance.String()].Settings)
+		if err != nil {
+			return nil, mergeCommonSettingsErr(err)
+		}
+
+	} else {
+		workSlice = r.Builders[AmazonInstance.String()].Settings
+	}
+	var k, v string
+	var hasAccessKey, hasAccountId, hasAmiName, hasInstanceType, hasRegion, hasS3Bucket bool
+	var hasSecretKey, hasSourceAmi, hasSSHUsername, hasX509CertPath, hasX509KeyPath bool
+	// Go through each element in the slice, only take the ones that matter
+	// to this builder.
+	for _, s := range workSlice {
+		// var tmp interface{}
+		k, v = parseVar(s)
+		v = r.replaceVariables(v)
+		switch k {
+		case "access_key":
+			settings[k] = v
+			hasAccessKey = true
+		case "account_id":
+			settings[k] = v
+			hasAccountId = true
+		case "ami_name":
+			settings[k] = v
+			hasAmiName = true
+		case "instance_type":
+			settings[k] = v
+			hasInstanceType = true
+		case "region":
+			settings[k] = v
+			hasRegion = true
+		case "s3_bucket":
+			settings[k] = v
+			hasS3Bucket = true
+		case "secret_key":
+			settings[k] = v
+			hasSecretKey = true
+		case "source_ami":
+			settings[k] = v
+			hasSourceAmi = true
+		case "ssh_username":
+			settings[k] = v
+			hasSSHUsername = true
+		case "x509_cert_path":
+			settings[k] = v
+			hasX509CertPath = true
+		case "x509_key_path":
+			settings[k] = v
+			hasX509KeyPath = true
+		case "ami_description", "availability_zone", "bundle_destination",
+			"bundle_prefix", "iam_instance_profile", "security_group_id",
+			"spot_price", "spot_price_auto_product", "ssh_private_key_file",
+			"ssh_timeout", "subnet_id", "temporary_key_pair_name",
+			"token", "user_data", "vpc_id",
+			"x509_upload_path":
+			settings[k] = v
+		case "ssh_port":
+			// only add if its an int
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, settingErr("ssh_port", err)
+			}
+			settings[k] = i
+		case "user_data_file":
+			src, err := r.findComponentSource(AmazonInstance.String(), v)
+			if err != nil {
+				return nil, settingErr("user_data_file", err)
+			}
+			r.files[r.buildOutPath(AmazonEBS.String(), v)] = src
+			settings[k] = r.buildTemplateResourcePath(AmazonInstance.String(), v)
+		case "associate_public_ip_address", "enhanced_networking", "ssh_private_ip":
+			settings[k], _ = strconv.ParseBool(v)
+		case "bundle_upload_command", "bundle_vol_command":
+			cmds, err := r.commandsFromFile(AmazonInstance.String(), v)
+			if err != nil {
+				return nil, commandFileErr(k, v, err)
+			}
+			if len(cmds) == 0 {
+				return nil, noCommandsFoundErr(k, v)
+			}
+			// the setting is a string so don't use the full slice
+			settings[k] = cmds[0]
+		}
+	}
+	if !hasAccessKey {
+		return nil, requiredSettingErr("access_key")
+	}
+	if !hasAccountId {
+		return nil, requiredSettingErr("account_id")
+	}
+	if !hasAmiName {
+		return nil, requiredSettingErr("ami_name")
+	}
+	if !hasInstanceType {
+		return nil, requiredSettingErr("instance_type")
+	}
+	if !hasRegion {
+		return nil, requiredSettingErr("region")
+	}
+	if !hasS3Bucket {
+		return nil, requiredSettingErr("s3_buvket")
+	}
+	if !hasSecretKey {
+		return nil, requiredSettingErr("secret_key")
+	}
+	if !hasSourceAmi {
+		return nil, requiredSettingErr("source_ami")
+	}
+	if !hasSSHUsername {
+		return nil, requiredSettingErr("ssh_username")
+	}
+	if !hasX509CertPath {
+		return nil, requiredSettingErr("x509_cert_path")
+	}
+	if !hasX509KeyPath {
+		return nil, requiredSettingErr("x509_key_path")
+	}
+	// Process the Arrays.
+	for name, val := range r.Builders[AmazonEBS.String()].Arrays {
+		// if it's not a supported array group, log a warning and move on
+		if name == "ami_groups" || name == "ami_product_codes" || name == "ami_regions" || name == "ami_users" || name == "security_group_ids" {
 			array := deepcopy.Iface(val)
 			if array != nil {
 				settings[name] = array
