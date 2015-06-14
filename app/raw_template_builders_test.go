@@ -294,6 +294,51 @@ var testAllBuilders = &rawTemplate{
 					},
 				},
 			},
+			"amazon-chroot": {
+				templateSection{
+					Settings: []string{
+						"access_key=AWS_ACCESS_KEY",
+						"ami_description=AMI_DESCRIPTION",
+						"ami_name=AMI_NAME",
+						"ami_virtualization_type=paravirtual",
+						"command_wrapper={{.Command}}",
+						"device_path=/dev/xvdf",
+						"enhanced_networking=false",
+						"mount_path=packer-amazon-chroot-volumes/{{.Device}}",
+						"secret_key=AWS_SECRET_ACCESS_KEY",
+						"source_ami=SOURCE_AMI",
+					},
+					Arrays: map[string]interface{}{
+						"ami_groups": []string{
+							"AGroup",
+						},
+						"ami_product_codes": []string{
+							"ami-d4e356aa",
+						},
+						"ami_regions": []string{
+							"us-east-1",
+						},
+						"ami_users": []string{
+							"aws-account-1",
+						},
+						"chroot_mounts": []interface{}{
+							[]string{
+								"proc",
+								"proc",
+								"/proc",
+							},
+							[]string{
+								"bind",
+								"/dev",
+								"/dev",
+							},
+						},
+						"copy_files": []string{
+							"/etc/resolv.conf",
+						},
+					},
+				},
+			},
 			"amazon-ebs": {
 				templateSection{
 					Settings: []string{
@@ -1147,6 +1192,57 @@ func TestRawTemplateBuildersSettingsToMap(t *testing.T) {
 	}
 	if settings["ssh_username"] != "vagrant" {
 		t.Errorf("Expected \"vagrant\", got %q", settings["ssh_username"])
+	}
+}
+
+func TestCreateAmazonChroot(t *testing.T) {
+	expected := map[string]interface{}{
+		"access_key":      "AWS_ACCESS_KEY",
+		"ami_description": "AMI_DESCRIPTION",
+		"ami_groups": []string{
+			"AGroup",
+		},
+		"ami_name": "AMI_NAME",
+		"ami_product_codes": []string{
+			"ami-d4e356aa",
+		},
+		"ami_regions": []string{
+			"us-east-1",
+		},
+		"ami_users": []string{
+			"aws-account-1",
+		},
+		"ami_virtualization_type": "paravirtual",
+		"chroot_mounts": []interface{}{
+			[]string{
+				"proc",
+				"proc",
+				"/proc",
+			},
+			[]string{
+				"bind",
+				"/dev",
+				"/dev",
+			},
+		},
+		"command_wrapper": "{{.Command}}",
+		"copy_files": []string{
+			"/etc/resolv.conf",
+		},
+		"device_path":         "/dev/xvdf",
+		"enhanced_networking": false,
+		"mount_path":          "packer-amazon-chroot-volumes/{{.Device}}",
+		"secret_key":          "AWS_SECRET_ACCESS_KEY",
+		"source_ami":          "SOURCE_AMI",
+		"type":                "amazon-chroot",
+	}
+	bldr, err := testAllBuilders.createAmazonChroot()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(bldr))
+		}
 	}
 }
 
