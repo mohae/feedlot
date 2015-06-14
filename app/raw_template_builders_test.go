@@ -44,7 +44,7 @@ var testUbuntu = &rawTemplate{
 						"ssh_password = vagrant",
 						"ssh_port = 22",
 						"ssh_username = vagrant",
-						"ssh_wait_timeout = 300m",
+						"ssh_wait_timeout = 30m",
 					},
 					Arrays: map[string]interface{}{},
 				},
@@ -149,7 +149,7 @@ var testCentOS = &rawTemplate{
 						"ssh_password = vagrant",
 						"ssh_port = 22",
 						"ssh_username = vagrant",
-						"ssh_wait_timeout = 300m",
+						"ssh_wait_timeout = 30m",
 					},
 				},
 			},
@@ -289,7 +289,8 @@ var testAllBuilders = &rawTemplate{
 						"ssh_password = vagrant",
 						"ssh_port = 22",
 						"ssh_username = vagrant",
-						"ssh_wait_timeout = 300m",
+						"ssh_timeout=30m",
+						"ssh_wait_timeout = 30m",
 					},
 				},
 			},
@@ -310,10 +311,7 @@ var testAllBuilders = &rawTemplate{
 						"source_ami=SOURCE_AMI",
 						"spot_price=auto",
 						"spot_price_auto_product=Linux/Unix",
-						"ssh_port=22",
-						"ssh_username=ssh_user",
 						"ssh_private_key_file=myKey",
-						"ssh_timeout=5m",
 						"temporary_key_pair_name=TMP_KEYPAIR",
 						"token=AWS_SECURITY_TOKEN",
 						"user_data=SOME_USER_DATA",
@@ -362,10 +360,7 @@ var testAllBuilders = &rawTemplate{
 						"source_ami=SOURCE_AMI",
 						"spot_price=auto",
 						"spot_price_auto_product=Linux/Unix",
-						"ssh_port=22",
-						"ssh_username=ssh_user",
 						"ssh_private_key_file=myKey",
-						"ssh_timeout=5m",
 						"subnet_id=subnet-12345def",
 						"temporary_key_pair_name=TMP_KEYPAIR",
 						"token=AWS_SECURITY_TOKEN",
@@ -406,9 +401,6 @@ var testAllBuilders = &rawTemplate{
 						"region=nyc3",
 						"size=512mb",
 						"snapshot_name=my-snapshot",
-						"ssh_port=22",
-						"ssh_timeout=5m",
-						"ssh_username=user",
 						"state_timeout=6m",
 					},
 				},
@@ -448,7 +440,6 @@ var testAllBuilders = &rawTemplate{
 						"network=default",
 						"project_id=projectID",
 						"source_image=centos-6",
-						"ssh_timeout=5m",
 						"state_timeout=5m",
 						"zone=us-central1-a",
 					},
@@ -489,7 +480,6 @@ var testAllBuilders = &rawTemplate{
 						"ssh_host_port_min=22",
 						"ssh_host_port_max=40",
 						"ssh_key_path=key/path",
-						"ssh_port=22",
 						"virtualbox_version_file=.vbox_version",
 						"vm_name=test-vb-iso",
 					},
@@ -535,7 +525,6 @@ var testAllBuilders = &rawTemplate{
 						"ssh_host_port_min=22",
 						"ssh_host_port_max=40",
 						"ssh_key_path=key/path",
-						"ssh_port=22",
 						"virtualbox_version_file=.vbox_version",
 						"vm_name=test-vb-ovf",
 					},
@@ -583,7 +572,6 @@ var testAllBuilders = &rawTemplate{
 						"shutdown_timeout=5m",
 						"ssh_host=127.0.0.1",
 						"ssh_key_path=key/path",
-						"ssh_port=22",
 						"tools_upload_flavor=linux",
 						"tools_upload_path={{.Flavor}}.iso",
 						"version=9",
@@ -626,7 +614,6 @@ var testAllBuilders = &rawTemplate{
 						"skip_compaction=false",
 						"source_path=source.vmx",
 						"ssh_key_path=key/path",
-						"ssh_port=22",
 						"ssh_skip_request_pty=false",
 						"vm_name=packer-BUILDNAME",
 						"vnc_port_min=5900",
@@ -722,8 +709,8 @@ var testDigtialOceanAPIV1 = &rawTemplate{
 						"size=512mb",
 						"snapshot_name=my-snapshot",
 						"ssh_port=22",
-						"ssh_timeout=5m",
-						"ssh_username=user",
+						"ssh_timeout=30m",
+						"ssh_username=vagrant",
 						"state_timeout=6m",
 					},
 				},
@@ -769,8 +756,8 @@ var testDigtialOceanNoAPI = &rawTemplate{
 						"size=512mb",
 						"snapshot_name=my-snapshot",
 						"ssh_port=22",
-						"ssh_timeout=5m",
-						"ssh_username=user",
+						"ssh_timeout=30m",
+						"ssh_username=vagrant",
 						"state_timeout=6m",
 					},
 				},
@@ -894,7 +881,7 @@ var builderOrig = map[string]builder{
 				"ssh_password = vagrant",
 				"ssh_port = 22",
 				"ssh_username = vagrant",
-				"ssh_wait_timeout = 300m",
+				"ssh_wait_timeout = 30m",
 			},
 			Arrays: map[string]interface{}{},
 		},
@@ -1163,7 +1150,7 @@ func TestRawTemplateBuildersSettingsToMap(t *testing.T) {
 	}
 }
 
-func TestAmazonEBSBuilder(t *testing.T) {
+func TestCreateAmazonEBS(t *testing.T) {
 	expected := map[string]interface{}{
 		"access_key":      "AWS_ACCESS_KEY",
 		"ami_description": "AMI_DESCRIPTION",
@@ -1192,9 +1179,9 @@ func TestAmazonEBSBuilder(t *testing.T) {
 		"spot_price":              "auto",
 		"spot_price_auto_product": "Linux/Unix",
 		"ssh_port":                22,
-		"ssh_username":            "ssh_user",
+		"ssh_username":            "vagrant",
 		"ssh_private_key_file":    "myKey",
-		"ssh_timeout":             "5m",
+		"ssh_timeout":             "30m",
 		"temporary_key_pair_name": "TMP_KEYPAIR",
 		"token":                   "AWS_SECURITY_TOKEN",
 		"type":                    "amazon-ebs",
@@ -1212,7 +1199,7 @@ func TestAmazonEBSBuilder(t *testing.T) {
 	}
 }
 
-func TestAmazonInstanceBuilder(t *testing.T) {
+func TestCreateAmazonInstance(t *testing.T) {
 	expected := map[string]interface{}{
 		"access_key":      "AWS_ACCESS_KEY",
 		"account_id":      "YOUR_ACCOUNT_ID",
@@ -1250,9 +1237,9 @@ func TestAmazonInstanceBuilder(t *testing.T) {
 		"spot_price":              "auto",
 		"spot_price_auto_product": "Linux/Unix",
 		"ssh_port":                22,
-		"ssh_username":            "ssh_user",
+		"ssh_username":            "vagrant",
 		"ssh_private_key_file":    "myKey",
-		"ssh_timeout":             "5m",
+		"ssh_timeout":             "30m",
 		"subnet_id":               "subnet-12345def",
 		"temporary_key_pair_name": "TMP_KEYPAIR",
 		"token":                   "AWS_SECURITY_TOKEN",
@@ -1274,7 +1261,7 @@ func TestAmazonInstanceBuilder(t *testing.T) {
 	}
 }
 
-func TestDigitalOceanBuilder(t *testing.T) {
+func TestCreateDigitalOcean(t *testing.T) {
 	expectedV1 := map[string]interface{}{
 		"api_key":            "DIGITALOCEAN_API_KEY",
 		"client_id":          "DIGITALOCEAN_CLIENT_ID",
@@ -1286,8 +1273,8 @@ func TestDigitalOceanBuilder(t *testing.T) {
 		"size":               "512mb",
 		"snapshot_name":      "my-snapshot",
 		"ssh_port":           22,
-		"ssh_timeout":        "5m",
-		"ssh_username":       "user",
+		"ssh_timeout":        "30m",
+		"ssh_username":       "vagrant",
 		"state_timeout":      "6m",
 		"type":               "digitalocean",
 	}
@@ -1301,8 +1288,8 @@ func TestDigitalOceanBuilder(t *testing.T) {
 		"size":               "512mb",
 		"snapshot_name":      "my-snapshot",
 		"ssh_port":           22,
-		"ssh_timeout":        "5m",
-		"ssh_username":       "user",
+		"ssh_timeout":        "30m",
+		"ssh_username":       "vagrant",
 		"state_timeout":      "6m",
 		"type":               "digitalocean",
 	}
@@ -1332,7 +1319,7 @@ func TestDigitalOceanBuilder(t *testing.T) {
 	}
 }
 
-func TestDockerBuilder(t *testing.T) {
+func TestCreateDocker(t *testing.T) {
 	expected := map[string]interface{}{
 		"commit":         true,
 		"export_path":    "export/path",
@@ -1398,7 +1385,7 @@ func TestDockerBuilder(t *testing.T) {
 	}
 }
 
-func TestDockerGoogleCompute(t *testing.T) {
+func TestCreateGoogleCompute(t *testing.T) {
 	expected := map[string]interface{}{
 		"account_file":      "googlecompute/account.json",
 		"disk_size":         20000,
@@ -1410,7 +1397,7 @@ func TestDockerGoogleCompute(t *testing.T) {
 		"project_id":        "projectID",
 		"source_image":      "centos-6",
 		"ssh_port":          22,
-		"ssh_timeout":       "5m",
+		"ssh_timeout":       "30m",
 		"ssh_username":      "vagrant",
 		"state_timeout":     "5m",
 		"tags": []string{
@@ -1430,7 +1417,7 @@ func TestDockerGoogleCompute(t *testing.T) {
 	}
 }
 
-func TestCreateBuilderNull(t *testing.T) {
+func TestBuilderNull(t *testing.T) {
 	expected := map[string]interface{}{
 		"host":                 "nullhost.com",
 		"port":                 22,
@@ -1452,7 +1439,7 @@ func TestCreateBuilderNull(t *testing.T) {
 /*
 // elided because as the funcs are currently written, it requires call out to the site
 // and will error when the version changes, e.g. would require maintenance
-func TestCreateBuilderVirtualboxISO(t *testing.T) {
+func TestCreateVirtualboxISO(t *testing.T) {
 	expected := map[string]interface{}{
 		"boot_command": []string{
 			"<bs>",
@@ -1492,7 +1479,7 @@ func TestCreateBuilderVirtualboxISO(t *testing.T) {
 		"ssh_password":           "vagrant",
 		"ssh_port":               22,
 		"ssh_username":           "vagrant",
-		"ssh_wait_timeout":       "300m",
+		"ssh_wait_timeout":       "30m",
 		"type":                   "virtualbox-iso",
 		"vboxmanage": [][]string{
 			[]string{
@@ -1531,7 +1518,7 @@ func TestCreateBuilderVirtualboxISO(t *testing.T) {
 }
 */
 
-func TestCreateBuilderVirtualboxOVF(t *testing.T) {
+func TestCreateVirtualboxOVF(t *testing.T) {
 	expected := map[string]interface{}{
 		"boot_command": []string{
 			"<bs>",
@@ -1566,7 +1553,7 @@ func TestCreateBuilderVirtualboxOVF(t *testing.T) {
 		"ssh_password":           "vagrant",
 		"ssh_port":               22,
 		"ssh_username":           "vagrant",
-		"ssh_wait_timeout":       "300m",
+		"ssh_wait_timeout":       "30m",
 		"type":                   "virtualbox-ovf",
 		"vboxmanage": [][]string{
 			[]string{
@@ -1609,7 +1596,7 @@ func TestCreateBuilderVirtualboxOVF(t *testing.T) {
 /*
 // elided because as the funcs are currently written, it requires call out to the site
 // and will error when the version changes, e.g. would require maintenance
-func TestCreateBuilderVMWareISO(t *testing.T) {
+func TestCreateVMWareISO(t *testing.T) {
 	expected := map[string]interface{}{
 		"boot_command": []string{
 			"<bs>",
@@ -1646,7 +1633,7 @@ func TestCreateBuilderVMWareISO(t *testing.T) {
 		"ssh_password":           "vagrant",
 		"ssh_port":               22,
 		"ssh_username":           "vagrant",
-		"ssh_wait_timeout":       "300m",
+		"ssh_wait_timeout":       "30m",
 		"tools_upload_flavor":    "linux",
 		"tools_upload_path":      "{{.Flavor}}.iso",
 		"type":                   "vmware-iso",
@@ -1677,7 +1664,7 @@ func TestCreateBuilderVMWareISO(t *testing.T) {
 }
 */
 
-func TestCreateBuilderVMWareVMX(t *testing.T) {
+func TestCreateVMWareVMX(t *testing.T) {
 	expected := map[string]interface{}{
 		"boot_command": []string{
 			"<bs>",
@@ -1704,7 +1691,7 @@ func TestCreateBuilderVMWareVMX(t *testing.T) {
 		"ssh_port":             22,
 		"ssh_skip_request_pty": false,
 		"ssh_username":         "vagrant",
-		"ssh_wait_timeout":     "300m",
+		"ssh_wait_timeout":     "30m",
 		"type":                 "vmware-vmx",
 		"vmx_data": map[string]string{
 			"cpuid.coresPerSocket": "1",
