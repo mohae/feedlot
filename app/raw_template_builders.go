@@ -13,6 +13,7 @@ const (
 	UnsupportedBuilder Builder = iota
 	Common
 	Custom
+	AmazonChroot
 	AmazonEBS
 	AmazonInstance
 	DigitalOcean
@@ -35,6 +36,7 @@ var builders = [...]string{
 	"unsupported",
 	"common",
 	"custom",
+	"amazon-chroot",
 	"amazon-ebs",
 	"amazon-instance",
 	"digitalocean",
@@ -61,6 +63,8 @@ func BuilderFromString(s string) Builder {
 		return Common
 	case "custom":
 		return Custom
+	case "amazon-chroot":
+		return AmazonChroot
 	case "amazon-ebs":
 		return AmazonEBS
 	case "amazon-instance":
@@ -111,6 +115,11 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 	for _, bType := range r.BuilderTypes {
 		typ := BuilderFromString(bType)
 		switch typ {
+		case AmazonChroot:
+			tmpS, err = r.createAmazonChroot()
+			if err != nil {
+				return nil, builderErr(AmazonChroot, err)
+			}
 		case AmazonEBS:
 			tmpS, err = r.createAmazonEBS()
 			if err != nil {
@@ -121,8 +130,6 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 			if err != nil {
 				return nil, builderErr(AmazonInstance, err)
 			}
-		// case AmazonChroot:
-		// not implemented
 		case DigitalOcean:
 			tmpS, err = r.createDigitalOcean()
 			if err != nil {
@@ -187,6 +194,106 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 		m[k] = v
 	}
 	return m
+}
+
+// createAmazonChroot creates a map of settings for Packer's amazon-chroot
+// builder.  Any values that aren't supported by the amazon-ebs builder are
+// ignored.  Any required settings that don't exist result in an error and
+// processing of the builder is stopped.  For more information, refer to
+// https://packer.io/docs/builders/amazon-instance.html
+//
+// Required configuration options:
+//   access_key               string
+//   ami_name                 string
+//   secret_key               string
+//   source_ami               string
+// Optional configuration options:
+//   ami_description          string
+//   ami_groups               array of strings
+//   ami_product_codes        array of strings
+//   ami_regions              array of strings
+//   ami_users                array of strings
+//   ami_virtualization_type  string
+//   chroot_mounts            array of array of strings
+//   command_wrapper          string
+//   copy_files               array of strings
+//   device_path              string
+//   enhanced_networking      bool
+//   mount_path               string
+// Not implemented configuration options:
+//   tags                     object of key/value strings
+func (r *rawTemplate) createAmazonChroot() (settings map[string]interface{}, err error) {
+	_, ok := r.Builders[AmazonChroot.String()]
+	if !ok {
+		return nil, configNotFoundErr()
+	}
+	settings = make(map[string]interface{})
+	// Each create function is responsible for setting its own type.
+	settings["type"] = AmazonChroot.String()
+	// Merge the settings between common and this builders.
+	var workSlice []string
+	_, ok = r.Builders[Common.String()]
+	if ok {
+		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[AmazonChroot.String()].Settings)
+		if err != nil {
+			return nil, mergeCommonSettingsErr(err)
+		}
+
+	} else {
+		workSlice = r.Builders[AmazonChroot.String()].Settings
+	}
+	var k, v string
+	var hasAccessKey, hasAmiName, hasSecretKey, hasSourceAmi bool
+	// Go through each element in the slice, only take the ones that matter
+	// to this builder.
+	for _, s := range workSlice {
+		// var tmp interface{}
+		k, v = parseVar(s)
+		v = r.replaceVariables(v)
+		switch k {
+		case "access_key":
+			settings[k] = v
+			hasAccessKey = true
+		case "ami_name":
+			settings[k] = v
+			hasAmiName = true
+		case "secret_key":
+			settings[k] = v
+			hasSecretKey = true
+		case "source_ami":
+			settings[k] = v
+			hasSourceAmi = true
+		case "ami_description", "ami_virtualization_type", "command_wrapper",
+			"device_path", "mount_path":
+			settings[k] = v
+		case "enhanced_networking":
+			settings[k], _ = strconv.ParseBool(v)
+		}
+	}
+	if !hasAccessKey {
+		return nil, requiredSettingErr("access_key")
+	}
+	if !hasAmiName {
+		return nil, requiredSettingErr("ami_name")
+	}
+	if !hasSecretKey {
+		return nil, requiredSettingErr("secret_key")
+	}
+	if !hasSourceAmi {
+		return nil, requiredSettingErr("source_ami")
+	}
+	// Process the Arrays.
+	for name, val := range r.Builders[AmazonChroot.String()].Arrays {
+		// if it's not a supported array group, log a warning and move on
+		if name == "ami_groups" || name == "ami_product_codes" || name == "ami_regions" || name == "ami_users" || name == "chroot_mounts" || name == "copy_files" {
+			array := deepcopy.Iface(val)
+			if array != nil {
+				settings[name] = array
+			}
+			continue
+		}
+	}
+	return settings, nil
 }
 
 // createAmazonEBS creates a map of settings for Packer's amazon-ebs builder.
