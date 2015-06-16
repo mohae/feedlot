@@ -305,7 +305,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 						"skip_install=false",
 						"staging_directory=/tmp/chef/",
 						"validation_client_name=some_value",
-						"validation_key_path=chef-key",
+						"validation_key_path=/home/user/chef/chef-key",
 					},
 					Arrays: map[string]interface{}{
 						"run_list": []string{
@@ -320,7 +320,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 					Settings: []string{
 						"config_template=chef.cfg",
 						"data_bags_path=data_bag",
-						"encrypted_data_bag_secret_path=secret_data_bag",
+						"encrypted_data_bag_secret_path=/home/user/chef/secret_data_bag",
 						"environments_path=environments",
 						"execute_command=execute.command",
 						"install_command=install.command",
@@ -642,7 +642,7 @@ func TestChefClientProvisioner(t *testing.T) {
 		"staging_directory": "/tmp/chef/",
 		"type":              "chef-client",
 		"validation_client_name": "some_value",
-		"validation_key_path":    "chef-client/chef-key",
+		"validation_key_path":    "/home/user/chef/chef-key",
 	}
 	settings, err := testRawTemplateProvisionersAll.createChefClient()
 	if err != nil {
@@ -662,7 +662,7 @@ func TestChefSoloProvisioner(t *testing.T) {
 			"chef-solo/cookbook2",
 		},
 		"data_bags_path":                 "chef-solo/data_bag",
-		"encrypted_data_bag_secret_path": "chef-solo/secret_data_bag",
+		"encrypted_data_bag_secret_path": "/home/user/chef/secret_data_bag",
 		"environments_path":              "chef-solo/environments",
 		"execute_command":                "{{if .Sudo}}sudo {{end}}chef-client --no-color -c {{.ConfigPath}} -j {{.JsonPath}}",
 		"install_command":                "curl -L https://www.opscode.com/chef/install.sh | {{if .Sudo}}sudo{{end}} bash",

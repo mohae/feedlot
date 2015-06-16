@@ -256,11 +256,11 @@ func (r *rawTemplate) createChefClient() (settings map[string]interface{}, err e
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
-		case "chef_environment", "node_name", "server_url", "staging_directory", "validation_client_name":
+		case "chef_environment", "node_name", "server_url", "staging_directory", "validation_client_name", "validation_key_path":
 			settings[k] = v
 		case "prevent_sudo", "skip_clean_client", "skip_clean_node", "skip_install":
 			settings[k], _ = strconv.ParseBool(v)
-		case "config_template", "validation_key_path":
+		case "config_template":
 			// find the actual location of the source file and add it to the files map for copying
 			src, err := r.findComponentSource(ChefClient.String(), v)
 			if err != nil {
@@ -332,11 +332,11 @@ func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, err err
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
-		case "staging_directory":
+		case "staging_directory", "encrypted_data_bag_secret_path":
 			settings[k] = v
 		case "prevent_sudo", "skip_install":
 			settings[k], _ = strconv.ParseBool(v)
-		case "config_template", "encrypted_data_bag_secret_path":
+		case "config_template":
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(ChefSolo.String(), v)
 			if err != nil {

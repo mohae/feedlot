@@ -1006,7 +1006,7 @@ func (r *rawTemplate) createNull() (settings map[string]interface{}, err error) 
 //   iso_url                  string
 //   ssh_username             string
 // Optional configuration options:
-//   boot_command             array of strings*
+//   boot_command             array of strings*\
 //   boot_wait                string
 //   disk_size                integer
 //   export_opts              array of strings
@@ -1240,7 +1240,7 @@ noISOURL:
 //   source_path              string
 //   ssh_username             string
 // Optional configuration options:
-//   boot_command             array of strings*
+//   boot_command             array of strings
 //   boot_wait                string
 //   export_opts              array of strings
 //   floppy_files             array of strings
@@ -1436,7 +1436,7 @@ func (r *rawTemplate) createVBoxManage(v interface{}) [][]string {
 //   iso_urls                array of strings
 //   output_directory        string
 //   remote_cache_datastore  string
-//   remote_cache_directory	  string
+//   remote_cache_directory  string
 //   remote_datastore        string
 //   remote_host             string
 //   remote_password         string
@@ -1638,31 +1638,31 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, err er
 // https://packer.io/docs/builders/vmware-vmx.html
 //
 // Required configuration options:
-//   source_name				// string
-//   ssh_username				// string
+//   source_name              // string
+//   ssh_username             // string
 // Optional configuration options
-//   boot_command				// array of strings*
-//   boot_wait					// string
-//   floppy_files				// array of strings
-//   fusion_app_path			// string
-//   headless					// boolean
-//   http_directory				// string
-//   http_port_min				// integer
-//   http_port_max				// integer
-//   output_directory			// string
-//   shutdown_command			// string
-//   shutdown_timeout			// string
-//   skip_compaction			// boolean
-//   ssh_key_path				// string
-//   ssh_password				// string
-//   ssh_port					// integer
-//   ssh_skip_request_pty		// boolean
-//   ssh_wait_timeout			// string
-//   vm_name					// string
-//   vmx_data					// object of key/value strings
-//   vmx_data_post				// object of key/value strings
-//   vnc_port_min				// integer
-//   vnc_port_max				// integer
+//   boot_command             // array of strings*
+//   boot_wait                // string
+//   floppy_files             // array of strings
+//   fusion_app_path          // string
+//   headless                 // boolean
+//   http_directory           // string
+//   http_port_min            // integer
+//   http_port_max            // integer
+//   output_directory         // string
+//   shutdown_command         // string
+//   shutdown_timeout         // string
+//   skip_compaction          // boolean
+//   ssh_key_path             // string
+//   ssh_password             // string
+//   ssh_port                 // integer
+//   ssh_skip_request_pty     // boolean
+//   ssh_wait_timeout         // string
+//   vm_name                  // string
+//   vmx_data                 // object of key/value strings
+//   vmx_data_post            // object of key/value strings
+//   vnc_port_min             // integer
+//   vnc_port_max             // integer
 func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[VMWareVMX.String()]
 	if !ok {
