@@ -402,13 +402,12 @@ func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, err err
 //   manifest_file
 // Optional configuraiton options:
 //   execute_command    string
+//   facter             object, string key and values
 //   hiera_config_path  string
 //   manifest_dir       string
 //   module_paths       array of strings
 //   prevent_sudo       bool
 //   staging_directroy  string
-// Unsopported configuration options:
-//   facter             object, string key and values
 func (r *rawTemplate) createPuppetMasterless() (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[PuppetMasterless.String()]
 	if !ok {
@@ -471,8 +470,11 @@ func (r *rawTemplate) createPuppetMasterless() (settings map[string]interface{},
 	if !hasManifestFile {
 		return nil, requiredSettingErr("manifest_file")
 	}
-	// just copy the array
 	for name, val := range r.Provisioners[PuppetMasterless.String()].Arrays {
+		if name == "facter" {
+			settings[name] = val
+			continue
+		}
 		if name == "module_paths" {
 			settings[name] = val
 		}
@@ -490,13 +492,12 @@ func (r *rawTemplate) createPuppetMasterless() (settings map[string]interface{},
 // Optional configuraiton options:
 //   client_cert_path         string
 //   client_private_key_path  string
+//   facter                   object, string key and values
 //   options                  string
 //   prevent_sudo             bool
 //   puppet_node              string
 //   puppet_server            string
 //   staging_directroy        string
-// Unsopported configuration options:
-//   facter                   hash
 func (r *rawTemplate) createPuppetServer() (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[PuppetServer.String()]
 	if !ok {
@@ -514,6 +515,11 @@ func (r *rawTemplate) createPuppetServer() (settings map[string]interface{}, err
 			settings[k] = v
 		case "prevent_sudo":
 			settings[k], _ = strconv.ParseBool(v)
+		}
+	}
+	for name, val := range r.Provisioners[PuppetMasterless.String()].Arrays {
+		if name == "facter" {
+			settings[name] = val
 		}
 	}
 	return settings, nil
