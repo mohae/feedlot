@@ -368,6 +368,16 @@ var testAllBuilders = &rawTemplate{
 						"vpc_id=VPC_ID",
 					},
 					Arrays: map[string]interface{}{
+						"ami_block_device_mappings": []map[string]string{
+							{
+								"device_name":  "/dev/sdb",
+								"virtual_name": "/ephemeral0",
+							},
+							{
+								"device_name":  "/dev/sdc",
+								"virtual_name": "/ephemeral1",
+							},
+						},
 						"ami_groups": []string{
 							"AGroup",
 						},
@@ -429,6 +439,16 @@ var testAllBuilders = &rawTemplate{
 						"x509_upload_path=/etc/x509",
 					},
 					Arrays: map[string]interface{}{
+						"ami_block_device_mappings": []map[string]string{
+							{
+								"device_name":  "/dev/sdb",
+								"virtual_name": "/ephemeral0",
+							},
+							{
+								"device_name":  "/dev/sdc",
+								"virtual_name": "/ephemeral1",
+							},
+						},
 						"ami_groups": []string{
 							"AGroup",
 						},
@@ -1272,7 +1292,18 @@ func TestCreateAmazonChroot(t *testing.T) {
 
 func TestCreateAmazonEBS(t *testing.T) {
 	expected := map[string]interface{}{
-		"access_key":      "AWS_ACCESS_KEY",
+		"access_key": "AWS_ACCESS_KEY",
+		"ami_block_device_mappings": []map[string]string{
+			{
+				"device_name":  "/dev/sdb",
+				"virtual_name": "/ephemeral0",
+			},
+			{
+				"device_name":  "/dev/sdc",
+				"virtual_name": "/ephemeral1",
+			},
+		},
+
 		"ami_description": "AMI_DESCRIPTION",
 		"ami_groups": []string{
 			"AGroup",
@@ -1332,6 +1363,16 @@ func TestCreateAmazonInstance(t *testing.T) {
 		"access_key":      "AWS_ACCESS_KEY",
 		"account_id":      "YOUR_ACCOUNT_ID",
 		"ami_description": "AMI_DESCRIPTION",
+		"ami_block_device_mappings": []map[string]string{
+			{
+				"device_name":  "/dev/sdb",
+				"virtual_name": "/ephemeral0",
+			},
+			{
+				"device_name":  "/dev/sdc",
+				"virtual_name": "/ephemeral1",
+			},
+		},
 		"ami_groups": []string{
 			"AGroup",
 		},

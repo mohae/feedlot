@@ -439,6 +439,10 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, err er
 	// Process the Arrays.
 	for name, val := range r.Builders[AmazonEBS.String()].Arrays {
 		// if it's not a supported array group, log a warning and move on
+		if name == "ami_block_device_mappings" {
+			settings[name] = val
+			continue
+		}
 		if name == "ami_groups" || name == "ami_product_codes" || name == "ami_regions" || name == "security_group_ids" {
 			array := deepcopy.Iface(val)
 			if array != nil {
@@ -638,6 +642,10 @@ func (r *rawTemplate) createAmazonInstance() (settings map[string]interface{}, e
 	// Process the Arrays.
 	for name, val := range r.Builders[AmazonEBS.String()].Arrays {
 		// if it's not a supported array group, log a warning and move on
+		if name == "ami_block_device_mappings" {
+			settings[name] = val
+			continue
+		}
 		if name == "ami_groups" || name == "ami_product_codes" || name == "ami_regions" || name == "ami_users" || name == "security_group_ids" {
 			array := deepcopy.Iface(val)
 			if array != nil {
