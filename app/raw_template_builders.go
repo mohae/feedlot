@@ -871,15 +871,14 @@ func (r *rawTemplate) createDocker() (settings map[string]interface{}, err error
 //   image_name         string
 //   image_description  string
 //   instance_name      string
-//   machine_name       string
 //   machine_type       string
+//   metadata           object of key/value strings
 //   network            string
 //   ssh_port           integer
+//   ssh_timeout        string
 //   ssh_username       string
 //   state_timeout      string
 //   tags               array of strings
-// Not implemented configuration options:
-//   metadata           object of key/value strings
 func (r *rawTemplate) createGoogleCompute() (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[GoogleCompute.String()]
 	if !ok {
@@ -944,6 +943,10 @@ func (r *rawTemplate) createGoogleCompute() (settings map[string]interface{}, er
 	}
 	// Process the Arrays.
 	for name, val := range r.Builders[GoogleCompute.String()].Arrays {
+		if name == "metadata" {
+			settings[name] = val
+			continue
+		}
 		if name == "tags" {
 			array := deepcopy.InterfaceToSliceOfStrings(val)
 			if array != nil {
