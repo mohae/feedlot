@@ -336,6 +336,10 @@ var testAllBuilders = &rawTemplate{
 						"copy_files": []string{
 							"/etc/resolv.conf",
 						},
+						"tags": map[string]string{
+							"OS_Version": "Ubuntu",
+							"Release":    "Latest",
+						},
 					},
 				},
 			},
@@ -378,6 +382,10 @@ var testAllBuilders = &rawTemplate{
 						},
 						"security_group_ids": []string{
 							"SECURITY_GROUP",
+						},
+						"tags": map[string]string{
+							"OS_Version": "Ubuntu",
+							"Release":    "Latest",
 						},
 					},
 				},
@@ -431,6 +439,10 @@ var testAllBuilders = &rawTemplate{
 						},
 						"security_group_ids": []string{
 							"SECURITY_GROUP",
+						},
+						"tags": map[string]string{
+							"OS_Version": "Ubuntu",
+							"Release":    "Latest",
 						},
 					},
 				},
@@ -1234,7 +1246,11 @@ func TestCreateAmazonChroot(t *testing.T) {
 		"mount_path":          "packer-amazon-chroot-volumes/{{.Device}}",
 		"secret_key":          "AWS_SECRET_ACCESS_KEY",
 		"source_ami":          "SOURCE_AMI",
-		"type":                "amazon-chroot",
+		"tags": map[string]string{
+			"OS_Version": "Ubuntu",
+			"Release":    "Latest",
+		},
+		"type": "amazon-chroot",
 	}
 	bldr, err := testAllBuilders.createAmazonChroot()
 	if err != nil {
@@ -1278,6 +1294,10 @@ func TestCreateAmazonEBS(t *testing.T) {
 		"ssh_username":            "vagrant",
 		"ssh_private_key_file":    "myKey",
 		"ssh_timeout":             "30m",
+		"tags": map[string]string{
+			"OS_Version": "Ubuntu",
+			"Release":    "Latest",
+		},
 		"temporary_key_pair_name": "TMP_KEYPAIR",
 		"token":                   "AWS_SECURITY_TOKEN",
 		"type":                    "amazon-ebs",
@@ -1338,14 +1358,18 @@ func TestCreateAmazonInstance(t *testing.T) {
 		"ssh_timeout":             "30m",
 		"subnet_id":               "subnet-12345def",
 		"temporary_key_pair_name": "TMP_KEYPAIR",
-		"token":                   "AWS_SECURITY_TOKEN",
-		"type":                    "amazon-instance",
-		"user_data":               "SOME_USER_DATA",
-		"user_data_file":          "amazon-instance/amazon.userdata",
-		"vpc_id":                  "VPC_ID",
-		"x509_cert_path":          "/path/to/x509/cert",
-		"x509_key_path":           "/path/to/x509/key",
-		"x509_upload_path":        "/etc/x509",
+		"tags": map[string]string{
+			"OS_Version": "Ubuntu",
+			"Release":    "Latest",
+		},
+		"token":            "AWS_SECURITY_TOKEN",
+		"type":             "amazon-instance",
+		"user_data":        "SOME_USER_DATA",
+		"user_data_file":   "amazon-instance/amazon.userdata",
+		"vpc_id":           "VPC_ID",
+		"x509_cert_path":   "/path/to/x509/cert",
+		"x509_key_path":    "/path/to/x509/key",
+		"x509_upload_path": "/etc/x509",
 	}
 	bldr, err := testAllBuilders.createAmazonInstance()
 	if err != nil {
