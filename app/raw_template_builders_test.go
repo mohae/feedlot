@@ -533,6 +533,10 @@ var testAllBuilders = &rawTemplate{
 						"zone=us-central1-a",
 					},
 					Arrays: map[string]interface{}{
+						"metadata": map[string]string{
+							"key-1": "value-1",
+							"key-2": "value-2",
+						},
 						"tags": []string{
 							"tag1",
 						},
@@ -1597,13 +1601,17 @@ func TestCreateGoogleCompute(t *testing.T) {
 		"image_description": "test image",
 		"instance_name":     "packer-{{uuid}}",
 		"machine_type":      "nl-standard-1",
-		"network":           "default",
-		"project_id":        "projectID",
-		"source_image":      "centos-6",
-		"ssh_port":          22,
-		"ssh_timeout":       "30m",
-		"ssh_username":      "vagrant",
-		"state_timeout":     "5m",
+		"metadata": map[string]string{
+			"key-1": "value-1",
+			"key-2": "value-2",
+		},
+		"network":       "default",
+		"project_id":    "projectID",
+		"source_image":  "centos-6",
+		"ssh_port":      22,
+		"ssh_timeout":   "30m",
+		"ssh_username":  "vagrant",
+		"state_timeout": "5m",
 		"tags": []string{
 			"tag1",
 		},
