@@ -340,7 +340,6 @@ func (r *rawTemplate) createAmazonChroot() (settings map[string]interface{}, err
 // Not implemented configuration options:
 //   ami_block_device_mappings     array of block device mappings
 //   launch_block_device_mappings  array of block device mappings
-//   run_tags                      object of key/value strings
 
 func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[AmazonEBS.String()]
@@ -447,7 +446,7 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, err er
 			}
 			continue
 		}
-		if name == "tags" {
+		if name == "tags" || name == "run_tags" {
 			settings[name] = val
 		}
 	}
@@ -495,6 +494,7 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, err er
 //   ssh_private_ip                bool
 //   ssh_timeout                   string
 //   subnet_id                     string
+//   run_tags                      object of key/value strings
 //   tags                          object of key/value strings
 //   temporary_key_pair_name       string
 //   user_data                     string
@@ -504,7 +504,6 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, err er
 // Not implemented configuration options:
 //   ami_block_device_mappings     array of block device mappings
 //   launch_block_device_mappings  array of block device mappings
-//   run_tags                      object of key/value strings
 func (r *rawTemplate) createAmazonInstance() (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[AmazonEBS.String()]
 	if !ok {
@@ -646,7 +645,7 @@ func (r *rawTemplate) createAmazonInstance() (settings map[string]interface{}, e
 			}
 			continue
 		}
-		if name == "tags" {
+		if name == "tags" || name == "run_tags" {
 			settings[name] = val
 		}
 	}
