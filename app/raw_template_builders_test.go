@@ -390,16 +390,6 @@ var testAllBuilders = &rawTemplate{
 						"ami_users": []string{
 							"ami-account",
 						},
-						"launch_block_device_mappings": []map[string]string{
-							{
-								"device_name":  "/dev/sdd",
-								"virtual_name": "/ephemeral2",
-							},
-							{
-								"device_name":  "/dev/sde",
-								"virtual_name": "/ephemeral3",
-							},
-						},
 						"security_group_ids": []string{
 							"SECURITY_GROUP",
 						},
@@ -471,16 +461,6 @@ var testAllBuilders = &rawTemplate{
 						"ami_users": []string{
 							"ami-account",
 						},
-						"launch_block_device_mappings": []map[string]string{
-							{
-								"device_name":  "/dev/sdd",
-								"virtual_name": "/ephemeral2",
-							},
-							{
-								"device_name":  "/dev/sde",
-								"virtual_name": "/ephemeral3",
-							},
-						},
 						"security_group_ids": []string{
 							"SECURITY_GROUP",
 						},
@@ -530,6 +510,10 @@ var testAllBuilders = &rawTemplate{
 							"-t",
 							"{{.Image}}",
 							"/bin/bash",
+						},
+						"volumes": map[string]string{
+							"/var/data1": "/var/data",
+							"/var/www":   "/var/www",
 						},
 					},
 				},
@@ -1340,17 +1324,7 @@ func TestCreateAmazonEBS(t *testing.T) {
 		"enhanced_networking":         false,
 		"iam_instance_profile":        "INSTANCE_PROFILE",
 		"instance_type":               "m3.medium",
-		"launch_block_device_mappings": []map[string]string{
-			{
-				"device_name":  "/dev/sdd",
-				"virtual_name": "/ephemeral2",
-			},
-			{
-				"device_name":  "/dev/sde",
-				"virtual_name": "/ephemeral3",
-			},
-		},
-		"region": "us-east-1",
+		"region":                      "us-east-1",
 		"run_tags": map[string]string{
 			"foo": "bar",
 			"fiz": "baz",
@@ -1425,17 +1399,7 @@ func TestCreateAmazonInstance(t *testing.T) {
 		"bundle_vol_command":          "sudo -n ec2-upload-bundle -b {{.BucketName}} -m {{.ManifestPath}} -a {{.AccessKey}} -s {{.SecretKey}} -d {{.BundleDirectory}} --batch --region {{.Region}} --retry",
 		"iam_instance_profile":        "INSTANCE_PROFILE",
 		"instance_type":               "m3.medium",
-		"launch_block_device_mappings": []map[string]string{
-			{
-				"device_name":  "/dev/sdd",
-				"virtual_name": "/ephemeral2",
-			},
-			{
-				"device_name":  "/dev/sde",
-				"virtual_name": "/ephemeral3",
-			},
-		},
-		"region": "us-east-1",
+		"region":                      "us-east-1",
 		"run_tags": map[string]string{
 			"foo": "bar",
 			"fiz": "baz",
@@ -1555,6 +1519,29 @@ func TestCreateDocker(t *testing.T) {
 			"/bin/bash",
 		},
 		"type": "docker",
+		"volumes": map[string]string{
+			"/var/data1": "/var/data",
+			"/var/www":   "/var/www",
+		},
+	}
+	expectedCommand := map[string]interface{}{
+		"commit":         true,
+		"export_path":    "export/path",
+		"image":          "baseImage",
+		"login":          true,
+		"login_email":    "test@test.com",
+		"login_username": "username",
+		"login_password": "password",
+		"login_server":   "127.0.0.1",
+		"pull":           true,
+		"run_command": []string{
+			"-d",
+			"-i",
+			"-t",
+			"{{.Image}}",
+			"/bin/bash",
+		},
+		"type": "docker",
 	}
 	expectedCommandFile := map[string]interface{}{
 		"commit":         true,
@@ -1596,8 +1583,8 @@ func TestCreateDocker(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(bldr))
+		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedCommand) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedCommand), MarshalJSONToString.Get(bldr))
 		}
 	}
 }
