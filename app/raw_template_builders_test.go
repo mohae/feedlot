@@ -383,6 +383,10 @@ var testAllBuilders = &rawTemplate{
 						"security_group_ids": []string{
 							"SECURITY_GROUP",
 						},
+						"run_tags": map[string]string{
+							"foo": "bar",
+							"fiz": "baz",
+						},
 						"tags": map[string]string{
 							"OS_Version": "Ubuntu",
 							"Release":    "Latest",
@@ -439,6 +443,10 @@ var testAllBuilders = &rawTemplate{
 						},
 						"security_group_ids": []string{
 							"SECURITY_GROUP",
+						},
+						"run_tags": map[string]string{
+							"foo": "bar",
+							"fiz": "baz",
 						},
 						"tags": map[string]string{
 							"OS_Version": "Ubuntu",
@@ -1282,8 +1290,12 @@ func TestCreateAmazonEBS(t *testing.T) {
 		"iam_instance_profile":        "INSTANCE_PROFILE",
 		"instance_type":               "m3.medium",
 		"region":                      "us-east-1",
-		"secret_key":                  "AWS_SECRET_ACCESS_KEY",
-		"security_group_id":           "GROUP_ID",
+		"run_tags": map[string]string{
+			"foo": "bar",
+			"fiz": "baz",
+		},
+		"secret_key":        "AWS_SECRET_ACCESS_KEY",
+		"security_group_id": "GROUP_ID",
 		"security_group_ids": []string{
 			"SECURITY_GROUP",
 		},
@@ -1343,9 +1355,13 @@ func TestCreateAmazonInstance(t *testing.T) {
 		"iam_instance_profile":        "INSTANCE_PROFILE",
 		"instance_type":               "m3.medium",
 		"region":                      "us-east-1",
-		"s3_bucket":                   "packer_bucket",
-		"secret_key":                  "AWS_SECRET_ACCESS_KEY",
-		"security_group_id":           "GROUP_ID",
+		"run_tags": map[string]string{
+			"foo": "bar",
+			"fiz": "baz",
+		},
+		"s3_bucket":         "packer_bucket",
+		"secret_key":        "AWS_SECRET_ACCESS_KEY",
+		"security_group_id": "GROUP_ID",
 		"security_group_ids": []string{
 			"SECURITY_GROUP",
 		},
