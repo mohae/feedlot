@@ -390,6 +390,16 @@ var testAllBuilders = &rawTemplate{
 						"ami_users": []string{
 							"ami-account",
 						},
+						"launch_block_device_mappings": []map[string]string{
+							{
+								"device_name":  "/dev/sdd",
+								"virtual_name": "/ephemeral2",
+							},
+							{
+								"device_name":  "/dev/sde",
+								"virtual_name": "/ephemeral3",
+							},
+						},
 						"security_group_ids": []string{
 							"SECURITY_GROUP",
 						},
@@ -460,6 +470,16 @@ var testAllBuilders = &rawTemplate{
 						},
 						"ami_users": []string{
 							"ami-account",
+						},
+						"launch_block_device_mappings": []map[string]string{
+							{
+								"device_name":  "/dev/sdd",
+								"virtual_name": "/ephemeral2",
+							},
+							{
+								"device_name":  "/dev/sde",
+								"virtual_name": "/ephemeral3",
+							},
 						},
 						"security_group_ids": []string{
 							"SECURITY_GROUP",
@@ -1320,7 +1340,17 @@ func TestCreateAmazonEBS(t *testing.T) {
 		"enhanced_networking":         false,
 		"iam_instance_profile":        "INSTANCE_PROFILE",
 		"instance_type":               "m3.medium",
-		"region":                      "us-east-1",
+		"launch_block_device_mappings": []map[string]string{
+			{
+				"device_name":  "/dev/sdd",
+				"virtual_name": "/ephemeral2",
+			},
+			{
+				"device_name":  "/dev/sde",
+				"virtual_name": "/ephemeral3",
+			},
+		},
+		"region": "us-east-1",
 		"run_tags": map[string]string{
 			"foo": "bar",
 			"fiz": "baz",
@@ -1395,7 +1425,17 @@ func TestCreateAmazonInstance(t *testing.T) {
 		"bundle_vol_command":          "sudo -n ec2-upload-bundle -b {{.BucketName}} -m {{.ManifestPath}} -a {{.AccessKey}} -s {{.SecretKey}} -d {{.BundleDirectory}} --batch --region {{.Region}} --retry",
 		"iam_instance_profile":        "INSTANCE_PROFILE",
 		"instance_type":               "m3.medium",
-		"region":                      "us-east-1",
+		"launch_block_device_mappings": []map[string]string{
+			{
+				"device_name":  "/dev/sdd",
+				"virtual_name": "/ephemeral2",
+			},
+			{
+				"device_name":  "/dev/sde",
+				"virtual_name": "/ephemeral3",
+			},
+		},
+		"region": "us-east-1",
 		"run_tags": map[string]string{
 			"foo": "bar",
 			"fiz": "baz",
