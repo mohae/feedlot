@@ -242,6 +242,7 @@ Rancher also has a `common` builder which can contain settings which may exist i
 
 #### Supported Post-processors
 
+    * atlas
     * compress
     * docker-import
     * docker-push

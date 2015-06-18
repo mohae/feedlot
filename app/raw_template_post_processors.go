@@ -12,6 +12,7 @@ import (
 // PostProcessor constants
 const (
 	UnsupportedPostProcessor PostProcessor = iota
+	Atlas
 	Compress
 	DockerImport
 	DockerPush
@@ -27,6 +28,7 @@ type PostProcessor int
 
 var postProcessors = [...]string{
 	"unsupported",
+	"atlas",
 	"compress",
 	"docker-import",
 	"docker-push",
@@ -44,6 +46,8 @@ func (p PostProcessor) String() string { return postProcessors[p] }
 func PostProcessorFromString(s string) PostProcessor {
 	s = strings.ToLower(s)
 	switch s {
+	case "atlas":
+		return Atlas
 	case "compress":
 		return Compress
 	case "docker-import":
@@ -127,6 +131,11 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, err error) {
 		tmpS := make(map[string]interface{})
 		typ := PostProcessorFromString(pType)
 		switch typ {
+		case Atlas:
+			tmpS, err = r.createAtlas()
+			if err != nil {
+				return nil, postProcessorErr(Atlas, err)
+			}
 		case Compress:
 			tmpS, err = r.createCompress()
 			if err != nil {
@@ -175,6 +184,64 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, err error) {
 		ndx++
 	}
 	return p, nil
+}
+
+// createAtlas() creates a map of settings for Packer's atlas post-processor.
+// Any values that aren't supported by the atlas post-processor are ignored.
+// For more information refer to
+// https://packer.io/docs/post-processors/compress.html
+//
+// Required configuration options:
+//   artifact      string
+//   artifact_type string
+//   token         string
+// Optional configuration options:
+//   atlas_url     string
+//   metadata      object of key/value strings
+func (r *rawTemplate) createAtlas() (settings map[string]interface{}, err error) {
+	_, ok := r.PostProcessors[Atlas.String()]
+	if !ok {
+		return nil, configNotFoundErr()
+	}
+	settings = make(map[string]interface{})
+	settings["type"] = Atlas.String()
+	// For each value, extract its key value pair and then process. Only
+	// process the supported keys. Key validation isn't done here, leaving
+	// that for Packer.
+	var k, v string
+	var hasArtifact, hasArtifactType, hasToken bool
+	for _, s := range r.PostProcessors[Atlas.String()].Settings {
+		k, v = parseVar(s)
+		v = r.replaceVariables(v)
+		switch k {
+		case "artifact":
+			settings[k] = v
+			hasArtifact = true
+		case "artifact_type":
+			settings[k] = v
+			hasArtifactType = true
+		case "token":
+			settings[k] = v
+			hasToken = true
+		case "atlas_url":
+			settings[k] = v
+		}
+	}
+	if !hasArtifact {
+		return nil, requiredSettingErr("artifact")
+	}
+	if !hasArtifactType {
+		return nil, requiredSettingErr("artifact_type")
+	}
+	if !hasToken {
+		return nil, requiredSettingErr("token")
+	}
+	for name, val := range r.PostProcessors[Atlas.String()].Arrays {
+		if name == "metadata" {
+			settings[name] = val
+		}
+	}
+	return settings, nil
 }
 
 // createCompress() creates a map of settings for Packer's compress
