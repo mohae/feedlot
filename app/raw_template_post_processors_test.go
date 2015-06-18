@@ -119,6 +119,20 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 			"vagrant",
 		},
 		PostProcessors: map[string]postProcessor{
+			"atlas": {
+				templateSection{
+					Settings: []string{
+						"artifact=hashicorp/foobar",
+						"artifact_type=aws.ami",
+						"token={{user `atlas_token`}}",
+					},
+					Arrays: map[string]interface{}{
+						"metadata": map[string]string{
+							"created_at": "{{timestamp}}",
+						},
+					},
+				},
+			},
 			"compress": {
 				templateSection{
 					Settings: []string{
@@ -364,6 +378,26 @@ func TestPostProcessorsSettingsToMap(t *testing.T) {
 	res := pp.settingsToMap("vagrant", testRawTpl)
 	if MarshalJSONToString.Get(res) != MarshalJSONToString.Get(map[string]interface{}{"type": "vagrant", "compression_level": "8", "keep_input_artifact": true}) {
 		t.Errorf("expected %q, got %q", MarshalJSONToString.Get(map[string]interface{}{"type": "vagrant", "compression_level": "8", "keep_input_artifact": true}), MarshalJSONToString.Get(res))
+	}
+}
+
+func TestAtlasPostProcessor(t *testing.T) {
+	expected := map[string]interface{}{
+		"artifact":      "hashicorp/foobar",
+		"artifact_type": "aws.ami",
+		"metadata": map[string]string{
+			"created_at": "{{timestamp}}",
+		},
+		"token": "{{user `atlas_token`}}",
+		"type":  "atlas",
+	}
+	pp, err := testPostProcessorsAllTemplate.createAtlas()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(expected) != MarshalJSONToString.Get(pp) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(pp))
+		}
 	}
 }
 
