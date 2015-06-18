@@ -264,7 +264,11 @@ Rancher also has a `common` builder which can contain settings which may exist i
 
 
 ## Rancher Commands
-###Rancher uses mitchellh's cli package, with support for the `build` and `run` custom commands, along with the standard `version` and `help` commands.
+
+    * build <build_name>...
+    * help
+    * run <buil_list>...
+    * version
 
 ### `build`
 `rancher build <flags> buildNames...`
