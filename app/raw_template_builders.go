@@ -313,7 +313,8 @@ func (r *rawTemplate) createAmazonChroot() (settings map[string]interface{}, err
 //   source_ami                   string
 //   ssh_username                 string
 // Optional configuration options:
-//   ami_description
+//   ami_block_device_mappings     array of block device mappings
+//   ami_description               string
 //   ami_groups                    array of strings
 //   ami_product_codes             array of strings
 //   ami_regions                   array of strings
@@ -322,11 +323,12 @@ func (r *rawTemplate) createAmazonChroot() (settings map[string]interface{}, err
 //   availability_zone             string
 //   enhanced_networking           string
 //   iam_instance_profile          string
+//   launch_block_device_mappings  array of block device mappings
 //   security_group_id             string
 //   security_group_ids            array of strings
 //   spot_price                    string
 //   spot_price_auto_product       string
-//   shh_port
+//   shh_port                      integer
 //   ssh_private_key_file          string
 //   ssh_private_ip                bool
 //   ssh_timeout                   string
@@ -337,10 +339,6 @@ func (r *rawTemplate) createAmazonChroot() (settings map[string]interface{}, err
 //   user_data                     string
 //   user_data_file                string
 //   vpc_id                        string
-// Not implemented configuration options:
-//   ami_block_device_mappings     array of block device mappings
-//   launch_block_device_mappings  array of block device mappings
-
 func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[AmazonEBS.String()]
 	if !ok {
@@ -439,7 +437,7 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, err er
 	// Process the Arrays.
 	for name, val := range r.Builders[AmazonEBS.String()].Arrays {
 		// if it's not a supported array group, log a warning and move on
-		if name == "ami_block_device_mappings" {
+		if name == "ami_block_device_mappings" || name == "launch_block_device_mappings" {
 			settings[name] = val
 			continue
 		}
@@ -476,6 +474,7 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, err er
 //   x509_cert_path                string
 //   x509_key_path                 string
 // Optional configuration options:
+//   ami_block_device_mappings     array of block device mappings
 //   ami_description               string
 //   ami_groups                    array of strings
 //   ami_product_codes             array of strings
@@ -489,6 +488,7 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, err er
 //   bundle_vol_command            string
 //   enhanced_networking           bool
 //   iam_instance_profile          string
+//   launch_block_device_mappings  array of block device mappings
 //   security_group_id             string
 //   security_group_ids            array of strings
 //   spot_price                    string
@@ -505,9 +505,6 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, err er
 //   user_data_file                string
 //   vpc_id                        string
 //   x509_upload_path              string
-// Not implemented configuration options:
-//   ami_block_device_mappings     array of block device mappings
-//   launch_block_device_mappings  array of block device mappings
 func (r *rawTemplate) createAmazonInstance() (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[AmazonEBS.String()]
 	if !ok {
@@ -642,7 +639,7 @@ func (r *rawTemplate) createAmazonInstance() (settings map[string]interface{}, e
 	// Process the Arrays.
 	for name, val := range r.Builders[AmazonEBS.String()].Arrays {
 		// if it's not a supported array group, log a warning and move on
-		if name == "ami_block_device_mappings" {
+		if name == "ami_block_device_mappings" || name == "launch_block_device_mappings" {
 			settings[name] = val
 			continue
 		}
@@ -1021,7 +1018,7 @@ func (r *rawTemplate) createNull() (settings map[string]interface{}, err error) 
 //   iso_url                  string
 //   ssh_username             string
 // Optional configuration options:
-//   boot_command             array of strings*\
+//   boot_command             array of strings
 //   boot_wait                string
 //   disk_size                integer
 //   export_opts              array of strings
@@ -1262,7 +1259,7 @@ noISOURL:
 //   format                   string
 //   guest_additions_mode     string
 //   guest_additions_path     string
-//   guest_additions_sha256	   string
+//   guest_additions_sha256   string
 //   guest_additions_url      string
 //   headless                 boolean
 //   http_directory           string
@@ -1433,11 +1430,11 @@ func (r *rawTemplate) createVBoxManage(v interface{}) [][]string {
 //
 // Required configuration options:
 //   iso_checksum            string
-//	 iso_checksum_type       string
-//	 iso_url                 string
+//   iso_checksum_type       string
+//   iso_url                 string
 //   ssh_username            string
 // Optional configuration options
-//   boot_command            array of strings*
+//   boot_command            array of strings
 //   boot_wait               string
 //   disk_size               integer
 //   disk_type_id            string
