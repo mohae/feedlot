@@ -221,7 +221,9 @@ Some supported Packer section types may have unsupported settings. Usually these
     * ubuntu
 
 #### Supported Builders
+    * amazon-chroot
     * amazon-ebs
+    * amazon-instance
     * digitalocean
     * docker
     * googlecompute
@@ -248,6 +250,8 @@ Rancher also has a `common` builder which can contain settings which may exist i
     * chef-client
     * chef-solo
     * file-uploads
+    * puppet-masterless
+    * puppet-server
     * salt-masterless
     * shell
 
@@ -332,10 +336,20 @@ And the files would be copied to:
 ### Specifying your own iso information
 For builders that require the `iso` information, you can specify your own information by populating the `iso_url` or `iso_urls`, `iso_checksum`, and `iso_checksum_type` settings. If these settings are not set, Rancher will look-up the information for you. For CentOS, this will result in a random mirror being chosen, unless you have specified the mirror in the `base_url` field.
 
-### Key handling
-While Rancher ensures that most referenced resources are copied to the resulting template, this does not apply to key files. When generating Packer templates, Rancher does not attempt to locate any referenced key files. It is assumed that these keys will be in the location specified in the template. 
+Please file an issue for any key resources that may be copied during Packer template generation from Rancher builds.toml.
 
-Please file an issue for any key resources that may be copied during Packer template generation from Rancher builds.toml
+### Arrays
+In Rancher builds, Packer component sections can have both a `settings` and `array` definec. The `arrays` section is for configuration settings whose values are more complex than a string, int, or bool. The exception to this are configuration settings whose values are `json`, which are not supported at the moment.
+
+### Private Key handling
+While Rancher ensures that most referenced resources are copied to the resulting template, this does not apply to key files. When generating Packer templates, Rancher does not attempt to locate any referenced key files. It is assumed that these keys will be in the location specified in the template. This also applies to Chef's secret data bags.
+
+### Multiple provisoner handling
+Some Packer templates may have multiple provisioners. Some provisioners require work to be done by another provisioner first, like Puppet. Unfortunately, due to the way Go writes out JSON, this ordering will not be preserved, all JSON is written in alphabetical order. If ordering is important, then some manual changes will need to be made after Rancher generates the Packer template.
+
+This may not be a permanent limitation, but it is a current one.
+
+Also, the TOML unmarshall may not preserve the order in which they were defined in the original build template. This is something I should check, but haven't.
 
 ## Issues: questions, bugs, changes, etc.
 Please file an issue for an issue for any questions, bugs, changes, wishes, etc. that you may have related to Rancher. Better yet, submit a pull request when applicable!
