@@ -357,6 +357,9 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 						"staging_directory=/tmp/puppet-masterless",
 					},
 					Arrays: map[string]interface{}{
+						"facter": map[string]string{
+							"server_role": "webserver",
+						},
 						"module_paths": []string{
 							"/etc/puppetlabs/puppet/modules",
 							"/opt/puppet/share/puppet/modules",
@@ -374,6 +377,11 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 						"puppet_node=vagrant-puppet-srv01",
 						"puppet_server=server",
 						"staging_directory=/tmp/puppet-server",
+					},
+					Arrays: map[string]interface{}{
+						"facter": map[string]string{
+							"server_role": "webserver",
+						},
 					},
 				},
 			},
@@ -694,8 +702,11 @@ func TestPuppetMasterlessProvisioner(t *testing.T) {
 	expected := map[string]interface{}{
 		"execute_command":   "echo 'vagrant'|sudo -S sh '{{.Path}}'",
 		"hiera_config_path": "puppet-masterless/hiera.yaml",
-		"manifest_dir":      "puppet-masterless/manifests",
-		"manifest_file":     "puppet-masterless/site.pp",
+		"facter": map[string]string{
+			"server_role": "webserver",
+		},
+		"manifest_dir":  "puppet-masterless/manifests",
+		"manifest_file": "puppet-masterless/site.pp",
 		"module_paths": []string{
 			"/etc/puppetlabs/puppet/modules",
 			"/opt/puppet/share/puppet/modules",
@@ -718,12 +729,15 @@ func TestPuppetServerProvisioner(t *testing.T) {
 	expected := map[string]interface{}{
 		"client_cert_path":        "/etc/puppet/client.pem",
 		"client_private_key_path": "/home/puppet/.ssh/puppet_id_rsa",
-		"options":                 "-v --detailed-exitcodes",
-		"prevent_sudo":            false,
-		"puppet_node":             "vagrant-puppet-srv01",
-		"puppet_server":           "server",
-		"staging_directory":       "/tmp/puppet-server",
-		"type":                    "puppet-server",
+		"facter": map[string]string{
+			"server_role": "webserver",
+		},
+		"options":           "-v --detailed-exitcodes",
+		"prevent_sudo":      false,
+		"puppet_node":       "vagrant-puppet-srv01",
+		"puppet_server":     "server",
+		"staging_directory": "/tmp/puppet-server",
+		"type":              "puppet-server",
 	}
 	settings, err := testRawTemplateProvisionersAll.createPuppetServer()
 	if err != nil {
