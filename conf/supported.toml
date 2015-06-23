@@ -22,7 +22,7 @@
 			"7"
 		]
 		default_image = [
-			"release = 6",
+			"release = 7",
 			"image = minimal",
 			"arch = x86_64",
 		]
