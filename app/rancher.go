@@ -359,7 +359,7 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 	bTpl.BuildName = buildName
 	// create build template() then call create packertemplate
 	rTpl.build = DistroDefaults.Templates[DistroFromString(bTpl.Distro)].build
-	rTpl.updateBuildSettings(&bTpl)
+	rTpl.updateBuildSettings(bTpl)
 	pTpl := packerTemplate{}
 	var err error
 	pTpl, err = rTpl.createPackerTemplate()

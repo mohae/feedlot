@@ -307,7 +307,7 @@ var testBuild = map[string]rawTemplate{
 					templateSection{
 						Arrays: map[string]interface{}{
 							"vboxmanage": []string{
-								"--memory=4096",
+								"memory=4096",
 							},
 						},
 					},

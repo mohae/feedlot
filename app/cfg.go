@@ -451,7 +451,7 @@ func (s *supported) Load() error {
 
 // Struct to hold the builds.
 type builds struct {
-	Build map[string]rawTemplate
+	Build map[string]*rawTemplate
 	sync.Mutex
 	loaded bool
 }
@@ -471,19 +471,28 @@ func (b *builds) Load() error {
 			return decodeErr(err)
 		}
 	case "json":
+		/*
+			buff, err := ioutil.ReadFile(name)
+			if err != nil {
+				return decodeErr(err)
+			}
+			err = json.Unmarshal(buff, &b.Build)
+			if err != nil {
+				return decodeErr(err)
+			}
+		*/
 		f, err := os.Open(name)
 		if err != nil {
 			return decodeErr(err)
 		}
-		defer f.Close()
 		dec := json.NewDecoder(f)
 		for {
-			err := dec.Decode(&b)
+			err := dec.Decode(&b.Build)
 			if err == io.EOF {
 				break
 			}
 			if err != nil {
-				return err
+				return decodeErr(err)
 			}
 		}
 	default:
