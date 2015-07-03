@@ -28,3 +28,4 @@
 # will be dynamically replaced at build time.
 #param_delim_start    = ":"
 #archive_prior_build  = false
+#$format              = "toml"

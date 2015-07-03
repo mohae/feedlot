@@ -1,7 +1,12 @@
 package app
 
 import (
+	"errors"
 	"fmt"
+)
+
+var (
+	ErrUnsupportedFormat = errors.New("error: unsupported format")
 )
 
 func builderErr(b Builder, err error) error {

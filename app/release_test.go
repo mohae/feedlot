@@ -119,8 +119,8 @@ func TestCentOSSetChecksumURL(t *testing.T) {
 	c.setVersionInfo()
 	c.SetISOInfo()
 	checksumURL := c.checksumURL()
-	if !strings.HasPrefix(checksumURL, "http://") {
-		t.Errorf("Expected %q to start with \"http://\", it did not.", checksumURL)
+	if !strings.HasPrefix(checksumURL, "https://") && !strings.HasPrefix(checksumURL, "http://") {
+		t.Errorf("Expected %q to start with either \"http://\" or \"https://\", it did not.", checksumURL)
 	}
 	expected := c.FullVersion + "/isos/" + c.Arch + "/sha256sum.txt"
 	if !strings.HasSuffix(checksumURL, expected) {

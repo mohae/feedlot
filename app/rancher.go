@@ -85,14 +85,14 @@ var DistroDefaults distroDefaults
 // distroDefaults contains the defaults for all supported distros and a flag
 // whether its been set or not.
 type distroDefaults struct {
-	Templates map[Distro]*rawTemplate
+	Templates map[Distro]rawTemplate
 	IsSet     bool
 }
 
 // GetTemplate returns a deep copy of the default template for the passed
 // distro name. If the distro does not exist, an error is returned.
-func (d *distroDefaults) GetTemplate(n string) (*rawTemplate, error) {
-	var t *rawTemplate
+func (d *distroDefaults) GetTemplate(n string) (rawTemplate, error) {
+	var t rawTemplate
 	var ok bool
 	t, ok = d.Templates[DistroFromString(n)]
 	if !ok {
@@ -132,7 +132,7 @@ func (d *distroDefaults) Set() error {
 		jww.ERROR.Println(err)
 		return err
 	}
-	d.Templates = map[Distro]*rawTemplate{}
+	d.Templates = map[Distro]rawTemplate{}
 	// Generate the default settings for each distro.
 	for k, v := range s.Distro {
 		// See if the base url exists for non centos distros
@@ -221,7 +221,7 @@ func BuildDistro(a ArgsFilter) error {
 
 // Create Packer templates from specified build templates.
 func buildPackerTemplateFromDistro(a ArgsFilter) error {
-	var rTpl *rawTemplate
+	var rTpl rawTemplate
 	if a.Distro == "" {
 		err := fmt.Errorf("cannot build a Packer template because no there wasn't a value for the distro flag")
 		jww.ERROR.Println(err)
@@ -330,12 +330,10 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 		doneCh <- err
 		return
 	}
-	var rTpl, bTpl *rawTemplate
 	var ok bool
 	// Check the type and create the defaults for that type, if it doesn't already exist.
-	rTpl = &rawTemplate{}
-	bTpl = &rawTemplate{}
-	bTpl, ok = Builds.Build[buildName]
+	rTpl := rawTemplate{}
+	bTpl, ok := Builds.Build[buildName]
 	if !ok {
 		err := fmt.Errorf("unable to build Packer template: %q is not a valid build name", buildName)
 		doneCh <- err
@@ -361,7 +359,7 @@ func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
 	bTpl.BuildName = buildName
 	// create build template() then call create packertemplate
 	rTpl.build = DistroDefaults.Templates[DistroFromString(bTpl.Distro)].build
-	rTpl.updateBuildSettings(bTpl)
+	rTpl.updateBuildSettings(&bTpl)
 	pTpl := packerTemplate{}
 	var err error
 	pTpl, err = rTpl.createPackerTemplate()

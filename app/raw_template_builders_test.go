@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-var testUbuntu = &rawTemplate{
+var testUbuntu = rawTemplate{
 	IODirInf: IODirInf{
 		OutDir: "../test_files/ubuntu/out/ubuntu",
 		SrcDir: "../test_files/src/ubuntu",
@@ -108,7 +108,7 @@ var testUbuntu = &rawTemplate{
 	},
 }
 
-var testCentOS = &rawTemplate{
+var testCentOS = rawTemplate{
 	IODirInf: IODirInf{
 		OutDir: "../test_files/out/centos",
 		SrcDir: "../test_files/src/centos",
@@ -242,7 +242,7 @@ var testCentOS = &rawTemplate{
 	},
 }
 
-var testAllBuilders = &rawTemplate{
+var testAllBuilders = rawTemplate{
 	IODirInf: IODirInf{
 		IncludeComponentString: "true",
 		OutDir:                 "../test_files/out",
@@ -783,7 +783,7 @@ var testAllBuilders = &rawTemplate{
 	},
 }
 
-var testDigtialOceanAPIV1 = &rawTemplate{
+var testDigtialOceanAPIV1 = rawTemplate{
 	IODirInf: IODirInf{
 		OutDir: "../test_files/ubuntu/out/ubuntu",
 		SrcDir: "../test_files/src/ubuntu",
@@ -832,7 +832,7 @@ var testDigtialOceanAPIV1 = &rawTemplate{
 	},
 }
 
-var testDigtialOceanNoAPI = &rawTemplate{
+var testDigtialOceanNoAPI = rawTemplate{
 	IODirInf: IODirInf{
 		OutDir: "../test_files/ubuntu/out/ubuntu",
 		SrcDir: "../test_files/src/ubuntu",
@@ -878,7 +878,7 @@ var testDigtialOceanNoAPI = &rawTemplate{
 		},
 	},
 }
-var testDockerRunComandFile = &rawTemplate{
+var testDockerRunComandFile = rawTemplate{
 	IODirInf: IODirInf{
 		OutDir: "../test_files/out",
 		SrcDir: "../test_files/src",
@@ -927,7 +927,7 @@ var testDockerRunComandFile = &rawTemplate{
 
 // This should still result in only 1 command array, using the array value and not the
 // file
-var testDockerRunComand = &rawTemplate{
+var testDockerRunComand = rawTemplate{
 	IODirInf: IODirInf{
 		OutDir: "../test_files/out",
 		SrcDir: "../test_files/src",
@@ -1092,7 +1092,7 @@ var builderMerged = map[string]builder{
 	},
 }
 
-var vbB = &builder{
+var vbB = builder{
 	templateSection{
 		Settings: []string{
 			"boot_wait=5s",
@@ -1198,7 +1198,7 @@ func TestCreateBuilders(t *testing.T) {
 		}
 	}
 
-	r := &rawTemplate{}
+	r := rawTemplate{}
 	r = testDistroDefaultUbuntu
 	r.files = make(map[string]string)
 	r.BuilderTypes[0] = "unsupported"
@@ -1248,7 +1248,7 @@ func TestRawTemplateUpdateBuilderCommon(t *testing.T) {
 }
 
 func TestRawTemplateBuildersSettingsToMap(t *testing.T) {
-	settings := vbB.settingsToMap(testRawTpl)
+	settings := vbB.settingsToMap(&testRawTpl)
 	if settings["boot_wait"] != "5s" {
 		t.Errorf("Expected \"5s\", got %q", settings["boot_wait"])
 	}

@@ -8,8 +8,9 @@ import (
 
 var testDefaults = &defaults{
 	IODirInf: IODirInf{
-		OutDir: "../test_files/out/:distro/:build_name",
-		SrcDir: "../test_files/src/:distro",
+		IncludeComponentString: "true",
+		OutDir:                 "out/:build_name",
+		SrcDir:                 "src",
 	},
 	PackerInf: PackerInf{
 		Description:      "Test Default Rancher template",
@@ -23,7 +24,6 @@ var testDefaults = &defaults{
 	build: build{
 		BuilderTypes: []string{
 			"virtualbox-iso",
-			"vmware-iso",
 		},
 		Builders: map[string]builder{
 			"common": {
@@ -36,6 +36,7 @@ var testDefaults = &defaults{
 						"headless = true",
 						"http_directory = http",
 						"iso_checksum_type = sha256",
+						"output_directory = :out_dir",
 						"shutdown_command = shutdown_test.command",
 						"ssh_password = vagrant",
 						"ssh_port = 22",
@@ -47,23 +48,13 @@ var testDefaults = &defaults{
 			"virtualbox-iso": {
 				templateSection{
 					Settings: []string{
+						"guest_additions_path = VBoxGuestAdditions_{{ .Version }}.iso",
 						"virtualbox_version_file = .vbox_version",
 					},
 					Arrays: map[string]interface{}{
-						"vm_settings": []string{
+						"vboxmanage": []string{
 							"cpus=1",
 							"memory=1024",
-						},
-					},
-				},
-			},
-			"vmware-iso": {
-				templateSection{
-					Arrays: map[string]interface{}{
-						"vm_settings": []string{
-							"cpuid.coresPerSocket=1",
-							"memsize=1024",
-							"numvcpus=1",
 						},
 					},
 				},
@@ -71,7 +62,6 @@ var testDefaults = &defaults{
 		},
 		PostProcessorTypes: []string{
 			"vagrant",
-			"vagrant-cloud",
 		},
 		PostProcessors: map[string]postProcessor{
 			"vagrant": {
@@ -79,22 +69,7 @@ var testDefaults = &defaults{
 					Settings: []string{
 						"compression_level = 9",
 						"keep_input_artifact = false",
-						"output = out/rancher-packer.box",
-					},
-					Arrays: map[string]interface{}{
-						"only": []string{
-							"virtualbox-iso",
-						},
-					},
-				},
-			},
-			"vagrant-cloud": {
-				templateSection{
-					Settings: []string{
-						"access_token = getAValidTokenFrom-VagrantCloud.com",
-						"box_tag = foo/bar",
-						"no_release = true",
-						"version = 1.0.1",
+						"output = :build_name.box",
 					},
 				},
 			},
@@ -109,12 +84,6 @@ var testDefaults = &defaults{
 						"execute_command = execute_test.command",
 					},
 					Arrays: map[string]interface{}{
-						"except": []string{
-							"docker",
-						},
-						"only": []string{
-							"virtualbox-iso",
-						},
 						"scripts": []string{
 							"setup_test.sh",
 							"vagrant_test.sh",
@@ -129,6 +98,62 @@ var testDefaults = &defaults{
 	loaded: true,
 }
 
+var testSupported = map[string]distro{
+	"centos": distro{
+		BuildInf: BuildInf{
+			BaseURL: "",
+		},
+		IODirInf: IODirInf{},
+		PackerInf: PackerInf{
+			MinPackerVersion: "",
+			Description:      "Default template config and Rancher options for CentOS",
+		},
+		Arch: []string{
+			"i386",
+			"x86_64",
+		},
+		Image: []string{
+			"minimal",
+			"netinstall",
+		},
+		Release: []string{
+			"5",
+			"6",
+		},
+		DefImage: []string{
+			"release = 6",
+			"image = minimal",
+			"arch = x86_64",
+		},
+	},
+	"debian": distro{
+		BuildInf: BuildInf{
+			BaseURL: "http://cdimage.debian.org/debian-cd/",
+		},
+		IODirInf: IODirInf{},
+		PackerInf: PackerInf{
+			MinPackerVersion: "",
+			Description:      "Default template config and Rancher options for Debian",
+		},
+		Arch: []string{
+			"i386",
+			"amd64",
+		},
+		Image: []string{
+			"lxde-CD-1",
+			"netinst",
+			"xfce-CD-1",
+		},
+		Release: []string{
+			"8",
+		},
+		DefImage: []string{
+			"release = 8",
+			"image = netinst",
+			"arch = amd64",
+		},
+	},
+}
 var testSupportedUbuntu = &distro{
 	BuildInf: BuildInf{
 		BaseURL: "http://releases.ubuntu.com/",
@@ -255,6 +280,100 @@ var testSupportedCentOS = &distro{
 		"image = minimal",
 		"arch = x86_64",
 	},
+}
+
+var testBuild = map[string]rawTemplate{
+	"1204-amd64": rawTemplate{
+		Distro: "ubuntu",
+		PackerInf: PackerInf{
+			Description: "ubuntu LTS 1204 amd64 server build, minimal install",
+		},
+		Arch:    "amd64",
+		Image:   "server",
+		Release: "12.04",
+		build: build{
+			BuilderTypes: []string{
+				"virtualbox-iso",
+			},
+			Builders: map[string]builder{
+				"common": {
+					templateSection{
+						Settings: []string{
+							"ssh_wait_timeout = 300m",
+						},
+					},
+				},
+				"virtualbox-iso": {
+					templateSection{
+						Arrays: map[string]interface{}{
+							"vboxmanage": []string{
+								"--memory=4096",
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	"centos6": rawTemplate{
+		Distro: "centos",
+		PackerInf: PackerInf{
+			Description: "Centos 6 w virtualbox-iso only",
+		},
+		build: build{
+			BuilderTypes: []string{
+				"virtualbox-iso",
+			},
+		},
+	},
+	"jessie": rawTemplate{
+		Distro: "debian",
+		PackerInf: PackerInf{
+			Description: "debian jessie",
+		},
+		Arch: "amd64",
+		build: build{
+			BuilderTypes: []string{
+				"virtualbox-iso",
+			},
+			Builders: map[string]builder{
+				"virtualbox-iso": {
+					templateSection{
+						Arrays: map[string]interface{}{
+							"vboxmanage": []string{
+								"--memory=4096",
+							},
+						},
+					},
+				},
+			},
+			PostProcessorTypes: []string{
+				"vagrant",
+			},
+			ProvisionerTypes: []string{
+				"shell",
+			},
+			Provisioners: map[string]provisioner{
+				"shell": {
+					templateSection{
+						Arrays: map[string]interface{}{
+							"scripts": []string{
+								"setup.sh",
+								"sudoers.sh",
+								"vagrant.sh",
+								"customize.sh",
+								"cleanup.sh",
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
+var testBuildList = map[string]list{
+	"ubuntu-all": list{Builds: []string{"1204-amd64-server", "1310-amd64-desktop"}},
 }
 
 func TestTemplateSectionMergeArrays(t *testing.T) {
@@ -454,86 +573,131 @@ func TestProvisionerMergeSettings(t *testing.T) {
 }
 
 func TestDefaults(t *testing.T) {
-	contour.UpdateString(DefaultFile, "")
-	d := defaults{}
-	err := d.Load()
-	if err == nil {
-		t.Error("Expected an error, got nil")
-	} else {
-		if err.Error() != "\"default\" not set, unable to retrieve the default file" {
-			t.Errorf("Expected '\"default\" not set, unable to retrieve the default the file', got %q", err.Error())
-		} else {
-			if d.MinPackerVersion != "" {
-				t.Errorf("Expected \"\", got %q", d.MinPackerVersion)
+	tests := []struct {
+		filename    string
+		format      string
+		expectedErr string
+	}{
+		{"", "", "\"default\" not set, unable to retrieve the default file"},
+		//		{"../test_files/conf/test.default.yaml", "", ""},
+		//{"../test_files/conf/test.default.yaml", "yaml", ""},
+		{"../test_files/conf/test.default.toml", "toml", ""},
+		{"../test_files/conf/test.default.json", "json", ""},
+	}
+	for i, test := range tests {
+		contour.UpdateString(DefaultFile, test.filename)
+		d := defaults{}
+		err := d.Load()
+		if err != nil {
+			if err.Error() != test.expectedErr {
+				t.Errorf("%d: expected %q, got %q", i, test.expectedErr, err.Error())
 			}
+			continue
+		}
+		if test.expectedErr != "" {
+			t.Errorf("%d: expepcted an error: %q, got none", i, test.expectedErr)
+			continue
+		}
+		if MarshalJSONToString.Get(d) != MarshalJSONToString.Get(testDefaults) {
+			t.Errorf("%d: expected %q, got %q", i, MarshalJSONToString.Get(testDefaults), MarshalJSONToString.Get(d))
 		}
 	}
 }
 
 func TestSupported(t *testing.T) {
-	contour.UpdateString(SupportedFile, "")
-	s := supported{}
-	err := s.Load()
-	if err == nil {
-		t.Errorf("expected error, none occurred")
-	} else {
-		if err.Error() != "\"supported\" not set, unable to retrieve the supported file" {
-			t.Errorf("expected '\"supported\" not set, unable to retrieve the supported file' got %q", err.Error())
+	tests := []struct {
+		filename    string
+		format      string
+		expectedErr string
+	}{
+		{"", "", "\"supported\" not set, unable to retrieve the supported file"},
+		//		{"../test_files/conf/test.supported.yaml", "", ""},
+		//{"../test_files/conf/test.supported.yaml", "yaml", ""},
+		{"../test_files/conf/test.supported.toml", "toml", ""},
+		{"../test_files/conf/test.supported.json", "json", ""},
+	}
+	for i, test := range tests {
+		contour.UpdateString(SupportedFile, test.filename)
+		s := supported{}
+		err := s.Load()
+		if err != nil {
+			if err.Error() != test.expectedErr {
+				t.Errorf("%d: expected %q, got %q", i, test.expectedErr, err.Error())
+			}
+			continue
 		}
-		if s.loaded {
-			t.Errorf("expected Supported info not to be loaded, but it was true")
+		if test.expectedErr != "" {
+			t.Errorf("%d: expepcted an error: %q, got none", i, test.expectedErr)
+			continue
+		}
+		if MarshalJSONToString.Get(s.Distro) != MarshalJSONToString.Get(testSupported) {
+			t.Errorf("%d: expected %q, got %q", i, MarshalJSONToString.Get(testSupported), MarshalJSONToString.Get(s.Distro))
 		}
 	}
 }
 
 func TestBuildStuff(t *testing.T) {
-	contour.UpdateString(BuildFile, "")
-	b := builds{}
-	err := b.Load()
-	if err == nil {
-		t.Error("Expected an error, but none received")
-	} else {
-		if err.Error() != "\"build\" not set, unable to retrieve the build file" {
-			t.Errorf("Expected \"build\" not set, unable to retrieve the build file, got %q", err.Error())
-		}
-		if b.loaded == true {
-			t.Errorf("expected Build's loaded flag to be false, but it was true")
-		}
+	tests := []struct {
+		filename    string
+		format      string
+		expectedErr string
+	}{
+		{"", "", "\"build\" not set, unable to retrieve the build file"},
+		{"../test_files/conf.d/test.build.yaml", "", "error: unsupported format"},
+		{"../test_files/conf.d/test.build.yaml", "yaml", "error: unsupported format"},
+		{"../test_files/conf.d/test.build.toml", "toml", ""},
+		{"../test_files/conf.d/test.build.json", "json", ""},
 	}
-
-	contour.UpdateString(BuildFile, "../test_files/notthere.toml")
-	err = b.Load()
-	if err == nil {
-		t.Error("Expected an error, but none received")
-	} else {
-		if err.Error() != "decode failed: open ../test_files/notthere.toml: no such file or directory" {
-			t.Errorf("Expected \"decode failed: open ../test_files/notthere.toml: no such file or directory\", got %q", err.Error())
+	for i, test := range tests {
+		contour.UpdateString(BuildFile, test.filename)
+		contour.UpdateString("format", test.format)
+		b := builds{}
+		err := b.Load()
+		if err != nil {
+			if err.Error() != test.expectedErr {
+				t.Errorf("%d: expected %q, got %q", i, test.expectedErr, err.Error())
+			}
+			continue
 		}
-		if b.loaded == true {
-			t.Errorf("expected Build's loaded flag to be false, but it was true")
+		if test.expectedErr != "" {
+			t.Errorf("%d: expepcted an error: %q, got none", i, test.expectedErr)
+			continue
+		}
+		if MarshalJSONToString.Get(b.Build) != MarshalJSONToString.Get(testBuild) {
+			t.Errorf("%d: expected %q, got %q", i, MarshalJSONToString.Get(testBuild), MarshalJSONToString.Get(b.Build))
 		}
 	}
 }
 
 func TestBuildListStuff(t *testing.T) {
-	contour.UpdateString(BuildListFile, "")
-	b := buildLists{}
-	err := b.Load()
-	if err == nil {
-		t.Error("Expected an error, but none received")
-	} else {
-		if err.Error() != "\"build_list\" not set, unable to retrieve the build_list file" {
-			t.Errorf("Expected '\"build_list\" not set, unable to retrieve the build_list file', got %q", err.Error())
-		}
+	tests := []struct {
+		filename    string
+		format      string
+		expectedErr string
+	}{
+		{"", "", "\"build_list\" not set, unable to retrieve the build_list file"},
+		{"../test_files/conf.d/test.build_list.yaml", "", "error: unsupported format"},
+		{"../test_files/conf.d/test.build_list.yaml", "yaml", "error: unsupported format"},
+		{"../test_files/conf.d/test.build_list.toml", "toml", ""},
+		{"../test_files/conf.d/test.build_list.json", "json", ""},
 	}
-
-	contour.UpdateString(BuildListFile, "../test_files/notthere.toml")
-	err = b.Load()
-	if err == nil {
-		t.Error("Expected an error, but none received")
-	} else {
-		if err.Error() != "decode failed: open ../test_files/notthere.toml: no such file or directory" {
-			t.Errorf("Expected \"decode failed: open ../test_files/notthere.toml: no such file or directory\", got %q", err.Error())
+	for i, test := range tests {
+		contour.UpdateString(BuildListFile, test.filename)
+		contour.UpdateString("format", test.format)
+		b := &buildLists{List: map[string]list{}}
+		err := b.Load()
+		if err != nil {
+			if err.Error() != test.expectedErr {
+				t.Errorf("%d: expected %q, got %q", i, test.expectedErr, err.Error())
+			}
+			continue
+		}
+		if test.expectedErr != "" {
+			t.Errorf("%d: expected an error: %q, got none", i, test.expectedErr)
+			continue
+		}
+		if MarshalJSONToString.Get(b.List) != MarshalJSONToString.Get(testBuildList) {
+			t.Errorf("%d: expected %q, got %q", i, MarshalJSONToString.Get(testBuildList), MarshalJSONToString.Get(b.List))
 		}
 	}
 }

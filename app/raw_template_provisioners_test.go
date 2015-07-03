@@ -584,7 +584,7 @@ func TestRawTemplateUpdateProvisioners(t *testing.T) {
 }
 
 func TestProvisionersSettingsToMap(t *testing.T) {
-	res := pr.settingsToMap("shell", testRawTpl)
+	res := pr.settingsToMap("shell", &testRawTpl)
 	compare := map[string]interface{}{"type": "shell", "execute_command": "echo 'vagrant' | sudo -S sh '{{.Path}}'"}
 	for k, v := range res {
 		val, ok := compare[k]

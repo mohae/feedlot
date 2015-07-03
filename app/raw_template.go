@@ -59,11 +59,11 @@ type rawTemplate struct {
 
 // mewRawTemplate returns a rawTemplate with current date in ISO 8601 format.
 // This should be called when a rawTemplate with the current date is desired.
-func newRawTemplate() *rawTemplate {
+func newRawTemplate() rawTemplate {
 	// Set the date, formatted to ISO 8601
 	date := time.Now()
 	splitDate := strings.Split(date.String(), " ")
-	return &rawTemplate{date: splitDate[0], delim: contour.GetString(ParamDelimStart), files: make(map[string]string), dirs: make(map[string]string)}
+	return rawTemplate{date: splitDate[0], delim: contour.GetString(ParamDelimStart), files: make(map[string]string), dirs: make(map[string]string)}
 }
 
 // r.createPackerTemplate creates a Packer template from the rawTemplate that

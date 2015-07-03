@@ -25,7 +25,7 @@ func stringSliceContains(sl []string, val string) bool {
 	return false
 }
 
-var testDistroDefaultUbuntu = &rawTemplate{
+var testDistroDefaultUbuntu = rawTemplate{
 	PackerInf: PackerInf{MinPackerVersion: "0.4.0", Description: "Test supported distribution template"},
 	IODirInf: IODirInf{
 		OutDir: "../test_files/out/:distro/:build_name",
@@ -151,7 +151,7 @@ var testDistroDefaultUbuntu = &rawTemplate{
 	},
 }
 
-var testDistroDefaultCentOS = &rawTemplate{
+var testDistroDefaultCentOS = rawTemplate{
 	PackerInf: PackerInf{
 		MinPackerVersion: "0.4.0",
 		Description:      "Test template config and Rancher options for CentOS",
@@ -289,15 +289,15 @@ var testDistroDefaultCentOS = &rawTemplate{
 var testDistroDefaults distroDefaults
 
 func init() {
-	testDistroDefaults = distroDefaults{Templates: map[Distro]*rawTemplate{}, IsSet: true}
+	testDistroDefaults = distroDefaults{Templates: map[Distro]rawTemplate{}, IsSet: true}
 	testDistroDefaults.Templates[Ubuntu] = testDistroDefaultUbuntu
 	testDistroDefaults.Templates[CentOS] = testDistroDefaultCentOS
 }
 
 func TestDistroDefaultsGetTemplate(t *testing.T) {
 	var err error
-	var emptyRawTemplate *rawTemplate
-	r := &rawTemplate{}
+	var emptyRawTemplate rawTemplate
+	r := rawTemplate{}
 	r, err = testDistroDefaults.GetTemplate("invalid")
 	if err == nil {
 		t.Error("expected \"unsupported distro: invalid\", got nil")

@@ -1,7 +1,9 @@
 package app
 
 import (
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/mohae/contour"
 	jww "github.com/spf13/jwalterweatherman"
@@ -12,7 +14,7 @@ const (
 	BuildFile       = "build_file"
 	BuildListFile   = "build_list_file"
 	CfgFile         = "cfg_file"
-	CfgFilename     = "rancher.toml"
+	CfgFilename     = "rancher.json"
 	DefaultFile     = "default_file"
 	Log             = "log"
 	LogFile         = "log_file"
@@ -58,6 +60,13 @@ func init() {
 	// if it's not set, use the application default
 	if cfgFilename == "" {
 		cfgFilename = CfgFilename
+
+	}
+	parts := strings.Split(cfgFilename, ".")
+	if len(parts) < 2 {
+		contour.RegisterStringFlag("format", "f", "toml", "toml", "the format of the rancher conf files: toml and json are supported")
+	} else {
+		contour.RegisterStringFlag("format", "f", parts[len(parts)-1], parts[len(parts)-1], "the format of the rancher conf files: toml and json are supported")
 	}
 	contour.SetName(Name)
 	contour.SetUseEnv(true)
@@ -81,15 +90,68 @@ func init() {
 	contour.RegisterStringFlag("release", "r", "", "", "os release override for default builds")
 }
 
-// SetCfg set's the appCFg from the app's cfg file and then applies any
-// env vars that have been set. After this, settings can only be updated
+// GetConfFile returns the name of the conf file using the new extension.
+func GetConfFile(s string) string {
+	if s == "" {
+		return s
+	}
+	parts := strings.Split(s, ".")
+	if len(parts) < 2 {
+		return fmt.Sprintf("%s.%s", contour.GetString("format"))
+	}
+	var new string
+	for i, part := range parts {
+		if i == len(parts)-1 {
+			return fmt.Sprintf("%s%s", new, contour.GetString("format"))
+		}
+		new += part + "."
+	}
+	return new
+}
+
+// SetCfg set's the appCFg from the app's cfg file and then applies any env
+// vars that have been set. After this, settings can only be updated
 // programmatically or via command-line flags.
+//
+// The default cfg file may not be the one found as the app config file may be
+// in a different format. SetCfg first looks for it in the configured location.
+// If it is not found, the alternate format is checked.
+//
+// Since Rancher supports operations without a config file, not finding one is
+// not an error state.
+//
+// Currently supported config file formats:
+//    TOML
+//    JSON
 func SetCfg() error {
-	err := contour.SetCfg()
+	// determine the correct file, This is done here because it's less ugly than the alternatives.
+	_, err := os.Stat(contour.GetString(CfgFile))
+	if err != nil && err == os.ErrNotExist {
+		ft := contour.GetString("format")
+		switch ft {
+		case "toml":
+			contour.UpdateString("format", "json")
+			contour.UpdateString(CfgFile, GetConfFile(contour.GetString(CfgFile)))
+		case "json":
+			contour.UpdateString("format", "toml")
+			contour.UpdateString(CfgFile, GetConfFile(contour.GetString(CfgFile)))
+		}
+		_, err = os.Stat(contour.GetString(CfgFile))
+		if err != nil && err == os.ErrNotExist {
+			return nil
+		}
+		// Set the format to the new value.
+		contour.UpdateString("format", ft)
+	}
 	if err != nil {
 		jww.ERROR.Print(err)
 		jww.FEEDBACK.Printf("SetCfg: %s", err.Error())
 		return err
 	}
-	return nil
+	err = contour.SetCfg()
+	if err != nil {
+		jww.ERROR.Print(err)
+		jww.FEEDBACK.Printf("SetCfg: %s", err.Error())
+	}
+	return err
 }

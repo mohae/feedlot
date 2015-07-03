@@ -357,15 +357,26 @@ var ppMerged = map[string]postProcessor{
 }
 
 func TestRawTemplateUpdatePostProcessors(t *testing.T) {
-	err := testDistroDefaults.Templates[CentOS].updatePostProcessors(nil)
+	tpl, ok := testDistroDefaults.Templates[CentOS]
+	if !ok {
+		t.Error("expected \"CentOS\" template to exist. It didn't")
+		return
+	}
+	err := tpl.updatePostProcessors(nil)
 	if err != nil {
 		t.Errorf("expected error to be nil, got %q", err.Error())
+		return
 	}
 	if MarshalJSONToString.Get(testDistroDefaults.Templates[CentOS].PostProcessors) != MarshalJSONToString.Get(ppOrig) {
 		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(ppOrig), MarshalJSONToString.Get(testDistroDefaults.Templates[CentOS].PostProcessors))
 	}
 
-	err = testDistroDefaults.Templates[CentOS].updatePostProcessors(ppNew)
+	tpl, ok = testDistroDefaults.Templates[CentOS]
+	if !ok {
+		t.Error("expected \"CentOS\" template to exist. It didn't")
+		return
+	}
+	err = tpl.updatePostProcessors(ppNew)
 	if err != nil {
 		t.Errorf("expected error to be nil, got %q", err.Error())
 	}
@@ -375,7 +386,7 @@ func TestRawTemplateUpdatePostProcessors(t *testing.T) {
 }
 
 func TestPostProcessorsSettingsToMap(t *testing.T) {
-	res := pp.settingsToMap("vagrant", testRawTpl)
+	res := pp.settingsToMap("vagrant", &testRawTpl)
 	if MarshalJSONToString.Get(res) != MarshalJSONToString.Get(map[string]interface{}{"type": "vagrant", "compression_level": "8", "keep_input_artifact": true}) {
 		t.Errorf("expected %q, got %q", MarshalJSONToString.Get(map[string]interface{}{"type": "vagrant", "compression_level": "8", "keep_input_artifact": true}), MarshalJSONToString.Get(res))
 	}

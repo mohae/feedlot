@@ -1,6 +1,0 @@
-# This is the build list file for Rancher.
-# A list consists of one or more Rancher Build names. This is a comma separated list.
-[list]
-
-	[list.ubuntu]
-	builds = ["1204-amd64-server", "1310-amd64-desktop"]

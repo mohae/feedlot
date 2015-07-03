@@ -9,7 +9,10 @@
 package app
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
+	"os"
 	"strconv"
 	"sync"
 
@@ -23,18 +26,18 @@ import (
 type build struct {
 	// Targeted builders: the values are consistent with Packer's, e.g.
 	// `virtualbox.iso` is used for VirtualBox.
-	BuilderTypes []string `toml:"builder_types"`
+	BuilderTypes []string `toml:"builder_types" json:"builder_types"`
 	// A map of builder configuration. There should always be a `common`
 	// builder, which has settings common to both VMWare and VirtualBox.
 	Builders map[string]builder `toml:"builders"`
 	// Targeted post-processors: the values are consistent with Packer's, e.g.
 	// `vagrant` is used for Vagrant.
-	PostProcessorTypes []string `toml:"post_processor_types"`
+	PostProcessorTypes []string `toml:"post_processor_types" json:"post_processor_types"`
 	// A map of post-processor configurations.
-	PostProcessors map[string]postProcessor `toml:"post_processors"`
+	PostProcessors map[string]postProcessor `toml:"post_processors" json:"post_processors"`
 	// Targeted provisioners: the values are consistent with Packer's, e.g.
 	// `shell` is used for shell.
-	ProvisionerTypes []string `toml:"provisioner_types"`
+	ProvisionerTypes []string `toml:"provisioner_types" json:"provisioner_types"`
 	// A map of provisioner configurations.
 	Provisioners map[string]provisioner `toml:"provisioners"`
 }
@@ -150,24 +153,6 @@ func (b *builder) mergeArrays(m map[string]interface{}) {
 	b.Arrays = b.templateSection.mergeArrays(b.Arrays, m)
 }
 
-// mergeVMSettings Merge the VMSettings section of a builder. New values
-// supersede existing ones.
-// TODO update to work with new arrays processing
-/*
-func (b *builder) mergeVMSettings(new []string) []string {
-	if new == nil {
-		return nil
-	}
-	var merged []string
-	old := deepcopy.InterfaceToSliceStrings(b.Arrays[VMSettings])
-	merged = mergeSettingsSlices(old, new)
-	if b.Arrays == nil {
-		b.Arrays = map[string]interface{}{}
-	}
-	return merged
-}
-*/
-
 // Type for handling the post-processor section of the configs.
 type postProcessor struct {
 	templateSection
@@ -266,9 +251,34 @@ func (d *defaults) Load() error {
 	if name == "" {
 		return filenameNotSetErr("default")
 	}
-	_, err := toml.DecodeFile(name, d)
-	if err != nil {
-		return fmt.Errorf("load of default information failed: %s", err)
+	name = GetConfFile(name)
+	switch contour.GetString("format") {
+	case "toml":
+		_, err := toml.DecodeFile(name, &d)
+		if err != nil {
+			return decodeErr(err)
+		}
+	case "json":
+		f, err := os.Open(name)
+		if err != nil {
+			return decodeErr(err)
+		}
+		defer f.Close()
+		dec := json.NewDecoder(f)
+		if err != nil {
+			return decodeErr(err)
+		}
+		for {
+			err := dec.Decode(&d)
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				return err
+			}
+		}
+	default:
+		return ErrUnsupportedFormat
 	}
 	d.loaded = true
 	return nil
@@ -282,8 +292,8 @@ type BuildInf struct {
 	// BuildName is the name of the build. This is either the name, as
 	// specified in the build.toml file, or a generated name for -distro
 	// flag based builds.
-	BuildName string `toml:"build_name"`
-	BaseURL   string `toml:"base_url"`
+	BuildName string `toml:"build_name" json:"build_name"`
+	BaseURL   string `toml:"base_url" json:"base_url"`
 }
 
 func (i *BuildInf) update(b BuildInf) {
@@ -304,11 +314,11 @@ type IODirInf struct {
 	// value is empty, parsed to false, or cannot be properly parsed, false is assumed.
 	// If this is true, the component.String() value will be added as the parent of the
 	// output resource: i.e. OutDir/component.String()/resource_name
-	IncludeComponentString string `toml:"include_component_string"`
+	IncludeComponentString string `toml:"include_component_string" json:"include_component_string"`
 	// The directory that the output artifacts will be written to.
-	OutDir string `toml:"out_dir"`
+	OutDir string `toml:"out_dir" json:"out_dir"`
 	// The directory that contains the source files for this build.
-	SrcDir string `toml:"src_dir"`
+	SrcDir string `toml:"src_dir" json:"src_dir"`
 }
 
 func (i *IODirInf) update(inf IODirInf) {
@@ -384,7 +394,7 @@ type distro struct {
 	Release []string `toml:"Release"`
 	// The default Image configuration for this distribution. This usually consists of
 	// things like Release, Architecture, Image type, etc.
-	DefImage []string `toml:"default_Image"`
+	DefImage []string `toml:"default_image" json:"default_image"`
 	// The configurations needed to generate the default settings for a build for this
 	// distribution.
 	build
@@ -408,17 +418,40 @@ func (s *supported) Load() error {
 	if name == "" {
 		return filenameNotSetErr("supported")
 	}
-	_, err := toml.DecodeFile(name, &s)
-	if err != nil {
-		return decodeErr(err)
+	name = GetConfFile(name)
+	switch contour.GetString("format") {
+	case "toml":
+		_, err := toml.DecodeFile(name, &s.Distro)
+		if err != nil {
+			return decodeErr(err)
+		}
+	case "json":
+		f, err := os.Open(name)
+		if err != nil {
+			return decodeErr(err)
+		}
+		defer f.Close()
+		dec := json.NewDecoder(f)
+		for {
+			err := dec.Decode(&s.Distro)
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				return err
+			}
+		}
+	default:
+		return ErrUnsupportedFormat
 	}
 	s.loaded = true
+	fmt.Printf("%+v\n", s)
 	return nil
 }
 
 // Struct to hold the builds.
 type builds struct {
-	Build map[string]*rawTemplate
+	Build map[string]rawTemplate
 	sync.Mutex
 	loaded bool
 }
@@ -427,13 +460,36 @@ type builds struct {
 func (b *builds) Load() error {
 	b.Mutex.Lock()
 	defer b.Mutex.Unlock()
-	name := contour.GetString(BuildFile)
+	name := GetConfFile(contour.GetString(BuildFile))
 	if name == "" {
 		return filenameNotSetErr("build")
 	}
-	_, err := toml.DecodeFile(name, &b)
-	if err != nil {
-		return decodeErr(err)
+	switch contour.GetString("format") {
+	case "toml":
+		_, err := toml.DecodeFile(name, &b.Build)
+		if err != nil {
+			return decodeErr(err)
+		}
+	case "json":
+		var blds map[string]rawTemplate
+		f, err := os.Open(name)
+		if err != nil {
+			return decodeErr(err)
+		}
+		defer f.Close()
+		dec := json.NewDecoder(f)
+		for {
+			err := dec.Decode(&blds)
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				return err
+			}
+		}
+		fmt.Printf("json: %+v\n", blds)
+	default:
+		return ErrUnsupportedFormat
 	}
 	b.loaded = true
 	return nil
@@ -442,6 +498,7 @@ func (b *builds) Load() error {
 // Contains lists of builds.
 type buildLists struct {
 	List map[string]list
+	sync.Mutex
 }
 
 // A list contains 1 or more builds.
@@ -452,12 +509,39 @@ type list struct {
 // This is a normal load, no mutex, as this is only called once.
 func (b *buildLists) Load() error {
 	// Load the build lists.
-	name := contour.GetString(BuildListFile)
+	b.Mutex.Lock()
+	defer b.Mutex.Unlock()
+	name := GetConfFile(contour.GetString(BuildListFile))
 	if name == "" {
 		return filenameNotSetErr("build_list")
 	}
-	if _, err := toml.DecodeFile(name, &b); err != nil {
-		return decodeErr(err)
+	switch contour.GetString("format") {
+	case "toml":
+		_, err := toml.DecodeFile(name, &b.List)
+		if err != nil {
+			return decodeErr(err)
+		}
+	case "json":
+		f, err := os.Open(name)
+		if err != nil {
+			return decodeErr(err)
+		}
+		defer f.Close()
+		dec := json.NewDecoder(f)
+		if err != nil {
+			return decodeErr(err)
+		}
+		for {
+			err := dec.Decode(&b.List)
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				return err
+			}
+		}
+	default:
+		return ErrUnsupportedFormat
 	}
 	return nil
 }
