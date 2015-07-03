@@ -471,7 +471,6 @@ func (b *builds) Load() error {
 			return decodeErr(err)
 		}
 	case "json":
-		var blds map[string]rawTemplate
 		f, err := os.Open(name)
 		if err != nil {
 			return decodeErr(err)
@@ -479,7 +478,7 @@ func (b *builds) Load() error {
 		defer f.Close()
 		dec := json.NewDecoder(f)
 		for {
-			err := dec.Decode(&blds)
+			err := dec.Decode(&b)
 			if err == io.EOF {
 				break
 			}
@@ -487,7 +486,6 @@ func (b *builds) Load() error {
 				return err
 			}
 		}
-		fmt.Printf("json: %+v\n", blds)
 	default:
 		return ErrUnsupportedFormat
 	}
