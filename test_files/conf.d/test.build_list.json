@@ -1,0 +1,8 @@
+{
+  "ubuntu-all": {
+    "builds": [
+      "1204-amd64-server",
+      "1310-amd64-desktop"
+    ]
+  }
+}

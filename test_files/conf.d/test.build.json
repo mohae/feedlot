@@ -1,0 +1,69 @@
+{
+  "1204-amd64": {
+    "distro": "ubuntu",
+    "description": "ubuntu LTS 1204 amd64 server build, minimal install",
+    "arch": "amd64",
+    "image": "server",
+    "release": "12.04",
+    "builder_types": [
+      "virtualbox-iso"
+    ],
+    "builders": {
+      "common": {
+        "settings": [
+           "ssh_wait_timeout = 300m"
+        ]
+      },
+      "virtualbox-iso": {
+        "arrays": {
+          "vboxmanage": [
+             "memory=4096"
+           ]
+         }
+       }
+    }
+  },
+  "centos6": {
+    "distro": "centos",
+    "description": "Centos 6 w virtualbox-iso only",
+    "builder_types": [
+      "virtualbox-iso"
+    ]
+  },
+  "jessie": {
+    "distro": "debian",
+    "description": "debian jessie",
+    "arch": "amd64",
+    "builder_types": [
+      "virtualbox-iso"
+    ],
+    "post_processor_types": [
+      "vagrant"
+    ],
+    "provisioner_types": [
+      "shell"
+    ],
+    "builders": {
+      "virtualbox-iso": {
+        "arrays": {
+          "vboxmanage": [
+            "--memory=4096"
+          ]
+        }
+      }
+    },
+    "provisioners": {
+      "shell": {
+        "arrays": {
+           "scripts": [ 
+              "setup.sh",
+              "sudoers.sh",
+              "vagrant.sh",
+              "customize.sh",
+              "cleanup.sh"
+            ]
+         }
+      }
+    }
+  }
+}	

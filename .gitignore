@@ -34,6 +34,6 @@ log/**
 out/*.tar
 # don't archive the json output...this may expand as 
 # output handling gets expanded, or it may be deleted
-*.json
+rancher.json
 test_files/out/**
 rancher.toml
