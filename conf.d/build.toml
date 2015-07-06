@@ -2,307 +2,127 @@
 # define the final overrides and settings for generating a Packer Template. The 
 # generated Packer template will be the result of merging the settings within the
 # build configuration with the Rancher and distro defaults.
-[build] 
-	[build.1404-amd64]
-		distro = "ubuntu"
-		description = "ubuntu LTS 1404 amd64 vagrant build"
-		arch = "amd64"
-		image = "server"
-		release = "14.04"
-		builder_types = [
-			"virtualbox-iso"
-		]
-		[build.1404-amd64.builders]
-			[build.1204-amd64.builders.common]
-				settings = [
-					"ssh_wait_timeout = 300m"
+[1404-amd64]
+	distro = "ubuntu"
+	description = "ubuntu LTS 1404 amd64 vagrant build"
+	arch = "amd64"
+	image = "server"
+	release = "14.04"
+	builder_types = [
+		"virtualbox-iso"
+	]
+	[1404-amd64.builders]
+		[4204-amd64.builders.common]
+			settings = [
+				"ssh_wait_timeout = 300m"
+			]
+		[1404-amd64.builders.virtualbox-iso.arrays]
+			vboxmanage = [
+				"memory=4096"
+			]
+[centos7_x86_64]
+	distro = "centos"
+	description = "centos 7 x86_64 build"
+	arch = "x86_64"
+	image = "minimal"
+	release = "7"
+	builder_types = [
+		"virtualbox-iso"
+	]
+	[centos7_x86_64.builders]
+		[centos7_x86_64.builders.common]
+			settings = [
+				"ssh_wait_timeout = 300m"
+			]
+			[centos7_x86_64.builders.virtualbox-iso.arrays]
+				vboxmanage = [
+					"--memory=4096"
 				]
-				[build.1404-amd64.builders.virtualbox-iso.arrays]
-					vboxmanage = [
-						"--memory=4096"
-					]
-
-	[build.centos6-x86_64]
-		distro = "centos"
-		description = "centos 6 vagrant build"
-		arch = "x86_64"
-		image = "minimal"
-		release = "6"
-		builder_types = [
-			"virtualbox-iso"
-		]
-		[build.centos6-x86_64.builders]
-			[build.centos6-x86_64.builders.common]
-				settings = [
-					"ssh_wait_timeout = 300m"
-				]
-				[build.centos6-x86_64.builders.virtualbox-iso.arrays]
-					vboxmanage = [
-						"--memory=4096"
-					]
 	
-	[build.jessie-amd64]
-		distro = "debian"
-		description = "debian 8 vagrant build"
-		arch = "amd64"
-		image = "netinst"
-		release = "8"
-		builder_types = [
-			"virtualbox-iso"
-		]
-		[build.jessie-amd64.builders]
-			[build.jessie-amd64.builders.common]
-				settings = [
-					"ssh_wait_timeout = 300m"
-				]
-				[build.jessie-amd64.builders.virtualbox-iso.arrays]
-					vboxmanage = [
-						"--memory=4096"
-					]
+[jessie_amd64]
+	distro = "debian"
+	description = "debian jessie build"
+	arch = "amd64"
+	image = "netinst"
+	release = "8"
+	builder_types = [
+		"virtualbox-iso"
+	]
+	[jessie_amd64.builders]
+		[jessie_amd64.builders.common]
+			settings = [
+				"ssh_wait_timeout = 300m"
+			]
+		[jessie_amd64.builders.virtualbox-iso.arrays]
+			vboxmanage = [
+				"--memory=4096"
+			]
 		
-	[build.1404-salt]
-		distro = "ubuntu"
-		description = "ubuntu LTS 1404 amd64 server build, minimal salt install"
-		arch = "amd64"
-		image = "server"
-		release = "14.04"
-		builder_types = [
-			"virtualbox-iso"
-		]
-		provisioner_types = [
-			"salt-masterless"
-		]
-		[build.1404-salt.builders]
-			[build.1404-salt.builders.common]
-				settings = [
-					"ssh_wait_timeout = 300m"
-				]
-				[build.1404-salt.builders.virtualbox-iso.arrays]
-					vboxmanage = [
-						"--memory=4096"
-					]
-		[build.1404-salt.provisioners]
-			[build.1404-salt.provisioners.salt-masterless]
-				settings = [
-					"local_state_tree = salt-masterless/salt",
-					"local_pillar_roots = salt-masterless/pillar",
-					"minion_config = salt-masterless/"
-				]
-
-	[build.1404-dev]
-		distro = "ubuntu"
-		description = "ubuntu LTS 1404 amd64 desktop build, minimal install w stuff for development"
-		arch = "amd64"
-		release = "14.04"
-		image = "server"
-		builder_types = [
-			"virtualbox-iso"
-		]
-		post_processor_types = [
-			"vagrant"
-		]
-		provisioner_types = [
-			"shell"
-		]
-		[build.1404-dev.builders]
-			[build.1404-dev.builders.virtualbox-iso.arrays]
-				vboxmanage = [
-					"--memory=4096"
-				]
-		[build.1404-dev.post_processors]
-			[build.1404-dev.post_processors.vagrant]
-				[build.1404-dev.post_processors.vagrant.arrays]
-					only = [
-						"virtualbox-iso"
-					]
-		[build.1404-dev.provisioners]
-			[build.1404-dev.provisioners.shell]
-				[build.1404-dev.provisioners.shell.arrays]
-					only = [
-						"virtualbox-iso"
-					]
-					scripts = [ 
-						"setup.sh",
-						"sudoers.sh",
-						"vagrant.sh",
-						"dev_stuff.sh",
-						"customize.sh",
-						"cleanup.sh",
-					]
-
-	[build.1404-go]
-		distro = "ubuntu"
-		description = "ubuntu LTS 1404 amd64 desktop build, minimal install w go"
-		arch = "amd64"
-		release = "14.04"
-		image = "server"
-		builder_types = [
-			"virtualbox-iso"
-		]
-		post_processor_types = [
-			"vagrant"
-		]
-		provisioner_types = [
-			"shell"
-		]
-		[build.1404-go.builders]
-			[build.1404-go.builders.virtualbox-iso.arrays]
-				vboxmanage = [
-					"--memory=4096"
-				]
-		[build.1404-go.post_processors]
-			[build.1404-go.post_processors.vagrant]
-				[build.1404-go.post_processors.vagrant.arrays]
-					only = [
-						"virtualbox-iso"
-					]
-		[build.1404-go.provisioners]
-			[build.1404-go.provisioners.shell]
-				[build.1404-go.provisioners.shell.arrays]
-					only = [
-						"virtualbox-iso"
-					]
-					scripts = [ 
-						"setup.sh",
-						"sudoers.sh",
-						"vagrant.sh",
-						"customize.sh",
-						"cleanup.sh",
-					]
-
-	[build.1404-chef]
-		distro = "ubuntu"
-		description = "ubuntu LTS 1404 amd64 desktop build, minimal install w chef"
-		arch = "amd64"
-		release = "14.04"
-		image = "server"
-		builder_types = [
-			"virtualbox-iso"
-		]
-		post_processor_types = [
-			"vagrant"
-		]
-		provisioner_types = [
-			"chef-solo"
-		]
-		[build.1404-chef.builders]
-			[build.1404-chef.builders.virtualbox-iso.arrays]
-				vboxmanage = [
-					"--memory=4096"
-				]
-		[build.1404-chef.post_processors]
-			[build.1404-chef.post_processors.vagrant]
-				[build.1404-chef.post_processors.vagrant.arrays]
-					only = [
-						"virtualbox-iso"
-					]
-		[build.1404-chef.provisioners]
-			[build.1404-chef.provisioners.chef-solo]
-				[build.1404-chef.provisioners.chef-solo.arrays]
-					only = [
-						"virtualbox-iso"
-					]
-					cookbook_paths = [ 
-						"cookbooks",
-					]
-
-	[build.centos6]
-		distro = "centos"
-		description = "Centos 6 w virtualbox-iso only"
-		builder_types = [
-			"virtualbox-iso"
-		]
-
-	[build.centos6-salt]
-		distro = "centos"
-		description = "Centos 6 with salt provisioning"
-		builder_types = [
-			"virtualbox-iso"
-		]
-		provisioner_types = [
-			"salt-masterless"
-		]
-		[build.centos6-salt.provisioner.salt-masterless]
+[1404-salt]
+	distro = "ubuntu"
+	description = "ubuntu LTS 1404 amd64 server build, minimal salt install"
+	arch = "amd64"
+	image = "server"
+	release = "14.04"
+	builder_types = [
+		"virtualbox-iso"
+	]
+	provisioner_types = [
+		"salt-masterless"
+	]
+	[1404-salt.builders]
+		[1404-salt.builders.common]
 			settings = [
-				"local_state_tree = ~/saltstack/centos6/salt"
+				"ssh_wait_timeout = 300m"
+			]
+			[1404-salt.builders.virtualbox-iso.arrays]
+				vboxmanage = [
+					"--memory=4096"
+				]
+	[1404-salt.provisioners]
+		[1404-salt.provisioners.salt-masterless]
+			settings = [
+				"local_state_tree = salt-masterless/salt",
+				"local_pillar_roots = salt-masterless/pillar",
+				"minion_config = salt-masterless/"
 			]
 
-	[build.centos6-ansible]
-		distro = "centos"
-		description = "Centos6 with ansible provisioning"
-		builder_types = [
-			"virtualbox-iso"
-		]
-		provisioner_types = [
-			"ansible-local"
-		]
-		[build.centos6-ansible.provisioner.ansible-local]
-			settings = [
-				"command = ansible-playbook-command-override",
-				"inventory_file = playbook-inventory.yaml",
-				"playbook_file = local.yaml"
+[1404-go]
+	distro = "ubuntu"
+	description = "ubuntu LTS 1404 amd64 desktop build, minimal install w go"
+	arch = "amd64"
+	release = "14.04"
+	image = "server"
+	builder_types = [
+		"virtualbox-iso"
+	]
+	post_processor_types = [
+		"vagrant"
+	]
+	provisioner_types = [
+		"shell"
+	]
+	[1404-go.builders]
+		[1404-go.builders.virtualbox-iso.arrays]
+			vboxmanage = [
+				"--memory=4096"
 			]
-
-	[build.centos6-chef-solo]
-		distro = "centos"
-		description = "CentOS6 with chef-solo provisioning"
-		builder_types = [
-			"virtualbox-iso"
-		]
-		provisioner_types = [
-			"chef-solo"
-		]
-		[build.centos6-chef-solo.provisioner.chef-solo]
-			[build.centos6-chef-solo.provisioner.chef-solo.arrays]
-				cookbook_paths = [
-					"cookbooks"
+	[1404-go.post_processors]
+		[1404-go.post_processors.vagrant]
+			[1404-go.post_processors.vagrant.arrays]
+				only = [
+					"virtualbox-iso"
 				]
-				remote_cookbook_paths= [
-					"remote_cookbooks"
+	[1404-go.provisioners]
+		[1404-go.provisioners.shell]
+			[1404-go.provisioners.shell.arrays]
+				only = [
+					"virtualbox-iso"
 				]
-				run_list = [
-					"runlist"
+				scripts = [ 
+					"setup.sh",
+					"sudoers.sh",
+					"vagrant.sh",
+					"customize.sh",
+					"cleanup.sh",
 				]
-				settings = [
-					"config_template = chef.config.tpl",
-					"data_bags_path = data.bags.path",
-					"encrypted_data_bag_secret_path = encrypted.data.bag.secret.path",
-					"execute_command = chef/execute.command",
-					"install_command = chef/install.command",
-					"json = chef/node_attributes.json",
-					"prevent_sudo = false",
-					"roles_path = roles/",
-					"skip_install = false",
-					"staging_directory = staging/"
-				]
-
-	[build.jessie-salt]
-		distro = "debian"
-		description = "debian jessie w saltstack"
-		arch = "amd64"
-		builder_types = [
-			"virtualbox-iso"
-		]
-		post_processor_types = [
-			"vagrant"
-		]
-		provisioner_types = [
-			"shell"
-		]
-		[build.jessie-salt.builders]
-			[build.jessie-salt.builders.virtualbox-iso.arrays]
-				vboxmanage = [
-					"--memory=4096"
-				]
-		[build.jessie-salt.provisioners]
-			[build.jessie-salt.provisioners.shell]
-				[build.jessie-salt.provisioners.shell.arrays]
-					scripts = [ 
-						"setup.sh",
-						"sudoers.sh",
-						"vagrant.sh",
-						"dev_stuff.sh",
-						"customize.sh",
-						"install_salt.sh",
-						"cleanup.sh",
-					]
