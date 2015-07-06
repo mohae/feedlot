@@ -1,0 +1,73 @@
+# Default builder variable settings for Rancher. Merging the contents of this
+# file with supported.toml provids the default settings for each distro.
+description = "Examplet Rancher template"
+name = ":build_name"
+out_dir = "out/:build_name"
+src_dir = "src"
+min_packer_version = "0.7.0"
+include_component_string = "true"
+builder_types = [
+    "virtualbox-iso",
+	"vmware-iso"
+]
+post_processor_types = [
+	"vagrant"
+]
+provisioner_types = [
+	"shell"
+]
+[builders]
+	[builders.common]
+		settings = [	
+			"boot_command = boot.command",
+			"boot_wait = 5s",
+			"disk_size = 20000",
+			"guest_os_type = ",
+			"headless = true",
+			"http_directory = http",
+			"iso_checksum_type = sha256",
+			"output_directory = :out_dir",		
+			"shutdown_command = shutdown.command",
+			"ssh_password = vagrant",
+			"ssh_port = 22",
+			"ssh_username = vagrant",
+			"ssh_wait_timeout = 60m",
+			"vm_name = :build_name",
+		]
+	[builders.virtualbox-iso]
+		settings = [
+			"guest_additions_path = VBoxGuestAdditions_{{ .Version }}.iso",
+			"virtualbox_version_file = .vbox_version"
+		]
+		[builders.virtualbox-iso.arrays]
+			vboxmanage = [
+				"cpus=1",
+				"memory=1024"	
+			]
+	[builders.vmware-iso]
+		[builders.vmware-iso.arrays]
+			vmx_data = [
+				"cpuid.coresPerSocket=1",
+				"memsiz=1024",
+				"numvcpus=1"
+			]
+			
+[post_processors]
+	[post_processors.vagrant]
+		settings = [
+			"compression_level = 9",
+			"keep_input_artifact = false",
+			"output = :build_name.box"
+		]
+[provisioners]
+	[provisioners.shell]
+		settings = [
+			"execute_command = execute.command"
+		]
+		[provisioners.shell.arrays]
+			scripts = [ 
+				"setup_test.sh",
+				"vagrant_test.sh",
+				"sudoers_test.sh",
+				"cleanup_test.sh",
+			]
