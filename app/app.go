@@ -73,85 +73,24 @@ func init() {
 	// missing main application cfg isn't considered an error state.
 	contour.SetErrOnMissingCfg(false)
 	contour.RegisterCfgFile(CfgFile, CfgFilename)
-	// shortcuts used: a, d, f, i, l, n, p, r, s, v
+	// shortcuts used: a, d, e, eg, f, i, l, n, p, r, s, v
 	contour.RegisterBoolFlag("archive_prior_build", "v", false, "false", "archive prior build before writing new packer template files")
 	contour.RegisterBoolFlag(Log, "l", true, "true", "enable/disable logging")
-	contour.RegisterStringFlag(BuildFile, "", "conf.d/build.toml", "conf.d/build.toml", "location of the build cfguration file")
-	contour.RegisterStringFlag(BuildListFile, "", "conf.d/build_list.toml", "conf.d/build_list.toml", "location of the build list cfguration file")
-	contour.RegisterStringFlag(DefaultFile, "", "conf/default.toml", "conf/default.toml", "location of the default cfguration file")
-	contour.RegisterStringFlag(SupportedFile, "", "conf/supported.toml", "conf/supported.toml", "location of the supported distros cfguration file")
+	contour.RegisterBoolFlag("example", "eg", false, "false", "whether or not to generate from examples")
+	contour.RegisterStringFlag("conf_dir", "", "conf/", "conf/", "location of the root configuration directory for conf")
+	contour.RegisterStringFlag("conf_root", "", "", "", "location of the root directory for standard rancher builds")
+	contour.RegisterStringFlag("example_root", "", "example/", "example/", "the location of the root directory for example rancher builds")
+	contour.RegisterStringFlag(BuildFile, "", "build.toml", "build.toml", "location of the build cfguration file")
+	contour.RegisterStringFlag(BuildListFile, "", "build_list.toml", "build_list.toml", "location of the build list cfguration file")
+	contour.RegisterStringFlag(DefaultFile, "", "default.toml", "default.toml", "location of the default cfguration file")
+	contour.RegisterStringFlag(SupportedFile, "", "supported.toml", "supported.toml", "location of the supported distros cfguration file")
 	contour.RegisterStringFlag(ParamDelimStart, "p", ":", ":", "the start delimiter for template variabes")
 	contour.RegisterStringFlag(LogFile, "", "rancher.log", "rancher.log", "log filename")
 	contour.RegisterStringFlag(LogLevelFile, "f", "WARN", "WARN", "log level for writing to the log file")
 	contour.RegisterStringFlag(LogLevelStdOut, "s", "ERROR", "ERROR", "log level for writing to stdout")
+	contour.RegisterStringFlag("envs", "e", "", "", "additional environments from within which config additional config information should be loaded")
 	contour.RegisterStringFlag("distro", "d", "", "", "distro override for default builds")
 	contour.RegisterStringFlag("arch", "a", "", "", "os arch override for default builds")
 	contour.RegisterStringFlag("image", "i", "", "", "os image override for default builds")
 	contour.RegisterStringFlag("release", "r", "", "", "os release override for default builds")
-}
-
-// GetConfFile returns the name of the conf file using the new extension.
-func GetConfFile(s string) string {
-	if s == "" {
-		return s
-	}
-	parts := strings.Split(s, ".")
-	if len(parts) < 2 {
-		return fmt.Sprintf("%s.%s", contour.GetString("format"))
-	}
-	var new string
-	for i, part := range parts {
-		if i == len(parts)-1 {
-			return fmt.Sprintf("%s%s", new, contour.GetString("format"))
-		}
-		new += part + "."
-	}
-	return new
-}
-
-// SetCfg set's the appCFg from the app's cfg file and then applies any env
-// vars that have been set. After this, settings can only be updated
-// programmatically or via command-line flags.
-//
-// The default cfg file may not be the one found as the app config file may be
-// in a different format. SetCfg first looks for it in the configured location.
-// If it is not found, the alternate format is checked.
-//
-// Since Rancher supports operations without a config file, not finding one is
-// not an error state.
-//
-// Currently supported config file formats:
-//    TOML
-//    JSON
-func SetCfg() error {
-	// determine the correct file, This is done here because it's less ugly than the alternatives.
-	_, err := os.Stat(contour.GetString(CfgFile))
-	if err != nil && err == os.ErrNotExist {
-		ft := contour.GetString("format")
-		switch ft {
-		case "toml":
-			contour.UpdateString("format", "json")
-			contour.UpdateString(CfgFile, GetConfFile(contour.GetString(CfgFile)))
-		case "json":
-			contour.UpdateString("format", "toml")
-			contour.UpdateString(CfgFile, GetConfFile(contour.GetString(CfgFile)))
-		}
-		_, err = os.Stat(contour.GetString(CfgFile))
-		if err != nil && err == os.ErrNotExist {
-			return nil
-		}
-		// Set the format to the new value.
-		contour.UpdateString("format", ft)
-	}
-	if err != nil {
-		jww.ERROR.Print(err)
-		jww.FEEDBACK.Printf("SetCfg: %s", err.Error())
-		return err
-	}
-	err = contour.SetCfg()
-	if err != nil {
-		jww.ERROR.Print(err)
-		jww.FEEDBACK.Printf("SetCfg: %s", err.Error())
-	}
-	return err
 }

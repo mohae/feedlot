@@ -51,6 +51,9 @@ Options:
 
 -release=<releaseNum>	Override the distro's default release with this flag.
 			The actual values are determined by the distro.
+-envs=<list of envs>    Include builds from the specified Rancher environments.
+-eg=bool                true/false: create builds from examples; generates
+                        example Packer templates.
 `
 	return strings.TrimSpace(helpText)
 }

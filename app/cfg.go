@@ -553,6 +553,65 @@ func (b *buildLists) Load() error {
 	return nil
 }
 
+// SetCfgFile set's the appCFg from the app's cfg file and then applies any env
+// vars that have been set. After this, settings can only be updated
+// programmatically or via command-line flags.
+//
+// The default cfg file may not be the one found as the app config file may be
+// in a different format. SetCfg first looks for it in the configured location.
+// If it is not found, the alternate format is checked.
+//
+// Since Rancher supports operations without a config file, not finding one is
+// not an error state.
+//
+// Currently supported config file formats:
+//    TOML
+//    JSON
+func SetCfgFile() error {
+	// determine the correct file, This is done here because it's less ugly than the alternatives.
+	_, err := os.Stat(contour.GetString(CfgFile))
+	if err != nil && err == os.ErrNotExist {
+		ft := contour.GetString("format")
+		switch ft {
+		case "toml":
+			contour.UpdateString("format", "json")
+			contour.UpdateString(CfgFile, GetConfFile(contour.GetString(CfgFile)))
+		case "json":
+			contour.UpdateString("format", "toml")
+			contour.UpdateString(CfgFile, GetConfFile(contour.GetString(CfgFile)))
+		}
+		_, err = os.Stat(contour.GetString(CfgFile))
+		if err != nil && err == os.ErrNotExist {
+			return nil
+		}
+		// Set the format to the new value.
+		contour.UpdateString("format", ft)
+	}
+	if err != nil {
+		jww.ERROR.Print(err)
+		jww.FEEDBACK.Printf("SetCfg: %s", err.Error())
+		return err
+	}
+	err = contour.SetCfg()
+	if err != nil {
+		jww.ERROR.Print(err)
+		jww.FEEDBACK.Printf("SetCfg: %s", err.Error())
+	}
+	return err
+}
+
+// GetConfFile returns the location of the provided conf file. This accounts
+// for examples. An empty string results in an empty string.
+func GetConfFile(s string) string {
+	if s == "" {
+		return s
+	}
+	if contour.GetBool("example") {
+		return filepath.Join(contour.GetString("example_root"), contour.GetString("conf_dir"), s)
+	}
+	return filepath.Join(contour.GetSTring("conf_root"), contour.GetString("conf_dir"), s)
+}
+
 func filenameNotSetErr(target string) error {
 	return fmt.Errorf("%q not set, unable to retrieve the %s file", target, target)
 }
