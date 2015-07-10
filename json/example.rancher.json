@@ -1,6 +1,6 @@
 {
-  "conf_dir": "conf/
-  "conf_root": "json/",
+  "conf_dir": "json/
+  "conf_root": "conf/",
   "default_file": "default.json",
   "example": false,
   "example_root", "examples/",
