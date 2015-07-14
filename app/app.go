@@ -1,42 +1,43 @@
 package app
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
 	"github.com/mohae/contour"
-	jww "github.com/spf13/jwalterweatherman"
 )
 
 const (
 	Name            = "rancher"
-	BuildFile       = "build_file"
-	BuildListFile   = "build_list_file"
+	Build           = "build"
+	BuildList       = "build_list"
+	Default         = "default"
+	DefaultFormat   = "json"
+	Supported       = "supported"
 	CfgFile         = "cfg_file"
 	CfgFilename     = "rancher.json"
-	DefaultFile     = "default_file"
-	Log             = "log"
-	LogFile         = "log_file"
-	LogLevelFile    = "log_level_file"
-	LogLevelStdOut  = "log_level_stdout"
 	ParamDelimStart = "param_delim_start"
-	SupportedFile   = "supported_file"
+
+	Log            = "log"
+	LogFile        = "log_file"
+	LogLevelFile   = "log_level_file"
+	LogLevelStdOut = "log_level_stdout"
 )
 
 // AppCfg contains the current Rancher cfguration...loaded at start-up.
 var AppCfg appCfg
 
 type appCfg struct {
-	BuildFile       string `toml:"build_file"`
-	BuildListFile   string `toml:"build_list_file"`
-	DefaultFile     string `toml:"default_file"`
-	Log             bool   `toml:"log"`
-	LogFile         string `toml:"log_file"`
-	LogLevelFile    string `toml:"log_level_file"`
-	LogLevelStdout  string `toml:"log_level_stdout"`
-	ParamDelimStart string `toml:"param_delim_start"`
-	SupportedFile   string `toml:"supported_file"`
+	ConfDir         string `toml:"conf_dir",json:"conf_dir"`
+	ExampleDir      string `toml:"example_dir",json:"example_dir"`
+	SrcDir          string `toml:"src_dir",json:"src_dir"`
+	Format          string
+	ParamDelimStart string `toml:"param_delim_start",json:"param_delim_start"`
+	Example         bool
+	Log             bool
+	LogFile         string `toml:"log_file",json:"log_file"`
+	LogLevelFile    string `toml:"log_level_file",json:log_level_file"`
+	LogLevelStdout  string `toml:"log_level_stdout",json:"log_level_stdout"`
 }
 
 // ArgsFilter has all the valid commandline flags for the build-subcommand.
@@ -78,12 +79,7 @@ func init() {
 	contour.RegisterBoolFlag(Log, "l", true, "true", "enable/disable logging")
 	contour.RegisterBoolFlag("example", "eg", false, "false", "whether or not to generate from examples")
 	contour.RegisterStringFlag("conf_dir", "", "conf/", "conf/", "location of the root configuration directory for conf")
-	contour.RegisterStringFlag("conf_root", "", "", "", "location of the root directory for standard rancher builds")
-	contour.RegisterStringFlag("example_root", "", "example/", "example/", "the location of the root directory for example rancher builds")
-	contour.RegisterStringFlag(BuildFile, "", "build.toml", "build.toml", "location of the build cfguration file")
-	contour.RegisterStringFlag(BuildListFile, "", "build_list.toml", "build_list.toml", "location of the build list cfguration file")
-	contour.RegisterStringFlag(DefaultFile, "", "default.toml", "default.toml", "location of the default cfguration file")
-	contour.RegisterStringFlag(SupportedFile, "", "supported.toml", "supported.toml", "location of the supported distros cfguration file")
+	contour.RegisterStringFlag("example_dir", "", "examples/", "examples/", "the location of the root directory for example rancher configuration files")
 	contour.RegisterStringFlag(ParamDelimStart, "p", ":", ":", "the start delimiter for template variabes")
 	contour.RegisterStringFlag(LogFile, "", "rancher.log", "rancher.log", "log filename")
 	contour.RegisterStringFlag(LogLevelFile, "f", "WARN", "WARN", "log level for writing to the log file")

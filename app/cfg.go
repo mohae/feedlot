@@ -13,12 +13,14 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strconv"
 	"sync"
 
 	"github.com/BurntSushi/toml"
 	"github.com/mohae/contour"
 	"github.com/mohae/deepcopy"
+	jww "github.com/spf13/jwalterweatherman"
 )
 
 // Contains most of the information for Packer templates within a Rancher
@@ -249,9 +251,10 @@ func (d *defaults) Load() error {
 	}
 	name := contour.GetString(DefaultFile)
 	if name == "" {
+		// TODO rationalize this with ignore error stuff
 		return filenameNotSetErr("default")
 	}
-	name = GetConfFile(name)
+	name = GetConfFile(d.env, name)
 	switch contour.GetString("format") {
 	case "toml":
 		_, err := toml.DecodeFile(name, &d)
@@ -471,16 +474,6 @@ func (b *builds) Load() error {
 			return decodeErr(err)
 		}
 	case "json":
-		/*
-			buff, err := ioutil.ReadFile(name)
-			if err != nil {
-				return decodeErr(err)
-			}
-			err = json.Unmarshal(buff, &b.Build)
-			if err != nil {
-				return decodeErr(err)
-			}
-		*/
 		f, err := os.Open(name)
 		if err != nil {
 			return decodeErr(err)
@@ -609,7 +602,7 @@ func GetConfFile(s string) string {
 	if contour.GetBool("example") {
 		return filepath.Join(contour.GetString("example_root"), contour.GetString("conf_dir"), s)
 	}
-	return filepath.Join(contour.GetSTring("conf_root"), contour.GetString("conf_dir"), s)
+	return filepath.Join(contour.GetString("conf_root"), contour.GetString("conf_dir"), s)
 }
 
 func filenameNotSetErr(target string) error {

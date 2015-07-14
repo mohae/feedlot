@@ -446,8 +446,8 @@ func (r *rawTemplate) findComponentSource(component, p string) (string, error) {
 	var err error
 	// if len(cParts) > 1, there was a - and component-base processing should be done
 	if component != "" {
-		tmpPath = filepath.Join(component, p)
-		tmpPath, err = r.findSource(tmpPath)
+		
+		tmpPath, err = r.findSource(filepath.Join()oin(rootslug , component, p))
 		if err != nil && err != os.ErrNotExist {
 			return "", err
 		}
@@ -468,7 +468,7 @@ func (r *rawTemplate) findComponentSource(component, p string) (string, error) {
 		}
 	}
 	// look for the source as using just the passed path
-	tmpPath, err = r.findSource(p)
+	tmpPath, err = r.findSource(filepath.Join(root, p))
 	if err == nil {
 		return tmpPath, nil
 	}

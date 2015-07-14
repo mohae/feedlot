@@ -25,7 +25,7 @@ func main() {
 func realMain() int {
 	// Logging to temp first
 	app.SetTempLogging()
-	err := app.SetCfg()
+	err := app.SetCfgFile()
 	if err != nil {
 		jww.ERROR.Printf("%s", err.Error())
 	}
