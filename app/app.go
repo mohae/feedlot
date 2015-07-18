@@ -79,6 +79,7 @@ func init() {
 	contour.RegisterBoolFlag(Log, "l", true, "true", "enable/disable logging")
 	contour.RegisterBoolFlag("example", "eg", false, "false", "whether or not to generate from examples")
 	contour.RegisterStringFlag("conf_dir", "", "conf/", "conf/", "location of the root configuration directory for conf")
+	contour.RegisterStringFlag("src_dir", "", "src/", "src/", "location of the root src directory for source files")
 	contour.RegisterStringFlag("example_dir", "", "examples/", "examples/", "the location of the root directory for example rancher configuration files")
 	contour.RegisterStringFlag(ParamDelimStart, "p", ":", ":", "the start delimiter for template variabes")
 	contour.RegisterStringFlag(LogFile, "", "rancher.log", "rancher.log", "log filename")

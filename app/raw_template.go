@@ -446,8 +446,7 @@ func (r *rawTemplate) findComponentSource(component, p string) (string, error) {
 	var err error
 	// if len(cParts) > 1, there was a - and component-base processing should be done
 	if component != "" {
-		
-		tmpPath, err = r.findSource(filepath.Join()oin(rootslug , component, p))
+		tmpPath, err = r.findSource(r.getSourcePath(filepath.Join(component, p)))
 		if err != nil && err != os.ErrNotExist {
 			return "", err
 		}
@@ -457,8 +456,7 @@ func (r *rawTemplate) findComponentSource(component, p string) (string, error) {
 		cParts := strings.Split(component, "-")
 		if len(cParts) > 1 {
 			// first element is the base
-			tmpPath = filepath.Join(cParts[0], p)
-			tmpPath, err = r.findSource(tmpPath)
+			tmpPath, err = r.findSource(r.getSourcePath(filepath.Join(cParts[0], p)))
 			if err != nil && err != os.ErrNotExist {
 				return "", err
 			}
@@ -468,7 +466,7 @@ func (r *rawTemplate) findComponentSource(component, p string) (string, error) {
 		}
 	}
 	// look for the source as using just the passed path
-	tmpPath, err = r.findSource(filepath.Join(root, p))
+	tmpPath, err = r.findSource(p)
 	if err == nil {
 		return tmpPath, nil
 	}
@@ -509,7 +507,7 @@ func (r *rawTemplate) findSource(p string) (string, error) {
 		}
 	}
 	// src_dir/:build_name/p
-	tmpPath := filepath.Join(r.SrcDir, r.BuildName, p)
+	tmpPath := r.getSourcePath(filepath.Join(r.BuildName, p))
 	_, err := os.Stat(tmpPath)
 	if err == nil {
 		jww.TRACE.Printf("findSource:  %s found", tmpPath)
@@ -517,7 +515,7 @@ func (r *rawTemplate) findSource(p string) (string, error) {
 	}
 	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	// src_dir/:distro/:build_name/p
-	tmpPath = filepath.Join(r.SrcDir, r.Distro, r.BuildName, p)
+	tmpPath = r.getSourcePath(filepath.Join(r.Distro, r.BuildName, p))
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		jww.TRACE.Printf("findSource:  %s found", tmpPath)
@@ -525,7 +523,7 @@ func (r *rawTemplate) findSource(p string) (string, error) {
 	}
 	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	// src_dir/:distro/:release/:build_name/p
-	tmpPath = filepath.Join(r.SrcDir, r.Distro, r.Release, r.BuildName, p)
+	tmpPath = r.getSourcePath(filepath.Join(r.Distro, r.Release, r.BuildName, p))
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		jww.TRACE.Printf("findSource:  %s found", tmpPath)
@@ -535,7 +533,7 @@ func (r *rawTemplate) findSource(p string) (string, error) {
 	// src_dir/:distro/numericRelease/:build_name/p
 	// only if the numericRelease is different than the release
 	if numericRelease != r.Release {
-		tmpPath = filepath.Join(r.SrcDir, r.Distro, numericRelease, r.BuildName, p)
+		tmpPath = r.getSourcePath(filepath.Join(r.Distro, numericRelease, r.BuildName, p))
 		_, err = os.Stat(tmpPath)
 		if err == nil {
 			jww.TRACE.Printf("findSource:  %s found", tmpPath)
@@ -546,7 +544,7 @@ func (r *rawTemplate) findSource(p string) (string, error) {
 	// src_dir/:distro/releaseBase/:build_name/p
 	// only if releaseBase is different than the release
 	if releaseParts[0] != r.Release {
-		tmpPath = filepath.Join(r.SrcDir, r.Distro, releaseParts[0], r.BuildName, p)
+		tmpPath = r.getSourcePath(filepath.Join(r.Distro, releaseParts[0], r.BuildName, p))
 		_, err = os.Stat(tmpPath)
 		if err == nil {
 			jww.TRACE.Printf("findSource:  %s found", tmpPath)
@@ -555,7 +553,7 @@ func (r *rawTemplate) findSource(p string) (string, error) {
 		jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	}
 	// src_dir/:distro/:release/:arch/p
-	tmpPath = filepath.Join(r.SrcDir, r.Distro, r.Release, r.Arch, p)
+	tmpPath = r.getSourcePath(filepath.Join(r.Distro, r.Release, r.Arch, p))
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		jww.TRACE.Printf("findSource:  %s found", tmpPath)
@@ -565,7 +563,7 @@ func (r *rawTemplate) findSource(p string) (string, error) {
 	// src_dir/:distro/release/:arch/p
 	// only if the numericRelease is different than the release
 	if numericRelease != r.Release {
-		tmpPath = filepath.Join(r.SrcDir, r.Distro, numericRelease, r.Arch, p)
+		tmpPath = r.getSourcePath(filepath.Join(r.Distro, numericRelease, r.Arch, p))
 		_, err = os.Stat(tmpPath)
 		if err == nil {
 			jww.TRACE.Printf("findSource:  %s found", tmpPath)
@@ -576,7 +574,7 @@ func (r *rawTemplate) findSource(p string) (string, error) {
 	// src_dir/:distro/releaseBase/:arch/p
 	// only if releaseBase is different than the release
 	if releaseParts[0] != r.Release {
-		tmpPath = filepath.Join(r.SrcDir, r.Distro, releaseParts[0], r.Arch, p)
+		tmpPath = r.getSourcePath(filepath.Join(r.Distro, releaseParts[0], r.Arch, p))
 		_, err = os.Stat(tmpPath)
 		if err == nil {
 			jww.TRACE.Printf("findSource:  %s found", tmpPath)
@@ -585,7 +583,7 @@ func (r *rawTemplate) findSource(p string) (string, error) {
 	}
 	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	// src_dir/:distro/:release/p
-	tmpPath = filepath.Join(r.SrcDir, r.Distro, r.Release, p)
+	tmpPath = r.getSourcePath(filepath.Join(r.Distro, r.Release, p))
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		jww.TRACE.Printf("findSource:  %s found", tmpPath)
@@ -595,7 +593,7 @@ func (r *rawTemplate) findSource(p string) (string, error) {
 	// src_dir/:distro/release/p
 	// only if the numericRelease is different than the release
 	if numericRelease != r.Release {
-		tmpPath = filepath.Join(r.SrcDir, r.Distro, numericRelease, p)
+		tmpPath = r.getSourcePath(filepath.Join(r.Distro, numericRelease, p))
 		_, err = os.Stat(tmpPath)
 		if err == nil {
 			jww.TRACE.Printf("findSource:  %s found", tmpPath)
@@ -606,7 +604,7 @@ func (r *rawTemplate) findSource(p string) (string, error) {
 	// src_dir/:distro/releaseBase/p
 	// only if releaseBase is different than the release
 	if releaseParts[0] != r.Release {
-		tmpPath = filepath.Join(r.SrcDir, r.Distro, releaseParts[0], p)
+		tmpPath = r.getSourcePath(filepath.Join(r.Distro, releaseParts[0], p))
 		_, err = os.Stat(tmpPath)
 		if err == nil {
 			jww.TRACE.Printf("findSource:  %s found", tmpPath)
@@ -615,7 +613,7 @@ func (r *rawTemplate) findSource(p string) (string, error) {
 		jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	}
 	// src_dir/:distro/:arch/p
-	tmpPath = filepath.Join(r.SrcDir, r.Distro, r.Arch, p)
+	tmpPath = r.getSourcePath(filepath.Join(r.Distro, r.Arch, p))
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		jww.TRACE.Printf("findSource:  %s found", tmpPath)
@@ -623,7 +621,7 @@ func (r *rawTemplate) findSource(p string) (string, error) {
 	}
 	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	// src_dir/:distro/p
-	tmpPath = filepath.Join(r.SrcDir, r.Distro, p)
+	tmpPath = r.getSourcePath(filepath.Join(r.Distro, p))
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		jww.TRACE.Printf("findSource:  %s found", tmpPath)
@@ -631,7 +629,7 @@ func (r *rawTemplate) findSource(p string) (string, error) {
 	}
 	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	// src_dir/p
-	tmpPath = filepath.Join(r.SrcDir, p)
+	tmpPath = r.getSourcePath(filepath.Join(p))
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		jww.TRACE.Printf("findSource:  %s found", tmpPath)
@@ -660,4 +658,54 @@ func (r *rawTemplate) buildTemplateResourcePath(component, p string) string {
 		return filepath.Join(component, p)
 	}
 	return p
+}
+
+// provides the true source path for the requested p; i.e. it adjusts the
+// resulting source path for examples, if in example mode.  'Example' builds
+// use the `example_dir` as the parent to the `src_dir`.  If the `src_dir`
+// starts with 1 or more '../' elements, they are all elided to ensure that the
+// `src_dir` will be a child of `example_dir`. The rest of the path remains
+// intact.
+//
+// Example:
+//    example_dir = "example/"
+//    src_dir = "../../rancher_src/"
+//    p = "commands/boot.command"
+//
+//    Example mode output: "example/rancher_src/commands/boot.command"
+//    Regular output:      "../../rancher_rc/commands/boot.command"
+func (r *rawTemplate) getSourcePath(p string) string {
+	if p == "" {
+		return ""
+	}
+	var i int
+	var s string
+	var srcParts []string
+	srcDir := contour.GetString("src_dir")
+	if srcDir == "" {
+		goto done
+	}
+	srcParts = strings.Split(srcDir, string(filepath.Separator))
+	if len(srcParts) == 1 {
+		goto done
+	}
+	//
+	if contour.GetBool("example") {
+		for i, s = range srcParts {
+			if s != ".." {
+				break
+			}
+		}
+		if i > 0 {
+			if contour.GetString("example_dir") != "" {
+				srcDir = filepath.Join(srcParts[i:]...)
+			}
+		}
+	}
+done:
+	// example files always end in '.example'
+	if contour.GetBool("example") {
+		return filepath.Join(contour.GetString("example_dir"), srcDir, fmt.Sprintf("%s.%s", p, "example"))
+	}
+	return filepath.Join(srcDir, p)
 }

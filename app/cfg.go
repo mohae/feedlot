@@ -15,6 +15,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/BurntSushi/toml"
@@ -249,12 +250,8 @@ func (d *defaults) Load() error {
 	if d.loaded {
 		return nil
 	}
-	name := contour.GetString(DefaultFile)
-	if name == "" {
-		// TODO rationalize this with ignore error stuff
-		return filenameNotSetErr("default")
-	}
-	name = GetConfFile(d.env, name)
+	name := GetConfFile(Default)
+	jww.FEEDBACK.Printf("default filename: %s\n", name)
 	switch contour.GetString("format") {
 	case "toml":
 		_, err := toml.DecodeFile(name, &d)
@@ -417,11 +414,7 @@ type supported struct {
 func (s *supported) Load() error {
 	s.Mutex.Lock()
 	defer s.Mutex.Unlock()
-	name := contour.GetString(SupportedFile)
-	if name == "" {
-		return filenameNotSetErr("supported")
-	}
-	name = GetConfFile(name)
+	name := GetConfFile(Supported)
 	switch contour.GetString("format") {
 	case "toml":
 		_, err := toml.DecodeFile(name, &s.Distro)
@@ -448,7 +441,6 @@ func (s *supported) Load() error {
 		return ErrUnsupportedFormat
 	}
 	s.loaded = true
-	fmt.Printf("%+v\n", s)
 	return nil
 }
 
@@ -460,24 +452,25 @@ type builds struct {
 }
 
 // Load the build information. If it has already been loaded, nothing will be done
-func (b *builds) Load() error {
+func (b *builds) Load(name string) error {
 	b.Mutex.Lock()
 	defer b.Mutex.Unlock()
-	name := GetConfFile(contour.GetString(BuildFile))
 	if name == "" {
 		return filenameNotSetErr("build")
 	}
-	switch contour.GetString("format") {
-	case "toml":
+	switch filepath.Ext(name) {
+	case ".toml", ".tml":
 		_, err := toml.DecodeFile(name, &b.Build)
 		if err != nil {
 			return decodeErr(err)
 		}
-	case "json":
+	case "json", "jsn":
 		f, err := os.Open(name)
 		if err != nil {
 			return decodeErr(err)
 		}
+		defer f.Close()
+
 		dec := json.NewDecoder(f)
 		for {
 			err := dec.Decode(&b.Build)
@@ -511,11 +504,11 @@ func (b *buildLists) Load() error {
 	// Load the build lists.
 	b.Mutex.Lock()
 	defer b.Mutex.Unlock()
-	name := GetConfFile(contour.GetString(BuildListFile))
+	name := GetConfFile(BuildList)
 	if name == "" {
-		return filenameNotSetErr("build_list")
+		return filenameNotSetErr(BuildList)
 	}
-	switch contour.GetString("format") {
+	switch filepath.Ext(name) {
 	case "toml":
 		_, err := toml.DecodeFile(name, &b.List)
 		if err != nil {
@@ -599,10 +592,25 @@ func GetConfFile(s string) string {
 	if s == "" {
 		return s
 	}
-	if contour.GetBool("example") {
-		return filepath.Join(contour.GetString("example_root"), contour.GetString("conf_dir"), s)
+	var fname string
+	// save the filename and add an extension to it if it doesn't exist
+	if filepath.Ext(s) == "" {
+		fname = s
+		s = fmt.Sprintf("%s.%s", s, contour.GetString("format"))
+	} else {
+		fname = strings.TrimSuffix(s, filepath.Ext(s))
 	}
-	return filepath.Join(contour.GetString("conf_root"), contour.GetString("conf_dir"), s)
+	if contour.GetBool("example") {
+		// example files always end in '.example'
+		if fname == Supported {
+			return filepath.Join(contour.GetString("example_dir"), fmt.Sprintf("%s.example", s))
+		}
+		return filepath.Join(contour.GetString("example_dir"), contour.GetString("conf_dir"), fmt.Sprintf("%s.example", s))
+	}
+	if fname == Supported {
+		return s
+	}
+	return filepath.Join(contour.GetString("conf_dir"), s)
 }
 
 func filenameNotSetErr(target string) error {

@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mohae/contour"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -77,7 +78,7 @@ func (e RancherError) Error() string {
 var indent = "    "
 
 // Defined builds
-var Builds *builds
+var Builds map[string]builds
 
 // Defaults for each supported distribution
 var DistroDefaults distroDefaults
@@ -167,13 +168,58 @@ func (d *distroDefaults) Set() error {
 	return nil
 }
 
-// Set DistroDefaults
+// loadBuilds accepts a list of builds and loads the build information for
+// them. Since we don't know everything that is going to be used, we load all
+// build configuration files. A Rancher configuration directory can have 0 or
+// more build configuration files and any number of subdirectories.
+//
+// A build configuration file is any file that ends in ".fmt" and isn't name
+// build_list.fmt", "defualt.fmt", "rancher.fmt", or "supported.fmt".
+//
+// Subdirectories are called environments, envs, and are a way to namespace
+// builds. An envs' name is the same as the subdirectories name. Env names can
+// be concatonated together, using the env_separator_char as the separator; '-'
+// is the default value.
 func loadBuilds() error {
-	Builds = &builds{}
-	err := Builds.Load()
+	// index all the files in the configuration directory, including subdir
+	// this should be sorted
+	cDir := contour.GetString("conf_dir")
+	if contour.GetBool("example") {
+		cDir = filepath.Join(contour.GetString("example_dir"), cDir)
+	}
+	// names come from os.FileInfo.Name() results
+	// TODO: add handling of dir names and recursive for envs support
+	_, fnames, err := indexDir(cDir)
 	if err != nil {
-		jww.ERROR.Println(err)
 		return err
+	}
+	// for each file
+	for _, fname := range fnames {
+		// get the file name, without the extension and without path info
+		ext := filepath.Ext(fname)
+		file := strings.TrimSuffix(fname, ext)
+		// skip non-build files.
+		switch file {
+		case "build_list":
+			continue
+		case "default":
+			continue
+		case "rancher":
+			continue
+		case "supported":
+			continue
+		}
+		// file names ending with build_list are skipped too
+		if strings.HasSuffix(file, "build_list") {
+			continue
+		}
+		fname = filepath.Join(cDir, fname)
+		b := builds{}
+		err := b.Load(fname)
+		if err != nil {
+			return err
+		}
+		Builds[fname] = b
 	}
 	return nil
 }
@@ -670,4 +716,41 @@ func getUniqueFilename(p, layout string) (string, error) {
 		}
 		i++
 	}
+}
+
+// indexDir indexes the passed directory and returns its contents as two lists:
+// directory names and file names. Any error encountered results in termination
+// of indexing and returns.
+//
+// TODO update error handling so that the caller can just return the err
+func indexDir(s string) (dirs, files []string, err error) {
+	// nothing to index
+	if s == "" {
+		return nil, nil, ErrEmptyParam
+	}
+	fi, err := os.Stat(s)
+	if err != nil {
+		return nil, nil, err
+	}
+	if !fi.IsDir() {
+		return nil, nil, ErrNotADir
+	}
+	f, err := os.Open(s)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer f.Close()
+	fis, err := f.Readdir(-1)
+	if err != nil {
+		return nil, nil, err
+	}
+	for _, fi := range fis {
+		if fi.IsDir() {
+			dirs = append(dirs, fi.Name())
+			continue
+		}
+		files = append(files, fi.Name())
+	}
+	jww.FEEDBACK.Printf("indexDir %s: %+v\n", s, files)
+	return dirs, files, nil
 }

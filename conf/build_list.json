@@ -1,9 +1,0 @@
-{
-  "ubuntu" : {
-    "builds": [
-      "1404-amd64",
-      "jessie-amd64",
-      "centos6-amd64"
-    ]
-  }
-}

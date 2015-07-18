@@ -6,7 +6,9 @@ import (
 )
 
 var (
-	ErrUnsupportedFormat = errors.New("error: unsupported format")
+	ErrUnsupportedFormat = errors.New("unsupported format")
+	ErrEmptyParam        = errors.New("received an empty paramater, expected a value")
+	ErrNotADir           = errors.New(" not a directory")
 )
 
 func builderErr(b Builder, err error) error {
