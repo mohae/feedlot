@@ -1,0 +1,112 @@
+{
+  "1404-amd64": {
+    "distro": "ubuntu",
+    "description": "ubuntu LTS 1404 amd64 vagrant build",
+    "arch": "amd64",
+    "image": "server",
+    "release": "14.04",
+    "builder_types": [
+      "virtualbox-iso"
+    ],
+    "builders": {
+      "common": {
+        "settings": [
+          "ssh_wait_timeout = 300m"
+        ]
+      },
+      "virtualbox-iso": {
+        "arrays": {
+          "vboxmanage": [
+            "memory=4096"
+          ]
+        }
+      }
+    }
+  },
+  "centos7_x86_64": {
+    "distro": "centos",
+    "description": "centos 7 x86_64 build",
+    "arch": "x86_64",
+    "image": "minimal",
+    "release": "7",
+    "builder_types": [
+      "virtualbox-iso"
+    ],
+    "builders": {
+      "common": {
+        "settings": [
+          "ssh_wait_timeout = 300m"
+        ]
+      },
+      "virtualbox-iso": {
+	    "arrays": {
+          "vboxmanage": [
+            "--memory=4096"
+          ]
+        }
+      }
+    }
+  },
+  "jessie_amd64": {
+    "distro": "debian",
+    "description": "debian jessie build",
+    "arch": "amd64",
+    "image": "netinst",
+    "release": "8",
+    "builder_types": [
+      "virtualbox-iso"
+    ],
+	"builders": {
+      "common": {
+        "settings": [
+          "ssh_wait_timeout = 300m"
+         ]
+      },
+      "virtualbox-iso": {
+        "arrays": {
+          "vboxmanage": [
+            "--memory=4096"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "1404-salt": {
+      "distro": "ubuntu",
+      "description": "ubuntu LTS 1404 amd64 server build, minimal salt install",
+      "arch": "amd64",
+      "image": "server",
+      "release": "14.04",
+      "builder_types": [
+         "virtualbox-iso"
+      ],
+      "provisioner_types": [
+        "salt-masterless"
+      ],
+      "builders": {
+        "common": {
+          "settings": [
+            "ssh_wait_timeout = 300m"
+           ]
+         },
+         "virtualbox-iso": {
+		  "arrays": {
+             "vboxmanage": [
+               "--memory=4096"
+             ]
+           }
+         }
+       }
+       "provisioners": {
+         "salt-masterless": {
+           "settings": [
+             "local_state_tree = salt-masterless/salt",
+             "local_pillar_roots = salt-masterless/pillar",
+             "minion_config = salt-masterless/"
+           ]
+         },
+      },
+    },
+  }
+}
