@@ -46,7 +46,7 @@ type build struct {
 }
 
 // build.DeepCopy makes a deep copy of the build and returns it.
-func (b *build) DeepCopy() build {
+func (b *build) copy() build {
 	newB := build{
 		BuilderTypes:       []string{},
 		Builders:           map[string]builder{},
@@ -251,14 +251,13 @@ func (d *defaults) Load() error {
 		return nil
 	}
 	name := GetConfFile(Default)
-	jww.FEEDBACK.Printf("default filename: %s\n", name)
-	switch contour.GetString("format") {
-	case "toml":
+	switch contour.GetString(Format) {
+	case "toml", "tml":
 		_, err := toml.DecodeFile(name, &d)
 		if err != nil {
 			return decodeErr(err)
 		}
-	case "json":
+	case "json", "jsn":
 		f, err := os.Open(name)
 		if err != nil {
 			return decodeErr(err)
@@ -274,7 +273,7 @@ func (d *defaults) Load() error {
 				break
 			}
 			if err != nil {
-				return err
+				return decodeErr(err)
 			}
 		}
 	default:
@@ -303,10 +302,13 @@ func (i *BuildInf) update(b BuildInf) {
 	if b.BuildName != "" {
 		i.BuildName = b.BuildName
 	}
+	if b.BaseURL != "" {
+		i.BaseURL = b.BaseURL
+	}
 }
 
 // IODirInf is used to store information about where Rancher can find and put
-// things. Source files are always in a SrcDir.
+// things. Source files are always in a SourceDir.
 type IODirInf struct {
 	// Include the packer component name in the path. Even though it is used as a bool,
 	// it is defined as a string so that it makes absense from a template detectable.
@@ -315,18 +317,18 @@ type IODirInf struct {
 	// If this is true, the component.String() value will be added as the parent of the
 	// output resource: i.e. OutDir/component.String()/resource_name
 	IncludeComponentString string `toml:"include_component_string" json:"include_component_string"`
-	// The directory that the output artifacts will be written to.
-	OutDir string `toml:"out_dir" json:"out_dir"`
+	// The directory to use for example runs
+	OutputDir string `toml:"output_dir" json:"output_dir"`
 	// The directory that contains the source files for this build.
-	SrcDir string `toml:"src_dir" json:"src_dir"`
+	SourceDir string `toml:"source_dir" json:"source_dir"`
 }
 
 func (i *IODirInf) update(inf IODirInf) {
-	if inf.OutDir != "" {
-		i.OutDir = appendSlash(inf.OutDir)
+	if inf.OutputDir != "" {
+		i.OutputDir = appendSlash(inf.OutputDir)
 	}
-	if inf.SrcDir != "" {
-		i.SrcDir = appendSlash(inf.SrcDir)
+	if inf.SourceDir != "" {
+		i.SourceDir = appendSlash(inf.SourceDir)
 	}
 	if inf.IncludeComponentString != "" {
 		i.IncludeComponentString = inf.IncludeComponentString
@@ -337,21 +339,20 @@ func (i *IODirInf) update(inf IODirInf) {
 // should be included. Any string that results in a parse error will be
 // evaluated as false, otherwise any string that strconv.ParseBool() can parse
 // is valid.
+//
+// Any value that errors is evaluated to false
 func (i *IODirInf) includeComponentString() bool {
-	b, err := strconv.ParseBool(i.IncludeComponentString)
-	if err != nil {
-		return false
-	}
+	b, _ := strconv.ParseBool(i.IncludeComponentString)
 	return b
 }
 
 // check to see if the dirinf is set, if not, set them to their defaults
 func (i *IODirInf) check() {
-	if i.OutDir == "" {
-		i.OutDir = contour.GetString(ParamDelimStart) + "build_name"
+	if i.OutputDir == "" {
+		i.OutputDir = fmt.Sprintf("%sbuildname", contour.GetString(ParamDelimStart))
 	}
-	if i.SrcDir == "" {
-		i.SrcDir = "src"
+	if i.SourceDir == "" {
+		i.SourceDir = "src"
 	}
 }
 
@@ -415,13 +416,13 @@ func (s *supported) Load() error {
 	s.Mutex.Lock()
 	defer s.Mutex.Unlock()
 	name := GetConfFile(Supported)
-	switch contour.GetString("format") {
-	case "toml":
+	switch contour.GetString(Format) {
+	case "toml", "tml":
 		_, err := toml.DecodeFile(name, &s.Distro)
 		if err != nil {
 			return decodeErr(err)
 		}
-	case "json":
+	case "json", "jsn":
 		f, err := os.Open(name)
 		if err != nil {
 			return decodeErr(err)
@@ -434,7 +435,7 @@ func (s *supported) Load() error {
 				break
 			}
 			if err != nil {
-				return err
+				return decodeErr(err)
 			}
 		}
 	default:
@@ -458,8 +459,8 @@ func (b *builds) Load(name string) error {
 	if name == "" {
 		return filenameNotSetErr("build")
 	}
-	switch filepath.Ext(name) {
-	case ".toml", ".tml":
+	switch contour.GetString(Format) {
+	case "toml", "tml":
 		_, err := toml.DecodeFile(name, &b.Build)
 		if err != nil {
 			return decodeErr(err)
@@ -470,7 +471,6 @@ func (b *builds) Load(name string) error {
 			return decodeErr(err)
 		}
 		defer f.Close()
-
 		dec := json.NewDecoder(f)
 		for {
 			err := dec.Decode(&b.Build)
@@ -508,13 +508,13 @@ func (b *buildLists) Load() error {
 	if name == "" {
 		return filenameNotSetErr(BuildList)
 	}
-	switch filepath.Ext(name) {
-	case "toml":
+	switch contour.GetString(Format) {
+	case "toml", "tml":
 		_, err := toml.DecodeFile(name, &b.List)
 		if err != nil {
 			return decodeErr(err)
 		}
-	case "json":
+	case "json", "jsn":
 		f, err := os.Open(name)
 		if err != nil {
 			return decodeErr(err)
@@ -530,7 +530,7 @@ func (b *buildLists) Load() error {
 				break
 			}
 			if err != nil {
-				return err
+				return decodeErr(err)
 			}
 		}
 	default:
@@ -557,13 +557,13 @@ func SetCfgFile() error {
 	// determine the correct file, This is done here because it's less ugly than the alternatives.
 	_, err := os.Stat(contour.GetString(CfgFile))
 	if err != nil && err == os.ErrNotExist {
-		ft := contour.GetString("format")
+		ft := contour.GetString(Format)
 		switch ft {
-		case "toml":
-			contour.UpdateString("format", "json")
+		case "toml", "tml":
+			contour.UpdateString(Format, "json")
 			contour.UpdateString(CfgFile, GetConfFile(contour.GetString(CfgFile)))
 		case "json":
-			contour.UpdateString("format", "toml")
+			contour.UpdateString(Format, "toml")
 			contour.UpdateString(CfgFile, GetConfFile(contour.GetString(CfgFile)))
 		}
 		_, err = os.Stat(contour.GetString(CfgFile))
@@ -571,17 +571,15 @@ func SetCfgFile() error {
 			return nil
 		}
 		// Set the format to the new value.
-		contour.UpdateString("format", ft)
+		contour.UpdateString(Format, ft)
 	}
 	if err != nil {
 		jww.ERROR.Print(err)
-		jww.FEEDBACK.Printf("SetCfg: %s", err.Error())
 		return err
 	}
 	err = contour.SetCfg()
 	if err != nil {
 		jww.ERROR.Print(err)
-		jww.FEEDBACK.Printf("SetCfg: %s", err.Error())
 	}
 	return err
 }
@@ -596,27 +594,16 @@ func GetConfFile(s string) string {
 	// save the filename and add an extension to it if it doesn't exist
 	if filepath.Ext(s) == "" {
 		fname = s
-		s = fmt.Sprintf("%s.%s", s, contour.GetString("format"))
+		s = fmt.Sprintf("%s.%s", s, contour.GetString(Format))
 	} else {
 		fname = strings.TrimSuffix(s, filepath.Ext(s))
 	}
-	if contour.GetBool("example") {
+	if contour.GetBool(Example) {
 		// example files always end in '.example'
 		if fname == Supported {
-			return filepath.Join(contour.GetString("example_dir"), fmt.Sprintf("%s.example", s))
+			return filepath.Join(contour.GetString(ExampleDir), fmt.Sprintf("%s.example", s))
 		}
-		return filepath.Join(contour.GetString("example_dir"), contour.GetString("conf_dir"), fmt.Sprintf("%s.example", s))
+		return filepath.Join(contour.GetString(ExampleDir), contour.GetString(ConfDir), fmt.Sprintf("%s.example", s))
 	}
-	if fname == Supported {
-		return s
-	}
-	return filepath.Join(contour.GetString("conf_dir"), s)
-}
-
-func filenameNotSetErr(target string) error {
-	return fmt.Errorf("%q not set, unable to retrieve the %s file", target, target)
-}
-
-func decodeErr(err error) error {
-	return fmt.Errorf("decode failed: %s", err)
+	return filepath.Join(contour.GetString(ConfDir), s)
 }

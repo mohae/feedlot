@@ -2,7 +2,6 @@ package app
 
 import (
 	"fmt"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -472,19 +471,7 @@ func (r *rawTemplate) createVagrant() (settings map[string]interface{}, err erro
 	// Process the Arrays.
 	for name, val := range r.PostProcessors[Vagrant.String()].Arrays {
 		switch name {
-		case "include":
-			array := deepcopy.InterfaceToSliceOfStrings(val)
-			for i, v := range array {
-				v = r.replaceVariables(v)
-				src, err := r.findComponentSource(Vagrant.String(), v)
-				if err != nil {
-					return nil, settingErr(v, err)
-				}
-				array[i] = v
-				r.files[filepath.Join(r.OutDir, Vagrant.String(), v)] = src
-			}
-			settings[name] = array
-		case "override", "except", "only":
+		case "except", "include", "only", "override":
 			array := deepcopy.Iface(val)
 			if array != nil {
 				settings[name] = array

@@ -11,8 +11,8 @@ var testRawTemplateProvisioner = &rawTemplate{
 		Description:      "Test template config and Rancher options for CentOS",
 	},
 	IODirInf: IODirInf{
-		OutDir: "../test_files/out/:build_name",
-		SrcDir: "../test_files/src",
+		OutputDir: "../test_files/out/:build_name",
+		SourceDir: "../test_files/src",
 	},
 	BuildInf: BuildInf{
 		Name:      ":build_name",
@@ -155,8 +155,8 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 	},
 	IODirInf: IODirInf{
 		IncludeComponentString: "true",
-		OutDir:                 "../test_files/out/:build_name",
-		SrcDir:                 "../test_files/src",
+		OutputDir:              "../test_files/out/:build_name",
+		SourceDir:              "../test_files/src",
 	},
 	BuildInf: BuildInf{
 		Name:      ":build_name",
@@ -584,7 +584,7 @@ func TestRawTemplateUpdateProvisioners(t *testing.T) {
 }
 
 func TestProvisionersSettingsToMap(t *testing.T) {
-	res := pr.settingsToMap("shell", &testRawTpl)
+	res := pr.settingsToMap("shell", testRawTpl)
 	compare := map[string]interface{}{"type": "shell", "execute_command": "echo 'vagrant' | sudo -S sh '{{.Path}}'"}
 	for k, v := range res {
 		val, ok := compare[k]

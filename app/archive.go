@@ -6,21 +6,165 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
 	"path/filepath"
-	"sync"
+
+	"github.com/mohae/contour"
 )
 
 // Archive holds information about an archive.
 type Archive struct {
+	// Name is the name of the archive, w/o extensions
+	Name string
 	// Path to the target directory for the archive output.
 	OutDir string
-	// Name of the archive.
-	Name string
 	// Compression type to be used.
 	Type string
 	// List of files to add to the archive.
 	directory
+}
+
+func NewArchive(s string) *Archive {
+	return &Archive{Name: s}
+}
+func (a *Archive) addFile(tW *tar.Writer, filename string) error {
+	// Add the passed file, if it exists, to the archive, otherwise error.
+	// This preserves mode and modification.
+	// TODO check ownership/permissions
+	file, err := os.Open(filename)
+	if err != nil {
+		return archivePriorBuildErr(err)
+	}
+	defer file.Close()
+	var fileStat os.FileInfo
+	fileStat, err = file.Stat()
+	if err != nil {
+		return archivePriorBuildErr(err)
+	}
+	// Don't add directories--they result in tar header errors.
+	fileMode := fileStat.Mode()
+	if fileMode.IsDir() {
+		return nil
+	}
+	// Create the tar header stuff.
+	tH := new(tar.Header)
+	tH.Name = filename
+	tH.Size = fileStat.Size()
+	tH.Mode = int64(fileStat.Mode())
+	tH.ModTime = fileStat.ModTime()
+	// Write the file header to the tarball.
+	err = tW.WriteHeader(tH)
+	if err != nil {
+		return archivePriorBuildErr(err)
+	}
+	// Add the file to the tarball.
+	_, err = io.Copy(tW, file)
+	if err != nil {
+		return archivePriorBuildErr(err)
+	}
+	return nil
+}
+
+// priorBuild handles archiving prior build artifacts, if it exists, and then
+// deleting those artifacts. This prevents any stale elements from persisting
+// to the new build.
+func (a *Archive) priorBuild(p, t string) error {
+	if !contour.GetBool(ArchivePriorBuild) {
+		return nil
+	}
+	// See if src exists, if it doesn't then don't do anything
+	_, err := os.Stat(p)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return archivePriorBuildErr(err)
+	}
+	// Archive the old artifacts.
+	err = a.archivePriorBuild(p, t)
+	if err != nil {
+		return archivePriorBuildErr(err)
+	}
+	// Delete the old artifacts.
+	err = a.deletePriorBuild(p)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *Archive) archivePriorBuild(p, t string) error {
+	// examples don't get archived
+	if contour.GetBool(Example) {
+		return nil
+	}
+	// Get a list of directory contents
+	err := a.DirWalk(p)
+	if err != nil {
+		return err
+	}
+	if len(a.Files) <= 1 {
+		// This isn't a real error, just log it and return a non-error state.
+		return nil
+	}
+	// Get the relative path so that it can be added to the tarball name.
+	relPath := filepath.Dir(filepath.Clean(p))
+	// The tarball's name is the directory name + extensions.
+	tBName := fmt.Sprintf("%s.tar.gz", filepath.Join(appendSlash(relPath), a.Name))
+
+	// ensure the archive name is unique
+	tBName, err = getUniqueFilename(tBName, "2006-01-02")
+	if err != nil {
+		return err
+	}
+	// Create the new archive file.
+	tBall, err := os.Create(tBName)
+	if err != nil {
+		return err
+	}
+	// Close the file with error handling
+	defer func() {
+		cerr := tBall.Close()
+		if cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
+	// The tarball gets compressed with gzip
+	gw := gzip.NewWriter(tBall)
+	defer func() {
+		cerr := gw.Close()
+		if cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
+	// Create the tar writer.
+	tW := tar.NewWriter(gw)
+	defer func() {
+		cerr := tW.Close()
+		if cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
+	// Go through each file in the path and add it to the archive
+	var c int
+	for i, f := range a.Files {
+		fmt.Println(filepath.Join(p, f.p))
+		err := a.addFile(tW, filepath.Join(p, f.p))
+		if err != nil {
+			return err
+		}
+		c = i
+	}
+	fmt.Printf("%d files added to archive\n", c)
+	return nil
+}
+
+func (a *Archive) deletePriorBuild(p string) error {
+	//delete the contents of the passed directory
+	err := deleteDir(p)
+	if err != nil {
+		return fmt.Errorf("deletePriorBuild failed: %s", err.Error())
+	}
+	return nil
 }
 
 // directory is a container for files to add to an archive.
@@ -67,7 +211,7 @@ func (d *directory) DirWalk(dirPath string) error {
 }
 
 // Add the current file information to the file slice.
-func (d *directory) addFilename(root string, p string, fi os.FileInfo, err error) error {
+func (d *directory) addFilename(root, p string, fi os.FileInfo, err error) error {
 	// Add a file to the slice of files for which an archive will be created.
 	// See if the path exists
 	var exists bool
@@ -89,133 +233,6 @@ func (d *directory) addFilename(root string, p string, fi os.FileInfo, err error
 	// Add the file information.
 	d.Files = append(d.Files, file{p: rel, info: fi})
 	return nil
-}
-
-func (a *Archive) addFile(tW *tar.Writer, filename string) error {
-	// Add the passed file, if it exists, to the archive, otherwise error.
-	// This preserves mode and modification.
-	// TODO check ownership/permissions
-	file, err := os.Open(filename)
-	if err != nil {
-		return archivePriorBuildErr(err)
-	}
-	defer file.Close()
-	var fileStat os.FileInfo
-	fileStat, err = file.Stat()
-	if err != nil {
-		return archivePriorBuildErr(err)
-	}
-	// Don't add directories--they result in tar header errors.
-	fileMode := fileStat.Mode()
-	if fileMode.IsDir() {
-		return nil
-	}
-	// Create the tar header stuff.
-	tH := new(tar.Header)
-	tH.Name = filename
-	tH.Size = fileStat.Size()
-	tH.Mode = int64(fileStat.Mode())
-	tH.ModTime = fileStat.ModTime()
-	// Write the file header to the tarball.
-	err = tW.WriteHeader(tH)
-	if err != nil {
-		return archivePriorBuildErr(err)
-	}
-	// Add the file to the tarball.
-	_, err = io.Copy(tW, file)
-	if err != nil {
-		return archivePriorBuildErr(err)
-	}
-	return nil
-}
-
-// priorBuild handles archiving prior build artifacts, if it exists, and then
-// deleting those artifacts. This prevents any stale elements from persisting
-// to the new build.
-func (a *Archive) priorBuild(p string, t string, wg *sync.WaitGroup) error {
-	defer wg.Done()
-	// See if src exists, if it doesn't then don't do anything
-	_, err := os.Stat(p)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil
-		}
-		return archivePriorBuildErr(err)
-	}
-	// Archive the old artifacts.
-	err = a.archivePriorBuild(p, t)
-	if err != nil {
-		return archivePriorBuildErr(err)
-	}
-	// Delete the old artifacts.
-	err = a.deletePriorBuild(p)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (a *Archive) archivePriorBuild(p string, t string) error {
-	// Get a list of directory contents
-	err := a.DirWalk(p)
-	if err != nil {
-		return err
-	}
-	if len(a.Files) <= 1 {
-		// This isn't a real error, just log it and return a non-error state.
-		return nil
-	}
-	// Get the relative path so that it can be added to the tarball name.
-	relPath := path.Dir(p)
-	// The tarball's name is the directory name + extensions.
-	tBName := filepath.Join(relPath, a.Name) + ".tar.gz"
-
-	// ensure the archive name is unique
-	tBName, err = getUniqueFilename(tBName, "2006-01-02")
-	if err != nil {
-		return err
-	}
-	// Create the new archive file.
-	tBall, err := os.Create(tBName)
-	if err != nil {
-		return err
-	}
-	// Close the file with error handling
-	defer func() {
-		cerr := tBall.Close()
-		if cerr != nil && err == nil {
-			err = cerr
-		}
-	}()
-	// The tarball gets compressed with gzip
-	gw := gzip.NewWriter(tBall)
-	defer gw.Close()
-	// Create the tar writer.
-	tW := tar.NewWriter(gw)
-	defer tW.Close()
-	// Go through each file in the path and add it to the archive
-	for _, f := range a.Files {
-		err := a.addFile(tW, filepath.Join(relPath, f.p))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (a *Archive) deletePriorBuild(p string) error {
-	//delete the contents of the passed directory
-	err := deleteDir(p)
-	if err != nil {
-		return fmt.Errorf("deletePriorBuild failed: %s", err.Error())
-	}
-	return nil
-}
-
-// archivePriorBuildErr is a helper function to help generate consistent
-// errors
-func archivePriorBuildErr(err error) error {
-	return fmt.Errorf("archive of prior build failed: %s", err.Error())
 }
 
 // deleteDir deletes the contents of a directory.

@@ -18,7 +18,6 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
-	"strconv"
 	"strings"
 	"time"
 
@@ -33,6 +32,10 @@ const (
 	Debian
 	Ubuntu
 )
+
+func init() {
+	Builds = map[string]builds{}
+}
 
 // Distro is the distribution type
 type Distro int
@@ -63,17 +66,6 @@ func DistroFromString(s string) Distro {
 	return UnsupportedDistro
 }
 
-type RancherError struct {
-	BuildName string
-	Distro    string
-	Operation string
-	Problem   string
-}
-
-func (e RancherError) Error() string {
-	return fmt.Sprintf("%s: %s %s, %s", e.BuildName, e.Distro, e.Operation, e.Problem)
-}
-
 // indent: default indent to use for marshal stuff
 var indent = "    "
 
@@ -92,31 +84,16 @@ type distroDefaults struct {
 
 // GetTemplate returns a deep copy of the default template for the passed
 // distro name. If the distro does not exist, an error is returned.
-func (d *distroDefaults) GetTemplate(n string) (rawTemplate, error) {
+func (d *distroDefaults) GetTemplate(n string) (*rawTemplate, error) {
 	var t rawTemplate
 	var ok bool
 	t, ok = d.Templates[DistroFromString(n)]
 	if !ok {
 		err := fmt.Errorf("unsupported distro: %s", n)
 		jww.ERROR.Println(err)
-		return t, err
+		return nil, err
 	}
-	Copy := newRawTemplate()
-	Copy.PackerInf = t.PackerInf
-	Copy.IODirInf = t.IODirInf
-	Copy.BuildInf = t.BuildInf
-	Copy.releaseISO = t.releaseISO
-	Copy.date = t.date
-	Copy.delim = t.delim
-	Copy.Distro = t.Distro
-	Copy.Arch = t.Arch
-	Copy.Image = t.Image
-	Copy.Release = t.Release
-	for k, v := range t.varVals {
-		Copy.varVals[k] = v
-	}
-	Copy.build = t.build.DeepCopy()
-	return Copy, nil
+	return t.copy(), nil
 }
 
 // Set sets the default templates for each distro.
@@ -151,8 +128,8 @@ func (d *distroDefaults) Set() error {
 		tmp.BuildInf = dflts.BuildInf
 		tmp.IODirInf = dflts.IODirInf
 		tmp.PackerInf = dflts.PackerInf
-		tmp.build = dflts.build.DeepCopy()
-		tmp.Distro = k
+		tmp.build = dflts.build.copy()
+		tmp.Distro = strings.ToLower(k)
 		// Now update it with the distro settings.
 		tmp.BaseURL = appendSlash(v.BaseURL)
 		tmp.Arch, tmp.Image, tmp.Release = getDefaultISOInfo(v.DefImage)
@@ -162,7 +139,7 @@ func (d *distroDefaults) Set() error {
 			jww.ERROR.Print(err.Error())
 			return err
 		}
-		d.Templates[DistroFromString(k)] = tmp
+		d.Templates[DistroFromString(k)] = *tmp
 	}
 	DistroDefaults.IsSet = true
 	return nil
@@ -183,9 +160,9 @@ func (d *distroDefaults) Set() error {
 func loadBuilds() error {
 	// index all the files in the configuration directory, including subdir
 	// this should be sorted
-	cDir := contour.GetString("conf_dir")
-	if contour.GetBool("example") {
-		cDir = filepath.Join(contour.GetString("example_dir"), cDir)
+	cDir := contour.GetString(ConfDir)
+	if contour.GetBool(Example) {
+		cDir = filepath.Join(contour.GetString(ExampleDir), cDir)
 	}
 	// names come from os.FileInfo.Name() results
 	// TODO: add handling of dir names and recursive for envs support
@@ -193,9 +170,14 @@ func loadBuilds() error {
 	if err != nil {
 		return err
 	}
+	isExample := contour.GetBool(Example)
 	// for each file
 	for _, fname := range fnames {
-		// get the file name, without the extension and without path info
+		// example suffix needs to be removed, if it exists
+		if isExample {
+			fname = stripExampleFilename(fname)
+		}
+		// get the file name, without the extension
 		ext := filepath.Ext(fname)
 		file := strings.TrimSuffix(fname, ext)
 		// skip non-build files.
@@ -209,9 +191,9 @@ func loadBuilds() error {
 		case "supported":
 			continue
 		}
-		// file names ending with build_list are skipped too
-		if strings.HasSuffix(file, "build_list") {
-			continue
+		// example suffix needs to be restored, if example
+		if isExample {
+			fname = exampleFilename(fname)
 		}
 		fname = filepath.Join(cDir, fname)
 		b := builds{}
@@ -656,17 +638,18 @@ func setParentDir(d, p string) string {
 // preserved in some manner, e.g. archives or log files.
 //
 // If the filepath and name already exists, the current formatted date is
-// appended to it using the received layout.  If the file doesn't exist, this
-// filepath is returned.  If the layout is an empty string, this step is
-// skipped.
-//
-// Otherwise, a sequence number is appended to the filename with the date and
-// is checked for collision until no file is found. The first filename that
-// results in a "no such file or directory" error is returned as the filename
-// to use.
+// appended to it using the received layout. The name is then appended with a
+// sequence number, starting at 1, and checked for existence until no file is
+// found. The first filename that results in a "no such file or directory" is
+// returned as the filename to use.
 //
 // Any non "no such file or directory" error is returned as an error.
+//
+// There is a special check made for tar.gz, as this is the default extension
+// for the compressed archives of templates; otherwise, it is assumed that the
+// extension is the text after the last "." in the path.
 func getUniqueFilename(p, layout string) (string, error) {
+	// see if file exists; if it doesn't we're done.
 	_, err := os.Stat(p)
 	if err != nil {
 		if err.(*os.PathError).Err.Error() == "no such file or directory" {
@@ -674,39 +657,23 @@ func getUniqueFilename(p, layout string) (string, error) {
 		}
 		return "", err
 	}
-
-	dir, file := path.Split(p)
-	parts := strings.Split(file, ".")
-	var newPath, basePath string
-	// If the path had multiple .'s append everything except last two elements
-	for i := 0; i < len(parts)-1; i++ {
-		newPath += parts[i]
-		if i < len(parts)-2 {
-			newPath += "."
-		}
+	var base, ext string
+	dir := filepath.Dir(p)
+	if strings.HasSuffix(p, ".tar.gz") {
+		ext = ".tar.gz"
+	} else {
+		ext = filepath.Ext(p)
 	}
-	newPath = filepath.Join(dir, newPath)
+	base = filepath.Base(strings.TrimSuffix(p, ext))
 	// cache the path fragment in case we need to use a sequence
-	basePath = newPath
 	if layout != "" {
 		now := time.Now().Format(layout)
-		newPath += "-" + now
-		// update basePath
-		basePath = newPath
-		newPath += "." + parts[len(parts)-1]
-		_, err = os.Stat(newPath)
-		if err != nil {
-			if err.(*os.PathError).Err.Error() == "no such file or directory" {
-				return newPath, nil
-			}
-			return "", err
-		}
+		base = fmt.Sprintf("%s.%s", base, now)
 	}
 	// check for a unique name while appending a sequence.
 	i := 1
 	for {
-		newPath = basePath + "-" + strconv.Itoa(i) + "." + parts[len(parts)-1]
-		fmt.Println(newPath)
+		newPath := filepath.Join(dir, fmt.Sprintf("%s-%d%s", base, i, ext))
 		_, err = os.Stat(newPath)
 		if err != nil {
 			if err.(*os.PathError).Err.Error() == "no such file or directory" {
@@ -751,6 +718,15 @@ func indexDir(s string) (dirs, files []string, err error) {
 		}
 		files = append(files, fi.Name())
 	}
-	jww.FEEDBACK.Printf("indexDir %s: %+v\n", s, files)
 	return dirs, files, nil
+}
+
+// exampleFilename adds the example ext to the received string and returns it.
+func exampleFilename(s string) string {
+	return fmt.Sprintf("%s%s", s, ExampleExt)
+}
+
+// stripExampleFilename trims the example ext from the passed string amd returns it
+func stripExampleFilename(n string) string {
+	return strings.TrimSuffix(n, ExampleExt)
 }

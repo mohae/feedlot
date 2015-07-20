@@ -18,6 +18,9 @@ type rawTemplate struct {
 	PackerInf
 	IODirInf
 	BuildInf
+	// Example settings
+	IsExample  bool
+	ExampleDir string
 	// holds release information
 	releaseISO releaser
 	// the builder specific string for the template's OS and Arch
@@ -59,11 +62,31 @@ type rawTemplate struct {
 
 // mewRawTemplate returns a rawTemplate with current date in ISO 8601 format.
 // This should be called when a rawTemplate with the current date is desired.
-func newRawTemplate() rawTemplate {
+func newRawTemplate() *rawTemplate {
 	// Set the date, formatted to ISO 8601
 	date := time.Now()
 	splitDate := strings.Split(date.String(), " ")
-	return rawTemplate{date: splitDate[0], delim: contour.GetString(ParamDelimStart), files: make(map[string]string), dirs: make(map[string]string)}
+	return &rawTemplate{date: splitDate[0], delim: contour.GetString(ParamDelimStart), files: make(map[string]string), dirs: make(map[string]string)}
+}
+
+// copy makes a copy of the template and returns the new copy.
+func (r *rawTemplate) copy() *rawTemplate {
+	Copy := newRawTemplate()
+	Copy.PackerInf = r.PackerInf
+	Copy.IODirInf = r.IODirInf
+	Copy.BuildInf = r.BuildInf
+	Copy.releaseISO = r.releaseISO
+	Copy.date = r.date
+	Copy.delim = r.delim
+	Copy.Distro = r.Distro
+	Copy.Arch = r.Arch
+	Copy.Image = r.Image
+	Copy.Release = r.Release
+	for k, v := range r.varVals {
+		Copy.varVals[k] = v
+	}
+	Copy.build = r.build.copy()
+	return Copy
 }
 
 // r.createPackerTemplate creates a Packer template from the rawTemplate that
@@ -88,14 +111,14 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 		jww.ERROR.Println(err)
 		return p, err
 	}
+	fmt.Println("Post-Processors done")
 	// Provisioners
 	p.Provisioners, err = r.createProvisioners()
 	if err != nil {
 		jww.ERROR.Println(err)
 		return p, err
 	}
-	// Now we can create the Variable Section
-	// TODO: currently not implemented/supported
+	fmt.Println("provisioners done")
 	// Return the generated Packer Template
 	return p, nil
 }
@@ -189,16 +212,16 @@ func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
 //  image                    the image used, e.g. server
 //  date                     the current datetime, time.Now()
 //  build_name               the name of the build template
-//  out_dir                  the directory to write the build output to
-//  src_dir                  the directory of any source files used in the build*
+//  output_dir                  the directory to write the build output to
+//  source_dir                  the directory of any source files used in the build*
 //
-// Note: src_dir must be set. Rancher searches for referenced files and uses
-// src_dir/distro as the last search directory. This directory is also used as
+// Note: source_dir must be set. Rancher searches for referenced files and uses
+// source_dir/distro as the last search directory. This directory is also used as
 // the base directory for any specified src directories.
 //
-// TODO should there be a flag to not prefix src paths with src_dir to allow for
+// TODO should there be a flag to not prefix src paths with source_dir to allow for
 // specification of files that are not in src? If the flag is set to not prepend
-// src_dir, src_dir could still be used by adding it to the specific variable.
+// source_dir, source_dir could still be used by adding it to the specific variable.
 func (r *rawTemplate) mergeVariables() {
 	// Get the delim and set the replacement map, resolve name information
 	r.setBaseVarVals()
@@ -206,10 +229,10 @@ func (r *rawTemplate) mergeVariables() {
 	r.Name = r.replaceVariables(r.Name)
 	r.varVals[r.delim+"name"] = r.Name
 	// then merge the sourc and out dirs and set them
-	r.mergeSrcDir()
+	r.mergeSourceDir()
 	r.mergeOutDir()
-	r.varVals[r.delim+"out_dir"] = r.OutDir
-	r.varVals[r.delim+"src_dir"] = r.SrcDir
+	r.varVals[r.delim+"output_dir"] = r.OutputDir
+	r.varVals[r.delim+"source_dir"] = r.SourceDir
 }
 
 // setBaseVarVals sets the varVals for the base variables
@@ -234,29 +257,29 @@ func (r *rawTemplate) mergeString(s, d string) string {
 	return strings.TrimSuffix(r.replaceVariables(s), "/")
 }
 
-// mergeSrcDir sets whether or not a custom source directory was used, does any
+// mergeSourceDir sets whether or not a custom source directory was used, does any
 // necessary variable replacement, and normalizes the string to not end in /
-func (r *rawTemplate) mergeSrcDir() {
-	// variable replacement is only necessary if the SrcDir has the variable delims
-	if !strings.Contains(r.SrcDir, r.delim) {
+func (r *rawTemplate) mergeSourceDir() {
+	// variable replacement is only necessary if the SourceDir has the variable delims
+	if !strings.Contains(r.SourceDir, r.delim) {
 		// normalize to no ending /
-		r.SrcDir = strings.TrimSuffix(r.replaceVariables(r.SrcDir), "/")
+		r.SourceDir = strings.TrimSuffix(r.replaceVariables(r.SourceDir), "/")
 		return
 	}
 	// normalize to no ending /
-	r.SrcDir = strings.TrimSuffix(r.replaceVariables(r.SrcDir), "/")
+	r.SourceDir = strings.TrimSuffix(r.replaceVariables(r.SourceDir), "/")
 }
 
-// mergeOutDir resolves the out_dir for this template.
+// mergeOutDir resolves the output_dir for this template.
 func (r *rawTemplate) mergeOutDir() {
-	// variable replacement is only necessary if the SrcDir has the variable delims
-	if !strings.Contains(r.OutDir, r.delim) {
+	// variable replacement is only necessary if the SourceDir has the variable delims
+	if !strings.Contains(r.OutputDir, r.delim) {
 		// normalize to no ending /
-		r.OutDir = strings.TrimSuffix(r.replaceVariables(r.OutDir), "/")
+		r.OutputDir = strings.TrimSuffix(r.replaceVariables(r.OutputDir), "/")
 		return
 	}
 	// normalize to no ending /
-	r.OutDir = strings.TrimSuffix(r.replaceVariables(r.OutDir), "/")
+	r.OutputDir = strings.TrimSuffix(r.replaceVariables(r.OutputDir), "/")
 }
 
 // ISOInfo sets the ISO info for the template's supported distro type. This
@@ -413,7 +436,7 @@ func (r *rawTemplate) findCommandFile(component, name string) (string, error) {
 		return "", fmt.Errorf("the passed command filename was empty")
 	}
 	findPath := filepath.Join("commands", name)
-	src, err := r.findComponentSource(component, findPath)
+	src, err := r.findComponentSource(component, findPath, false)
 	// return the error for any error other than ErrNotExist
 	if err != nil && err != os.ErrNotExist {
 		return "", err
@@ -422,12 +445,12 @@ func (r *rawTemplate) findCommandFile(component, name string) (string, error) {
 	if err == nil {
 		return src, nil
 	}
-	return r.findComponentSource(component, name)
+	return r.findComponentSource(component, name, false)
 }
 
 // findComponentSource attempts to locate the source file or directory referred
 // to in p for the requested component and return it's actual location within
-// the src_dir.  If the component is not empty, it is added to the path to see
+// the source_dir.  If the component is not empty, it is added to the path to see
 // if there are any component specific files that match.  If none are found,
 // just the path is used.  Any match is returned, otherwise an os.ErrNotFound
 // error is returned.  Any other error encountered will also be returned.
@@ -441,14 +464,19 @@ func (r *rawTemplate) findCommandFile(component, name string) (string, error) {
 // e.g. vagrant, chef-client, shell, etc.  The component-base is the base name
 // of the packer component that this path belongs to, if applicable, e.g.
 // chef-client's base would be chef as would chef-solo's.
-func (r *rawTemplate) findComponentSource(component, p string) (string, error) {
+func (r *rawTemplate) findComponentSource(component, p string, isDir bool) (string, error) {
+	if p == "" {
+		return "", fmt.Errorf("cannot find source, no path received")
+	}
 	var tmpPath string
 	var err error
+	p = r.exampleFilename(p)
 	// if len(cParts) > 1, there was a - and component-base processing should be done
 	if component != "" {
-		tmpPath, err = r.findSource(r.getSourcePath(filepath.Join(component, p)))
+		component = strings.ToLower(component)
+		tmpPath, err = r.findSource(filepath.Join(component, p), isDir)
 		if err != nil && err != os.ErrNotExist {
-			return "", err
+			return "", fmt.Errorf("%s: %s", tmpPath, err)
 		}
 		if err == nil {
 			return tmpPath, nil
@@ -456,9 +484,9 @@ func (r *rawTemplate) findComponentSource(component, p string) (string, error) {
 		cParts := strings.Split(component, "-")
 		if len(cParts) > 1 {
 			// first element is the base
-			tmpPath, err = r.findSource(r.getSourcePath(filepath.Join(cParts[0], p)))
+			tmpPath, err = r.findSource(filepath.Join(cParts[0], p), isDir)
 			if err != nil && err != os.ErrNotExist {
-				return "", err
+				return "", fmt.Errorf("%s: %s", tmpPath, err)
 			}
 			if err == nil {
 				return tmpPath, nil
@@ -466,11 +494,12 @@ func (r *rawTemplate) findComponentSource(component, p string) (string, error) {
 		}
 	}
 	// look for the source as using just the passed path
-	tmpPath, err = r.findSource(p)
-	if err == nil {
-		return tmpPath, nil
+	tmpPath, err = r.findSource(p, isDir)
+	if err != nil {
+		return "", fmt.Errorf("%s file %q: %s", component, p, err)
 	}
-	return "", err
+	return tmpPath, nil
+
 }
 
 // findSource searches for the specified sub-path using Rancher's algorithm for
@@ -481,21 +510,21 @@ func (r *rawTemplate) findComponentSource(component, p string) (string, error) {
 // e.g. 14.04 becomes 1404,or numericRelease.  The base release number is also
 // checked: e.g. 14, the releaseBase, is searched for 14.04.
 // Search order:
-//   src_dir/build_name/
-//   src_dir/distro/build_name/
-//   src_dir/distro/release/build_name/
-//   src_dir/distro/numericRelease/build_name/
-//   src_dir/distro/releaseBase/build_name/
-//   src_dir/distro/release/arch/
-//   src_dir/distro/releaseBase/arch/
-//   src_dir/distro/release/
-//   src_dir/distro/releaseBase/
-//   src_dir/distro/arch
-//   src_dir/distro/
-//   src_dir/
+//   source_dir/build_name/
+//   source_dir/distro/build_name/
+//   source_dir/distro/release/build_name/
+//   source_dir/distro/numericRelease/build_name/
+//   source_dir/distro/releaseBase/build_name/
+//   source_dir/distro/release/arch/
+//   source_dir/distro/releaseBase/arch/
+//   source_dir/distro/release/
+//   source_dir/distro/releaseBase/
+//   source_dir/distro/arch
+//   source_dir/distro/
+//   source_dir/
 //
 // If the passed path is not found, an os.ErrNotExist will be returned
-func (r *rawTemplate) findSource(p string) (string, error) {
+func (r *rawTemplate) findSource(p string, isDir bool) (string, error) {
 	if p == "" {
 		return "", fmt.Errorf("cannot find source, no path received")
 	}
@@ -506,34 +535,34 @@ func (r *rawTemplate) findSource(p string) (string, error) {
 			numericRelease += v
 		}
 	}
-	// src_dir/:build_name/p
-	tmpPath := r.getSourcePath(filepath.Join(r.BuildName, p))
+	// source_dir/:build_name/p
+	tmpPath := r.getSourcePath(filepath.Join(r.BuildName, p), isDir)
 	_, err := os.Stat(tmpPath)
 	if err == nil {
 		jww.TRACE.Printf("findSource:  %s found", tmpPath)
 		return tmpPath, nil
 	}
 	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
-	// src_dir/:distro/:build_name/p
-	tmpPath = r.getSourcePath(filepath.Join(r.Distro, r.BuildName, p))
+	// source_dir/:distro/:build_name/p
+	tmpPath = r.getSourcePath(filepath.Join(r.Distro, r.BuildName, p), isDir)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		jww.TRACE.Printf("findSource:  %s found", tmpPath)
 		return tmpPath, nil
 	}
 	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
-	// src_dir/:distro/:release/:build_name/p
-	tmpPath = r.getSourcePath(filepath.Join(r.Distro, r.Release, r.BuildName, p))
+	// source_dir/:distro/:release/:build_name/p
+	tmpPath = r.getSourcePath(filepath.Join(r.Distro, r.Release, r.BuildName, p), isDir)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		jww.TRACE.Printf("findSource:  %s found", tmpPath)
 		return tmpPath, nil
 	}
 	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
-	// src_dir/:distro/numericRelease/:build_name/p
+	// source_dir/:distro/numericRelease/:build_name/p
 	// only if the numericRelease is different than the release
 	if numericRelease != r.Release {
-		tmpPath = r.getSourcePath(filepath.Join(r.Distro, numericRelease, r.BuildName, p))
+		tmpPath = r.getSourcePath(filepath.Join(r.Distro, numericRelease, r.BuildName, p), isDir)
 		_, err = os.Stat(tmpPath)
 		if err == nil {
 			jww.TRACE.Printf("findSource:  %s found", tmpPath)
@@ -541,10 +570,10 @@ func (r *rawTemplate) findSource(p string) (string, error) {
 		}
 		jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	}
-	// src_dir/:distro/releaseBase/:build_name/p
+	// source_dir/:distro/releaseBase/:build_name/p
 	// only if releaseBase is different than the release
 	if releaseParts[0] != r.Release {
-		tmpPath = r.getSourcePath(filepath.Join(r.Distro, releaseParts[0], r.BuildName, p))
+		tmpPath = r.getSourcePath(filepath.Join(r.Distro, releaseParts[0], r.BuildName, p), isDir)
 		_, err = os.Stat(tmpPath)
 		if err == nil {
 			jww.TRACE.Printf("findSource:  %s found", tmpPath)
@@ -552,18 +581,18 @@ func (r *rawTemplate) findSource(p string) (string, error) {
 		}
 		jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	}
-	// src_dir/:distro/:release/:arch/p
-	tmpPath = r.getSourcePath(filepath.Join(r.Distro, r.Release, r.Arch, p))
+	// source_dir/:distro/:release/:arch/p
+	tmpPath = r.getSourcePath(filepath.Join(r.Distro, r.Release, r.Arch, p), isDir)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		jww.TRACE.Printf("findSource:  %s found", tmpPath)
 		return tmpPath, nil
 	}
 	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
-	// src_dir/:distro/release/:arch/p
+	// source_dir/:distro/release/:arch/p
 	// only if the numericRelease is different than the release
 	if numericRelease != r.Release {
-		tmpPath = r.getSourcePath(filepath.Join(r.Distro, numericRelease, r.Arch, p))
+		tmpPath = r.getSourcePath(filepath.Join(r.Distro, numericRelease, r.Arch, p), isDir)
 		_, err = os.Stat(tmpPath)
 		if err == nil {
 			jww.TRACE.Printf("findSource:  %s found", tmpPath)
@@ -571,10 +600,10 @@ func (r *rawTemplate) findSource(p string) (string, error) {
 		}
 		jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	}
-	// src_dir/:distro/releaseBase/:arch/p
+	// source_dir/:distro/releaseBase/:arch/p
 	// only if releaseBase is different than the release
 	if releaseParts[0] != r.Release {
-		tmpPath = r.getSourcePath(filepath.Join(r.Distro, releaseParts[0], r.Arch, p))
+		tmpPath = r.getSourcePath(filepath.Join(r.Distro, releaseParts[0], r.Arch, p), isDir)
 		_, err = os.Stat(tmpPath)
 		if err == nil {
 			jww.TRACE.Printf("findSource:  %s found", tmpPath)
@@ -582,18 +611,18 @@ func (r *rawTemplate) findSource(p string) (string, error) {
 		}
 	}
 	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
-	// src_dir/:distro/:release/p
-	tmpPath = r.getSourcePath(filepath.Join(r.Distro, r.Release, p))
+	// source_dir/:distro/:release/p
+	tmpPath = r.getSourcePath(filepath.Join(r.Distro, r.Release, p), isDir)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		jww.TRACE.Printf("findSource:  %s found", tmpPath)
 		return tmpPath, nil
 	}
 	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
-	// src_dir/:distro/release/p
+	// source_dir/:distro/release/p
 	// only if the numericRelease is different than the release
 	if numericRelease != r.Release {
-		tmpPath = r.getSourcePath(filepath.Join(r.Distro, numericRelease, p))
+		tmpPath = r.getSourcePath(filepath.Join(r.Distro, numericRelease, p), isDir)
 		_, err = os.Stat(tmpPath)
 		if err == nil {
 			jww.TRACE.Printf("findSource:  %s found", tmpPath)
@@ -601,10 +630,10 @@ func (r *rawTemplate) findSource(p string) (string, error) {
 		}
 		jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	}
-	// src_dir/:distro/releaseBase/p
+	// source_dir/:distro/releaseBase/p
 	// only if releaseBase is different than the release
 	if releaseParts[0] != r.Release {
-		tmpPath = r.getSourcePath(filepath.Join(r.Distro, releaseParts[0], p))
+		tmpPath = r.getSourcePath(filepath.Join(r.Distro, releaseParts[0], p), isDir)
 		_, err = os.Stat(tmpPath)
 		if err == nil {
 			jww.TRACE.Printf("findSource:  %s found", tmpPath)
@@ -612,24 +641,24 @@ func (r *rawTemplate) findSource(p string) (string, error) {
 		}
 		jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	}
-	// src_dir/:distro/:arch/p
-	tmpPath = r.getSourcePath(filepath.Join(r.Distro, r.Arch, p))
+	// source_dir/:distro/:arch/p
+	tmpPath = r.getSourcePath(filepath.Join(r.Distro, r.Arch, p), isDir)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		jww.TRACE.Printf("findSource:  %s found", tmpPath)
 		return tmpPath, nil
 	}
 	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
-	// src_dir/:distro/p
-	tmpPath = r.getSourcePath(filepath.Join(r.Distro, p))
+	// source_dir/:distro/p
+	tmpPath = r.getSourcePath(filepath.Join(r.Distro, p), isDir)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		jww.TRACE.Printf("findSource:  %s found", tmpPath)
 		return tmpPath, nil
 	}
 	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
-	// src_dir/p
-	tmpPath = r.getSourcePath(filepath.Join(p))
+	// source_dir/p
+	tmpPath = r.getSourcePath(filepath.Join(p), isDir)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		jww.TRACE.Printf("findSource:  %s found", tmpPath)
@@ -644,9 +673,16 @@ func (r *rawTemplate) findSource(p string) (string, error) {
 // parent directory, it is added to the path.
 func (r *rawTemplate) buildOutPath(component, p string) string {
 	if r.includeComponentString() && component != "" {
-		return filepath.Join(r.OutDir, component, p)
+		component = strings.ToLower(component)
+		if r.IsExample {
+			return filepath.Join(r.ExampleDir, r.OutputDir, component, p)
+		}
+		return filepath.Join(r.OutputDir, component, p)
 	}
-	return filepath.Join(r.OutDir, p)
+	if r.IsExample {
+		return filepath.Join(r.ExampleDir, r.OutputDir, p)
+	}
+	return filepath.Join(r.OutputDir, p)
 }
 
 // buildTemplateResourcePath builds the path that will be added to the Packer
@@ -655,57 +691,97 @@ func (r *rawTemplate) buildOutPath(component, p string) string {
 // the path.
 func (r *rawTemplate) buildTemplateResourcePath(component, p string) string {
 	if r.includeComponentString() && component != "" {
-		return filepath.Join(component, p)
+		component = strings.ToLower(component)
+		return filepath.Join(strings.ToLower(component), p)
 	}
 	return p
 }
 
-// provides the true source path for the requested p; i.e. it adjusts the
-// resulting source path for examples, if in example mode.  'Example' builds
-// use the `example_dir` as the parent to the `src_dir`.  If the `src_dir`
-// starts with 1 or more '../' elements, they are all elided to ensure that the
-// `src_dir` will be a child of `example_dir`. The rest of the path remains
-// intact.
+// getSourcePath returns the requested path as a child of the SourceDir. If this
+// is an example template and the path is not a directory, the path is suffixed
+// with the ExampleExt, with which all example files must end.
 //
 // Example:
 //    example_dir = "example/"
-//    src_dir = "../../rancher_src/"
+//    source_dir = "../../rancher_src/"
 //    p = "commands/boot.command"
 //
 //    Example mode output: "example/rancher_src/commands/boot.command"
 //    Regular output:      "../../rancher_rc/commands/boot.command"
-func (r *rawTemplate) getSourcePath(p string) string {
+func (r *rawTemplate) getSourcePath(p string, isDir bool) string {
 	if p == "" {
 		return ""
 	}
-	var i int
-	var s string
-	var srcParts []string
-	srcDir := contour.GetString("src_dir")
-	if srcDir == "" {
-		goto done
-	}
-	srcParts = strings.Split(srcDir, string(filepath.Separator))
-	if len(srcParts) == 1 {
-		goto done
-	}
-	//
-	if contour.GetBool("example") {
-		for i, s = range srcParts {
-			if s != ".." {
-				break
-			}
-		}
-		if i > 0 {
-			if contour.GetString("example_dir") != "" {
-				srcDir = filepath.Join(srcParts[i:]...)
-			}
-		}
-	}
-done:
 	// example files always end in '.example'
-	if contour.GetBool("example") {
-		return filepath.Join(contour.GetString("example_dir"), srcDir, fmt.Sprintf("%s.%s", p, "example"))
+	if r.IsExample && !isDir {
+		return filepath.Join(r.SourceDir, fmt.Sprintf("%s%s", p, ExampleExt))
 	}
-	return filepath.Join(srcDir, p)
+	return filepath.Join(r.SourceDir, p)
+}
+
+// exampleFilename checks to see if this is an example template. If it is, it
+// returns the string with the example ext; otherwise the unmodified, original
+// string is returned.
+func (r *rawTemplate) exampleFilename(s string) string {
+	if !r.IsExample {
+		return s
+	}
+	return exampleFilename(s)
+}
+
+// stripExampleFilename checks to see if this is an example template. If it is,
+// it returns the string with the example ext stripped from it, otherwise the
+// unmodified, original string is returned.
+func (r *rawTemplate) stripExampleFilename(s string) string {
+	if !r.IsExample {
+		return s
+	}
+	return exampleFilename(s)
+}
+
+// setExampleDisr sets the SourceDir and OutDir for example template builds. If
+// either the Dir starts with 1 or more parent dirs, '../', they will elided
+// from the Dir before prepending the SourceDir path with the Example directory.
+//
+// src = example/src
+// ../src = example/src
+// ../../src = example/src
+// src/foo = example/src/foo
+func (r *rawTemplate) setExampleDirs() {
+	var i int
+	var part string
+	var parts []string
+	if r.SourceDir == "" {
+		r.SourceDir = r.ExampleDir
+		goto outDir
+	}
+	parts = strings.Split(r.SourceDir, string(filepath.Separator))
+	for i, part = range parts {
+		if part != ".." {
+			break
+		}
+	}
+	if i > 0 {
+		if r.ExampleDir != "" {
+			r.SourceDir = filepath.Join(parts[i:]...)
+		}
+	}
+	r.SourceDir = filepath.Join(r.ExampleDir, r.SourceDir)
+outDir:
+	if r.OutputDir == "" {
+		r.OutputDir = r.ExampleDir
+		return
+	}
+	parts = strings.Split(r.OutputDir, string(filepath.Separator))
+	for i, part = range parts {
+		if part != ".." {
+			break
+		}
+	}
+	if i > 0 {
+		if r.ExampleDir != "" {
+			r.OutputDir = filepath.Join(parts[i:]...)
+		}
+	}
+	r.OutputDir = filepath.Join(r.ExampleDir, r.OutputDir)
 }

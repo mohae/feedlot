@@ -1,8 +1,8 @@
 {
   "description": "Default Rancher template",
   "name": ":build_name",
-  "out_dir": "out/:build_name",
-  "src_dir": "src",
+  "output_dir": "packer_templates/:build_name",
+  "source_dir": "packer_resources",
   "include_component_string": "true",
   "min_packer_version": "0.5.0",
   "builder_types": [
@@ -10,7 +10,7 @@
     "vmware-iso"
   ],
   "builders": {
-	"common": {
+    "common": {
       "settings": [
         "boot_command = boot.command",
         "boot_wait = 5s",
@@ -23,11 +23,11 @@
         "ssh_password = vagrant",
         "ssh_port = 22",
         "ssh_username = vagrant",
-        "ssh_wait_timeout = 240m",
+        "ssh_wait_timeout = 10m",
         "vm_name = :build_name"
       ]
     },
-	"virtualbox-iso": {
+    "virtualbox-iso": {
       "settings": [
         "guest_additions_path = VBoxGuestAdditions_{{ .Version }}.iso",
         "virtualbox_version_file = .vbox_version"
@@ -44,19 +44,19 @@
         "guest_additions_path = VBoxGuestAdditions_{{ .Version }}.iso",
         "virtualbox_version_file = .vbox_version"
       ],
-	  "arrays": {
+      "arrays": {
          "vboxmanage": [
-           "cpus=1",
-           "memory=1024"
+         "cpus=1",
+         "memory=1024"
         ]	
       }
     }
   },
   "post_processor_types": [
-	"vagrant"
+    "vagrant"
   ],
   "post_processors": {
-	"vagrant": {
+    "vagrant": {
       "settings": [
         "compression_level = 9",
         "keep_input_artifact = false",
@@ -78,7 +78,7 @@
           "vagrant.sh",
           "sudoers.sh",
           "cleanup.sh"
-		]
+        ]
       }
     }
   }

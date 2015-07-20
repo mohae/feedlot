@@ -1,5 +1,5 @@
 {
-  "1404-amd64": {
+  "1404_amd64": {
     "distro": "ubuntu",
     "description": "ubuntu LTS 1404 amd64 vagrant build",
     "arch": "amd64",
@@ -70,43 +70,5 @@
         }
       }
     }
-  },
-  {
-    "1404-salt": {
-      "distro": "ubuntu",
-      "description": "ubuntu LTS 1404 amd64 server build, minimal salt install",
-      "arch": "amd64",
-      "image": "server",
-      "release": "14.04",
-      "builder_types": [
-         "virtualbox-iso"
-      ],
-      "provisioner_types": [
-        "salt-masterless"
-      ],
-      "builders": {
-        "common": {
-          "settings": [
-            "ssh_wait_timeout = 300m"
-           ]
-         },
-         "virtualbox-iso": {
-		  "arrays": {
-             "vboxmanage": [
-               "--memory=4096"
-             ]
-           }
-         }
-       }
-       "provisioners": {
-         "salt-masterless": {
-           "settings": [
-             "local_state_tree = salt-masterless/salt",
-             "local_pillar_roots = salt-masterless/pillar",
-             "minion_config = salt-masterless/"
-           ]
-         },
-      },
-    },
   }
 }

@@ -11,28 +11,42 @@ var (
 	ErrNotADir           = errors.New(" not a directory")
 )
 
+// archivePriorBuildErr is a helper function to help generate consistent
+// errors
+func archivePriorBuildErr(err error) error {
+	return fmt.Errorf("archive of prior build failed: %s", err)
+}
+
 func builderErr(b Builder, err error) error {
-	return fmt.Errorf("%s builder error: %s", b.String(), err.Error())
+	return fmt.Errorf("%s builder error: %s", b.String(), err)
 }
 
 func commandFileErr(s, path string, err error) error {
-	return fmt.Errorf("extracting commands for %s from %s failed: %s", s, path, err.Error())
+	return fmt.Errorf("extracting commands for %s from %s failed: %s", s, path, err)
 }
 
 func configNotFoundErr() error {
 	return fmt.Errorf("configuration not found")
 }
 
+func decodeErr(err error) error {
+	return fmt.Errorf("decode failed: %s", err)
+}
+
 func dependentSettingErr(s1, s2 string) error {
 	return fmt.Errorf("setting %s found but setting %s was not found-both are required", s1, s2)
 }
 
+func filenameNotSetErr(target string) error {
+	return fmt.Errorf("%q not set, unable to retrieve the %s file", target, target)
+}
+
 func mergeCommonSettingsErr(err error) error {
-	return fmt.Errorf("merge of common settings failed: %s", err.Error())
+	return fmt.Errorf("merge of common settings failed: %s", err)
 }
 
 func mergeSettingsErr(err error) error {
-	return fmt.Errorf("merge of section settings failed: %s", err.Error())
+	return fmt.Errorf("merge of section settings failed: %s", err)
 }
 
 func noCommandsFoundErr(s, path string) error {
@@ -40,11 +54,11 @@ func noCommandsFoundErr(s, path string) error {
 }
 
 func provisionerErr(p Provisioner, err error) error {
-	return fmt.Errorf("%s provisioner error: %s", p.String(), err.Error())
+	return fmt.Errorf("%s provisioner error: %s", p.String(), err)
 }
 
 func postProcessorErr(p PostProcessor, err error) error {
-	return fmt.Errorf("%s post-processor error: %s", p.String(), err.Error())
+	return fmt.Errorf("%s post-processor error: %s", p.String(), err)
 }
 
 func requiredSettingErr(s string) error {
@@ -52,5 +66,20 @@ func requiredSettingErr(s string) error {
 }
 
 func settingErr(s string, err error) error {
-	return fmt.Errorf("encountered a problem processing the %s setting: %s", s, err.Error())
+	return fmt.Errorf("encountered a problem processing the %s setting: %s", s, err)
+}
+
+func PackerCreateErr(name string, err error) error {
+	return fmt.Errorf("create of Packer template for %q failed: %s", name, err.Error())
+}
+
+type RancherError struct {
+	BuildName string
+	Distro    string
+	Operation string
+	Problem   string
+}
+
+func (e RancherError) Error() string {
+	return fmt.Sprintf("%s: %s %s, %s", e.BuildName, e.Distro, e.Operation, e.Problem)
 }

@@ -28,8 +28,8 @@ func stringSliceContains(sl []string, val string) bool {
 var testDistroDefaultUbuntu = rawTemplate{
 	PackerInf: PackerInf{MinPackerVersion: "0.4.0", Description: "Test supported distribution template"},
 	IODirInf: IODirInf{
-		OutDir: "../test_files/out/:distro/:build_name",
-		SrcDir: "../test_files/src/:distro",
+		OutputDir: "../test_files/out/:distro/:build_name",
+		SourceDir: "../test_files/src/:distro",
 	},
 	BuildInf: BuildInf{
 		Name:      ":build_name",
@@ -157,8 +157,8 @@ var testDistroDefaultCentOS = rawTemplate{
 		Description:      "Test template config and Rancher options for CentOS",
 	},
 	IODirInf: IODirInf{
-		OutDir: "../test_files/out/:distro/:build_name",
-		SrcDir: "../test_files/src/:distro",
+		OutputDir: "../test_files/out/:distro/:build_name",
+		SourceDir: "../test_files/src/:distro",
 	},
 	BuildInf: BuildInf{
 		Name:      ":build_name",
@@ -295,18 +295,15 @@ func init() {
 }
 
 func TestDistroDefaultsGetTemplate(t *testing.T) {
-	var err error
-	var emptyRawTemplate rawTemplate
-	r := rawTemplate{}
-	r, err = testDistroDefaults.GetTemplate("invalid")
+	r, err := testDistroDefaults.GetTemplate("invalid")
 	if err == nil {
 		t.Error("expected \"unsupported distro: invalid\", got nil")
 	} else {
 		if err.Error() != "unsupported distro: invalid" {
 			t.Errorf("unsupported distro: invalid, got %q", err.Error())
 		}
-		if MarshalJSONToString.Get(r) != MarshalJSONToString.Get(emptyRawTemplate) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(emptyRawTemplate), MarshalJSONToString.Get(r))
+		if r != nil {
+			t.Errorf("Expected nil, got %q", MarshalJSONToString.Get(r))
 		}
 	}
 
@@ -369,7 +366,7 @@ func TestbuildPackerTemplateFromNamedBuild(t *testing.T) {
 		}
 	}
 
-	contour.RegisterString(BuildFile, "../test_files/conf/builds_test.toml")
+	contour.RegisterString(Build, "../test_files/conf/builds_test.toml")
 	go buildPackerTemplateFromNamedBuild("", doneCh)
 	err = <-doneCh
 	if err == nil {
@@ -994,9 +991,9 @@ func TestGetUniqueFilename(t *testing.T) {
 		{"../test_files/not.there.txt", "", "../test_files/not.there.txt", ""},
 		{"../test_files/not.there.txt", "2006", "../test_files/not.there.txt", ""},
 		{"../test_files/test.txt", "", "../test_files/test-3.txt", ""},
-		{"../test_files/test.txt", "2006", "../test_files/test-2015-2.txt", ""},
+		{"../test_files/test.txt", "2006", "../test_files/test.2015-2.txt", ""},
 		{"../test_files/test.file.txt", "", "../test_files/test.file-2.txt", ""},
-		{"../test_files/test.file.txt", "2006", "../test_files/test.file-2015-1.txt", ""},
+		{"../test_files/test.file.txt", "2006", "../test_files/test.file.2015-1.txt", ""},
 	}
 	for i, test := range tests {
 		f, err := getUniqueFilename(test.filename, test.layout)

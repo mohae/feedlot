@@ -8,12 +8,8 @@ import (
 )
 
 func init() {
-	contour.RegisterBoolFlag("example", "eg", false, "false", "whether this is an example")
-	contour.RegisterStringFlag("exampledir", "ed", "examples/", "examples/", "example directory")
-	contour.RegisterBoolFlag("optionals", "", false, "false", "include optional flags")
-	contour.RegisterStringFlag("builders", "", "", "", "override build types")
-	contour.RegisterStringFlag("postprocessors", "", "", "", "override postprocessor types")
-	contour.RegisterStringFlag("provisioners", "", "", "", "override provisioner types")
+	contour.RegisterBoolFlag(Example, "eg", false, "false", "whether this is an example")
+	contour.RegisterStringFlag(ExampleDir, "ed", "examples/", "examples/", "example directory")
 }
 
 // BuildDistro creates a build based on the target distro's defaults. The
@@ -58,8 +54,9 @@ func BuildDistro(a ArgsFilter) error {
 }
 
 // Create Packer templates from specified build templates.
+// TODO: refactor to match updated handling
 func buildPackerTemplateFromDistro(a ArgsFilter) error {
-	var rTpl rawTemplate
+	var rTpl *rawTemplate
 	if a.Distro == "" {
 		err := fmt.Errorf("cannot build a Packer template because no there wasn't a value for the distro flag")
 		jww.ERROR.Println(err)
@@ -82,10 +79,6 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 		rTpl.Release = a.Release
 	}
 	rTpl.BuildName = ":type-:release-:arch-:image-rancher"
-
-	//	// make a copy of the .
-	//	rTpl := newRawTemplate()
-	//	rTpl.updateBuilders(d.Builders)
 
 	// Since distro builds don't actually have a build name, we create one
 	// out of the args used to create it.
@@ -175,38 +168,32 @@ func buildPackerTemplateFromNamedBuild(name string, doneCh chan error) {
 	}
 	var ok bool
 	// Check the type and create the defaults for that type, if it doesn't already exist.
-	rTpl := rawTemplate{}
 	bTpl, err := getBuildTemplate(name)
 	if err != nil {
 		doneCh <- fmt.Errorf("processing of build template %q failed: %s", name, err.Error())
 		return
 	}
 	// See if the distro default exists.
+	rTpl := rawTemplate{}
 	rTpl, ok = DistroDefaults.Templates[DistroFromString(bTpl.Distro)]
 	if !ok {
 		doneCh <- fmt.Errorf("building Packer template for %s failed: an unsupported distro, %s, was specified", name, bTpl.Distro)
 		return
 	}
-	// Set build iso information overrides, if any.
-	if bTpl.Arch != "" {
-		rTpl.Arch = bTpl.Arch
-	}
-	if bTpl.Image != "" {
-		rTpl.Image = bTpl.Image
-	}
-	if bTpl.Release != "" {
-		rTpl.Release = bTpl.Release
-	}
-	bTpl.Name = name
-	// create build template() then call create packertemplate
-	rTpl.build = DistroDefaults.Templates[DistroFromString(bTpl.Distro)].build
+	// TODO: this is probably where the merging of parent build would occur
+	rTpl.Name = name
 	rTpl.updateBuildSettings(bTpl)
-	pTpl := packerTemplate{}
-	pTpl, err = rTpl.createPackerTemplate()
+	if contour.GetBool(Example) {
+		rTpl.IsExample = true
+		rTpl.ExampleDir = contour.GetString(ExampleDir)
+		rTpl.setExampleDirs()
+	}
+	pTpl, err := rTpl.createPackerTemplate()
 	if err != nil {
 		doneCh <- err
 		return
 	}
+	fmt.Printf("IODirInf: %#v\n", rTpl.IODirInf)
 	err = pTpl.create(rTpl.IODirInf, rTpl.BuildInf, rTpl.dirs, rTpl.files)
 	if err != nil {
 		doneCh <- err
@@ -216,6 +203,23 @@ func buildPackerTemplateFromNamedBuild(name string, doneCh chan error) {
 	return
 }
 
+// getBuildTemplate returns the requested build template, or an error if it
+// can't be found. Th
 func getBuildTemplate(name string) (*rawTemplate, error) {
-	return nil, nil
+	var r *rawTemplate
+	var fname string
+	for bfile, blds := range Builds {
+		for n, bTpl := range blds.Build {
+			if n == name {
+				r = bTpl.copy()
+				r.BuildName = name
+				goto found
+			}
+		}
+		fname = bfile
+	}
+	jww.FEEDBACK.Printf("getBuildTemplate %s found in %s", name, fname)
+	return nil, fmt.Errorf("build not found: %s", name)
+found:
+	return r, nil
 }
