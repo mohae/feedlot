@@ -193,7 +193,6 @@ func buildPackerTemplateFromNamedBuild(name string, doneCh chan error) {
 		doneCh <- err
 		return
 	}
-	fmt.Printf("IODirInf: %#v\n", rTpl.IODirInf)
 	err = pTpl.create(rTpl.IODirInf, rTpl.BuildInf, rTpl.dirs, rTpl.files)
 	if err != nil {
 		doneCh <- err

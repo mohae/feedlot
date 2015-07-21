@@ -111,14 +111,12 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 		jww.ERROR.Println(err)
 		return p, err
 	}
-	fmt.Println("Post-Processors done")
 	// Provisioners
 	p.Provisioners, err = r.createProvisioners()
 	if err != nil {
 		jww.ERROR.Println(err)
 		return p, err
 	}
-	fmt.Println("provisioners done")
 	// Return the generated Packer Template
 	return p, nil
 }

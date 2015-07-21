@@ -23,7 +23,6 @@ type packerTemplate struct {
 // template is written to the output directory and any external resources that
 // the template requires is copied there.
 func (p *packerTemplate) create(i IODirInf, b BuildInf, dirs, files map[string]string) error {
-	fmt.Printf("create packer template: %s\n", i.OutputDir)
 	i.check()
 	// priorBuild handles both the archiving and deletion of the prior build, if it exists, i.e.
 	// if the build's output path exists.
@@ -38,10 +37,8 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, dirs, files map[string]s
 	if err != nil {
 		return PackerCreateErr(b.BuildName, err)
 	}
-	fmt.Println(dirs, files)
 	// copy any directories associated with the template
 	for dst, src := range dirs {
-		fmt.Printf("dirDst: %s\n", dst)
 		err = copyDir(src, dst)
 		if err != nil {
 			jww.ERROR.Println(err)
@@ -50,7 +47,6 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, dirs, files map[string]s
 	}
 	// copy the files associated with the template
 	for dst, src := range files {
-		fmt.Printf("fileDst: %s\n", dst)
 		_, err = copyFile(src, dst)
 		if err != nil {
 			jww.ERROR.Println(err)

@@ -69,7 +69,6 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 	if r.ProvisionerTypes == nil || len(r.ProvisionerTypes) <= 0 {
 		return nil, nil
 	}
-	fmt.Println(r.ProvisionerTypes)
 	var tmpS map[string]interface{}
 	var ndx int
 	p = make([]interface{}, len(r.ProvisionerTypes))
@@ -691,7 +690,6 @@ func (r *rawTemplate) createSalt() (settings map[string]interface{}, err error) 
 //   remote_path          string
 //   start_retry_timeout  string
 func (r *rawTemplate) createShellScript() (settings map[string]interface{}, err error) {
-	fmt.Println(r.IncludeComponentString)
 	_, ok := r.Provisioners[ShellScript.String()]
 	if !ok {
 		return nil, configNotFoundErr()
@@ -712,7 +710,6 @@ func (r *rawTemplate) createShellScript() (settings map[string]interface{}, err 
 				var commands []string
 				commands, err = r.commandsFromFile(ShellScript.String(), v)
 				if err != nil {
-					fmt.Println(err)
 					return nil, commandFileErr(k, v, err)
 				}
 				if len(commands) == 0 {
@@ -731,13 +728,10 @@ func (r *rawTemplate) createShellScript() (settings map[string]interface{}, err 
 	// Process the Arrays.
 	var scripts []string
 	for name, val := range r.Provisioners[ShellScript.String()].Arrays {
-		fmt.Println("Shell processor processing")
 		// if this is a scripts array, special processing needs to be done.
 		if name == "scripts" {
-			fmt.Println("\tscripts array")
 			scripts = deepcopy.InterfaceToSliceOfStrings(val)
 			for i, v := range scripts {
-				fmt.Println(v)
 				v = r.replaceVariables(v)
 				// find the source
 				s, err := r.findComponentSource(ShellScript.String(), v, false)

@@ -145,16 +145,12 @@ func (a *Archive) archivePriorBuild(p, t string) error {
 		}
 	}()
 	// Go through each file in the path and add it to the archive
-	var c int
-	for i, f := range a.Files {
-		fmt.Println(filepath.Join(p, f.p))
+	for _, f := range a.Files {
 		err := a.addFile(tW, filepath.Join(p, f.p))
 		if err != nil {
 			return err
 		}
-		c = i
 	}
-	fmt.Printf("%d files added to archive\n", c)
 	return nil
 }
 
