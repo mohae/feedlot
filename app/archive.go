@@ -67,7 +67,7 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 // priorBuild handles archiving prior build artifacts, if it exists, and then
 // deleting those artifacts. This prevents any stale elements from persisting
 // to the new build.
-func (a *Archive) priorBuild(p, t string) error {
+func (a *Archive) priorBuild(p string) error {
 	if !contour.GetBool(ArchivePriorBuild) {
 		return nil
 	}
@@ -80,7 +80,7 @@ func (a *Archive) priorBuild(p, t string) error {
 		return archivePriorBuildErr(err)
 	}
 	// Archive the old artifacts.
-	err = a.archivePriorBuild(p, t)
+	err = a.create(p)
 	if err != nil {
 		return archivePriorBuildErr(err)
 	}
@@ -92,7 +92,7 @@ func (a *Archive) priorBuild(p, t string) error {
 	return nil
 }
 
-func (a *Archive) archivePriorBuild(p, t string) error {
+func (a *Archive) create(p string) error {
 	// examples don't get archived
 	if contour.GetBool(Example) {
 		return nil
@@ -108,11 +108,9 @@ func (a *Archive) archivePriorBuild(p, t string) error {
 	}
 	// Get the relative path so that it can be added to the tarball name.
 	relPath := filepath.Dir(filepath.Clean(p))
-	// The tarball's name is the directory name + extensions.
-	tBName := fmt.Sprintf("%s.tar.gz", filepath.Join(appendSlash(relPath), a.Name))
-
-	// ensure the archive name is unique
-	tBName, err = getUniqueFilename(tBName, "2006-01-02")
+	// The tarball's name is the directory name + extension.  If there is a collision
+	// on the resulting name, a unique name will be generated and returned.
+	tBName, err := archiveFilename(relPath, a.Name)
 	if err != nil {
 		return err
 	}
@@ -265,4 +263,11 @@ func deleteDir(dir string) error {
 		}
 	}
 	return nil
+}
+
+// archiveFilename returns the name of the archive to be created
+func archiveFilename(p, name string) (string, error) {
+	name = fmt.Sprintf("%s.tar.gz", filepath.Join(appendSlash(p), name))
+	// ensure the archive name is unique
+	return getUniqueFilename(name, "2006-01-02")
 }

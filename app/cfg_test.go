@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/mohae/contour"
@@ -376,6 +377,90 @@ var testBuildList = map[string]list{
 	"ubuntu-all": list{Builds: []string{"1204-amd64-server", "1310-amd64-desktop"}},
 }
 
+func TestBuildCopy(t *testing.T) {
+	tstTpl := testBuild["jessie"]
+	newBuild := tstTpl.build.copy()
+	if fmt.Sprintf("%p", newBuild.BuilderTypes) == fmt.Sprintf("%p", tstTpl.build.BuilderTypes) {
+		t.Errorf("The pointer for BuilderTypes is the same for both newBuild and testBuild: %x, expected them to be different.", fmt.Sprintf("%p", tstTpl.build.BuilderTypes))
+		goto builderTypesEnd
+	}
+	if len(newBuild.BuilderTypes) != len(tstTpl.BuilderTypes) {
+		t.Errorf("Expected newBuild.BuilderTypoes to have a length of %d; got %d", len(tstTpl.BuilderTypes), len(newBuild.BuilderTypes))
+		goto builderTypesEnd
+	}
+	for i, v := range tstTpl.BuilderTypes {
+		if v != newBuild.BuilderTypes[i] {
+			t.Errorf("Expected builder type at index %d to be %q; got %q", i, v, newBuild.BuilderTypes[i])
+		}
+	}
+builderTypesEnd:
+	if fmt.Sprintf("%p", newBuild.Builders) == fmt.Sprintf("%p", tstTpl.build.Builders) {
+		t.Errorf("The pointer for BuilderTypes is the same for both newBuild and testBuild: %x, expected them to be different.", fmt.Sprintf("%p", tstTpl.build.Builders))
+		goto buildersEnd
+	}
+	if len(newBuild.Builders) != len(tstTpl.Builders) {
+		t.Errorf("Expected newBuild.BuilderTypoes to have a length of %d; got %d", len(tstTpl.Builders), len(newBuild.Builders))
+		goto buildersEnd
+	}
+	for k, _ := range tstTpl.Builders {
+		_, ok := newBuild.Builders[k]
+		if !ok {
+			t.Errorf("Expected %s to be a builder in the copy, but it wasn't", k)
+		}
+	}
+buildersEnd:
+	if len(newBuild.PostProcessorTypes) != len(tstTpl.PostProcessorTypes) {
+		t.Errorf("Expected newBuild.PostProcessorTypes to have a length of %d; got %d", len(tstTpl.PostProcessorTypes), len(newBuild.PostProcessorTypes))
+		goto postProcessorTypesEnd
+	}
+	for i, v := range tstTpl.PostProcessorTypes {
+		if v != newBuild.PostProcessorTypes[i] {
+			t.Errorf("Expected PostProcessor type at index %d to be %q; got %q", i, v, newBuild.PostProcessorTypes[i])
+		}
+	}
+postProcessorTypesEnd:
+	if fmt.Sprintf("%p", newBuild.PostProcessors) == fmt.Sprintf("%p", tstTpl.build.PostProcessors) {
+		t.Errorf("The pointer for PostProcessors is the same for both newBuild and testBuild: %x, expected them to be different.", fmt.Sprintf("%p", newBuild.PostProcessors), fmt.Sprintf("%p", tstTpl.build.PostProcessors))
+		goto postProcessorsEnd
+	}
+	if len(newBuild.PostProcessors) != len(tstTpl.PostProcessors) {
+		t.Errorf("Expected newBuild.PostProcessors to have a length of %d; got %d", len(tstTpl.PostProcessors), len(newBuild.PostProcessors))
+		goto postProcessorsEnd
+	}
+	for k, _ := range tstTpl.PostProcessors {
+		_, ok := newBuild.PostProcessors[k]
+		if !ok {
+			t.Errorf("Expected %s to be a PostProcessors in the copy, but it wasn't", k)
+		}
+	}
+postProcessorsEnd:
+	if len(newBuild.ProvisionerTypes) != len(tstTpl.ProvisionerTypes) {
+		t.Errorf("Expected newBuild.ProvisionerTypes to have a length of %d; got %d", len(tstTpl.ProvisionerTypes), len(newBuild.PostProcessorTypes))
+		goto provisionerTypesEnd
+	}
+	for i, v := range tstTpl.ProvisionerTypes {
+		if v != newBuild.ProvisionerTypes[i] {
+			t.Errorf("Expected provisioner type at index %d to be %q; got %q", i, v, newBuild.ProvisionerTypes[i])
+		}
+	}
+provisionerTypesEnd:
+	if fmt.Sprintf("%p", newBuild.Provisioners) == fmt.Sprintf("%p", tstTpl.build.Provisioners) {
+		t.Errorf("The pointer for Provisioners is the same for both newBuild and testBuild: %x, expected them to be different.", fmt.Sprintf("%p", tstTpl.build.Provisioners))
+		goto provisionersEnd
+	}
+	if len(newBuild.Provisioners) != len(tstTpl.Provisioners) {
+		t.Errorf("Expected newBuild.Provisioners types to have a length of %d; got %d", len(tstTpl.Provisioners), len(newBuild.Provisioners))
+		goto provisionersEnd
+	}
+	for k, _ := range tstTpl.Provisioners {
+		_, ok := newBuild.Provisioners[k]
+		if !ok {
+			t.Errorf("Expected %s to be a Provisioners in the copy, but it wasn't", k)
+		}
+	}
+provisionersEnd:
+}
+
 func TestTemplateSectionMergeArrays(t *testing.T) {
 	ts := &templateSection{}
 	merged := ts.mergeArrays(nil, nil)
@@ -589,7 +674,7 @@ func TestDefaults(t *testing.T) {
 		err := d.Load()
 		if err != nil {
 			if err.Error() != test.expectedErr {
-				t.Errorf("%d: expected %q, got %q", i, test.expectedErr, err.Error())
+				t.Errorf("%d: expected %q, got %q", i, test.expectedErr, err)
 			}
 			continue
 		}
@@ -620,7 +705,7 @@ func TestSupported(t *testing.T) {
 		err := s.Load()
 		if err != nil {
 			if err.Error() != test.expectedErr {
-				t.Errorf("%d: expected %q, got %q", i, test.expectedErr, err.Error())
+				t.Errorf("%d: expected %q, got %q", i, test.expectedErr, err)
 			}
 			continue
 		}
@@ -655,7 +740,7 @@ func TestBuildStuff(t *testing.T) {
 		err := b.Load(test.filename)
 		if err != nil {
 			if err.Error() != test.expectedErr {
-				t.Errorf("%d: expected %q, got %q", i, test.expectedErr, err.Error())
+				t.Errorf("%d: expected %q, got %q", i, test.expectedErr, err)
 			}
 			continue
 		}
@@ -686,7 +771,7 @@ func TestBuildListStuff(t *testing.T) {
 		err := b.Load()
 		if err != nil {
 			if err.Error() != test.expectedErr {
-				t.Errorf("%d: expected %q, got %q", i, test.expectedErr, err.Error())
+				t.Errorf("%d: expected %q, got %q", i, test.expectedErr, err)
 			}
 			continue
 		}

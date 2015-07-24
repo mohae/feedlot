@@ -93,7 +93,10 @@ func (r *centos) setISORedirectURL() {
 // iso name string.
 func (r *centos) setVersionInfo() error {
 	if r.Release == "" {
-		return noReleaseErr(Debian.String())
+		return noReleaseErr(CentOS.String())
+	}
+	if !strings.HasPrefix(r.Release, "6") && !strings.HasPrefix(r.Release, "7") {
+		return unsupportedReleaseErr(CentOS, r.Release)
 	}
 	r.setISORedirectURL()
 	tokens, err := tokensFromURL(r.isoredirectURL)
@@ -118,7 +121,7 @@ func (r *centos) setVersionInfo() error {
 		err = r.setVersion7Info()
 		return err
 	}
-	return unsupportedReleaseErr(r.Release)
+	return unsupportedReleaseErr(CentOS, r.Release)
 }
 
 func (r *centos) setVersion6Info() error {
@@ -727,48 +730,4 @@ func extractLinksHasPrefix(links, prefixes []string) []string {
 		}
 	}
 	return extracted
-}
-
-func emptyPageErr(name, operation string) error {
-	return ReleaseError{Name: name, Operation: operation, Problem: "page was empty"}
-}
-
-func checksumNotFoundErr(name, operation string) error {
-	return ReleaseError{Name: name, Operation: operation, Problem: "checksum not found on page"}
-}
-
-func checksumNotSetErr(name string) error {
-	return ReleaseError{Name: name, Operation: "setISOChecksum", Problem: "checksum not set"}
-}
-
-func noArchErr(name string) error {
-	return ReleaseError{Name: name, Operation: "SetISOInfo", Problem: "arch was not set"}
-}
-
-func noFullVersionErr(name string) error {
-	return ReleaseError{Name: name, Operation: "SetISOInfo", Problem: "full version was not set"}
-}
-
-func noMajorVersionErr(name string) error {
-	return ReleaseError{Name: name, Operation: "SetISOInfo", Problem: "major version was not set"}
-}
-
-func noMinorVersionErr(name string) error {
-	return ReleaseError{Name: name, Operation: "SetISOInfo", Problem: "minor version was not set"}
-}
-
-func noReleaseErr(name string) error {
-	return ReleaseError{Name: name, Operation: "SetISOInfo", Problem: "release was not set"}
-}
-
-func setVersionInfoErr(name string, err error) error {
-	return ReleaseError{Name: name, Operation: "SetVersionInfo", Problem: err.Error()}
-}
-
-func unsupportedReleaseErr(name string) error {
-	return ReleaseError{Name: name, Operation: "SetVersionInfo", Problem: "release is unsupported"}
-}
-
-func osTypeBuilderErr(name, typ string) error {
-	return ReleaseError{Name: name, Operation: "getOSType", Problem: fmt.Sprintf("%s is not supported by this distro", typ)}
 }

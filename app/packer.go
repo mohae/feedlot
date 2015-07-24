@@ -27,7 +27,7 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, dirs, files map[string]s
 	// priorBuild handles both the archiving and deletion of the prior build, if it exists, i.e.
 	// if the build's output path exists.
 	a := NewArchive(b.BuildName)
-	err := a.priorBuild(appendSlash(i.OutputDir), "gzip")
+	err := a.priorBuild(appendSlash(i.OutputDir))
 	if err != nil {
 		jww.ERROR.Println(err)
 		return PackerCreateErr(b.BuildName, err)

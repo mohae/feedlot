@@ -58,7 +58,7 @@ func BuildDistro(a ArgsFilter) error {
 func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	var rTpl *rawTemplate
 	if a.Distro == "" {
-		err := fmt.Errorf("cannot build a Packer template because no there wasn't a value for the distro flag")
+		err := fmt.Errorf("unable to build Packer template: distro wasn't specified")
 		jww.ERROR.Println(err)
 		return err
 	}
@@ -177,7 +177,7 @@ func buildPackerTemplateFromNamedBuild(name string, doneCh chan error) {
 	rTpl := rawTemplate{}
 	rTpl, ok = DistroDefaults.Templates[DistroFromString(bTpl.Distro)]
 	if !ok {
-		doneCh <- fmt.Errorf("building Packer template for %s failed: an unsupported distro, %s, was specified", name, bTpl.Distro)
+		doneCh <- fmt.Errorf("creation of Packer template for %s failed: %s not supported", name, bTpl.Distro)
 		return
 	}
 	// TODO: this is probably where the merging of parent build would occur

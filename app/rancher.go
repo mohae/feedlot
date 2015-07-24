@@ -700,7 +700,7 @@ func indexDir(s string) (dirs, files []string, err error) {
 		return nil, nil, err
 	}
 	if !fi.IsDir() {
-		return nil, nil, ErrNotADir
+		return nil, nil, fmt.Errorf("cannot index %s: not a directory", s)
 	}
 	f, err := os.Open(s)
 	if err != nil {

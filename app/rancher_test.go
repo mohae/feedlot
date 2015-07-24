@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mohae/contour"
 	json "github.com/mohae/customjson"
 )
 
@@ -23,6 +22,30 @@ func stringSliceContains(sl []string, val string) bool {
 		}
 	}
 	return false
+}
+
+// simple func to create and populate a test directory.
+// it is the callers responisibility to clean it up when done.
+func createTmpTestDirFiles(s string) (dir string, files []string, err error) {
+	dir, err = ioutil.TempDir("", s)
+	if err != nil {
+		return dir, files, err
+	}
+	// we make a subdirectory because archive. All tests expect dir/test as a result.
+	tmpDir := filepath.Join(dir, "test")
+	err = os.MkdirAll(tmpDir, 0777)
+	if err != nil {
+		return dir, files, err
+	}
+	data := []byte("abcdefghijklmnopqrstuvwxyz")
+	for i := 0; i < 3; i++ {
+		err := ioutil.WriteFile(filepath.Join(tmpDir, fmt.Sprintf("test-%d", i)), data, 0777)
+		if err != nil {
+			return dir, files, err
+		}
+		files = append(files, filepath.Join(tmpDir, fmt.Sprintf("test-%d", i)))
+	}
+	return dir, files, nil
 }
 
 var testDistroDefaultUbuntu = rawTemplate{
@@ -294,13 +317,39 @@ func init() {
 	testDistroDefaults.Templates[CentOS] = testDistroDefaultCentOS
 }
 
+func TestDistroFromString(t *testing.T) {
+	tests := []struct {
+		value    string
+		expected Distro
+	}{
+		{"centos", CentOS},
+		{"CentOS", CentOS},
+		{"CENTOS", CentOS},
+		{"debian", Debian},
+		{"Debian", Debian},
+		{"DEBIAN", Debian},
+		{"ubuntu", Ubuntu},
+		{"Ubuntu", Ubuntu},
+		{"UBUNTU", Ubuntu},
+		{"slackware", UnsupportedDistro},
+		{"", UnsupportedDistro},
+	}
+	for i, test := range tests {
+		d := DistroFromString(test.value)
+		if d != test.expected {
+			t.Errorf("%d: expected %s got %s", i, test.expected, d)
+		}
+	}
+
+}
+
 func TestDistroDefaultsGetTemplate(t *testing.T) {
 	r, err := testDistroDefaults.GetTemplate("invalid")
 	if err == nil {
 		t.Error("expected \"unsupported distro: invalid\", got nil")
 	} else {
 		if err.Error() != "unsupported distro: invalid" {
-			t.Errorf("unsupported distro: invalid, got %q", err.Error())
+			t.Errorf("unsupported distro: invalid, got %q", err)
 		}
 		if r != nil {
 			t.Errorf("Expected nil, got %q", MarshalJSONToString.Get(r))
@@ -317,67 +366,44 @@ func TestDistroDefaultsGetTemplate(t *testing.T) {
 	}
 }
 
-func TestbuildPackerTemplateFromDistros(t *testing.T) {
-	a := ArgsFilter{}
-	err := buildPackerTemplateFromDistro(a)
-	if err == nil {
-		t.Error("Expected an error, none occurred")
+func TestGetSliceLenFromIface(t *testing.T) {
+	ssl := []string{"a", "b", "c"}
+	isl := []int{1, 2, 3}
+	bsl := []byte("abc")
+	s := "hello"
+	i, err := getSliceLenFromIface(ssl)
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if err.Error() != "Cannot build requested packer template, the supported data structure was empty." {
-			t.Errorf("Expected \"Cannot build requested packer template, the supported data structure was empty.\", got %q", err.Error())
+		if i != 3 {
+			t.Errorf("Expected the len to be 3, got %d", i)
+		}
+	}
+	i, err = getSliceLenFromIface(isl)
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if i != 3 {
+			t.Errorf("Expected the len to be 3, got %d", i)
+		}
+	}
+	i, err = getSliceLenFromIface(bsl)
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if i != 3 {
+			t.Errorf("Expected the len to be 3, got %d", i)
+		}
+	}
+	_, err = getSliceLenFromIface(s)
+	if err == nil {
+		t.Error("Expected an error, got nil")
+	} else {
+		if err.Error() != "getSliceLenFromIface expected a slice, got \"string\"" {
+			t.Errorf("Expected errror to be \"getSliceLenFromIface expected a slice, got \"string\"\", got %q", err)
 		}
 	}
 
-	err = buildPackerTemplateFromDistro(a)
-	if err == nil {
-		t.Error("Expected an error, none occurred")
-	} else {
-		if err.Error() != "Cannot build a packer template because no target distro information was passed." {
-			t.Errorf("Expected \"Cannot build a packer template because no target distro information was passed.\", got %q", err.Error())
-		}
-	}
-
-	a.Distro = "ubuntu"
-	err = buildPackerTemplateFromDistro(a)
-	if err == nil {
-		t.Error("Expected an error, none occurred")
-	} else {
-		if err.Error() != "Cannot build a packer template from passed distro: ubuntu is not supported. Please pass a supported distribution." {
-			t.Errorf("Expected \"Cannot build a packer template from passed distro: ubuntu is not supported. Please pass a supported distribution.\". got %q", err.Error())
-		}
-	}
-
-	a.Distro = "slackware"
-	err = buildPackerTemplateFromDistro(a)
-	if err.Error() != "Cannot build a packer template from passed distro: slackware is not supported. Please pass a supported distribution." {
-		t.Errorf("Expected \"Cannot build a packer template from passed distro: slackware is not supported. Please pass a supported distribution.\", got %q", err.Error())
-	}
-}
-
-func TestbuildPackerTemplateFromNamedBuild(t *testing.T) {
-	doneCh := make(chan error)
-	go buildPackerTemplateFromNamedBuild("", doneCh)
-	err := <-doneCh
-	if err == nil {
-		t.Error("Expected an error, received none")
-	} else {
-		if err.Error() != "open look/for/it/here/: no such file or directory" {
-			t.Errorf("Expected \"open look/for/it/here/: no such file or directory\", got %q", err.Error())
-		}
-	}
-
-	contour.RegisterString(Build, "../test_files/conf/builds_test.toml")
-	go buildPackerTemplateFromNamedBuild("", doneCh)
-	err = <-doneCh
-	if err == nil {
-		t.Error("Expected an error, received none")
-	} else {
-		if err.Error() != "buildPackerTemplateFromNamedBuild error: no build names were passed. Nothing was built." {
-			t.Errorf("Expected \"buildPackerTemplateFromNamedBuild error: no build names were passed. Nothing was built.\", got %q", err.Error())
-		}
-	}
-
-	close(doneCh)
 }
 
 func TestMergeSlices(t *testing.T) {
@@ -561,7 +587,7 @@ func TestMergeSettingsSlices(t *testing.T) {
 	var err error
 	res, err = mergeSettingsSlices(s1, s2)
 	if err != nil {
-		t.Errorf("expected error to be nil, got %q", err.Error())
+		t.Errorf("expected error to be nil, got %q", err)
 	}
 	if res != nil {
 		t.Errorf("expected nil, got %+v", res)
@@ -592,7 +618,7 @@ func TestMergeSettingsSlices(t *testing.T) {
 	s2 = []string{"key1=value1", "key2=value2", "key3=value3"}
 	res, err = mergeSettingsSlices(s1, s2)
 	if err != nil {
-		t.Errorf("expected error to be nil, got %q", err.Error())
+		t.Errorf("expected error to be nil, got %q", err)
 	}
 	if res == nil {
 		t.Error("Expected a non-nil slice, got nil")
@@ -779,7 +805,7 @@ func TestCopyFile(t *testing.T) {
 		t.Error("Expected an error, no received")
 	} else {
 		if err.Error() != "copyfile error: source name was empty" {
-			t.Errorf("Expected \"copyfile error: source name was empty\", got %q", err.Error())
+			t.Errorf("Expected \"copyfile error: source name was empty\", got %q", err)
 		}
 	}
 
@@ -788,7 +814,7 @@ func TestCopyFile(t *testing.T) {
 		t.Error("Expected an error, no received")
 	} else {
 		if err.Error() != "copyfile error: destination name was empty" {
-			t.Errorf("Expected \"copyfile error: destination name was empty\", got %q", err.Error())
+			t.Errorf("Expected \"copyfile error: destination name was empty\", got %q", err)
 		}
 	}
 
@@ -797,70 +823,85 @@ func TestCopyFile(t *testing.T) {
 		t.Error("Expected an error, no received")
 	} else {
 		if err.Error() != "copyfile error: destination name, \"test\", did not include a directory" {
-			t.Errorf("Expected \"copyfile error: destination name, \"test\", did not include a directory\", got %q", err.Error())
+			t.Errorf("Expected \"copyfile error: destination name, \"test\", did not include a directory\", got %q", err)
 		}
 	}
+	dir, files, err := createTmpTestDirFiles("rancher-copyfile-")
+	if err != nil {
+		t.Errorf("unexpected error while setting up a copy test: %s", err)
+	}
+	fname := filepath.Base(files[1])
+	toDir, err := ioutil.TempDir("", "copyfile")
+	_, err = copyFile(files[1], filepath.Join(toDir, fname))
+	if err != nil {
+		t.Errorf("Expected no error, got %q", err)
+	}
+	_, err = os.Stat(filepath.Join(toDir, fname))
+	if err != nil {
+		t.Errorf("expected no error, got %q", err)
+	}
+	os.RemoveAll(dir)
+	os.RemoveAll(toDir)
 }
 
-/*
 func TestCopyDirContent(t *testing.T) {
-	origDir, err := ioutil.TempDir("", "orig")
-	os.MkdirAll(origDir, os.FileMode(0766))
-
-	copyDir, err := ioutil.TempDir("", "test")
-	os.MkdirAll(copyDir, os.FileMode(0766))
-	ioutil.WriteFile(filepath.Join(origDir, "test1"), []byte("this is a test file"), 0777)
-	ioutil.WriteFile(filepath.Join(origDir, "test2"), []byte("this is another test file"), 0777)
-
-	notADir := filepath.Join(origDir, "zzz")
-	err = copyDirContent(notADir, copyDir)
+	dir, files, err := createTmpTestDirFiles("rancher-copydircontent-")
+	if err != nil {
+		t.Errorf("expected error to be nil, got %q", err)
+		return
+	}
+	toDir, err := ioutil.TempDir("", "copyto")
+	if err != nil {
+		t.Errorf("cannot create destination directory for copy: %q", err)
+	}
+	notADir := filepath.Join(dir, "zzz")
+	err = copyDir(notADir, toDir)
 	if err == nil {
 		t.Error("Expected an error, none received")
 	} else {
-		if err.Error() != fmt.Sprintf("nothing copied: the source, %s, does not exist", notADir) {
-			t.Errorf("Expected \"nothing copied: the source, %q, does not exist\", got %q", notADir, err.Error())
+		if err.Error() != fmt.Sprintf("copyDir error: %s does not exist", notADir) {
+			t.Errorf("Expected \"copyDir error: %s, does not exist\", got %q", notADir, err)
 		}
 	}
-
-	err = copyDirContent(origDir, copyDir)
+	err = copyDir(dir, toDir)
 	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
+		t.Errorf("Expected error to be nil, got %q", err)
 	}
-
-	os.RemoveAll(copyDir)
-	os.RemoveAll(origDir)
+	// make sure that all the files have been copied
+	for _, file := range files {
+		fname := filepath.Base(file)
+		_, err := os.Stat(filepath.Join(toDir, "test", fname))
+		if err != nil {
+			t.Errorf("expected no error, got %q", err)
+		}
+	}
+	os.RemoveAll(dir)
+	os.RemoveAll(toDir)
 }
-*/
 
 func TestDeleteDirContent(t *testing.T) {
-	tmpDir, _ := ioutil.TempDir("", "testdel")
-	testFile1, err := os.Create(filepath.Join(tmpDir, "test1.txt"))
+	dir, _, err := createTmpTestDirFiles("rancher-deletedircontent-")
 	if err != nil {
-		t.Errorf("no error expected, got %q", err.Error())
-	} else {
-		testFile1.Close()
+		t.Errorf("no error expected, got %q", err)
+		return
 	}
-
-	testFile2, err := os.Create(filepath.Join(tmpDir + "test2.txt"))
-	if err != nil {
-		t.Errorf("no error expected, got %q", err.Error())
-	} else {
-		testFile2.Close()
-	}
-
-	err = deleteDir(filepath.Join(tmpDir, "testtest"))
+	err = deleteDir(filepath.Join(dir, "notthere"))
 	if err == nil {
 		t.Error("Expected an error, none occurred")
 	} else {
-		if err.Error() != fmt.Sprintf("deleteDir: stat %s/testtest: no such file or directory", tmpDir) {
-			t.Errorf("expected \"deleteDir: stat "+tmpDir+"/testtest: no such file or directory\", got %q", err.Error())
+		if err.Error() != fmt.Sprintf("deleteDir: stat %s/notthere: no such file or directory", dir) {
+			t.Errorf("expected \"deleteDir: stat %s/notthere: no such file or directory\", got %q", dir, err)
 		}
 	}
-
-	err = os.RemoveAll(tmpDir)
+	err = deleteDir(dir)
 	if err != nil {
-		t.Errorf("Expected no error: got %q", err.Error())
+		t.Errorf("Expected error to be nil; got %q", err)
 	}
+	_, err = os.Stat(dir)
+	if err != nil {
+		t.Errorf("expected error to be nil, got %q", err)
+	}
+	_ = os.RemoveAll(dir)
 }
 
 func TestSubString(t *testing.T) {
@@ -999,16 +1040,118 @@ func TestGetUniqueFilename(t *testing.T) {
 		f, err := getUniqueFilename(test.filename, test.layout)
 		if err != nil {
 			if err.Error() != test.expectedErr {
-				t.Errorf("TestGetUniqueFilename %d:  Expected error to be %q. got %q", i, test.expectedErr, err.Error())
+				t.Errorf("TestGetUniqueFilename %d:  Expected error to be %q. got %q", i, test.expectedErr, err)
 			}
 			continue
 		}
 		if test.expectedErr != "" {
-			t.Errorf("TestGetUniqueFilename %d: Expected no error, got %q", i, err.Error())
+			t.Errorf("TestGetUniqueFilename %d: Expected no error, got %q", i, err)
 			continue
 		}
 		if test.expected != f {
 			t.Errorf("TestGetUniqueFilename %d: Expected %q, got %q", i, test.expected, f)
 		}
 	}
+}
+
+func TestIndexDir(t *testing.T) {
+	dir, files, err := createTmpTestDirFiles("rancher-indexDir")
+	if err != nil {
+		t.Errorf("An error occurred during test file creation, aborting IndexDir tests: %q", err)
+		return
+	}
+	_, _, err = indexDir("")
+	if err == nil {
+		t.Errorf("Expected an error, got nil")
+	} else {
+		if err.Error() != "received an empty paramater, expected a value" {
+			t.Errorf("Expected \"received an empty paramater, expected a value\", got %q", err)
+		}
+	}
+	_, _, err = indexDir(filepath.Join(dir, "notthere"))
+	if err == nil {
+		t.Errorf("Expected an error, got nil")
+	} else {
+		if err.Error() != fmt.Sprintf("stat %s: no such file or directory", filepath.Join(dir, "notthere")) {
+			t.Errorf("Expected \"stat %s: no such file or directory\", got %q", filepath.Join(dir, "notthere"), err)
+		}
+	}
+	_, _, err = indexDir(files[1])
+	if err == nil {
+		t.Errorf("Expected an error, got none")
+	} else {
+		if err.Error() != fmt.Sprintf("cannot index %s: not a directory", files[1]) {
+			t.Errorf("Expected error to be \"cannot index %s: not a directory\": got %q", files[1], err)
+		}
+	}
+	dirs, fnames, err := indexDir(dir)
+	if err != nil {
+		t.Errorf("Expected error to be nil; got %q", err)
+		goto next
+	}
+	if len(dirs) != 1 {
+		t.Errorf("Expected 1 directory in the results, got %v", dirs)
+	}
+	if dirs[0] != "test" {
+		t.Errorf("Expected the directory \"test\" to be indexed; got %q", dirs[1])
+	}
+	if len(fnames) > 0 {
+		t.Errorf("Expected 0 files to be indexed; got %d", len(fnames))
+	}
+next:
+	dirs, fnames, err = indexDir(filepath.Join(dir, "test"))
+	if err != nil {
+		t.Errorf("Expected error to be nil; got %q", err)
+		goto done
+	}
+	if len(dirs) > 0 {
+		t.Errorf("Expected 0 files to be idnexed; got %d", len(dirs))
+	}
+	if len(files) != len(fnames) {
+		t.Errorf("Expected %d files to be indexed; got %d", len(files), len(fnames))
+	}
+	for _, file := range files {
+		if !stringSliceContains(fnames, filepath.Base(file)) {
+			t.Errorf("Expected %q to be in the indexed files list; it wasn't", file)
+		}
+	}
+done:
+	_ = os.RemoveAll(dir)
+}
+
+func TestExampleFileName(t *testing.T) {
+	tests := []struct {
+		value    string
+		expected string
+	}{
+		{"", ".example"},
+		{"test.txt", "test.txt.example"},
+		{"path/to/test.txt", "path/to/test.txt.example"},
+	}
+	for i, test := range tests {
+		s := exampleFilename(test.value)
+		if s != test.expected {
+			t.Errorf("%d: expected %q, got %q", i, test.expected, s)
+		}
+	}
+}
+
+func TestStripExampleFilename(t *testing.T) {
+	tests := []struct {
+		value    string
+		expected string
+	}{
+		{"", ""},
+		{"test.txt", "test.txt"},
+		{"test.txt.example", "test.txt"},
+		{"path/to/test.txt", "path/to/test.txt"},
+		{"path/to/test.txt.example", "path/to/test.txt"},
+	}
+	for i, test := range tests {
+		s := stripExampleFilename(test.value)
+		if s != test.expected {
+			t.Errorf("%d: expected %q, got %q", i, test.expected, s)
+		}
+	}
+
 }
