@@ -140,7 +140,7 @@ func TestAddFilename(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, got nil")
 	} else {
-		if "archive of prior build failed: ../test_files/src/ubuntu/scripts/dne_test_file.sh does not exist" != err {
+		if "archive of prior build failed: ../test_files/src/ubuntu/scripts/dne_test_file.sh does not exist" != err.Error() {
 			t.Errorf("Expected \"archive of prior build failed: ../test_files/src/ubuntu/scripts/dne_test_file.sh does not exist\", got %q", err)
 		}
 	}
