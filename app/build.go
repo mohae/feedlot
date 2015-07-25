@@ -113,9 +113,7 @@ func BuildBuilds(buildNames ...string) (string, error) {
 		jww.ERROR.Println(err)
 		return "", err
 	}
-	// Only load supported if it hasn't been loaded. Even though LoadSupported
-	// uses a mutex to control access to prevent race conditions, no need to
-	// call it if its already loaded.
+	// Only load supported if it hasn't been loaded.
 	if !DistroDefaults.IsSet {
 		err := DistroDefaults.Set()
 		if err != nil {
@@ -200,25 +198,4 @@ func buildPackerTemplateFromNamedBuild(name string, doneCh chan error) {
 	}
 	doneCh <- nil
 	return
-}
-
-// getBuildTemplate returns the requested build template, or an error if it
-// can't be found. Th
-func getBuildTemplate(name string) (*rawTemplate, error) {
-	var r *rawTemplate
-	var fname string
-	for bfile, blds := range Builds {
-		for n, bTpl := range blds.Build {
-			if n == name {
-				r = bTpl.copy()
-				r.BuildName = name
-				goto found
-			}
-		}
-		fname = bfile
-	}
-	jww.FEEDBACK.Printf("getBuildTemplate %s found in %s", name, fname)
-	return nil, fmt.Errorf("build not found: %s", name)
-found:
-	return r, nil
 }

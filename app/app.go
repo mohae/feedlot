@@ -55,7 +55,7 @@ type appCfg struct {
 	Example         bool
 	Log             bool
 	LogFile         string `toml:"log_file",json:"log_file"`
-	LogLevelFile    string `toml:"log_level_file",json:log_level_file"`
+	LogLevelFile    string `toml:"log_level_file",json:"log_level_file"`
 	LogLevelStdout  string `toml:"log_level_stdout",json:"log_level_stdout"`
 }
 

@@ -420,7 +420,7 @@ buildersEnd:
 	}
 postProcessorTypesEnd:
 	if fmt.Sprintf("%p", newBuild.PostProcessors) == fmt.Sprintf("%p", tstTpl.build.PostProcessors) {
-		t.Errorf("The pointer for PostProcessors is the same for both newBuild and testBuild: %x, expected them to be different.", fmt.Sprintf("%p", newBuild.PostProcessors), fmt.Sprintf("%p", tstTpl.build.PostProcessors))
+		t.Errorf("The pointer for PostProcessors is the same for both newBuild and testBuild: %x, expected them to be different.", fmt.Sprintf("%p", tstTpl.build.PostProcessors))
 		goto postProcessorsEnd
 	}
 	if len(newBuild.PostProcessors) != len(tstTpl.PostProcessors) {

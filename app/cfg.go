@@ -16,7 +16,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/BurntSushi/toml"
 	"github.com/mohae/contour"
@@ -238,15 +237,12 @@ type defaults struct {
 	PackerInf
 	BuildInf
 	build
-	sync.Mutex
 	loaded bool
 }
 
 // Load loads the defualt settings. If the defaults have already been loaded
 // nothing is done.
 func (d *defaults) Load() error {
-	d.Mutex.Lock()
-	defer d.Mutex.Unlock()
 	if d.loaded {
 		return nil
 	}
@@ -406,15 +402,11 @@ type distro struct {
 // application.
 type supported struct {
 	Distro map[string]*distro
-	sync.Mutex
 	loaded bool
 }
 
-// Load the supported distro info. If it has already been loaded, nothing is
-// done.
+// Load the supported distro info.
 func (s *supported) Load() error {
-	s.Mutex.Lock()
-	defer s.Mutex.Unlock()
 	name := GetConfFile(Supported)
 	switch contour.GetString(Format) {
 	case "toml", "tml":
@@ -447,15 +439,12 @@ func (s *supported) Load() error {
 
 // Struct to hold the builds.
 type builds struct {
-	Build map[string]*rawTemplate
-	sync.Mutex
+	Build  map[string]*rawTemplate
 	loaded bool
 }
 
 // Load the build information. If it has already been loaded, nothing will be done
 func (b *builds) Load(name string) error {
-	b.Mutex.Lock()
-	defer b.Mutex.Unlock()
 	if name == "" {
 		return filenameNotSetErr("build")
 	}
@@ -488,10 +477,30 @@ func (b *builds) Load(name string) error {
 	return nil
 }
 
+// getBuildTemplate returns the requested build template, or an error if it
+// can't be found. Th
+func getBuildTemplate(name string) (*rawTemplate, error) {
+	var r *rawTemplate
+	var fname string
+	for bfile, blds := range Builds {
+		for n, bTpl := range blds.Build {
+			if n == name {
+				r = bTpl.copy()
+				r.BuildName = name
+				goto found
+			}
+		}
+		fname = bfile
+	}
+	jww.FEEDBACK.Printf("getBuildTemplate %s found in %s", name, fname)
+	return nil, fmt.Errorf("build not found: %s", name)
+found:
+	return r, nil
+}
+
 // Contains lists of builds.
 type buildLists struct {
 	List map[string]list
-	sync.Mutex
 }
 
 // A list contains 1 or more builds.
@@ -499,11 +508,9 @@ type list struct {
 	Builds []string
 }
 
-// This is a normal load, no mutex, as this is only called once.
+// Load loads the build lists
 func (b *buildLists) Load() error {
 	// Load the build lists.
-	b.Mutex.Lock()
-	defer b.Mutex.Unlock()
 	name := GetConfFile(BuildList)
 	if name == "" {
 		return filenameNotSetErr(BuildList)
@@ -604,6 +611,11 @@ func GetConfFile(s string) string {
 			return filepath.Join(contour.GetString(ExampleDir), fmt.Sprintf("%s.example", s))
 		}
 		return filepath.Join(contour.GetString(ExampleDir), contour.GetString(ConfDir), fmt.Sprintf("%s.example", s))
+	}
+	// supported is in cwd
+	// TODO remove when supported is embedded
+	if fname == Supported {
+		return s
 	}
 	return filepath.Join(contour.GetString(ConfDir), s)
 }
