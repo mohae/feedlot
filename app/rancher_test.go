@@ -358,7 +358,7 @@ func TestDistroDefaultsGetTemplate(t *testing.T) {
 
 	r, err = testDistroDefaults.GetTemplate("ubuntu")
 	if err != nil {
-		t.Errorf("Expected no error, got %q", err.Error())
+		t.Errorf("Expected no error, got %q", err)
 	} else {
 		if MarshalJSONToString.Get(r) != MarshalJSONToString.Get(testDistroDefaults.Templates[Ubuntu]) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testDistroDefaults.Templates[Ubuntu]), MarshalJSONToString.Get(r))
@@ -596,7 +596,7 @@ func TestMergeSettingsSlices(t *testing.T) {
 	s1 = []string{"key1=value1", "key2=value2", "key3=value3"}
 	res, err = mergeSettingsSlices(s1, s2)
 	if err != nil {
-		t.Errorf("expected error to be nil, got %q", err.Error())
+		t.Errorf("expected error to be nil, got %q", err)
 	}
 	if res == nil {
 		t.Error("Expected a non-nil slice, got nil")
@@ -641,7 +641,7 @@ func TestMergeSettingsSlices(t *testing.T) {
 	s2 = []string{"key2=value22", "key4=value4"}
 	res, err = mergeSettingsSlices(s1, s2)
 	if err != nil {
-		t.Errorf("expected error to be nil, got %q", err.Error())
+		t.Errorf("expected error to be nil, got %q", err)
 	}
 	if res == nil {
 		t.Error("Expected a non-nil slice, got nil")

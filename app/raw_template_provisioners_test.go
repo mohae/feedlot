@@ -568,7 +568,7 @@ var prMerged = map[string]provisioner{
 func TestRawTemplateUpdateProvisioners(t *testing.T) {
 	err := testRawTemplateProvisioner.updateProvisioners(nil)
 	if err != nil {
-		t.Errorf("expected error to be nil, got %q", err.Error())
+		t.Errorf("expected error to be nil, got %q", err)
 	}
 	if MarshalJSONToString.Get(testRawTemplateProvisioner.Provisioners) != MarshalJSONToString.Get(prOrig) {
 		t.Errorf("Got %q, want %q", MarshalJSONToString.Get(testRawTemplateProvisioner.Provisioners), MarshalJSONToString.Get(prOrig))
@@ -576,7 +576,7 @@ func TestRawTemplateUpdateProvisioners(t *testing.T) {
 
 	err = testRawTemplateProvisioner.updateProvisioners(prNew)
 	if err != nil {
-		t.Errorf("expected error to be nil, got %q", err.Error())
+		t.Errorf("expected error to be nil, got %q", err)
 	}
 	if MarshalJSONToString.GetIndented(testRawTemplateProvisioner.Provisioners) != MarshalJSONToString.GetIndented(prMerged) {
 		t.Errorf("Got %q, want %q", MarshalJSONToString.GetIndented(prMerged), MarshalJSONToString.GetIndented(testRawTemplateProvisioner.Provisioners))
@@ -623,7 +623,7 @@ func TestAnsibleProvisioner(t *testing.T) {
 	}
 	settings, err := testRawTemplateProvisionersAll.createAnsible()
 	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
+		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
 		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
@@ -654,7 +654,7 @@ func TestChefClientProvisioner(t *testing.T) {
 	}
 	settings, err := testRawTemplateProvisionersAll.createChefClient()
 	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
+		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
 		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
@@ -690,7 +690,7 @@ func TestChefSoloProvisioner(t *testing.T) {
 	}
 	settings, err := testRawTemplateProvisionersAll.createChefSolo()
 	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
+		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
 		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
@@ -717,7 +717,7 @@ func TestPuppetMasterlessProvisioner(t *testing.T) {
 	}
 	settings, err := testRawTemplateProvisionersAll.createPuppetMasterless()
 	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
+		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
 		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
@@ -741,7 +741,7 @@ func TestPuppetServerProvisioner(t *testing.T) {
 	}
 	settings, err := testRawTemplateProvisionersAll.createPuppetServer()
 	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
+		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
 		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
@@ -761,7 +761,7 @@ func TestSaltProvisioner(t *testing.T) {
 	}
 	settings, err := testRawTemplateProvisionersAll.createSalt()
 	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
+		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
 		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
@@ -792,7 +792,7 @@ func TestShellProvisioner(t *testing.T) {
 	}
 	settings, err := testRawTemplateProvisionersAll.createShellScript()
 	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
+		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
 		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
@@ -808,7 +808,7 @@ func TestFileUploadsProvisioner(t *testing.T) {
 	}
 	settings, err := testRawTemplateProvisionersAll.createFileUploads()
 	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
+		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
 		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))

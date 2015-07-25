@@ -101,7 +101,7 @@ func (r *centos) setVersionInfo() error {
 	r.setISORedirectURL()
 	tokens, err := tokensFromURL(r.isoredirectURL)
 	if err != nil {
-		return setVersionInfoErr(r.isoredirectURL, fmt.Errorf("could not tokenize release page: %s", err.Error()))
+		return setVersionInfoErr(r.isoredirectURL, fmt.Errorf("could not tokenize release page: %s", err))
 	}
 	links := inlineElementsFromTokens("a", "href", tokens)
 	if len(links) == 0 || links == nil {
@@ -151,7 +151,7 @@ func (r *centos) setVersion7Info() error {
 	// get the page from the url
 	tokens, err := tokensFromURL(r.BaseURL)
 	if err != nil {
-		return setVersionInfoErr(r.isoredirectURL, fmt.Errorf("could not tokenize release page: %s", err.Error()))
+		return setVersionInfoErr(r.isoredirectURL, fmt.Errorf("could not tokenize release page: %s", err))
 	}
 	links := inlineElementsFromTokens("a", "href", tokens)
 	if len(links) == 0 || links == nil {
@@ -304,7 +304,7 @@ func (r *debian) setVersionInfo() error {
 	}
 	hrefs := inlineElementsFromTokens("a", "href", tokens)
 	if len(hrefs) == 0 || hrefs == nil {
-		return setVersionInfoErr(r.BaseURL, fmt.Errorf("could not tokenize release page: %s", err.Error()))
+		return setVersionInfoErr(r.BaseURL, fmt.Errorf("could not tokenize release page: %s", err))
 	}
 	for _, href := range hrefs {
 		if strings.HasPrefix(href, r.Release) {

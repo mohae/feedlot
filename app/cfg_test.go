@@ -667,11 +667,11 @@ func TestDefaults(t *testing.T) {
 		{"toml", ""},
 		{"json", ""},
 	}
-	contour.UpdateString(ConfDir, "../test_files/conf")
+	contour.UpdateString(ConfDir, "conf")
 	for i, test := range tests {
 		contour.UpdateString(Format, test.format)
 		d := defaults{}
-		err := d.Load()
+		err := d.Load("../test_files")
 		if err != nil {
 			if err.Error() != test.expectedErr {
 				t.Errorf("%d: expected %q, got %q", i, test.expectedErr, err)
@@ -691,18 +691,18 @@ func TestDefaults(t *testing.T) {
 func TestSupported(t *testing.T) {
 	tests := []struct {
 		format      string
+		p           string
 		expectedErr string
 	}{
-		{"", "unsupported format"},
-		{"yaml", "unsupported format"},
-		{"toml", ""},
-		{"json", ""},
+		{"", "", "unsupported format"},
+		{"yaml", "", "unsupported format"},
+		{"toml", "../test_files", ""},
+		{"json", "../test_files", ""},
 	}
-	contour.UpdateString(ConfDir, "../test_files")
 	for i, test := range tests {
 		contour.UpdateString(Format, test.format)
 		s := supported{}
-		err := s.Load()
+		err := s.Load(test.p)
 		if err != nil {
 			if err.Error() != test.expectedErr {
 				t.Errorf("%d: expected %q, got %q", i, test.expectedErr, err)
@@ -710,7 +710,7 @@ func TestSupported(t *testing.T) {
 			continue
 		}
 		if test.expectedErr != "" {
-			t.Errorf("%d: expepcted an error: %q, got none", i, test.expectedErr)
+			t.Errorf("%d: expected an error: %q, got none", i, test.expectedErr)
 			continue
 		}
 		if MarshalJSONToString.Get(s.Distro) != MarshalJSONToString.Get(testSupported) {
@@ -764,11 +764,11 @@ func TestBuildListStuff(t *testing.T) {
 		{"toml", ""},
 		{"json", ""},
 	}
-	contour.UpdateString(ConfDir, "../test_files/conf")
+	contour.UpdateString(ConfDir, "conf")
 	for i, test := range tests {
 		contour.UpdateString(Format, test.format)
 		b := &buildLists{List: map[string]list{}}
-		err := b.Load()
+		err := b.Load("../test_files")
 		if err != nil {
 			if err.Error() != test.expectedErr {
 				t.Errorf("%d: expected %q, got %q", i, test.expectedErr, err)

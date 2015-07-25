@@ -145,7 +145,7 @@ func (b *builder) mergeSettings(sl []string) error {
 	var err error
 	b.Settings, err = mergeSettingsSlices(b.Settings, sl)
 	if err != nil {
-		return fmt.Errorf("merge of builder settings failed: %s", err.Error())
+		return fmt.Errorf("merge of builder settings failed: %s", err)
 	}
 	return nil
 }
@@ -182,7 +182,7 @@ func (p *postProcessor) mergeSettings(sl []string) error {
 	var err error
 	p.Settings, err = mergeSettingsSlices(p.Settings, sl)
 	if err != nil {
-		return fmt.Errorf("merge of post-processor settings failed: %s", err.Error())
+		return fmt.Errorf("merge of post-processor settings failed: %s", err)
 	}
 	return nil
 }
@@ -220,7 +220,7 @@ func (p *provisioner) mergeSettings(sl []string) error {
 	var err error
 	p.Settings, err = mergeSettingsSlices(p.Settings, sl)
 	if err != nil {
-		return fmt.Errorf("merge of provisioner settings failed: %s", err.Error())
+		return fmt.Errorf("merge of provisioner settings failed: %s", err)
 	}
 	return nil
 }
@@ -242,11 +242,11 @@ type defaults struct {
 
 // Load loads the defualt settings. If the defaults have already been loaded
 // nothing is done.
-func (d *defaults) Load() error {
+func (d *defaults) Load(p string) error {
 	if d.loaded {
 		return nil
 	}
-	name := GetConfFile(Default)
+	name := GetConfFile(p, Default)
 	switch contour.GetString(Format) {
 	case "toml", "tml":
 		_, err := toml.DecodeFile(name, &d)
@@ -406,8 +406,8 @@ type supported struct {
 }
 
 // Load the supported distro info.
-func (s *supported) Load() error {
-	name := GetConfFile(Supported)
+func (s *supported) Load(p string) error {
+	name := GetConfFile(p, Supported)
 	switch contour.GetString(Format) {
 	case "toml", "tml":
 		_, err := toml.DecodeFile(name, &s.Distro)
@@ -443,7 +443,7 @@ type builds struct {
 	loaded bool
 }
 
-// Load the build information. If it has already been loaded, nothing will be done
+// Load the build information.
 func (b *builds) Load(name string) error {
 	if name == "" {
 		return filenameNotSetErr("build")
@@ -508,10 +508,12 @@ type list struct {
 	Builds []string
 }
 
-// Load loads the build lists
-func (b *buildLists) Load() error {
+// Load loads the build lists. It accepts a path prefix; which is mainly used
+// for testing ATM.
+func (b *buildLists) Load(p string) error {
+
 	// Load the build lists.
-	name := GetConfFile(BuildList)
+	name := GetConfFile(p, BuildList)
 	if name == "" {
 		return filenameNotSetErr(BuildList)
 	}
@@ -568,10 +570,10 @@ func SetCfgFile() error {
 		switch ft {
 		case "toml", "tml":
 			contour.UpdateString(Format, "json")
-			contour.UpdateString(CfgFile, GetConfFile(contour.GetString(CfgFile)))
+			contour.UpdateString(CfgFile, GetConfFile("", contour.GetString(CfgFile)))
 		case "json":
 			contour.UpdateString(Format, "toml")
-			contour.UpdateString(CfgFile, GetConfFile(contour.GetString(CfgFile)))
+			contour.UpdateString(CfgFile, GetConfFile("", contour.GetString(CfgFile)))
 		}
 		_, err = os.Stat(contour.GetString(CfgFile))
 		if err != nil && err == os.ErrNotExist {
@@ -592,30 +594,35 @@ func SetCfgFile() error {
 }
 
 // GetConfFile returns the location of the provided conf file. This accounts
-// for examples. An empty string results in an empty string.
-func GetConfFile(s string) string {
-	if s == "" {
-		return s
+// for examples. An empty
+//
+// If the p field has a value, it is used as the dir path, instead of the
+// confDir,
+//
+// If p is prefixed with 1 or more '..' and this is an Example, the path will
+// not be correct. This shouldn't be an issue since p was added as a parm
+// mainly for testing; though its usage may expand in the future.
+func GetConfFile(p, name string) string {
+	if name == "" {
+		return name
 	}
 	var fname string
 	// save the filename and add an extension to it if it doesn't exist
-	if filepath.Ext(s) == "" {
-		fname = s
-		s = fmt.Sprintf("%s.%s", s, contour.GetString(Format))
+	if filepath.Ext(name) == "" {
+		fname = name
+		name = fmt.Sprintf("%s.%s", name, contour.GetString(Format))
 	} else {
-		fname = strings.TrimSuffix(s, filepath.Ext(s))
+		fname = strings.TrimSuffix(name, filepath.Ext(name))
+	}
+	// if the path wasn't passed, use the confdir, unless this file is the supported
+	// file. A path is prefixed to supported file only if this func receives one;
+	// the ConfDir is not used for supported.
+	if fname != Supported {
+		p = filepath.Join(p, contour.GetString(ConfDir))
 	}
 	if contour.GetBool(Example) {
 		// example files always end in '.example'
-		if fname == Supported {
-			return filepath.Join(contour.GetString(ExampleDir), fmt.Sprintf("%s.example", s))
-		}
-		return filepath.Join(contour.GetString(ExampleDir), contour.GetString(ConfDir), fmt.Sprintf("%s.example", s))
+		return filepath.Join(contour.GetString(ExampleDir), p, fmt.Sprintf("%s.example", name))
 	}
-	// supported is in cwd
-	// TODO remove when supported is embedded
-	if fname == Supported {
-		return s
-	}
-	return filepath.Join(contour.GetString(ConfDir), s)
+	return filepath.Join(p, name)
 }

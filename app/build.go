@@ -21,14 +21,14 @@ func BuildDistro(a ArgsFilter) error {
 	if !DistroDefaults.IsSet {
 		err := DistroDefaults.Set()
 		if err != nil {
-			err = fmt.Errorf("BuildDistro failed: %s", err.Error())
+			err = fmt.Errorf("BuildDistro failed: %s", err)
 			jww.ERROR.Println(err)
 			return err
 		}
 	}
 	err := buildPackerTemplateFromDistro(a)
 	if err != nil {
-		err = fmt.Errorf("BuildDistro failed: %s", err.Error())
+		err = fmt.Errorf("BuildDistro failed: %s", err)
 		jww.ERROR.Println(err)
 		return err
 	}
@@ -117,7 +117,7 @@ func BuildBuilds(buildNames ...string) (string, error) {
 	if !DistroDefaults.IsSet {
 		err := DistroDefaults.Set()
 		if err != nil {
-			err = fmt.Errorf("builds failed: %s", err.Error())
+			err = fmt.Errorf("builds failed: %s", err)
 			jww.ERROR.Println(err)
 			return "", err
 		}
@@ -168,7 +168,7 @@ func buildPackerTemplateFromNamedBuild(name string, doneCh chan error) {
 	// Check the type and create the defaults for that type, if it doesn't already exist.
 	bTpl, err := getBuildTemplate(name)
 	if err != nil {
-		doneCh <- fmt.Errorf("processing of build template %q failed: %s", name, err.Error())
+		doneCh <- fmt.Errorf("processing of build template %q failed: %s", name, err)
 		return
 	}
 	// See if the distro default exists.

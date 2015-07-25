@@ -69,7 +69,7 @@ func settingErr(s string, err error) error {
 }
 
 func PackerCreateErr(name string, err error) error {
-	return fmt.Errorf("create of Packer template for %q failed: %s", name, err.Error())
+	return fmt.Errorf("create of Packer template for %q failed: %s", name, err)
 }
 
 func emptyPageErr(name, operation string) error {

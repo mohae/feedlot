@@ -99,13 +99,13 @@ func (d *distroDefaults) GetTemplate(n string) (*rawTemplate, error) {
 // Set sets the default templates for each distro.
 func (d *distroDefaults) Set() error {
 	dflts := &defaults{}
-	err := dflts.Load()
+	err := dflts.Load("")
 	if err != nil {
 		jww.ERROR.Println(err)
 		return err
 	}
 	s := &supported{}
-	err = s.Load()
+	err = s.Load("")
 	if err != nil {
 		jww.ERROR.Println(err)
 		return err
@@ -135,8 +135,8 @@ func (d *distroDefaults) Set() error {
 		tmp.Arch, tmp.Image, tmp.Release = getDefaultISOInfo(v.DefImage)
 		err = tmp.setDefaults(v)
 		if err != nil {
-			err = fmt.Errorf("setting of distro defaults failed: %s", err.Error())
-			jww.ERROR.Print(err.Error())
+			err = fmt.Errorf("setting of distro defaults failed: %s", err)
+			jww.ERROR.Print(err)
 			return err
 		}
 		d.Templates[DistroFromString(k)] = *tmp
@@ -526,7 +526,7 @@ func copyFile(src string, dst string) (written int64, err error) {
 func copyDir(srcDir string, dstDir string) error {
 	exists, err := pathExists(srcDir)
 	if err != nil {
-		return fmt.Errorf("copyDir error: %s", err.Error())
+		return fmt.Errorf("copyDir error: %s", err)
 	}
 	if !exists {
 		return fmt.Errorf("copyDir error: %s does not exist", srcDir)
@@ -534,7 +534,7 @@ func copyDir(srcDir string, dstDir string) error {
 	dir := Archive{}
 	err = dir.DirWalk(srcDir)
 	if err != nil {
-		return fmt.Errorf("copyDir dirWalk error: %s", err.Error())
+		return fmt.Errorf("copyDir dirWalk error: %s", err)
 	}
 	for _, file := range dir.Files {
 		if file.info == nil {
@@ -543,13 +543,13 @@ func copyDir(srcDir string, dstDir string) error {
 		if file.info.IsDir() {
 			err = os.MkdirAll(file.p, os.FileMode(0766))
 			if err != nil {
-				return fmt.Errorf("copyDir errorL %s", err.Error())
+				return fmt.Errorf("copyDir errorL %s", err)
 			}
 			continue
 		}
 		_, err = copyFile(filepath.Join(srcDir, file.p), filepath.Join(dstDir, file.p))
 		if err != nil {
-			return fmt.Errorf("copyDir errorL %s", err.Error())
+			return fmt.Errorf("copyDir errorL %s", err)
 
 		}
 	}

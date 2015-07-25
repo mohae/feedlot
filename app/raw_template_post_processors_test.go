@@ -364,7 +364,7 @@ func TestRawTemplateUpdatePostProcessors(t *testing.T) {
 	}
 	err := tpl.updatePostProcessors(nil)
 	if err != nil {
-		t.Errorf("expected error to be nil, got %q", err.Error())
+		t.Errorf("expected error to be nil, got %q", err)
 		return
 	}
 	if MarshalJSONToString.Get(testDistroDefaults.Templates[CentOS].PostProcessors) != MarshalJSONToString.Get(ppOrig) {
@@ -378,7 +378,7 @@ func TestRawTemplateUpdatePostProcessors(t *testing.T) {
 	}
 	err = tpl.updatePostProcessors(ppNew)
 	if err != nil {
-		t.Errorf("expected error to be nil, got %q", err.Error())
+		t.Errorf("expected error to be nil, got %q", err)
 	}
 	if MarshalJSONToString.Get(testDistroDefaults.Templates[CentOS].PostProcessors) != MarshalJSONToString.Get(ppMerged) {
 		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(ppMerged), MarshalJSONToString.Get(testDistroDefaults.Templates[CentOS].PostProcessors))

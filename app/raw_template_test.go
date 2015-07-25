@@ -562,7 +562,7 @@ func TestFindSource(t *testing.T) {
 		src, err := r.findSource(test.p, test.isDir)
 		if err != nil {
 			if err.Error() != test.expectedErr {
-				t.Errorf("TestFindSource %d: expected %q got %q", i, test.expectedErr, err.Error())
+				t.Errorf("TestFindSource %d: expected %q got %q", i, test.expectedErr, err)
 			}
 			continue
 		}
@@ -605,7 +605,7 @@ func TestFindComponentSource(t *testing.T) {
 		src, err := r.findComponentSource(test.component, test.p, test.isDir)
 		if err != nil {
 			if err.Error() != test.expectedErr {
-				t.Errorf("TestFindSource %d: expected %q got %q", i, test.expectedErr, err.Error())
+				t.Errorf("TestFindSource %d: expected %q got %q", i, test.expectedErr, err)
 			}
 			continue
 		}
@@ -646,7 +646,7 @@ func TestFindCommandFile(t *testing.T) {
 		src, err := r.findCommandFile(test.component, test.p)
 		if err != nil {
 			if err.Error() != test.expectedErr {
-				t.Errorf("TestFindCommandFile %d: expected %q got %q", i, test.expectedErr, err.Error())
+				t.Errorf("TestFindCommandFile %d: expected %q got %q", i, test.expectedErr, err)
 			}
 			continue
 		}
@@ -683,7 +683,7 @@ func TestCommandsFromFile(t *testing.T) {
 		commands, err := r.commandsFromFile(test.component, test.p)
 		if err != nil {
 			if err.Error() != test.expectedErr {
-				t.Errorf("TestCommandsFromFile %d: expected %q got %q", i, test.expectedErr, err.Error())
+				t.Errorf("TestCommandsFromFile %d: expected %q got %q", i, test.expectedErr, err)
 			}
 			continue
 		}

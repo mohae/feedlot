@@ -156,7 +156,7 @@ func (a *Archive) deletePriorBuild(p string) error {
 	//delete the contents of the passed directory
 	err := deleteDir(p)
 	if err != nil {
-		return fmt.Errorf("deletePriorBuild failed: %s", err.Error())
+		return fmt.Errorf("deletePriorBuild failed: %s", err)
 	}
 	return nil
 }
@@ -238,7 +238,7 @@ func deleteDir(dir string) error {
 	_, err := os.Stat(dir)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("deleteDir: %s", err.Error())
+			return fmt.Errorf("deleteDir: %s", err)
 		}
 	}
 	dirInf := directory{}
@@ -259,7 +259,7 @@ func deleteDir(dir string) error {
 	for i := len(dirs) - 1; i >= 0; i-- {
 		err = os.Remove(dirs[i])
 		if err != nil {
-			return fmt.Errorf("deleteDir: %s", err.Error())
+			return fmt.Errorf("deleteDir: %s", err)
 		}
 	}
 	return nil
