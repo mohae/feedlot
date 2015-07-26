@@ -1,46 +1,39 @@
-# Default builder variable settings for Rancher. Merging the contents of this
-# file with supported.toml provids the default settings for each distro.
+# Default settings for Rancher templates.  Merging the contents of this file
+# with the supported config file settings results in the default template for
+# Rancher. 
 #
-# By default, the VMWare-iso and Virtualbox-iso builders are supported. If
-# you want the default templates to support only one, remove the other one from
-# the 'builder_type' section. If you wish to support something else, By
-# default, you will need to remove the builder types that you do not want to
-# support and add the builder type(s) that you do wish to support along with
-# the relevant builder settings.
-#
-# Only the Packer sections enumerated in the {packer-section}_type sections
-# are used by Rancher, any other sections defined within a template are ignored
-# during the Packer template build process.
-#
-# Most customizations should probably be done in rancher build templates, but
-# any settings that are going to be fairly consistent across builds should
-# probably be put in here; minimizing the things that need to be set in a 
-# specific build template.
 description = "Default Rancher template"
 name = ":build_name"
-out_dir = "out/:build_name"
-src_dir = "src"
+output_dir = "out/:build_name"
+source_dir = "src"
 include_component_string = "true"
-min_packer_version = "0.5.0"
+min_packer_version = "0.7.0"
 builder_types = [
-    "virtualbox-iso",
+	"virtualbox-iso",
 	"vmware-iso",
+]
+post_processor_types = [
+	"vagrant"
+]
+provisioner_types = [
+	"shell"
 ]
 [builders]
 	[builders.common]
 		settings = [	
 			"boot_command = boot.command",
-			"boot_wait = 5s",
-			"disk_size = 20000",
+			"boot_wait = 10s",
+			"disk_size = 40000",
+			"guest_os_type=",
 			"headless = true",
 			"http_directory = http",
 			"iso_checksum_type = sha256",
-			"output_directory = :out_dir",		
+			"output_directory = :output_dir",
 			"shutdown_command = shutdown.command",
-			"ssh_password = vagrant",
+			"ssh_password = packer",
 			"ssh_port = 22",
-			"ssh_username = vagrant",
-			"ssh_wait_timeout = 240m",
+			"ssh_username = packer",
+			"ssh_wait_timeout = 5m",
 			"vm_name = :build_name",
 		]
 	[builders.virtualbox-iso]
@@ -63,9 +56,6 @@ builder_types = [
 				"cpus=1",
 				"memory=1024"	
 			]
-post_processor_types = [
-	"vagrant"
-]
 [post_processors]
 	[post_processors.vagrant]
 		settings = [
@@ -73,9 +63,6 @@ post_processor_types = [
 			"keep_input_artifact = false",
 			"output =  :build_name.box"
 		]
-provisioner_types = [
-	"shell"
-]
 [provisioners]
 	[provisioners.shell]
 		settings = [
