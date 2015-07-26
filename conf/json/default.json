@@ -4,26 +4,33 @@
   "output_dir": "packer_templates/:build_name",
   "source_dir": "packer_resources",
   "include_component_string": "true",
-  "min_packer_version": "0.5.0",
+  "min_packer_version": "0.7.0",
   "builder_types": [
     "virtualbox-iso",
     "vmware-iso"
+  ],
+  "post_processor_types": [
+    "vagrant"
+  ],
+  "provisioner_types": [
+    "shell"
   ],
   "builders": {
     "common": {
       "settings": [
         "boot_command = boot.command",
-        "boot_wait = 5s",
-        "disk_size = 20000",
+        "boot_wait = 10s",
+        "disk_size = 40000",
+        "guest_os_type=",
         "headless = true",
         "http_directory = http",
         "iso_checksum_type = sha256",
-        "output_directory = :out_dir",		
+        "output_directory = :output_dir",		
         "shutdown_command = shutdown.command",
-        "ssh_password = vagrant",
+        "ssh_password = packer",
         "ssh_port = 22",
-        "ssh_username = vagrant",
-        "ssh_wait_timeout = 10m",
+        "ssh_username = packer",
+        "ssh_wait_timeout = 5m",
         "vm_name = :build_name"
       ]
     },
@@ -45,16 +52,13 @@
         "virtualbox_version_file = .vbox_version"
       ],
       "arrays": {
-         "vboxmanage": [
+         "modifyvm": [
          "cpus=1",
          "memory=1024"
         ]	
       }
     }
   },
-  "post_processor_types": [
-    "vagrant"
-  ],
   "post_processors": {
     "vagrant": {
       "settings": [
@@ -64,9 +68,6 @@
       ]
     }
   },
-  "provisioner_types": [
-    "shell"
-  ],
   "provisioners": {
     "shell": {
       "settings": [

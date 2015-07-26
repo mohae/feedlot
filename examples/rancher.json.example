@@ -4,9 +4,9 @@
   "example": false,
   "example_dir": "examples",
   "format": "json",
-  "log": true,
+  "log": false,
   "log_file": "rancher.log",
   "log_level_file": "WARN",
-  "log_level_stdout": "TRACE",
+  "log_level_stdout": "ERROR",
   "param_delim_start": ":"
 }

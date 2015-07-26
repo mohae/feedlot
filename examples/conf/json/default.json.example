@@ -7,44 +7,44 @@
   "min_packer_version": "0.7.0",
   "builder_types": [
     "virtualbox-iso",
-	"vmware-iso"
-  ],
-  "provisioner_types": [
-    "shell"
+    "vmware-iso"
   ],
   "post_processor_types": [
     "vagrant"
   ],
+  "provisioner_types": [
+    "shell"
+  ],
   "builders": {
-	"common": {
+    "common": {
       "settings": [
         "boot_command = boot.command.example",
-        "boot_wait = 5s",
-        "disk_size = 20000",
+        "boot_wait = 10s",
+        "disk_size = 40000",
         "guest_os_type = ",
         "headless = true",
         "http_directory = http",
         "iso_checksum_type = sha256",
-        "output_directory = :out_dir",		
+        "output_directory = :output_dir",		
         "shutdown_command = shutdown.command.example",
         "ssh_password = packer",
         "ssh_port = 22",
         "ssh_username = packer",
-        "ssh_wait_timeout = 30s",
+        "ssh_wait_timeout = 5m",
         "vm_name = :build_name"
       ]
     },
     "amazon-chroot": {
       "settings": [
-	    "access_key=YOUR KEY HERE",
-		"ami_name:packer-amazon-chroot {{timestamp}}",
-		"secret_key:YOUR SECRET KEY HERE",
-		"source_ami:ami-e81d5881"
+        "access_key=YOUR KEY HERE",
+        "ami_name:packer-amazon-chroot {{timestamp}}",
+        "secret_key:YOUR SECRET KEY HERE",
+        "source_ami:ami-e81d5881"
       ]
     },
     "amazon-ebs": {
       "settings": [
-	    "access_key=YOUR KEY HERE",
+        "access_key=YOUR KEY HERE",
         "ami_name:packer-quick-start {{timestamp}}",
         "instance_type=t1.micro",
         "region=us-east-1",
