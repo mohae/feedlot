@@ -251,17 +251,17 @@ func (d *defaults) Load(p string) error {
 	case "toml", "tml":
 		_, err := toml.DecodeFile(name, &d)
 		if err != nil {
-			return decodeErr(err)
+			return decodeErr(name, err)
 		}
 	case "json", "jsn":
 		f, err := os.Open(name)
 		if err != nil {
-			return decodeErr(err)
+			return decodeErr(name, err)
 		}
 		defer f.Close()
 		dec := json.NewDecoder(f)
 		if err != nil {
-			return decodeErr(err)
+			return decodeErr(name, err)
 		}
 		for {
 			err := dec.Decode(&d)
@@ -269,7 +269,7 @@ func (d *defaults) Load(p string) error {
 				break
 			}
 			if err != nil {
-				return decodeErr(err)
+				return decodeErr(name, err)
 			}
 		}
 	default:
@@ -412,12 +412,12 @@ func (s *supported) Load(p string) error {
 	case "toml", "tml":
 		_, err := toml.DecodeFile(name, &s.Distro)
 		if err != nil {
-			return decodeErr(err)
+			return decodeErr(name, err)
 		}
 	case "json", "jsn":
 		f, err := os.Open(name)
 		if err != nil {
-			return decodeErr(err)
+			return decodeErr(name, err)
 		}
 		defer f.Close()
 		dec := json.NewDecoder(f)
@@ -427,7 +427,7 @@ func (s *supported) Load(p string) error {
 				break
 			}
 			if err != nil {
-				return decodeErr(err)
+				return decodeErr(name, err)
 			}
 		}
 	default:
@@ -452,12 +452,12 @@ func (b *builds) Load(name string) error {
 	case "toml", "tml":
 		_, err := toml.DecodeFile(name, &b.Build)
 		if err != nil {
-			return decodeErr(err)
+			return decodeErr(name, err)
 		}
 	case "json", "jsn":
 		f, err := os.Open(name)
 		if err != nil {
-			return decodeErr(err)
+			return decodeErr(name, err)
 		}
 		defer f.Close()
 		dec := json.NewDecoder(f)
@@ -467,7 +467,7 @@ func (b *builds) Load(name string) error {
 				break
 			}
 			if err != nil {
-				return decodeErr(err)
+				return decodeErr(name, err)
 			}
 		}
 	default:
@@ -481,18 +481,17 @@ func (b *builds) Load(name string) error {
 // can't be found. Th
 func getBuildTemplate(name string) (*rawTemplate, error) {
 	var r *rawTemplate
-	var fname string
 	for bfile, blds := range Builds {
+		jww.FEEDBACK.Printf("build template file: %s\n", bfile)
 		for n, bTpl := range blds.Build {
+			jww.FEEDBACK.Printf("build name: %s\n", n)
 			if n == name {
 				r = bTpl.copy()
 				r.BuildName = name
 				goto found
 			}
 		}
-		fname = bfile
 	}
-	jww.FEEDBACK.Printf("getBuildTemplate %s found in %s", name, fname)
 	return nil, fmt.Errorf("build not found: %s", name)
 found:
 	return r, nil
@@ -521,17 +520,17 @@ func (b *buildLists) Load(p string) error {
 	case "toml", "tml":
 		_, err := toml.DecodeFile(name, &b.List)
 		if err != nil {
-			return decodeErr(err)
+			return decodeErr(name, err)
 		}
 	case "json", "jsn":
 		f, err := os.Open(name)
 		if err != nil {
-			return decodeErr(err)
+			return decodeErr(name, err)
 		}
 		defer f.Close()
 		dec := json.NewDecoder(f)
 		if err != nil {
-			return decodeErr(err)
+			return decodeErr(name, err)
 		}
 		for {
 			err := dec.Decode(&b.List)
@@ -539,7 +538,7 @@ func (b *buildLists) Load(p string) error {
 				break
 			}
 			if err != nil {
-				return decodeErr(err)
+				return decodeErr(name, err)
 			}
 		}
 	default:

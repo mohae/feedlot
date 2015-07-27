@@ -28,8 +28,8 @@ func configNotFoundErr() error {
 	return fmt.Errorf("configuration not found")
 }
 
-func decodeErr(err error) error {
-	return fmt.Errorf("decode failed: %s", err)
+func decodeErr(name string, err error) error {
+	return fmt.Errorf("decode of %q failed: %s", name, err)
 }
 
 func dependentSettingErr(s1, s2 string) error {
