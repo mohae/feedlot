@@ -69,7 +69,7 @@
         "x509_upload_path=/tmp"
       ]
     },
-	"digitalocean": {
+    "digitalocean": {
       "settings": [
         "api_token=YOUR API KEY",
         "image=ubuntu-12-04-x64",
@@ -84,13 +84,13 @@
         "source_image=debian-7-wheezy-v20150127",
         "zone=us-central1-a"
       ]
-	},
-     "nullbuilder": {
-        "settings": [
-          "ssh_host=127.0.0.1",
-          "ssh_username=foo",
-          "ssh_password=bar"
-        ]
+    },
+    "nullbuilder": {
+      "settings": [
+        "ssh_host=127.0.0.1",
+        "ssh_username=foo",
+        "ssh_password=bar"
+      ]
     },
     "virtualbox-iso": {
       "settings": [
@@ -116,9 +116,9 @@
         "tag=0.7"
       ]
     },
-	"docker-push": {
+    "docker-push": {
     },
-	"docker-save": {
+    "docker-save": {
       "settings": [
         "path=foo.tar"
       ]
@@ -179,7 +179,7 @@
         ]
       }
     },
-	"file": {
+    "file": {
       "settings": [
          "source=app.tar.gz",
          "destination=/tmp/app.tar.gz"
@@ -205,7 +205,7 @@
         ]
       }
     },
-	"salt-masterless": {
+    "salt-masterless": {
        "settings": [
           "local_state_Tree=/Users/me/salt"
        ]
