@@ -99,7 +99,7 @@
       "virtualbox-iso",
       "virtualbox-ovf",
       "vmware-iso",
-      "vmware-ovf"
+      "vmware-vmx"
     ],
     "post_processor_types": [
       "compress",

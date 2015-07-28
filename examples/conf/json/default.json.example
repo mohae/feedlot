@@ -18,6 +18,7 @@
   "builders": {
     "common": {
       "settings": [
+        "iso_checksum_type=sha256",
         "ssh_username = packer"
       ]
     },
@@ -92,9 +93,9 @@
     },
     "vmware-iso": {
     },
-    "vmware-ovf": {
+    "vmware-vmx": {
       "settings": [
-        "source_path=source.ovf"
+        "source_path=source.vmx"
       ]
     }
   },
