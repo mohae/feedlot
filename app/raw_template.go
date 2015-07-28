@@ -663,6 +663,12 @@ func (r *rawTemplate) findSource(p string, isDir bool) (string, error) {
 		return tmpPath, nil
 	}
 	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
+	// if we've gotten this far, it's not found. For examples this is not an error;
+	// return the original path.
+	if r.IsExample {
+		return p, nil
+	}
+	// If it's not an example, return a os.ErrNotExist
 	return "", os.ErrNotExist
 }
 
