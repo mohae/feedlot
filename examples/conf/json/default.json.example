@@ -187,7 +187,7 @@
     },
     "puppet-masterless": {
       "settings": [
-        "manifest_filie=site.pp"
+        "manifest_file=site.pp"
       ]
     },
     "puppet-server": {
