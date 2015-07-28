@@ -539,10 +539,10 @@ func (r *rawTemplate) createVagrantCloud() (settings map[string]interface{}, err
 //
 // Required configuration options:
 //   cluster         string
-//   datacenter      string
+//   datastore*      string
 //   host            string
 //   password        string
-//   resource_pool   string
+//   resource_pool*  string
 //   username        string
 //   vm_name         string
 // Optional configuration options:
@@ -551,6 +551,9 @@ func (r *rawTemplate) createVagrantCloud() (settings map[string]interface{}, err
 //   insecure        boolean
 //   vm_folder       string
 //   vm_network      string
+//
+// Notes:
+//   * datastore is not required if resource_pool is specified
 func (r *rawTemplate) createVSphere() (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[VSphere.String()]
 	if !ok {
@@ -562,7 +565,7 @@ func (r *rawTemplate) createVSphere() (settings map[string]interface{}, err erro
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
 	var k, v string
-	var hasCluster, hasDatacenter, hasHost, hasPassword, hasResourcePool, hasUsername, hasVMName bool
+	var hasCluster, hasDatastore, hasHost, hasPassword, hasResourcePool, hasUsername, hasVMName bool
 	for _, s := range r.PostProcessors[VSphere.String()].Settings {
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
@@ -570,9 +573,9 @@ func (r *rawTemplate) createVSphere() (settings map[string]interface{}, err erro
 		case "cluster":
 			settings[k] = v
 			hasCluster = true
-		case "datacenter":
+		case "datastore":
 			settings[k] = v
-			hasDatacenter = true
+			hasDatastore = true
 		case "host":
 			settings[k] = v
 			hasHost = true
@@ -588,7 +591,7 @@ func (r *rawTemplate) createVSphere() (settings map[string]interface{}, err erro
 		case "vm_name":
 			settings[k] = v
 			hasVMName = true
-		case "datastore", "disk_mode", "vm_folder", "vm_network":
+		case "disk_mode", "vm_folder", "vm_network":
 			settings[k] = v
 		case "insecure":
 			settings[k], _ = strconv.ParseBool(v)
@@ -597,17 +600,16 @@ func (r *rawTemplate) createVSphere() (settings map[string]interface{}, err erro
 	if !hasCluster {
 		return nil, requiredSettingErr("cluster")
 	}
-	if !hasDatacenter {
-		return nil, requiredSettingErr("datacenter")
+	if !hasDatastore {
+		if !hasResourcePool {
+			return nil, fmt.Errorf("%s; if the datastore is not set a resource_pool must be specified.", requiredSettingErr("datastore/resource_pool"))
+		}
 	}
 	if !hasHost {
 		return nil, requiredSettingErr("host")
 	}
 	if !hasPassword {
 		return nil, requiredSettingErr("password")
-	}
-	if !hasResourcePool {
-		return nil, requiredSettingErr("resource_pool")
 	}
 	if !hasUsername {
 		return nil, requiredSettingErr("username")
