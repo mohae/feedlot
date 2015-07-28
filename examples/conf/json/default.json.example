@@ -202,7 +202,7 @@
     },
     "salt-masterless": {
        "settings": [
-          "local_state_Tree=/Users/me/salt"
+          "local_state_tree=/Users/me/salt"
        ]
     },
     "shell": {
