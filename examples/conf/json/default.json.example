@@ -85,7 +85,7 @@
         "zone=us-central1-a"
       ]
     },
-    "nullbuilder": {
+    "null": {
       "settings": [
         "ssh_host=127.0.0.1",
         "ssh_username=foo",

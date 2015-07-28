@@ -95,7 +95,7 @@
       "amazon-instance",
       "digitalocean",
       "googlecompute",
-      "nullbuilder",
+      "null",
       "virtualbox-iso",
       "virtualbox-ovf",
       "vmware-iso",
