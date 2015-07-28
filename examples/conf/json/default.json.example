@@ -18,20 +18,7 @@
   "builders": {
     "common": {
       "settings": [
-        "boot_command = boot.command.example",
-        "boot_wait = 10s",
-        "disk_size = 40000",
-        "guest_os_type = ",
-        "headless = true",
-        "http_directory = http",
-        "iso_checksum_type = sha256",
-        "output_directory = :output_dir",		
-        "shutdown_command = shutdown.command.example",
-        "ssh_password = packer",
-        "ssh_port = 22",
-        "ssh_username = packer",
-        "ssh_wait_timeout = 5m",
-        "vm_name = :build_name"
+        "ssh_username = packer"
       ]
     },
     "amazon-chroot": {
@@ -99,6 +86,13 @@
       ]
     },
     "virtualbox-ovf": {
+      "settings": [
+        "source_path=source.ovf"
+      ]
+    },
+    "vmware-iso": {
+    },
+    "vmware-ovf": {
       "settings": [
         "source_path=source.ovf"
       ]
