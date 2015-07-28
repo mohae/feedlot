@@ -117,7 +117,6 @@
       "chef-client",
       "chef-solo",
       "file",
-      "powershell",
       "puppet-masterless",
       "puppet-server",
       "salt-masterless",
