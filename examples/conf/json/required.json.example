@@ -120,8 +120,7 @@
       "puppet-masterless",
       "puppet-server",
       "salt-masterless",
-      "shell",
-      "shell-local"
+      "shell"
     ]
   }
 }
