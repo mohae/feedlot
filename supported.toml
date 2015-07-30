@@ -22,7 +22,7 @@
 	default_image = [
 		"release = 7",
 		"image = minimal",
-		"arch = x86_64",
+		"arch = x86_64"
 	]
 [debian]
 	base_url = "http://cdimage.debian.org/debian-cd/"
@@ -40,7 +40,7 @@
 	default_image = [
 		"release = 8",
 		"image = netinst",
-		"arch = amd64",
+		"arch = amd64"
 	]
 [ubuntu]
 	base_url = "http://releases.ubuntu.com/"
@@ -61,5 +61,5 @@
 	default_image = [
 		"release = 14.04",
 		"image = server",
-		"arch = amd64",
+		"arch = amd64"
 	]

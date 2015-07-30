@@ -1,8 +1,8 @@
 archive_prior_build = false
-conf_dir = "conf/json"
+conf_dir = "conf/toml"
 example = false
 example_dir = "examples"
-format = "json"
+format = "toml"
 log = false
 log_file = "rancher.log"
 log_level_file = "WARN"
