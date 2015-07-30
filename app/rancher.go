@@ -688,8 +688,6 @@ func getUniqueFilename(p, layout string) (string, error) {
 // indexDir indexes the passed directory and returns its contents as two lists:
 // directory names and file names. Any error encountered results in termination
 // of indexing and returns.
-//
-// TODO update error handling so that the caller can just return the err
 func indexDir(s string) (dirs, files []string, err error) {
 	// nothing to index
 	if s == "" {
@@ -723,6 +721,10 @@ func indexDir(s string) (dirs, files []string, err error) {
 
 // exampleFilename adds the example ext to the received string and returns it.
 func exampleFilename(s string) string {
+	// if the name is already suffixed with .example. don't add another, just return it
+	if strings.HasSuffix(s, ExampleExt) {
+		return s
+	}
 	return fmt.Sprintf("%s%s", s, ExampleExt)
 }
 

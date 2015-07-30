@@ -481,10 +481,8 @@ func (b *builds) Load(name string) error {
 // can't be found. Th
 func getBuildTemplate(name string) (*rawTemplate, error) {
 	var r *rawTemplate
-	for bfile, blds := range Builds {
-		jww.FEEDBACK.Printf("build template file: %s\n", bfile)
+	for _, blds := range Builds {
 		for n, bTpl := range blds.Build {
-			jww.FEEDBACK.Printf("build name: %s\n", n)
 			if n == name {
 				r = bTpl.copy()
 				r.BuildName = name

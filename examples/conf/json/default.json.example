@@ -81,10 +81,6 @@
       ]
     },
     "virtualbox-iso": {
-      "settings": [
-        "guest_additions_path = VBoxGuestAdditions_{{ .Version }}.iso",
-        "virtualbox_version_file = .vbox_version"
-      ]
     },
     "virtualbox-ovf": {
       "settings": [
@@ -125,17 +121,6 @@
       ]
     },
     "vagrant": {
-      "settings": [
-        "compression_level = 1",
-        "include: [\"image.iso\"]",
-          "vagrantfile_template=vagrantfile.tpl",
-          "output=proxycore_{{.Provider}}.box"
-      ],
-      "override": {
-        "vmware": [
-          "compression_level=0"
-        ]
-      }
     },
     "vagrant-cloud": {
       "settings": [

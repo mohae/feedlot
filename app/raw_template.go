@@ -468,6 +468,7 @@ func (r *rawTemplate) findComponentSource(component, p string, isDir bool) (stri
 	}
 	var tmpPath string
 	var err error
+	// adjust path for example, if applicable
 	p = r.exampleFilename(p)
 	// if len(cParts) > 1, there was a - and component-base processing should be done
 	if component != "" {
@@ -494,6 +495,11 @@ func (r *rawTemplate) findComponentSource(component, p string, isDir bool) (stri
 	// look for the source as using just the passed path
 	tmpPath, err = r.findSource(p, isDir)
 	if err != nil {
+		// If the file didn't exist and this is an example, it's not an error
+		if err == os.ErrNotExist && r.IsExample {
+			return "", nil
+		}
+		// Otherwise return the error
 		return "", fmt.Errorf("%s file %q: %s", component, p, err)
 	}
 	return tmpPath, nil
@@ -663,12 +669,7 @@ func (r *rawTemplate) findSource(p string, isDir bool) (string, error) {
 		return tmpPath, nil
 	}
 	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
-	// if we've gotten this far, it's not found. For examples this is not an error;
-	// return the original path.
-	if r.IsExample {
-		return p, nil
-	}
-	// If it's not an example, return a os.ErrNotExist
+	// not found, return an error
 	return "", os.ErrNotExist
 }
 
@@ -701,24 +702,10 @@ func (r *rawTemplate) buildTemplateResourcePath(component, p string) string {
 	return p
 }
 
-// getSourcePath returns the requested path as a child of the SourceDir. If this
-// is an example template and the path is not a directory, the path is suffixed
-// with the ExampleExt, with which all example files must end.
-//
-// Example:
-//    example_dir = "example/"
-//    source_dir = "../../rancher_src/"
-//    p = "commands/boot.command"
-//
-//    Example mode output: "example/rancher_src/commands/boot.command"
-//    Regular output:      "../../rancher_rc/commands/boot.command"
+// getSourcePath returns the requested path as a child of the SourceDir.
 func (r *rawTemplate) getSourcePath(p string, isDir bool) string {
 	if p == "" {
 		return ""
-	}
-	// example files always end in '.example'
-	if r.IsExample && !isDir {
-		return filepath.Join(r.SourceDir, fmt.Sprintf("%s%s", p, ExampleExt))
 	}
 	return filepath.Join(r.SourceDir, p)
 }
@@ -745,7 +732,7 @@ func (r *rawTemplate) stripExampleFilename(s string) string {
 
 // setExampleDisr sets the SourceDir and OutDir for example template builds. If
 // either the Dir starts with 1 or more parent dirs, '../', they will elided
-// from the Dir before prepending the SourceDir path with the Example directory.
+// from the Dir before prepending the SourceDir path with the Example directory.n
 //
 // src = example/src
 // ../src = example/src

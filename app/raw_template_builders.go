@@ -404,10 +404,13 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, err er
 		case "user_data_file":
 			src, err := r.findComponentSource(AmazonEBS.String(), v, false)
 			if err != nil {
-				if !r.IsExample {
-					return nil, settingErr(k, err)
-				}
-			} else {
+				return nil, settingErr(k, err)
+			}
+			// if the source couldn't be found and an error wasn't generated, replace
+			// s with the original value; this occurs when it is an example.
+			// Nothing should be copied in this instancel it should not be added
+			// to the copy info
+			if s != "" {
 				r.files[r.buildOutPath(AmazonEBS.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(AmazonEBS.String(), v)
@@ -587,10 +590,13 @@ func (r *rawTemplate) createAmazonInstance() (settings map[string]interface{}, e
 		case "user_data_file":
 			src, err := r.findComponentSource(AmazonInstance.String(), v, false)
 			if err != nil {
-				if !r.IsExample {
-					return nil, settingErr("user_data_file", err)
-				}
-			} else {
+				return nil, settingErr("user_data_file", err)
+			}
+			// if the source couldn't be found and an error wasn't generated, replace
+			// s with the original value; this occurs when it is an example.
+			// Nothing should be copied in this instancel it should not be added
+			// to the copy info
+			if s != "" {
 				r.files[r.buildOutPath(AmazonEBS.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(AmazonInstance.String(), v)
@@ -922,10 +928,13 @@ func (r *rawTemplate) createGoogleCompute() (settings map[string]interface{}, er
 		case "account_file":
 			src, err := r.findComponentSource(GoogleCompute.String(), v, false)
 			if err != nil {
-				if !r.IsExample {
-					return nil, err
-				}
-			} else {
+				return nil, err
+			}
+			// if the source couldn't be found and an error wasn't generated, replace
+			// s with the original value; this occurs when it is an example.
+			// Nothing should be copied in this instancel it should not be added
+			// to the copy info
+			if s != "" {
 				r.files[r.buildOutPath(GoogleCompute.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(GoogleCompute.String(), v)
@@ -1332,10 +1341,13 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, er
 		case "source_path":
 			src, err := r.findComponentSource(VirtualBoxOVF.String(), v, true)
 			if err != nil {
-				if !r.IsExample {
-					return nil, err
-				}
-			} else {
+				return nil, err
+			}
+			// if the source couldn't be found and an error wasn't generated, replace
+			// s with the original value; this occurs when it is an example.
+			// Nothing should be copied in this instancel it should not be added
+			// to the copy info
+			if s != "" {
 				settings[k] = r.buildTemplateResourcePath(VirtualBoxOVF.String(), v)
 			}
 			r.files[r.buildOutPath(VirtualBoxOVF.String(), v)] = src
@@ -1746,10 +1758,13 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, err er
 		case "source_path":
 			src, err := r.findComponentSource(VMWareVMX.String(), v, true)
 			if err != nil {
-				if !r.IsExample {
-					return nil, err
-				}
-			} else {
+				return nil, err
+			}
+			// if the source couldn't be found and an error wasn't generated, replace
+			// s with the original value; this occurs when it is an example.
+			// Nothing should be copied in this instancel it should not be added
+			// to the copy info
+			if s != "" {
 				r.files[r.buildOutPath(VMWareVMX.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(VMWareVMX.String(), v)
@@ -1918,13 +1933,16 @@ func (r *rawTemplate) setHTTP(component string, m map[string]interface{}) error 
 	if !ok {
 		v = "http"
 	}
-	src, err := r.findComponentSource(component, v.(string), true)
+	s, err := r.findComponentSource(component, v.(string), true)
 	if err != nil {
-		if !r.IsExample {
-			return fmt.Errorf("setHTTP error: %s", err)
-		}
-	} else {
-		r.dirs[r.buildOutPath("", v.(string))] = src
+		return fmt.Errorf("setHTTP error: %s", err)
+	}
+	// if the source couldn't be found and an error wasn't generated, replace
+	// s with the original value; this occurs when it is an example.
+	// Nothing should be copied in this instancel it should not be added
+	// to the copy info
+	if s != "" {
+		r.dirs[r.buildOutPath("", v.(string))] = s
 	}
 	m["http_directory"] = r.buildTemplateResourcePath(component, v.(string))
 	return nil
