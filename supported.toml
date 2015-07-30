@@ -13,11 +13,9 @@
 		"x86_64"
 	]
 	image = [
-		"minimal",
-		"netinstall"
+		"minimal"
 	]
 	release = [
-		"5",
 		"6",
 		"7"
 	]
@@ -34,9 +32,7 @@
 		"amd64"
 	]
 	image = [
-		"lxde-CD-1",
-		"netinst",
-		"xfce-CD-1"
+		"netinst"
 	]
 	release = [
 		"8"
@@ -47,7 +43,7 @@
 		"arch = amd64",
 	]
 [ubuntu]
-	base_url = "http://releases.ubuntu.com"
+	base_url = "http://releases.ubuntu.com/"
 	description = "Default template config and Rancher options for Ubuntu"
 	arch = [
 		"i386",
@@ -57,7 +53,6 @@
 		"server"
 	]
 	release = [
-		"10.04",
 		"12.04",
 		"14.04",
 		"14.10",
