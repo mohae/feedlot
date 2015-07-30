@@ -677,13 +677,7 @@ func (r *rawTemplate) findSource(p string, isDir bool) (string, error) {
 func (r *rawTemplate) buildOutPath(component, p string) string {
 	if r.includeComponentString() && component != "" {
 		component = strings.ToLower(component)
-		if r.IsExample {
-			return filepath.Join(r.ExampleDir, r.OutputDir, component, p)
-		}
 		return filepath.Join(r.OutputDir, component, p)
-	}
-	if r.IsExample {
-		return filepath.Join(r.ExampleDir, r.OutputDir, p)
 	}
 	return filepath.Join(r.OutputDir, p)
 }

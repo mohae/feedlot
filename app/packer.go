@@ -39,7 +39,6 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, dirs, files map[string]s
 	}
 	// copy any directories associated with the template
 	for dst, src := range dirs {
-		fmt.Printf("CopyDir: %s to %s\n", src, dst)
 		err = copyDir(src, dst)
 		if err != nil {
 			jww.ERROR.Println(err)
@@ -48,7 +47,6 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, dirs, files map[string]s
 	}
 	// copy the files associated with the template
 	for dst, src := range files {
-		fmt.Printf("CopyFiles: %s to %s\n", src, dst)
 		_, err = copyFile(src, dst)
 		if err != nil {
 			jww.ERROR.Println(err)

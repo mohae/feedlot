@@ -790,7 +790,7 @@ func (r *rawTemplate) createShellScript() (settings map[string]interface{}, err 
 			for i, v := range scripts {
 				v = r.replaceVariables(v)
 				// find the source
-				s, err := r.findComponentSource(ShellScript.String(), v, false)
+				src, err := r.findComponentSource(ShellScript.String(), v, false)
 				if err != nil {
 					return nil, settingErr(k, err)
 				}
@@ -798,8 +798,8 @@ func (r *rawTemplate) createShellScript() (settings map[string]interface{}, err 
 				// s with the original value; this occurs when it is an example.
 				// Nothing should be copied in this instancel it should not be added
 				// to the copy info
-				if s != "" {
-					r.files[r.buildOutPath(ShellScript.String(), v)] = s
+				if src != "" {
+					r.files[r.buildOutPath(ShellScript.String(), v)] = src
 				}
 				scripts[i] = r.buildTemplateResourcePath(ShellScript.String(), v)
 			}
