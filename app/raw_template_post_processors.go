@@ -565,7 +565,7 @@ func (r *rawTemplate) createVSphere() (settings map[string]interface{}, err erro
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
 	var k, v string
-	var hasCluster, hasDatastore, hasHost, hasPassword, hasResourcePool, hasUsername, hasVMName bool
+	var hasCluster, hasDatacenter, hasDatastore, hasHost, hasPassword, hasResourcePool, hasUsername, hasVMName bool
 	for _, s := range r.PostProcessors[VSphere.String()].Settings {
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
@@ -573,6 +573,9 @@ func (r *rawTemplate) createVSphere() (settings map[string]interface{}, err erro
 		case "cluster":
 			settings[k] = v
 			hasCluster = true
+		case "datacenter":
+			settings[k] = v
+			hasDatacenter = true
 		case "datastore":
 			settings[k] = v
 			hasDatastore = true
@@ -599,6 +602,9 @@ func (r *rawTemplate) createVSphere() (settings map[string]interface{}, err erro
 	}
 	if !hasCluster {
 		return nil, requiredSettingErr("cluster")
+	}
+	if !hasDatacenter {
+		return nil, requiredSettingErr("datacenter")
 	}
 	if !hasDatastore {
 		if !hasResourcePool {
