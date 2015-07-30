@@ -130,6 +130,7 @@
         "datastore=ds-001",
         "host=vsphere-host",
         "password=packer",
+        "username=packer",
         "vm_name=packer-vshpere-vm"
       ]
     }
