@@ -354,7 +354,6 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, err er
 		if err != nil {
 			return nil, mergeCommonSettingsErr(err)
 		}
-
 	} else {
 		workSlice = r.Builders[AmazonEBS.String()].Settings
 	}
@@ -410,7 +409,7 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, err er
 			// s with the original value; this occurs when it is an example.
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
-			if s != "" {
+			if src != "" {
 				r.files[r.buildOutPath(AmazonEBS.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(AmazonEBS.String(), v)
@@ -526,7 +525,6 @@ func (r *rawTemplate) createAmazonInstance() (settings map[string]interface{}, e
 		if err != nil {
 			return nil, mergeCommonSettingsErr(err)
 		}
-
 	} else {
 		workSlice = r.Builders[AmazonInstance.String()].Settings
 	}
@@ -596,7 +594,7 @@ func (r *rawTemplate) createAmazonInstance() (settings map[string]interface{}, e
 			// s with the original value; this occurs when it is an example.
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
-			if s != "" {
+			if src != "" {
 				r.files[r.buildOutPath(AmazonEBS.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(AmazonInstance.String(), v)
@@ -934,7 +932,7 @@ func (r *rawTemplate) createGoogleCompute() (settings map[string]interface{}, er
 			// s with the original value; this occurs when it is an example.
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
-			if s != "" {
+			if src != "" {
 				r.files[r.buildOutPath(GoogleCompute.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(GoogleCompute.String(), v)
@@ -1347,10 +1345,10 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, er
 			// s with the original value; this occurs when it is an example.
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
-			if s != "" {
-				settings[k] = r.buildTemplateResourcePath(VirtualBoxOVF.String(), v)
+			if src != "" {
+				r.files[r.buildOutPath(VirtualBoxOVF.String(), v)] = src
 			}
-			r.files[r.buildOutPath(VirtualBoxOVF.String(), v)] = src
+			settings[k] = r.buildTemplateResourcePath(VirtualBoxOVF.String(), v)
 			hasSourcePath = true
 		case "ssh_username":
 			settings[k] = v
@@ -1764,7 +1762,7 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, err er
 			// s with the original value; this occurs when it is an example.
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
-			if s != "" {
+			if src != "" {
 				r.files[r.buildOutPath(VMWareVMX.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(VMWareVMX.String(), v)
@@ -1933,7 +1931,7 @@ func (r *rawTemplate) setHTTP(component string, m map[string]interface{}) error 
 	if !ok {
 		v = "http"
 	}
-	s, err := r.findComponentSource(component, v.(string), true)
+	src, err := r.findComponentSource(component, v.(string), true)
 	if err != nil {
 		return fmt.Errorf("setHTTP error: %s", err)
 	}
@@ -1941,8 +1939,8 @@ func (r *rawTemplate) setHTTP(component string, m map[string]interface{}) error 
 	// s with the original value; this occurs when it is an example.
 	// Nothing should be copied in this instancel it should not be added
 	// to the copy info
-	if s != "" {
-		r.dirs[r.buildOutPath("", v.(string))] = s
+	if src != "" {
+		r.dirs[r.buildOutPath("", v.(string))] = src
 	}
 	m["http_directory"] = r.buildTemplateResourcePath(component, v.(string))
 	return nil

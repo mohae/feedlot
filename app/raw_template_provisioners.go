@@ -168,7 +168,7 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, err erro
 			// s with the original value; this occurs when it is an example.
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
-			if s != "" {
+			if src != "" {
 				r.files[filepath.Join(r.OutputDir, Ansible.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(Ansible.String(), v)
@@ -183,7 +183,7 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, err erro
 			// s with the original value; this occurs when it is an example.
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
-			if s != "" {
+			if src != "" {
 				r.files[r.buildOutPath(Ansible.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(Ansible.String(), v)
@@ -197,7 +197,7 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, err erro
 			// s with the original value; this occurs when it is an example.
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
-			if s != "" {
+			if src != "" {
 				r.dirs[r.buildOutPath(Ansible.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(Ansible.String(), v)
@@ -215,7 +215,7 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, err erro
 			array := deepcopy.InterfaceToSliceOfStrings(val)
 			for i, v := range array {
 				v = r.replaceVariables(v)
-				s, err := r.findComponentSource(Ansible.String(), v, true)
+				src, err := r.findComponentSource(Ansible.String(), v, true)
 				if err != nil {
 					return nil, settingErr(k, err)
 				}
@@ -223,8 +223,8 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, err erro
 				// s with the original value; this occurs when it is an example.
 				// Nothing should be copied in this instancel it should not be added
 				// to the copy info
-				if s != "" {
-					r.files[r.buildOutPath(Ansible.String(), v)] = s
+				if src != "" {
+					r.files[r.buildOutPath(Ansible.String(), v)] = src
 				}
 				array[i] = r.buildTemplateResourcePath(Ansible.String(), v)
 			}
@@ -294,7 +294,7 @@ func (r *rawTemplate) createChefClient() (settings map[string]interface{}, err e
 			// s with the original value; this occurs when it is an example.
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
-			if s != "" {
+			if src != "" {
 				r.files[r.buildOutPath(ChefClient.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(ChefClient.String(), v)
@@ -376,7 +376,7 @@ func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, err err
 			// s with the original value; this occurs when it is an example.
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
-			if s != "" {
+			if src != "" {
 				r.files[r.buildOutPath(ChefSolo.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(ChefSolo.String(), v)
@@ -389,7 +389,7 @@ func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, err err
 			// s with the original value; this occurs when it is an example.
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
-			if s != "" {
+			if src != "" {
 				r.dirs[r.buildOutPath(ChefSolo.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(ChefSolo.String(), v)
@@ -416,7 +416,7 @@ func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, err err
 			for i, v := range array {
 				v = r.replaceVariables(v)
 				// find the actual location and add it to the files map for copying
-				s, err := r.findComponentSource(ChefSolo.String(), v, true)
+				src, err := r.findComponentSource(ChefSolo.String(), v, true)
 				if err != nil {
 					return nil, settingErr(name, err)
 				}
@@ -424,8 +424,8 @@ func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, err err
 				// s with the original value; this occurs when it is an example.
 				// Nothing should be copied in this instancel it should not be added
 				// to the copy info
-				if s != "" {
-					r.dirs[r.buildOutPath(ChefSolo.String(), v)] = s
+				if src != "" {
+					r.dirs[r.buildOutPath(ChefSolo.String(), v)] = src
 				}
 				array[i] = r.buildTemplateResourcePath(ChefSolo.String(), v)
 			}
@@ -479,7 +479,7 @@ func (r *rawTemplate) createPuppetMasterless() (settings map[string]interface{},
 			// s with the original value; this occurs when it is an example.
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
-			if s != "" {
+			if src != "" {
 				r.files[r.buildOutPath(PuppetMasterless.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(PuppetMasterless.String(), v)
@@ -498,7 +498,7 @@ func (r *rawTemplate) createPuppetMasterless() (settings map[string]interface{},
 			// s with the original value; this occurs when it is an example.
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
-			if s != "" {
+			if src != "" {
 				r.files[r.buildOutPath(PuppetMasterless.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(PuppetMasterless.String(), v)
@@ -512,7 +512,7 @@ func (r *rawTemplate) createPuppetMasterless() (settings map[string]interface{},
 			// s with the original value; this occurs when it is an example.
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
-			if s != "" {
+			if src != "" {
 				r.dirs[r.buildOutPath(PuppetMasterless.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(PuppetMasterless.String(), v)
@@ -624,7 +624,7 @@ func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, err 
 			// s with the original value; this occurs when it is an example.
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
-			if s != "" {
+			if src != "" {
 				r.files[r.buildOutPath(FileUploads.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(FileUploads.String(), v)
@@ -697,7 +697,7 @@ func (r *rawTemplate) createSalt() (settings map[string]interface{}, err error) 
 			// s with the original value; this occurs when it is an example.
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
-			if s != "" {
+			if src != "" {
 				r.dirs[r.buildOutPath(Salt.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(Salt.String(), v)
@@ -711,7 +711,7 @@ func (r *rawTemplate) createSalt() (settings map[string]interface{}, err error) 
 			// s with the original value; this occurs when it is an example.
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
-			if s != "" {
+			if src != "" {
 				r.files[r.buildOutPath(Salt.String(), filepath.Join(v, "minion"))] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(Salt.String(), v)
