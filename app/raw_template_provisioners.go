@@ -681,8 +681,8 @@ func (r *rawTemplate) createSalt() (settings map[string]interface{}, err error) 
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
 			// Nothing should be copied in this instancel it should not be added
-			// to the copy info
-			if s != "" {
+			// to the copy info)
+			if src != "" {
 				r.dirs[r.buildOutPath(Salt.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(Salt.String(), v)
