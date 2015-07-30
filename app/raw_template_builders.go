@@ -152,16 +152,6 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 		//	case Openstack:
 		//	case ParallelsISO, ParallelsPVM:
 		//	case QEMU:
-		case VMWareISO:
-			tmpS, err = r.createVMWareISO()
-			if err != nil {
-				return nil, builderErr(VMWareISO, err)
-			}
-		case VMWareVMX:
-			tmpS, err = r.createVMWareVMX()
-			if err != nil {
-				return nil, builderErr(VMWareVMX, err)
-			}
 		case VirtualBoxISO:
 			tmpS, err = r.createVirtualBoxISO()
 			if err != nil {
@@ -171,6 +161,16 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 			tmpS, err = r.createVirtualBoxOVF()
 			if err != nil {
 				return nil, builderErr(VirtualBoxOVF, err)
+			}
+		case VMWareISO:
+			tmpS, err = r.createVMWareISO()
+			if err != nil {
+				return nil, builderErr(VMWareISO, err)
+			}
+		case VMWareVMX:
+			tmpS, err = r.createVMWareVMX()
+			if err != nil {
+				return nil, builderErr(VMWareVMX, err)
 			}
 		default:
 			return nil, builderErr(UnsupportedBuilder, fmt.Errorf("%q is not supported", bType))
