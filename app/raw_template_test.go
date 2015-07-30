@@ -175,8 +175,8 @@ var testBuildNewTPL = &rawTemplate{
 var testRawTemplateBuilderOnly = &rawTemplate{
 	PackerInf: PackerInf{MinPackerVersion: "0.4.0", Description: "Test supported distribution template"},
 	IODirInf: IODirInf{
-		OutDir: "../test_files/out/:distro/:build_name",
-		SrcDir: "../test_files/src/:distro",
+		OutputDir: "../test_files/out/:distro/:build_name",
+		SourceDir: "../test_files/src/:distro",
 	},
 	BuildInf: BuildInf{
 		Name:      ":build_name",
@@ -198,8 +198,8 @@ var testRawTemplateBuilderOnly = &rawTemplate{
 var testRawTemplateWOSection = &rawTemplate{
 	PackerInf: PackerInf{MinPackerVersion: "0.4.0", Description: "Test supported distribution template"},
 	IODirInf: IODirInf{
-		OutDir: "../test_files/out/:distro/:build_name",
-		SrcDir: "../test_files/src/:distro",
+		OutputDir: "../test_files/out/:distro/:build_name",
+		SourceDir: "../test_files/src/:distro",
 	},
 	BuildInf: BuildInf{
 		Name:      ":build_name",
@@ -299,11 +299,11 @@ func TestRawTemplateUpdateBuildSettings(t *testing.T) {
 func TestMergeVariables(t *testing.T) {
 	r := testDistroDefaults.Templates[Ubuntu]
 	r.mergeVariables()
-	if r.OutDir != "../test_files/out/ubuntu" {
-		t.Errorf("Expected \"../test_files/out/ubuntu\", got %q", r.OutDir)
+	if r.OutputDir != "../test_files/out/ubuntu" {
+		t.Errorf("Expected \"../test_files/out/ubuntu\", got %q", r.OutputDir)
 	}
-	if r.SrcDir != "../test_files/src/ubuntu" {
-		t.Errorf("Expected \"../test_files/src/ubuntu\", got %q", r.SrcDir)
+	if r.SourceDir != "../test_files/src/ubuntu" {
+		t.Errorf("Expected \"../test_files/src/ubuntu\", got %q", r.SourceDir)
 	}
 }
 
@@ -396,10 +396,10 @@ func TestRawTemplateMergeSrcDir(t *testing.T) {
 	rawTpl.Distro = "ubuntu"
 	rawTpl.setBaseVarVals()
 	for i, test := range tests {
-		rawTpl.SrcDir = test.SrcDir
-		rawTpl.mergeSrcDir()
-		if rawTpl.SrcDir != test.ExpectedSrcDir {
-			t.Errorf("MergeSrcDir test %d: expected SrcDir to be %s; got %s", i, test.ExpectedSrcDir, rawTpl.SrcDir)
+		rawTpl.SourceDir = test.SrcDir
+		rawTpl.mergeSourceDir()
+		if rawTpl.SourceDir != test.ExpectedSrcDir {
+			t.Errorf("MergeSrcDir test %d: expected SrcDir to be %s; got %s", i, test.ExpectedSrcDir, rawTpl.SourceDir)
 		}
 	}
 }
@@ -420,10 +420,10 @@ func TestRawTemplateMergeOutDir(t *testing.T) {
 	rawTpl.Distro = "ubuntu"
 	rawTpl.setBaseVarVals()
 	for i, test := range tests {
-		rawTpl.OutDir = test.OutDir
+		rawTpl.OutputDir = test.OutDir
 		rawTpl.mergeOutDir()
-		if rawTpl.OutDir != test.ExpectedOutDir {
-			t.Errorf("MergeOutDirtest %d: expected OutDir to be %s; got %s", i, test.ExpectedOutDir, rawTpl.OutDir)
+		if rawTpl.OutputDir != test.ExpectedOutDir {
+			t.Errorf("MergeOutDirtest %d: expected OutDir to be %s; got %s", i, test.ExpectedOutDir, rawTpl.OutputDir)
 		}
 	}
 }
@@ -529,39 +529,40 @@ func TestRawTemplateMergeString(t *testing.T) {
 func TestFindSource(t *testing.T) {
 	tests := []struct {
 		p           string
+		isDir       bool
 		src         string
 		expectedErr string
 	}{
-		{"", "", "cannot find source, no path received"},
-		{"something", "", "file does not exist"},
-		{"http/preseed.cfg", "../test_files/src/ubuntu/http/preseed.cfg", ""},
-		{"chef-solo/cookbook1", "../test_files/src/chef-solo/cookbook1", ""},
-		{"14.04_ubuntu_build.txt", "../test_files/src/ubuntu/14.04/ubuntu_build/14.04_ubuntu_build.txt", ""},
-		{"1404_ubuntu_build.txt", "../test_files/src/ubuntu/1404/ubuntu_build/1404_ubuntu_build.txt", ""},
-		{"14_ubuntu_build.txt", "../test_files/src/ubuntu/14/ubuntu_build/14_ubuntu_build.txt", ""},
-		{"ubuntu_build_text.txt", "../test_files/src/ubuntu/ubuntu_build/ubuntu_build_text.txt", ""},
-		{"ubuntu_build.txt", "../test_files/src/ubuntu_build/ubuntu_build.txt", ""},
-		{"14.04_amd64_build_text.txt", "../test_files/src/ubuntu/14.04/amd64/14.04_amd64_build_text.txt", ""},
-		{"1404_amd64_build_text.txt", "../test_files/src/ubuntu/1404/amd64/1404_amd64_build_text.txt", ""},
-		{"14_amd64_build_text.txt", "../test_files/src/ubuntu/14/amd64/14_amd64_build_text.txt", ""},
-		{"14.04_text.txt", "../test_files/src/ubuntu/14.04/14.04_text.txt", ""},
-		{"1404_text.txt", "../test_files/src/ubuntu/1404/1404_text.txt", ""},
-		{"14_text.txt", "../test_files/src/ubuntu/14/14_text.txt", ""},
-		{"amd64_text.txt", "../test_files/src/ubuntu/amd64/amd64_text.txt", ""},
-		{"ubuntu_text.txt", "../test_files/src/ubuntu/ubuntu_text.txt", ""},
+		{"", false, "", "cannot find source, no path received"},
+		{"something", false, "", "file does not exist"},
+		{"http/preseed.cfg", false, "../test_files/src/ubuntu/http/preseed.cfg", ""},
+		{"chef-solo/cookbook1", true, "../test_files/src/chef-solo/cookbook1", ""},
+		{"14.04_ubuntu_build.txt", false, "../test_files/src/ubuntu/14.04/ubuntu_build/14.04_ubuntu_build.txt", ""},
+		{"1404_ubuntu_build.txt", false, "../test_files/src/ubuntu/1404/ubuntu_build/1404_ubuntu_build.txt", ""},
+		{"14_ubuntu_build.txt", false, "../test_files/src/ubuntu/14/ubuntu_build/14_ubuntu_build.txt", ""},
+		{"ubuntu_build_text.txt", false, "../test_files/src/ubuntu/ubuntu_build/ubuntu_build_text.txt", ""},
+		{"ubuntu_build.txt", false, "../test_files/src/ubuntu_build/ubuntu_build.txt", ""},
+		{"14.04_amd64_build_text.txt", false, "../test_files/src/ubuntu/14.04/amd64/14.04_amd64_build_text.txt", ""},
+		{"1404_amd64_build_text.txt", false, "../test_files/src/ubuntu/1404/amd64/1404_amd64_build_text.txt", ""},
+		{"14_amd64_build_text.txt", false, "../test_files/src/ubuntu/14/amd64/14_amd64_build_text.txt", ""},
+		{"14.04_text.txt", false, "../test_files/src/ubuntu/14.04/14.04_text.txt", ""},
+		{"1404_text.txt", false, "../test_files/src/ubuntu/1404/1404_text.txt", ""},
+		{"14_text.txt", false, "../test_files/src/ubuntu/14/14_text.txt", ""},
+		{"amd64_text.txt", false, "../test_files/src/ubuntu/amd64/amd64_text.txt", ""},
+		{"ubuntu_text.txt", false, "../test_files/src/ubuntu/ubuntu_text.txt", ""},
 	}
 	r := newRawTemplate()
 	r.Distro = "ubuntu"
 	r.Arch = "amd64"
 	r.Release = "14.04"
 	r.Image = "server"
-	r.SrcDir = "../test_files/src"
+	r.SourceDir = "../test_files/src"
 	r.BuildName = "ubuntu_build"
 	for i, test := range tests {
-		src, err := r.findSource(test.p)
+		src, err := r.findSource(test.p, test.isDir)
 		if err != nil {
 			if err.Error() != test.expectedErr {
-				t.Errorf("TestFindSource %d: expected %q got %q", i, test.expectedErr, err.Error())
+				t.Errorf("TestFindSource %d: expected %q got %q", i, test.expectedErr, err)
 			}
 			continue
 		}
@@ -579,31 +580,32 @@ func TestFindComponentSource(t *testing.T) {
 	tests := []struct {
 		component   string
 		p           string
+		isDir       bool
 		src         string
 		expectedErr string
 	}{
-		{"", "", "", "cannot find source, no path received"},
-		{"", "chef.cfg", "", "file does not exist"},
-		{"salt", "minion", "", "file does not exist"},
-		{"salt-masterless", "master", "", "file does not exist"},
-		{"chef-solo", "chef.cfg", "../test_files/src/chef-solo/chef.cfg", ""},
-		{"chef-client", "chef.cfg", "../test_files/src/chef-client/chef.cfg", ""},
-		{"chef", "chef.cfg", "../test_files/src/chef/chef.cfg", ""},
-		{"shell", "commands", "../test_files/src/shell/commands", ""},
-		{"", "ubuntu_build.txt", "../test_files/src/ubuntu_build/ubuntu_build.txt", ""},
+		{"", "", false, "", "cannot find source, no path received"},
+		{"", "chef.cfg", false, "", " file \"chef.cfg\": file does not exist"},
+		{"salt", "minion", false, "", "salt file \"minion\": file does not exist"},
+		{"salt-masterless", "master", false, "", "salt-masterless file \"master\": file does not exist"},
+		{"chef-solo", "chef.cfg", false, "../test_files/src/chef-solo/chef.cfg", ""},
+		{"chef-client", "chef.cfg", false, "../test_files/src/chef-client/chef.cfg", ""},
+		{"chef", "chef.cfg", false, "../test_files/src/chef/chef.cfg", ""},
+		{"shell", "commands", true, "../test_files/src/shell/commands", ""},
+		{"", "ubuntu_build.txt", false, "../test_files/src/ubuntu_build/ubuntu_build.txt", ""},
 	}
 	r := newRawTemplate()
 	r.Distro = "ubuntu"
 	r.Arch = "amd64"
 	r.Release = "14.04"
 	r.Image = "server"
-	r.SrcDir = "../test_files/src"
+	r.SourceDir = "../test_files/src"
 	r.BuildName = "ubuntu_build"
 	for i, test := range tests {
-		src, err := r.findComponentSource(test.component, test.p)
+		src, err := r.findComponentSource(test.component, test.p, test.isDir)
 		if err != nil {
 			if err.Error() != test.expectedErr {
-				t.Errorf("TestFindSource %d: expected %q got %q", i, test.expectedErr, err.Error())
+				t.Errorf("TestFindSource %d: expected %q got %q", i, test.expectedErr, err)
 			}
 			continue
 		}
@@ -625,12 +627,12 @@ func TestFindCommandFile(t *testing.T) {
 		expectedErr string
 	}{
 		{"", "", "", "the passed command filename was empty"},
-		{"", "test.command", "", "file does not exist"},
+		{"", "test.command", "", " file \"commands/test.command\": file does not exist"},
 		{"", "execute.command", "../test_files/src/commands/execute.command", ""},
 		{"shell", "execute_test.command", "../test_files/src/shell/commands/execute_test.command", ""},
 		{"chef-solo", "execute.command", "../test_files/src/chef-solo/commands/execute.command", ""},
 		{"chef-solo", "chef.command", "../test_files/src/chef/commands/chef.command", ""},
-		{"shell", "ubuntu-1404.command", "../test_files/src/ubuntu/1404/ubuntu-1404.command", ""},
+		{"shell", "ubuntu.command", "../test_files/src/ubuntu/commands/ubuntu.command", ""},
 		{"shell", "ubuntu-14.command", "../test_files/src/ubuntu/14/commands/ubuntu-14.command", ""},
 	}
 	r := newRawTemplate()
@@ -638,13 +640,13 @@ func TestFindCommandFile(t *testing.T) {
 	r.Arch = "amd64"
 	r.Release = "14.04"
 	r.Image = "server"
-	r.SrcDir = "../test_files/src"
+	r.SourceDir = "../test_files/src"
 	r.BuildName = "ubuntu_build"
 	for i, test := range tests {
 		src, err := r.findCommandFile(test.component, test.p)
 		if err != nil {
 			if err.Error() != test.expectedErr {
-				t.Errorf("TestFindCommandFile %d: expected %q got %q", i, test.expectedErr, err.Error())
+				t.Errorf("TestFindCommandFile %d: expected %q got %q", i, test.expectedErr, err)
 			}
 			continue
 		}
@@ -666,7 +668,7 @@ func TestCommandsFromFile(t *testing.T) {
 		expectedErr string
 	}{
 		{"", "", []string{}, "the passed command filename was empty"},
-		{"", "test.command", []string{}, "file does not exist"},
+		{"", "test.command", []string{}, " file \"commands/test.command\": file does not exist"},
 		{"shell", "execute.command", []string{"echo 'vagrant'|sudo -S sh '{{.Path}}'"}, ""},
 		{"shell", "boot.command", []string{"<esc><wait>", "<esc><wait>", "<enter><wait>"}, ""},
 	}
@@ -675,13 +677,13 @@ func TestCommandsFromFile(t *testing.T) {
 	r.Arch = "amd64"
 	r.Release = "14.04"
 	r.Image = "server"
-	r.SrcDir = "../test_files/src"
+	r.SourceDir = "../test_files/src"
 	r.BuildName = "ubuntu_build"
 	for i, test := range tests {
 		commands, err := r.commandsFromFile(test.component, test.p)
 		if err != nil {
 			if err.Error() != test.expectedErr {
-				t.Errorf("TestCommandsFromFile %d: expected %q got %q", i, test.expectedErr, err.Error())
+				t.Errorf("TestCommandsFromFile %d: expected %q got %q", i, test.expectedErr, err)
 			}
 			continue
 		}
@@ -724,7 +726,7 @@ func TestBuildOutPath(t *testing.T) {
 		{"true", "shell", "path/to/file.txt", "out/shell/path/to/file.txt"},
 	}
 	r := newRawTemplate()
-	r.OutDir = "out"
+	r.OutputDir = "out"
 	for i, test := range tests {
 		r.IncludeComponentString = test.includeComponent
 		p := r.buildOutPath(test.component, test.path)
@@ -755,7 +757,7 @@ func TestBuildTemplateResourcePath(t *testing.T) {
 		{"true", "shell", "path/to/file.txt", "shell/path/to/file.txt"},
 	}
 	r := newRawTemplate()
-	r.OutDir = "out"
+	r.OutputDir = "out"
 	for i, test := range tests {
 		r.IncludeComponentString = test.includeComponent
 		p := r.buildTemplateResourcePath(test.component, test.path)

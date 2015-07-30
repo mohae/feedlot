@@ -39,7 +39,7 @@ func SetLogging() error {
 	fname, err := getUniqueFilename(logfile, "2006-01-02")
 	if err != nil {
 		err = fmt.Errorf("unable to continue: cannot obtain unique log filename: %s", err)
-		jww.FEEDBACK.Println(err.Error())
+		jww.FEEDBACK.Println(err)
 		return err
 	}
 	// if the names aren't the same, the logfile already exists. Rename it to the fname
@@ -47,7 +47,7 @@ func SetLogging() error {
 		err := os.Rename(logfile, fname)
 		if err != nil {
 			err = fmt.Errorf("unable to continuecannot rename existing logfile: %s", err)
-			jww.FEEDBACK.Println(err.Error())
+			jww.FEEDBACK.Println(err)
 			return err
 		}
 	}
@@ -55,7 +55,7 @@ func SetLogging() error {
 	err = os.Rename(jww.LogHandle.(*os.File).Name(), logfile)
 	if err != nil {
 		err = fmt.Errorf("unable to contineu: cannot rename the temp log to %s", err)
-		jww.FEEDBACK.Println(err.Error())
+		jww.FEEDBACK.Println(err)
 		return err
 	}
 

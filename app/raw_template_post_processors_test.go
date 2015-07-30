@@ -86,8 +86,8 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 	Image:   "server",
 	Release: "12.04",
 	IODirInf: IODirInf{
-		OutDir: "../test_files/out/:build_name",
-		SrcDir: "../test_files/src",
+		OutputDir: "../test_files/out/:build_name",
+		SourceDir: "../test_files/src",
 	},
 	varVals: map[string]string{},
 	dirs:    map[string]string{},
@@ -364,7 +364,7 @@ func TestRawTemplateUpdatePostProcessors(t *testing.T) {
 	}
 	err := tpl.updatePostProcessors(nil)
 	if err != nil {
-		t.Errorf("expected error to be nil, got %q", err.Error())
+		t.Errorf("expected error to be nil, got %q", err)
 		return
 	}
 	if MarshalJSONToString.Get(testDistroDefaults.Templates[CentOS].PostProcessors) != MarshalJSONToString.Get(ppOrig) {
@@ -378,7 +378,7 @@ func TestRawTemplateUpdatePostProcessors(t *testing.T) {
 	}
 	err = tpl.updatePostProcessors(ppNew)
 	if err != nil {
-		t.Errorf("expected error to be nil, got %q", err.Error())
+		t.Errorf("expected error to be nil, got %q", err)
 	}
 	if MarshalJSONToString.Get(testDistroDefaults.Templates[CentOS].PostProcessors) != MarshalJSONToString.Get(ppMerged) {
 		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(ppMerged), MarshalJSONToString.Get(testDistroDefaults.Templates[CentOS].PostProcessors))
@@ -386,7 +386,7 @@ func TestRawTemplateUpdatePostProcessors(t *testing.T) {
 }
 
 func TestPostProcessorsSettingsToMap(t *testing.T) {
-	res := pp.settingsToMap("vagrant", &testRawTpl)
+	res := pp.settingsToMap("vagrant", testRawTpl)
 	if MarshalJSONToString.Get(res) != MarshalJSONToString.Get(map[string]interface{}{"type": "vagrant", "compression_level": "8", "keep_input_artifact": true}) {
 		t.Errorf("expected %q, got %q", MarshalJSONToString.Get(map[string]interface{}{"type": "vagrant", "compression_level": "8", "keep_input_artifact": true}), MarshalJSONToString.Get(res))
 	}

@@ -18,10 +18,10 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
-	"strconv"
 	"strings"
 	"time"
 
+	"github.com/mohae/contour"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -32,6 +32,10 @@ const (
 	Debian
 	Ubuntu
 )
+
+func init() {
+	Builds = map[string]builds{}
+}
 
 // Distro is the distribution type
 type Distro int
@@ -62,22 +66,11 @@ func DistroFromString(s string) Distro {
 	return UnsupportedDistro
 }
 
-type RancherError struct {
-	BuildName string
-	Distro    string
-	Operation string
-	Problem   string
-}
-
-func (e RancherError) Error() string {
-	return fmt.Sprintf("%s: %s %s, %s", e.BuildName, e.Distro, e.Operation, e.Problem)
-}
-
 // indent: default indent to use for marshal stuff
 var indent = "    "
 
 // Defined builds
-var Builds *builds
+var Builds map[string]builds
 
 // Defaults for each supported distribution
 var DistroDefaults distroDefaults
@@ -91,43 +84,28 @@ type distroDefaults struct {
 
 // GetTemplate returns a deep copy of the default template for the passed
 // distro name. If the distro does not exist, an error is returned.
-func (d *distroDefaults) GetTemplate(n string) (rawTemplate, error) {
+func (d *distroDefaults) GetTemplate(n string) (*rawTemplate, error) {
 	var t rawTemplate
 	var ok bool
 	t, ok = d.Templates[DistroFromString(n)]
 	if !ok {
 		err := fmt.Errorf("unsupported distro: %s", n)
 		jww.ERROR.Println(err)
-		return t, err
+		return nil, err
 	}
-	Copy := newRawTemplate()
-	Copy.PackerInf = t.PackerInf
-	Copy.IODirInf = t.IODirInf
-	Copy.BuildInf = t.BuildInf
-	Copy.releaseISO = t.releaseISO
-	Copy.date = t.date
-	Copy.delim = t.delim
-	Copy.Distro = t.Distro
-	Copy.Arch = t.Arch
-	Copy.Image = t.Image
-	Copy.Release = t.Release
-	for k, v := range t.varVals {
-		Copy.varVals[k] = v
-	}
-	Copy.build = t.build.DeepCopy()
-	return Copy, nil
+	return t.copy(), nil
 }
 
 // Set sets the default templates for each distro.
 func (d *distroDefaults) Set() error {
 	dflts := &defaults{}
-	err := dflts.Load()
+	err := dflts.Load("")
 	if err != nil {
 		jww.ERROR.Println(err)
 		return err
 	}
 	s := &supported{}
-	err = s.Load()
+	err = s.Load("")
 	if err != nil {
 		jww.ERROR.Println(err)
 		return err
@@ -150,230 +128,73 @@ func (d *distroDefaults) Set() error {
 		tmp.BuildInf = dflts.BuildInf
 		tmp.IODirInf = dflts.IODirInf
 		tmp.PackerInf = dflts.PackerInf
-		tmp.build = dflts.build.DeepCopy()
-		tmp.Distro = k
+		tmp.build = dflts.build.copy()
+		tmp.Distro = strings.ToLower(k)
 		// Now update it with the distro settings.
 		tmp.BaseURL = appendSlash(v.BaseURL)
 		tmp.Arch, tmp.Image, tmp.Release = getDefaultISOInfo(v.DefImage)
 		err = tmp.setDefaults(v)
 		if err != nil {
-			err = fmt.Errorf("setting of distro defaults failed: %s", err.Error())
-			jww.ERROR.Print(err.Error())
+			err = fmt.Errorf("setting of distro defaults failed: %s", err)
+			jww.ERROR.Print(err)
 			return err
 		}
-		d.Templates[DistroFromString(k)] = tmp
+		d.Templates[DistroFromString(k)] = *tmp
 	}
 	DistroDefaults.IsSet = true
 	return nil
 }
 
-// Set DistroDefaults
+// loadBuilds accepts a list of builds and loads the build information for
+// them. Since we don't know everything that is going to be used, we load all
+// build configuration files. A Rancher configuration directory can have 0 or
+// more build configuration files and any number of subdirectories.
+//
+// A build configuration file is any file that ends in ".fmt" and isn't name
+// build_list.fmt", "defualt.fmt", "rancher.fmt", or "supported.fmt".
+//
+// Subdirectories are called environments, envs, and are a way to namespace
+// builds. An envs' name is the same as the subdirectories name. Env names can
+// be concatonated together, using the env_separator_char as the separator; '-'
+// is the default value.
 func loadBuilds() error {
-	Builds = &builds{}
-	err := Builds.Load()
+	// index all the files in the configuration directory, including subdir
+	// this should be sorted
+	cDir := contour.GetString(ConfDir)
+	if contour.GetBool(Example) {
+		cDir = filepath.Join(contour.GetString(ExampleDir), cDir)
+	}
+	// names come from os.FileInfo.Name() results
+	// TODO: add handling of dir names and recursive for envs support
+	_, fnames, err := indexDir(cDir)
 	if err != nil {
-		jww.ERROR.Println(err)
 		return err
 	}
-	return nil
-}
-
-// BuildDistro creates a build based on the target distro's defaults. The
-// ArgsFilter contains information on the target distro and any overrides that
-// are to be applied to the build.
-//
-// Returns an error or nil if successful.
-func BuildDistro(a ArgsFilter) error {
-	if !DistroDefaults.IsSet {
-		err := DistroDefaults.Set()
+	// for each file
+	for _, fname := range fnames {
+		// get the file name, without the extension
+		ext := filepath.Ext(fname)
+		file := strings.TrimSuffix(fname, ext)
+		// skip non-build files.
+		switch file {
+		case "build_list":
+			continue
+		case "default":
+			continue
+		case "rancher":
+			continue
+		case "supported":
+			continue
+		}
+		fname = filepath.Join(cDir, fname)
+		b := builds{}
+		err := b.Load(fname)
 		if err != nil {
-			err = fmt.Errorf("BuildDistro failed: %s", err.Error())
-			jww.ERROR.Println(err)
 			return err
 		}
-	}
-	err := buildPackerTemplateFromDistro(a)
-	if err != nil {
-		err = fmt.Errorf("BuildDistro failed: %s", err.Error())
-		jww.ERROR.Println(err)
-		return err
-	}
-	// TODO: what does this argString processing do, or supposed to do? and document it this time!
-	argString := ""
-	if a.Arch != "" {
-		argString += "Arch=" + a.Arch
-	}
-	if a.Image != "" {
-		if argString != "" {
-			argString += ", "
-		}
-		argString += "Image=" + a.Image
-	}
-	if a.Release != "" {
-		if argString != "" {
-			argString += ", "
-		}
-		argString += "Release=" + a.Release
+		Builds[fname] = b
 	}
 	return nil
-
-}
-
-// Create Packer templates from specified build templates.
-func buildPackerTemplateFromDistro(a ArgsFilter) error {
-	var rTpl rawTemplate
-	if a.Distro == "" {
-		err := fmt.Errorf("cannot build a Packer template because no there wasn't a value for the distro flag")
-		jww.ERROR.Println(err)
-		return err
-	}
-	// Get the default for this distro, if one isn't found then it isn't Supported.
-	rTpl, err := DistroDefaults.GetTemplate(a.Distro)
-	if err != nil {
-		jww.ERROR.Println(err)
-		return err
-	}
-	// If any overrides were passed, set them.
-	if a.Arch != "" {
-		rTpl.Arch = a.Arch
-	}
-	if a.Image != "" {
-		rTpl.Image = a.Image
-	}
-	if a.Release != "" {
-		rTpl.Release = a.Release
-	}
-	rTpl.BuildName = ":type-:release-:arch-:image-rancher"
-
-	//	// make a copy of the .
-	//	rTpl := newRawTemplate()
-	//	rTpl.updateBuilders(d.Builders)
-
-	// Since distro builds don't actually have a build name, we create one
-	// out of the args used to create it.
-	// TODO: given the above, should this be done? Or should the buildname for distro
-	//       builds be merged later?
-	rTpl.BuildName = fmt.Sprintf("%s-%s-%s-%s", rTpl.Distro, rTpl.Release, rTpl.Arch, rTpl.Image)
-	pTpl := packerTemplate{}
-	// Now that the raw template has been made, create a Packer template out of it
-	pTpl, err = rTpl.createPackerTemplate()
-	if err != nil {
-		jww.ERROR.Println(err)
-		return err
-	}
-	// Create the JSON version of the Packer template. This also handles creation of
-	// the build directory and copying all files that the Packer template needs to the
-	// build directory.
-	err = pTpl.create(rTpl.IODirInf, rTpl.BuildInf, rTpl.dirs, rTpl.files)
-	if err != nil {
-		jww.ERROR.Println(err)
-		return err
-	}
-	return nil
-}
-
-// BuildBuilds manages the process of creating Packer Build templates out of
-// the passed build names. All builds are done concurrently.  Returns either a
-// message providing information about the processing of the requested builds
-// or an error.
-func BuildBuilds(buildNames ...string) (string, error) {
-	if buildNames[0] == "" {
-		err := fmt.Errorf("BuildBuilds failed: no build name was received")
-		jww.ERROR.Println(err)
-		return "", err
-	}
-	// Only load supported if it hasn't been loaded. Even though LoadSupported
-	// uses a mutex to control access to prevent race conditions, no need to
-	// call it if its already loaded.
-	if !DistroDefaults.IsSet {
-		err := DistroDefaults.Set()
-		if err != nil {
-			fmt.Errorf("BuildBuilds failed: %s", err.Error())
-			jww.ERROR.Println(err)
-			return "", err
-		}
-	}
-	// First load the build information
-	loadBuilds()
-	// Make as many channels as there are build requests.
-	var errorCount, builtCount int
-	nBuilds := len(buildNames)
-	doneCh := make(chan error, nBuilds)
-	// Process each build request
-	for i := 0; i < nBuilds; i++ {
-		go buildPackerTemplateFromNamedBuild(buildNames[i], doneCh)
-	}
-	// Wait for channel done responses.
-	for i := 0; i < nBuilds; i++ {
-		err := <-doneCh
-		if err != nil {
-			jww.ERROR.Println(err)
-			errorCount++
-		} else {
-			builtCount++
-		}
-	}
-	if nBuilds == 1 {
-		if builtCount > 0 {
-			return fmt.Sprintf("%s was successfully processed and its Packer template was created", buildNames[0]), nil
-		}
-		return fmt.Sprintf("Processing of the %s build failed with an error.", buildNames[0]), nil
-	}
-	return fmt.Sprintf("BuildBuilds: %v Builds were successfully processed and their Packer templates were created, %v Builds were unsucessfully process and resulted in errors..", builtCount, errorCount), nil
-}
-
-// buildPackerTemplateFromNamedBuild creates a Packer tmeplate and associated
-// artifacts for the passed build.
-func buildPackerTemplateFromNamedBuild(buildName string, doneCh chan error) {
-	if buildName == "" {
-		err := fmt.Errorf("unable to build Packer template: no build name was received")
-		doneCh <- err
-		return
-	}
-	var ok bool
-	// Check the type and create the defaults for that type, if it doesn't already exist.
-	rTpl := rawTemplate{}
-	bTpl, ok := Builds.Build[buildName]
-	if !ok {
-		err := fmt.Errorf("unable to build Packer template: %q is not a valid build name", buildName)
-		doneCh <- err
-		return
-	}
-	// See if the distro default exists.
-	rTpl, ok = DistroDefaults.Templates[DistroFromString(bTpl.Distro)]
-	if !ok {
-		err := fmt.Errorf("building Packer template for %s failed: an unsupported distro, %s, was specified", buildName, bTpl.Distro)
-		doneCh <- err
-		return
-	}
-	// Set build iso information overrides, if any.
-	if bTpl.Arch != "" {
-		rTpl.Arch = bTpl.Arch
-	}
-	if bTpl.Image != "" {
-		rTpl.Image = bTpl.Image
-	}
-	if bTpl.Release != "" {
-		rTpl.Release = bTpl.Release
-	}
-	bTpl.BuildName = buildName
-	// create build template() then call create packertemplate
-	rTpl.build = DistroDefaults.Templates[DistroFromString(bTpl.Distro)].build
-	rTpl.updateBuildSettings(bTpl)
-	pTpl := packerTemplate{}
-	var err error
-	pTpl, err = rTpl.createPackerTemplate()
-	if err != nil {
-		doneCh <- err
-		return
-	}
-	err = pTpl.create(rTpl.IODirInf, rTpl.BuildInf, rTpl.dirs, rTpl.files)
-	if err != nil {
-		doneCh <- err
-		return
-	}
-	doneCh <- nil
-	return
 }
 
 // getSliceLenFromIface takes an interface that's assumed to be a slice and
@@ -696,7 +517,7 @@ func copyFile(src string, dst string) (written int64, err error) {
 func copyDir(srcDir string, dstDir string) error {
 	exists, err := pathExists(srcDir)
 	if err != nil {
-		return fmt.Errorf("copyDir error: %s", err.Error())
+		return fmt.Errorf("copyDir error: %s", err)
 	}
 	if !exists {
 		return fmt.Errorf("copyDir error: %s does not exist", srcDir)
@@ -704,7 +525,7 @@ func copyDir(srcDir string, dstDir string) error {
 	dir := Archive{}
 	err = dir.DirWalk(srcDir)
 	if err != nil {
-		return fmt.Errorf("copyDir dirWalk error: %s", err.Error())
+		return fmt.Errorf("copyDir dirWalk error: %s", err)
 	}
 	for _, file := range dir.Files {
 		if file.info == nil {
@@ -713,13 +534,13 @@ func copyDir(srcDir string, dstDir string) error {
 		if file.info.IsDir() {
 			err = os.MkdirAll(file.p, os.FileMode(0766))
 			if err != nil {
-				return fmt.Errorf("copyDir errorL %s", err.Error())
+				return fmt.Errorf("copyDir errorL %s", err)
 			}
 			continue
 		}
 		_, err = copyFile(filepath.Join(srcDir, file.p), filepath.Join(dstDir, file.p))
 		if err != nil {
-			return fmt.Errorf("copyDir errorL %s", err.Error())
+			return fmt.Errorf("copyDir errorL %s", err)
 
 		}
 	}
@@ -808,17 +629,18 @@ func setParentDir(d, p string) string {
 // preserved in some manner, e.g. archives or log files.
 //
 // If the filepath and name already exists, the current formatted date is
-// appended to it using the received layout.  If the file doesn't exist, this
-// filepath is returned.  If the layout is an empty string, this step is
-// skipped.
-//
-// Otherwise, a sequence number is appended to the filename with the date and
-// is checked for collision until no file is found. The first filename that
-// results in a "no such file or directory" error is returned as the filename
-// to use.
+// appended to it using the received layout. The name is then appended with a
+// sequence number, starting at 1, and checked for existence until no file is
+// found. The first filename that results in a "no such file or directory" is
+// returned as the filename to use.
 //
 // Any non "no such file or directory" error is returned as an error.
+//
+// There is a special check made for tar.gz, as this is the default extension
+// for the compressed archives of templates; otherwise, it is assumed that the
+// extension is the text after the last "." in the path.
 func getUniqueFilename(p, layout string) (string, error) {
+	// see if file exists; if it doesn't we're done.
 	_, err := os.Stat(p)
 	if err != nil {
 		if err.(*os.PathError).Err.Error() == "no such file or directory" {
@@ -826,39 +648,23 @@ func getUniqueFilename(p, layout string) (string, error) {
 		}
 		return "", err
 	}
-
-	dir, file := path.Split(p)
-	parts := strings.Split(file, ".")
-	var newPath, basePath string
-	// If the path had multiple .'s append everything except last two elements
-	for i := 0; i < len(parts)-1; i++ {
-		newPath += parts[i]
-		if i < len(parts)-2 {
-			newPath += "."
-		}
+	var base, ext string
+	dir := filepath.Dir(p)
+	if strings.HasSuffix(p, ".tar.gz") {
+		ext = ".tar.gz"
+	} else {
+		ext = filepath.Ext(p)
 	}
-	newPath = filepath.Join(dir, newPath)
+	base = filepath.Base(strings.TrimSuffix(p, ext))
 	// cache the path fragment in case we need to use a sequence
-	basePath = newPath
 	if layout != "" {
 		now := time.Now().Format(layout)
-		newPath += "-" + now
-		// update basePath
-		basePath = newPath
-		newPath += "." + parts[len(parts)-1]
-		_, err = os.Stat(newPath)
-		if err != nil {
-			if err.(*os.PathError).Err.Error() == "no such file or directory" {
-				return newPath, nil
-			}
-			return "", err
-		}
+		base = fmt.Sprintf("%s.%s", base, now)
 	}
 	// check for a unique name while appending a sequence.
 	i := 1
 	for {
-		newPath = basePath + "-" + strconv.Itoa(i) + "." + parts[len(parts)-1]
-		fmt.Println(newPath)
+		newPath := filepath.Join(dir, fmt.Sprintf("%s-%d%s", base, i, ext))
 		_, err = os.Stat(newPath)
 		if err != nil {
 			if err.(*os.PathError).Err.Error() == "no such file or directory" {
@@ -868,4 +674,38 @@ func getUniqueFilename(p, layout string) (string, error) {
 		}
 		i++
 	}
+}
+
+// indexDir indexes the passed directory and returns its contents as two lists:
+// directory names and file names. Any error encountered results in termination
+// of indexing and returns.
+func indexDir(s string) (dirs, files []string, err error) {
+	// nothing to index
+	if s == "" {
+		return nil, nil, ErrEmptyParam
+	}
+	fi, err := os.Stat(s)
+	if err != nil {
+		return nil, nil, err
+	}
+	if !fi.IsDir() {
+		return nil, nil, fmt.Errorf("cannot index %s: not a directory", s)
+	}
+	f, err := os.Open(s)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer f.Close()
+	fis, err := f.Readdir(-1)
+	if err != nil {
+		return nil, nil, err
+	}
+	for _, fi := range fis {
+		if fi.IsDir() {
+			dirs = append(dirs, fi.Name())
+			continue
+		}
+		files = append(files, fi.Name())
+	}
+	return dirs, files, nil
 }

@@ -99,8 +99,7 @@ func BuilderFromString(s string) Builder {
 // Builder
 func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 	if r.BuilderTypes == nil || len(r.BuilderTypes) <= 0 {
-		err = fmt.Errorf("unable to create builders: none specified")
-		return nil, err
+		return nil, fmt.Errorf("unable to create builders: none specified")
 	}
 	var tmpS map[string]interface{}
 	var ndx int
@@ -153,16 +152,6 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 		//	case Openstack:
 		//	case ParallelsISO, ParallelsPVM:
 		//	case QEMU:
-		case VMWareISO:
-			tmpS, err = r.createVMWareISO()
-			if err != nil {
-				return nil, builderErr(VMWareISO, err)
-			}
-		case VMWareVMX:
-			tmpS, err = r.createVMWareVMX()
-			if err != nil {
-				return nil, builderErr(VMWareVMX, err)
-			}
 		case VirtualBoxISO:
 			tmpS, err = r.createVirtualBoxISO()
 			if err != nil {
@@ -172,6 +161,16 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 			tmpS, err = r.createVirtualBoxOVF()
 			if err != nil {
 				return nil, builderErr(VirtualBoxOVF, err)
+			}
+		case VMWareISO:
+			tmpS, err = r.createVMWareISO()
+			if err != nil {
+				return nil, builderErr(VMWareISO, err)
+			}
+		case VMWareVMX:
+			tmpS, err = r.createVMWareVMX()
+			if err != nil {
+				return nil, builderErr(VMWareVMX, err)
 			}
 		default:
 			return nil, builderErr(UnsupportedBuilder, fmt.Errorf("%q is not supported", bType))
@@ -355,7 +354,6 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, err er
 		if err != nil {
 			return nil, mergeCommonSettingsErr(err)
 		}
-
 	} else {
 		workSlice = r.Builders[AmazonEBS.String()].Settings
 	}
@@ -403,11 +401,17 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, err er
 			}
 			settings[k] = i
 		case "user_data_file":
-			src, err := r.findComponentSource(AmazonEBS.String(), v)
+			src, err := r.findComponentSource(AmazonEBS.String(), v, false)
 			if err != nil {
-				return nil, settingErr("user_data_file", err)
+				return nil, settingErr(k, err)
 			}
-			r.files[r.buildOutPath(AmazonEBS.String(), v)] = src
+			// if the source couldn't be found and an error wasn't generated, replace
+			// s with the original value; this occurs when it is an example.
+			// Nothing should be copied in this instancel it should not be added
+			// to the copy info
+			if src != "" {
+				r.files[r.buildOutPath(AmazonEBS.String(), v)] = src
+			}
 			settings[k] = r.buildTemplateResourcePath(AmazonEBS.String(), v)
 		case "associate_public_ip_address", "enhanced_networking", "ssh_private_ip":
 			settings[k], _ = strconv.ParseBool(v)
@@ -521,7 +525,6 @@ func (r *rawTemplate) createAmazonInstance() (settings map[string]interface{}, e
 		if err != nil {
 			return nil, mergeCommonSettingsErr(err)
 		}
-
 	} else {
 		workSlice = r.Builders[AmazonInstance.String()].Settings
 	}
@@ -583,11 +586,17 @@ func (r *rawTemplate) createAmazonInstance() (settings map[string]interface{}, e
 			}
 			settings[k] = i
 		case "user_data_file":
-			src, err := r.findComponentSource(AmazonInstance.String(), v)
+			src, err := r.findComponentSource(AmazonInstance.String(), v, false)
 			if err != nil {
 				return nil, settingErr("user_data_file", err)
 			}
-			r.files[r.buildOutPath(AmazonEBS.String(), v)] = src
+			// if the source couldn't be found and an error wasn't generated, replace
+			// s with the original value; this occurs when it is an example.
+			// Nothing should be copied in this instancel it should not be added
+			// to the copy info
+			if src != "" {
+				r.files[r.buildOutPath(AmazonEBS.String(), v)] = src
+			}
 			settings[k] = r.buildTemplateResourcePath(AmazonInstance.String(), v)
 		case "associate_public_ip_address", "enhanced_networking", "ssh_private_ip":
 			settings[k], _ = strconv.ParseBool(v)
@@ -915,11 +924,17 @@ func (r *rawTemplate) createGoogleCompute() (settings map[string]interface{}, er
 			"machine_type", "network", "ssh_timeout", "ssh_username", "state_timeout":
 			settings[k] = v
 		case "account_file":
-			src, err := r.findComponentSource(GoogleCompute.String(), v)
+			src, err := r.findComponentSource(GoogleCompute.String(), v, false)
 			if err != nil {
 				return nil, err
 			}
-			r.files[r.buildOutPath(GoogleCompute.String(), v)] = src
+			// if the source couldn't be found and an error wasn't generated, replace
+			// s with the original value; this occurs when it is an example.
+			// Nothing should be copied in this instancel it should not be added
+			// to the copy info
+			if src != "" {
+				r.files[r.buildOutPath(GoogleCompute.String(), v)] = src
+			}
 			settings[k] = r.buildTemplateResourcePath(GoogleCompute.String(), v)
 		case "disk_size", "ssh_port":
 			i, err := strconv.Atoi(v)
@@ -1195,8 +1210,6 @@ noISOURL:
 			}
 		case "vboxmanage", "vboxmanage_post":
 			settings[name] = r.createVBoxManage(val)
-		case "scripts":
-
 		}
 	}
 	if r.osType == "" { // if the os type hasn't been set, the ISO info hasn't been retrieved
@@ -1324,12 +1337,18 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, er
 				bootCmdProcessed = true
 			}
 		case "source_path":
-			src, err := r.findComponentSource(VirtualBoxOVF.String(), v)
+			src, err := r.findComponentSource(VirtualBoxOVF.String(), v, true)
 			if err != nil {
 				return nil, err
 			}
+			// if the source couldn't be found and an error wasn't generated, replace
+			// s with the original value; this occurs when it is an example.
+			// Nothing should be copied in this instancel it should not be added
+			// to the copy info
+			if src != "" {
+				r.files[r.buildOutPath(VirtualBoxOVF.String(), v)] = src
+			}
 			settings[k] = r.buildTemplateResourcePath(VirtualBoxOVF.String(), v)
-			r.files[r.buildOutPath(VirtualBoxOVF.String(), v)] = src
 			hasSourcePath = true
 		case "ssh_username":
 			settings[k] = v
@@ -1735,11 +1754,17 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, err er
 				settings[k] = v // the value is the command
 			}
 		case "source_path":
-			src, err := r.findComponentSource(VMWareVMX.String(), v)
+			src, err := r.findComponentSource(VMWareVMX.String(), v, true)
 			if err != nil {
 				return nil, err
 			}
-			r.files[r.buildOutPath(VMWareVMX.String(), v)] = src
+			// if the source couldn't be found and an error wasn't generated, replace
+			// s with the original value; this occurs when it is an example.
+			// Nothing should be copied in this instancel it should not be added
+			// to the copy info
+			if src != "" {
+				r.files[r.buildOutPath(VMWareVMX.String(), v)] = src
+			}
 			settings[k] = r.buildTemplateResourcePath(VMWareVMX.String(), v)
 			hasSourcePath = true
 		case "ssh_username":
@@ -1863,7 +1888,7 @@ func (r *rawTemplate) updateBuilders(newB map[string]builder) error {
 		}
 		err := b.mergeSettings(bb.Settings)
 		if err != nil {
-			return fmt.Errorf("merge of settings failed: %s", err.Error())
+			return fmt.Errorf("merge of settings failed: %s", err)
 		}
 		b.mergeArrays(bb.Arrays)
 		r.Builders[v] = b
@@ -1906,11 +1931,17 @@ func (r *rawTemplate) setHTTP(component string, m map[string]interface{}) error 
 	if !ok {
 		v = "http"
 	}
-	src, err := r.findComponentSource(component, v.(string))
+	src, err := r.findComponentSource(component, v.(string), true)
 	if err != nil {
 		return fmt.Errorf("setHTTP error: %s", err)
 	}
-	r.dirs[r.buildOutPath(component, v.(string))] = src
+	// if the source couldn't be found and an error wasn't generated, replace
+	// s with the original value; this occurs when it is an example.
+	// Nothing should be copied in this instancel it should not be added
+	// to the copy info
+	if src != "" {
+		r.dirs[r.buildOutPath("", v.(string))] = src
+	}
 	m["http_directory"] = r.buildTemplateResourcePath(component, v.(string))
 	return nil
 }

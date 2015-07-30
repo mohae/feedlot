@@ -22,13 +22,43 @@ func newTestCentOS() centos {
 
 func TestCentOSsetReleaseInfo(t *testing.T) {
 	c := newTestCentOS()
+	c.Release = ""
 	err := c.setVersionInfo()
 	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
+		if err.Error() != "centos SetISOInfo error: release was not set" {
+			t.Errorf("expected \"centos SetISOInfo error: release was not set\"; got %q", err)
+		}
+	} else {
+		t.Error("expected an error; got none")
+	}
+	c.Release = "6"
+	err = c.setVersionInfo()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
 		if !strings.HasPrefix(c.Release, "6") {
 			t.Errorf("Expected %q to start with \"6\"", c.Release)
 		}
+	}
+	c = newTestCentOS()
+	c.Release = "7"
+	err = c.setVersionInfo()
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if !strings.HasPrefix(c.Release, "7") {
+			t.Errorf("Expected %q to start with \"7\"", c.Release)
+		}
+	}
+	c = newTestCentOS()
+	c.Release = "8"
+	err = c.setVersionInfo()
+	if err != nil {
+		if err.Error() != "centos 8: unsupported release" {
+			t.Errorf("Expected \"centos 8: unsupported release\"; got %q", err)
+		}
+	} else {
+		t.Error("Expected an error, got none")
 	}
 }
 
@@ -37,7 +67,7 @@ func TestCentOSGetOSType(t *testing.T) {
 	buildType := "vmware-iso"
 	res, err := c.getOSType(buildType)
 	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
+		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
 		if res != "centos-64" {
 			t.Errorf("Expected \"centos-64\", got %q", res)
@@ -47,7 +77,7 @@ func TestCentOSGetOSType(t *testing.T) {
 	buildType = "virtualbox-iso"
 	res, err = c.getOSType(buildType)
 	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
+		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
 		if res != "RedHat_64" {
 			t.Errorf("Expected \"RedHat_64\", got %q", res)
@@ -58,7 +88,7 @@ func TestCentOSGetOSType(t *testing.T) {
 	buildType = "vmware-iso"
 	res, err = c.getOSType(buildType)
 	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
+		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
 		if res != "centos-32" {
 			t.Errorf("Expected \"centos-32\", got %q", res)
@@ -68,7 +98,7 @@ func TestCentOSGetOSType(t *testing.T) {
 	buildType = "virtualbox-iso"
 	res, err = c.getOSType(buildType)
 	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
+		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
 		if res != "RedHat_32" {
 			t.Errorf("Expected \"RedHat_32\", got %q", res)
@@ -81,7 +111,7 @@ func TestCentOSGetOSType(t *testing.T) {
 		t.Error("Expected error to not be nil, it was")
 	} else {
 		if err.Error() != "centos getOSType error: voodoo is not supported by this distro" {
-			t.Errorf("Expected \"centos getOSType error: voodoo is not supported by this distro\", got %q", err.Error())
+			t.Errorf("Expected \"centos getOSType error: voodoo is not supported by this distro\", got %q", err)
 		}
 	}
 }
@@ -95,7 +125,7 @@ func TestCentOSSetISOChecksum(t *testing.T) {
 		t.Error("Expected \"centos 6 setISOChecksum error: checksum not set\", got nil")
 	} else {
 		if err.Error() != "centos 6 setISOChecksum error: checksum not set" {
-			t.Errorf("expected \"centos 6 setISOChecksum error: checksum not set\", got %q", err.Error())
+			t.Errorf("expected \"centos 6 setISOChecksum error: checksum not set\", got %q", err)
 		}
 	}
 
@@ -106,7 +136,7 @@ func TestCentOSSetISOChecksum(t *testing.T) {
 	c.SetISOInfo()
 	err = c.setISOChecksum()
 	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
+		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
 		if c.Checksum != "5458f357e8a55e3a866dd856896c7e0ac88e7f9220a3dd74c58a3b0acede8e4d" {
 			t.Errorf("Expected \"5458f357e8a55e3a866dd856896c7e0ac88e7f9220a3dd74c58a3b0acede8e4d\", got %q", c.Checksum)
@@ -198,7 +228,7 @@ ad8f6de098503174c7609d172679fa0dd276f4b669708933d9c4927bd3fe1017  CentOS-6.6-x86
 		err := c.findISOChecksum(test.page)
 		if err != nil {
 			if err.Error() != test.expectedErr {
-				t.Errorf("TestCentOSFindISOChecksum %d: expected %q, got %q", i, test.expectedErr, err.Error())
+				t.Errorf("TestCentOSFindISOChecksum %d: expected %q, got %q", i, test.expectedErr, err)
 			}
 			continue
 		}
@@ -233,7 +263,7 @@ func TestDebianSetReleaseInfo(t *testing.T) {
 	d.FullVersion = ""
 	err := d.setReleaseInfo(page)
 	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
+		t.Errorf("Expected error to be nil, got %q", err)
 	}
 	expected := "7.8.0"
 	if d.FullVersion != expected {
@@ -254,7 +284,7 @@ func TestDebianFindISOChecksum(t *testing.T) {
 		t.Error("Expected an error, got nil")
 	} else {
 		if err.Error() != " findISOChecksum error: page was empty" {
-			t.Errorf("expected \"findISOChecksum error: page was empty\", got %q ", err.Error())
+			t.Errorf("expected \"findISOChecksum error: page was empty\", got %q ", err)
 		}
 	}
 
@@ -273,7 +303,7 @@ fb1c1c30815da3e7189d44b6699cf9114b16e44ea139f0cd4df5f1dde3659272  debian-7.8.0-a
 		t.Error("Expected an error, got nil")
 	} else {
 		if err.Error() != "debian-7.8.0-amd64-whatever.iso findISOChecksum error: checksum not found on page" {
-			t.Errorf("TestDebianFindISOChecksum: expected \"debian-7.8.0-amd64-whatever.iso findISOChecksum error: checksum not found on page\", got %q", err.Error())
+			t.Errorf("TestDebianFindISOChecksum: expected \"debian-7.8.0-amd64-whatever.iso findISOChecksum error: checksum not found on page\", got %q", err)
 		}
 	}
 
@@ -283,7 +313,7 @@ fb1c1c30815da3e7189d44b6699cf9114b16e44ea139f0cd4df5f1dde3659272  debian-7.8.0-a
 	d.Arch = "amd64"
 	err = d.findISOChecksum(checksumPage)
 	if err != nil {
-		t.Errorf("Expected no error, got %q", err.Error())
+		t.Errorf("Expected no error, got %q", err)
 	} else {
 		if d.Checksum != "e39c36d6adc0fd86c6edb0e03e22919086c883b37ca194d063b8e3e8f6ff6a3a" {
 			t.Errorf("Expected \"e39c36d6adc0fd86c6edb0e03e22919086c883b37ca194d063b8e3e8f6ff6a3a\", got %q", d.Checksum)
@@ -312,7 +342,7 @@ func TestDebianGetOSType(t *testing.T) {
 	buildType := "vmware-iso"
 	res, err := d.getOSType(buildType)
 	if err != nil {
-		t.Errorf("Expected no error, got %q", err.Error())
+		t.Errorf("Expected no error, got %q", err)
 	} else {
 		if res != "debian-64" {
 			t.Errorf("Expected \"debian-64\", got %q", res)
@@ -322,7 +352,7 @@ func TestDebianGetOSType(t *testing.T) {
 	buildType = "virtualbox-iso"
 	res, err = d.getOSType(buildType)
 	if err != nil {
-		t.Errorf("Expected no error, got %q", err.Error())
+		t.Errorf("Expected no error, got %q", err)
 	} else {
 		if res != "Debian_64" {
 			t.Errorf("Expected \"Debian_64\", got %q", res)
@@ -333,7 +363,7 @@ func TestDebianGetOSType(t *testing.T) {
 	buildType = "vmware-iso"
 	res, err = d.getOSType(buildType)
 	if err != nil {
-		t.Errorf("Expected no error, got %q", err.Error())
+		t.Errorf("Expected no error, got %q", err)
 	} else {
 		if res != "debian-32" {
 			t.Errorf("Expected \"debian-32\", got %q", res)
@@ -343,7 +373,7 @@ func TestDebianGetOSType(t *testing.T) {
 	buildType = "virtualbox-iso"
 	res, err = d.getOSType(buildType)
 	if err != nil {
-		t.Errorf("Expected no error, got %q", err.Error())
+		t.Errorf("Expected no error, got %q", err)
 	} else {
 		if res != "Debian_32" {
 			t.Errorf("Expected \"Debian_32\", got %q", res)
@@ -356,7 +386,7 @@ func TestDebianGetOSType(t *testing.T) {
 		t.Error("Expected an error, received nil")
 	} else {
 		if err.Error() != "debian getOSType error: voodoo is not supported by this distro" {
-			t.Errorf("Expected \"debian getOSType error: voodoo is not supported by this distro\", got %q", err.Error())
+			t.Errorf("Expected \"debian getOSType error: voodoo is not supported by this distro\", got %q", err)
 		}
 	}
 }
@@ -375,7 +405,7 @@ func TestUbuntuFindISOChecksum(t *testing.T) {
 		t.Error("Expected an error, got nil")
 	} else {
 		if err.Error() != " findISOChecksum error: page was empty" {
-			t.Errorf("TestUbuntuFindISOChecksum: expected \" findISOChecksum error: page was empty\", got %q", err.Error())
+			t.Errorf("TestUbuntuFindISOChecksum: expected \" findISOChecksum error: page was empty\", got %q", err)
 		}
 	}
 
@@ -391,7 +421,7 @@ bc3b20ad00f19d0169206af0df5a4186c61ed08812262c55dbca3b7b1f1c4a0b *wubi.exe`
 		t.Error("Expected an error, got nil")
 	} else {
 		if err.Error() != "ubuntu-14.04-whatever.iso findISOChecksum error: checksum not found on page" {
-			t.Errorf("TestUbuntuFindISOChecksum: expected \"ubuntu-14.04-whatever.iso findISOChecksum error: checksum not found on page\", got %q", err.Error())
+			t.Errorf("TestUbuntuFindISOChecksum: expected \"ubuntu-14.04-whatever.iso findISOChecksum error: checksum not found on page\", got %q", err)
 		}
 	}
 
@@ -401,7 +431,7 @@ bc3b20ad00f19d0169206af0df5a4186c61ed08812262c55dbca3b7b1f1c4a0b *wubi.exe`
 	u.Name = "ubuntu-14.04-server-amd64.iso"
 	err = u.findISOChecksum(checksumPage)
 	if err != nil {
-		t.Errorf("Expected no error, got %q", err.Error())
+		t.Errorf("Expected no error, got %q", err)
 	} else {
 		if u.Checksum != "ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388" {
 			t.Errorf("Expected \"ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388\", got %q", u.Checksum)
@@ -422,7 +452,7 @@ fbe7f159337551cc5ce9f0ff72acefef567f3dcd30750425287588c554978501 *ubuntu-12.04.4
 	u.Name = "ubuntu-12.04.4-server-amd64.iso"
 	err = u.findISOChecksum(checksumPage)
 	if err != nil {
-		t.Errorf("Expected no error, got %q", err.Error())
+		t.Errorf("Expected no error, got %q", err)
 	} else {
 		if u.Checksum != "3aeb42816253355394897ae80d99a9ba56217c0e98e05294b51f0f5b13bceb54" {
 			t.Errorf("Expected \"3aeb42816253355394897ae80d99a9ba56217c0e98e05294b51f0f5b13bceb54\", got %q", u.Checksum)
@@ -435,7 +465,7 @@ func TestUbuntuGetOSType(t *testing.T) {
 	buildType := "vmware-iso"
 	res, err := u.getOSType(buildType)
 	if err != nil {
-		t.Errorf("Expected no error, got %q", err.Error())
+		t.Errorf("Expected no error, got %q", err)
 	} else {
 		if res != "ubuntu-64" {
 			t.Errorf("Expected \"3aeb42816253355394897ae80d99a9ba56217c0e98e05294b51f0f5b13bceb54\", got %q", res)
@@ -445,7 +475,7 @@ func TestUbuntuGetOSType(t *testing.T) {
 	buildType = "virtualbox-iso"
 	res, err = u.getOSType(buildType)
 	if err != nil {
-		t.Errorf("Expected no error, got %q", err.Error())
+		t.Errorf("Expected no error, got %q", err)
 	} else {
 		if res != "Ubuntu_64" {
 			t.Errorf("Expected \"Ubuntu_64\", got %q", res)
@@ -456,7 +486,7 @@ func TestUbuntuGetOSType(t *testing.T) {
 	buildType = "vmware-iso"
 	res, err = u.getOSType(buildType)
 	if err != nil {
-		t.Errorf("Expected no error, got %q", err.Error())
+		t.Errorf("Expected no error, got %q", err)
 	} else {
 		if res != "ubuntu-32" {
 			t.Errorf("Expected \"ubuntu-32\", got %q", res)
@@ -466,7 +496,7 @@ func TestUbuntuGetOSType(t *testing.T) {
 	buildType = "virtualbox-iso"
 	res, err = u.getOSType(buildType)
 	if err != nil {
-		t.Errorf("Expected no error, got %q", err.Error())
+		t.Errorf("Expected no error, got %q", err)
 	} else {
 		if res != "Ubuntu_32" {
 			t.Errorf("Expected \"Ubuntu_32\", got %q", res)
@@ -479,7 +509,7 @@ func TestUbuntuGetOSType(t *testing.T) {
 		t.Error("Expected an error, received nil")
 	} else {
 		if err.Error() != "ubuntu getOSType error: voodoo is not supported by this distro" {
-			t.Errorf("Expected \"ubuntu getOSType error: voodoo is not supported by this distro\", got %q", err.Error())
+			t.Errorf("Expected \"ubuntu getOSType error: voodoo is not supported by this distro\", got %q", err)
 		}
 	}
 }
@@ -496,7 +526,7 @@ func TestNoArchError(t *testing.T) {
 	for i, test := range tests {
 		err := noArchErr(test.name)
 		if err.Error() != test.expected {
-			t.Errorf("TestNoArchError %d: expected %q, got %q", i, test.expected, err.Error())
+			t.Errorf("TestNoArchError %d: expected %q, got %q", i, test.expected, err)
 		}
 	}
 }
@@ -513,7 +543,7 @@ func TestNoReleaseError(t *testing.T) {
 	for i, test := range tests {
 		err := noReleaseErr(test.name)
 		if err.Error() != test.expected {
-			t.Errorf("TestNoReleaseError %d: expected %q, got %q", i, test.expected, err.Error())
+			t.Errorf("TestNoReleaseError %d: expected %q, got %q", i, test.expected, err)
 		}
 	}
 }
@@ -534,7 +564,7 @@ func TestEmptyPageError(t *testing.T) {
 	for i, test := range tests {
 		err := emptyPageErr(test.name, test.operation)
 		if err.Error() != test.expected {
-			t.Errorf("TestEmptyPageError %d: expected %q, got %q", i, test.expected, err.Error())
+			t.Errorf("TestEmptyPageError %d: expected %q, got %q", i, test.expected, err)
 		}
 	}
 }
@@ -555,7 +585,7 @@ func TestChecksumNotFoundError(t *testing.T) {
 	for i, test := range tests {
 		err := checksumNotFoundErr(test.name, test.operation)
 		if err.Error() != test.expected {
-			t.Errorf("TestChecksumNotFoundError %d: expected %q, got %q", i, test.expected, err.Error())
+			t.Errorf("TestChecksumNotFoundError %d: expected %q, got %q", i, test.expected, err)
 		}
 	}
 }

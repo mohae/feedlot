@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"sync"
+	"path/filepath"
 
 	json "github.com/mohae/customjson"
 	jww "github.com/spf13/jwalterweatherman"
@@ -26,13 +26,15 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, dirs, files map[string]s
 	i.check()
 	// priorBuild handles both the archiving and deletion of the prior build, if it exists, i.e.
 	// if the build's output path exists.
-	var wg sync.WaitGroup
-	a := Archive{}
-	wg.Add(1)
-	err := a.priorBuild(appendSlash(i.OutDir), "gzip", &wg)
-	wg.Wait()
+	a := NewArchive(b.BuildName)
+	err := a.priorBuild(appendSlash(i.OutputDir))
 	if err != nil {
 		jww.ERROR.Println(err)
+		return PackerCreateErr(b.BuildName, err)
+	}
+	// create the destination directory if it doesn't already exist
+	err = os.MkdirAll(i.OutputDir, 0754)
+	if err != nil {
 		return PackerCreateErr(b.BuildName, err)
 	}
 	// copy any directories associated with the template
@@ -57,7 +59,8 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, dirs, files map[string]s
 		jww.ERROR.Print(err)
 		return PackerCreateErr(b.BuildName, err)
 	}
-	f, err := os.Create(appendSlash(i.OutDir) + fmt.Sprintf("%s.json", b.Name))
+	fname := filepath.Join(i.OutputDir, fmt.Sprintf("%s.json", b.Name))
+	f, err := os.Create(fname)
 	if err != nil {
 		jww.ERROR.Print(err)
 		return PackerCreateErr(b.BuildName, err)
@@ -75,8 +78,4 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, dirs, files map[string]s
 		return PackerCreateErr(b.BuildName, err)
 	}
 	return nil
-}
-
-func PackerCreateErr(name string, err error) error {
-	return fmt.Errorf("create of Packer template for %q failed: %s", name, err.Error())
 }

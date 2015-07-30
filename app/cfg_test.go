@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/mohae/contour"
@@ -9,8 +10,8 @@ import (
 var testDefaults = &defaults{
 	IODirInf: IODirInf{
 		IncludeComponentString: "true",
-		OutDir:                 "out/:build_name",
-		SrcDir:                 "src",
+		OutputDir:              "out/:build_name",
+		SourceDir:              "src",
 	},
 	PackerInf: PackerInf{
 		Description:      "Test Default Rancher template",
@@ -376,6 +377,90 @@ var testBuildList = map[string]list{
 	"ubuntu-all": list{Builds: []string{"1204-amd64-server", "1310-amd64-desktop"}},
 }
 
+func TestBuildCopy(t *testing.T) {
+	tstTpl := testBuild["jessie"]
+	newBuild := tstTpl.build.copy()
+	if fmt.Sprintf("%p", newBuild.BuilderTypes) == fmt.Sprintf("%p", tstTpl.build.BuilderTypes) {
+		t.Errorf("The pointer for BuilderTypes is the same for both newBuild and testBuild: %x, expected them to be different.", fmt.Sprintf("%p", tstTpl.build.BuilderTypes))
+		goto builderTypesEnd
+	}
+	if len(newBuild.BuilderTypes) != len(tstTpl.BuilderTypes) {
+		t.Errorf("Expected newBuild.BuilderTypoes to have a length of %d; got %d", len(tstTpl.BuilderTypes), len(newBuild.BuilderTypes))
+		goto builderTypesEnd
+	}
+	for i, v := range tstTpl.BuilderTypes {
+		if v != newBuild.BuilderTypes[i] {
+			t.Errorf("Expected builder type at index %d to be %q; got %q", i, v, newBuild.BuilderTypes[i])
+		}
+	}
+builderTypesEnd:
+	if fmt.Sprintf("%p", newBuild.Builders) == fmt.Sprintf("%p", tstTpl.build.Builders) {
+		t.Errorf("The pointer for BuilderTypes is the same for both newBuild and testBuild: %x, expected them to be different.", fmt.Sprintf("%p", tstTpl.build.Builders))
+		goto buildersEnd
+	}
+	if len(newBuild.Builders) != len(tstTpl.Builders) {
+		t.Errorf("Expected newBuild.BuilderTypoes to have a length of %d; got %d", len(tstTpl.Builders), len(newBuild.Builders))
+		goto buildersEnd
+	}
+	for k, _ := range tstTpl.Builders {
+		_, ok := newBuild.Builders[k]
+		if !ok {
+			t.Errorf("Expected %s to be a builder in the copy, but it wasn't", k)
+		}
+	}
+buildersEnd:
+	if len(newBuild.PostProcessorTypes) != len(tstTpl.PostProcessorTypes) {
+		t.Errorf("Expected newBuild.PostProcessorTypes to have a length of %d; got %d", len(tstTpl.PostProcessorTypes), len(newBuild.PostProcessorTypes))
+		goto postProcessorTypesEnd
+	}
+	for i, v := range tstTpl.PostProcessorTypes {
+		if v != newBuild.PostProcessorTypes[i] {
+			t.Errorf("Expected PostProcessor type at index %d to be %q; got %q", i, v, newBuild.PostProcessorTypes[i])
+		}
+	}
+postProcessorTypesEnd:
+	if fmt.Sprintf("%p", newBuild.PostProcessors) == fmt.Sprintf("%p", tstTpl.build.PostProcessors) {
+		t.Errorf("The pointer for PostProcessors is the same for both newBuild and testBuild: %x, expected them to be different.", fmt.Sprintf("%p", tstTpl.build.PostProcessors))
+		goto postProcessorsEnd
+	}
+	if len(newBuild.PostProcessors) != len(tstTpl.PostProcessors) {
+		t.Errorf("Expected newBuild.PostProcessors to have a length of %d; got %d", len(tstTpl.PostProcessors), len(newBuild.PostProcessors))
+		goto postProcessorsEnd
+	}
+	for k, _ := range tstTpl.PostProcessors {
+		_, ok := newBuild.PostProcessors[k]
+		if !ok {
+			t.Errorf("Expected %s to be a PostProcessors in the copy, but it wasn't", k)
+		}
+	}
+postProcessorsEnd:
+	if len(newBuild.ProvisionerTypes) != len(tstTpl.ProvisionerTypes) {
+		t.Errorf("Expected newBuild.ProvisionerTypes to have a length of %d; got %d", len(tstTpl.ProvisionerTypes), len(newBuild.PostProcessorTypes))
+		goto provisionerTypesEnd
+	}
+	for i, v := range tstTpl.ProvisionerTypes {
+		if v != newBuild.ProvisionerTypes[i] {
+			t.Errorf("Expected provisioner type at index %d to be %q; got %q", i, v, newBuild.ProvisionerTypes[i])
+		}
+	}
+provisionerTypesEnd:
+	if fmt.Sprintf("%p", newBuild.Provisioners) == fmt.Sprintf("%p", tstTpl.build.Provisioners) {
+		t.Errorf("The pointer for Provisioners is the same for both newBuild and testBuild: %x, expected them to be different.", fmt.Sprintf("%p", tstTpl.build.Provisioners))
+		goto provisionersEnd
+	}
+	if len(newBuild.Provisioners) != len(tstTpl.Provisioners) {
+		t.Errorf("Expected newBuild.Provisioners types to have a length of %d; got %d", len(tstTpl.Provisioners), len(newBuild.Provisioners))
+		goto provisionersEnd
+	}
+	for k, _ := range tstTpl.Provisioners {
+		_, ok := newBuild.Provisioners[k]
+		if !ok {
+			t.Errorf("Expected %s to be a Provisioners in the copy, but it wasn't", k)
+		}
+	}
+provisionersEnd:
+}
+
 func TestTemplateSectionMergeArrays(t *testing.T) {
 	ts := &templateSection{}
 	merged := ts.mergeArrays(nil, nil)
@@ -574,23 +659,22 @@ func TestProvisionerMergeSettings(t *testing.T) {
 
 func TestDefaults(t *testing.T) {
 	tests := []struct {
-		filename    string
 		format      string
 		expectedErr string
 	}{
-		{"", "", "\"default\" not set, unable to retrieve the default file"},
-		//		{"../test_files/conf/test.default.yaml", "", ""},
-		//{"../test_files/conf/test.default.yaml", "yaml", ""},
-		{"../test_files/conf/test.default.toml", "toml", ""},
-		{"../test_files/conf/test.default.json", "json", ""},
+		{"", "unsupported format"},
+		{"yaml", "unsupported format"},
+		{"toml", ""},
+		{"json", ""},
 	}
+	contour.UpdateString(ConfDir, "conf")
 	for i, test := range tests {
-		contour.UpdateString(DefaultFile, test.filename)
+		contour.UpdateString(Format, test.format)
 		d := defaults{}
-		err := d.Load()
+		err := d.Load("../test_files")
 		if err != nil {
 			if err.Error() != test.expectedErr {
-				t.Errorf("%d: expected %q, got %q", i, test.expectedErr, err.Error())
+				t.Errorf("%d: expected %q, got %q", i, test.expectedErr, err)
 			}
 			continue
 		}
@@ -606,28 +690,27 @@ func TestDefaults(t *testing.T) {
 
 func TestSupported(t *testing.T) {
 	tests := []struct {
-		filename    string
 		format      string
+		p           string
 		expectedErr string
 	}{
-		{"", "", "\"supported\" not set, unable to retrieve the supported file"},
-		//		{"../test_files/conf/test.supported.yaml", "", ""},
-		//{"../test_files/conf/test.supported.yaml", "yaml", ""},
-		{"../test_files/conf/test.supported.toml", "toml", ""},
-		{"../test_files/conf/test.supported.json", "json", ""},
+		{"", "", "unsupported format"},
+		{"yaml", "", "unsupported format"},
+		{"toml", "../test_files", ""},
+		{"json", "../test_files", ""},
 	}
 	for i, test := range tests {
-		contour.UpdateString(SupportedFile, test.filename)
+		contour.UpdateString(Format, test.format)
 		s := supported{}
-		err := s.Load()
+		err := s.Load(test.p)
 		if err != nil {
 			if err.Error() != test.expectedErr {
-				t.Errorf("%d: expected %q, got %q", i, test.expectedErr, err.Error())
+				t.Errorf("%d: expected %q, got %q", i, test.expectedErr, err)
 			}
 			continue
 		}
 		if test.expectedErr != "" {
-			t.Errorf("%d: expepcted an error: %q, got none", i, test.expectedErr)
+			t.Errorf("%d: expected an error: %q, got none", i, test.expectedErr)
 			continue
 		}
 		if MarshalJSONToString.Get(s.Distro) != MarshalJSONToString.Get(testSupported) {
@@ -643,19 +726,21 @@ func TestBuildStuff(t *testing.T) {
 		expectedErr string
 	}{
 		{"", "", "\"build\" not set, unable to retrieve the build file"},
-		{"../test_files/conf.d/test.build.yaml", "", "error: unsupported format"},
-		{"../test_files/conf.d/test.build.yaml", "yaml", "error: unsupported format"},
-		{"../test_files/conf.d/test.build.toml", "toml", ""},
-		{"../test_files/conf.d/test.build.json", "json", ""},
+		{"", "yaml", "\"build\" not set, unable to retrieve the build file"},
+		{"", "toml", "\"build\" not set, unable to retrieve the build file"},
+		{"", "json", "\"build\" not set, unable to retrieve the build file"},
+		{"../test_files/conf/build2.yaml", "yaml", "unsupported format"},
+		{"../test_files/conf/build2.toml", "toml", ""},
+		{"../test_files/conf/build2.json", "json", ""},
 	}
+	contour.UpdateString(ConfDir, "../test_files/conf")
 	for i, test := range tests {
-		contour.UpdateString(BuildFile, test.filename)
-		contour.UpdateString("format", test.format)
+		contour.UpdateString(Format, test.format)
 		b := builds{}
-		err := b.Load()
+		err := b.Load(test.filename)
 		if err != nil {
 			if err.Error() != test.expectedErr {
-				t.Errorf("%d: expected %q, got %q", i, test.expectedErr, err.Error())
+				t.Errorf("%d: expected %q, got %q", i, test.expectedErr, err)
 			}
 			continue
 		}
@@ -671,24 +756,22 @@ func TestBuildStuff(t *testing.T) {
 
 func TestBuildListStuff(t *testing.T) {
 	tests := []struct {
-		filename    string
 		format      string
 		expectedErr string
 	}{
-		{"", "", "\"build_list\" not set, unable to retrieve the build_list file"},
-		{"../test_files/conf.d/test.build_list.yaml", "", "error: unsupported format"},
-		{"../test_files/conf.d/test.build_list.yaml", "yaml", "error: unsupported format"},
-		{"../test_files/conf.d/test.build_list.toml", "toml", ""},
-		{"../test_files/conf.d/test.build_list.json", "json", ""},
+		{"", "unsupported format"},
+		{"yaml", "unsupported format"},
+		{"toml", ""},
+		{"json", ""},
 	}
+	contour.UpdateString(ConfDir, "conf")
 	for i, test := range tests {
-		contour.UpdateString(BuildListFile, test.filename)
-		contour.UpdateString("format", test.format)
+		contour.UpdateString(Format, test.format)
 		b := &buildLists{List: map[string]list{}}
-		err := b.Load()
+		err := b.Load("../test_files")
 		if err != nil {
 			if err.Error() != test.expectedErr {
-				t.Errorf("%d: expected %q, got %q", i, test.expectedErr, err.Error())
+				t.Errorf("%d: expected %q, got %q", i, test.expectedErr, err)
 			}
 			continue
 		}
@@ -703,33 +786,33 @@ func TestBuildListStuff(t *testing.T) {
 }
 
 func TestIODirInfUpdate(t *testing.T) {
-	oldIODirInf := IODirInf{OutDir: "old OutDir", SrcDir: "old SrcDir"}
+	oldIODirInf := IODirInf{OutputDir: "old OutDir", SourceDir: "old SrcDir"}
 	newIODirInf := IODirInf{}
 	oldIODirInf.update(newIODirInf)
-	if oldIODirInf.OutDir != "old OutDir" {
-		t.Errorf("Expected \"old OutDir\", got %q", oldIODirInf.OutDir)
+	if oldIODirInf.OutputDir != "old OutDir" {
+		t.Errorf("Expected \"old OutDir\", got %q", oldIODirInf.OutputDir)
 	}
-	if oldIODirInf.SrcDir != "old SrcDir" {
-		t.Errorf("Expected \"old SrcDir\", got %q", oldIODirInf.SrcDir)
-	}
-
-	oldIODirInf = IODirInf{OutDir: "old OutDir", SrcDir: "old SrcDir"}
-	newIODirInf = IODirInf{OutDir: "new OutDir", SrcDir: "new SrcDir"}
-	oldIODirInf.update(newIODirInf)
-	if oldIODirInf.OutDir != "new OutDir/" {
-		t.Errorf("Expected \"new OutDir/\", got %q", oldIODirInf.OutDir)
-	}
-	if oldIODirInf.SrcDir != "new SrcDir/" {
-		t.Errorf("Expected \"new SrcDir/\", got %q", oldIODirInf.SrcDir)
+	if oldIODirInf.SourceDir != "old SrcDir" {
+		t.Errorf("Expected \"old SrcDir\", got %q", oldIODirInf.SourceDir)
 	}
 
-	oldIODirInf = IODirInf{OutDir: "old OutDir", SrcDir: "old SrcDir"}
-	newIODirInf = IODirInf{OutDir: "OutDir"}
+	oldIODirInf = IODirInf{OutputDir: "old OutDir", SourceDir: "old SrcDir"}
+	newIODirInf = IODirInf{OutputDir: "new OutDir", SourceDir: "new SrcDir"}
 	oldIODirInf.update(newIODirInf)
-	if oldIODirInf.OutDir != "OutDir/" {
-		t.Errorf("Expected \"OutDir/\", got %q", oldIODirInf.OutDir)
+	if oldIODirInf.OutputDir != "new OutDir/" {
+		t.Errorf("Expected \"new OutDir/\", got %q", oldIODirInf.OutputDir)
 	}
-	if oldIODirInf.SrcDir != "old SrcDir" {
-		t.Errorf("Expected \"old SrcDir\", got %q", oldIODirInf.SrcDir)
+	if oldIODirInf.SourceDir != "new SrcDir/" {
+		t.Errorf("Expected \"new SrcDir/\", got %q", oldIODirInf.SourceDir)
+	}
+
+	oldIODirInf = IODirInf{OutputDir: "old OutDir", SourceDir: "old SrcDir"}
+	newIODirInf = IODirInf{OutputDir: "OutDir"}
+	oldIODirInf.update(newIODirInf)
+	if oldIODirInf.OutputDir != "OutDir/" {
+		t.Errorf("Expected \"OutDir/\", got %q", oldIODirInf.OutputDir)
+	}
+	if oldIODirInf.SourceDir != "old SrcDir" {
+		t.Errorf("Expected \"old SrcDir\", got %q", oldIODirInf.SourceDir)
 	}
 }

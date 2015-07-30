@@ -1,0 +1,57 @@
+# Builds are named configurations that specify the distro to use, at minimum, and 
+# define the final overrides and settings for generating a Packer Template. The 
+# generated Packer template will be the result of merging the settings within the
+# build configuration with the Rancher and distro defaults.
+[1204-amd64]
+	distro = "ubuntu"
+	description = "ubuntu LTS 1204 amd64 server build, minimal install"
+	arch = "amd64"
+	image = "server"
+	release = "12.04"
+	builder_types = [
+		"virtualbox-iso"
+	]
+	[1204-amd64.builders]
+		[1204-amd64.builders.common]
+			settings = [
+				"ssh_wait_timeout = 300m"
+			]
+			[1204-amd64.builders.virtualbox-iso.arrays]
+				vboxmanage = [
+					"memory=4096"
+				]
+[centos6]
+	distro = "centos"
+	description = "Centos 6 w virtualbox-iso only"
+	builder_types = [
+		"virtualbox-iso"
+	]
+
+[jessie]
+	distro = "debian"
+	description = "debian jessie"
+	arch = "amd64"
+	builder_types = [
+		"virtualbox-iso"
+	]
+	post_processor_types = [
+		"vagrant"
+	]
+	provisioner_types = [
+		"shell"
+	]
+	[jessie.builders]
+		[jessie.builders.virtualbox-iso.arrays]
+			vboxmanage = [
+				"--memory=4096"
+			]
+	[jessie.provisioners]
+		[jessie.provisioners.shell]
+			[jessie.provisioners.shell.arrays]
+				scripts = [ 
+					"setup.sh",
+					"sudoers.sh",
+					"vagrant.sh",
+					"customize.sh",
+					"cleanup.sh",
+				]

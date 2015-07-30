@@ -3,12 +3,14 @@ package app
 
 import (
 	"testing"
+
+	"github.com/mohae/contour"
 )
 
 var testUbuntu = rawTemplate{
 	IODirInf: IODirInf{
-		OutDir: "../test_files/ubuntu/out/ubuntu",
-		SrcDir: "../test_files/src/ubuntu",
+		OutputDir: "../test_files/ubuntu/out/ubuntu",
+		SourceDir: "../test_files/src/ubuntu",
 	},
 	PackerInf: PackerInf{
 		MinPackerVersion: "",
@@ -110,8 +112,8 @@ var testUbuntu = rawTemplate{
 
 var testCentOS = rawTemplate{
 	IODirInf: IODirInf{
-		OutDir: "../test_files/out/centos",
-		SrcDir: "../test_files/src/centos",
+		OutputDir: "../test_files/out/centos",
+		SourceDir: "../test_files/src/centos",
 	},
 	PackerInf: PackerInf{
 		MinPackerVersion: "",
@@ -245,8 +247,8 @@ var testCentOS = rawTemplate{
 var testAllBuilders = rawTemplate{
 	IODirInf: IODirInf{
 		IncludeComponentString: "true",
-		OutDir:                 "../test_files/out",
-		SrcDir:                 "../test_files/src",
+		OutputDir:              "../test_files/out",
+		SourceDir:              "../test_files/src",
 	},
 	PackerInf: PackerInf{
 		MinPackerVersion: "",
@@ -785,8 +787,8 @@ var testAllBuilders = rawTemplate{
 
 var testDigtialOceanAPIV1 = rawTemplate{
 	IODirInf: IODirInf{
-		OutDir: "../test_files/ubuntu/out/ubuntu",
-		SrcDir: "../test_files/src/ubuntu",
+		OutputDir: "../test_files/ubuntu/out/ubuntu",
+		SourceDir: "../test_files/src/ubuntu",
 	},
 	PackerInf: PackerInf{
 		MinPackerVersion: "",
@@ -834,8 +836,8 @@ var testDigtialOceanAPIV1 = rawTemplate{
 
 var testDigtialOceanNoAPI = rawTemplate{
 	IODirInf: IODirInf{
-		OutDir: "../test_files/ubuntu/out/ubuntu",
-		SrcDir: "../test_files/src/ubuntu",
+		OutputDir: "../test_files/ubuntu/out/ubuntu",
+		SourceDir: "../test_files/src/ubuntu",
 	},
 	PackerInf: PackerInf{
 		MinPackerVersion: "",
@@ -880,8 +882,8 @@ var testDigtialOceanNoAPI = rawTemplate{
 }
 var testDockerRunComandFile = rawTemplate{
 	IODirInf: IODirInf{
-		OutDir: "../test_files/out",
-		SrcDir: "../test_files/src",
+		OutputDir: "../test_files/out",
+		SourceDir: "../test_files/src",
 	},
 	PackerInf: PackerInf{
 		MinPackerVersion: "",
@@ -929,8 +931,8 @@ var testDockerRunComandFile = rawTemplate{
 // file
 var testDockerRunComand = rawTemplate{
 	IODirInf: IODirInf{
-		OutDir: "../test_files/out",
-		SrcDir: "../test_files/src",
+		OutputDir: "../test_files/out",
+		SourceDir: "../test_files/src",
 	},
 	PackerInf: PackerInf{
 		MinPackerVersion: "",
@@ -1115,7 +1117,7 @@ func TestCreateBuilders(t *testing.T) {
 		t.Error("Expected error \"unable to create builders: none specified\", got nil")
 	} else {
 		if err.Error() != "unable to create builders: none specified" {
-			t.Errorf("Expected \"unable to create builders: none specified\", got %q", err.Error())
+			t.Errorf("Expected \"unable to create builders: none specified\", got %q", err)
 		}
 	}
 
@@ -1124,7 +1126,7 @@ func TestCreateBuilders(t *testing.T) {
 		t.Error("Expected \"amazon-ebs builder error: configuration not found\", got nil")
 	} else {
 		if err.Error() != "amazon-ebs builder error: configuration not found" {
-			t.Errorf("Expected \"amazon-ebs builder error: configuration not found\", got %q", err.Error())
+			t.Errorf("Expected \"amazon-ebs builder error: configuration not found\", got %q", err)
 		}
 	}
 
@@ -1134,7 +1136,7 @@ func TestCreateBuilders(t *testing.T) {
 		t.Error("Expected \"digitalocean builder error: configuration not found\", got nil")
 	} else {
 		if err.Error() != "digitalocean builder error: configuration not found" {
-			t.Errorf("Expected digitalocean builder error: configuration not found\", got %q", err.Error())
+			t.Errorf("Expected digitalocean builder error: configuration not found\", got %q", err)
 		}
 	}
 
@@ -1144,7 +1146,7 @@ func TestCreateBuilders(t *testing.T) {
 		t.Error("Expected \"docker builder error: configuration not found\", got nil")
 	} else {
 		if err.Error() != "docker builder error: configuration not found" {
-			t.Errorf("Expected \"docker builder error: configuration not found\", got %q", err.Error())
+			t.Errorf("Expected \"docker builder error: configuration not found\", got %q", err)
 		}
 	}
 
@@ -1154,7 +1156,7 @@ func TestCreateBuilders(t *testing.T) {
 		t.Error("Expected \"googlecompute builder error: configuration not found\", got nil")
 	} else {
 		if err.Error() != "googlecompute builder error: configuration not found" {
-			t.Errorf("Expected \"googlecompute builder error: configuration not found\", got %q", err.Error())
+			t.Errorf("Expected \"googlecompute builder error: configuration not found\", got %q", err)
 		}
 	}
 
@@ -1164,7 +1166,7 @@ func TestCreateBuilders(t *testing.T) {
 		t.Error("Expected \"virtualbox-iso builder error: configuration not found\", got nil")
 	} else {
 		if err.Error() != "virtualbox-iso builder error: configuration not found" {
-			t.Errorf("Expected \"virtualbox-iso builder error: configuration not found\", got %q", err.Error())
+			t.Errorf("Expected \"virtualbox-iso builder error: configuration not found\", got %q", err)
 		}
 	}
 
@@ -1174,7 +1176,7 @@ func TestCreateBuilders(t *testing.T) {
 		t.Error("Expected \"virtualbox-ovf builder error: configuration not found\", got nil")
 	} else {
 		if err.Error() != "virtualbox-ovf builder error: configuration not found" {
-			t.Errorf("Expected \"virtualbox-ovf builder error: configuration not found\", got %q", err.Error())
+			t.Errorf("Expected \"virtualbox-ovf builder error: configuration not found\", got %q", err)
 		}
 	}
 
@@ -1184,7 +1186,7 @@ func TestCreateBuilders(t *testing.T) {
 		t.Error("Expected \"vmware-iso builder error: configuration not found\", got nil")
 	} else {
 		if err.Error() != "vmware-iso builder error: configuration not found" {
-			t.Errorf("Expected \"vmware-iso builder error: configuration not found\", got %q", err.Error())
+			t.Errorf("Expected \"vmware-iso builder error: configuration not found\", got %q", err)
 		}
 	}
 
@@ -1194,7 +1196,7 @@ func TestCreateBuilders(t *testing.T) {
 		t.Error("Expected \"vmware-vmx builder error: configuration not found\", got nil")
 	} else {
 		if err.Error() != "vmware-vmx builder error: configuration not found" {
-			t.Errorf("Expected \"vmware-vmx builder error: configuration not found\", got %q", err.Error())
+			t.Errorf("Expected \"vmware-vmx builder error: configuration not found\", got %q", err)
 		}
 	}
 
@@ -1207,7 +1209,7 @@ func TestCreateBuilders(t *testing.T) {
 		t.Error("Expected an error, got nil")
 	} else {
 		if err.Error() != "unsupported builder error: \"unsupported\" is not supported" {
-			t.Errorf("Expected \"unsupported builder error: \"unsupported\" is not supported\"), got %q", err.Error())
+			t.Errorf("Expected \"unsupported builder error: \"unsupported\" is not supported\"), got %q", err)
 		}
 	}
 
@@ -1217,7 +1219,7 @@ func TestCreateBuilders(t *testing.T) {
 		t.Error("Expected an error, got nil")
 	} else {
 		if err.Error() != "unable to create builders: none specified" {
-			t.Errorf("Expected \"unable to create builders: none specified\"), got %q", err.Error())
+			t.Errorf("Expected \"unable to create builders: none specified\"), got %q", err)
 		}
 	}
 }
@@ -1225,7 +1227,7 @@ func TestCreateBuilders(t *testing.T) {
 func TestRawTemplateUpdatebuilders(t *testing.T) {
 	err := testUbuntu.updateBuilders(nil)
 	if err != nil {
-		t.Errorf("expected error to be nil, got %q", err.Error())
+		t.Errorf("expected error to be nil, got %q", err)
 	}
 	if MarshalJSONToString.Get(testUbuntu.Builders) != MarshalJSONToString.Get(builderOrig) {
 		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(builderOrig), MarshalJSONToString.Get(testUbuntu.Builders))
@@ -1233,7 +1235,7 @@ func TestRawTemplateUpdatebuilders(t *testing.T) {
 
 	err = testUbuntu.updateBuilders(builderNew)
 	if err != nil {
-		t.Errorf("expected error to be nil, got %q", err.Error())
+		t.Errorf("expected error to be nil, got %q", err)
 	}
 	if MarshalJSONToString.Get(testUbuntu.Builders) != MarshalJSONToString.Get(builderMerged) {
 		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(builderMerged), MarshalJSONToString.Get(testUbuntu.Builders))
@@ -1248,7 +1250,7 @@ func TestRawTemplateUpdateBuilderCommon(t *testing.T) {
 }
 
 func TestRawTemplateBuildersSettingsToMap(t *testing.T) {
-	settings := vbB.settingsToMap(&testRawTpl)
+	settings := vbB.settingsToMap(testRawTpl)
 	if settings["boot_wait"] != "5s" {
 		t.Errorf("Expected \"5s\", got %q", settings["boot_wait"])
 	}
@@ -1476,6 +1478,7 @@ func TestCreateAmazonInstance(t *testing.T) {
 		"x509_key_path":    "/path/to/x509/key",
 		"x509_upload_path": "/etc/x509",
 	}
+	contour.UpdateString(SourceDir, "../test_files/src")
 	bldr, err := testAllBuilders.createAmazonInstance()
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
@@ -1539,7 +1542,7 @@ func TestCreateDigitalOcean(t *testing.T) {
 		t.Errorf("Expected an error, got nil")
 	} else {
 		if err.Error() != "required setting not found: either api_token or (api_key && client_id)" {
-			t.Errorf("Expected \"required setting not found: either api_token or (api_key && client_id)\", got %q", err.Error())
+			t.Errorf("Expected \"required setting not found: either api_token or (api_key && client_id)\", got %q", err)
 		}
 	}
 }
@@ -1835,7 +1838,7 @@ func TestCreateVirtualboxOVF(t *testing.T) {
 	testAllBuilders.files = make(map[string]string)
 	settings, err := testAllBuilders.createVirtualBoxOVF()
 	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
+		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
 		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
@@ -1907,7 +1910,7 @@ func TestCreateVMWareISO(t *testing.T) {
 	testAllBuilders.BaseURL = "http://releases.ubuntu.com/"
 	settings, err := testAllBuilders.createVMWareISO()
 	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
+		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
 		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
@@ -1960,7 +1963,7 @@ func TestCreateVMWareVMX(t *testing.T) {
 
 	settings, err := testAllBuilders.createVMWareVMX()
 	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err.Error())
+		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
 		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))

@@ -2,7 +2,6 @@ package command
 
 import (
 	"flag"
-	"fmt"
 	"strings"
 
 	"github.com/mitchellh/cli"
@@ -35,14 +34,9 @@ func (c *RunCommand) Help() string {
 // Run runs the run sub-command; the args are a variadic list of build list names.
 func (c *RunCommand) Run(args []string) int {
 	var logLevel string
-
 	cmdFlags := flag.NewFlagSet("run", flag.ContinueOnError)
 	cmdFlags.Usage = func() { c.UI.Output(c.Help()) }
 	cmdFlags.StringVar(&logLevel, "log-level", "INFO", "log level")
-
-	fmt.Printf("%+v\n", args)
-	fmt.Printf("Not implemented")
-
 	return 0
 
 }
