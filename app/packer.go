@@ -39,6 +39,7 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, dirs, files map[string]s
 	}
 	// copy any directories associated with the template
 	for dst, src := range dirs {
+		jww.FEEDBACK.Printf("CopyDir: %s to %s\n", src, dst)
 		err = copyDir(src, dst)
 		if err != nil {
 			jww.ERROR.Println(err)
