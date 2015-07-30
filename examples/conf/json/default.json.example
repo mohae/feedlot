@@ -37,8 +37,7 @@
         "instance_type=t1.micro",
         "region=us-east-1",
         "secret_key=YOUR SECRET KEY HERE",
-        "source_ami=ami-de0d9eb7",
-        "ssh_username=ubuntu"
+        "source_ami=ami-de0d9eb7"
       ]
     },
     "amazon-instance": {
@@ -51,7 +50,6 @@
         "s3_bucket=packer-images",
         "secret_key=YOUR SECRET KEY HERE",
         "source_ami=ami-d9d6a6b0",
-        "ssh_username=ubuntu",
         "x509_cert_path=x509.cert",
         "x509_key_path=x509.key",
         "x509_upload_path=/tmp"
@@ -67,8 +65,7 @@
     },
     "googlecompute": {
       "settings": [
-        "account_file=account.json",
-        "project_id=mu-project",
+        "project_id=my-project",
         "source_image=debian-7-wheezy-v20150127",
         "zone=us-central1-a"
       ]
@@ -76,8 +73,7 @@
     "null": {
       "settings": [
         "ssh_host=127.0.0.1",
-        "ssh_username=foo",
-        "ssh_password=bar"
+        "ssh_password=packer"
       ]
     },
     "virtualbox-iso": {
@@ -103,8 +99,7 @@
     },
     "docker-import": {
       "settings": [
-        "repository=mitchellh/packer",
-        "tag=0.7"
+        "repository=mitchellh/packer"
       ]
     },
     "docker-push": {
@@ -116,16 +111,15 @@
     },
     "docker-tag": {
       "settings": [
-        "repository=mitchellh/packer",
-        "tag=0.7"
+        "repository=mitchellh/packer"
       ]
     },
     "vagrant": {
     },
     "vagrant-cloud": {
       "settings": [
-        "box_tag=hashicorp/precise64",
         "access_token={{user `cloud_token`}}",
+        "box_tag=hashicorp/precise64",
         "version={{user `version`}}"
       ]
     },
@@ -136,7 +130,6 @@
         "datastore=ds-001",
         "host=vsphere-host",
         "password=packer",
-        "username=packer",
         "vm_name=packer-vshpere-vm"
       ]
     }
@@ -148,21 +141,14 @@
       ]
     },
     "chef-client": {
-      "settings": [
-        "server_url=https://mychefserver.com/"
-      ]
     },
     "chef-solo": {
-      "arrays": {
-        "cookbook_paths": [
-          "cookbooks"
-        ]
-      }
     },
     "file": {
       "settings": [
          "source=app.tar.gz",
-         "destination=/tmp/app.tar.gz"
+         "destination=/tmp/app.tar.gz",
+         "direction=upload"
        ]
     },
     "powershell": {
@@ -176,14 +162,6 @@
       ]
     },
     "puppet-server": {
-      "settings": [
-        "options=--test --pluginsync"
-      ],
-      "arrays": {
-        "facter": [
-          "server_role = webserver"
-        ]
-      }
     },
     "salt-masterless": {
        "settings": [
@@ -191,9 +169,6 @@
        ]
     },
     "shell": {
-      "settings": [
-        "inline=[\"echo foo\"]"
-      ],
       "arrays": {
         "scripts": [
           "setup.sh",
@@ -205,7 +180,7 @@
     },
     "shell-local": {
       "settings": [
-         "command=\"echo foo\""
+         "command=echo foo"
       ]
     },
     "windows-restart": {
