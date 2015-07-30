@@ -468,8 +468,6 @@ func (r *rawTemplate) findComponentSource(component, p string, isDir bool) (stri
 	}
 	var tmpPath string
 	var err error
-	// adjust path for example, if applicable
-	p = r.exampleFilename(p)
 	// if len(cParts) > 1, there was a - and component-base processing should be done
 	if component != "" {
 		component = strings.ToLower(component)
@@ -708,26 +706,6 @@ func (r *rawTemplate) getSourcePath(p string, isDir bool) string {
 		return ""
 	}
 	return filepath.Join(r.SourceDir, p)
-}
-
-// exampleFilename checks to see if this is an example template. If it is, it
-// returns the string with the example ext; otherwise the unmodified, original
-// string is returned.
-func (r *rawTemplate) exampleFilename(s string) string {
-	if !r.IsExample {
-		return s
-	}
-	return exampleFilename(s)
-}
-
-// stripExampleFilename checks to see if this is an example template. If it is,
-// it returns the string with the example ext stripped from it, otherwise the
-// unmodified, original string is returned.
-func (r *rawTemplate) stripExampleFilename(s string) string {
-	if !r.IsExample {
-		return s
-	}
-	return exampleFilename(s)
 }
 
 // setExampleDisr sets the SourceDir and OutDir for example template builds. If

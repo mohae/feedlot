@@ -170,13 +170,8 @@ func loadBuilds() error {
 	if err != nil {
 		return err
 	}
-	isExample := contour.GetBool(Example)
 	// for each file
 	for _, fname := range fnames {
-		// example suffix needs to be removed, if it exists
-		if isExample {
-			fname = stripExampleFilename(fname)
-		}
 		// get the file name, without the extension
 		ext := filepath.Ext(fname)
 		file := strings.TrimSuffix(fname, ext)
@@ -190,10 +185,6 @@ func loadBuilds() error {
 			continue
 		case "supported":
 			continue
-		}
-		// example suffix needs to be restored, if example
-		if isExample {
-			fname = exampleFilename(fname)
 		}
 		fname = filepath.Join(cDir, fname)
 		b := builds{}
@@ -717,18 +708,4 @@ func indexDir(s string) (dirs, files []string, err error) {
 		files = append(files, fi.Name())
 	}
 	return dirs, files, nil
-}
-
-// exampleFilename adds the example ext to the received string and returns it.
-func exampleFilename(s string) string {
-	// if the name is already suffixed with .example. don't add another, just return it
-	if strings.HasSuffix(s, ExampleExt) {
-		return s
-	}
-	return fmt.Sprintf("%s%s", s, ExampleExt)
-}
-
-// stripExampleFilename trims the example ext from the passed string amd returns it
-func stripExampleFilename(n string) string {
-	return strings.TrimSuffix(n, ExampleExt)
 }
