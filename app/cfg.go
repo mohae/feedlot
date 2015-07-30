@@ -595,10 +595,6 @@ func SetCfgFile() error {
 //
 // If the p field has a value, it is used as the dir path, instead of the
 // confDir,
-//
-// If p is prefixed with 1 or more '..' and this is an Example, the path will
-// not be correct. This shouldn't be an issue since p was added as a parm
-// mainly for testing; though its usage may expand in the future.
 func GetConfFile(p, name string) string {
 	if name == "" {
 		return name
@@ -619,7 +615,7 @@ func GetConfFile(p, name string) string {
 	}
 	if contour.GetBool(Example) {
 		// example files always end in '.example'
-		return filepath.Join(contour.GetString(ExampleDir), p, fmt.Sprintf("%s.example", name))
+		return filepath.Join(contour.GetString(ExampleDir), p, name)
 	}
 	return filepath.Join(p, name)
 }

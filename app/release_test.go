@@ -46,8 +46,8 @@ func TestCentOSsetReleaseInfo(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if !strings.HasPrefix(c.Release, "6") {
-			t.Errorf("Expected %q to start with \"6\"", c.Release)
+		if !strings.HasPrefix(c.Release, "7") {
+			t.Errorf("Expected %q to start with \"7\"", c.Release)
 		}
 	}
 	c = newTestCentOS()

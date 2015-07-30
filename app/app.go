@@ -34,9 +34,6 @@ const (
 	LogLevelStdOut    = "log_level_stdout"
 )
 
-// ExampleExt is the extension for example files; used in example mode.
-const ExampleExt = ".example"
-
 // CfgFile is the suffix for the ENV variable name that holds the override
 // value for the Rancher cfg file, if there is one.
 var CfgFile = "cfg_file"
