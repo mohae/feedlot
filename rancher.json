@@ -1,0 +1,12 @@
+{
+  "archive_prior_build": false,
+  "conf_dir": "conf/json",
+  "example": false,
+  "example_dir": "examples",
+  "format": "json",
+  "log": false,
+  "log_file": "rancher.log",
+  "log_level_file": "WARN",
+  "log_level_stdout": "ERROR",
+  "param_delim_start": ":"
+}

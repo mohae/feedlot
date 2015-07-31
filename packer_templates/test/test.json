@@ -1,0 +1,169 @@
+{
+	"description": "example ubuntu LTS 1404 amd64 build with all supported components; required settings only",
+	"min_packer_version": "0.7.0",
+	"builders": [
+		{
+			"access_key": "YOUR KEY HERE",
+			"ami_name": "packer-amazon-chroot {{timestamp}}",
+			"secret_key": "YOUR SECRET KEY HERE",
+			"source_ami": "ami-e81d5881",
+			"type": "amazon-chroot"
+		},
+		{
+			"access_key": "YOUR KEY HERE",
+			"ami_name": "packer-quick-start {{timestamp}}",
+			"instance_type": "t1.micro",
+			"region": "us-east-1",
+			"secret_key": "YOUR SECRET KEY HERE",
+			"source_ami": "ami-de0d9eb7",
+			"ssh_username": "packer",
+			"type": "amazon-ebs"
+		},
+		{
+			"access_key": "YOUR KEY HERE",
+			"account_id": "0123-4567-0890",
+			"ami_name": "packer-quick-start {{timestamp}}",
+			"instance_type": "m1.small",
+			"region": "us-east-1",
+			"s3_bucket": "packer-images",
+			"secret_key": "YOUR SECRET KEY HERE",
+			"source_ami": "ami-d9d6a6b0",
+			"ssh_username": "packer",
+			"type": "amazon-instance",
+			"x509_cert_path": "x509.cert",
+			"x509_key_path": "x509.key",
+			"x509_upload_path": "/tmp"
+		},
+		{
+			"api_token": "YOUR API KEY",
+			"image": "ubuntu-12-04-x64",
+			"region": "nyc2",
+			"size": "512mb",
+			"ssh_username": "packer",
+			"type": "digitalocean"
+		},
+		{
+			"project_id": "my-project",
+			"source_image": "debian-7-wheezy-v20150127",
+			"ssh_username": "packer",
+			"type": "googlecompute",
+			"zone": "us-central1-a"
+		},
+		{
+			"ssh_password": "packer",
+			"ssh_username": "packer",
+			"type": "null"
+		},
+		{
+			"guest_os_type": "Ubuntu_64",
+			"http_directory": "virtualbox-iso/http",
+			"iso_checksum": "8acd2f56bfcba2f7ac74a7e4a5e565ce68c024c38525c0285573e41c86ae90c0",
+			"iso_checksum_type": "sha256",
+			"iso_url": "http://releases.ubuntu.com/14.04/ubuntu-14.04.2-server-amd64.iso",
+			"ssh_username": "packer",
+			"type": "virtualbox-iso"
+		},
+		{
+			"http_directory": "virtualbox-ovf/http",
+			"source_path": "virtualbox-ovf/source.ovf",
+			"ssh_username": "packer",
+			"type": "virtualbox-ovf"
+		},
+		{
+			"guest_os_type": "Ubuntu_64",
+			"http_directory": "vmware-iso/http",
+			"iso_checksum": "8acd2f56bfcba2f7ac74a7e4a5e565ce68c024c38525c0285573e41c86ae90c0",
+			"iso_checksum_type": "sha256",
+			"iso_url": "http://releases.ubuntu.com/14.04/ubuntu-14.04.2-server-amd64.iso",
+			"ssh_username": "packer",
+			"type": "vmware-iso"
+		},
+		{
+			"http_directory": "vmware-vmx/http",
+			"source_path": "vmware-vmx/source.vmx",
+			"ssh_username": "packer",
+			"type": "vmware-vmx"
+		}
+	],
+	"post-processors": [
+		{
+			"output": "archive.tar.lz4",
+			"type": "compress"
+		},
+		{
+			"repository": "mitchellh/packer",
+			"type": "docker-import"
+		},
+		{
+			"repository": "mitchellh/packer",
+			"type": "docker-tag"
+		},
+		{
+			"type": "docker-push"
+		},
+		{
+			"path": "foo.tar",
+			"type": "docker-save"
+		},
+		{
+			"repository": "mitchellh/packer",
+			"type": "docker-tag"
+		},
+		{
+			"type": "vagrant"
+		},
+		{
+			"access_token": "{{user `cloud_token`}}",
+			"box_tag": "hashicorp/precise64",
+			"type": "vagrant-cloud",
+			"version": "{{user `version`}}"
+		},
+		{
+			"cluster": "vSphereCluster",
+			"datacenter": "dc-east-1",
+			"datastore": "ds-001",
+			"host": "vsphere-host",
+			"password": "packer",
+			"type": "vsphere",
+			"username": "packer",
+			"vm_name": "packer-vshpere-vm"
+		}
+	],
+	"provisioners": [
+		{
+			"playbook_file": "ansible-local/local.yml",
+			"type": "ansible-local"
+		},
+		{
+			"type": "chef-client"
+		},
+		{
+			"type": "chef-solo"
+		},
+		{
+			"destination": "/tmp/app.tar.gz",
+			"source": "file/app.tar.gz",
+			"type": "file"
+		},
+		{
+			"manifest_file": "puppet-masterless/site.pp",
+			"type": "puppet-masterless"
+		},
+		{
+			"type": "puppet-server"
+		},
+		{
+			"local_state_tree": "salt-masterless/Users/me/salt",
+			"type": "salt-masterless"
+		},
+		{
+			"scripts": [
+				"shell/setup.sh",
+				"shell/sudoers.sh",
+				"shell/packer.sh",
+				"shell/cleanup.sh"
+			],
+			"type": "shell"
+		}
+	]
+}
