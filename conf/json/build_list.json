@@ -5,5 +5,12 @@
       "centos7_x86_64",
       "jessie_amd64"	
     ]
-  }
+  },
+  "required": {
+    "builds": [
+      "1404_amd64_required",
+      "centos7_x86_64_required",
+      "jessie_amd64_required"
+    ]
+  {
 }
