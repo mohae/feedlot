@@ -1,7 +1,7 @@
 {
-  "example_1404_amd64": {
+  "1404_amd64": {
     "distro": "ubuntu",
-    "description": "example ubuntu LTS 1404 amd64 vagrant build",
+    "description": "example Ubuntu LTS 1404 amd64 vagrant build",
     "arch": "amd64",
     "image": "server",
     "release": "14.04",
@@ -25,7 +25,7 @@
   },
   "centos7_x86_64": {
     "distro": "centos",
-    "description": "example centos 7 x86_64 build",
+    "description": "example Centos 7 x86_64 build",
     "arch": "x86_64",
     "image": "minimal",
     "release": "7",
@@ -49,7 +49,7 @@
   },
   "jessie_amd64": {
     "distro": "debian",
-    "description": "example debian jessie build",
+    "description": "example Debian Jessie build",
     "arch": "amd64",
     "image": "netinst",
     "release": "8",
