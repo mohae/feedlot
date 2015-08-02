@@ -562,22 +562,8 @@ func (b *buildLists) Load(p string) error {
 func SetCfgFile() error {
 	// determine the correct file, This is done here because it's less ugly than the alternatives.
 	_, err := os.Stat(contour.GetString(CfgFile))
-	if err != nil && err == os.ErrNotExist {
-		ft := contour.GetString(Format)
-		switch ft {
-		case "toml", "tml":
-			contour.UpdateString(Format, "json")
-			contour.UpdateString(CfgFile, GetConfFile("", contour.GetString(CfgFile)))
-		case "json":
-			contour.UpdateString(Format, "toml")
-			contour.UpdateString(CfgFile, GetConfFile("", contour.GetString(CfgFile)))
-		}
-		_, err = os.Stat(contour.GetString(CfgFile))
-		if err != nil && err == os.ErrNotExist {
-			return nil
-		}
-		// Set the format to the new value.
-		contour.UpdateString(Format, ft)
+	if err != nil && strings.HasSuffix(err.Error(), "no such file or directory") {
+		return nil
 	}
 	if err != nil {
 		jww.ERROR.Print(err)
