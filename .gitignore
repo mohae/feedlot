@@ -26,7 +26,6 @@ rancher
 # additional tmp stuff that may exist that shouldn't be tracked
 *~
 *.out
-out/**
 *.bak
 *.log
 *.gz
