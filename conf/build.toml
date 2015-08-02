@@ -2,7 +2,7 @@
 # define the final overrides and settings for generating a Packer Template. The 
 # generated Packer template will be the result of merging the settings within the
 # build configuration with the Rancher and distro defaults.
-[1404-amd64]
+[1404_amd64]
 	distro = "ubuntu"
 	description = "ubuntu LTS 1404 amd64 vagrant build"
 	arch = "amd64"
@@ -11,12 +11,12 @@
 	builder_types = [
 		"virtualbox-iso"
 	]
-	[1404-amd64.builders]
-		[1404-amd64.builders.common]
+	[1404_amd64.builders]
+		[1404_amd64.builders.common]
 			settings = [
 				"ssh_wait_timeout = 30m"
 			]
-		[1404-amd64.builders.virtualbox-iso.arrays]
+		[1404_amd64.builders.virtualbox-iso.arrays]
 			vboxmanage = [
 				"memory=4096"
 			]
