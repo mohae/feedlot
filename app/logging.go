@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 
@@ -21,6 +22,13 @@ func SetTempLogging() {
 	jww.UseTempLogFile("rancher")
 	jww.SetLogThreshold(getJWWLevel(contour.GetString(LogLevelFile)))
 	jww.SetStdoutThreshold(getJWWLevel(contour.GetString(LogLevelStdOut)))
+	jww.TRACE.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	jww.DEBUG.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	jww.INFO.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	jww.WARN.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	jww.ERROR.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	jww.CRITICAL.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	jww.FATAL.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 }
 
 // SetLogging sets application logging settings.
