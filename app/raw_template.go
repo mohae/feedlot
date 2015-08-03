@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -433,7 +434,7 @@ func (r *rawTemplate) findCommandFile(component, name string) (string, error) {
 	if name == "" {
 		return "", fmt.Errorf("the passed command filename was empty")
 	}
-	findPath := filepath.Join("commands", name)
+	findPath := path.Join("commands", name)
 	src, err := r.findComponentSource(component, findPath, false)
 	// return the error for any error other than ErrNotExist
 	if err != nil && err != os.ErrNotExist {
@@ -471,9 +472,9 @@ func (r *rawTemplate) findComponentSource(component, p string, isDir bool) (stri
 	// if len(cParts) > 1, there was a - and component-base processing should be done
 	if component != "" {
 		component = strings.ToLower(component)
-		tmpPath, err = r.findSource(filepath.Join(component, p), isDir)
+		tmpPath, err = r.findSource(path.Join(component, p), isDir)
 		if err != nil && err != os.ErrNotExist {
-			return "", fmt.Errorf("%s: %s", tmpPath, err)
+			return "", fmt.Errorf("%s: %s", p, err)
 		}
 		if err == nil {
 			return tmpPath, nil
@@ -481,9 +482,9 @@ func (r *rawTemplate) findComponentSource(component, p string, isDir bool) (stri
 		cParts := strings.Split(component, "-")
 		if len(cParts) > 1 {
 			// first element is the base
-			tmpPath, err = r.findSource(filepath.Join(cParts[0], p), isDir)
+			tmpPath, err = r.findSource(path.Join(cParts[0], p), isDir)
 			if err != nil && err != os.ErrNotExist {
-				return "", fmt.Errorf("%s: %s", tmpPath, err)
+				return "", fmt.Errorf("%s: %s", p, err)
 			}
 			if err == nil {
 				return tmpPath, nil
@@ -538,133 +539,133 @@ func (r *rawTemplate) findSource(p string, isDir bool) (string, error) {
 		}
 	}
 	// source_dir/:build_name/p
-	tmpPath := r.getSourcePath(filepath.Join(r.BuildName, p), isDir)
+	tmpPath := r.getSourcePath(path.Join(r.BuildName, p), isDir)
 	_, err := os.Stat(tmpPath)
 	if err == nil {
 		jww.TRACE.Printf("findSource:  %s found", tmpPath)
-		return tmpPath, nil
+		return filepath.ToSlash(tmpPath), nil
 	}
 	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	// source_dir/:distro/:build_name/p
-	tmpPath = r.getSourcePath(filepath.Join(r.Distro, r.BuildName, p), isDir)
+	tmpPath = r.getSourcePath(path.Join(r.Distro, r.BuildName, p), isDir)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		jww.TRACE.Printf("findSource:  %s found", tmpPath)
-		return tmpPath, nil
+		return filepath.ToSlash(tmpPath), nil
 	}
 	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	// source_dir/:distro/:release/:build_name/p
-	tmpPath = r.getSourcePath(filepath.Join(r.Distro, r.Release, r.BuildName, p), isDir)
+	tmpPath = r.getSourcePath(path.Join(r.Distro, r.Release, r.BuildName, p), isDir)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		jww.TRACE.Printf("findSource:  %s found", tmpPath)
-		return tmpPath, nil
+		return filepath.ToSlash(tmpPath), nil
 	}
 	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	// source_dir/:distro/numericRelease/:build_name/p
 	// only if the numericRelease is different than the release
 	if numericRelease != r.Release {
-		tmpPath = r.getSourcePath(filepath.Join(r.Distro, numericRelease, r.BuildName, p), isDir)
+		tmpPath = r.getSourcePath(path.Join(r.Distro, numericRelease, r.BuildName, p), isDir)
 		_, err = os.Stat(tmpPath)
 		if err == nil {
 			jww.TRACE.Printf("findSource:  %s found", tmpPath)
-			return tmpPath, nil
+			return filepath.ToSlash(tmpPath), nil
 		}
 		jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	}
 	// source_dir/:distro/releaseBase/:build_name/p
 	// only if releaseBase is different than the release
 	if releaseParts[0] != r.Release {
-		tmpPath = r.getSourcePath(filepath.Join(r.Distro, releaseParts[0], r.BuildName, p), isDir)
+		tmpPath = r.getSourcePath(path.Join(r.Distro, releaseParts[0], r.BuildName, p), isDir)
 		_, err = os.Stat(tmpPath)
 		if err == nil {
 			jww.TRACE.Printf("findSource:  %s found", tmpPath)
-			return tmpPath, nil
+			return filepath.ToSlash(tmpPath), nil
 		}
 		jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	}
 	// source_dir/:distro/:release/:arch/p
-	tmpPath = r.getSourcePath(filepath.Join(r.Distro, r.Release, r.Arch, p), isDir)
+	tmpPath = r.getSourcePath(path.Join(r.Distro, r.Release, r.Arch, p), isDir)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		jww.TRACE.Printf("findSource:  %s found", tmpPath)
-		return tmpPath, nil
+		return filepath.ToSlash(tmpPath), nil
 	}
 	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	// source_dir/:distro/release/:arch/p
 	// only if the numericRelease is different than the release
 	if numericRelease != r.Release {
-		tmpPath = r.getSourcePath(filepath.Join(r.Distro, numericRelease, r.Arch, p), isDir)
+		tmpPath = r.getSourcePath(path.Join(r.Distro, numericRelease, r.Arch, p), isDir)
 		_, err = os.Stat(tmpPath)
 		if err == nil {
 			jww.TRACE.Printf("findSource:  %s found", tmpPath)
-			return tmpPath, nil
+			return filepath.ToSlash(tmpPath), nil
 		}
 		jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	}
 	// source_dir/:distro/releaseBase/:arch/p
 	// only if releaseBase is different than the release
 	if releaseParts[0] != r.Release {
-		tmpPath = r.getSourcePath(filepath.Join(r.Distro, releaseParts[0], r.Arch, p), isDir)
+		tmpPath = r.getSourcePath(path.Join(r.Distro, releaseParts[0], r.Arch, p), isDir)
 		_, err = os.Stat(tmpPath)
 		if err == nil {
 			jww.TRACE.Printf("findSource:  %s found", tmpPath)
-			return tmpPath, nil
+			return filepath.ToSlash(tmpPath), nil
 		}
 	}
 	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	// source_dir/:distro/:release/p
-	tmpPath = r.getSourcePath(filepath.Join(r.Distro, r.Release, p), isDir)
+	tmpPath = r.getSourcePath(path.Join(r.Distro, r.Release, p), isDir)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		jww.TRACE.Printf("findSource:  %s found", tmpPath)
-		return tmpPath, nil
+		return filepath.ToSlash(tmpPath), nil
 	}
 	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	// source_dir/:distro/release/p
 	// only if the numericRelease is different than the release
 	if numericRelease != r.Release {
-		tmpPath = r.getSourcePath(filepath.Join(r.Distro, numericRelease, p), isDir)
+		tmpPath = r.getSourcePath(path.Join(r.Distro, numericRelease, p), isDir)
 		_, err = os.Stat(tmpPath)
 		if err == nil {
 			jww.TRACE.Printf("findSource:  %s found", tmpPath)
-			return tmpPath, nil
+			return filepath.ToSlash(tmpPath), nil
 		}
 		jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	}
 	// source_dir/:distro/releaseBase/p
 	// only if releaseBase is different than the release
 	if releaseParts[0] != r.Release {
-		tmpPath = r.getSourcePath(filepath.Join(r.Distro, releaseParts[0], p), isDir)
+		tmpPath = r.getSourcePath(path.Join(r.Distro, releaseParts[0], p), isDir)
 		_, err = os.Stat(tmpPath)
 		if err == nil {
 			jww.TRACE.Printf("findSource:  %s found", tmpPath)
-			return tmpPath, nil
+			return filepath.ToSlash(tmpPath), nil
 		}
 		jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	}
 	// source_dir/:distro/:arch/p
-	tmpPath = r.getSourcePath(filepath.Join(r.Distro, r.Arch, p), isDir)
+	tmpPath = r.getSourcePath(path.Join(r.Distro, r.Arch, p), isDir)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		jww.TRACE.Printf("findSource:  %s found", tmpPath)
-		return tmpPath, nil
+		return filepath.ToSlash(tmpPath), nil
 	}
 	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	// source_dir/:distro/p
-	tmpPath = r.getSourcePath(filepath.Join(r.Distro, p), isDir)
+	tmpPath = r.getSourcePath(path.Join(r.Distro, p), isDir)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		jww.TRACE.Printf("findSource:  %s found", tmpPath)
-		return tmpPath, nil
+		return filepath.ToSlash(tmpPath), nil
 	}
 	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	// source_dir/p
-	tmpPath = r.getSourcePath(filepath.Join(p), isDir)
+	tmpPath = r.getSourcePath(path.Join(p), isDir)
 	_, err = os.Stat(tmpPath)
 	if err == nil {
 		jww.TRACE.Printf("findSource:  %s found", tmpPath)
-		return tmpPath, nil
+		return filepath.ToSlash(tmpPath), nil
 	}
 	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
 	// not found, return an error
@@ -677,9 +678,9 @@ func (r *rawTemplate) findSource(p string, isDir bool) (string, error) {
 func (r *rawTemplate) buildOutPath(component, p string) string {
 	if r.includeComponentString() && component != "" {
 		component = strings.ToLower(component)
-		return filepath.Join(r.OutputDir, component, p)
+		return path.Join(r.OutputDir, component, p)
 	}
-	return filepath.Join(r.OutputDir, p)
+	return path.Join(r.OutputDir, p)
 }
 
 // buildTemplateResourcePath builds the path that will be added to the Packer
@@ -689,7 +690,7 @@ func (r *rawTemplate) buildOutPath(component, p string) string {
 func (r *rawTemplate) buildTemplateResourcePath(component, p string) string {
 	if r.includeComponentString() && component != "" {
 		component = strings.ToLower(component)
-		return filepath.Join(strings.ToLower(component), p)
+		return path.Join(strings.ToLower(component), p)
 	}
 	return p
 }
@@ -699,7 +700,7 @@ func (r *rawTemplate) getSourcePath(p string, isDir bool) string {
 	if p == "" {
 		return ""
 	}
-	return filepath.Join(r.SourceDir, p)
+	return path.Join(r.SourceDir, p)
 }
 
 // setExampleDisr sets the SourceDir and OutDir for example template builds. If
@@ -729,7 +730,7 @@ func (r *rawTemplate) setExampleDirs() {
 			r.SourceDir = filepath.Join(parts[i:]...)
 		}
 	}
-	r.SourceDir = filepath.Join(r.ExampleDir, r.SourceDir)
+	r.SourceDir = path.Join(r.ExampleDir, r.SourceDir)
 outDir:
 	if r.OutputDir == "" {
 		r.OutputDir = r.ExampleDir
@@ -743,8 +744,8 @@ outDir:
 	}
 	if i > 0 {
 		if r.ExampleDir != "" {
-			r.OutputDir = filepath.Join(parts[i:]...)
+			r.OutputDir = path.Join(parts[i:]...)
 		}
 	}
-	r.OutputDir = filepath.Join(r.ExampleDir, r.OutputDir)
+	r.OutputDir = path.Join(r.ExampleDir, r.OutputDir)
 }

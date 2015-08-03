@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"testing"
 	"time"
@@ -832,11 +833,11 @@ func TestCopyFile(t *testing.T) {
 	}
 	fname := filepath.Base(files[1])
 	toDir, err := ioutil.TempDir("", "copyfile")
-	_, err = copyFile(files[1], filepath.Join(toDir, fname))
+	_, err = copyFile(files[1], path.Join(toDir, fname))
 	if err != nil {
 		t.Errorf("Expected no error, got %q", err)
 	}
-	_, err = os.Stat(filepath.Join(toDir, fname))
+	_, err = os.Stat(path.Join(toDir, fname))
 	if err != nil {
 		t.Errorf("expected no error, got %q", err)
 	}
@@ -885,7 +886,7 @@ func TestDeleteDirContent(t *testing.T) {
 		t.Errorf("no error expected, got %q", err)
 		return
 	}
-	err = deleteDir(filepath.Join(dir, "notthere"))
+	err = deleteDir(path.Join(dir, "notthere"))
 	if err == nil {
 		t.Error("Expected an error, none occurred")
 	} else {
@@ -1008,7 +1009,7 @@ func TestSetParentDir(t *testing.T) {
 	}{
 		{"", "", ""},
 		{"", "path", "path"},
-		{"dir", "path", filepath.Join("dir", "path")},
+		{"dir", "path", "dir/path"},
 		{"dir", "some/path", "some/path"},
 	}
 	for i, test := range tests {

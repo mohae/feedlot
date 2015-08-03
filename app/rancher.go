@@ -476,7 +476,7 @@ func copyFile(src string, dst string) (written int64, err error) {
 		return 0, fmt.Errorf("copyfile error: destination name was empty")
 	}
 	// get the destination directory
-	dstDir := path.Dir(dst)
+	dstDir := filepath.Dir(dst)
 	if dstDir == "." {
 		return 0, fmt.Errorf("copyfile error: destination name, %q, did not include a directory", dst)
 	}
@@ -531,16 +531,13 @@ func copyDir(srcDir string, dstDir string) error {
 		if file.info == nil {
 			return fmt.Errorf("copyDir error: %s does not exist", file.p)
 		}
-		if file.info.IsDir() {
-			err = os.MkdirAll(file.p, os.FileMode(0766))
-			if err != nil {
-				return fmt.Errorf("copyDir errorL %s", err)
-			}
+		// skip non-regular files
+		if !file.info.Mode().IsRegular() {
 			continue
 		}
 		_, err = copyFile(filepath.Join(srcDir, file.p), filepath.Join(dstDir, file.p))
 		if err != nil {
-			return fmt.Errorf("copyDir errorL %s", err)
+			return fmt.Errorf("copyDir error: %s", err)
 
 		}
 	}
@@ -616,7 +613,7 @@ func setParentDir(d, p string) string {
 	}
 	dir := path.Dir(p)
 	if dir == "." {
-		return filepath.Join(d, p)
+		return path.Join(d, p)
 	}
 	return p
 }
@@ -653,9 +650,9 @@ func getUniqueFilename(p, layout string) (string, error) {
 	if strings.HasSuffix(p, ".tar.gz") {
 		ext = ".tar.gz"
 	} else {
-		ext = filepath.Ext(p)
+		ext = path.Ext(p)
 	}
-	base = filepath.Base(strings.TrimSuffix(p, ext))
+	base = path.Base(strings.TrimSuffix(p, ext))
 	// cache the path fragment in case we need to use a sequence
 	if layout != "" {
 		now := time.Now().Format(layout)
@@ -664,11 +661,11 @@ func getUniqueFilename(p, layout string) (string, error) {
 	// check for a unique name while appending a sequence.
 	i := 1
 	for {
-		newPath := filepath.Join(dir, fmt.Sprintf("%s-%d%s", base, i, ext))
+		newPath := path.Join(dir, fmt.Sprintf("%s-%d%s", base, i, ext))
 		_, err = os.Stat(newPath)
 		if err != nil {
 			if os.IsNotExist(err) {
-				return newPath, nil
+				return filepath.ToSlash(newPath), nil
 			}
 			return "", err
 		}

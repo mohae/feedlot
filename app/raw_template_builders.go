@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/mohae/utilitybelt/deepcopy"
+	jww "github.com/spf13/jwalterweatherman"
 )
 
 // Builder constants
@@ -405,6 +406,7 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, err er
 			if err != nil {
 				return nil, settingErr(k, err)
 			}
+			jww.ERROR.Printf("EBS user_data_file: %v", src)
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
 			// Nothing should be copied in this instancel it should not be added
