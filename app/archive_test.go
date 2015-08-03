@@ -82,8 +82,8 @@ func TestPriorBuild(t *testing.T) {
 				t.Errorf("%d: expected an error; got none", i)
 				continue
 			}
-			if err.Error() != fmt.Sprintf("stat %s: no such file or directory", tball) {
-				t.Errorf("%d: expected %q got %q", i, fmt.Sprintf("stat %s: no such file or directory", tball), err)
+			if !os.IsNotExist(err) {
+				t.Errorf("%d: expected os.IsNotExist(); got %q", i, err)
 			}
 			goto deletetmp
 		}

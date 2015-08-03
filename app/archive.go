@@ -237,9 +237,7 @@ func deleteDir(dir string) error {
 	// os.IsNotExist(err)
 	_, err := os.Stat(dir)
 	if err != nil {
-		if os.IsNotExist(err) {
-			return fmt.Errorf("deleteDir: %s", err)
-		}
+		return err
 	}
 	dirInf := directory{}
 	dirInf.DirWalk(dir)

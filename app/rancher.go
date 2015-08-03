@@ -624,17 +624,17 @@ func setParentDir(d, p string) string {
 // getUniqueFilename takes the path of the file to be created along with a date
 // layout and checks to see if it exists. If it doesn't exist, it is returned
 // as the filename to use. Otherwise, it goes through the steps below until an
-// "no such file or directory" error is returned. This is used for situations
+// os.IsNotExist() error is returned. This is used for situations
 // where there might be a filename collision and the existing file is to be
 // preserved in some manner, e.g. archives or log files.
 //
 // If the filepath and name already exists, the current formatted date is
 // appended to it using the received layout. The name is then appended with a
 // sequence number, starting at 1, and checked for existence until no file is
-// found. The first filename that results in a "no such file or directory" is
+// found. The first filename that results in an os.IsNotExist(err) is
 // returned as the filename to use.
 //
-// Any non "no such file or directory" error is returned as an error.
+// Any non os.IsNotExist() error is returned as an error.
 //
 // There is a special check made for tar.gz, as this is the default extension
 // for the compressed archives of templates; otherwise, it is assumed that the
@@ -643,7 +643,7 @@ func getUniqueFilename(p, layout string) (string, error) {
 	// see if file exists; if it doesn't we're done.
 	_, err := os.Stat(p)
 	if err != nil {
-		if err.(*os.PathError).Err.Error() == "no such file or directory" {
+		if os.IsNotExist(err) {
 			return p, nil
 		}
 		return "", err
@@ -667,7 +667,7 @@ func getUniqueFilename(p, layout string) (string, error) {
 		newPath := filepath.Join(dir, fmt.Sprintf("%s-%d%s", base, i, ext))
 		_, err = os.Stat(newPath)
 		if err != nil {
-			if err.(*os.PathError).Err.Error() == "no such file or directory" {
+			if os.IsNotExist(err) {
 				return newPath, nil
 			}
 			return "", err

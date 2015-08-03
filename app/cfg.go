@@ -562,7 +562,7 @@ func (b *buildLists) Load(p string) error {
 func SetCfgFile() error {
 	// determine the correct file, This is done here because it's less ugly than the alternatives.
 	_, err := os.Stat(contour.GetString(CfgFile))
-	if err != nil && strings.HasSuffix(err.Error(), "no such file or directory") {
+	if err != nil && os.IsNotExist(err) {
 		return nil
 	}
 	if err != nil {

@@ -889,8 +889,8 @@ func TestDeleteDirContent(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, none occurred")
 	} else {
-		if err.Error() != fmt.Sprintf("deleteDir: stat %s/notthere: no such file or directory", dir) {
-			t.Errorf("expected \"deleteDir: stat %s/notthere: no such file or directory\", got %q", dir, err)
+		if !os.IsNotExist(err) {
+			t.Errorf("expected os.IsNotExist(), got %q", err)
 		}
 	}
 	err = deleteDir(dir)
@@ -1072,8 +1072,8 @@ func TestIndexDir(t *testing.T) {
 	if err == nil {
 		t.Errorf("Expected an error, got nil")
 	} else {
-		if err.Error() != fmt.Sprintf("stat %s: no such file or directory", filepath.Join(dir, "notthere")) {
-			t.Errorf("Expected \"stat %s: no such file or directory\", got %q", filepath.Join(dir, "notthere"), err)
+		if !os.IsNotExist(err) {
+			t.Errorf("Expected os.IsNotExist(), got %q", err)
 		}
 	}
 	_, _, err = indexDir(files[1])
