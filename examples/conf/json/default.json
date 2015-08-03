@@ -19,6 +19,7 @@
     "common": {
       "settings": [
         "iso_checksum_type=sha256",
+        "output_directory = :output_dir",
         "ssh_username = packer"
       ]
     },

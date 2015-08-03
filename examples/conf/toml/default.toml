@@ -26,7 +26,8 @@ provisioner_types = [
 	[builders.common]
 		settings = [
 			"iso_checksum_type = sha256",
-			"ssh_username = packer",
+			"output_directory = :output_dir",
+			"ssh_username = packer"
 		]
 	[builders.amazon-chroot]
 		settings =  [
