@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 
 	"github.com/mohae/contour"
 	jww "github.com/spf13/jwalterweatherman"
@@ -34,10 +33,9 @@ func SetTempLogging() {
 // SetLogging sets application logging settings.
 func SetLogging() error {
 	// Check to see if logging is enabled, if not, discard the temp logfile and remove.
-	b, _ := strconv.ParseBool(contour.GetString(Log))
-	if !b {
+
+	if !contour.GetBool(Log) {
 		tmpFile := jww.LogHandle.(*os.File).Name()
-		jww.FEEDBACK.Println(tmpFile)
 		jww.LogHandle.(*os.File).Close()
 		jww.DiscardLogging()
 		os.Remove(tmpFile)

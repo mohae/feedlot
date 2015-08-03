@@ -72,6 +72,7 @@ func (c *BuildCommand) Run(args []string) int {
 		c.UI.Error(err.Error())
 		return 1
 	}
+	app.SetLogging()
 	// the remaining args are build names: build those templates.
 	message, err := app.BuildBuilds(filteredArgs...)
 	if err != nil {

@@ -88,8 +88,8 @@ func init() {
 	contour.RegisterStringFlag(Format, "", "toml", "toml", "the format of the Rancher conf files: toml or json")
 	// shortcuts used: a, d, e, eg, f, i, l, n, p, r, s, v
 	contour.RegisterBoolFlag(ArchivePriorBuild, "v", false, "false", "archive prior build before writing new packer template files")
-	contour.RegisterBoolFlag(Log, "l", false, "false", "enable/disable logging")
 	contour.RegisterBoolFlag(Example, "eg", false, "false", "whether or not to generate from examples")
+	contour.RegisterBoolFlag(Log, "l", false, "false", "enable/disable logging")
 	contour.RegisterStringFlag(ConfDir, "", "conf/", "conf/", "location of the root configuration directory for conf")
 	contour.RegisterStringFlag(ExampleDir, "", "examples/", "examples/", "the location of the root directory for example rancher configuration files")
 	contour.RegisterStringFlag(ParamDelimStart, "p", ":", ":", "the start delimiter for template variabes")
