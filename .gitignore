@@ -28,7 +28,6 @@ rancher
 *.out
 *.bak
 *.log
-*.gz
 log/**
 out/*.tar
 # don't archive the json output...this may expand as 
