@@ -1928,6 +1928,8 @@ func (r *rawTemplate) updateCommon(newB builder) error {
 
 // setHTTP ensures that http setting is set and adds it to the dirs info so that its
 // contents can be copied. If it is not set, http is assumed.
+//
+// The http_directory doesn't include component
 func (r *rawTemplate) setHTTP(component string, m map[string]interface{}) error {
 	v, ok := m["http_directory"]
 	if !ok {
@@ -1944,7 +1946,7 @@ func (r *rawTemplate) setHTTP(component string, m map[string]interface{}) error 
 	if src != "" {
 		r.dirs[r.buildOutPath("", v.(string))] = src
 	}
-	m["http_directory"] = r.buildTemplateResourcePath(component, v.(string))
+	m["http_directory"] = r.buildTemplateResourcePath("", v.(string))
 	return nil
 }
 
