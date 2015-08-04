@@ -1,6 +1,6 @@
 # Builds are named configurations that specify the distro to use, at minimum, and 
 # define the final overrides and settings for generating a Packer Template.
-[1404_amd64]
+[1404-64]
 	distro = "ubuntu"
 	description = "example Ubuntu LTS 1404 amd64 vagrant build"
 	arch = "amd64"
@@ -19,7 +19,7 @@
 					"memory=4096"
 				]
 
-[centos7_x86_64]
+[centos7-64]
 	distro = "centos"
 	description = "example Centos 7 x86_64 build"
 	arch: "x86_64",
@@ -38,7 +38,7 @@
 				"memory=4096"
 			]
 
-[jessie_amd64]
+[jessie-64]
 	distro = "debian"
 	description = "example Debian Jessie build"
 	arch = "amd64"
