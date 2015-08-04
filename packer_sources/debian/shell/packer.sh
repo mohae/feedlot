@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Set up packer user for sudo
-echo %packer ALL=NOPASSWD:ALL > /etc/sudoers.d/vagrant
+echo %packer ALL=NOPASSWD:ALL > /etc/sudoers.d/packer
 chmod 0440 /etc/sudoers.d/packer
 
 # Add the packer user to sudoers
