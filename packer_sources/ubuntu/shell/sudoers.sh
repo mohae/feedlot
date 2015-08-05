@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Add/set the sudoers stuff
+apt-get install -y sudo
 groupadd -r admin
-groupadd -r sudo
 
 # Back up before making changes
 cp /etc/sudoers /etc/sudoers.orig
