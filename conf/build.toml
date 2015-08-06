@@ -11,12 +11,12 @@
 	builder_types = [
 		"virtualbox-iso"
 	]
-	[1404_amd64.builders]
-		[1404_amd64.builders.common]
+	[1404-64.builders]
+		[1404-64.builders.common]
 			settings = [
 				"ssh_wait_timeout = 30m"
 			]
-		[1404_amd64.builders.virtualbox-iso.arrays]
+		[1404-64.builders.virtualbox-iso.arrays]
 			vboxmanage = [
 				"memory=4096"
 			]
@@ -29,12 +29,12 @@
 	builder_types = [
 		"virtualbox-iso"
 	]
-	[centos7_x86_64.builders]
-		[centos7_x86_64.builders.common]
+	[centos7-64.builders]
+		[centos7-64.builders.common]
 			settings = [
 				"ssh_wait_timeout = 30m"
 			]
-			[centos7_x86_64.builders.virtualbox-iso.arrays]
+			[centos7-64.builders.virtualbox-iso.arrays]
 				vboxmanage = [
 					"--memory=4096"
 				]
@@ -48,12 +48,20 @@
 	builder_types = [
 		"virtualbox-iso"
 	]
-	[jessie_amd64.builders]
-		[jessie_amd64.builders.common]
+	[jessie-64.builders]
+		[jessie-64.builders.common]
 			settings = [
 				"ssh_wait_timeout = 30m"
 			]
-		[jessie_amd64.builders.virtualbox-iso.arrays]
+		[jessie-64.builders.virtualbox-iso.arrays]
 			vboxmanage = [
 				"--memory=4096"
 			]
+	[jessie-64.provisioners]
+		[jessie-64.provisioners.shell]
+			[jessie-64.provisioners.shell.arrays]
+				scripts = [ 
+					"vagrant.sh",
+					"setup.sh",
+					"cleanup.sh",
+				]

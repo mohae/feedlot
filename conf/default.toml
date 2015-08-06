@@ -22,7 +22,7 @@ provisioner_types = [
 	[builders.common]
 		settings = [	
 			"boot_command = boot.command",
-			"boot_wait = 10s",
+			"boot_wait = 5s",
 			"disk_size = 40000",
 			"guest_os_type=",
 			"headless = true",
@@ -67,8 +67,8 @@ provisioner_types = [
 		]
 		[provisioners.shell.arrays]
 			scripts = [ 
-				"setup.sh",
 				"vagrant.sh",
 				"sudoers.sh",
+				"setup.sh",
 				"cleanup.sh",
 			]

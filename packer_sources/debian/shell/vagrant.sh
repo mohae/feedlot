@@ -5,7 +5,7 @@ echo %vagrant ALL=NOPASSWD:ALL > /etc/sudoers.d/vagrant
 chmod 0440 /etc/sudoers.d/vagrant
 
 # Add the vagrant user to sudoers
-usermod -a -G sudo vagrant
+/usr/sbin/usermod -a -G sudo vagrant
 
 # setup vagrant keys using vagrant's insecure keys
 # note: vagrant keys are well known and insecure, which is why we can add them
