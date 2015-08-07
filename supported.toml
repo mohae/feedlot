@@ -21,7 +21,7 @@
 	]
 	default_image = [
 		"release = 7",
-		"image = minimal",
+		"image = Minimal",
 		"arch = x86_64"
 	]
 [debian]
