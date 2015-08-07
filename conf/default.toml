@@ -4,7 +4,7 @@
 #
 description = "Default Rancher template"
 name = ":build_name"
-output_dir = "packer_templates/:build_name"
+output_dir = "../packer_templates/:build_name"
 source_dir = "packer_sources"
 include_component_string = "true"
 min_packer_version = "0.7.0"
@@ -22,7 +22,7 @@ provisioner_types = [
 	[builders.common]
 		settings = [	
 			"boot_command = boot.command",
-			"boot_wait = 10s",
+			"boot_wait = 5s",
 			"disk_size = 40000",
 			"guest_os_type=",
 			"headless = true",
@@ -30,9 +30,9 @@ provisioner_types = [
 			"iso_checksum_type = sha256",
 			"output_directory = :output_dir",
 			"shutdown_command = shutdown.command",
-			"ssh_password = packer",
+			"ssh_password = vagrant",
 			"ssh_port = 22",
-			"ssh_username = packer",
+			"ssh_username = vagrant",
 			"ssh_wait_timeout = 5m",
 			"vm_name = :build_name",
 		]
@@ -67,8 +67,8 @@ provisioner_types = [
 		]
 		[provisioners.shell.arrays]
 			scripts = [ 
-				"setup.sh",
-				"packer.sh",
+				"vagrant.sh",
 				"sudoers.sh",
+				"setup.sh",
 				"cleanup.sh",
 			]
