@@ -24,7 +24,7 @@
 	distro = "centos"
 	description = "centos 7 x86_64 vagrant build"
 	arch = "x86_64"
-	image = "minimal"
+	image = "Minimal"
 	release = "7"
 	builder_types = [
 		"virtualbox-iso"
