@@ -13,7 +13,8 @@
 		"x86_64"
 	]
 	image = [
-		"minimal"
+		"Minamal",
+		"NetInstall"
 	]
 	release = [
 		"6",

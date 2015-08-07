@@ -127,7 +127,7 @@ func (r *centos) setVersionInfo() error {
 func (r *centos) setVersion6Info() error {
 	parts := strings.Split(r.BaseURL, "/")
 	if len(parts) < 7 {
-		return ReleaseError{Name: CentOS.String(), Operation: "setVersion7Info", Problem: fmt.Sprintf("could not determine the current release of version %s", r.Release)}
+		return ReleaseError{Name: CentOS.String(), Operation: "setVersion6Info", Problem: fmt.Sprintf("could not determine the current release of version %s", r.Release)}
 	}
 	// go through each part until we get to the version
 	for _, part := range parts {
@@ -137,7 +137,7 @@ func (r *centos) setVersion6Info() error {
 		}
 	}
 	if r.FullVersion == "" {
-		return ReleaseError{Name: CentOS.String(), Operation: "setVersion7Info", Problem: fmt.Sprintf("could not find the current point release for %s", r.Release)}
+		return ReleaseError{Name: CentOS.String(), Operation: "setVersion6Info", Problem: fmt.Sprintf("could not find the current point release for %s", r.Release)}
 	}
 	nums := strings.Split(r.FullVersion, ".")
 	r.MajorVersion = nums[0]
@@ -201,7 +201,7 @@ func (r *centos) setISOName6() {
 	buff.WriteByte('-')
 	buff.WriteString(r.Arch)
 	buff.WriteByte('-')
-	buff.WriteString(r.Image)
+	buff.WriteString(strings.ToLower(r.Image))
 	buff.WriteString(".iso")
 	r.Name = buff.String()
 }
