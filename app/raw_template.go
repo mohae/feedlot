@@ -147,6 +147,18 @@ func (r *rawTemplate) setDefaults(d *distro) error {
 	r.IODirInf.update(d.IODirInf)
 	r.PackerInf.update(d.PackerInf)
 	r.BuildInf.update(d.BuildInf)
+	// update def image stuff
+	for _, v := range d.DefImage {
+		k, vv := parseVar(v)
+		switch k {
+		case "arch":
+			r.Arch = vv
+		case "image":
+			r.Image = vv
+		case "release":
+			r.Release = vv
+		}
+	}
 	// If defined, BuilderTypes override any prior BuilderTypes Settings
 	if d.BuilderTypes != nil && len(d.BuilderTypes) > 0 {
 		r.BuilderTypes = d.BuilderTypes
@@ -183,6 +195,15 @@ func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
 	r.IODirInf.update(bld.IODirInf)
 	r.PackerInf.update(bld.PackerInf)
 	r.BuildInf.update(bld.BuildInf)
+	if bld.Arch != "" {
+		r.Arch = bld.Arch
+	}
+	if bld.Image != "" {
+		r.Image = bld.Image
+	}
+	if bld.Release != "" {
+		r.Release = bld.Release
+	}
 	// If defined, Builders override any prior builder Settings.
 	if bld.BuilderTypes != nil && len(bld.BuilderTypes) > 0 {
 		r.BuilderTypes = bld.BuilderTypes

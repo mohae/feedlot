@@ -263,18 +263,68 @@ func TestReplaceVariables(t *testing.T) {
 	}
 }
 
+func TestSetDefaults(t *testing.T) {
+	r := newRawTemplate()
+	r.setDefaults(testSupportedCentOS)
+	if r.Arch == "" {
+		t.Error("expected Arch to not be empty. it was")
+	}
+	if r.Image == "" {
+		t.Error("expected Image to not be empty, it was")
+	}
+	if r.Release == "" {
+		t.Error("expected Release to not be empty, it was")
+	}
+	if MarshalJSONToString.Get(r.IODirInf) != MarshalJSONToString.Get(testSupportedCentOS.IODirInf) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupportedCentOS.IODirInf), MarshalJSONToString.Get(r.IODirInf))
+	}
+	if MarshalJSONToString.Get(r.PackerInf) != MarshalJSONToString.Get(testSupportedCentOS.PackerInf) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupportedCentOS.PackerInf), MarshalJSONToString.Get(r.PackerInf))
+	}
+	if MarshalJSONToString.Get(r.BuildInf) != MarshalJSONToString.Get(testSupportedCentOS.BuildInf) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupportedCentOS.BuildInf), MarshalJSONToString.Get(r.BuildInf))
+	}
+	if MarshalJSONToString.Get(r.BuilderTypes) != MarshalJSONToString.Get(testSupportedCentOS.BuilderTypes) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupportedCentOS.BuilderTypes), MarshalJSONToString.Get(r.BuilderTypes))
+	}
+	if MarshalJSONToString.Get(r.PostProcessorTypes) != MarshalJSONToString.Get(testSupportedCentOS.PostProcessorTypes) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupportedCentOS.PostProcessorTypes), MarshalJSONToString.Get(r.PostProcessorTypes))
+	}
+	if MarshalJSONToString.Get(r.ProvisionerTypes) != MarshalJSONToString.Get(testSupportedCentOS.ProvisionerTypes) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupportedCentOS.ProvisionerTypes), MarshalJSONToString.Get(r.ProvisionerTypes))
+	}
+	if r.Builders != nil {
+		t.Errorf("Expected builders to be nil, got %q", MarshalJSONToString.Get(r.Builders))
+	}
+	if r.PostProcessors != nil {
+		t.Errorf("Expected postprocessors to be nil, got %q", MarshalJSONToString.Get(r.PostProcessors))
+	}
+	if r.Provisioners != nil {
+		t.Errorf("Expected provisioners to be nil, got %q", MarshalJSONToString.Get(r.Provisioners))
+	}
+}
+
 func TestRawTemplateUpdateBuildSettings(t *testing.T) {
 	r := newRawTemplate()
 	r.setDefaults(testSupportedCentOS)
 	r.updateBuildSettings(testBuildNewTPL)
+	if r.Arch != testBuildNewTPL.Arch {
+		t.Errorf("expected Arch to be %q, got %q", testBuildNewTPL.Arch, r.Arch)
+	}
+	if r.Image != testBuildNewTPL.Image {
+		t.Errorf("expected Image to be %q, got %q", testBuildNewTPL.Image, r.Image)
+	}
+	if r.Release != testBuildNewTPL.Release {
+		t.Errorf("expected Release to be %q, got %q", testBuildNewTPL.Release, r.Release)
+	}
 	if MarshalJSONToString.Get(r.IODirInf) != MarshalJSONToString.Get(testSupportedCentOS.IODirInf) {
 		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupportedCentOS.IODirInf), MarshalJSONToString.Get(r.IODirInf))
 	}
 	if MarshalJSONToString.Get(r.PackerInf) != MarshalJSONToString.Get(testBuildNewTPL.PackerInf) {
 		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testBuildNewTPL.PackerInf), MarshalJSONToString.Get(r.PackerInf))
 	}
-	if MarshalJSONToString.Get(r.BuildInf) != MarshalJSONToString.Get(testSupportedCentOS.BuildInf) {
-		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupportedCentOS.BuildInf), MarshalJSONToString.Get(r.BuildInf))
+	if MarshalJSONToString.Get(r.BuildInf) != MarshalJSONToString.Get(testBuildNewTPL.BuildInf) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testBuildNewTPL.BuildInf), MarshalJSONToString.Get(r.BuildInf))
 	}
 	if MarshalJSONToString.Get(r.BuilderTypes) != MarshalJSONToString.Get(testBuildNewTPL.BuilderTypes) {
 		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testBuildNewTPL.BuilderTypes), MarshalJSONToString.Get(r.BuilderTypes))
