@@ -29,24 +29,6 @@
 					"setup.sh",
 					"cleanup.sh",
 				]
-[centos7-64]
-	distro = "centos"
-	description = "centos 7 x86_64 vagrant build"
-	arch = "x86_64"
-	image = "Minimal"
-	release = "7"
-	builder_types = [
-		"virtualbox-iso"
-	]
-	[centos7-64.builders]
-		[centos7-64.builders.common]
-			settings = [
-				"ssh_wait_timeout = 30m"
-			]
-			[centos7-64.builders.virtualbox-iso.arrays]
-				vboxmanage = [
-					"--memory=4096"
-				]
 
 [centos6-64]
 	distro = "centos"
@@ -66,8 +48,26 @@
 				vboxmanage = [
 					"--memory=4096"
 				]
-				
-	
+
+[centos7-64]
+	distro = "centos"
+	description = "centos 7 x86_64 vagrant build"
+	arch = "x86_64"
+	image = "Minimal"
+	release = "7"
+	builder_types = [
+		"virtualbox-iso"
+	]
+	[centos7-64.builders]
+		[centos7-64.builders.common]
+			settings = [
+				"ssh_wait_timeout = 30m"
+			]
+			[centos7-64.builders.virtualbox-iso.arrays]
+				vboxmanage = [
+					"--memory=4096"
+				]
+
 [jessie-64]
 	distro = "debian"
 	description = "debian jessie amd64 vagrant build"

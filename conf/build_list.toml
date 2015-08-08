@@ -1,4 +1,4 @@
 # This is the build list file for Rancher.
 # A list consists of one or more Rancher Build names. This is a comma separated list.
-[ubuntu]
-builds = ["1404-amd64", "jessie-amd64", "centos6-amd64"]
+[all]
+builds = ["1404-64", "centos6-64", "centos7-64", "jessie-64"]
