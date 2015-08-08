@@ -125,6 +125,8 @@ func (r *centos) setVersionInfo() error {
 }
 
 func (r *centos) setVersion6Info() error {
+	// ensure that the image is all lowercase
+	r.Image = strings.ToLower(r.Image)
 	parts := strings.Split(r.BaseURL, "/")
 	if len(parts) < 7 {
 		return ReleaseError{Name: CentOS.String(), Operation: "setVersion6Info", Problem: fmt.Sprintf("could not determine the current release of version %s", r.Release)}
@@ -148,6 +150,9 @@ func (r *centos) setVersion6Info() error {
 }
 
 func (r *centos) setVersion7Info() error {
+	// the image should start with a cap. If NetInst ends up being supported
+	// this will need to be revisited
+	r.Image = fmt.Sprintf("%s%s", strings.ToUpper(r.Image[:1]), r.Image[1:])
 	// get the page from the url
 	tokens, err := tokensFromURL(r.BaseURL)
 	if err != nil {
