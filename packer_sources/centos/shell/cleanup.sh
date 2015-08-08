@@ -6,7 +6,3 @@ yum erase -y yum-utils
 yum clean -y all
 rm -rf VBoxGuestAdditions_*.iso
 rm -rf /tmp/rubygems-*
-
-# zerosidk
-dd if=/dev/zero of=/EMPTY bs=1M
-rm -f /EMPTY

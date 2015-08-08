@@ -67,8 +67,8 @@ provisioner_types = [
 		]
 		[provisioners.shell.arrays]
 			scripts = [ 
-				"vagrant.sh",
-				"sudoers.sh",
 				"setup.sh",
+				"sudoers.sh",
+				"vagrant.sh",
 				"cleanup.sh",
 			]
