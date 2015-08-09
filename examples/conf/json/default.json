@@ -19,7 +19,8 @@
     "common": {
       "settings": [
         "iso_checksum_type=sha256",
-        "ssh_username = packer"
+        "output_directory = :output_dir",		
+        "ssh_username = vagramt"
       ]
     },
     "amazon-chroot": {
@@ -73,7 +74,7 @@
     "null": {
       "settings": [
         "ssh_host=127.0.0.1",
-        "ssh_password=packer"
+        "ssh_password=vagrant"
       ]
     },
     "virtualbox-iso": {
