@@ -1,3 +1,0 @@
-ntp:
-  pkg:
-    - installed
