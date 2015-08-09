@@ -25,6 +25,9 @@ apt-get install default-jdk
 #
 apt-get install lua5.2
 
+# switch to vagrant user
+su vagrant
+
 # nodejs: from nvm. 0.12.7 is current latest. Install what works for you
 curl https://raw.githubusercontent.com/creationix/nvm/v0.16.1/install.sh | sh
 source ~/.profile
@@ -33,3 +36,6 @@ nvm use 0.12.7
 
 # rust
 curl -sSf https://static.rust-lang.org/rustup.sh | sh
+
+# switch back to root
+sudo su

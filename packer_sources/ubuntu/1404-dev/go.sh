@@ -1,16 +1,22 @@
+# Go should be installed under the user not root
+su vagrant
 # install go
-sudo vagrant tar -C /usr/local -xzf go1.4.2.linux-amd64.tar.gz
-sudo vagrant export PATH=$PATH:/usr/local/go/bin
-sudo vagrant mkdir $HOME/code
-sudo vagrant mkdir $HOME/code/go
-sudo vagrant export GOPATH=/$HOME/code/go
-sudo vagrant export PATH=$PATH:$GOPATH/bin
+wget https://storage.googleapis.com/golang/go1.4.2.linux-amd64.tar.gz
+tar -C /usr/local -xzf go1.4.2.linux-amd64.tar.gz
+export PATH=$PATH:/usr/local/go/bin
+mkdir $HOME/code
+mkdir $HOME/code/go
+export GOPATH=/$HOME/code/go
+export PATH=$PATH:$GOPATH/bin
 
 # liteide: https://github.com/visualfc/liteide
 # get the latest liteide
-sudo vagrant wget http://sourceforge.net/projects/liteide/files/latest/download liteide-latest.tar.bz2
+wget http://sourceforge.net/projects/liteide/files/latest/download liteide-latest.tar.bz2
 # extract download to /usr/local
-sudo vagrant tar xzf liteide-latest-tar.bz2 /usr/local/
+tar xzf liteide-latest-tar.bz2 /usr/local/
 
 # delve debugger: https://github.com/derekparker/delve
-sudo vagrant go get -u github.com/derekparker/delve/cmd/dlv
+go get -u github.com/derekparker/delve/cmd/dlv
+
+# switch back to root
+sudo su
