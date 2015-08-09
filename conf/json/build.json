@@ -1,5 +1,5 @@
 {
-  "1404-amd64": {
+  "1404-64": {
     "distro": "ubuntu",
     "description": "example Ubuntu LTS 1404 amd64 virtualbox vagrant build",
     "arch": "amd64",
@@ -12,8 +12,8 @@
       "shell": {
         "scripts": [
           "setup",
-          "user_vagrant",
           "sudoers",
+          "user_vagrant",
           "vbox",
           "cleanup"
         ]
@@ -27,20 +27,21 @@
     "image": "Minimal",
     "release": "6",
     "builder_types": [
-      "virtualbox-iso"
+        "virtualbox-iso"
     ],
     "provisioners": {
       "shell": {
         "scripts": [
           "setup",
-          "user_vagrant",
           "sudoers",
+          "user_vagrant",
           "vbox",
           "cleanup"
         ]
       }
     }
   },
+
   "centos7-64": {
     "distro": "centos",
     "description": "example Centos 7 x86_64 virtualbox vagrant build",
@@ -54,8 +55,8 @@
       "shell": {
         "scripts": [
           "setup",
-          "user_vagrant",
           "sudoers",
+          "user_vagrant",
           "vbox",
           "cleanup"
         ]
@@ -75,8 +76,8 @@
       "shell": {
         "scripts": [
           "setup",
-          "user_vagrant",
           "sudoers",
+          "user_vagrant",
           "vbox",
           "cleanup"
         ]

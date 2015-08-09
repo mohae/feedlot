@@ -14,5 +14,5 @@
       "centos7-64-required",
       "jessie-64-required"
     ]
-  {
+  }
 }
