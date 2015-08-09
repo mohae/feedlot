@@ -16,10 +16,6 @@
 			settings = [
 				"ssh_wait_timeout = 30m"
 			]
-		[1404-64.builders.virtualbox-iso.arrays]
-			vboxmanage = [
-				"memory=4096"
-			]
 	[1404-64.provisioners]
 		[1404-64.provisioners.shell]
 			[1404-64.provisioners.shell.arrays]
@@ -44,10 +40,6 @@
 			settings = [
 				"ssh_wait_timeout = 30m"
 			]
-			[centos6-64.builders.virtualbox-iso.arrays]
-				vboxmanage = [
-					"--memory=4096"
-				]
 
 [centos7-64]
 	distro = "centos"
@@ -63,10 +55,6 @@
 			settings = [
 				"ssh_wait_timeout = 30m"
 			]
-			[centos7-64.builders.virtualbox-iso.arrays]
-				vboxmanage = [
-					"--memory=4096"
-				]
 
 [jessie-64]
 	distro = "debian"
@@ -81,10 +69,6 @@
 		[jessie-64.builders.common]
 			settings = [
 				"ssh_wait_timeout = 30m"
-			]
-		[jessie-64.builders.virtualbox-iso.arrays]
-			vboxmanage = [
-				"--memory=4096"
 			]
 	[jessie-64.provisioners]
 		[jessie-64.provisioners.shell]

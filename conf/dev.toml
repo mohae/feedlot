@@ -12,10 +12,6 @@
 			settings = [
 				"ssh_wait_timeout = 30m"
 			]
-		[1404-dev.builders.virtualbox-iso.arrays]
-			vboxmanage = [
-				"memory=4096"
-			]
 	[1404-dev.provisioners]
 		[1404-dev.provisioners.shell]
 			[1404-dev.provisioners.shell.arrays]
@@ -30,3 +26,29 @@
 					"go.sh",
 					"cleanup.sh",
 				]
+[jessie-go]
+	distro = "debian"
+	description = "debian jessie amd64 vagrant build"
+	arch = "amd64"
+	image = "netinst"
+	release = "8"
+	builder_types = [
+		"virtualbox-iso"
+	]
+	[jessie-go.builders]
+		[jessie-go.builders.common]
+			settings = [
+				"ssh_wait_timeout = 30m"
+			]
+	[jessie-go.provisioners]
+		[jessie-go.provisioners.shell]
+			[jessie-go.provisioners.shell.arrays]
+				scripts = [ 
+					"vagrant.sh",
+					"setup.sh",
+					"browsers.sh",
+					"editors.sh",
+					"go.sh",
+					"cleanup.sh",
+				]
+
