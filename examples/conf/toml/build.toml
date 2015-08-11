@@ -1,58 +1,81 @@
 # Builds are named configurations that specify the distro to use, at minimum, and 
-# define the final overrides and settings for generating a Packer Template.
+# define the final overrides and settings for generating a Packer Template. The 
+# generated Packer template will be the result of merging the settings within the
+# build configuration with the Rancher and distro defaults.
 [1404-64]
 	distro = "ubuntu"
-	description = "example Ubuntu LTS 1404 amd64 vagrant build"
+	description = "ubuntu LTS 1404 amd64 vagrant build"
 	arch = "amd64"
 	image = "server"
 	release = "14.04"
 	builder_types = [
 		"virtualbox-iso"
 	]
-	[1404_amd64.builders]
-		[1404_amd64.builders.common]
+	[1404-64.builders]
+		[1404-64.builders.common]
 			settings = [
-				"ssh_wait_timeout = 15m"
+				"ssh_wait_timeout = 30m"
 			]
-			[1404_amd64.builders.virtualbox-iso.arrays]
-				vboxmanage = [
-					"memory=4096"
+	[1404-64.provisioners]
+		[1404-64.provisioners.shell]
+			[1404-64.provisioners.shell.arrays]
+				scripts = [ 
+					"vagrant.sh",
+					"sudoers.sh",
+					"setup.sh",
+					"cleanup.sh",
 				]
 
-[centos7-64]
+[centos6-64]
 	distro = "centos"
-	description = "example Centos 7 x86_64 build"
-	arch: "x86_64",
-	image: "minimal"
-	release: "7"
+	description = "centos 6 x86_64 vagrant build"
+	arch = "x86_64"
+	image = "Minimal"
+	release = "6"
 	builder_types = [
 		"virtualbox-iso"
 	]
-	[centos7_x86_64.builders]
-		[centos7_x86_64.builders.common]
-		settings = [
-			"ssh_wait_timeout = 15m"
-		]
-		[centos7_x86_64.virtualbox-iso.arrays]
-			vboxmanage = [
-				"memory=4096"
+	[centos6-64.builders]
+		[centos6-64.builders.common]
+			settings = [
+				"ssh_wait_timeout = 30m"
+			]
+
+[centos7-64]
+	distro = "centos"
+	description = "centos 7 x86_64 vagrant build"
+	arch = "x86_64"
+	image = "Minimal"
+	release = "7"
+	builder_types = [
+		"virtualbox-iso"
+	]
+	[centos7-64.builders]
+		[centos7-64.builders.common]
+			settings = [
+				"ssh_wait_timeout = 30m"
 			]
 
 [jessie-64]
 	distro = "debian"
-	description = "example Debian Jessie build"
+	description = "debian jessie amd64 vagrant build"
 	arch = "amd64"
 	image = "netinst"
 	release = "8"
 	builder_types = [
 		"virtualbox-iso"
 	]
-	[jessie_amd64.builders]
-		[jessie_amd64.builders.common]
+	[jessie-64.builders]
+		[jessie-64.builders.common]
 			settings = [
-				"ssh_wait_timeout = 15m"
+				"ssh_wait_timeout = 30m"
 			]
-		[jessie_amd64.builders.virtualbox-iso.arrays]
-			vboxmanage = [
-				"--memory=4096"
-			]
+	[jessie-64.provisioners]
+		[jessie-64.provisioners.shell]
+			[jessie-64.provisioners.shell.arrays]
+				scripts = [ 
+					"vagrant.sh",
+					"setup.sh",
+					"cleanup.sh",
+				]
+

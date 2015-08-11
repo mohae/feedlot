@@ -1,7 +1,7 @@
 {
   "description": "Example Rancher template",
   "name": ":build_name",
-  "output_dir": "packer_templates/:build_name",
+  "output_dir": "../packer_templates/:build_name",
   "source_dir": "packer_sources",
   "include_component_string": "true",
   "min_packer_version": "0.7.0",
@@ -19,8 +19,8 @@
     "common": {
       "settings": [
         "iso_checksum_type=sha256",
-        "output_directory = :output_dir",
-        "ssh_username = packer"
+        "output_directory = :output_dir",		
+        "ssh_username = vagramt"
       ]
     },
     "amazon-chroot": {
@@ -74,7 +74,7 @@
     "null": {
       "settings": [
         "ssh_host=127.0.0.1",
-        "ssh_password=packer"
+        "ssh_password=vagrant"
       ]
     },
     "virtualbox-iso": {
