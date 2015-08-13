@@ -33,9 +33,8 @@ func SetTempLogging() {
 // SetLogging sets application logging settings.
 func SetLogging() error {
 	// Check to see if logging is enabled, if not, discard the temp logfile and remove.
-
+	tmpFile := jww.LogHandle.(*os.File).Name()
 	if !contour.GetBool(Log) {
-		tmpFile := jww.LogHandle.(*os.File).Name()
 		jww.LogHandle.(*os.File).Close()
 		jww.DiscardLogging()
 		os.Remove(tmpFile)
@@ -44,27 +43,24 @@ func SetLogging() error {
 	logfile := contour.GetString(LogFile)
 	fname, err := getUniqueFilename(logfile, "2006-01-02")
 	if err != nil {
-		err = fmt.Errorf("unable to continue: cannot obtain unique log filename: %s", err)
+		err = fmt.Errorf("cannot obtain unique log filename: %s", err)
 		jww.FEEDBACK.Println(err)
 		return err
 	}
 	// if the names aren't the same, the logfile already exists. Rename it to the fname
 	if fname != logfile {
-		err := os.Rename(logfile, fname)
-		if err != nil {
-			err = fmt.Errorf("unable to continuecannot rename existing logfile: %s", err)
-			jww.FEEDBACK.Println(err)
-			return err
-		}
+		logfile = fname
 	}
+	// close the temp logfile
+	jww.LogHandle.(*os.File).Close()
 	// make the tmpLogFile the actual logfile
-	err = os.Rename(jww.LogHandle.(*os.File).Name(), logfile)
+	err = os.Rename(tmpFile, logfile)
 	if err != nil {
-		err = fmt.Errorf("unable to contineu: cannot rename the temp log to %s", err)
+		err = fmt.Errorf("cannot rename the temp log, %q, to %q: %s", logfile, fname, err)
 		jww.FEEDBACK.Println(err)
 		return err
 	}
-
+	jww.FEEDBACK.Printf("The temp log file %s was moved to %s\n", tmpFile, logfile)
 	// Set LogLevels
 	jww.SetLogThreshold(getJWWLevel(contour.GetString(LogLevelFile)))
 	jww.SetStdoutThreshold(getJWWLevel(contour.GetString(LogLevelStdOut)))
