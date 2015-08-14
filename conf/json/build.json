@@ -1,5 +1,5 @@
 {
-  "1404_amd64": {
+  "1404-64": {
     "distro": "ubuntu",
     "description": "example Ubuntu LTS 1404 amd64 vagrant build",
     "arch": "amd64",
@@ -8,46 +8,67 @@
     "builder_types": [
       "virtualbox-iso"
     ],
-    "builders": {
-      "common": {
-        "settings": [
-          "ssh_wait_timeout = 15m"
-        ]
-      },
-      "virtualbox-iso": {
+    "provisioners": {
+      "shell": {
         "arrays": {
-          "vboxmanage": [
-            "memory=4096"
+          "scripts": [
+            "setup",
+            "sudoers",
+	    "vagrant",
+            "vbox",
+            "cleanup"
           ]
         }
       }
     }
   },
-  "centos7_x86_64": {
+  "centos6-64": {
+    "distro": "centos",
+    "description": "example Centos 6 x86_64 build",
+    "arch": "x86_64",
+    "image": "Minimal",
+    "release": "6",
+    "builder_types": [
+        "virtualbox-iso"
+    ],
+    "provisioners": {
+      "shell": {
+        "arrays": {
+          "scripts": [
+            "setup",
+            "sudoers",
+            "vagrant",
+	    "vbox",
+            "cleanup"
+          ]
+	}
+      }
+    }
+  },
+  "centos7-64": {
     "distro": "centos",
     "description": "example Centos 7 x86_64 build",
     "arch": "x86_64",
-    "image": "minimal",
+    "image": "Minimal",
     "release": "7",
     "builder_types": [
       "virtualbox-iso"
     ],
-    "builders": {
-      "common": {
-        "settings": [
-          "ssh_wait_timeout = 15m"
-        ]
-      },
-      "virtualbox-iso": {
-	    "arrays": {
-          "vboxmanage": [
-            "--memory=4096"
+    "provisioners": {
+      "shell": {
+        "arrays": {
+          "scripts": [
+            "setup",
+            "sudoers",
+            "vagrant",
+	    "vbox",
+            "cleanup"
           ]
-        }
+	}
       }
     }
   },
-  "jessie_amd64": {
+  "jessie-64": {
     "distro": "debian",
     "description": "example Debian Jessie build",
     "arch": "amd64",
@@ -56,19 +77,18 @@
     "builder_types": [
       "virtualbox-iso"
     ],
-	"builders": {
-      "common": {
-        "settings": [
-          "ssh_wait_timeout = 15m"
-         ]
-      },
-      "virtualbox-iso": {
+    "provisioners": {
+      "shell": {
         "arrays": {
-          "vboxmanage": [
-            "--memory=4096"
-          ]
+   	  "scripts": {
+            "setup",
+            "sudoers",
+            "vagrant",
+            "vbox",
+	    "cleanup"
+          }
         }
-      }
+      }     	
     }
   }
 }
