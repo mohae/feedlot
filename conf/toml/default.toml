@@ -29,8 +29,13 @@ provisioner_types = [
 	[builders.common]
 	settings = [
 		"iso_checksum_type = sha256",
+<<<<<<< HEAD
 		"ssh_username = vagrant",
 		"ssh_wait_timeout = 60m",
+=======
+		"output_directory = :output_dir",
+		"ssh_username = vagrant",
+>>>>>>> 27ca84f... rename shell scripts so they don't have .sh suffic, update configuration files
 	]
 	[builders.amazon-chroot]
 	settings =  [
@@ -69,6 +74,10 @@ provisioner_types = [
 		"region=nyc2",
 		"size=512mb"
 	]
+<<<<<<< HEAD
+=======
+
+>>>>>>> 27ca84f... rename shell scripts so they don't have .sh suffic, update configuration files
 	[builders.googlecompute]
 	settings = [
 		"project_id=my-project",
@@ -111,9 +120,15 @@ provisioner_types = [
 	[post_processors.vagrant]
 	[post_processors.vagrant-cloud]
 	settings = [
+<<<<<<< HEAD
 		access_token={{user `cloud_token`}}",
 		box_tag=hashicorp/precise64",
 		version={{user `version`}}"
+=======
+		"access_token={{user `cloud_token`}}",
+		"box_tag=hashicorp/precise64",
+		"version={{user `version`}}"
+>>>>>>> 27ca84f... rename shell scripts so they don't have .sh suffic, update configuration files
 	]
 	[post_processors.vsphere]
 	settings = [
@@ -123,7 +138,11 @@ provisioner_types = [
 		"host=vsphere-host",
 		"password=vagrant",
 		"username=vagrant",
+<<<<<<< HEAD
 		"vm_name=packer-vsphere-vm"
+=======
+		"vm_name=packer-vshpere-vm"
+>>>>>>> 27ca84f... rename shell scripts so they don't have .sh suffic, update configuration files
 	]
 [provisioners]
 	[provisioners.ansible-local]
@@ -134,9 +153,15 @@ provisioner_types = [
 	[provisioners.chef-solo]
 	[provisioners.file]
 	settings = [
+<<<<<<< HEAD
  		"source=app.tar.gz",
  		"destination=/tmp/app.tar.gz",
  		"direction=upload"
+=======
+		"source=app.tar.gz",
+		"destination=/tmp/app.tar.gz",
+		"direction=upload"
+>>>>>>> 27ca84f... rename shell scripts so they don't have .sh suffic, update configuration files
 	]
 	[provisioners.powershell]
 	settings = [
@@ -148,6 +173,7 @@ provisioner_types = [
 	]
 	[provisioners.puppet-server]
 	[provisioners.salt-masterless]
+<<<<<<< HEAD
  	settings = [
   		"local_state_tree=/Users/me/salt"
 	]
@@ -157,6 +183,17 @@ provisioner_types = [
 			"setup",
 			"sudoers",
 			"user_vagrant",
+=======
+	settings = [
+		"local_state_tree=/Users/me/salt"
+	]
+	[provisioners.shell]
+		[provionsers.shell.arrays]
+		scripts = [
+			"setup",
+			"sudoers",
+			"vagrant",
+>>>>>>> 27ca84f... rename shell scripts so they don't have .sh suffic, update configuration files
 			"cleanup"
 		]
 	[provisioners.shell-local]

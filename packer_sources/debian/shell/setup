@@ -2,5 +2,9 @@
 date > /etc/packer_build_time
 DEBIAN_FRONTEND=noninteractive apt-get update
 DEBIAN_FRONTEND=noninteractive apt-get upgrade -y
+<<<<<<< HEAD
 DEBIAN_FRONTEND=noninteractive apt-get install -y bzip2 curl git rsync tree wget vim
+=======
+DEBIAN_FRONTEND=noninteractive apt-get install -y curl git rsync wget vim
+>>>>>>> 27ca84f... rename shell scripts so they don't have .sh suffic, update configuration files
 DEBIAN_FRONTEND=noninteractive apt-get -y install build-essential dkms linux-headers-$(uname -r)

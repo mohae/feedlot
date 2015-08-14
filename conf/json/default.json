@@ -94,14 +94,26 @@
   },
   "post_processors": {
     "compress": {
+<<<<<<< HEAD
       "output=archive.tar.lz4"
     },
     "docker-import": {
       "repository=mitchellh/packer"
+=======
+      "settings": {
+        "output=archive.tar.lz4"
+      }
+    },
+    "docker-import": {
+      "settings": {
+        "repository=mitchellh/packer"
+      }       
+>>>>>>> 27ca84f... rename shell scripts so they don't have .sh suffic, update configuration files
     },
     "docker-push": {
     },
     "docker-save": {
+<<<<<<< HEAD
     },
     "docker-tag": {
       "repository=mitchellh/packer"
@@ -119,6 +131,37 @@
       "username=vagrant",
       "vm_name=packer-vsphere-vm"
     }
+=======
+      "settings": {
+        "path=foo.tar"
+      }       
+    },
+    "docker-tag": {
+      "settings": {
+        "repository=mitchellh/packer"
+      }       
+    },
+    "vagrant": {
+    } 
+    "vagrant-cloud": {
+      "settings": {
+        "access_token={{user `cloud_token`}}",
+        "box_tag=hashicorp/precise64",
+	"version={{user `version`}}"
+      }       
+    },
+    "vsphere": {
+      "settings": {
+        "cluster=vSphereCluster",
+	"datacenter=dc-east-1",
+	"datastore=ds-001",
+	"host=vsphere-host",
+	"password=vagrant",
+	"username=vagrant",
+	"vm_name=packer-vsphere-vm"
+      }       
+    },    
+>>>>>>> 27ca84f... rename shell scripts so they don't have .sh suffic, update configuration files
   },
   "provisioners": {
     "ansible-local": {
@@ -159,7 +202,11 @@
         "scripts": [
           "setup",
           "sudoers",
+<<<<<<< HEAD
           "user_vagrant",
+=======
+          "vagrant",
+>>>>>>> 27ca84f... rename shell scripts so they don't have .sh suffic, update configuration files
           "cleanup"
         ]
       }
