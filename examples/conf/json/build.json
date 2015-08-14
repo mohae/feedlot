@@ -8,34 +8,18 @@
     "builder_types": [
       "virtualbox-iso"
     ],
-    "builders": {
-      "common": {
-        "settings": [
-<<<<<<< HEAD
-          "ssh_wait_timeout = 15m"
-        ]
-      },
-      "virtualbox-iso": {
+    "provisioners": {
+      "shell": {
         "arrays": {
-          "vboxmanage": [
-            "memory=4096"
+          "scripts": [
+            "setup",
+            "sudoers",
+	    "vagrant",
+            "vbox",
+            "cleanup"
           ]
         }
       }
-    }
-  },
-=======
-          "ssh_wait_timeout = 30m"
-        ]
-      }
-    },
-    "provisioners": {
-      "scripts": [
-        "vagrant.sh",
-	"sudoers.sh",
-	"setup.sh",
-	"cleanup.sh"
-      ]
     }
   },
   "centos6-64": {
@@ -47,11 +31,17 @@
     "builder_types": [
         "virtualbox-iso"
     ],
-    "builders": {
-      "common": {
-        "settings": [
-          "ssh_wait_timeout = 30m"
-        ]
+    "provisioners": {
+      "shell": {
+        "arrays": {
+          "scripts": [
+            "setup",
+            "sudoers",
+            "vagrant",
+	    "vbox",
+            "cleanup"
+          ]
+	}
       }
     }
   },
@@ -64,11 +54,17 @@
     "builder_types": [
       "virtualbox-iso"
     ],
-    "builders": {
-      "common": {
-        "settings": [
-          "ssh_wait_timeout = 30m"
-        ]
+    "provisioners": {
+      "shell": {
+        "arrays": {
+          "scripts": [
+            "setup",
+            "sudoers",
+            "vagrant",
+	    "vbox",
+            "cleanup"
+          ]
+	}
       }
     }
   },
@@ -81,18 +77,18 @@
     "builder_types": [
       "virtualbox-iso"
     ],
-	"builders": {
-      "common": {
-        "settings": [
-          "ssh_wait_timeout = 30m"
-         ]
-      }
-    },
     "provisioners": {
       "shell": {
-        "vagrant.sh",
-        "setup.sh",
-        "cleanup.sh"
-	}
+        "arrays": {
+   	  "scripts": {
+            "setup",
+            "sudoers",
+            "vagrant",
+            "vbox",
+	    "cleanup"
+          }
+        }
+      }     	
+    }
   }
 }

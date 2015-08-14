@@ -1,0 +1,6 @@
+#!/bin/bash
+date > /etc/packer_build_time
+DEBIAN_FRONTEND=noninteractive apt-get update
+DEBIAN_FRONTEND=noninteractive apt-get upgrade -y
+DEBIAN_FRONTEND=noninteractive apt-get install -y curl git rsync wget vim
+DEBIAN_FRONTEND=noninteractive apt-get -y install build-essential dkms linux-headers-$(uname -r)

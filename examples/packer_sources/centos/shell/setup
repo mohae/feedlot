@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Update the system and install basics
+yum update
+yum upgrade -y
+yum install -y bzip2 curl git rsync wget vim
+yum install -y gcc make gcc-c++ kernel-devel-`uname-r`
