@@ -93,7 +93,48 @@
     }
   },
   "post_processors": {
-
+    "compress": {
+      "settings": {
+        "output=archive.tar.lz4"
+      }
+    },
+    "docker-import": {
+      "settings": {
+        "repository=mitchellh/packer"
+      }       
+    },
+    "docker-push": {
+    },
+    "docker-save": {
+      "settings": {
+        "path=foo.tar"
+      }       
+    },
+    "docker-tag": {
+      "settings": {
+        "repository=mitchellh/packer"
+      }       
+    },
+    "vagrant": {
+    } 
+    "vagrant-cloud": {
+      "settings": {
+        "access_token={{user `cloud_token`}}",
+        "box_tag=hashicorp/precise64",
+	"version={{user `version`}}"
+      }       
+    },
+    "vsphere": {
+      "settings": {
+        "cluster=vSphereCluster",
+	"datacenter=dc-east-1",
+	"datastore=ds-001",
+	"host=vsphere-host",
+	"password=vagrant",
+	"username=vagrant",
+	"vm_name=packer-vsphere-vm"
+      }       
+    },    
   },
   "provisioners": {
     "ansible-local": {
@@ -132,12 +173,12 @@
     "shell": {
       "arrays": {
         "scripts": [
-          "setup.sh",
-          "sudoers.sh",
-          "packer.sh",
-          "cleanup.sh"
+          "setup",
+          "sudoers",
+          "vagrant",
+          "cleanup"
         ]
-  	  }
+      }
     },
     "shell-local": {
       "settings": [

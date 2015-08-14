@@ -1,13 +1,15 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # Add/set the sudoers stuff
-groupadd -r admin
-groupadd -r sudo
+DEBIAN_FRONTEND=noninteractive apt-get install -y sudo
+groupadd admin
 
-# Back up before the screw up
+# Back up before making changes
 cp /etc/sudoers /etc/sudoers.orig
 
-# Make the sudo group exempt. 
+# Exempt.sudoers
 sed -i -e '/Defaults\s\+env_reset/a Defaults\texempt_group=sudo' /etc/sudoers
 
-# Let Admins use no password.
+# No passwords for admins
 sed -i -e 's/%admin ALL=(ALL) ALL/%admin ALL=NOPASSWD:ALL/g' /etc/sudoers
+
+echo "UseDNS no" >> /etc/ssh/sshd_config

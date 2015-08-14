@@ -10,5 +10,5 @@ fb=false <wait>
 debconf/frontend=noninteractive <wait>
 console-setup/ask_detect=false <wait>
 console-keymaps-at/keymap=us <wait>
-keyboard-configuration/xkb-keymap=ys <wait>
+keyboard-configuration/xkb-keymap=us <wait>
 <enter><wait>

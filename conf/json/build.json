@@ -8,20 +8,18 @@
     "builder_types": [
       "virtualbox-iso"
     ],
-    "builders": {
-      "common": {
-        "settings": [
-          "ssh_wait_timeout = 30m"
-        ]
-      }
-    },
     "provisioners": {
-      "scripts": [
-        "vagrant.sh",
-	"sudoers.sh",
-	"setup.sh",
-	"cleanup.sh"
-      ]
+      "shell": {
+        "arrays": {
+          "scripts": [
+            "setup",
+            "sudoers",
+	    "vagrant",
+            "vbox",
+            "cleanup"
+          ]
+        }
+      }
     }
   },
   "centos6-64": {
@@ -33,15 +31,20 @@
     "builder_types": [
         "virtualbox-iso"
     ],
-    "builders": {
-      "common": {
-        "settings": [
-          "ssh_wait_timeout = 30m"
-        ]
+    "provisioners": {
+      "shell": {
+        "arrays": {
+          "scripts": [
+            "setup",
+            "sudoers",
+            "vagrant",
+	    "vbox",
+            "cleanup"
+          ]
+	}
       }
     }
   },
-
   "centos7-64": {
     "distro": "centos",
     "description": "example Centos 7 x86_64 build",
@@ -51,11 +54,17 @@
     "builder_types": [
       "virtualbox-iso"
     ],
-    "builders": {
-      "common": {
-        "settings": [
-          "ssh_wait_timeout = 30m"
-        ]
+    "provisioners": {
+      "shell": {
+        "arrays": {
+          "scripts": [
+            "setup",
+            "sudoers",
+            "vagrant",
+	    "vbox",
+            "cleanup"
+          ]
+	}
       }
     }
   },
@@ -68,18 +77,18 @@
     "builder_types": [
       "virtualbox-iso"
     ],
-	"builders": {
-      "common": {
-        "settings": [
-          "ssh_wait_timeout = 30m"
-         ]
-      }
-    },
     "provisioners": {
       "shell": {
-        "vagrant.sh",
-        "setup.sh",
-        "cleanup.sh"
-	}
+        "arrays": {
+   	  "scripts": {
+            "setup",
+            "sudoers",
+            "vagrant",
+            "vbox",
+	    "cleanup"
+          }
+        }
+      }     	
+    }
   }
 }
