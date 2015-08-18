@@ -1,10 +1,11 @@
 package command
 
 import (
-	"flag"
 	"strings"
 
-	"github.com/mitchellh/cli"
+	"github.com/mohae/cli"
+	"github.com/mohae/contour"
+	"github.com/mohae/rancher/app"
 )
 
 // RunCommand is a Command implementation that generates Packer templates
@@ -27,16 +28,55 @@ func (c *RunCommand) Help() string {
 
         The above command generates Packer templates from all of the Rancher
 	Builds that have been specified within the RunList 'example1'.
+
+	Options:
+	-eg=bool           true/false: create builds from examples; generates
+                       example Packer templates.
 `
+
 	return strings.TrimSpace(helpText)
 }
 
 // Run runs the run sub-command; the args are a variadic list of build list names.
 func (c *RunCommand) Run(args []string) int {
-	var logLevel string
-	cmdFlags := flag.NewFlagSet("run", flag.ContinueOnError)
-	cmdFlags.Usage = func() { c.UI.Output(c.Help()) }
-	cmdFlags.StringVar(&logLevel, "log-level", "INFO", "log level")
+	// Declare the command flag set and their values.
+	contour.SetUsage(func() {
+		c.UI.Output(c.Help())
+	})
+	// set flags/filter rgs
+	var err error
+	var filteredArgs []string
+	filteredArgs, err = contour.FilterArgs(args)
+	if err != nil {
+		c.UI.Error(err.Error())
+		return 1
+	}
+	app.SetLogging()
+	if len(filteredArgs) == 0 {
+		c.UI.Error("Nothing to do: no build list names were received.")
+		return 1
+	}
+	// the remaining args are build names: build those templates.
+	messages, errs := app.Run(filteredArgs...)
+	// message and err are slices, []string and []error, respectively.
+	// go through them and print out what's appropriate.
+	// TODO: there better matching of returned results to build list. I am assuming the
+	//       worst when I write this TODO, it may be that the returned stuff already does
+	//       this.
+	if messages != nil {
+		for _, message := range messages {
+			if message != "" {
+				c.UI.Output(message)
+			}
+		}
+	}
+	if errs != nil {
+		for _, err := range errs {
+			if err != nil {
+				c.UI.Error(err.Error())
+			}
+		}
+	}
 	return 0
 
 }

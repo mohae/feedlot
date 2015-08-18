@@ -545,6 +545,15 @@ func (b *buildLists) Load(p string) error {
 	return nil
 }
 
+// Get returns the requested build list, or an error
+func (b *buildLists) Get(s string) (list, error) {
+	l, ok := b.List[s]
+	if !ok {
+		return list{}, fmt.Errorf("%s is not a valid build_list name", s)
+	}
+	return l, nil
+}
+
 // SetCfgFile set's the appCFg from the app's cfg file and then applies any env
 // vars that have been set. After this, settings can only be updated
 // programmatically or via command-line flags.
