@@ -1,4 +1,4 @@
-[1404_amd64_required]
+[1404-64-required]
 	distro = "ubuntu",
 	description = "example ubuntu LTS 1404 amd64 build with all supported components; required settings only",
 	arch = "amd64",
@@ -78,7 +78,7 @@
 		"shell"
 	]
 
-[jessie_amd64_required]
+[jessie-64-required]
 	distro = "debian",
 	description = "example debian jessie build with all supported components; required settings only",
 	arch = "amd64",

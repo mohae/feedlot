@@ -1,7 +1,7 @@
 {
   "description": "Example Rancher template",
   "name": ":build_name",
-  "output_dir": "packer_templates/:build_name",
+  "output_dir": "../packer_templates/:build_name",
   "source_dir": "packer_sources",
   "include_component_string": "true",
   "min_packer_version": "0.7.0",
@@ -19,7 +19,8 @@
     "common": {
       "settings": [
         "iso_checksum_type=sha256",
-        "ssh_username = packer"
+        "ssh_username = vagrant",
+        "ssh_wait_timeout = 60m"
       ]
     },
     "amazon-chroot": {
@@ -73,7 +74,7 @@
     "null": {
       "settings": [
         "ssh_host=127.0.0.1",
-        "ssh_password=packer"
+        "ssh_password=vagrant"
       ]
     },
     "virtualbox-iso": {
@@ -92,7 +93,32 @@
     }
   },
   "post_processors": {
-
+    "compress": {
+      "output=archive.tar.lz4"
+    },
+    "docker-import": {
+      "repository=mitchellh/packer"
+    },
+    "docker-push": {
+    },
+    "docker-save": {
+    },
+    "docker-tag": {
+      "repository=mitchellh/packer"
+    },
+    "vagrant": {
+    },
+    "vagrant-cloud": {
+    },
+    "vsphere": {
+      "cluster=vSphereCluster",
+      "datacenter=dc-east-1",
+      "datastore=ds-001",
+      "host=vsphere-host",
+      "password=vagrant",
+      "username=vagrant",
+      "vm_name=packer-vsphere-vm"
+    }
   },
   "provisioners": {
     "ansible-local": {
@@ -131,12 +157,12 @@
     "shell": {
       "arrays": {
         "scripts": [
-          "setup.sh",
-          "sudoers.sh",
-          "packer.sh",
-          "cleanup.sh"
+          "setup",
+          "sudoers",
+          "user_vagrant",
+          "cleanup"
         ]
-  	  }
+      }
     },
     "shell-local": {
       "settings": [
@@ -149,6 +175,6 @@
       "settings": [
         "inline=dir c:\\"
       ]
-    }	
+    }
   }
 }

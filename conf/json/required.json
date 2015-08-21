@@ -39,11 +39,51 @@
       "shell"
     ]
   },
+  "centos6_x86_64_required": {
+    "distro": "centos",
+    "description": "example centos 6 x86_64 build with all supported components; required settings only",
+    "arch": "x86_64",
+    "image": "minimal",
+    "release": "6",
+    "builder_types": [
+      "amazon-chroot",
+      "amazon-ebs",
+      "amazon-instance",
+      "digitalocean",
+      "googlecompute",
+      "null",
+      "virtualbox-iso",
+      "virtualbox-ovf",
+      "vmware-iso",
+      "vmware-vmx"
+    ],
+    "post_processor_types": [
+      "compress",
+      "docker-import",
+      "docker-tag",
+      "docker-push",
+      "docker-save",
+      "docker-tag",
+      "vagrant",
+      "vagrant-cloud",
+      "vsphere"
+    ],
+    "provisioner_types": [
+      "ansible-local",
+      "chef-client",
+      "chef-solo",
+      "file",
+      "puppet-masterless",
+      "puppet-server",
+      "salt-masterless",
+      "shell"
+    ]
+  },
   "centos7_x86_64_required": {
     "distro": "centos",
     "description": "example centos 7 x86_64 build with all supported components; required settings only",
     "arch": "x86_64",
-    "image": "minimal",
+    "image": "Minimal",
     "release": "7",
     "builder_types": [
       "amazon-chroot",

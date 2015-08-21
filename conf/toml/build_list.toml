@@ -1,6 +1,6 @@
 # This is the build list file for Rancher.
 # A list consists of one or more Rancher Build names. This is a comma separated list.
 [all]
-	builds = ["1404_amd64", "centos7_x86_64", "jessie_amd64"]
+builds = ["1404-64", "centos6-64", "centos7-64", "jessie-64"]
 [required]
-	builds = ["1404_amd64_required", "centos7_x86_64_required", "jessie_amd64_required"]
+builds = ["1404-64-required", "centos6-64-required", "centos7-64-required", "jessie-64-required"]
