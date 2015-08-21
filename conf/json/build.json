@@ -10,7 +10,6 @@
     ],
     "provisioners": {
       "shell": {
-<<<<<<< HEAD
         "scripts": [
           "setup",
           "sudoers",
@@ -18,17 +17,6 @@
           "vbox",
           "cleanup"
         ]
-=======
-        "arrays": {
-          "scripts": [
-            "setup",
-            "sudoers",
-	    "vagrant",
-            "vbox",
-            "cleanup"
-          ]
-        }
->>>>>>> 27ca84f... rename shell scripts so they don't have .sh suffic, update configuration files
       }
     }
   },
@@ -43,7 +31,6 @@
     ],
     "provisioners": {
       "shell": {
-<<<<<<< HEAD
         "scripts": [
           "setup",
           "sudoers",
@@ -51,20 +38,10 @@
           "vbox",
           "cleanup"
         ]
-=======
-        "arrays": {
-          "scripts": [
-            "setup",
-            "sudoers",
-            "vagrant",
-	    "vbox",
-            "cleanup"
-          ]
-	}
->>>>>>> 27ca84f... rename shell scripts so they don't have .sh suffic, update configuration files
       }
     }
   },
+
   "centos7-64": {
     "distro": "centos",
     "description": "example Centos 7 x86_64 virtualbox vagrant build",
@@ -76,7 +53,6 @@
     ],
     "provisioners": {
       "shell": {
-<<<<<<< HEAD
         "scripts": [
           "setup",
           "sudoers",
@@ -84,17 +60,6 @@
           "vbox",
           "cleanup"
         ]
-=======
-        "arrays": {
-          "scripts": [
-            "setup",
-            "sudoers",
-            "vagrant",
-	    "vbox",
-            "cleanup"
-          ]
-	}
->>>>>>> 27ca84f... rename shell scripts so they don't have .sh suffic, update configuration files
       }
     }
   },
@@ -109,7 +74,6 @@
     ],
     "provisioners": {
       "shell": {
-<<<<<<< HEAD
         "scripts": [
           "setup",
           "sudoers",
@@ -118,18 +82,6 @@
           "cleanup"
         ]
       }
-=======
-        "arrays": {
-   	  "scripts": {
-            "setup",
-            "sudoers",
-            "vagrant",
-            "vbox",
-	    "cleanup"
-          }
-        }
-      }     	
->>>>>>> 27ca84f... rename shell scripts so they don't have .sh suffic, update configuration files
     }
   }
 }
