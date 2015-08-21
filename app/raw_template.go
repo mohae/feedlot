@@ -160,15 +160,15 @@ func (r *rawTemplate) setDefaults(d *distro) error {
 		}
 	}
 	// If defined, BuilderTypes override any prior BuilderTypes Settings
-	if d.BuilderTypes != nil && len(d.BuilderTypes) > 0 {
+	if d.BuilderTypes != nil {
 		r.BuilderTypes = d.BuilderTypes
 	}
 	// If defined, PostProcessorTypes override any prior PostProcessorTypes Settings
-	if d.PostProcessorTypes != nil && len(d.PostProcessorTypes) > 0 {
+	if d.PostProcessorTypes != nil {
 		r.PostProcessorTypes = d.PostProcessorTypes
 	}
 	// If defined, ProvisionerTypes override any prior ProvisionerTypes Settings
-	if d.ProvisionerTypes != nil && len(d.ProvisionerTypes) > 0 {
+	if d.ProvisionerTypes != nil {
 		r.ProvisionerTypes = d.ProvisionerTypes
 	}
 	// merge the build portions.
@@ -208,12 +208,17 @@ func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
 	if bld.BuilderTypes != nil && len(bld.BuilderTypes) > 0 {
 		r.BuilderTypes = bld.BuilderTypes
 	}
-	// If defined, PostProcessorTypes override any prior PostProcessorTypes Settings
-	if bld.PostProcessorTypes != nil && len(bld.PostProcessorTypes) > 0 {
+	// For post_processor_types and provisioner_types the following logic is used
+	// if nil don't do anything (this means prior settings are used, e.g. default)
+	// if len == 0 unset. A len of 0 means that the build template purposely unsets
+	//   any build
+	// if len > 0 replace the existing types with the builder's.
+
+	if bld.PostProcessorTypes != nil {
 		r.PostProcessorTypes = bld.PostProcessorTypes
 	}
-	// If defined, ProvisionerTypes override any prior ProvisionerTypes Settings
-	if bld.ProvisionerTypes != nil && len(bld.ProvisionerTypes) > 0 {
+
+	if bld.ProvisionerTypes != nil {
 		r.ProvisionerTypes = bld.ProvisionerTypes
 	}
 	// merge the build portions.

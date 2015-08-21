@@ -47,22 +47,19 @@ type build struct {
 // build.DeepCopy makes a deep copy of the build and returns it.
 func (b *build) copy() build {
 	newB := build{
-		BuilderTypes:       []string{},
-		Builders:           map[string]builder{},
-		PostProcessorTypes: []string{},
-		PostProcessors:     map[string]postProcessor{},
-		ProvisionerTypes:   []string{},
-		Provisioners:       map[string]provisioner{},
+		Builders:       map[string]builder{},
+		PostProcessors: map[string]postProcessor{},
+		Provisioners:   map[string]provisioner{},
 	}
-	if b.BuilderTypes != nil || len(b.BuilderTypes) > 0 {
+	if b.BuilderTypes != nil {
 		newB.BuilderTypes = make([]string, len(b.BuilderTypes), len(b.BuilderTypes))
 		copy(newB.BuilderTypes, b.BuilderTypes)
 	}
-	if b.PostProcessorTypes != nil || len(b.PostProcessorTypes) > 0 {
+	if b.PostProcessorTypes != nil {
 		newB.PostProcessorTypes = make([]string, len(b.PostProcessorTypes), len(b.PostProcessorTypes))
 		copy(newB.PostProcessorTypes, b.PostProcessorTypes)
 	}
-	if b.ProvisionerTypes != nil || len(b.ProvisionerTypes) > 0 {
+	if b.ProvisionerTypes != nil {
 		newB.ProvisionerTypes = make([]string, len(b.ProvisionerTypes), len(b.ProvisionerTypes))
 		copy(newB.ProvisionerTypes, b.ProvisionerTypes)
 	}
