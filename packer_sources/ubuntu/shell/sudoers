@@ -1,7 +1,7 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # Add/set the sudoers stuff
-apt-get install -y sudo
-groupadd -r admin
+DEBIAN_FRONTEND=noninteractive apt-get install -y sudo
+groupadd admin
 
 # Back up before making changes
 cp /etc/sudoers /etc/sudoers.orig

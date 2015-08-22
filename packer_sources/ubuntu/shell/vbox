@@ -1,0 +1,9 @@
+#!/bin/bash
+# Install VirtualBox Guest Additions
+# necessary:
+apt-get install -y xserver-xorg xserver-xorg-core
+cd /tmp
+mount -o loop /home/vagrant/VBoxGuestAdditions.iso /mnt
+sh /mnt/VBoxLinuxAdditions.run
+umount /mnt
+rm -f /home/vagrant/VBoxGuestAdditions*.iso

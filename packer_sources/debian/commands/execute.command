@@ -1,1 +1,1 @@
-echo 'vagrant'|sudo -S sh '{{.Path}}'
+echo 'vagrant'|sudo -E -S bash '{{.Path}}'
