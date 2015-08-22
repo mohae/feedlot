@@ -16,7 +16,7 @@ builder_types = [
 		[1404-64-vbox-vagrant.provisioners.shell.arrays]
 		scripts = [ 
 			"setup",
-			"vagrant",
+			"user_vagrant",
 			"sudoers",
 			"vbox",
 			"cleanup",
@@ -36,7 +36,7 @@ builder_types = [
 		[centos6-64-vbox-vagrant.provisioners.shell.arrays]
 		scripts = [ 
 			"setup",
-			"vagrant",
+			"user_vagrant",
 			"sudoers",
 			"vbox",
 			"cleanup",
@@ -56,7 +56,7 @@ builder_types = [
 		[centos7-64-vbox-vagrant.provisioners.shell.arrays]
 		scripts = [ 
 			"setup",
-			"vagrant",
+			"user_vagrant",
 			"sudoers",
 			"vbox",
 			"cleanup",
@@ -76,7 +76,7 @@ builder_types = [
 		[jessie-64-vbox-vagrant.provisioners.shell.arrays]
 		scripts = [ 
 			"setup",
-			"vagrant",
+			"user_vagrant",
 			"sudoers",
 			"vbox",
 			"cleanup",
