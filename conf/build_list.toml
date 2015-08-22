@@ -1,4 +1,9 @@
 # This is the build list file for Rancher.
 # A list consists of one or more Rancher Build names. This is a comma separated list.
 [all]
-builds = ["1404-64", "centos6-64", "centos7-64", "jessie-64"]
+builds = [
+	"1404-64",
+	"centos6-64",
+	"centos7-64",
+	"jessie-64"
+]
