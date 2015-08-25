@@ -19,8 +19,8 @@
     "common": {
       "settings": [
         "iso_checksum_type=sha256",
-        "output_directory = :output_dir",		
-        "ssh_username = vagramt"
+        "ssh_username = vagrant",
+        "ssh_wait_timeout = 60m"
       ]
     },
     "amazon-chroot": {
@@ -94,47 +94,31 @@
   },
   "post_processors": {
     "compress": {
-      "settings": {
-        "output=archive.tar.lz4"
-      }
+      "output=archive.tar.lz4"
     },
     "docker-import": {
-      "settings": {
-        "repository=mitchellh/packer"
-      }       
+      "repository=mitchellh/packer"
     },
     "docker-push": {
     },
     "docker-save": {
-      "settings": {
-        "path=foo.tar"
-      }       
     },
     "docker-tag": {
-      "settings": {
-        "repository=mitchellh/packer"
-      }       
+      "repository=mitchellh/packer"
     },
     "vagrant": {
-    } 
+    },
     "vagrant-cloud": {
-      "settings": {
-        "access_token={{user `cloud_token`}}",
-        "box_tag=hashicorp/precise64",
-	"version={{user `version`}}"
-      }       
     },
     "vsphere": {
-      "settings": {
-        "cluster=vSphereCluster",
-	"datacenter=dc-east-1",
-	"datastore=ds-001",
-	"host=vsphere-host",
-	"password=vagrant",
-	"username=vagrant",
-	"vm_name=packer-vsphere-vm"
-      }       
-    },    
+      "cluster=vSphereCluster",
+      "datacenter=dc-east-1",
+      "datastore=ds-001",
+      "host=vsphere-host",
+      "password=vagrant",
+      "username=vagrant",
+      "vm_name=packer-vsphere-vm"
+    }
   },
   "provisioners": {
     "ansible-local": {
@@ -175,7 +159,7 @@
         "scripts": [
           "setup",
           "sudoers",
-          "vagrant",
+          "user_vagrant",
           "cleanup"
         ]
       }
@@ -191,6 +175,6 @@
       "settings": [
         "inline=dir c:\\"
       ]
-    }	
+    }
   }
 }

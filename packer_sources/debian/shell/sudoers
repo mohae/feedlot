@@ -2,6 +2,7 @@
 # Add/set the sudoers stuff
 DEBIAN_FRONTEND=noninteractive apt-get install -y sudo
 groupadd admin
+groupadd sudo
 
 # Back up before making changes
 cp /etc/sudoers /etc/sudoers.orig

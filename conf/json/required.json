@@ -83,7 +83,7 @@
     "distro": "centos",
     "description": "example centos 7 x86_64 build with all supported components; required settings only",
     "arch": "x86_64",
-    "image": "minimal",
+    "image": "Minimal",
     "release": "7",
     "builder_types": [
       "amazon-chroot",

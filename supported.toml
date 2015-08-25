@@ -24,7 +24,6 @@ default_image = [
 	"image = Minimal",
 	"arch = x86_64"
 ]
-
 [debian]
 base_url = "http://cdimage.debian.org/debian-cd/"
 description = "Default template config and Rancher options for Debian"
@@ -43,7 +42,6 @@ default_image = [
 	"image = netinst",
 	"arch = amd64"
 ]
-
 [ubuntu]
 base_url = "http://releases.ubuntu.com/"
 description = "Default template config and Rancher options for Ubuntu"

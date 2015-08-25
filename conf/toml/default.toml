@@ -3,9 +3,12 @@
 #
 # Only the required settings are included for example purposes. The values used
 # are consistent with the documented Packer defaults, where possible, with the
-# exception of username/ssh_username, which defaults to 'packer'. Add any
-# additional settings that make sense for your environment.
+# exception of username/ssh_username, which defaults to 'vagrant' and
+# ssh_wait_timeout which is set to 60m.  
 #
+# Add any additional settings that make sense for your environment.
+# Remove any settings or Packer components that do not make sense for your
+# environment
 description = "Example Rancher template"
 name = ":build_name"
 output_dir = "../packer_templates/:build_name"
@@ -26,8 +29,8 @@ provisioner_types = [
 	[builders.common]
 	settings = [
 		"iso_checksum_type = sha256",
-		"output_directory = :output_dir",
 		"ssh_username = vagrant",
+		"ssh_wait_timeout = 60m",
 	]
 	[builders.amazon-chroot]
 	settings =  [
@@ -66,7 +69,6 @@ provisioner_types = [
 		"region=nyc2",
 		"size=512mb"
 	]
-
 	[builders.googlecompute]
 	settings = [
 		"project_id=my-project",
@@ -109,9 +111,9 @@ provisioner_types = [
 	[post_processors.vagrant]
 	[post_processors.vagrant-cloud]
 	settings = [
-		"access_token={{user `cloud_token`}}",
-		"box_tag=hashicorp/precise64",
-		"version={{user `version`}}"
+		access_token={{user `cloud_token`}}",
+		box_tag=hashicorp/precise64",
+		version={{user `version`}}"
 	]
 	[post_processors.vsphere]
 	settings = [
@@ -121,7 +123,7 @@ provisioner_types = [
 		"host=vsphere-host",
 		"password=vagrant",
 		"username=vagrant",
-		"vm_name=packer-vshpere-vm"
+		"vm_name=packer-vsphere-vm"
 	]
 [provisioners]
 	[provisioners.ansible-local]
@@ -132,9 +134,9 @@ provisioner_types = [
 	[provisioners.chef-solo]
 	[provisioners.file]
 	settings = [
-		"source=app.tar.gz",
-		"destination=/tmp/app.tar.gz",
-		"direction=upload"
+ 		"source=app.tar.gz",
+ 		"destination=/tmp/app.tar.gz",
+ 		"direction=upload"
 	]
 	[provisioners.powershell]
 	settings = [
@@ -146,15 +148,15 @@ provisioner_types = [
 	]
 	[provisioners.puppet-server]
 	[provisioners.salt-masterless]
-	settings = [
-		"local_state_tree=/Users/me/salt"
+ 	settings = [
+  		"local_state_tree=/Users/me/salt"
 	]
 	[provisioners.shell]
-		[provionsers.shell.arrays]
+		[provisioners.shell.arrays]
 		scripts = [
 			"setup",
 			"sudoers",
-			"vagrant",
+			"user_vagrant",
 			"cleanup"
 		]
 	[provisioners.shell-local]
