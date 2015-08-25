@@ -3,4 +3,4 @@
 yum update
 yum upgrade -y
 yum install -y bzip2 curl git rsync wget vim
-yum install -y gcc make gcc-c++ kernel-devel-`uname-r`
+yum install -y gcc make gcc-c++ kernel-devel
