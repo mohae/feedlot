@@ -2,8 +2,6 @@
 # references:
 #    http://vstone.eu/reducing-vagrant-box-size/
 #    https://github.com/mitchellh/vagrant/issues/343
-
-rm -f /home/vagrant/VBoxGuestAddition*.iso
 DEBIAN_FRONTEND=noninteractive apt-get -y install deborphan
 DEBIAN_FRONTEND=noninteractive deborphan | xargs sudo apt-get purge -y
 DEBIAN_FRONTEND=noninteractive apt-get clean -y

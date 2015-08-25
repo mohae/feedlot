@@ -1,7 +1,7 @@
 {
   "1404-64": {
     "distro": "ubuntu",
-    "description": "example Ubuntu LTS 1404 amd64 vagrant build",
+    "description": "example Ubuntu LTS 1404 amd64 virtualbox vagrant build",
     "arch": "amd64",
     "image": "server",
     "release": "14.04",
@@ -10,21 +10,19 @@
     ],
     "provisioners": {
       "shell": {
-        "arrays": {
-          "scripts": [
-            "setup",
-            "sudoers",
-	    "vagrant",
-            "vbox",
-            "cleanup"
-          ]
-        }
+        "scripts": [
+          "setup",
+          "sudoers",
+          "user_vagrant",
+          "vbox",
+          "cleanup"
+        ]
       }
     }
   },
   "centos6-64": {
     "distro": "centos",
-    "description": "example Centos 6 x86_64 build",
+    "description": "example Centos 6 x86_64 virtualbox vagrant build",
     "arch": "x86_64",
     "image": "Minimal",
     "release": "6",
@@ -33,21 +31,20 @@
     ],
     "provisioners": {
       "shell": {
-        "arrays": {
-          "scripts": [
-            "setup",
-            "sudoers",
-            "vagrant",
-	    "vbox",
-            "cleanup"
-          ]
-	}
+        "scripts": [
+          "setup",
+          "sudoers",
+          "user_vagrant",
+          "vbox",
+          "cleanup"
+        ]
       }
     }
   },
+
   "centos7-64": {
     "distro": "centos",
-    "description": "example Centos 7 x86_64 build",
+    "description": "example Centos 7 x86_64 virtualbox vagrant build",
     "arch": "x86_64",
     "image": "Minimal",
     "release": "7",
@@ -56,21 +53,19 @@
     ],
     "provisioners": {
       "shell": {
-        "arrays": {
-          "scripts": [
-            "setup",
-            "sudoers",
-            "vagrant",
-	    "vbox",
-            "cleanup"
-          ]
-	}
+        "scripts": [
+          "setup",
+          "sudoers",
+          "user_vagrant",
+          "vbox",
+          "cleanup"
+        ]
       }
     }
   },
   "jessie-64": {
     "distro": "debian",
-    "description": "example Debian Jessie build",
+    "description": "example Debian Jessie amd64 virtualbox vagrant build",
     "arch": "amd64",
     "image": "netinst",
     "release": "8",
@@ -79,16 +74,14 @@
     ],
     "provisioners": {
       "shell": {
-        "arrays": {
-   	  "scripts": {
-            "setup",
-            "sudoers",
-            "vagrant",
-            "vbox",
-	    "cleanup"
-          }
-        }
-      }     	
+        "scripts": [
+          "setup",
+          "sudoers",
+          "user_vagrant",
+          "vbox",
+          "cleanup"
+        ]
+      }
     }
   }
 }

@@ -1,5 +1,5 @@
 # This is the build list file for Rancher.
-# A list consists of one or more Rancher Build names. This is a comma separated list.
+# A list consists of one or more Rancher build template names.
 [all]
 builds = [
 	"1404-64",
