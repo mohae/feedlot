@@ -9,9 +9,8 @@
 package app
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -20,6 +19,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/mohae/contour"
 	"github.com/mohae/deepcopy"
+	cjsn "github.com/mohae/ersatzjson"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -250,24 +250,14 @@ func (d *defaults) Load(p string) error {
 		if err != nil {
 			return decodeErr(name, err)
 		}
-	case "json", "jsn":
-		f, err := os.Open(name)
+	case "cjsn", "json", "jsn":
+		b, err := ioutil.ReadFile(name)
 		if err != nil {
 			return decodeErr(name, err)
 		}
-		defer f.Close()
-		dec := json.NewDecoder(f)
+		err = cjsn.Unmarshal(b, &d)
 		if err != nil {
 			return decodeErr(name, err)
-		}
-		for {
-			err := dec.Decode(&d)
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return decodeErr(name, err)
-			}
 		}
 	default:
 		return ErrUnsupportedFormat
@@ -411,21 +401,14 @@ func (s *supported) Load(p string) error {
 		if err != nil {
 			return decodeErr(name, err)
 		}
-	case "json", "jsn":
-		f, err := os.Open(name)
+	case "cjsn", "json", "jsn":
+		b, err := ioutil.ReadFile(name)
 		if err != nil {
 			return decodeErr(name, err)
 		}
-		defer f.Close()
-		dec := json.NewDecoder(f)
-		for {
-			err := dec.Decode(&s.Distro)
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return decodeErr(name, err)
-			}
+		err = cjsn.Unmarshal(b, &s.Distro)
+		if err != nil {
+			return decodeErr(name, err)
 		}
 	default:
 		return ErrUnsupportedFormat
@@ -451,21 +434,14 @@ func (b *builds) Load(name string) error {
 		if err != nil {
 			return decodeErr(name, err)
 		}
-	case "json", "jsn":
-		f, err := os.Open(name)
+	case "cjsn", "json", "jsn":
+		by, err := ioutil.ReadFile(name)
 		if err != nil {
 			return decodeErr(name, err)
 		}
-		defer f.Close()
-		dec := json.NewDecoder(f)
-		for {
-			err := dec.Decode(&b.Build)
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return decodeErr(name, err)
-			}
+		err = cjsn.Unmarshal(by, &b.Build)
+		if err != nil {
+			return decodeErr(name, err)
 		}
 	default:
 		return ErrUnsupportedFormat
@@ -517,24 +493,14 @@ func (b *buildLists) Load(p string) error {
 		if err != nil {
 			return decodeErr(name, err)
 		}
-	case "json", "jsn":
-		f, err := os.Open(name)
+	case "cjsn", "json", "jsn":
+		by, err := ioutil.ReadFile(name)
 		if err != nil {
 			return decodeErr(name, err)
 		}
-		defer f.Close()
-		dec := json.NewDecoder(f)
+		err = cjsn.Unmarshal(by, &b.List)
 		if err != nil {
 			return decodeErr(name, err)
-		}
-		for {
-			err := dec.Decode(&b.List)
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return decodeErr(name, err)
-			}
 		}
 	default:
 		return ErrUnsupportedFormat
