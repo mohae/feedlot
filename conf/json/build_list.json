@@ -1,7 +1,7 @@
 {
   "all": {
     "builds": [
-      "1404-64",
+      "1504-64",
       "centos6-64",
       "centos7-64",
       "jessie-64"
@@ -9,7 +9,7 @@
   },
   "required": {
     "builds": [
-      "1404-64-required",
+      "1504-64-required",
       "centos6-64-required",
       "centos7-64-required",
       "jessie-64-required"

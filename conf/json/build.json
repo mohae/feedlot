@@ -1,10 +1,10 @@
 {
-  "1404-64": {
+  "1504-64": {
     "distro": "ubuntu",
-    "description": "example Ubuntu LTS 1404 amd64 virtualbox vagrant build",
+    "description": "example Ubuntu LTS 1504 amd64 virtualbox vagrant build",
     "arch": "amd64",
     "image": "server",
-    "release": "14.04",
+    "release": "15.04",
     "builder_types": [
       "virtualbox-iso"
     ],
