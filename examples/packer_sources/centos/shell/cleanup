@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# references:
+#    http://vstone.eu/reducing-vagrant-box-size/
+#    https://github.com/mitchellh/vagrant/issues/343
+yum install -y yum-utils
+yum erase -y gtk2 libX11 hicolor-icon-theme avahi freetype bitstream-vera-fonts
+yum erase -y $(package-cleanup --leaves)
+yum erase -y yum-utils
+yum clean -y all
+
+# the history isn't needed
+unset HISTFILE
+rm -f /root/.bash_history
+rm -f /home/vagrant/.bash_history
+
+# log files
+find /var/log -type f | while read f; do echo -ne '' > $f; done;
+
+echo 'Whiteout root'
+count=`df --sync -kP / | tail -n1  | awk -F ' ' '{print $4}'`; 
+count=$((count-1))
+dd if=/dev/zero of=/tmp/whitespace bs=1024 count=$count;
+rm /tmp/whitespace;
+ 
+echo 'Whiteout /boot'
+count=`df --sync -kP /boot | tail -n1 | awk -F ' ' '{print $4}'`;
+count=$((count-1))
+dd if=/dev/zero of=/boot/whitespace bs=1024 count=$count;
+rm /boot/whitespace;
+ 
+swappart=`cat /proc/swaps | tail -n1 | awk -F ' ' '{print $1}'`
+swapoff $swappart;
+dd if=/dev/zero of=$swappart;
+mkswap $swappart;
+swapon $swappart;
+
+# zero all empty space
+dd if=/dev/zero of=/EMPTY bs=1M
+rm -f /EMPTY

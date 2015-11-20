@@ -1,0 +1,23 @@
+# Application configuration settings
+#
+# The current setting reflect the application defaults; except for format.  Format's
+# setting value reflects the type of this configuration file, i.e. it is assumed
+# that if you are using rancher.toml your template configurations will also be in
+# the same format.
+#
+# This file is only needed if any of Rancher's default settings will be overridden or
+# if the format is not "json"; Rancher's default format.
+#
+# Rancher recognizes both ".cjsn" and ".json" as valid extenstions for JSON.
+{
+  "archive_prior_build": false,
+  "conf_dir": "conf/json",
+  "example": false,
+  "example_dir": "examples",
+  "format": "json",
+  "log": false,
+  "log_file": "rancher.log",
+  "log_level_file": "WARN",
+  "log_level_stdout": "ERROR",
+  "param_delim_start": ":"
+}

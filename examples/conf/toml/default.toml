@@ -1,0 +1,170 @@
+# Default settings for Rancher templates.  Merging the contents of this file
+# with the supported config file settings results in the default template for
+#
+# Only the required settings are included for example purposes. The values used
+# are consistent with the documented Packer defaults, where possible, with the
+# exception of username/ssh_username, which defaults to 'vagrant' and
+# ssh_wait_timeout which is set to 60m.  
+#
+# Add any additional settings that make sense for your environment.
+# Remove any settings or Packer components that do not make sense for your
+# environment
+description = "Example Rancher template"
+name = ":build_name"
+output_dir = "../packer_templates/:build_name"
+source_dir = "packer_sources"
+include_component_string = "true"
+min_packer_version = "0.7.0"
+builder_types = [
+	"virtualbox-iso",
+	"vmware-iso"
+]
+post_processor_types = [
+	"vagrant"
+]
+provisioner_types = [
+	"shell"
+]
+[builders]
+	[builders.common]
+	settings = [
+		"iso_checksum_type = sha256",
+		"ssh_username = vagrant",
+		"ssh_wait_timeout = 60m",
+	]
+	[builders.amazon-chroot]
+	settings =  [
+		"access_key=YOUR KEY HERE",
+		"ami_name=packer-amazon-chroot {{timestamp}}",
+		"secret_key=YOUR SECRET KEY HERE",
+		"source_ami=ami-e81d5881"
+	]
+	[builders.amazon-ebs]
+	settings = [
+		"access_key=YOUR KEY HERE",
+		"ami_name=packer-quick-start {{timestamp}}",
+		"instance_type=t1.micro",
+		"region=us-east-1",
+		"secret_key=YOUR SECRET KEY HERE",
+		"source_ami=ami-de0d9eb7"
+	]
+	[builders.amazon-instance]
+	settings = [
+		"access_key=YOUR KEY HERE",
+		"account_id=0123-4567-0890",
+		"ami_name=packer-quick-start {{timestamp}}",
+		"instance_type=m1.small",
+		"region=us-east-1",
+		"s3_bucket=packer-images",
+		"secret_key=YOUR SECRET KEY HERE",
+		"source_ami=ami-d9d6a6b0",
+		"x509_cert_path=x509.cert",
+		"x509_key_path=x509.key",
+		"x509_upload_path=/tmp"
+	]
+	[builders.digitalocean]
+	settings = [
+		"api_token=YOUR API KEY",
+		"image=ubuntu-12-04-x64",
+		"region=nyc2",
+		"size=512mb"
+	]
+	[builders.googlecompute]
+	settings = [
+		"project_id=my-project",
+		"source_image=debian-7-wheezy-v20150127",
+		"zone=us-central1-a"
+	]
+	[builders.null]
+	settings = [
+		"ssh_host=127.0.0.1",
+		"ssh_password=vagrant"
+	]
+	[builders.virtualbox-iso]
+	[builders.virtualbox-ovf]
+	settings = [
+		"source_path=source.ovf"
+	]
+	[builders.vmware-iso]
+	[builders.vmware-vmx]
+	settings = [
+		"source_path=source.vmx"
+	]
+[post_processors]
+	[post_processors.compress]
+	settings = [
+		"output=archive.tar.lz4"
+	]
+	[post_processors.docker-import]
+	settings = [
+		"repository=mitchellh/packer"
+	]
+	[post_processors.docker-push]
+	[post_processors.docker-save]
+	settings = [
+		"path=foo.tar"
+	]
+	[post_processors.docker-tag]
+	settings = [
+		"repository=mitchellh/packer"
+	]
+	[post_processors.vagrant]
+	[post_processors.vagrant-cloud]
+	settings = [
+		access_token={{user `cloud_token`}}",
+		box_tag=hashicorp/precise64",
+		version={{user `version`}}"
+	]
+	[post_processors.vsphere]
+	settings = [
+		"cluster=vSphereCluster",
+		"datacenter=dc-east-1",
+		"datastore=ds-001",
+		"host=vsphere-host",
+		"password=vagrant",
+		"username=vagrant",
+		"vm_name=packer-vsphere-vm"
+	]
+[provisioners]
+	[provisioners.ansible-local]
+	settings = [
+		"playbook_file=local.yml"
+	]
+	[provisioners.chef-client]
+	[provisioners.chef-solo]
+	[provisioners.file]
+	settings = [
+ 		"source=app.tar.gz",
+ 		"destination=/tmp/app.tar.gz",
+ 		"direction=upload"
+	]
+	[provisioners.powershell]
+	settings = [
+		"inline=dir c:\\"
+	]
+	[provisioners.puppet-masterless]
+	settings = [
+		"manifest_file=site.pp"
+	]
+	[provisioners.puppet-server]
+	[provisioners.salt-masterless]
+ 	settings = [
+  		"local_state_tree=/Users/me/salt"
+	]
+	[provisioners.shell]
+		[provisioners.shell.arrays]
+		scripts = [
+			"setup",
+			"sudoers",
+			"user_vagrant",
+			"cleanup"
+		]
+	[provisioners.shell-local]
+	settings = [
+		"command=echo foo"
+	]
+	[provisioners.windows-restart]
+	[provisioners.windows-shell]
+	settings = [
+		"inline=dir c:\\"
+	]
