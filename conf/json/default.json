@@ -1,3 +1,14 @@
+# Default settings for Rancher templates.  Merging the contents of this file
+# with the supported config file settings results in the default template for
+#
+# Only the required settings are included for example purposes. The values used
+# are consistent with the documented Packer defaults, where possible, with the
+# exception of username/ssh_username, which defaults to 'vagrant' and
+# ssh_wait_timeout which is set to 60m.  
+#
+# Add any additional settings that make sense for your environment.
+# Remove any settings or Packer components that do not make sense for your
+# environment
 {
   "description": "Example Rancher template",
   "name": ":build_name",

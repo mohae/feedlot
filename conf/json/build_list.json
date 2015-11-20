@@ -1,3 +1,5 @@
+# This is the build list file for Rancher.
+# A list consists of one or more Rancher build template names.
 {
   "all": {
     "builds": [

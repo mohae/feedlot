@@ -1,3 +1,7 @@
+# These templates generate examples for all supported Packer components with only
+# the required settings, with a few exceptions.  The result of each named template
+# is a Packer template with all Packer components that Rancher supports and only the
+# settings that are required by Packer.
 [1504-64-required]
 distro = "ubuntu",
 description = "example ubuntu LTS 1504 amd64 build with all supported components; required settings only",

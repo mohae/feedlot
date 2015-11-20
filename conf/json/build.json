@@ -1,3 +1,7 @@
+# Builds are named configurations that specify the distro to use, at minimum, and 
+# define the final overrides and settings for generating a Packer Template. The 
+# generated Packer template will be the result of merging the settings within the
+# build configuration with the Rancher and distro defaults.
 {
   "1504-64": {
     "distro": "ubuntu",
