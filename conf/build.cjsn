@@ -1,0 +1,101 @@
+# Builds are named configurations that specify the distro to use, at minimum, and 
+# define the final overrides and settings for generating a Packer Template. The 
+# generated Packer template will be the result of merging the settings within the
+# build configuration with the Rancher and distro defaults.
+{
+# basic build for Ubuntu 15.04 amd64 server for virtualbox using the vagrant 
+# post-processor.  The artifact is cleaned to minimize size before post-processing.
+  "1504-64": {
+    "distro": "ubuntu",
+    "description": "Ubuntu LTS 1504 amd64 virtualbox vagrant build",
+    "arch": "amd64",
+    "image": "server",
+    "release": "15.04",
+    "builder_types": [
+      "virtualbox-iso"
+    ],
+    "provisioners": {
+      "shell": {
+        "scripts": [
+          "setup",
+          "sudoers",
+          "user_vagrant",
+          "vbox",
+          "cleanup"
+        ]
+      }
+    }
+  },
+# basic build for CentOS 6 x86_64, based on the minimal image, for virtualbox using
+# the vagrant post-processor.  The artifact is cleaned to minimize size before
+# post-processing.
+  "centos6-64": {
+    "distro": "centos",
+    "description": "example Centos 6 x86_64 virtualbox vagrant build",
+    "arch": "x86_64",
+    "image": "Minimal",
+    "release": "6",
+    "builder_types": [
+        "virtualbox-iso"
+    ],
+    "provisioners": {
+      "shell": {
+        "scripts": [
+          "setup",
+          "sudoers",
+          "user_vagrant",
+          "vbox",
+          "cleanup"
+        ]
+      }
+    }
+  },
+# basic build for CentOS 7 x86_64, based on the minimal image, for virtualbox using
+# the vagrant post-processor.  The artifact is cleaned to minimize size before
+# post-processing.
+  "centos7-64": {
+    "distro": "centos",
+    "description": "example Centos 7 x86_64 virtualbox vagrant build",
+    "arch": "x86_64",
+    "image": "Minimal",
+    "release": "7",
+    "builder_types": [
+      "virtualbox-iso"
+    ],
+    "provisioners": {
+      "shell": {
+        "scripts": [
+          "setup",
+          "sudoers",
+          "user_vagrant",
+          "vbox",
+          "cleanup"
+        ]
+      }
+    }
+  },
+# basic build for Debian Jessie amd 64, based on the netinst image, for virtualbox
+# using the vagrant post-processor.  The artifact is cleaned to minimize size before
+# post-processing.
+  "jessie-64": {
+    "distro": "debian",
+    "description": "example Debian Jessie amd64 virtualbox vagrant build",
+    "arch": "amd64",
+    "image": "netinst",
+    "release": "8",
+    "builder_types": [
+      "virtualbox-iso"
+    ],
+    "provisioners": {
+      "shell": {
+        "scripts": [
+          "setup",
+          "sudoers",
+          "user_vagrant",
+          "vbox",
+          "cleanup"
+        ]
+      }
+    }
+  }
+}

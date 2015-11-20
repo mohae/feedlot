@@ -1,0 +1,12 @@
+# This is the build list file for Rancher.
+# A list consists of one or more Rancher build template names.
+{
+  "all": {
+    "builds": [
+      "1504-64",
+      "centos6-64",
+      "centos7-64",
+      "jessie-64"
+    ]
+  }
+}
