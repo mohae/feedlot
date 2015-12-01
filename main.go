@@ -7,7 +7,6 @@ package main
 
 import (
 	"os"
-	"runtime"
 
 	"github.com/mohae/cli"
 	"github.com/mohae/rancher/app"
@@ -15,10 +14,6 @@ import (
 )
 
 func main() {
-	cpus := runtime.NumCPU()
-	if cpus > 1 {
-		runtime.GOMAXPROCS(runtime.NumCPU() - 1)
-	}
 	os.Exit(realMain())
 }
 

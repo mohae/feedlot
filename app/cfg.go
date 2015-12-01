@@ -17,9 +17,9 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
+	"github.com/mohae/cjsn"
 	"github.com/mohae/contour"
 	"github.com/mohae/deepcopy"
-	cjsn "github.com/mohae/ersatzjson"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
