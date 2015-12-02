@@ -299,6 +299,7 @@ var testBuild = map[string]rawTemplate{
 			Builders: map[string]builder{
 				"common": {
 					templateSection{
+						ID: "",
 						Settings: []string{
 							"ssh_wait_timeout = 300m",
 						},
@@ -306,6 +307,7 @@ var testBuild = map[string]rawTemplate{
 				},
 				"virtualbox-iso": {
 					templateSection{
+						ID: "",
 						Arrays: map[string]interface{}{
 							"vboxmanage": []string{
 								"memory=4096",
@@ -340,6 +342,7 @@ var testBuild = map[string]rawTemplate{
 			Builders: map[string]builder{
 				"virtualbox-iso": {
 					templateSection{
+						ID: "",
 						Arrays: map[string]interface{}{
 							"vboxmanage": []string{
 								"--memory=4096",
@@ -352,11 +355,12 @@ var testBuild = map[string]rawTemplate{
 				"vagrant",
 			},
 			ProvisionerTypes: []string{
-				"shell",
+				"basic-shell",
 			},
 			Provisioners: map[string]provisioner{
 				"shell": {
 					templateSection{
+						ID: "basic-shell",
 						Arrays: map[string]interface{}{
 							"scripts": []string{
 								"setup.sh",

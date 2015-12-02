@@ -41,7 +41,7 @@
       "vagrant"
     ],
     "provisioner_types": [
-      "shell"
+      "basic-shell"
     ],
     "builders": {
       "virtualbox-iso": {
@@ -54,6 +54,7 @@
     },
     "provisioners": {
       "shell": {
+        "id": "basic-shell",
         "arrays": {
            "scripts": [ 
               "setup.sh",

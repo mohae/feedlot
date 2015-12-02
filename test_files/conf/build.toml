@@ -38,7 +38,7 @@
 		"vagrant"
 	]
 	provisioner_types = [
-		"shell"
+		"basic-shell"
 	]
 	[jessie.builders]
 		[jessie.builders.virtualbox-iso.arrays]
@@ -47,6 +47,7 @@
 			]
 	[jessie.provisioners]
 		[jessie.provisioners.shell]
+            id = "basic-shell"
 			[jessie.provisioners.shell.arrays]
 				scripts = [ 
 					"setup.sh",

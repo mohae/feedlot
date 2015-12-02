@@ -78,6 +78,11 @@ func (b *build) copy() build {
 
 // templateSection is used as an embedded type.
 type templateSection struct {
+	// ID is used to reference this element in the *_type list.
+	// This makes it possible to have multiple occurrences of the same
+	// Packer component and set their order in the resulting Packer
+	// Template.
+	ID string
 	// Settings are string settings in "key=value" format.
 	Settings []string
 	// Arrays are the string array settings.
