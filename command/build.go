@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/mohae/cli"
@@ -24,7 +25,7 @@ Usage: rancher build [options] <buildName...>
 A Packer template will be created for each passed build name, if there are any.
 Each build name, if there are more than one, must be separated by a space. Each
 build must exist in the application's builds.toml file.
- 
+
 	$ rancher build <buildName...>
 	$ rancher build 1204-amd64-server 1404-amd64-desktop
 
@@ -34,7 +35,7 @@ This is done using the -distro flag:
 	$ rancher build -distro=<distro name>
 	$ rancher build -distro=ubuntu
 
-For builds using the -distro flag, the -arch, -image, and -release flags are 
+For builds using the -distro flag, the -arch, -image, and -release flags are
 optional. If any of them are missing, the distribution's default value for that
 flag will be used.
 
@@ -67,16 +68,30 @@ func (c *BuildCommand) Run(args []string) int {
 	// set flags/filter rgs
 	var err error
 	var filteredArgs []string
+	var message string
 	filteredArgs, err = contour.FilterArgs(args)
 	if err != nil {
 		c.UI.Error(err.Error())
 		return 1
 	}
 	app.SetLogging()
-	// the remaining args are build names: build those templates.
-	message, err := app.BuildBuilds(filteredArgs...)
-	if err != nil {
-		c.UI.Error(err.Error())
+	// If the distro option was passed, create the Packer template from distro defaults
+	if contour.GetString("distro") != "" {
+		message, err = app.BuildDistro()
+		if err != nil {
+			c.UI.Output(err.Error())
+			return 1
+		}
+	}
+
+	// If there were any builds passed, build them.
+	if len(filteredArgs) > 0 {
+		tmp, err := app.BuildBuilds(filteredArgs...)
+		if err != nil {
+			c.UI.Error(err.Error())
+			return 1
+		}
+		message += fmt.Sprintf("\n%s", tmp)
 	}
 
 	c.UI.Output(message)

@@ -7,20 +7,18 @@ import (
 )
 
 func TestBuildPackerTemplateFromDistros(t *testing.T) {
-	a := ArgsFilter{}
-	err := buildPackerTemplateFromDistro(a)
-	err = buildPackerTemplateFromDistro(a)
+	_, err := buildPackerTemplateFromDistro()
 	if err == nil {
 		t.Error("Expected an error, none occurred")
 	} else {
-		if err.Error() != "unable to build Packer template: distro wasn't specified" {
-			t.Errorf("Expected \"unable to build Packer template: distro wasn't specified\", got %q", err)
+		if err.Error() != "unsupported distro: " {
+			t.Errorf("Expected \"unsupported distro: \", got %q", err)
 		}
 	}
-	a.Distro = "slackware"
-	err = buildPackerTemplateFromDistro(a)
+	contour.UpdateString("distro", "slackware")
+	_, err = buildPackerTemplateFromDistro()
 	if err.Error() != "unsupported distro: slackware" {
-		t.Errorf("Expected \"unsupported distro: invalid\", got %q", err)
+		t.Errorf("Expected \"unsupported distro: slackware\", got %q", err)
 	}
 }
 

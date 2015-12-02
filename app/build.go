@@ -17,80 +17,53 @@ func init() {
 // are to be applied to the build.
 //
 // Returns an error or nil if successful.
-func BuildDistro(a ArgsFilter) error {
+func BuildDistro() (string, error) {
 	if !DistroDefaults.IsSet {
 		err := DistroDefaults.Set()
 		if err != nil {
 			err = fmt.Errorf("BuildDistro failed: %s", err)
 			jww.ERROR.Println(err)
-			return err
+			return "", err
 		}
 	}
-	err := buildPackerTemplateFromDistro(a)
+	message, err := buildPackerTemplateFromDistro()
 	if err != nil {
 		err = fmt.Errorf("BuildDistro failed: %s", err)
 		jww.ERROR.Println(err)
-		return err
 	}
-	// TODO: what does this argString processing do, or supposed to do? and document it this time!
-	argString := ""
-	if a.Arch != "" {
-		argString += "Arch=" + a.Arch
-	}
-	if a.Image != "" {
-		if argString != "" {
-			argString += ", "
-		}
-		argString += "Image=" + a.Image
-	}
-	if a.Release != "" {
-		if argString != "" {
-			argString += ", "
-		}
-		argString += "Release=" + a.Release
-	}
-	return nil
+	return message, err
 
 }
 
 // Create Packer templates from specified build templates.
 // TODO: refactor to match updated handling
-func buildPackerTemplateFromDistro(a ArgsFilter) error {
+func buildPackerTemplateFromDistro() (string, error) {
 	var rTpl *rawTemplate
-	if a.Distro == "" {
-		err := fmt.Errorf("unable to build Packer template: distro wasn't specified")
-		jww.ERROR.Println(err)
-		return err
-	}
 	// Get the default for this distro, if one isn't found then it isn't Supported.
-	rTpl, err := DistroDefaults.GetTemplate(a.Distro)
+	rTpl, err := DistroDefaults.GetTemplate(contour.GetString("distro"))
 	if err != nil {
 		jww.ERROR.Println(err)
-		return err
+		return "", err
 	}
-	// If any overrides were passed, set them.
-	if a.Arch != "" {
-		rTpl.Arch = a.Arch
+	if contour.GetString("arch") != "" {
+		rTpl.Arch = contour.GetString("arch")
 	}
-	if a.Image != "" {
-		rTpl.Image = a.Image
+	if contour.GetString("image")  != "" {
+		rTpl.Image = contour.GetString("image")
 	}
-	if a.Release != "" {
-		rTpl.Release = a.Release
+	if contour.GetString("release") != "" {
+		rTpl.Release = contour.GetString("release")
 	}
-	rTpl.BuildName = ":type-:release-:arch-:image-rancher"
 
 	// Since distro builds don't actually have a build name, we create one
 	// out of the args used to create it.
-	// TODO: given the above, should this be done? Or should the buildname for distro
-	//       builds be merged later?
 	rTpl.BuildName = fmt.Sprintf("%s-%s-%s-%s", rTpl.Distro, rTpl.Release, rTpl.Arch, rTpl.Image)
 	pTpl := packerTemplate{}
 	// Now that the raw template has been made, create a Packer template out of it
 	pTpl, err = rTpl.createPackerTemplate()
 	if err != nil {
 		jww.ERROR.Println(err)
-		return err
+		return "", err
 	}
 	// Create the JSON version of the Packer template. This also handles creation of
 	// the build directory and copying all files that the Packer template needs to the
@@ -98,9 +71,9 @@ func buildPackerTemplateFromDistro(a ArgsFilter) error {
 	err = pTpl.create(rTpl.IODirInf, rTpl.BuildInf, rTpl.dirs, rTpl.files)
 	if err != nil {
 		jww.ERROR.Println(err)
-		return err
+		return "", err
 	}
-	return nil
+	return fmt.Sprintf("build for %q complete: Packer template name is %q", rTpl.Distro, rTpl.BuildName), nil
 }
 
 // BuildBuilds manages the process of creating Packer Build templates out of

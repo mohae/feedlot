@@ -56,22 +56,6 @@ type appCfg struct {
 	LogLevelStdout  string `toml:"log_level_stdout",json:"log_level_stdout"`
 }
 
-// ArgsFilter has all the valid commandline flags for the build-subcommand.
-type ArgsFilter struct {
-	// Arch is a distribution specific string for the OS's target
-	// architecture.
-	Arch string
-	// Distro is the name of the distribution, this value is consistent
-	// with Packer.
-	Distro string
-	// Image is the type of ISO image that is to be used. This is a
-	// distribution specific value.
-	Image string
-	// Release is the release number or string of the ISO that is to be
-	// used. The valid values are distribution specific.
-	Release string
-}
-
 func init() {
 	// Override the defsulat cfg file if there is a value in the env var.
 	cfgFilename := os.Getenv(contour.GetEnvName(CfgFile))
