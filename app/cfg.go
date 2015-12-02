@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -250,10 +251,17 @@ func (d *defaults) Load(p string) error {
 		if err != nil {
 			return decodeErr(name, err)
 		}
-	case "cjsn", "json", "jsn":
-		b, err := ioutil.ReadFile(name)
+	case "cjsn", "json":
+		var b []byte
+		var err, alterr error
+		b, err = ioutil.ReadFile(name)
 		if err != nil {
-			return decodeErr(name, err)
+			// try alternate
+			name, _ = getAltJSONName(name)
+			b, alterr = ioutil.ReadFile(name)
+			if alterr != nil {
+				return decodeErr(name, err)
+			}
 		}
 		err = cjsn.Unmarshal(b, &d)
 		if err != nil {
@@ -401,10 +409,19 @@ func (s *supported) Load(p string) error {
 		if err != nil {
 			return decodeErr(name, err)
 		}
-	case "cjsn", "json", "jsn":
-		b, err := ioutil.ReadFile(name)
+	case "cjsn", "json":
+		var b []byte
+		var err, alterr error
+		b, err = ioutil.ReadFile(name)
 		if err != nil {
-			return decodeErr(name, err)
+			// try alternate
+			name, _ = getAltJSONName(name)
+			b, alterr = ioutil.ReadFile(name)
+			if alterr != nil {
+				// use the original error because the filename will
+				// be what the user expects
+				return decodeErr(name, err)
+			}
 		}
 		err = cjsn.Unmarshal(b, &s.Distro)
 		if err != nil {
@@ -480,7 +497,7 @@ type list struct {
 
 // Load loads the build lists. It accepts a path prefix; which is mainly used
 // for testing ATM.
-func (b *buildLists) Load(p string) error {
+func (bl *buildLists) Load(p string) error {
 
 	// Load the build lists.
 	name := GetConfFile(p, BuildList)
@@ -489,16 +506,23 @@ func (b *buildLists) Load(p string) error {
 	}
 	switch contour.GetString(Format) {
 	case "toml", "tml":
-		_, err := toml.DecodeFile(name, &b.List)
+		_, err := toml.DecodeFile(name, &bl.List)
 		if err != nil {
 			return decodeErr(name, err)
 		}
-	case "cjsn", "json", "jsn":
-		by, err := ioutil.ReadFile(name)
+	case "cjsn", "json":
+		var b []byte
+		var err, alterr error
+		b, err = ioutil.ReadFile(name)
 		if err != nil {
-			return decodeErr(name, err)
+			// try alternate
+			name, _ = getAltJSONName(name)
+			b, alterr = ioutil.ReadFile(name)
+			if alterr != nil {
+				return decodeErr(name, err)
+			}
 		}
-		err = cjsn.Unmarshal(by, &b.List)
+		err = cjsn.Unmarshal(b, &bl.List)
 		if err != nil {
 			return decodeErr(name, err)
 		}
@@ -530,12 +554,22 @@ func (b *buildLists) Get(s string) (list, error) {
 //
 // Currently supported config file formats:
 //    TOML
-//    JSON
+//    JSON || CJSN
 func SetCfgFile() error {
 	// determine the correct file, This is done here because it's less ugly than the alternatives.
-	_, err := os.Stat(contour.GetString(CfgFile))
+	fname := contour.GetString(CfgFile)
+	_, err := os.Stat(fname)
 	if err != nil && os.IsNotExist(err) {
-		return nil
+		// if this is json, try cjsn
+		var ok bool
+		fname, ok = getAltJSONName(fname)
+		if !ok {
+			return nil
+		}
+		_, err := os.Stat(fname)
+		if err != nil && os.IsNotExist(err) {
+			return nil
+		}
 	}
 	if err != nil {
 		jww.ERROR.Print(err)
@@ -576,4 +610,19 @@ func GetConfFile(p, name string) string {
 		return filepath.Join(contour.GetString(ExampleDir), p, name)
 	}
 	return filepath.Join(p, name)
+}
+
+// checks to see if the file ext is either .json or .cjsn.  If it is, it
+// returns the name with the alternate ext, otherwise it returns false.
+// This allows for transparent support of either JSON or CJSN.
+func getAltJSONName(fname string) (string, bool) {
+	ext := path.Ext(fname)
+	switch ext {
+	case ".json":
+		return fmt.Sprintf("%s.cjsn", strings.TrimSuffix(fname, ext)), true
+	case ".cjsn":
+		return fmt.Sprintf("%s.json", strings.TrimSuffix(fname, ext)), true
+	default:
+		return "", false
+	}
 }

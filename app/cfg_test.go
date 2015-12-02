@@ -816,3 +816,25 @@ func TestIODirInfUpdate(t *testing.T) {
 		t.Errorf("Expected \"old SrcDir\", got %q", oldIODirInf.SourceDir)
 	}
 }
+
+func TestGetAltJSONName(t *testing.T) {
+	tests := []struct{
+		fname string
+		expected string
+		isJSON bool
+	}{
+		{"test.json", "test.cjsn", true},
+		{"test.cjsn", "test.json", true},
+		{"test.toml", "", false},
+	}
+
+	for i, test := range tests {
+		name, ok := getAltJSONName(test.fname)
+		if ok != test.isJSON {
+			t.Errorf("%d: expected %t, got %t", i, test.isJSON, ok)
+		}
+		if name != test.expected {
+			t.Errorf("%d: expected %q, got %q", test.expected, name)
+		}
+	}
+}

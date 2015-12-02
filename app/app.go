@@ -39,7 +39,7 @@ const (
 var CfgFile = "cfg_file"
 
 // CfgFilename is the default value for the optional Rancher cfg file.
-var CfgFilename = "rancher.toml"
+var CfgFilename = "rancher.json"
 
 // AppCfg contains the current Rancher cfguration...loaded at start-up.
 var AppCfg appCfg
@@ -69,7 +69,7 @@ func init() {
 	// missing main application cfg isn't considered an error state.
 	contour.SetErrOnMissingCfg(false)
 	contour.RegisterCfgFile(CfgFile, cfgFilename)
-	contour.RegisterStringFlag(Format, "", "toml", "toml", "the format of the Rancher conf files: toml or json")
+	contour.RegisterStringFlag(Format, "", "json", "json", "the format of the Rancher conf files: toml or json")
 	// shortcuts used: a, d, e, eg, f, i, l, n, p, r, s, v
 	contour.RegisterBoolFlag(ArchivePriorBuild, "v", false, "false", "archive prior build before writing new packer template files")
 	contour.RegisterBoolFlag(Example, "eg", false, "false", "whether or not to generate from examples")

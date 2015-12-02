@@ -1,6 +1,6 @@
 # Default settings for Rancher templates.  Merging the contents of this file
 # with the supported config file settings results in the default template for
-# Rancher. 
+# Rancher.
 {
 	"description": "Default Rancher template",
 	"name": ":build_name",
@@ -34,10 +34,10 @@
 				"ssh_port = 22",
 				"ssh_username = vagrant",
 				"ssh_wait_timeout = 60m",
-				"vm_name = :build_name",
+				"vm_name = :build_name"
 			]
 		},
-	    "virtualbox-iso": {
+		"virtualbox-iso": {
 			"settings": [
 				"guest_additions_path = VBoxGuestAdditions.iso",
 				"virtualbox_version_file = .vbox_version"
@@ -45,34 +45,34 @@
 			"arrays": {
 				"vboxmanage": [
 					"cpus=1",
-					"memory=1024"	
+					"memory=1024"
 				]
 			}
 		},
-	    "vmware-iso": {
+		"vmware-iso": {
 			"arrays": {
 				"vmx_data": [
 					"cpuid.coresPerSocker=1",
 					"numvcpus=1",
-					"memsize=1024"				
-				]			
+					"memsize=1024"
+				]
 			}
-	    }
-  	},
+		}
+	},
 	"post_processors": {
 		"vagrant": {
 			"settings": [
 				"compression_level = 9",
 				"keep_input_artifact = false",
 				"output =  :build_name.box"
-			]	
-		},
+			]
+		}
 	},
 	"provisioners": {
 		"shell": {
 			"settings": [
 				"execute_command = execute.command"
-			]
+			],
 			"arrays": {
 				"scripts": [
 					"setup",
