@@ -17,7 +17,7 @@ var testPostProcessorTemplate = &rawTemplate{
 	dirs:    map[string]string{},
 	files:   map[string]string{},
 	build: build{
-		BuilderTypes: []string{
+		BuilderIDs: []string{
 			"virtualbox-iso",
 		},
 		Builders: map[string]builder{
@@ -38,7 +38,7 @@ var testPostProcessorTemplate = &rawTemplate{
 				},
 			},
 		},
-		PostProcessorTypes: []string{
+		PostProcessorIDs: []string{
 			"vagrant",
 		},
 		PostProcessors: map[string]postProcessor{
@@ -55,7 +55,7 @@ var testPostProcessorTemplate = &rawTemplate{
 				},
 			},
 		},
-		ProvisionerTypes: []string{
+		ProvisionerIDs: []string{
 			"shell",
 		},
 		Provisioners: map[string]provisioner{
@@ -93,7 +93,7 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 	dirs:    map[string]string{},
 	files:   map[string]string{},
 	build: build{
-		BuilderTypes: []string{
+		BuilderIDs: []string{
 			"virtualbox-iso",
 		},
 		Builders: map[string]builder{
@@ -114,7 +114,7 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 				},
 			},
 		},
-		PostProcessorTypes: []string{
+		PostProcessorIDs: []string{
 			"compress",
 			"vagrant",
 		},
@@ -225,7 +225,7 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 				},
 			},
 		},
-		ProvisionerTypes: []string{
+		ProvisionerIDs: []string{
 			"shell",
 		},
 		Provisioners: map[string]provisioner{

@@ -24,23 +24,29 @@ import (
 	jww "github.com/spf13/jwalterweatherman"
 )
 
+// Componenter is an interface for Packer components, i.e. builder,
+// post-processor, and provisioner.
+type Componenter interface {
+	getID() string
+}
+
 // Contains most of the information for Packer templates within a Rancher
 // Build.
 type build struct {
-	// Targeted builders: the values are consistent with Packer's, e.g.
-	// `virtualbox.iso` is used for VirtualBox.
-	BuilderTypes []string `toml:"builder_types" json:"builder_types"`
+	// Targeted builders: either the ID of the builder or the Packer value
+	// can be used, e.g. ID: "vbox" or "virtualbox-iso".
+	BuilderIDs []string `toml:"builder_ids" json:"builder_ids"`
 	// A map of builder configuration. There should always be a `common`
 	// builder, which has settings common to both VMWare and VirtualBox.
 	Builders map[string]builder `toml:"builders"`
-	// Targeted post-processors: the values are consistent with Packer's, e.g.
-	// `vagrant` is used for Vagrant.
-	PostProcessorTypes []string `toml:"post_processor_types" json:"post_processor_types"`
+	// Targeted post-processor: either the ID of the post-processor or the
+	// Packer value can be used, e.g. ID: "docker" or "docker-push".
+	PostProcessorIDs []string `toml:"post_processor_ids" json:"post_processor_ids"`
 	// A map of post-processor configurations.
 	PostProcessors map[string]postProcessor `toml:"post_processors" json:"post_processors"`
-	// Targeted provisioners: the values are consistent with Packer's, e.g.
-	// `shell` is used for shell.
-	ProvisionerTypes []string `toml:"provisioner_types" json:"provisioner_types"`
+	// Targeted provisioners: either the ID of the builder or the Packer value
+	// can be used, e.g. ID: "preprocess" or "shell".
+	ProvisionerIDs []string `toml:"provisioner_ids" json:"provisioner_ids"`
 	// A map of provisioner configurations.
 	Provisioners map[string]provisioner `toml:"provisioners"`
 }
@@ -52,17 +58,17 @@ func (b *build) copy() build {
 		PostProcessors: map[string]postProcessor{},
 		Provisioners:   map[string]provisioner{},
 	}
-	if b.BuilderTypes != nil {
-		newB.BuilderTypes = make([]string, len(b.BuilderTypes), len(b.BuilderTypes))
-		copy(newB.BuilderTypes, b.BuilderTypes)
+	if b.BuilderIDs != nil {
+		newB.BuilderIDs = make([]string, len(b.BuilderIDs), len(b.BuilderIDs))
+		copy(newB.BuilderIDs, b.BuilderIDs)
 	}
-	if b.PostProcessorTypes != nil {
-		newB.PostProcessorTypes = make([]string, len(b.PostProcessorTypes), len(b.PostProcessorTypes))
-		copy(newB.PostProcessorTypes, b.PostProcessorTypes)
+	if b.PostProcessorIDs != nil {
+		newB.PostProcessorIDs = make([]string, len(b.PostProcessorIDs), len(b.PostProcessorIDs))
+		copy(newB.PostProcessorIDs, b.PostProcessorIDs)
 	}
-	if b.ProvisionerTypes != nil {
-		newB.ProvisionerTypes = make([]string, len(b.ProvisionerTypes), len(b.ProvisionerTypes))
-		copy(newB.ProvisionerTypes, b.ProvisionerTypes)
+	if b.ProvisionerIDs != nil {
+		newB.ProvisionerIDs = make([]string, len(b.ProvisionerIDs), len(b.ProvisionerIDs))
+		copy(newB.ProvisionerIDs, b.ProvisionerIDs)
 	}
 	for k, v := range b.Builders {
 		newB.Builders[k] = v.DeepCopy()
@@ -91,6 +97,8 @@ type templateSection struct {
 
 // templateSection.DeepCopy updates its information with new via a deep copy.
 func (t *templateSection) DeepCopy(ts templateSection) {
+	// Copy ID
+	t.ID = ts.ID
 	//Deep Copy of settings
 	t.Settings = make([]string, len(ts.Settings))
 	copy(t.Settings, ts.Settings)
@@ -132,6 +140,13 @@ type builder struct {
 	templateSection
 }
 
+// getID returns the it for this component.  This is on builder instead of
+// templateSection because the component needs to fulfill the interface,
+// not the templateSection.
+func (b builder) getID() string {
+	return b.templateSection.ID
+}
+
 // builder.DeepCopy copies the builder values instead of the pointers.
 func (b *builder) DeepCopy() builder {
 	c := builder{templateSection: templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
@@ -161,6 +176,13 @@ func (b *builder) mergeArrays(m map[string]interface{}) {
 // Type for handling the post-processor section of the configs.
 type postProcessor struct {
 	templateSection
+}
+
+// getID returns the it for this component.  This is on postProcessor instead
+// of templateSection because the component needs to fulfill the interface,
+// not the templateSection.
+func (p postProcessor) getID() string {
+	return p.templateSection.ID
 }
 
 // postProcessor.DeepCopy copies the postProcessor values instead of the
@@ -199,6 +221,13 @@ func (p *postProcessor) mergeArrays(m map[string]interface{}) {
 // provisioner: type for common elements for provisioners.
 type provisioner struct {
 	templateSection
+}
+
+// getID returns the it for this component.  This is on postProcessor instead
+// of templateSection because the component needs to fulfill the interface,
+// not the templateSection.
+func (p provisioner) getID() string {
+	return p.templateSection.ID
 }
 
 // postProcessor.DeepCopy copies the postProcessor values instead of the

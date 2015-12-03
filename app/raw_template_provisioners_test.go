@@ -29,7 +29,7 @@ var testRawTemplateProvisioner = &rawTemplate{
 	dirs:    map[string]string{},
 	files:   map[string]string{},
 	build: build{
-		BuilderTypes: []string{"virtualbox-iso", "vmware-iso"},
+		BuilderIDs: []string{"virtualbox-iso", "vmware-iso"},
 		Builders: map[string]builder{
 			"common": {
 				templateSection{
@@ -75,7 +75,7 @@ var testRawTemplateProvisioner = &rawTemplate{
 				},
 			},
 		},
-		PostProcessorTypes: []string{
+		PostProcessorIDs: []string{
 			"vagrant",
 			"vagrant-cloud",
 		},
@@ -109,13 +109,14 @@ var testRawTemplateProvisioner = &rawTemplate{
 				},
 			},
 		},
-		ProvisionerTypes: []string{
-			"shell",
+		ProvisionerIDs: []string{
+			"shell-test",
 			"file",
 		},
 		Provisioners: map[string]provisioner{
 			"shell": {
 				templateSection{
+					ID: "shell-test",
 					Settings: []string{
 						"execute_command = execute_test.command",
 					},
@@ -173,7 +174,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 	dirs:    map[string]string{},
 	files:   map[string]string{},
 	build: build{
-		BuilderTypes: []string{"virtualbox-iso", "vmware-iso"},
+		BuilderIDs: []string{"virtualbox-iso", "vmware-iso"},
 		Builders: map[string]builder{
 			"common": {
 				templateSection{
@@ -219,7 +220,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 				},
 			},
 		},
-		PostProcessorTypes: []string{
+		PostProcessorIDs: []string{
 			"vagrant",
 			"vagrant-cloud",
 		},
@@ -253,7 +254,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 				},
 			},
 		},
-		ProvisionerTypes: []string{
+		ProvisionerIDs: []string{
 			"ansible-local",
 			"file",
 			"chef-client",
@@ -463,6 +464,7 @@ var pr = &provisioner{
 var prOrig = map[string]provisioner{
 	"shell": provisioner{
 		templateSection{
+			ID: "shell-test",
 			Settings: []string{
 				"execute_command = execute_test.command",
 			},
@@ -496,6 +498,7 @@ var prOrig = map[string]provisioner{
 var prNew = map[string]provisioner{
 	"shell": provisioner{
 		templateSection{
+			ID: "shell-test",
 			Settings: []string{},
 			Arrays: map[string]interface{}{
 				"only": []string{
@@ -525,6 +528,7 @@ var prNew = map[string]provisioner{
 var prMerged = map[string]provisioner{
 	"shell": provisioner{
 		templateSection{
+			ID: "shell-test",
 			Settings: []string{
 				"execute_command = execute_test.command",
 			},
@@ -579,7 +583,7 @@ func TestRawTemplateUpdateProvisioners(t *testing.T) {
 		t.Errorf("expected error to be nil, got %q", err)
 	}
 	if MarshalJSONToString.GetIndented(testRawTemplateProvisioner.Provisioners) != MarshalJSONToString.GetIndented(prMerged) {
-		t.Errorf("Got %q, want %q", MarshalJSONToString.GetIndented(prMerged), MarshalJSONToString.GetIndented(testRawTemplateProvisioner.Provisioners))
+		t.Errorf("Got %q, want %q", MarshalJSONToString.GetIndented(testRawTemplateProvisioner.Provisioners), MarshalJSONToString.GetIndented(prMerged))
 	}
 }
 

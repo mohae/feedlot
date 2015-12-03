@@ -594,6 +594,48 @@ func mergedKeysFromMaps(m ...map[string]interface{}) []string {
 	return mergedKeys
 }
 
+
+// mergedKeysFromComponents takes a variadic array of componenters and
+// returns a map of key IDs and their component type.
+func mergedKeysFromComponents(m ...map[string]Componenter) []string {
+	cnt := 0
+	types := make([][]string, len(m))
+	// For each passed interface
+	for i, tmpM := range m {
+		cnt = 0
+		tmpK := make([]string, len(tmpM))
+		for k, v := range tmpM {
+			fmt.Printf("k\t%s\t%s\n", k, v.getID())
+			key := v.getID()
+			if key == "" {
+				key = k
+			}
+			tmpK[cnt] = key
+			cnt++
+		}
+		types[i] = tmpK
+	}
+	// Merge the slices, de-dupes keys.
+	mergedKeys := MergeSlices(types...)
+	return mergedKeys
+}
+
+/*
+// mergedKeysFromComponents takes a variadic array of componenters and
+// returns a map of key IDs and their component type.
+func mergedKeysFromComponents(c map[string]Componenter) map[string]string {
+	types := map[string]string{}
+	// For each passed interface
+	for k, tmpC := range c {
+		key := v.getID()
+		if key == "" {
+			key = k
+		}
+		types[key] = k
+	}
+	return types
+}
+*/
 // setParentDir takes a directory name and and a path.
 //   * If the path does not contain a parent directory, the passed directory
 //     is prepended to the path and the new value is returned, otherwise the

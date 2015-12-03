@@ -29,7 +29,7 @@ var testUbuntu = rawTemplate{
 	dirs:    map[string]string{},
 	files:   map[string]string{},
 	build: build{
-		BuilderTypes: []string{
+		BuilderIDs: []string{
 			"virtualbox-iso",
 			"vmware-iso",
 		},
@@ -73,7 +73,7 @@ var testUbuntu = rawTemplate{
 				},
 			},
 		},
-		PostProcessorTypes: []string{
+		PostProcessorIDs: []string{
 			"vagrant",
 		},
 		PostProcessors: map[string]postProcessor{
@@ -86,7 +86,7 @@ var testUbuntu = rawTemplate{
 				},
 			},
 		},
-		ProvisionerTypes: []string{
+		ProvisionerIDs: []string{
 			"shell",
 		},
 		Provisioners: map[string]provisioner{
@@ -132,7 +132,7 @@ var testCentOS = rawTemplate{
 	dirs:    map[string]string{},
 	files:   map[string]string{},
 	build: build{
-		BuilderTypes: []string{
+		BuilderIDs: []string{
 			"virtualbox-iso",
 			"virtualbox-ovf",
 			"vmware-iso",
@@ -198,7 +198,7 @@ var testCentOS = rawTemplate{
 				},
 			},
 		},
-		PostProcessorTypes: []string{
+		PostProcessorIDs: []string{
 			"vagrant",
 		},
 		PostProcessors: map[string]postProcessor{
@@ -211,7 +211,7 @@ var testCentOS = rawTemplate{
 				},
 			},
 		},
-		ProvisionerTypes: []string{
+		ProvisionerIDs: []string{
 			"shell",
 			"salt",
 		},
@@ -267,7 +267,7 @@ var testAllBuilders = rawTemplate{
 	dirs:    map[string]string{},
 	files:   map[string]string{},
 	build: build{
-		BuilderTypes: []string{
+		BuilderIDs: []string{
 			"amazon-ebs",
 			"amazon-instance",
 			"digitalocean",
@@ -756,7 +756,7 @@ var testAllBuilders = rawTemplate{
 				},
 			},
 		},
-		PostProcessorTypes: []string{
+		PostProcessorIDs: []string{
 			"vagrant",
 		},
 		PostProcessors: map[string]postProcessor{
@@ -769,7 +769,7 @@ var testAllBuilders = rawTemplate{
 				},
 			},
 		},
-		ProvisionerTypes: []string{
+		ProvisionerIDs: []string{
 			"salt",
 		},
 		Provisioners: map[string]provisioner{
@@ -807,7 +807,7 @@ var testDigtialOceanAPIV1 = rawTemplate{
 	dirs:    map[string]string{},
 	files:   map[string]string{},
 	build: build{
-		BuilderTypes: []string{
+		BuilderIDs: []string{
 			"digitalocean",
 		},
 		Builders: map[string]builder{
@@ -856,7 +856,7 @@ var testDigtialOceanNoAPI = rawTemplate{
 	dirs:    map[string]string{},
 	files:   map[string]string{},
 	build: build{
-		BuilderTypes: []string{
+		BuilderIDs: []string{
 			"digitalocean",
 		},
 		Builders: map[string]builder{
@@ -902,7 +902,7 @@ var testDockerRunComandFile = rawTemplate{
 	dirs:    map[string]string{},
 	files:   map[string]string{},
 	build: build{
-		BuilderTypes: []string{
+		BuilderIDs: []string{
 			"docker",
 		},
 		Builders: map[string]builder{
@@ -951,7 +951,7 @@ var testDockerRunComand = rawTemplate{
 	dirs:    map[string]string{},
 	files:   map[string]string{},
 	build: build{
-		BuilderTypes: []string{
+		BuilderIDs: []string{
 			"docker",
 		},
 		Builders: map[string]builder{
@@ -1130,7 +1130,7 @@ func TestCreateBuilders(t *testing.T) {
 		}
 	}
 
-	testRawTemplateWOSection.build.BuilderTypes[0] = "digitalocean"
+	testRawTemplateWOSection.build.BuilderIDs[0] = "digitalocean"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
 		t.Error("Expected \"digitalocean builder error: configuration not found\", got nil")
@@ -1140,7 +1140,7 @@ func TestCreateBuilders(t *testing.T) {
 		}
 	}
 
-	testRawTemplateWOSection.build.BuilderTypes[0] = "docker"
+	testRawTemplateWOSection.build.BuilderIDs[0] = "docker"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
 		t.Error("Expected \"docker builder error: configuration not found\", got nil")
@@ -1150,7 +1150,7 @@ func TestCreateBuilders(t *testing.T) {
 		}
 	}
 
-	testRawTemplateWOSection.build.BuilderTypes[0] = "googlecompute"
+	testRawTemplateWOSection.build.BuilderIDs[0] = "googlecompute"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
 		t.Error("Expected \"googlecompute builder error: configuration not found\", got nil")
@@ -1160,7 +1160,7 @@ func TestCreateBuilders(t *testing.T) {
 		}
 	}
 
-	testRawTemplateWOSection.build.BuilderTypes[0] = "virtualbox-iso"
+	testRawTemplateWOSection.build.BuilderIDs[0] = "virtualbox-iso"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
 		t.Error("Expected \"virtualbox-iso builder error: configuration not found\", got nil")
@@ -1170,7 +1170,7 @@ func TestCreateBuilders(t *testing.T) {
 		}
 	}
 
-	testRawTemplateWOSection.build.BuilderTypes[0] = "virtualbox-ovf"
+	testRawTemplateWOSection.build.BuilderIDs[0] = "virtualbox-ovf"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
 		t.Error("Expected \"virtualbox-ovf builder error: configuration not found\", got nil")
@@ -1180,7 +1180,7 @@ func TestCreateBuilders(t *testing.T) {
 		}
 	}
 
-	testRawTemplateWOSection.build.BuilderTypes[0] = "vmware-iso"
+	testRawTemplateWOSection.build.BuilderIDs[0] = "vmware-iso"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
 		t.Error("Expected \"vmware-iso builder error: configuration not found\", got nil")
@@ -1190,7 +1190,7 @@ func TestCreateBuilders(t *testing.T) {
 		}
 	}
 
-	testRawTemplateWOSection.build.BuilderTypes[0] = "vmware-vmx"
+	testRawTemplateWOSection.build.BuilderIDs[0] = "vmware-vmx"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
 		t.Error("Expected \"vmware-vmx builder error: configuration not found\", got nil")
@@ -1203,7 +1203,7 @@ func TestCreateBuilders(t *testing.T) {
 	r := rawTemplate{}
 	r = testDistroDefaultUbuntu
 	r.files = make(map[string]string)
-	r.BuilderTypes[0] = "unsupported"
+	r.BuilderIDs[0] = "unsupported"
 	_, err = r.createBuilders()
 	if err == nil {
 		t.Error("Expected an error, got nil")
@@ -1213,7 +1213,7 @@ func TestCreateBuilders(t *testing.T) {
 		}
 	}
 
-	r.BuilderTypes = nil
+	r.BuilderIDs = nil
 	_, err = r.createBuilders()
 	if err == nil {
 		t.Error("Expected an error, got nil")
@@ -1771,7 +1771,7 @@ func TestCreateVirtualboxISO(t *testing.T) {
 		}
 	}
 }
-*/
+
 
 func TestCreateVirtualboxOVF(t *testing.T) {
 	expected := map[string]interface{}{
@@ -1845,8 +1845,6 @@ func TestCreateVirtualboxOVF(t *testing.T) {
 		}
 	}
 }
-
-/*
 
 /*
 // elided because as the funcs are currently written, it requires call out to the site

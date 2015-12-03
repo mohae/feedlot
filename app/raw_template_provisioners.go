@@ -66,14 +66,14 @@ func ProvisionerFromString(s string) Provisioner {
 
 // createProvisioner creates the provisioners for a build.
 func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
-	if r.ProvisionerTypes == nil || len(r.ProvisionerTypes) <= 0 {
+	if r.ProvisionerIDs == nil || len(r.ProvisionerIDs) <= 0 {
 		return nil, nil
 	}
 	var tmpS map[string]interface{}
 	var ndx int
-	p = make([]interface{}, len(r.ProvisionerTypes))
+	p = make([]interface{}, len(r.ProvisionerIDs))
 	// Generate the postProcessor for each postProcessor type.
-	for _, pType := range r.ProvisionerTypes {
+	for _, pType := range r.ProvisionerIDs {
 		typ := ProvisionerFromString(pType)
 		switch typ {
 		case Ansible:
@@ -832,17 +832,19 @@ func (r *rawTemplate) updateProvisioners(newP map[string]provisioner) error {
 		return nil
 	}
 	// Convert the existing provisioners to interface.
-	var ifaceOld = make(map[string]interface{}, len(r.Provisioners))
-	ifaceOld = DeepCopyMapStringProvisioner(r.Provisioners)
+	var oldC = make(map[string]Componenter, len(r.Provisioners))
+	oldC = DeepCopyMapStringProvisioner(r.Provisioners)
 	// Convert the new provisioners to interface.
-	var ifaceNew = make(map[string]interface{}, len(newP))
-	ifaceNew = DeepCopyMapStringProvisioner(newP)
+	var newC = make(map[string]Componenter, len(newP))
+	newC = DeepCopyMapStringProvisioner(newP)
 	// Get the all keys from both maps
 	var keys []string
-	keys = mergedKeysFromMaps(ifaceOld, ifaceNew)
+	keys = mergedKeysFromComponents(oldC, newC)
+	fmt.Println(keys)
 	if r.Provisioners == nil {
 		r.Provisioners = map[string]provisioner{}
 	}
+
 	// Copy: if the key exists in the new provisioners only.
 	// Ignore: if the key does not exist in the new provisioners.
 	// Merge: if the key exists in both the new and old provisioners.
@@ -854,6 +856,8 @@ func (r *rawTemplate) updateProvisioners(newP map[string]provisioner) error {
 			r.Provisioners[v] = pp.DeepCopy()
 			continue
 		}
+
+		fmt.Printf("----\n%v\n%#v\n-----\n", v, p)
 		// If the element for this key doesn't exist, skip it.
 		pp, ok := newP[v]
 		if !ok {
@@ -865,6 +869,7 @@ func (r *rawTemplate) updateProvisioners(newP map[string]provisioner) error {
 		}
 		p.mergeArrays(pp.Arrays)
 		r.Provisioners[v] = p
+		//r.ProvisionerTypeMap[v] =
 	}
 	return nil
 }
@@ -892,12 +897,13 @@ func (p *provisioner) settingsToMap(Type string, r *rawTemplate) map[string]inte
 
 // DeepCopyMapStringProvisioner makes a deep copy of each builder passed and
 // returns the copie map[string]provisioner as a map[string]interface{}
-func DeepCopyMapStringProvisioner(p map[string]provisioner) map[string]interface{} {
-	c := map[string]interface{}{}
+func DeepCopyMapStringProvisioner(p map[string]provisioner) map[string]Componenter {
+	c := map[string]Componenter{}
 	for k, v := range p {
 		tmpP := provisioner{}
 		tmpP = v.DeepCopy()
 		c[k] = tmpP
+		fmt.Println(k)
 	}
 	return c
 }

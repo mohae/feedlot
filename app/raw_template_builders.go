@@ -99,12 +99,12 @@ func BuilderFromString(s string) Builder {
 // r.createBuilders takes a raw builder and create the appropriate Packer
 // Builder
 func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
-	if r.BuilderTypes == nil || len(r.BuilderTypes) <= 0 {
+	if r.BuilderIDs == nil || len(r.BuilderIDs) <= 0 {
 		return nil, fmt.Errorf("unable to create builders: none specified")
 	}
 	var tmpS map[string]interface{}
 	var ndx int
-	bldrs = make([]interface{}, len(r.BuilderTypes))
+	bldrs = make([]interface{}, len(r.BuilderIDs))
 	// Set the CommonBuilder settings. Only the builder.Settings field is used
 	// for CommonBuilder as everything else is usually builder specific, even
 	// if they have common names, e.g. difference between specifying memory
@@ -112,7 +112,7 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 	//	r.updateCommonBuilder
 	//
 	// Generate the builders for each builder type.
-	for _, bType := range r.BuilderTypes {
+	for _, bType := range r.BuilderIDs {
 		typ := BuilderFromString(bType)
 		switch typ {
 		case AmazonChroot:

@@ -160,16 +160,16 @@ func (r *rawTemplate) setDefaults(d *distro) error {
 		}
 	}
 	// If defined, BuilderTypes override any prior BuilderTypes Settings
-	if d.BuilderTypes != nil {
-		r.BuilderTypes = d.BuilderTypes
+	if d.BuilderIDs != nil {
+		r.BuilderIDs = d.BuilderIDs
 	}
 	// If defined, PostProcessorTypes override any prior PostProcessorTypes Settings
-	if d.PostProcessorTypes != nil {
-		r.PostProcessorTypes = d.PostProcessorTypes
+	if d.PostProcessorIDs != nil {
+		r.PostProcessorIDs = d.PostProcessorIDs
 	}
 	// If defined, ProvisionerTypes override any prior ProvisionerTypes Settings
-	if d.ProvisionerTypes != nil {
-		r.ProvisionerTypes = d.ProvisionerTypes
+	if d.ProvisionerIDs != nil {
+		r.ProvisionerIDs = d.ProvisionerIDs
 	}
 	// merge the build portions.
 	err := r.updateBuilders(d.Builders)
@@ -205,8 +205,8 @@ func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
 		r.Release = bld.Release
 	}
 	// If defined, Builders override any prior builder Settings.
-	if bld.BuilderTypes != nil && len(bld.BuilderTypes) > 0 {
-		r.BuilderTypes = bld.BuilderTypes
+	if bld.BuilderIDs != nil && len(bld.BuilderIDs) > 0 {
+		r.BuilderIDs = bld.BuilderIDs
 	}
 	// For post_processor_types and provisioner_types the following logic is used
 	// if nil don't do anything (this means prior settings are used, e.g. default)
@@ -214,12 +214,12 @@ func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
 	//   any build
 	// if len > 0 replace the existing types with the builder's.
 
-	if bld.PostProcessorTypes != nil {
-		r.PostProcessorTypes = bld.PostProcessorTypes
+	if bld.PostProcessorIDs != nil {
+		r.PostProcessorIDs = bld.PostProcessorIDs
 	}
 
-	if bld.ProvisionerTypes != nil {
-		r.ProvisionerTypes = bld.ProvisionerTypes
+	if bld.ProvisionerIDs != nil {
+		r.ProvisionerIDs = bld.ProvisionerIDs
 	}
 	// merge the build portions.
 	r.updateBuilders(bld.Builders)

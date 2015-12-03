@@ -8,7 +8,7 @@
 	arch = "amd64"
 	image = "server"
 	release = "12.04"
-	builder_types = [
+	builder_ids = [
 		"virtualbox-iso"
 	]
 	[1204-amd64.builders]
@@ -23,7 +23,7 @@
 [centos6]
 	distro = "centos"
 	description = "Centos 6 w virtualbox-iso only"
-	builder_types = [
+	builder_ids = [
 		"virtualbox-iso"
 	]
 
@@ -31,13 +31,13 @@
 	distro = "debian"
 	description = "debian jessie"
 	arch = "amd64"
-	builder_types = [
+	builder_ids = [
 		"virtualbox-iso"
 	]
-	post_processor_types = [
+	post_processor_ids = [
 		"vagrant"
 	]
-	provisioner_types = [
+	provisioner_ids = [
 		"basic-shell"
 	]
 	[jessie.builders]

@@ -7,13 +7,13 @@ output_dir = "out/:build_name"
 source_dir = "src"
 min_packer_version = "0.4.0"
 include_component_string = "true"
-builder_types = [
+builder_ids = [
     "virtualbox-iso",
 ]
-post_processor_types = [
+post_processor_ids = [
 	"vagrant"
 ]
-provisioner_types = [
+provisioner_ids = [
 	"shell"
 ]
 [builders]

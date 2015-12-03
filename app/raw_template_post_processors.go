@@ -120,13 +120,13 @@ func (r *rawTemplate) updatePostProcessors(newP map[string]postProcessor) error 
 
 // r.createPostProcessors creates the PostProcessors for a build.
 func (r *rawTemplate) createPostProcessors() (p []interface{}, err error) {
-	if r.PostProcessorTypes == nil || len(r.PostProcessorTypes) <= 0 {
+	if r.PostProcessorIDs == nil || len(r.PostProcessorIDs) <= 0 {
 		return nil, nil
 	}
 	var ndx int
-	p = make([]interface{}, len(r.PostProcessorTypes))
+	p = make([]interface{}, len(r.PostProcessorIDs))
 	// Generate the postProcessor for each postProcessor type.
-	for _, pType := range r.PostProcessorTypes {
+	for _, pType := range r.PostProcessorIDs {
 		tmpS := make(map[string]interface{})
 		typ := PostProcessorFromString(pType)
 		switch typ {

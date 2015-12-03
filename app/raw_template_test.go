@@ -92,7 +92,7 @@ var testBuildNewTPL = &rawTemplate{
 	dirs:    map[string]string{},
 	files:   map[string]string{},
 	build: build{
-		BuilderTypes: []string{
+		BuilderIDs: []string{
 			"virtualbox-iso",
 		},
 		Builders: map[string]builder{
@@ -113,7 +113,7 @@ var testBuildNewTPL = &rawTemplate{
 				},
 			},
 		},
-		PostProcessorTypes: []string{
+		PostProcessorIDs: []string{
 			"vagrant",
 			"vagrant-cloud",
 		},
@@ -144,7 +144,7 @@ var testBuildNewTPL = &rawTemplate{
 				},
 			},
 		},
-		ProvisionerTypes: []string{
+		ProvisionerIDs: []string{
 			"shell",
 		},
 		Provisioners: map[string]provisioner{
@@ -216,11 +216,11 @@ var testRawTemplateWOSection = &rawTemplate{
 	dirs:    map[string]string{},
 	files:   map[string]string{},
 	build: build{
-		BuilderTypes:       []string{"amazon-ebs"},
+		BuilderIDs:       []string{"amazon-ebs"},
 		Builders:           map[string]builder{},
-		PostProcessorTypes: []string{"compress"},
+		PostProcessorIDs: []string{"compress"},
 		PostProcessors:     map[string]postProcessor{},
-		ProvisionerTypes:   []string{"ansible-local"},
+		ProvisionerIDs:   []string{"ansible-local"},
 		Provisioners:       map[string]provisioner{},
 	},
 }
@@ -284,14 +284,14 @@ func TestSetDefaults(t *testing.T) {
 	if MarshalJSONToString.Get(r.BuildInf) != MarshalJSONToString.Get(testSupportedCentOS.BuildInf) {
 		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupportedCentOS.BuildInf), MarshalJSONToString.Get(r.BuildInf))
 	}
-	if MarshalJSONToString.Get(r.BuilderTypes) != MarshalJSONToString.Get(testSupportedCentOS.BuilderTypes) {
-		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupportedCentOS.BuilderTypes), MarshalJSONToString.Get(r.BuilderTypes))
+	if MarshalJSONToString.Get(r.BuilderIDs) != MarshalJSONToString.Get(testSupportedCentOS.BuilderIDs) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupportedCentOS.BuilderIDs), MarshalJSONToString.Get(r.BuilderIDs))
 	}
-	if MarshalJSONToString.Get(r.PostProcessorTypes) != MarshalJSONToString.Get(testSupportedCentOS.PostProcessorTypes) {
-		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupportedCentOS.PostProcessorTypes), MarshalJSONToString.Get(r.PostProcessorTypes))
+	if MarshalJSONToString.Get(r.PostProcessorIDs) != MarshalJSONToString.Get(testSupportedCentOS.PostProcessorIDs) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupportedCentOS.PostProcessorIDs), MarshalJSONToString.Get(r.PostProcessorIDs))
 	}
-	if MarshalJSONToString.Get(r.ProvisionerTypes) != MarshalJSONToString.Get(testSupportedCentOS.ProvisionerTypes) {
-		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupportedCentOS.ProvisionerTypes), MarshalJSONToString.Get(r.ProvisionerTypes))
+	if MarshalJSONToString.Get(r.ProvisionerIDs) != MarshalJSONToString.Get(testSupportedCentOS.ProvisionerIDs) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupportedCentOS.ProvisionerIDs), MarshalJSONToString.Get(r.ProvisionerIDs))
 	}
 	if r.Builders != nil {
 		t.Errorf("Expected builders to be nil, got %q", MarshalJSONToString.Get(r.Builders))
@@ -326,14 +326,14 @@ func TestRawTemplateUpdateBuildSettings(t *testing.T) {
 	if MarshalJSONToString.Get(r.BuildInf) != MarshalJSONToString.Get(testBuildNewTPL.BuildInf) {
 		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testBuildNewTPL.BuildInf), MarshalJSONToString.Get(r.BuildInf))
 	}
-	if MarshalJSONToString.Get(r.BuilderTypes) != MarshalJSONToString.Get(testBuildNewTPL.BuilderTypes) {
-		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testBuildNewTPL.BuilderTypes), MarshalJSONToString.Get(r.BuilderTypes))
+	if MarshalJSONToString.Get(r.BuilderIDs) != MarshalJSONToString.Get(testBuildNewTPL.BuilderIDs) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testBuildNewTPL.BuilderIDs), MarshalJSONToString.Get(r.BuilderIDs))
 	}
-	if MarshalJSONToString.Get(r.PostProcessorTypes) != MarshalJSONToString.Get(testBuildNewTPL.PostProcessorTypes) {
-		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testBuildNewTPL.PostProcessorTypes), MarshalJSONToString.Get(r.PostProcessorTypes))
+	if MarshalJSONToString.Get(r.PostProcessorIDs) != MarshalJSONToString.Get(testBuildNewTPL.PostProcessorIDs) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testBuildNewTPL.PostProcessorIDs), MarshalJSONToString.Get(r.PostProcessorIDs))
 	}
-	if MarshalJSONToString.Get(r.ProvisionerTypes) != MarshalJSONToString.Get(testBuildNewTPL.ProvisionerTypes) {
-		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testBuildNewTPL.ProvisionerTypes), MarshalJSONToString.Get(r.ProvisionerTypes))
+	if MarshalJSONToString.Get(r.ProvisionerIDs) != MarshalJSONToString.Get(testBuildNewTPL.ProvisionerIDs) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testBuildNewTPL.ProvisionerIDs), MarshalJSONToString.Get(r.ProvisionerIDs))
 	}
 	if MarshalJSONToString.Get(r.Builders) != MarshalJSONToString.Get(updatedBuilders) {
 		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(updatedBuilders), MarshalJSONToString.Get(r.Builders))

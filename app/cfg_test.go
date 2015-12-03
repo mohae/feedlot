@@ -23,7 +23,7 @@ var testDefaults = &defaults{
 		Name:      ":build_name",
 	},
 	build: build{
-		BuilderTypes: []string{
+		BuilderIDs: []string{
 			"virtualbox-iso",
 		},
 		Builders: map[string]builder{
@@ -61,7 +61,7 @@ var testDefaults = &defaults{
 				},
 			},
 		},
-		PostProcessorTypes: []string{
+		PostProcessorIDs: []string{
 			"vagrant",
 		},
 		PostProcessors: map[string]postProcessor{
@@ -75,7 +75,7 @@ var testDefaults = &defaults{
 				},
 			},
 		},
-		ProvisionerTypes: []string{
+		ProvisionerIDs: []string{
 			"shell",
 		},
 		Provisioners: map[string]provisioner{
@@ -184,7 +184,7 @@ var testSupportedUbuntu = &distro{
 		"arch = amd64",
 	},
 	build: build{
-		BuilderTypes: []string{
+		BuilderIDs: []string{
 			"virtualbox-iso",
 			"vmware-iso",
 		},
@@ -212,7 +212,7 @@ var testSupportedUbuntu = &distro{
 				},
 			},
 		},
-		PostProcessorTypes: []string{
+		PostProcessorIDs: []string{
 			"vagrant",
 		},
 		PostProcessors: map[string]postProcessor{
@@ -224,7 +224,7 @@ var testSupportedUbuntu = &distro{
 				},
 			},
 		},
-		ProvisionerTypes: []string{
+		ProvisionerIDs: []string{
 			"shell",
 			"file-uploads",
 		},
@@ -293,7 +293,7 @@ var testBuild = map[string]rawTemplate{
 		Image:   "server",
 		Release: "12.04",
 		build: build{
-			BuilderTypes: []string{
+			BuilderIDs: []string{
 				"virtualbox-iso",
 			},
 			Builders: map[string]builder{
@@ -324,7 +324,7 @@ var testBuild = map[string]rawTemplate{
 			Description: "Centos 6 w virtualbox-iso only",
 		},
 		build: build{
-			BuilderTypes: []string{
+			BuilderIDs: []string{
 				"virtualbox-iso",
 			},
 		},
@@ -336,7 +336,7 @@ var testBuild = map[string]rawTemplate{
 		},
 		Arch: "amd64",
 		build: build{
-			BuilderTypes: []string{
+			BuilderIDs: []string{
 				"virtualbox-iso",
 			},
 			Builders: map[string]builder{
@@ -351,10 +351,10 @@ var testBuild = map[string]rawTemplate{
 					},
 				},
 			},
-			PostProcessorTypes: []string{
+			PostProcessorIDs: []string{
 				"vagrant",
 			},
-			ProvisionerTypes: []string{
+			ProvisionerIDs: []string{
 				"basic-shell",
 			},
 			Provisioners: map[string]provisioner{
@@ -384,17 +384,17 @@ var testBuildList = map[string]list{
 func TestBuildCopy(t *testing.T) {
 	tstTpl := testBuild["jessie"]
 	newBuild := tstTpl.build.copy()
-	if fmt.Sprintf("%p", newBuild.BuilderTypes) == fmt.Sprintf("%p", tstTpl.build.BuilderTypes) {
-		t.Errorf("The pointer for BuilderTypes is the same for both newBuild and testBuild: %x, expected them to be different.", fmt.Sprintf("%p", tstTpl.build.BuilderTypes))
+	if fmt.Sprintf("%p", newBuild.BuilderIDs) == fmt.Sprintf("%p", tstTpl.build.BuilderIDs) {
+		t.Errorf("The pointer for BuilderTypes is the same for both newBuild and testBuild: %x, expected them to be different.", fmt.Sprintf("%p", tstTpl.build.BuilderIDs))
 		goto builderTypesEnd
 	}
-	if len(newBuild.BuilderTypes) != len(tstTpl.BuilderTypes) {
-		t.Errorf("Expected newBuild.BuilderTypoes to have a length of %d; got %d", len(tstTpl.BuilderTypes), len(newBuild.BuilderTypes))
+	if len(newBuild.BuilderIDs) != len(tstTpl.BuilderIDs) {
+		t.Errorf("Expected newBuild.BuilderTypoes to have a length of %d; got %d", len(tstTpl.BuilderIDs), len(newBuild.BuilderIDs))
 		goto builderTypesEnd
 	}
-	for i, v := range tstTpl.BuilderTypes {
-		if v != newBuild.BuilderTypes[i] {
-			t.Errorf("Expected builder type at index %d to be %q; got %q", i, v, newBuild.BuilderTypes[i])
+	for i, v := range tstTpl.BuilderIDs {
+		if v != newBuild.BuilderIDs[i] {
+			t.Errorf("Expected builder type at index %d to be %q; got %q", i, v, newBuild.BuilderIDs[i])
 		}
 	}
 builderTypesEnd:
@@ -413,13 +413,13 @@ builderTypesEnd:
 		}
 	}
 buildersEnd:
-	if len(newBuild.PostProcessorTypes) != len(tstTpl.PostProcessorTypes) {
-		t.Errorf("Expected newBuild.PostProcessorTypes to have a length of %d; got %d", len(tstTpl.PostProcessorTypes), len(newBuild.PostProcessorTypes))
+	if len(newBuild.PostProcessorIDs) != len(tstTpl.PostProcessorIDs) {
+		t.Errorf("Expected newBuild.PostProcessorTypes to have a length of %d; got %d", len(tstTpl.PostProcessorIDs), len(newBuild.PostProcessorIDs))
 		goto postProcessorTypesEnd
 	}
-	for i, v := range tstTpl.PostProcessorTypes {
-		if v != newBuild.PostProcessorTypes[i] {
-			t.Errorf("Expected PostProcessor type at index %d to be %q; got %q", i, v, newBuild.PostProcessorTypes[i])
+	for i, v := range tstTpl.PostProcessorIDs {
+		if v != newBuild.PostProcessorIDs[i] {
+			t.Errorf("Expected PostProcessor type at index %d to be %q; got %q", i, v, newBuild.PostProcessorIDs[i])
 		}
 	}
 postProcessorTypesEnd:
@@ -438,13 +438,13 @@ postProcessorTypesEnd:
 		}
 	}
 postProcessorsEnd:
-	if len(newBuild.ProvisionerTypes) != len(tstTpl.ProvisionerTypes) {
-		t.Errorf("Expected newBuild.ProvisionerTypes to have a length of %d; got %d", len(tstTpl.ProvisionerTypes), len(newBuild.PostProcessorTypes))
+	if len(newBuild.ProvisionerIDs) != len(tstTpl.ProvisionerIDs) {
+		t.Errorf("Expected newBuild.ProvisionerTypes to have a length of %d; got %d", len(tstTpl.ProvisionerIDs), len(newBuild.PostProcessorIDs))
 		goto provisionerTypesEnd
 	}
-	for i, v := range tstTpl.ProvisionerTypes {
-		if v != newBuild.ProvisionerTypes[i] {
-			t.Errorf("Expected provisioner type at index %d to be %q; got %q", i, v, newBuild.ProvisionerTypes[i])
+	for i, v := range tstTpl.ProvisionerIDs {
+		if v != newBuild.ProvisionerIDs[i] {
+			t.Errorf("Expected provisioner type at index %d to be %q; got %q", i, v, newBuild.ProvisionerIDs[i])
 		}
 	}
 provisionerTypesEnd:
