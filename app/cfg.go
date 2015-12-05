@@ -27,25 +27,27 @@ import (
 // Componenter is an interface for Packer components, i.e. builder,
 // post-processor, and provisioner.
 type Componenter interface {
-	getID() string
+	getType() string
 }
 
 // Contains most of the information for Packer templates within a Rancher
-// Build.
+// Build.  The keys of the maps are the IDs
 type build struct {
-	// Targeted builders: either the ID of the builder or the Packer value
-	// can be used, e.g. ID: "vbox" or "virtualbox-iso".
+	// Targeted builders: either the ID of the builder section or the Packer
+	// component type value can be used, e.g. ID: "vbox" or "virtualbox-iso".
 	BuilderIDs []string `toml:"builder_ids" json:"builder_ids"`
-	// A map of builder configuration. There should always be a `common`
-	// builder, which has settings common to both VMWare and VirtualBox.
-	Builders map[string]builder `toml:"builders"`
-	// Targeted post-processor: either the ID of the post-processor or the
-	// Packer value can be used, e.g. ID: "docker" or "docker-push".
+	// A map of builder configurations.  When using a VMWare or VirtualBox
+	// builder, there is usually a 'common' builder, which has settings common
+	// to both VMWare and VirtualBox.
+	Builders map[string]builder `toml:"builders" json:"builders"`
+	// Targeted post-processors: either the ID of the post-processor or the
+	// Packer component type value can be used, e.g. ID: "docker" or
+	// "docker-push".
 	PostProcessorIDs []string `toml:"post_processor_ids" json:"post_processor_ids"`
 	// A map of post-processor configurations.
 	PostProcessors map[string]postProcessor `toml:"post_processors" json:"post_processors"`
-	// Targeted provisioners: either the ID of the builder or the Packer value
-	// can be used, e.g. ID: "preprocess" or "shell".
+	// Targeted provisioners: either the ID of the provisioners or the Packer
+	// component type value can be used, e.g. ID: "preprocess" or "shell".
 	ProvisionerIDs []string `toml:"provisioner_ids" json:"provisioner_ids"`
 	// A map of provisioner configurations.
 	Provisioners map[string]provisioner `toml:"provisioners"`
@@ -84,11 +86,9 @@ func (b *build) copy() build {
 
 // templateSection is used as an embedded type.
 type templateSection struct {
-	// ID is used to reference this element in the *_type list.
-	// This makes it possible to have multiple occurrences of the same
-	// Packer component and set their order in the resulting Packer
-	// Template.
-	ID string
+	// Type is the actual Packer component type, this may or may not be the
+	// same as the map key (ID).
+	Type string
 	// Settings are string settings in "key=value" format.
 	Settings []string
 	// Arrays are the string array settings.
@@ -97,8 +97,8 @@ type templateSection struct {
 
 // templateSection.DeepCopy updates its information with new via a deep copy.
 func (t *templateSection) DeepCopy(ts templateSection) {
-	// Copy ID
-	t.ID = ts.ID
+	// Copy Type
+	t.Type = ts.Type
 	//Deep Copy of settings
 	t.Settings = make([]string, len(ts.Settings))
 	copy(t.Settings, ts.Settings)
@@ -121,7 +121,7 @@ func (t *templateSection) mergeArrays(old map[string]interface{}, n map[string]i
 	merged := map[string]interface{}{}
 	// Get the all keys from both maps
 	var keys []string
-	keys = mergedKeysFromMaps(old, n)
+	keys = mergeKeysFromMaps(old, n)
 	// Process using the keys.
 	for _, v := range keys {
 		// If the element for this key doesn't exist in new, add old.
@@ -140,11 +140,11 @@ type builder struct {
 	templateSection
 }
 
-// getID returns the it for this component.  This is on builder instead of
+// getType returns the type for this component.  This is on builder instead of
 // templateSection because the component needs to fulfill the interface,
 // not the templateSection.
-func (b builder) getID() string {
-	return b.templateSection.ID
+func (b builder) getType() string {
+	return b.Type
 }
 
 // builder.DeepCopy copies the builder values instead of the pointers.
@@ -178,11 +178,11 @@ type postProcessor struct {
 	templateSection
 }
 
-// getID returns the it for this component.  This is on postProcessor instead
-// of templateSection because the component needs to fulfill the interface,
-// not the templateSection.
-func (p postProcessor) getID() string {
-	return p.templateSection.ID
+// getType returns the type for this component.  This is on postProcessor
+// instead of templateSection because the component needs to fulfill the
+// interface, not the templateSection.
+func (p postProcessor) getType() string {
+	return p.Type
 }
 
 // postProcessor.DeepCopy copies the postProcessor values instead of the
@@ -223,14 +223,14 @@ type provisioner struct {
 	templateSection
 }
 
-// getID returns the it for this component.  This is on postProcessor instead
-// of templateSection because the component needs to fulfill the interface,
-// not the templateSection.
-func (p provisioner) getID() string {
-	return p.templateSection.ID
+// getType returns the type for this component.  This is on provisioner
+// instead of templateSection because the component needs to fulfill the
+// interface, not the templateSection.
+func (p provisioner) getType() string {
+	return p.Type
 }
 
-// postProcessor.DeepCopy copies the postProcessor values instead of the
+// provisioner.DeepCopy copies the postProcessor values instead of the
 // pointers.
 func (p *provisioner) DeepCopy() provisioner {
 	c := provisioner{templateSection: templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
@@ -496,6 +496,28 @@ func (b *builds) Load(name string) error {
 		}
 	default:
 		return ErrUnsupportedFormat
+	}
+	// populate Type where applicable
+	for name, bld := range b.Build {
+		for k, tmp := range bld.build.Builders {
+			if len(tmp.Type) == 0 {
+				tmp.Type = k
+				bld.build.Builders[k] = tmp
+			}
+		}
+		for k, tmp := range bld.build.PostProcessors {
+			if len(tmp.Type) == 0 {
+				tmp.Type = k
+				bld.build.PostProcessors[k] = tmp
+			}
+		}
+		for k, tmp := range bld.build.Provisioners {
+			if len(tmp.Type) == 0 {
+				tmp.Type = k
+				bld.build.Provisioners[k] = tmp
+			}
+		}
+		b.Build[name] = bld
 	}
 	b.loaded = true
 	return nil

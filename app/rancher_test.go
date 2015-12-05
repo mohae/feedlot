@@ -74,6 +74,7 @@ var testDistroDefaultUbuntu = rawTemplate{
 		Builders: map[string]builder{
 			"common": {
 				templateSection{
+					//ID: "common",
 					Settings: []string{
 						"boot_wait = 5s",
 						"disk_size = 20000",
@@ -92,6 +93,7 @@ var testDistroDefaultUbuntu = rawTemplate{
 			},
 			"virtualbox-iso": {
 				templateSection{
+					//ID: "virtualbox-iso",
 					Settings: []string{
 						"virtualbox_version_file = .vbox_version",
 					},
@@ -941,17 +943,14 @@ func TestSubString(t *testing.T) {
 	}
 }
 
-func TestMergedKeysFromMaps(t *testing.T) {
-	map1 := map[string]interface{}{
-		"key1": "value1",
-		"key2": "value2",
-		"key3": []string{
-			"element1",
-			"element2",
-		},
+func TestMergedKeysFromComponentMaps(t *testing.T) {
+	map1 := map[string]Componenter{
+		"key1": provisioner{},
+		"key2": provisioner{},
+		"key3": builder{},
 	}
 
-	keys := mergedKeysFromMaps(map1)
+	keys := mergeKeysFromComponentMaps(map1)
 	if len(keys) != 3 {
 		t.Errorf("expected 3 keys, got %d", len(keys))
 	} else {
@@ -968,12 +967,12 @@ func TestMergedKeysFromMaps(t *testing.T) {
 			t.Error("expected \"key3\" to be in merged keys, not found")
 		}
 	}
-	map2 := map[string]interface{}{
-		"key1": "another value",
-		"key4": "value4",
+	map2 := map[string]Componenter{
+		"key1": provisioner{},
+		"key4": builder{},
 	}
 
-	keys = mergedKeysFromMaps(map1, map2)
+	keys = mergeKeysFromComponentMaps(map1, map2)
 	if len(keys) != 4 {
 		t.Errorf("expected 3 keys, got %d", len(keys))
 	} else {

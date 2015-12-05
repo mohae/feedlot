@@ -410,42 +410,6 @@ func getDefaultISOInfo(d []string) (arch string, image string, release string) {
 	return arch, image, release
 }
 
-// getMergedProvisioners merges the new config with the old. The updates follow
-// these rules:
-//   * The existing configuration is used when no `new` provisioners are
-//     specified.
-//   * When 1 or more `new` provisioners are specified, they will replace all
-//     existing provisioners. In this situation, if a provisioners exists in
-//     the `old` map but it does not exist in the `new` map, that provisioners
-//     will be orphaned.
-func getMergedProvisioners(old map[string]provisioner, new map[string]provisioner) map[string]provisioner {
-	// If there is nothing new, old equals merged.
-	if len(new) <= 0 || new == nil {
-		return old
-	}
-	// Convert to an interface.
-	var ifaceOld = make(map[string]interface{}, len(old))
-	for i, o := range old {
-		ifaceOld[i] = o
-	}
-	// Convert to an interface.
-	var ifaceNew = make(map[string]interface{}, len(new))
-	for i, n := range new {
-		ifaceNew[i] = n
-	}
-	// Get the all keys from both maps
-	var keys []string
-	keys = mergedKeysFromMaps(ifaceOld, ifaceNew)
-	pM := map[string]provisioner{}
-	for _, v := range keys {
-		p := provisioner{}
-		p = old[v]
-		//		p.mergeSettings(new[v].Settings)
-		pM[v] = p
-	}
-	return pM
-}
-
 // appendSlash appends a slash to the passed string. If the string already ends
 // in a slash, nothing is done.
 func appendSlash(s string) string {
@@ -574,11 +538,11 @@ func pathExists(p string) (bool, error) {
 	return false, err
 }
 
-// mergedKeysFromMaps takes a variadic array of maps and returns a merged slice
-// of keys for those maps.
-func mergedKeysFromMaps(m ...map[string]interface{}) []string {
+// mergeKeysFromComponentMaps takes a variadic array of packer component maps
+// and returns a merged, de-duped slice of keys for those maps.
+func mergeKeysFromComponentMaps(m ...map[string]Componenter) []string {
 	cnt := 0
-	types := make([][]string, len(m))
+	keys := make([][]string, len(m))
 	// For each passed interface
 	for i, tmpM := range m {
 		cnt = 0
@@ -587,37 +551,80 @@ func mergedKeysFromMaps(m ...map[string]interface{}) []string {
 			tmpK[cnt] = k
 			cnt++
 		}
-		types[i] = tmpK
+		keys[i] = tmpK
 	}
 	// Merge the slices, de-dupes keys.
-	mergedKeys := MergeSlices(types...)
-	return mergedKeys
+	return MergeSlices(keys...)
 }
 
-
-// mergedKeysFromComponents takes a variadic array of componenters and
-// returns a map of key IDs and their component type.
-func mergedKeysFromComponents(m ...map[string]Componenter) []string {
+// mergeKeysFromComponentMaps takes a variadic array of packer component maps
+// and returns a merged, de-duped slice of keys for those maps.
+func mergeKeysFromMaps(m ...map[string]interface{}) []string {
 	cnt := 0
-	types := make([][]string, len(m))
+	keys := make([][]string, len(m))
 	// For each passed interface
 	for i, tmpM := range m {
 		cnt = 0
 		tmpK := make([]string, len(tmpM))
-		for k, v := range tmpM {
-			fmt.Printf("k\t%s\t%s\n", k, v.getID())
-			key := v.getID()
-			if key == "" {
-				key = k
-			}
-			tmpK[cnt] = key
+		for k := range tmpM {
+			tmpK[cnt] = k
 			cnt++
 		}
-		types[i] = tmpK
+		keys[i] = tmpK
 	}
 	// Merge the slices, de-dupes keys.
-	mergedKeys := MergeSlices(types...)
-	return mergedKeys
+	return MergeSlices(keys...)
+}
+
+// mergeComponentInfo Takes two slices and returns the de-duped, merged list.
+// The elements are returned in order of first encounter-duplicate keys are
+// discarded.
+func mergeComponentInfo(m ...map[string]Componenter) (mids, mtypes []string) {
+	return nil, nil
+	/*
+		if len(m) == 0 {
+			return nil, nil
+		}
+
+		ids := make([][]string, len(m))
+		types := make([][]string, len(m))
+		var cnt int
+		// For each passed interface
+		for i, tmpM := range m {
+			tmpTypes := make([]string, len(tmpM))
+			for _, val := range tmpM {
+				tmpTypes[cnt] = val.getType()
+				cnt++
+			}
+			ids[i] = tmpIDs
+			types[i] = tmpTypes
+		}
+
+		// If there is only 1, there is nothing to merge
+		if len(ids) == 1 {
+			return ids[0], types[0]
+		}
+
+		// Go through all the elements, add to merged info (mids, mtypes) if the
+		// id doesn't already exist in merged list
+		var found bool
+		for i, v := range ids {
+			for j, id := range v {
+				for _, vv := range mids {
+					if vv == id {
+						found = true
+						break
+					}
+				}
+				if !found {
+					mids = append(mids, id)
+					mtypes = append(mtypes, types[i][j])
+				}
+				found = false
+			}
+		}
+		return mids, mtypes
+	*/
 }
 
 /*

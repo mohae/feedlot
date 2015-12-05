@@ -299,7 +299,7 @@ var testBuild = map[string]rawTemplate{
 			Builders: map[string]builder{
 				"common": {
 					templateSection{
-						ID: "",
+						Type: "common",
 						Settings: []string{
 							"ssh_wait_timeout = 300m",
 						},
@@ -307,7 +307,7 @@ var testBuild = map[string]rawTemplate{
 				},
 				"virtualbox-iso": {
 					templateSection{
-						ID: "",
+						Type: "virtualbox-iso",
 						Arrays: map[string]interface{}{
 							"vboxmanage": []string{
 								"memory=4096",
@@ -342,7 +342,7 @@ var testBuild = map[string]rawTemplate{
 			Builders: map[string]builder{
 				"virtualbox-iso": {
 					templateSection{
-						ID: "",
+						Type: "virtualbox-iso",
 						Arrays: map[string]interface{}{
 							"vboxmanage": []string{
 								"--memory=4096",
@@ -358,9 +358,9 @@ var testBuild = map[string]rawTemplate{
 				"basic-shell",
 			},
 			Provisioners: map[string]provisioner{
-				"shell": {
+				"basic-shell": {
 					templateSection{
-						ID: "basic-shell",
+						Type: "shell",
 						Arrays: map[string]interface{}{
 							"scripts": []string{
 								"setup.sh",
@@ -822,10 +822,10 @@ func TestIODirInfUpdate(t *testing.T) {
 }
 
 func TestGetAltJSONName(t *testing.T) {
-	tests := []struct{
-		fname string
+	tests := []struct {
+		fname    string
 		expected string
-		isJSON bool
+		isJSON   bool
 	}{
 		{"test.json", "test.cjsn", true},
 		{"test.cjsn", "test.json", true},

@@ -1857,16 +1857,17 @@ func (r *rawTemplate) updateBuilders(newB map[string]builder) error {
 	if len(newB) == 0 || newB == nil {
 		return nil
 	}
-	// Convert the existing Builders to interfaces.
-	var ifaceOld = make(map[string]interface{}, len(r.Builders))
-	ifaceOld = DeepCopyMapStringBuilder(r.Builders)
-	// Convert the new Builders to interfaces.
-	var ifaceNew = make(map[string]interface{}, len(newB))
-	ifaceNew = DeepCopyMapStringBuilder(newB)
+	// Convert the existing Builders to Componenter.
+	var oldC = make(map[string]Componenter, len(r.Builders))
+	oldC = DeepCopyMapStringBuilder(r.Builders)
+	// Convert the new Builders to Componenter.
+	var newC = make(map[string]Componenter, len(newB))
+	newC = DeepCopyMapStringBuilder(newB)
 	// Make the slice as long as the slices in both builders, odds are its shorter, but this is the worst case.
 	var keys []string
 	// Convert the keys to a map
-	keys = mergedKeysFromMaps(ifaceOld, ifaceNew)
+	keys = mergeKeysFromComponentMaps(oldC, newC)
+
 	// If there's a builder with the key CommonBuilder, merge them. This is a special case for builders only.
 	_, ok := newB[Common.String()]
 	if ok {
@@ -1914,7 +1915,7 @@ func (r *rawTemplate) updateCommon(newB builder) error {
 	// If the existing builder doesn't have a CommonBuilder section, just add it
 	b, ok := r.Builders[Common.String()]
 	if !ok {
-		r.Builders[Common.String()] = builder{templateSection: templateSection{Settings: newB.Settings, Arrays: newB.Arrays}}
+		r.Builders[Common.String()] = builder{templateSection: templateSection{Type: newB.Type, Settings: newB.Settings, Arrays: newB.Arrays}}
 		return nil
 	}
 	// Otherwise merge the two
@@ -1951,9 +1952,9 @@ func (r *rawTemplate) setHTTP(component string, m map[string]interface{}) error 
 }
 
 // DeepCopyMapStringBuilder makes a deep copy of each builder passed and
-// returns the copy map[string]builder as a map[string]interface{}
-func DeepCopyMapStringBuilder(b map[string]builder) map[string]interface{} {
-	c := map[string]interface{}{}
+// returns the copy map[string]builder as a map[string]Componenter{}
+func DeepCopyMapStringBuilder(b map[string]builder) map[string]Componenter {
+	c := map[string]Componenter{}
 	for k, v := range b {
 		tmpB := builder{}
 		tmpB = v.DeepCopy()

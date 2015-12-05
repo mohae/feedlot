@@ -11,6 +11,7 @@ var testRawTpl = newRawTemplate()
 var updatedBuilders = map[string]builder{
 	"common": {
 		templateSection{
+			Type: "common",
 			Settings: []string{
 				"ssh_wait_timeout = 300m",
 			},
@@ -18,6 +19,7 @@ var updatedBuilders = map[string]builder{
 	},
 	"virtualbox-iso": {
 		templateSection{
+			Type:     "virtualbox-iso",
 			Settings: []string{},
 			Arrays: map[string]interface{}{
 				"vm_settings": []string{
@@ -31,6 +33,7 @@ var updatedBuilders = map[string]builder{
 var comparePostProcessors = map[string]postProcessor{
 	"vagrant": {
 		templateSection{
+			Type: "vagrant",
 			Settings: []string{
 				"output = :out_dir/packer.box",
 			},
@@ -46,6 +49,7 @@ var comparePostProcessors = map[string]postProcessor{
 	},
 	"vagrant-cloud": {
 		templateSection{
+			Type: "vagrant-cloud",
 			Settings: []string{
 				"access_token = getAValidTokenFrom-VagrantCloud.com",
 				"box_tag = foo/bar/baz",
@@ -60,6 +64,7 @@ var comparePostProcessors = map[string]postProcessor{
 var compareProvisioners = map[string]provisioner{
 	"shell": {
 		templateSection{
+			Type: "shell",
 			Settings: []string{
 				"execute_command = execute_test.command",
 			},
@@ -98,6 +103,7 @@ var testBuildNewTPL = &rawTemplate{
 		Builders: map[string]builder{
 			"common": {
 				templateSection{
+					Type: "common",
 					Settings: []string{
 						"ssh_wait_timeout = 300m",
 					},
@@ -105,6 +111,7 @@ var testBuildNewTPL = &rawTemplate{
 			},
 			"virtualbox-iso": {
 				templateSection{
+					Type: "virtualbox-iso",
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
 							"memory=4096",
@@ -120,6 +127,7 @@ var testBuildNewTPL = &rawTemplate{
 		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				templateSection{
+					Type: "vagrant",
 					Settings: []string{
 						"output = :out_dir/packer.box",
 					},
@@ -135,6 +143,7 @@ var testBuildNewTPL = &rawTemplate{
 			},
 			"vagrant-cloud": {
 				templateSection{
+					Type: "vagrant-cloud",
 					Settings: []string{
 						"access_token = getAValidTokenFrom-VagrantCloud.com",
 						"box_tag = foo/bar/baz",
@@ -150,6 +159,7 @@ var testBuildNewTPL = &rawTemplate{
 		Provisioners: map[string]provisioner{
 			"shell": {
 				templateSection{
+					Type: "shell",
 					Settings: []string{
 						"execute_command = execute_test.command",
 					},
@@ -217,11 +227,11 @@ var testRawTemplateWOSection = &rawTemplate{
 	files:   map[string]string{},
 	build: build{
 		BuilderIDs:       []string{"amazon-ebs"},
-		Builders:           map[string]builder{},
+		Builders:         map[string]builder{},
 		PostProcessorIDs: []string{"compress"},
-		PostProcessors:     map[string]postProcessor{},
+		PostProcessors:   map[string]postProcessor{},
 		ProvisionerIDs:   []string{"ansible-local"},
-		Provisioners:       map[string]provisioner{},
+		Provisioners:     map[string]provisioner{},
 	},
 }
 

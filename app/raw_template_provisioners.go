@@ -831,20 +831,18 @@ func (r *rawTemplate) updateProvisioners(newP map[string]provisioner) error {
 	if len(newP) <= 0 || newP == nil {
 		return nil
 	}
-	// Convert the existing provisioners to interface.
+	// Convert the existing provisioners to Componenter.
 	var oldC = make(map[string]Componenter, len(r.Provisioners))
 	oldC = DeepCopyMapStringProvisioner(r.Provisioners)
-	// Convert the new provisioners to interface.
+	// Convert the new provisioners to Componenter.
 	var newC = make(map[string]Componenter, len(newP))
 	newC = DeepCopyMapStringProvisioner(newP)
 	// Get the all keys from both maps
 	var keys []string
-	keys = mergedKeysFromComponents(oldC, newC)
-	fmt.Println(keys)
+	keys = mergeKeysFromComponentMaps(oldC, newC)
 	if r.Provisioners == nil {
 		r.Provisioners = map[string]provisioner{}
 	}
-
 	// Copy: if the key exists in the new provisioners only.
 	// Ignore: if the key does not exist in the new provisioners.
 	// Merge: if the key exists in both the new and old provisioners.
@@ -856,8 +854,6 @@ func (r *rawTemplate) updateProvisioners(newP map[string]provisioner) error {
 			r.Provisioners[v] = pp.DeepCopy()
 			continue
 		}
-
-		fmt.Printf("----\n%v\n%#v\n-----\n", v, p)
 		// If the element for this key doesn't exist, skip it.
 		pp, ok := newP[v]
 		if !ok {
@@ -869,7 +865,6 @@ func (r *rawTemplate) updateProvisioners(newP map[string]provisioner) error {
 		}
 		p.mergeArrays(pp.Arrays)
 		r.Provisioners[v] = p
-		//r.ProvisionerTypeMap[v] =
 	}
 	return nil
 }
@@ -896,14 +891,13 @@ func (p *provisioner) settingsToMap(Type string, r *rawTemplate) map[string]inte
 }
 
 // DeepCopyMapStringProvisioner makes a deep copy of each builder passed and
-// returns the copie map[string]provisioner as a map[string]interface{}
+// returns the copied map[string]provisioner as a map[string]interface{}
 func DeepCopyMapStringProvisioner(p map[string]provisioner) map[string]Componenter {
 	c := map[string]Componenter{}
 	for k, v := range p {
 		tmpP := provisioner{}
 		tmpP = v.DeepCopy()
 		c[k] = tmpP
-		fmt.Println(k)
 	}
 	return c
 }

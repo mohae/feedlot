@@ -54,7 +54,7 @@
     },
     "provisioners": {
       "shell": {
-        "id": "basic-shell",
+        "type": "shell",
         "arrays": {
            "scripts": [ 
               "setup.sh",

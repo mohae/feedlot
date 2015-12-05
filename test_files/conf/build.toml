@@ -46,9 +46,9 @@
 				"--memory=4096"
 			]
 	[jessie.provisioners]
-		[jessie.provisioners.shell]
-            id = "basic-shell"
-			[jessie.provisioners.shell.arrays]
+		[jessie.provisioners.basic-shell]
+            type = "shell"
+			[jessie.provisioners.basic-shell.arrays]
 				scripts = [ 
 					"setup.sh",
 					"sudoers.sh",

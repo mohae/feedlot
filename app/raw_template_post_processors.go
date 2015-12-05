@@ -80,15 +80,15 @@ func (r *rawTemplate) updatePostProcessors(newP map[string]postProcessor) error 
 	if len(newP) == 0 || newP == nil {
 		return nil
 	}
-	// Convert the existing postProcessors to interface.
-	var ifaceOld = make(map[string]interface{}, len(r.PostProcessors))
-	ifaceOld = DeepCopyMapStringPostProcessor(r.PostProcessors)
-	// Convert the new postProcessors to interfaces
-	var ifaceNew = make(map[string]interface{}, len(newP))
-	ifaceNew = DeepCopyMapStringPostProcessor(newP)
+	// Convert the existing postProcessors to Componenter.
+	var oldC = make(map[string]Componenter, len(r.PostProcessors))
+	oldC = DeepCopyMapStringPostProcessor(r.PostProcessors)
+	// Convert the new postProcessors to Componenter
+	var newC = make(map[string]Componenter, len(newP))
+	newC = DeepCopyMapStringPostProcessor(newP)
 	// Get the all keys from both maps
 	var keys []string
-	keys = mergedKeysFromMaps(ifaceOld, ifaceNew)
+	keys = mergeKeysFromComponentMaps(oldC, newC)
 	if r.PostProcessors == nil {
 		r.PostProcessors = map[string]postProcessor{}
 	}
@@ -650,8 +650,8 @@ func (p *postProcessor) settingsToMap(Type string, r *rawTemplate) map[string]in
 // DeepCopyMapStringPostProcessor makes a deep copy of each builder passed and
 // returns the copie map[string]postProcessor as a map[string]interface{}
 // Note: This currently only supports string slices.
-func DeepCopyMapStringPostProcessor(p map[string]postProcessor) map[string]interface{} {
-	c := map[string]interface{}{}
+func DeepCopyMapStringPostProcessor(p map[string]postProcessor) map[string]Componenter {
+	c := map[string]Componenter{}
 	for k, v := range p {
 		tmpP := postProcessor{}
 		tmpP = v.DeepCopy()
