@@ -11,19 +11,50 @@ const (
 	DefaultFormat = "json"
 )
 
-// Rancher cfg and flag setting names
+// Rancher setting names: these values are used in the config files, for flags,
+// and as the basis for environment variables.
 const (
+	// ArchivePriorBuild is a boolean for whether or not a compressed tarball
+	// of a prior build, for a given Packer template, should be created, if it
+	// exists.
 	ArchivePriorBuild = "archive_prior_build"
-	ConfDir           = "conf_dir"
-	ExampleDir        = "example_dir"
-	SourceDir         = "source_dir"
-	Format            = "format"
-	Example           = "example"
-	ParamDelimStart   = "param_delim_start"
-	Log               = "log"
-	LogFile           = "log_file"
-	LogLevelFile      = "log_level_file"
-	LogLevelStdOut    = "log_level_stdout"
+	// ConfDir is the directory that contains the Rancher build information.
+	ConfDir = "conf_dir"
+	// ExampleDir is the directory that contains Rancher examples.  Examples
+	// are used to show how Rancher build templates may be configured and to
+	// provide an easy way to generated example Packer templates.
+	ExampleDir = "example_dir"
+	// SourceDir is the directory that contains the files referenced by a
+	// Rancher template.  The referenced files are copied to the generated
+	// Packer template directory.
+	SourceDir = "source_dir"
+	// Format is the format used for the Rancher configuration files: either
+	// TOML or JSON.  TOML expects all configuration files to have the '.toml'
+	// extension.  JSON expects all configuration files to have either a
+	// '.json' or '.cjsn' extension.  JSON is the default format.
+	Format = "format"
+	// Example is a bool that let's Rancher know that the current run is an
+	// example run.  Rancher will look for the configurations and source in
+	// the configured ExampleDir.
+	Example = "example"
+	// ParamDelimStart is the delimiter used to indicate the start of a Rancher
+	// parameter.  The default start delimiter is ':'.  This is used so that
+	// Rancher parameters in templates do not conflict with Packer parameters.
+	ParamDelimStart = "param_delim_start"
+	// Log is a bool that indicates whether Rancher should use logging.  Log
+	// messages are written to both a file and stdout.
+	Log = "log"
+	// LogFile is the log file to be used if logging is enabled.  Rancher
+	// generates a new logfile for every run.  If a file already exists with
+	// the same name, Rancher will add the date and, when necessary, a sequence
+	// number to ensure the file is unique.
+	LogFile = "log_file"
+	// LogLevelFile is the minimum log level used for logging to file.  The
+	// default log level for files is 'WARN'.
+	LogLevelFile = "log_level_file"
+	// LogLevelStdOut is the minimum log level used for printing log messages
+	// to stdout.  The default log level for stdout is 'ERROR'.
+	LogLevelStdOut = "log_level_stdout"
 )
 
 // CfgFile is the suffix for the ENV variable name that holds the override
