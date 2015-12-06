@@ -278,7 +278,7 @@ func (d *defaults) Load(p string) error {
 	if d.loaded {
 		return nil
 	}
-	name := GetConfFile(p, Default)
+	name := GetConfFile(p, "default")
 	switch contour.GetString(Format) {
 	case "toml", "tml":
 		_, err := toml.DecodeFile(name, &d)
@@ -436,7 +436,7 @@ type supported struct {
 
 // Load the supported distro info.
 func (s *supported) Load(p string) error {
-	name := GetConfFile(p, Supported)
+	name := GetConfFile(p, "supported")
 	switch contour.GetString(Format) {
 	case "toml", "tml":
 		_, err := toml.DecodeFile(name, &s.Distro)
@@ -556,10 +556,7 @@ type list struct {
 func (bl *buildLists) Load(p string) error {
 
 	// Load the build lists.
-	name := GetConfFile(p, BuildList)
-	if name == "" {
-		return filenameNotSetErr(BuildList)
-	}
+	name := GetConfFile(p, "build_list")
 	switch contour.GetString(Format) {
 	case "toml", "tml":
 		_, err := toml.DecodeFile(name, &bl.List)
@@ -677,7 +674,7 @@ func GetConfFile(p, name string) string {
 	// if the path wasn't passed, use the confdir, unless this file is the supported
 	// file. A path is prefixed to supported file only if this func receives one;
 	// the ConfDir is not used for supported.
-	if fname != Supported {
+	if fname != "supported" {
 		p = filepath.Join(p, contour.GetString(ConfDir))
 	}
 	if contour.GetBool(Example) {

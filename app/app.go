@@ -11,14 +11,6 @@ const (
 	DefaultFormat = "json"
 )
 
-// Rancher conf filename roots; these are reserved names for conf files.
-const (
-	Build     = "build"
-	BuildList = "build_list"
-	Default   = "default"
-	Supported = "supported"
-)
-
 // Rancher cfg and flag setting names
 const (
 	ArchivePriorBuild = "archive_prior_build"
