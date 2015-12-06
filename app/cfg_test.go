@@ -467,9 +467,9 @@ provisionersEnd:
 
 func TestTemplateSectionMergeArrays(t *testing.T) {
 	ts := &templateSection{}
-	merged := ts.mergeArrays(nil, nil)
-	if merged != nil {
-		t.Errorf("Expected the merged array to be nil, was not nil: %#v", merged)
+	ts.mergeArrays(nil)
+	if ts.Arrays != nil {
+		t.Errorf("Expected the merged array to be nil, was not nil: %#v", ts.Arrays)
 	}
 
 	old := map[string]interface{}{
@@ -501,7 +501,7 @@ func TestTemplateSectionMergeArrays(t *testing.T) {
 		},
 	}
 
-	newold := map[string]interface{}{
+	merged := map[string]interface{}{
 		"type":            "shell",
 		"execute_command": "echo 'vagrant'|sudo -S sh '{{.Path}}'",
 		"override": map[string]interface{}{
@@ -516,30 +516,33 @@ func TestTemplateSectionMergeArrays(t *testing.T) {
 		},
 	}
 
-	merged = ts.mergeArrays(old, nil)
-	if merged == nil {
+	ts.Arrays = old
+	ts.mergeArrays(nil)
+	if ts.Arrays == nil {
 		t.Errorf("Expected merged to be not nil, was nil")
 	} else {
-		if MarshalJSONToString.Get(merged) != MarshalJSONToString.Get(old) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(old), MarshalJSONToString.Get(merged))
+		if MarshalJSONToString.Get(ts.Arrays) != MarshalJSONToString.Get(old) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(old), MarshalJSONToString.Get(ts.Arrays))
 		}
 	}
 
-	merged = ts.mergeArrays(nil, nw)
-	if merged == nil {
+	ts.Arrays = nil
+	ts.mergeArrays(nw)
+	if ts.Arrays == nil {
 		t.Errorf("Expected merged to be not nil, was nil")
 	} else {
-		if MarshalJSONToString.Get(merged) != MarshalJSONToString.Get(nw) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(nw), MarshalJSONToString.Get(merged))
+		if MarshalJSONToString.Get(ts.Arrays) != MarshalJSONToString.Get(nw) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(nw), MarshalJSONToString.Get(ts.Arrays))
 		}
 	}
 
-	merged = ts.mergeArrays(old, nw)
-	if merged == nil {
+	ts.Arrays = old
+	ts.mergeArrays(nw)
+	if ts.Arrays == nil {
 		t.Errorf("Expected merged to be not nil, was nil")
 	} else {
-		if MarshalJSONToString.Get(merged) != MarshalJSONToString.Get(newold) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(newold), MarshalJSONToString.Get(merged))
+		if MarshalJSONToString.Get(ts.Arrays) != MarshalJSONToString.Get(merged) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(merged), MarshalJSONToString.Get(ts.Arrays))
 		}
 	}
 }

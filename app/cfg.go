@@ -106,33 +106,30 @@ func (t *templateSection) DeepCopy(ts templateSection) {
 	t.Arrays = deepcopy.Iface(ts.Arrays).(map[string]interface{})
 }
 
-// mergeArrays merges the arrays section of a template builder
-func (t *templateSection) mergeArrays(old map[string]interface{}, n map[string]interface{}) map[string]interface{} {
-	if old == nil && n == nil {
-		return nil
-	}
-	if old == nil {
-		return n
-	}
+// mergeArrays merges the received array with the current one.
+func (t *templateSection) mergeArrays(n map[string]interface{}) {
 	if n == nil {
-		return old
+		return
+	}
+	if t.Arrays == nil {
+		t.Arrays = n
+		return
 	}
 	// both are populated, merge them.
 	merged := map[string]interface{}{}
 	// Get the all keys from both maps
-	var keys []string
-	keys = mergeKeysFromMaps(old, n)
+	keys := mergeKeysFromMaps(t.Arrays, n)
 	// Process using the keys.
 	for _, v := range keys {
 		// If the element for this key doesn't exist in new, add old.
 		if _, ok := n[v]; !ok {
-			merged[v] = old[v]
+			merged[v] = t.Arrays[v]
 			continue
 		}
 		// Otherwise use the new value
 		merged[v] = n[v]
 	}
-	return merged
+	t.Arrays = merged
 }
 
 // builder represents a builder Packer template section.
@@ -166,11 +163,6 @@ func (b *builder) mergeSettings(sl []string) error {
 		return fmt.Errorf("merge of builder settings failed: %s", err)
 	}
 	return nil
-}
-
-// mergeArrays merges the arrays section of a template builder
-func (b *builder) mergeArrays(m map[string]interface{}) {
-	b.Arrays = b.templateSection.mergeArrays(b.Arrays, m)
 }
 
 // Type for handling the post-processor section of the configs.
@@ -212,12 +204,6 @@ func (p *postProcessor) mergeSettings(sl []string) error {
 	return nil
 }
 
-// postProcessor.mergeArrays wraps templateSection.mergeArrays
-func (p *postProcessor) mergeArrays(m map[string]interface{}) {
-	// merge the arrays:
-	p.Arrays = p.templateSection.mergeArrays(p.Arrays, m)
-}
-
 // provisioner: type for common elements for provisioners.
 type provisioner struct {
 	templateSection
@@ -255,12 +241,6 @@ func (p *provisioner) mergeSettings(sl []string) error {
 		return fmt.Errorf("merge of provisioner settings failed: %s", err)
 	}
 	return nil
-}
-
-// provisioner.mergeArrays wraps templateSection.mergeArrays
-func (p *provisioner) mergeArrays(m map[string]interface{}) {
-	// merge the arrays:
-	p.Arrays = p.templateSection.mergeArrays(p.Arrays, m)
 }
 
 // defaults is used to store Rancher application level defaults for Packer templates.
