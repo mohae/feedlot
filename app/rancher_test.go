@@ -780,28 +780,6 @@ func TestAppendSlash(t *testing.T) {
 	}
 }
 
-func TestTrimSuffix(t *testing.T) {
-	s := trimSuffix("", "")
-	if s != "" {
-		t.Errorf("Expected an empty string, got %q", s)
-	}
-
-	s = trimSuffix("aStringWithaSuffix", "")
-	if s != "aStringWithaSuffix" {
-		t.Errorf("Expected \"aStringWithaSuffix\", got %q", s)
-	}
-
-	s = trimSuffix("aStringWithaSuffix", "aszc")
-	if s != "aStringWithaSuffix" {
-		t.Errorf("Expected \"aStringWithaSuffix\", got %q", s)
-	}
-
-	s = trimSuffix("aStringWithaSuffix", "Suffix")
-	if s != "aStringWitha" {
-		t.Errorf("Expected \"aStringWitha\", got %q", s)
-	}
-}
-
 func TestCopyFile(t *testing.T) {
 	_, err := copyFile("", "test")
 	if err == nil {

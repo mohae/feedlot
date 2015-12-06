@@ -597,6 +597,25 @@ func (b *buildLists) Get(s string) (list, error) {
 	return l, nil
 }
 
+// mergeKeysFromComponentMaps takes a variadic array of packer component maps
+// and returns a merged, de-duped slice of keys for those maps.
+func mergeKeysFromComponentMaps(m ...map[string]Componenter) []string {
+	cnt := 0
+	keys := make([][]string, len(m))
+	// For each passed interface
+	for i, tmpM := range m {
+		cnt = 0
+		tmpK := make([]string, len(tmpM))
+		for k := range tmpM {
+			tmpK[cnt] = k
+			cnt++
+		}
+		keys[i] = tmpK
+	}
+	// Merge the slices, de-dupes keys.
+	return MergeSlices(keys...)
+}
+
 // SetCfgFile set's the appCFg from the app's cfg file and then applies any env
 // vars that have been set. After this, settings can only be updated
 // programmatically or via command-line flags.

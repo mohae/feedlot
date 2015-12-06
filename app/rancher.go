@@ -157,6 +157,8 @@ func (d *distroDefaults) Set() error {
 // builds. An envs' name is the same as the subdirectories name. Env names can
 // be concatonated together, using the env_separator_char as the separator; '-'
 // is the default value.
+//
+// TODO: add env support
 func loadBuilds() error {
 	// index all the files in the configuration directory, including subdir
 	// this should be sorted
@@ -212,8 +214,7 @@ func getSliceLenFromIface(v interface{}) (int, error) {
 }
 
 // MergeSlices takes a variadic input of []string and returns a string slice
-// with all of the values within the slices merged, later occurrences of the
-// same key override previous.
+// with all of the values within the slices merged.
 func MergeSlices(s ...[]string) []string {
 	// If nothing is received return nothing
 	if s == nil {
@@ -232,7 +233,7 @@ func MergeSlices(s ...[]string) []string {
 }
 
 // mergeSlices Takes two slices and returns the de-duped, merged list. The
-// elements are returned in order of first encounter-duplicate keys are
+// elements are returned in order of first encounter: duplicate keys are
 // discarded.
 func mergeSlices(s1 []string, s2 []string) []string {
 	// If nothing is received return nothing
@@ -245,31 +246,24 @@ func mergeSlices(s1 []string, s2 []string) []string {
 	if s2 == nil || len(s2) == 0 {
 		return s1
 	}
-	tempSl := make([]string, len(s1)+len(s2))
+	tempSl := make([]string, len(s1))
 	copy(tempSl, s1)
-	i := len(s1) - 1
-	var found bool
 	// Go through every element in the second slice.
 	for _, v := range s2 {
+		var found bool
 		// See if the key already exists
-		for k, tmp := range s1 {
+		for _, tmp := range tempSl {
 			if v == tmp {
 				// it already exists
 				found = true
-				tempSl[k] = v
 				break
 			}
 		}
 		if !found {
-			i++
-			tempSl[i] = v
+			tempSl = append(tempSl, v)
 		}
-		found = false
 	}
-	// Shrink the slice back down.
-	retSl := make([]string, i+1)
-	copy(retSl, tempSl)
-	return retSl
+	return tempSl
 }
 
 // mergeSettingsSlices merges two slices of settings. In cases of a key
@@ -423,14 +417,6 @@ func appendSlash(s string) string {
 	return s
 }
 
-// trimSuffix trims the passed suffix from the passed string, if it exists.
-func trimSuffix(s string, suffix string) string {
-	if strings.HasSuffix(s, suffix) {
-		s = s[:len(s)-len(suffix)]
-	}
-	return s
-}
-
 // copyFile copies a file the source file to the destination
 func copyFile(src string, dst string) (written int64, err error) {
 	if src == "" {
@@ -476,8 +462,7 @@ func copyFile(src string, dst string) (written int64, err error) {
 	return io.Copy(fd, fs)
 }
 
-// copyDir takes 2 directory paths and copies the contents from src to dest get
-// the contents of srcDir.
+// copyDir takes 2 directory paths and copies the contents from src to dest.
 func copyDir(srcDir string, dstDir string) error {
 	exists, err := pathExists(srcDir)
 	if err != nil {
@@ -540,25 +525,6 @@ func pathExists(p string) (bool, error) {
 
 // mergeKeysFromComponentMaps takes a variadic array of packer component maps
 // and returns a merged, de-duped slice of keys for those maps.
-func mergeKeysFromComponentMaps(m ...map[string]Componenter) []string {
-	cnt := 0
-	keys := make([][]string, len(m))
-	// For each passed interface
-	for i, tmpM := range m {
-		cnt = 0
-		tmpK := make([]string, len(tmpM))
-		for k := range tmpM {
-			tmpK[cnt] = k
-			cnt++
-		}
-		keys[i] = tmpK
-	}
-	// Merge the slices, de-dupes keys.
-	return MergeSlices(keys...)
-}
-
-// mergeKeysFromComponentMaps takes a variadic array of packer component maps
-// and returns a merged, de-duped slice of keys for those maps.
 func mergeKeysFromMaps(m ...map[string]interface{}) []string {
 	cnt := 0
 	keys := make([][]string, len(m))
@@ -576,73 +542,6 @@ func mergeKeysFromMaps(m ...map[string]interface{}) []string {
 	return MergeSlices(keys...)
 }
 
-// mergeComponentInfo Takes two slices and returns the de-duped, merged list.
-// The elements are returned in order of first encounter-duplicate keys are
-// discarded.
-func mergeComponentInfo(m ...map[string]Componenter) (mids, mtypes []string) {
-	return nil, nil
-	/*
-		if len(m) == 0 {
-			return nil, nil
-		}
-
-		ids := make([][]string, len(m))
-		types := make([][]string, len(m))
-		var cnt int
-		// For each passed interface
-		for i, tmpM := range m {
-			tmpTypes := make([]string, len(tmpM))
-			for _, val := range tmpM {
-				tmpTypes[cnt] = val.getType()
-				cnt++
-			}
-			ids[i] = tmpIDs
-			types[i] = tmpTypes
-		}
-
-		// If there is only 1, there is nothing to merge
-		if len(ids) == 1 {
-			return ids[0], types[0]
-		}
-
-		// Go through all the elements, add to merged info (mids, mtypes) if the
-		// id doesn't already exist in merged list
-		var found bool
-		for i, v := range ids {
-			for j, id := range v {
-				for _, vv := range mids {
-					if vv == id {
-						found = true
-						break
-					}
-				}
-				if !found {
-					mids = append(mids, id)
-					mtypes = append(mtypes, types[i][j])
-				}
-				found = false
-			}
-		}
-		return mids, mtypes
-	*/
-}
-
-/*
-// mergedKeysFromComponents takes a variadic array of componenters and
-// returns a map of key IDs and their component type.
-func mergedKeysFromComponents(c map[string]Componenter) map[string]string {
-	types := map[string]string{}
-	// For each passed interface
-	for k, tmpC := range c {
-		key := v.getID()
-		if key == "" {
-			key = k
-		}
-		types[key] = k
-	}
-	return types
-}
-*/
 // setParentDir takes a directory name and and a path.
 //   * If the path does not contain a parent directory, the passed directory
 //     is prepended to the path and the new value is returned, otherwise the
