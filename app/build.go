@@ -7,11 +7,6 @@ import (
 	jww "github.com/spf13/jwalterweatherman"
 )
 
-func init() {
-	contour.RegisterBoolFlag(Example, "eg", false, "false", "whether this is an example")
-	contour.RegisterStringFlag(ExampleDir, "ed", "examples/", "examples/", "example directory")
-}
-
 // BuildDistro creates a build based on the target distro's defaults. The
 // ArgsFilter contains information on the target distro and any overrides that
 // are to be applied to the build.
@@ -48,7 +43,7 @@ func buildPackerTemplateFromDistro() (string, error) {
 	if contour.GetString("arch") != "" {
 		rTpl.Arch = contour.GetString("arch")
 	}
-	if contour.GetString("image")  != "" {
+	if contour.GetString("image") != "" {
 		rTpl.Image = contour.GetString("image")
 	}
 	if contour.GetString("release") != "" {
