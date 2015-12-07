@@ -11,7 +11,7 @@
     "arch": "amd64",
     "image": "server",
     "release": "15.04",
-    "builder_types": [
+    "builder_ids": [
       "virtualbox-iso"
     ],
     "provisioners": {
@@ -35,7 +35,7 @@
     "arch": "x86_64",
     "image": "Minimal",
     "release": "6",
-    "builder_types": [
+    "builder_ids": [
         "virtualbox-iso"
     ],
     "provisioners": {
@@ -59,7 +59,7 @@
     "arch": "x86_64",
     "image": "Minimal",
     "release": "7",
-    "builder_types": [
+    "builder_ids": [
       "virtualbox-iso"
     ],
     "provisioners": {
@@ -83,7 +83,7 @@
     "arch": "amd64",
     "image": "netinst",
     "release": "8",
-    "builder_types": [
+    "builder_ids": [
       "virtualbox-iso"
     ],
     "provisioners": {

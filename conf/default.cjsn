@@ -8,14 +8,14 @@
 	"source_dir": "packer_sources",
 	"include_component_string": "true",
 	"min_packer_version": "0.7.0",
-	"builder_types": [
+	"builder_ids": [
 		"virtualbox-iso",
 		"vmware-iso"
 	],
-	"post_processor_types": [
+	"post_processor_ids": [
 		"vagrant"
 	],
-	"provisioner_types": [
+	"provisioner_ids": [
 		"shell"
 	],
 	"builders": {
