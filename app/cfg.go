@@ -53,7 +53,7 @@ type build struct {
 	Provisioners map[string]provisioner `toml:"provisioners"`
 }
 
-// build.DeepCopy makes a deep copy of the build and returns it.
+// copy makes a deep copy of the build and returns it.
 func (b *build) copy() build {
 	newB := build{
 		Builders:       map[string]builder{},
@@ -82,6 +82,29 @@ func (b *build) copy() build {
 		newB.Provisioners[k] = v.DeepCopy()
 	}
 	return newB
+}
+
+// setTypes goes through each component map and check's if the templateSection
+// Type is set.  If it isn't, the ID (key) is used to set it.
+func (b *build) setTypes() {
+	for k, v := range b.Builders {
+		if len(v.Type) == 0 {
+			v.Type = k
+			b.Builders[k] = v
+		}
+	}
+	for k, v := range b.PostProcessors {
+		if len(v.Type) == 0 {
+			v.Type = k
+			b.PostProcessors[k] = v
+		}
+	}
+	for k, v := range b.Provisioners {
+		if len(v.Type) == 0 {
+			v.Type = k
+			b.Provisioners[k] = v
+		}
+	}
 }
 
 // templateSection is used as an embedded type.
@@ -284,6 +307,7 @@ func (d *defaults) Load(p string) error {
 	default:
 		return ErrUnsupportedFormat
 	}
+	d.build.setTypes()
 	d.loaded = true
 	return nil
 }
@@ -477,27 +501,8 @@ func (b *builds) Load(name string) error {
 	default:
 		return ErrUnsupportedFormat
 	}
-	// populate Type where applicable
-	for name, bld := range b.Build {
-		for k, tmp := range bld.build.Builders {
-			if len(tmp.Type) == 0 {
-				tmp.Type = k
-				bld.build.Builders[k] = tmp
-			}
-		}
-		for k, tmp := range bld.build.PostProcessors {
-			if len(tmp.Type) == 0 {
-				tmp.Type = k
-				bld.build.PostProcessors[k] = tmp
-			}
-		}
-		for k, tmp := range bld.build.Provisioners {
-			if len(tmp.Type) == 0 {
-				tmp.Type = k
-				bld.build.Provisioners[k] = tmp
-			}
-		}
-		b.Build[name] = bld
+	for _, v := range b.Build {
+		v.build.setTypes()
 	}
 	b.loaded = true
 	return nil

@@ -56,7 +56,7 @@ func buildPackerTemplateFromDistro() (string, error) {
 	rTpl.BuildName = fmt.Sprintf("%s-%s-%s-%s", rTpl.Distro, rTpl.Release, rTpl.Arch, rTpl.Image)
 	pTpl := packerTemplate{}
 	// Now that the raw template has been made, create a Packer template out of it
-	pTpl, err = rTpl.createPackerTemplate()
+	err = rTpl.createPackerTemplate()
 	if err != nil {
 		jww.ERROR.Println(err)
 		return "", err
@@ -157,16 +157,16 @@ func buildPackerTemplateFromNamedBuild(name string, doneCh chan error) {
 		rTpl.ExampleDir = contour.GetString(ExampleDir)
 		rTpl.setExampleDirs()
 	}
-	pTpl, err := rTpl.createPackerTemplate()
+	err = rTpl.createPackerTemplate()
 	if err != nil {
 		doneCh <- err
 		return
 	}
-	err = pTpl.create(rTpl.IODirInf, rTpl.BuildInf, rTpl.dirs, rTpl.files)
-	if err != nil {
-		doneCh <- err
-		return
-	}
+	//err = pTpl.create(rTpl.IODirInf, rTpl.BuildInf, rTpl.dirs, rTpl.files)
+	//if err != nil {
+	//	doneCh <- err
+	//	return
+	//}
 	doneCh <- nil
 	return
 }
