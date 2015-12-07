@@ -119,70 +119,74 @@ func (r *rawTemplate) updatePostProcessors(newP map[string]postProcessor) error 
 }
 
 // r.createPostProcessors creates the PostProcessors for a build.
-func (r *rawTemplate) createPostProcessors() (p []interface{}, err error) {
+func (r *rawTemplate) createPostProcessors() (pp []interface{}, err error) {
 	if r.PostProcessorIDs == nil || len(r.PostProcessorIDs) <= 0 {
 		return nil, nil
 	}
+	var tmpS map[string]interface{}
 	var ndx int
-	p = make([]interface{}, len(r.PostProcessorIDs))
+	pp = make([]interface{}, len(r.PostProcessorIDs))
 	// Generate the postProcessor for each postProcessor type.
-	for _, pType := range r.PostProcessorIDs {
-		tmpS := make(map[string]interface{})
-		typ := PostProcessorFromString(pType)
+	for _, ID := range r.PostProcessorIDs {
+		tmpPP, ok := r.PostProcessors[ID]
+		if !ok {
+			return nil, fmt.Errorf("post-processor configuration for %s not found", ID)
+		}
+		typ := PostProcessorFromString(tmpPP.Type)
 		switch typ {
 		case Atlas:
-			tmpS, err = r.createAtlas()
+			tmpS, err = r.createAtlas(ID)
 			if err != nil {
 				return nil, postProcessorErr(Atlas, err)
 			}
 		case Compress:
-			tmpS, err = r.createCompress()
+			tmpS, err = r.createCompress(ID)
 			if err != nil {
 				return nil, postProcessorErr(Compress, err)
 			}
 		case DockerImport:
-			tmpS, err = r.createDockerImport()
+			tmpS, err = r.createDockerImport(ID)
 			if err != nil {
 				return nil, postProcessorErr(DockerImport, err)
 			}
 		case DockerPush:
-			tmpS, err = r.createDockerPush()
+			tmpS, err = r.createDockerPush(ID)
 			if err != nil {
 				return nil, postProcessorErr(DockerPush, err)
 			}
 		case DockerSave:
-			tmpS, err = r.createDockerSave()
+			tmpS, err = r.createDockerSave(ID)
 			if err != nil {
 				return nil, postProcessorErr(DockerSave, err)
 			}
 		case DockerTag:
-			tmpS, err = r.createDockerTag()
+			tmpS, err = r.createDockerTag(ID)
 			if err != nil {
 				return nil, postProcessorErr(DockerTag, err)
 			}
 		case Vagrant:
-			tmpS, err = r.createVagrant()
+			tmpS, err = r.createVagrant(ID)
 			if err != nil {
 				return nil, postProcessorErr(Vagrant, err)
 			}
 		case VagrantCloud:
 			// Create the settings
-			tmpS, err = r.createVagrantCloud()
+			tmpS, err = r.createVagrantCloud(ID)
 			if err != nil {
 				return nil, postProcessorErr(VagrantCloud, err)
 			}
 		case VSphere:
-			tmpS, err = r.createVSphere()
+			tmpS, err = r.createVSphere(ID)
 			if err != nil {
 				return nil, postProcessorErr(VSphere, err)
 			}
 		default:
-			return nil, postProcessorErr(UnsupportedPostProcessor, fmt.Errorf("%q is not supported", pType))
+			return nil, postProcessorErr(UnsupportedPostProcessor, fmt.Errorf("%q is not supported", tmpPP.Type))
 		}
-		p[ndx] = tmpS
+		pp[ndx] = tmpS
 		ndx++
 	}
-	return p, nil
+	return pp, nil
 }
 
 // createAtlas() creates a map of settings for Packer's atlas post-processor.
@@ -197,8 +201,8 @@ func (r *rawTemplate) createPostProcessors() (p []interface{}, err error) {
 // Optional configuration options:
 //   atlas_url     string
 //   metadata      object of key/value strings
-func (r *rawTemplate) createAtlas() (settings map[string]interface{}, err error) {
-	_, ok := r.PostProcessors[Atlas.String()]
+func (r *rawTemplate) createAtlas(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.PostProcessors[ID]
 	if !ok {
 		return nil, configNotFoundErr()
 	}
@@ -209,7 +213,7 @@ func (r *rawTemplate) createAtlas() (settings map[string]interface{}, err error)
 	// that for Packer.
 	var k, v string
 	var hasArtifact, hasArtifactType, hasToken bool
-	for _, s := range r.PostProcessors[Atlas.String()].Settings {
+	for _, s := range r.PostProcessors[ID].Settings {
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -235,7 +239,7 @@ func (r *rawTemplate) createAtlas() (settings map[string]interface{}, err error)
 	if !hasToken {
 		return nil, requiredSettingErr("token")
 	}
-	for name, val := range r.PostProcessors[Atlas.String()].Arrays {
+	for name, val := range r.PostProcessors[ID].Arrays {
 		if name == "metadata" {
 			settings[name] = val
 		}
@@ -252,8 +256,8 @@ func (r *rawTemplate) createAtlas() (settings map[string]interface{}, err error)
 //   output  string
 // Optional configuration options:
 //   none
-func (r *rawTemplate) createCompress() (settings map[string]interface{}, err error) {
-	_, ok := r.PostProcessors[Compress.String()]
+func (r *rawTemplate) createCompress(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.PostProcessors[ID]
 	if !ok {
 		return nil, configNotFoundErr()
 	}
@@ -264,7 +268,7 @@ func (r *rawTemplate) createCompress() (settings map[string]interface{}, err err
 	// that for Packer.
 	var k, v string
 	var hasOutput bool
-	for _, s := range r.PostProcessors[Compress.String()].Settings {
+	for _, s := range r.PostProcessors[ID].Settings {
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -288,8 +292,8 @@ func (r *rawTemplate) createCompress() (settings map[string]interface{}, err err
 //   repository  string
 // Optional configuration options:
 //   tag         string
-func (r *rawTemplate) createDockerImport() (settings map[string]interface{}, err error) {
-	_, ok := r.PostProcessors[DockerImport.String()]
+func (r *rawTemplate) createDockerImport(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.PostProcessors[ID]
 	if !ok {
 		return nil, configNotFoundErr()
 	}
@@ -300,7 +304,7 @@ func (r *rawTemplate) createDockerImport() (settings map[string]interface{}, err
 	// that for Packer.
 	var k, v string
 	var hasRepository bool
-	for _, s := range r.PostProcessors[DockerImport.String()].Settings {
+	for _, s := range r.PostProcessors[ID].Settings {
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -330,8 +334,8 @@ func (r *rawTemplate) createDockerImport() (settings map[string]interface{}, err
 //   login_username  string
 //   login_password  string
 //   login_server    string
-func (r *rawTemplate) createDockerPush() (settings map[string]interface{}, err error) {
-	_, ok := r.PostProcessors[DockerPush.String()]
+func (r *rawTemplate) createDockerPush(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.PostProcessors[ID]
 	if !ok {
 		return nil, configNotFoundErr()
 	}
@@ -341,7 +345,7 @@ func (r *rawTemplate) createDockerPush() (settings map[string]interface{}, err e
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
 	var k, v string
-	for _, s := range r.PostProcessors[DockerPush.String()].Settings {
+	for _, s := range r.PostProcessors[ID].Settings {
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -363,8 +367,8 @@ func (r *rawTemplate) createDockerPush() (settings map[string]interface{}, err e
 //   path  // string
 // Optional configuration options:
 //   none
-func (r *rawTemplate) createDockerSave() (settings map[string]interface{}, err error) {
-	_, ok := r.PostProcessors[DockerSave.String()]
+func (r *rawTemplate) createDockerSave(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.PostProcessors[ID]
 	if !ok {
 		return nil, configNotFoundErr()
 	}
@@ -375,7 +379,7 @@ func (r *rawTemplate) createDockerSave() (settings map[string]interface{}, err e
 	// that for Packer.
 	var k, v string
 	var hasPath bool
-	for _, s := range r.PostProcessors[DockerSave.String()].Settings {
+	for _, s := range r.PostProcessors[ID].Settings {
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -399,8 +403,8 @@ func (r *rawTemplate) createDockerSave() (settings map[string]interface{}, err e
 //   repository  string
 // Optional configuration options:
 //   tag         string
-func (r *rawTemplate) createDockerTag() (settings map[string]interface{}, err error) {
-	_, ok := r.PostProcessors[DockerTag.String()]
+func (r *rawTemplate) createDockerTag(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.PostProcessors[ID]
 	if !ok {
 		return nil, configNotFoundErr()
 	}
@@ -411,7 +415,7 @@ func (r *rawTemplate) createDockerTag() (settings map[string]interface{}, err er
 	// that for Packer.
 	var k, v string
 	var hasRepository bool
-	for _, s := range r.PostProcessors[DockerTag.String()].Settings {
+	for _, s := range r.PostProcessors[ID].Settings {
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -441,8 +445,8 @@ func (r *rawTemplate) createDockerTag() (settings map[string]interface{}, err er
 //   vagrantfile_template  string
 // Provider-Specific Overrides:
 //   override	              array of strings
-func (r *rawTemplate) createVagrant() (settings map[string]interface{}, err error) {
-	_, ok := r.PostProcessors[Vagrant.String()]
+func (r *rawTemplate) createVagrant(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.PostProcessors[ID]
 	if !ok {
 		return nil, configNotFoundErr()
 	}
@@ -451,7 +455,7 @@ func (r *rawTemplate) createVagrant() (settings map[string]interface{}, err erro
 	// For each value, extract its key value pair and then process. Only process the supported keys.
 	// Key validation isn't done here, leaving that for Packer.
 	var k, v string
-	for _, s := range r.PostProcessors[Vagrant.String()].Settings {
+	for _, s := range r.PostProcessors[ID].Settings {
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -469,7 +473,7 @@ func (r *rawTemplate) createVagrant() (settings map[string]interface{}, err erro
 		}
 	}
 	// Process the Arrays.
-	for name, val := range r.PostProcessors[Vagrant.String()].Arrays {
+	for name, val := range r.PostProcessors[ID].Arrays {
 		switch name {
 		case "except", "include", "only", "override":
 			array := deepcopy.Iface(val)
@@ -495,15 +499,15 @@ func (r *rawTemplate) createVagrant() (settings map[string]interface{}, err erro
 //   vagrant_cloud_url    string
 //   version_description  string
 //   box_download_url     string
-func (r *rawTemplate) createVagrantCloud() (settings map[string]interface{}, err error) {
-	_, ok := r.PostProcessors[VagrantCloud.String()]
+func (r *rawTemplate) createVagrantCloud(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.PostProcessors[ID]
 	if !ok {
 		return nil, configNotFoundErr()
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = VagrantCloud.String()
 	var hasAccessToken, hasBoxTag, hasVersion bool
-	for _, s := range r.PostProcessors[VagrantCloud.String()].Settings {
+	for _, s := range r.PostProcessors[ID].Settings {
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -554,8 +558,8 @@ func (r *rawTemplate) createVagrantCloud() (settings map[string]interface{}, err
 //
 // Notes:
 //   * datastore is not required if resource_pool is specified
-func (r *rawTemplate) createVSphere() (settings map[string]interface{}, err error) {
-	_, ok := r.PostProcessors[VSphere.String()]
+func (r *rawTemplate) createVSphere(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.PostProcessors[ID]
 	if !ok {
 		return nil, configNotFoundErr()
 	}
@@ -566,7 +570,7 @@ func (r *rawTemplate) createVSphere() (settings map[string]interface{}, err erro
 	// that for Packer.
 	var k, v string
 	var hasCluster, hasDatacenter, hasDatastore, hasHost, hasPassword, hasResourcePool, hasUsername, hasVMName bool
-	for _, s := range r.PostProcessors[VSphere.String()].Settings {
+	for _, s := range r.PostProcessors[ID].Settings {
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {

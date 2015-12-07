@@ -112,41 +112,45 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 	//	r.updateCommonBuilder
 	//
 	// Generate the builders for each builder type.
-	for _, bType := range r.BuilderIDs {
-		typ := BuilderFromString(bType)
+	for _, ID := range r.BuilderIDs {
+		bldr, ok := r.Builders[ID]
+		if !ok {
+			return nil, fmt.Errorf("builder configuration for %s not found", ID)
+		}
+		typ := BuilderFromString(bldr.Type)
 		switch typ {
 		case AmazonChroot:
-			tmpS, err = r.createAmazonChroot()
+			tmpS, err = r.createAmazonChroot(ID)
 			if err != nil {
 				return nil, builderErr(AmazonChroot, err)
 			}
 		case AmazonEBS:
-			tmpS, err = r.createAmazonEBS()
+			tmpS, err = r.createAmazonEBS(ID)
 			if err != nil {
 				return nil, builderErr(AmazonEBS, err)
 			}
 		case AmazonInstance:
-			tmpS, err = r.createAmazonInstance()
+			tmpS, err = r.createAmazonInstance(ID)
 			if err != nil {
 				return nil, builderErr(AmazonInstance, err)
 			}
 		case DigitalOcean:
-			tmpS, err = r.createDigitalOcean()
+			tmpS, err = r.createDigitalOcean(ID)
 			if err != nil {
 				return nil, builderErr(DigitalOcean, err)
 			}
 		case Docker:
-			tmpS, err = r.createDocker()
+			tmpS, err = r.createDocker(ID)
 			if err != nil {
 				return nil, builderErr(Docker, err)
 			}
 		case GoogleCompute:
-			tmpS, err = r.createGoogleCompute()
+			tmpS, err = r.createGoogleCompute(ID)
 			if err != nil {
 				return nil, builderErr(GoogleCompute, err)
 			}
 		case Null:
-			tmpS, err = r.createNull()
+			tmpS, err = r.createNull(ID)
 			if err != nil {
 				return nil, builderErr(Null, err)
 			}
@@ -154,27 +158,27 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 		//	case ParallelsISO, ParallelsPVM:
 		//	case QEMU:
 		case VirtualBoxISO:
-			tmpS, err = r.createVirtualBoxISO()
+			tmpS, err = r.createVirtualBoxISO(ID)
 			if err != nil {
 				return nil, builderErr(VirtualBoxISO, err)
 			}
 		case VirtualBoxOVF:
-			tmpS, err = r.createVirtualBoxOVF()
+			tmpS, err = r.createVirtualBoxOVF(ID)
 			if err != nil {
 				return nil, builderErr(VirtualBoxOVF, err)
 			}
 		case VMWareISO:
-			tmpS, err = r.createVMWareISO()
+			tmpS, err = r.createVMWareISO(ID)
 			if err != nil {
 				return nil, builderErr(VMWareISO, err)
 			}
 		case VMWareVMX:
-			tmpS, err = r.createVMWareVMX()
+			tmpS, err = r.createVMWareVMX(ID)
 			if err != nil {
 				return nil, builderErr(VMWareVMX, err)
 			}
 		default:
-			return nil, builderErr(UnsupportedBuilder, fmt.Errorf("%q is not supported", bType))
+			return nil, builderErr(UnsupportedBuilder, fmt.Errorf("%q is not supported", typ.String()))
 		}
 		bldrs[ndx] = tmpS
 		ndx++
@@ -221,7 +225,7 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 //   enhanced_networking      bool
 //   mount_path               string
 //   tags                     object of key/value strings
-func (r *rawTemplate) createAmazonChroot() (settings map[string]interface{}, err error) {
+func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[AmazonChroot.String()]
 	if !ok {
 		return nil, configNotFoundErr()
@@ -233,13 +237,13 @@ func (r *rawTemplate) createAmazonChroot() (settings map[string]interface{}, err
 	var workSlice []string
 	_, ok = r.Builders[Common.String()]
 	if ok {
-		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[AmazonChroot.String()].Settings)
+		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
 			return nil, mergeCommonSettingsErr(err)
 		}
 
 	} else {
-		workSlice = r.Builders[AmazonChroot.String()].Settings
+		workSlice = r.Builders[ID].Settings
 	}
 	var k, v string
 	var hasAccessKey, hasAmiName, hasSecretKey, hasSourceAmi bool
@@ -282,7 +286,7 @@ func (r *rawTemplate) createAmazonChroot() (settings map[string]interface{}, err
 		return nil, requiredSettingErr("source_ami")
 	}
 	// Process the Arrays.
-	for name, val := range r.Builders[AmazonChroot.String()].Arrays {
+	for name, val := range r.Builders[ID].Arrays {
 		// if it's not a supported array group, log a warning and move on
 		if name == "ami_groups" || name == "ami_product_codes" || name == "ami_regions" || name == "ami_users" || name == "chroot_mounts" || name == "copy_files" {
 			array := deepcopy.Iface(val)
@@ -339,8 +343,8 @@ func (r *rawTemplate) createAmazonChroot() (settings map[string]interface{}, err
 //   user_data                     string
 //   user_data_file                string
 //   vpc_id                        string
-func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, err error) {
-	_, ok := r.Builders[AmazonEBS.String()]
+func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.Builders[ID]
 	if !ok {
 		return nil, configNotFoundErr()
 	}
@@ -351,12 +355,12 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, err er
 	var workSlice []string
 	_, ok = r.Builders[Common.String()]
 	if ok {
-		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[AmazonEBS.String()].Settings)
+		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
 			return nil, mergeCommonSettingsErr(err)
 		}
 	} else {
-		workSlice = r.Builders[AmazonEBS.String()].Settings
+		workSlice = r.Builders[ID].Settings
 	}
 	var k, v string
 	var hasAccessKey, hasAmiName, hasInstanceType, hasRegion, hasSecretKey, hasSourceAmi, hasSSHUsername bool
@@ -441,7 +445,7 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, err er
 		return nil, requiredSettingErr("ssh_username")
 	}
 	// Process the Arrays.
-	for name, val := range r.Builders[AmazonEBS.String()].Arrays {
+	for name, val := range r.Builders[ID].Arrays {
 		// if it's not a supported array group, log a warning and move on
 		if name == "ami_block_device_mappings" || name == "launch_block_device_mappings" {
 			settings[name] = val
@@ -511,8 +515,8 @@ func (r *rawTemplate) createAmazonEBS() (settings map[string]interface{}, err er
 //   user_data_file                string
 //   vpc_id                        string
 //   x509_upload_path              string
-func (r *rawTemplate) createAmazonInstance() (settings map[string]interface{}, err error) {
-	_, ok := r.Builders[AmazonEBS.String()]
+func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.Builders[ID]
 	if !ok {
 		return nil, configNotFoundErr()
 	}
@@ -523,12 +527,12 @@ func (r *rawTemplate) createAmazonInstance() (settings map[string]interface{}, e
 	var workSlice []string
 	_, ok = r.Builders[Common.String()]
 	if ok {
-		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[AmazonInstance.String()].Settings)
+		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
 			return nil, mergeCommonSettingsErr(err)
 		}
 	} else {
-		workSlice = r.Builders[AmazonInstance.String()].Settings
+		workSlice = r.Builders[ID].Settings
 	}
 	var k, v string
 	var hasAccessKey, hasAccountId, hasAmiName, hasInstanceType, hasRegion, hasS3Bucket bool
@@ -648,7 +652,7 @@ func (r *rawTemplate) createAmazonInstance() (settings map[string]interface{}, e
 		return nil, requiredSettingErr("x509_key_path")
 	}
 	// Process the Arrays.
-	for name, val := range r.Builders[AmazonEBS.String()].Arrays {
+	for name, val := range r.Builders[ID].Arrays {
 		// if it's not a supported array group, log a warning and move on
 		if name == "ami_block_device_mappings" || name == "launch_block_device_mappings" {
 			settings[name] = val
@@ -697,8 +701,8 @@ func (r *rawTemplate) createAmazonInstance() (settings map[string]interface{}, e
 //   ssh_timeout         string
 //   ssh_username        string
 //   state_timeout       string
-func (r *rawTemplate) createDigitalOcean() (settings map[string]interface{}, err error) {
-	_, ok := r.Builders[DigitalOcean.String()]
+func (r *rawTemplate) createDigitalOcean(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.Builders[ID]
 	if !ok {
 		return nil, configNotFoundErr()
 	}
@@ -709,12 +713,12 @@ func (r *rawTemplate) createDigitalOcean() (settings map[string]interface{}, err
 	_, ok = r.Builders[Common.String()]
 	var workSlice []string
 	if ok {
-		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[DigitalOcean.String()].Settings)
+		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
 			return nil, mergeCommonSettingsErr(err)
 		}
 	} else {
-		workSlice = r.Builders[DigitalOcean.String()].Settings
+		workSlice = r.Builders[ID].Settings
 	}
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
@@ -775,8 +779,8 @@ func (r *rawTemplate) createDigitalOcean() (settings map[string]interface{}, err
 //   pull            boolean
 //   run_command     array of strings
 //   volumes         map of strings to strings
-func (r *rawTemplate) createDocker() (settings map[string]interface{}, err error) {
-	_, ok := r.Builders[Docker.String()]
+func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.Builders[ID]
 	if !ok {
 		return nil, configNotFoundErr()
 	}
@@ -787,12 +791,12 @@ func (r *rawTemplate) createDocker() (settings map[string]interface{}, err error
 	var workSlice []string
 	_, ok = r.Builders[Common.String()]
 	if ok {
-		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[Docker.String()].Settings)
+		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
 			return nil, mergeCommonSettingsErr(err)
 		}
 	} else {
-		workSlice = r.Builders[Docker.String()].Settings
+		workSlice = r.Builders[ID].Settings
 	}
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
@@ -833,7 +837,7 @@ func (r *rawTemplate) createDocker() (settings map[string]interface{}, err error
 		return nil, err
 	}
 	// Process the Arrays.
-	for name, val := range r.Builders[Docker.String()].Arrays {
+	for name, val := range r.Builders[ID].Arrays {
 		if name == "run_command" {
 			array := deepcopy.InterfaceToSliceOfStrings(val)
 			if array != nil {
@@ -887,8 +891,8 @@ func (r *rawTemplate) createDocker() (settings map[string]interface{}, err error
 //   ssh_username       string
 //   state_timeout      string
 //   tags               array of strings
-func (r *rawTemplate) createGoogleCompute() (settings map[string]interface{}, err error) {
-	_, ok := r.Builders[GoogleCompute.String()]
+func (r *rawTemplate) createGoogleCompute(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.Builders[ID]
 	if !ok {
 		return nil, configNotFoundErr()
 	}
@@ -899,12 +903,12 @@ func (r *rawTemplate) createGoogleCompute() (settings map[string]interface{}, er
 	var workSlice []string
 	_, ok = r.Builders[Common.String()]
 	if ok {
-		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[GoogleCompute.String()].Settings)
+		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
 			return nil, mergeCommonSettingsErr(err)
 		}
 	} else {
-		workSlice = r.Builders[GoogleCompute.String()].Settings
+		workSlice = r.Builders[ID].Settings
 	}
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
@@ -956,7 +960,7 @@ func (r *rawTemplate) createGoogleCompute() (settings map[string]interface{}, er
 		return nil, requiredSettingErr("zone")
 	}
 	// Process the Arrays.
-	for name, val := range r.Builders[GoogleCompute.String()].Arrays {
+	for name, val := range r.Builders[ID].Arrays {
 		if name == "metadata" {
 			settings[name] = val
 			continue
@@ -984,8 +988,8 @@ func (r *rawTemplate) createGoogleCompute() (settings map[string]interface{}, er
 //   ssh_username string
 // Optional configuration options:
 //   port            integer
-func (r *rawTemplate) createNull() (settings map[string]interface{}, err error) {
-	_, ok := r.Builders[Null.String()]
+func (r *rawTemplate) createNull(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.Builders[ID]
 	if !ok {
 		return nil, configNotFoundErr()
 	}
@@ -996,7 +1000,7 @@ func (r *rawTemplate) createNull() (settings map[string]interface{}, err error) 
 	var workSlice []string
 	_, ok = r.Builders[Common.String()]
 	if ok {
-		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[Null.String()].Settings)
+		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
 			return nil, mergeCommonSettingsErr(err)
 		}
@@ -1066,8 +1070,8 @@ func (r *rawTemplate) createNull() (settings map[string]interface{}, err error) 
 //   vboxmanage_post          array of array of strings
 //   virtualbox_version_file  string
 //   vm_name                  string
-func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, err error) {
-	_, ok := r.Builders[VirtualBoxISO.String()]
+func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.Builders[ID]
 	if !ok {
 		return nil, configNotFoundErr()
 	}
@@ -1078,12 +1082,12 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, er
 	var workSlice []string
 	_, ok = r.Builders[Common.String()]
 	if ok {
-		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[VirtualBoxISO.String()].Settings)
+		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
 			return nil, mergeCommonSettingsErr(err)
 		}
 	} else {
-		workSlice = r.Builders[VirtualBoxISO.String()].Settings
+		workSlice = r.Builders[ID].Settings
 	}
 	var k, v string
 	var bootCmdProcessed, hasSSHUsername bool
@@ -1167,7 +1171,7 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, er
 	// check to see if it has been set, and if not, if it's in this array prior
 	// to ranging through the rest of the elements. The range ignores iso_url
 	if tmpISOUrl != "" {
-		isoURL, ok := r.Builders[VirtualBoxISO.String()].Arrays["iso_url"].(string)
+		isoURL, ok := r.Builders[ID].Arrays["iso_url"].(string)
 		if !ok {
 			goto noISOURL
 		}
@@ -1188,7 +1192,7 @@ func (r *rawTemplate) createVirtualBoxISO() (settings map[string]interface{}, er
 
 noISOURL:
 
-	for name, val := range r.Builders[VirtualBoxISO.String()].Arrays {
+	for name, val := range r.Builders[ID].Arrays {
 		switch name {
 		case "boot_command":
 			if bootCmdProcessed {
@@ -1295,8 +1299,8 @@ noISOURL:
 //   vboxmanage_post          array of strings
 //   virtualbox_version_file  string
 //   vm_name                  string
-func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, err error) {
-	_, ok := r.Builders[VirtualBoxOVF.String()]
+func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.Builders[ID]
 	if !ok {
 		return nil, configNotFoundErr()
 	}
@@ -1307,12 +1311,12 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, er
 	var workSlice []string
 	_, ok = r.Builders[Common.String()]
 	if ok {
-		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[VirtualBoxOVF.String()].Settings)
+		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
 			return nil, mergeCommonSettingsErr(err)
 		}
 	} else {
-		workSlice = r.Builders[VirtualBoxOVF.String()].Settings
+		workSlice = r.Builders[ID].Settings
 	}
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
@@ -1406,7 +1410,7 @@ func (r *rawTemplate) createVirtualBoxOVF() (settings map[string]interface{}, er
 
 	// Generate Packer Variables
 	// Generate builder specific section
-	for name, val := range r.Builders[VirtualBoxOVF.String()].Arrays {
+	for name, val := range r.Builders[ID].Arrays {
 		switch name {
 		case "boot_command":
 			if bootCmdProcessed {
@@ -1494,8 +1498,8 @@ func (r *rawTemplate) createVBoxManage(v interface{}) [][]string {
 //   vmx_template_path       string
 //   vnc_port_min            integer
 //   vnc_port_max            integer
-func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, err error) {
-	_, ok := r.Builders[VMWareISO.String()]
+func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.Builders[ID]
 	if !ok {
 		return nil, configNotFoundErr()
 	}
@@ -1506,12 +1510,12 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, err er
 	var workSlice []string
 	_, ok = r.Builders[Common.String()]
 	if ok {
-		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[VMWareISO.String()].Settings)
+		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
 			return nil, mergeCommonSettingsErr(err)
 		}
 	} else {
-		workSlice = r.Builders[VMWareISO.String()].Settings
+		workSlice = r.Builders[ID].Settings
 	}
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
@@ -1597,7 +1601,7 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, err er
 		return nil, err
 	}
 	// Process arrays, iso_urls is only valid if iso_url is not set
-	for name, val := range r.Builders[VMWareISO.String()].Arrays {
+	for name, val := range r.Builders[ID].Arrays {
 		switch name {
 		case "boot_command":
 			if bootCmdProcessed {
@@ -1696,8 +1700,8 @@ func (r *rawTemplate) createVMWareISO() (settings map[string]interface{}, err er
 //   vmx_data_post            // object of key/value strings
 //   vnc_port_min             // integer
 //   vnc_port_max             // integer
-func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, err error) {
-	_, ok := r.Builders[VMWareVMX.String()]
+func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.Builders[ID]
 	if !ok {
 		return nil, configNotFoundErr()
 	}
@@ -1708,12 +1712,12 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, err er
 	var workSlice []string
 	_, ok = r.Builders[Common.String()]
 	if ok {
-		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[VMWareVMX.String()].Settings)
+		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
 			return nil, mergeCommonSettingsErr(err)
 		}
 	} else {
-		workSlice = r.Builders[VMWareVMX.String()].Settings
+		workSlice = r.Builders[ID].Settings
 	}
 	var hasSourcePath, hasSSHUsername, bootCmdProcessed bool
 	// Go through each element in the slice, only take the ones that matter
@@ -1801,7 +1805,7 @@ func (r *rawTemplate) createVMWareVMX() (settings map[string]interface{}, err er
 		return nil, err
 	}
 	// Process arrays, iso_urls is only valid if iso_url is not set
-	for name, val := range r.Builders[VMWareVMX.String()].Arrays {
+	for name, val := range r.Builders[ID].Arrays {
 		switch name {
 		case "boot_command":
 			if bootCmdProcessed {

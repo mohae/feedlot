@@ -282,6 +282,7 @@ var testAllBuilders = rawTemplate{
 		Builders: map[string]builder{
 			"common": {
 				templateSection{
+					Type: "common",
 					Settings: []string{
 						"boot_wait = 5s",
 						"disk_size = 20000",
@@ -298,6 +299,7 @@ var testAllBuilders = rawTemplate{
 			},
 			"amazon-chroot": {
 				templateSection{
+					Type: "amazon-chroot",
 					Settings: []string{
 						"access_key=AWS_ACCESS_KEY",
 						"ami_description=AMI_DESCRIPTION",
@@ -347,6 +349,7 @@ var testAllBuilders = rawTemplate{
 			},
 			"amazon-ebs": {
 				templateSection{
+					Type: "amazon-ebs",
 					Settings: []string{
 						"access_key=AWS_ACCESS_KEY",
 						"ami_description=AMI_DESCRIPTION",
@@ -418,6 +421,7 @@ var testAllBuilders = rawTemplate{
 			},
 			"amazon-instance": {
 				templateSection{
+					Type: "amazon-instance",
 					Settings: []string{
 						"access_key=AWS_ACCESS_KEY",
 						"account_id=YOUR_ACCOUNT_ID",
@@ -499,6 +503,7 @@ var testAllBuilders = rawTemplate{
 			},
 			"digitalocean": {
 				templateSection{
+					Type: "digitalocean",
 					Settings: []string{
 						"api_token=DIGITALOCEAN_API_TOKEN",
 						"api_url=https://api.digitalocean.com",
@@ -514,6 +519,7 @@ var testAllBuilders = rawTemplate{
 			},
 			"docker": {
 				templateSection{
+					Type: "docker",
 					Settings: []string{
 						"commit=true",
 						"export_path=export/path",
@@ -542,6 +548,7 @@ var testAllBuilders = rawTemplate{
 			},
 			"googlecompute": {
 				templateSection{
+					Type: "googlecompute",
 					Settings: []string{
 						"account_file=account.json",
 						"image_name=packer-{{timestamp}}",
@@ -567,6 +574,7 @@ var testAllBuilders = rawTemplate{
 			},
 			"null": {
 				templateSection{
+					Type: "null",
 					Settings: []string{
 						"host=nullhost.com",
 						"port=22",
@@ -577,6 +585,7 @@ var testAllBuilders = rawTemplate{
 			},
 			"virtualbox-iso": {
 				templateSection{
+					Type: "virtualbox-iso",
 					Settings: []string{
 						"format = ovf",
 						"guest_additions_mode=upload",
@@ -623,6 +632,7 @@ var testAllBuilders = rawTemplate{
 			},
 			"virtualbox-ovf": {
 				templateSection{
+					Type: "virtualbox-ovf",
 					Settings: []string{
 						"format = ovf",
 						"guest_additions_mode=upload",
@@ -668,6 +678,7 @@ var testAllBuilders = rawTemplate{
 			},
 			"vmware-iso": {
 				templateSection{
+					Type: "vmware-iso",
 					Settings: []string{
 						"disk_type_id=1",
 						"fusion_app_path=/Applications/VMware Fusion.app",
@@ -719,6 +730,7 @@ var testAllBuilders = rawTemplate{
 			},
 			"vmware-vmx": {
 				templateSection{
+					Type: "vmware-vmx",
 					Settings: []string{
 						"fusion_app_path=/Applications/VMware Fusion.app",
 						"headless=true",
@@ -762,6 +774,7 @@ var testAllBuilders = rawTemplate{
 		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				templateSection{
+					Type: "vagrant",
 					Settings: []string{
 						"keep_input_artifact = false",
 						"output = out/someComposedBoxName.box",
@@ -775,6 +788,7 @@ var testAllBuilders = rawTemplate{
 		Provisioners: map[string]provisioner{
 			"salt": {
 				templateSection{
+					Type: "salt",
 					Settings: []string{
 						"local_state_tree = ~/saltstates/centos6/salt",
 						"skip_bootstrap = true",
@@ -813,6 +827,7 @@ var testDigtialOceanAPIV1 = rawTemplate{
 		Builders: map[string]builder{
 			"digitalocean": {
 				templateSection{
+					Type: "digitalocean",
 					Settings: []string{
 						"api_key=DIGITALOCEAN_API_KEY",
 						"client_id=DIGITALOCEAN_CLIENT_ID",
@@ -862,6 +877,7 @@ var testDigtialOceanNoAPI = rawTemplate{
 		Builders: map[string]builder{
 			"digitalocean": {
 				templateSection{
+					Type: "digitalocean",
 					Settings: []string{
 						"api_url=https://api.digitalocean.com",
 						"droplet_name=ocean-drop",
@@ -1123,96 +1139,84 @@ func TestCreateBuilders(t *testing.T) {
 
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
-		t.Error("Expected \"amazon-ebs builder error: configuration not found\", got nil")
+		t.Error("Expected \"builder configuration for amazon-ebs not found\", got nil")
 	} else {
-		if err.Error() != "amazon-ebs builder error: configuration not found" {
-			t.Errorf("Expected \"amazon-ebs builder error: configuration not found\", got %q", err)
+		if err.Error() != "builder configuration for amazon-ebs not found" {
+			t.Errorf("Expected \"builder configuration for amazon-ebs not found\", got %q", err)
 		}
 	}
 
 	testRawTemplateWOSection.build.BuilderIDs[0] = "digitalocean"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
-		t.Error("Expected \"digitalocean builder error: configuration not found\", got nil")
+		t.Error("Expected \"builder configuration for digitalocean not found\", got nil")
 	} else {
-		if err.Error() != "digitalocean builder error: configuration not found" {
-			t.Errorf("Expected digitalocean builder error: configuration not found\", got %q", err)
+		if err.Error() != "builder configuration for digitalocean not found" {
+			t.Errorf("Expected \"builder configuration for digitalocean not found\", got %q", err)
 		}
 	}
 
 	testRawTemplateWOSection.build.BuilderIDs[0] = "docker"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
-		t.Error("Expected \"docker builder error: configuration not found\", got nil")
+		t.Error("Expected \"builder configuration for docker not found\", got nil")
 	} else {
-		if err.Error() != "docker builder error: configuration not found" {
-			t.Errorf("Expected \"docker builder error: configuration not found\", got %q", err)
+		if err.Error() != "builder configuration for docker not found" {
+			t.Errorf("Expected \"builder configuration for docker not found\", got %q", err)
 		}
 	}
 
 	testRawTemplateWOSection.build.BuilderIDs[0] = "googlecompute"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
-		t.Error("Expected \"googlecompute builder error: configuration not found\", got nil")
+		t.Error("Expected \"builder configuration for googlecompute not found\", got nil")
 	} else {
-		if err.Error() != "googlecompute builder error: configuration not found" {
-			t.Errorf("Expected \"googlecompute builder error: configuration not found\", got %q", err)
+		if err.Error() != "builder configuration for googlecompute not found" {
+			t.Errorf("Expected \"builder configuration for googlecompute not found\", got %q", err)
 		}
 	}
 
 	testRawTemplateWOSection.build.BuilderIDs[0] = "virtualbox-iso"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
-		t.Error("Expected \"virtualbox-iso builder error: configuration not found\", got nil")
+		t.Error("Expected \"builder configuration for virtualbox-iso not found\", got nil")
 	} else {
-		if err.Error() != "virtualbox-iso builder error: configuration not found" {
-			t.Errorf("Expected \"virtualbox-iso builder error: configuration not found\", got %q", err)
+		if err.Error() != "builder configuration for virtualbox-iso not found" {
+			t.Errorf("Expected \"builder configuration for virtualbox-iso not found\", got %q", err)
 		}
 	}
 
 	testRawTemplateWOSection.build.BuilderIDs[0] = "virtualbox-ovf"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
-		t.Error("Expected \"virtualbox-ovf builder error: configuration not found\", got nil")
+		t.Error("Expected \"builder configuration for virtualbox-ovf not found\", got nil")
 	} else {
-		if err.Error() != "virtualbox-ovf builder error: configuration not found" {
-			t.Errorf("Expected \"virtualbox-ovf builder error: configuration not found\", got %q", err)
+		if err.Error() != "builder configuration for virtualbox-ovf not found" {
+			t.Errorf("Expected \"builder configuration for virtualbox-ovf not found\", got %q", err)
 		}
 	}
 
 	testRawTemplateWOSection.build.BuilderIDs[0] = "vmware-iso"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
-		t.Error("Expected \"vmware-iso builder error: configuration not found\", got nil")
+		t.Error("Expected \"builder configuration for vmware-iso not found\", got nil")
 	} else {
-		if err.Error() != "vmware-iso builder error: configuration not found" {
-			t.Errorf("Expected \"vmware-iso builder error: configuration not found\", got %q", err)
+		if err.Error() != "builder configuration for vmware-iso not found" {
+			t.Errorf("Expected \"builder configuration for vmware-iso not found\", got %q", err)
 		}
 	}
 
 	testRawTemplateWOSection.build.BuilderIDs[0] = "vmware-vmx"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
-		t.Error("Expected \"vmware-vmx builder error: configuration not found\", got nil")
+		t.Error("Expected \"builder configuration for vmware-vmx not found\", got nil")
 	} else {
-		if err.Error() != "vmware-vmx builder error: configuration not found" {
-			t.Errorf("Expected \"vmware-vmx builder error: configuration not found\", got %q", err)
+		if err.Error() != "builder configuration for vmware-vmx not found" {
+			t.Errorf("Expected \"builder configuration for vmware-vmx not found\", got %q", err)
 		}
 	}
 
-	r := rawTemplate{}
-	r = testDistroDefaultUbuntu
-	r.files = make(map[string]string)
-	r.BuilderIDs[0] = "unsupported"
-	_, err = r.createBuilders()
-	if err == nil {
-		t.Error("Expected an error, got nil")
-	} else {
-		if err.Error() != "unsupported builder error: \"unsupported\" is not supported" {
-			t.Errorf("Expected \"unsupported builder error: \"unsupported\" is not supported\"), got %q", err)
-		}
-	}
-
+	r := testDistroDefaultUbuntu
 	r.BuilderIDs = nil
 	_, err = r.createBuilders()
 	if err == nil {
@@ -1310,7 +1314,7 @@ func TestCreateAmazonChroot(t *testing.T) {
 		},
 		"type": "amazon-chroot",
 	}
-	bldr, err := testAllBuilders.createAmazonChroot()
+	bldr, err := testAllBuilders.createAmazonChroot("amazon-chroot")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -1388,7 +1392,7 @@ func TestCreateAmazonEBS(t *testing.T) {
 		"user_data_file":          "amazon-ebs/amazon.userdata",
 		"vpc_id":                  "VPC_ID",
 	}
-	bldr, err := testAllBuilders.createAmazonEBS()
+	bldr, err := testAllBuilders.createAmazonEBS("amazon-ebs")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -1479,7 +1483,7 @@ func TestCreateAmazonInstance(t *testing.T) {
 		"x509_upload_path": "/etc/x509",
 	}
 	contour.UpdateString(SourceDir, "../test_files/src")
-	bldr, err := testAllBuilders.createAmazonInstance()
+	bldr, err := testAllBuilders.createAmazonInstance("amazon-instance")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -1521,7 +1525,7 @@ func TestCreateDigitalOcean(t *testing.T) {
 		"state_timeout":      "6m",
 		"type":               "digitalocean",
 	}
-	bldr, err := testAllBuilders.createDigitalOcean()
+	bldr, err := testAllBuilders.createDigitalOcean("digitalocean")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -1529,7 +1533,7 @@ func TestCreateDigitalOcean(t *testing.T) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedV2), MarshalJSONToString.Get(bldr))
 		}
 	}
-	bldr, err = testDigtialOceanAPIV1.createDigitalOcean()
+	bldr, err = testDigtialOceanAPIV1.createDigitalOcean("digitalocean")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -1537,7 +1541,7 @@ func TestCreateDigitalOcean(t *testing.T) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedV1), MarshalJSONToString.Get(bldr))
 		}
 	}
-	_, err = testDigtialOceanNoAPI.createDigitalOcean()
+	_, err = testDigtialOceanNoAPI.createDigitalOcean("digitalocean")
 	if err == nil {
 		t.Errorf("Expected an error, got nil")
 	} else {
@@ -1610,7 +1614,7 @@ func TestCreateDocker(t *testing.T) {
 		},
 		"type": "docker",
 	}
-	bldr, err := testAllBuilders.createDocker()
+	bldr, err := testAllBuilders.createDocker("docker")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -1618,7 +1622,7 @@ func TestCreateDocker(t *testing.T) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(bldr))
 		}
 	}
-	bldr, err = testDockerRunComandFile.createDocker()
+	bldr, err = testDockerRunComandFile.createDocker("docker")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -1626,7 +1630,7 @@ func TestCreateDocker(t *testing.T) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedCommandFile), MarshalJSONToString.Get(bldr))
 		}
 	}
-	bldr, err = testDockerRunComand.createDocker()
+	bldr, err = testDockerRunComand.createDocker("docker")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -1662,7 +1666,7 @@ func TestCreateGoogleCompute(t *testing.T) {
 		"zone": "us-central1-a",
 	}
 
-	bldr, err := testAllBuilders.createGoogleCompute()
+	bldr, err := testAllBuilders.createGoogleCompute("googlecompute")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -1681,7 +1685,7 @@ func TestBuilderNull(t *testing.T) {
 		"ssh_username":         "vagrant",
 		"type":                 "null",
 	}
-	bldr, err := testAllBuilders.createNull()
+	bldr, err := testAllBuilders.createNull("null")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -1959,7 +1963,7 @@ func TestCreateVMWareVMX(t *testing.T) {
 		"vnc_port_min": 5900,
 	}
 
-	settings, err := testAllBuilders.createVMWareVMX()
+	settings, err := testAllBuilders.createVMWareVMX("vmware-vmx")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {

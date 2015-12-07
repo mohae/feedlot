@@ -646,7 +646,7 @@ func TestAnsibleProvisioner(t *testing.T) {
 		"staging_directory": "staging/directory",
 		"type":              "ansible-local",
 	}
-	settings, err := testRawTemplateProvisionersAll.createAnsible()
+	settings, err := testRawTemplateProvisionersAll.createAnsible("ansible-local")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -677,7 +677,7 @@ func TestChefClientProvisioner(t *testing.T) {
 		"validation_client_name": "some_value",
 		"validation_key_path":    "/home/user/chef/chef-key",
 	}
-	settings, err := testRawTemplateProvisionersAll.createChefClient()
+	settings, err := testRawTemplateProvisionersAll.createChefClient("chef-client")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -713,7 +713,7 @@ func TestChefSoloProvisioner(t *testing.T) {
 		"staging_directory": "/tmp/chef/",
 		"type":              "chef-solo",
 	}
-	settings, err := testRawTemplateProvisionersAll.createChefSolo()
+	settings, err := testRawTemplateProvisionersAll.createChefSolo("chef-solo")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -740,7 +740,7 @@ func TestPuppetMasterlessProvisioner(t *testing.T) {
 		"staging_directory": "/tmp/puppet-masterless",
 		"type":              "puppet-masterless",
 	}
-	settings, err := testRawTemplateProvisionersAll.createPuppetMasterless()
+	settings, err := testRawTemplateProvisionersAll.createPuppetMasterless("puppet-masterless")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -764,7 +764,7 @@ func TestPuppetServerProvisioner(t *testing.T) {
 		"staging_directory": "/tmp/puppet-server",
 		"type":              "puppet-server",
 	}
-	settings, err := testRawTemplateProvisionersAll.createPuppetServer()
+	settings, err := testRawTemplateProvisionersAll.createPuppetServer("puppet-server")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -784,7 +784,7 @@ func TestSaltProvisioner(t *testing.T) {
 		"temp_config_dir":    "/tmp",
 		"type":               "salt-masterless",
 	}
-	settings, err := testRawTemplateProvisionersAll.createSalt()
+	settings, err := testRawTemplateProvisionersAll.createSalt("salt-masterless")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -815,7 +815,7 @@ func TestShellProvisioner(t *testing.T) {
 		"start_retry_timeout": "5m",
 		"type":                "shell",
 	}
-	settings, err := testRawTemplateProvisionersAll.createShellScript()
+	settings, err := testRawTemplateProvisionersAll.createShellScript("shell")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -831,7 +831,7 @@ func TestFileUploadsProvisioner(t *testing.T) {
 		"source":      "file/app.tar.gz",
 		"type":        "file",
 	}
-	settings, err := testRawTemplateProvisionersAll.createFileUploads()
+	settings, err := testRawTemplateProvisionersAll.createFileUploads("file")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {

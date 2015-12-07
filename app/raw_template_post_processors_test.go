@@ -402,7 +402,7 @@ func TestAtlasPostProcessor(t *testing.T) {
 		"token": "{{user `atlas_token`}}",
 		"type":  "atlas",
 	}
-	pp, err := testPostProcessorsAllTemplate.createAtlas()
+	pp, err := testPostProcessorsAllTemplate.createAtlas("atlas")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -418,7 +418,7 @@ func TestCompressPostProcessor(t *testing.T) {
 		"type":   "compress",
 	}
 
-	pp, err := testPostProcessorsAllTemplate.createCompress()
+	pp, err := testPostProcessorsAllTemplate.createCompress("compress")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -438,7 +438,7 @@ func TestDockerPushPostProcessor(t *testing.T) {
 		"type":           "docker-push",
 	}
 
-	pp, err := testPostProcessorsAllTemplate.createDockerPush()
+	pp, err := testPostProcessorsAllTemplate.createDockerPush("docker-push")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -454,7 +454,7 @@ func TestDockerSavePostProcessor(t *testing.T) {
 		"type": "docker-save",
 	}
 
-	pp, err := testPostProcessorsAllTemplate.createDockerSave()
+	pp, err := testPostProcessorsAllTemplate.createDockerSave("docker-save")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -471,7 +471,7 @@ func TestDockerTagPostProcessor(t *testing.T) {
 		"type":       "docker-tag",
 	}
 
-	pp, err := testPostProcessorsAllTemplate.createDockerTag()
+	pp, err := testPostProcessorsAllTemplate.createDockerTag("docker-tag")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -497,7 +497,7 @@ func TestVagrantPostProcessor(t *testing.T) {
 		"vagrantfile_template": "template/path",
 	}
 
-	pp, err := testPostProcessorsAllTemplate.createVagrant()
+	pp, err := testPostProcessorsAllTemplate.createVagrant("vagrant")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -519,7 +519,7 @@ func TestVagrantCloudPostProcessor(t *testing.T) {
 		"version_description": "initial",
 	}
 
-	pp, err := testPostProcessorsAllTemplate.createVagrantCloud()
+	pp, err := testPostProcessorsAllTemplate.createVagrantCloud("vagrant-cloud")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -546,7 +546,7 @@ func TestVagrantVSphereProcessor(t *testing.T) {
 		"vm_network":    "vm-network",
 	}
 
-	pp, err := testPostProcessorsAllTemplate.createVSphere()
+	pp, err := testPostProcessorsAllTemplate.createVSphere("vsphere")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
