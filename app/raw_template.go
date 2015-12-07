@@ -95,7 +95,7 @@ func (r *rawTemplate) copy() *rawTemplate {
 // 		Generate JSON
 //		Write to output
 //		Copy resources to output
-func (r *rawTemplate) createPackerTemplate() error {
+func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 	var err error
 	// Resolve the Rancher variables to their final values.
 	r.mergeVariables()
@@ -107,24 +107,22 @@ func (r *rawTemplate) createPackerTemplate() error {
 	p.Builders, err = r.createBuilders()
 	if err != nil {
 		jww.ERROR.Println(err)
-		return err
+		return p, err
 	}
 	// Post-Processors
 	p.PostProcessors, err = r.createPostProcessors()
 	if err != nil {
 		jww.ERROR.Println(err)
-		return err
+		return p, err
 	}
 	// Provisioners
 	p.Provisioners, err = r.createProvisioners()
 	if err != nil {
 		jww.ERROR.Println(err)
-		return err
+		return p, err
 	}
-	
-	fmt.Printf("%#v\n", p.Provisioners)
-	// Return the generated Packer Template
-	return nil
+	// Return the generated Packer Template.
+	return p, nil
 }
 
 // replaceVariables checks incoming string for variables and replaces them with
