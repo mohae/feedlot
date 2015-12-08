@@ -33,7 +33,7 @@ func TestBuildPackerTemplateFromNamedBuild(t *testing.T) {
 			t.Errorf("Expected \"unable to build Packer template: no build name was received\", got %q", err)
 		}
 	}
-	contour.RegisterString(Build, "../test_files/conf/builds_test.toml")
+	contour.RegisterString("build", "../test_files/conf/builds_test.toml")
 	go buildPackerTemplateFromNamedBuild("", doneCh)
 	err = <-doneCh
 	if err == nil {

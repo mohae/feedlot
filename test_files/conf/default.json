@@ -5,7 +5,7 @@
   "source_dir": "src",
   "include_component_string": "true",
   "min_packer_version": "0.4.0",
-  "builder_types": [
+  "builder_ids": [
     "virtualbox-iso"
   ],
   "builders": {
@@ -39,7 +39,7 @@
       }
     }
   },
-  "post_processor_types": [
+  "post_processor_ids": [
 	"vagrant"
   ],
   "post_processors": {
@@ -51,7 +51,7 @@
       ]
     }
   },
-  "provisioner_types": [
+  "provisioner_ids": [
     "shell"
   ],
   "provisioners": {

@@ -66,58 +66,62 @@ func ProvisionerFromString(s string) Provisioner {
 
 // createProvisioner creates the provisioners for a build.
 func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
-	if r.ProvisionerTypes == nil || len(r.ProvisionerTypes) <= 0 {
+	if r.ProvisionerIDs == nil || len(r.ProvisionerIDs) <= 0 {
 		return nil, nil
 	}
 	var tmpS map[string]interface{}
 	var ndx int
-	p = make([]interface{}, len(r.ProvisionerTypes))
-	// Generate the postProcessor for each postProcessor type.
-	for _, pType := range r.ProvisionerTypes {
-		typ := ProvisionerFromString(pType)
+	p = make([]interface{}, len(r.ProvisionerIDs))
+	// Generate the provisioners for each provisioners ID.
+	for _, ID := range r.ProvisionerIDs {
+		tmpP, ok := r.Provisioners[ID]
+		if !ok {
+			return nil, fmt.Errorf("provisioner configuration for %s not found", ID)
+		}
+		typ := ProvisionerFromString(tmpP.Type)
 		switch typ {
 		case Ansible:
-			tmpS, err = r.createAnsible()
+			tmpS, err = r.createAnsible(ID)
 			if err != nil {
 				return nil, provisionerErr(Ansible, err)
 			}
 		case FileUploads:
-			tmpS, err = r.createFileUploads()
+			tmpS, err = r.createFileUploads(ID)
 			if err != nil {
 				return nil, provisionerErr(FileUploads, err)
 			}
 		case Salt:
-			tmpS, err = r.createSalt()
+			tmpS, err = r.createSalt(ID)
 			if err != nil {
 				return nil, provisionerErr(Salt, err)
 			}
 		case ShellScript:
-			tmpS, err = r.createShellScript()
+			tmpS, err = r.createShellScript(ID)
 			if err != nil {
 				return nil, provisionerErr(ShellScript, err)
 			}
 		case ChefClient:
-			tmpS, err = r.createChefClient()
+			tmpS, err = r.createChefClient(ID)
 			if err != nil {
 				return nil, provisionerErr(ChefClient, err)
 			}
 		case ChefSolo:
-			tmpS, err = r.createChefSolo()
+			tmpS, err = r.createChefSolo(ID)
 			if err != nil {
 				return nil, provisionerErr(ChefSolo, err)
 			}
 		case PuppetMasterless:
-			tmpS, err = r.createPuppetMasterless()
+			tmpS, err = r.createPuppetMasterless(ID)
 			if err != nil {
 				return nil, provisionerErr(PuppetMasterless, err)
 			}
 		case PuppetServer:
-			tmpS, err = r.createPuppetServer()
+			tmpS, err = r.createPuppetServer(ID)
 			if err != nil {
 				return nil, provisionerErr(PuppetServer, err)
 			}
 		default:
-			return nil, provisionerErr(UnsupportedProvisioner, fmt.Errorf("%s is not supported", pType))
+			return nil, provisionerErr(UnsupportedProvisioner, fmt.Errorf("%s is not supported", tmpP.Type))
 		}
 		p[ndx] = tmpS
 		ndx++
@@ -125,7 +129,7 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 	return p, nil
 }
 
-// createAnsible() creates a map of settings for Packer's ansible-local
+// createAnsible creates a map of settings for Packer's ansible-local
 // provisioner.  Any values that aren't supported by the file provisioner are
 // ignored. For more information, refer to
 // https://packer.io/docs/provisioners/ansible-local.html
@@ -142,8 +146,8 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 //   playbook_paths     array of strings
 //   role_paths         array of strings
 //   staging_directory  string
-func (r *rawTemplate) createAnsible() (settings map[string]interface{}, err error) {
-	_, ok := r.Provisioners[Ansible.String()]
+func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.Provisioners[ID]
 	if !ok {
 		return nil, configNotFoundErr()
 	}
@@ -154,7 +158,7 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, err erro
 	// that for Packer.
 	var k, v string
 	var hasPlaybook bool
-	for _, s := range r.Provisioners[Ansible.String()].Settings {
+	for _, s := range r.Provisioners[ID].Settings {
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -209,7 +213,7 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, err erro
 		return nil, requiredSettingErr("playbook_file")
 	}
 	// Process the Arrays.
-	for name, val := range r.Provisioners[Ansible.String()].Arrays {
+	for name, val := range r.Provisioners[ID].Arrays {
 		// playbook_paths, role_paths
 		if name == "playbook_paths" || name == "role_paths" {
 			array := deepcopy.InterfaceToSliceOfStrings(val)
@@ -243,7 +247,7 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, err erro
 	return settings, nil
 }
 
-// createChefClient() creates a map of settings for Packer's chef-client
+// createChefClient creates a map of settings for Packer's chef-client
 // provisioner.  Any values that aren't supported by the chef-client
 // provisioner are ignored. For more information, refer to:
 // https://www.packer.io/docs/provisioners/chef-client.html
@@ -267,7 +271,7 @@ func (r *rawTemplate) createAnsible() (settings map[string]interface{}, err erro
 //   validation_key_path     string
 // Unsopported configuration options:
 //   json                    object
-func (r *rawTemplate) createChefClient() (settings map[string]interface{}, err error) {
+func (r *rawTemplate) createChefClient(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ChefClient.String()]
 	if !ok {
 		return nil, configNotFoundErr()
@@ -276,7 +280,7 @@ func (r *rawTemplate) createChefClient() (settings map[string]interface{}, err e
 	settings["type"] = ChefClient.String()
 	// For each value, extract its key value pair and then process. Only process the supported
 	// keys. Key validation isn't done here, leaving that for Packer.
-	for _, s := range r.Provisioners[ChefClient.String()].Settings {
+	for _, s := range r.Provisioners[ID].Settings {
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -315,7 +319,7 @@ func (r *rawTemplate) createChefClient() (settings map[string]interface{}, err e
 			settings[k] = v
 		}
 	}
-	for name, val := range r.Provisioners[ChefClient.String()].Arrays {
+	for name, val := range r.Provisioners[ID].Arrays {
 		if name == "run_list" {
 			array := deepcopy.InterfaceToSliceOfStrings(val)
 			settings[name] = array
@@ -325,9 +329,9 @@ func (r *rawTemplate) createChefClient() (settings map[string]interface{}, err e
 	return settings, nil
 }
 
-// createChefSolo() creates a map of settings for Packer's chef-solo
-// provisioner.  Any values that aren't supported by the chef-solo provisioner
-// are ignored.  For more information, refer to
+// createChefSolo creates a map of settings for Packer's chef-solo provisioner.
+// Any values that aren't supported by the chef-solo provisioner are ignored.
+//  For more information, refer to
 // https://www.packer.io/docs/provisioners/chef-solo.html
 //
 // Required configuration options:
@@ -348,8 +352,8 @@ func (r *rawTemplate) createChefClient() (settings map[string]interface{}, err e
 //   staging_directory               string
 // Unsopported configuration options:
 //   json                            object
-func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, err error) {
-	_, ok := r.Provisioners[ChefSolo.String()]
+func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.Provisioners[ID]
 	if !ok {
 		return nil, configNotFoundErr()
 	}
@@ -410,7 +414,7 @@ func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, err err
 			settings[k] = v
 		}
 	}
-	for name, val := range r.Provisioners[ChefSolo.String()].Arrays {
+	for name, val := range r.Provisioners[ID].Arrays {
 		if name == "cookbook_paths" {
 			array := deepcopy.InterfaceToSliceOfStrings(val)
 			for i, v := range array {
@@ -441,7 +445,7 @@ func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, err err
 	return settings, nil
 }
 
-// createPuppetMasterless() creates a map of settings for Packer's puppet-client
+// createPuppetMasterless creates a map of settings for Packer's puppet-client
 // provisioner.  Any values that aren't supported by the puppet-client
 // provisioner are ignored. For more information, refer to:
 // https://www.packer.io/docs/provisioners/chef-client.html
@@ -456,8 +460,8 @@ func (r *rawTemplate) createChefSolo() (settings map[string]interface{}, err err
 //   module_paths       array of strings
 //   prevent_sudo       bool
 //   staging_directroy  string
-func (r *rawTemplate) createPuppetMasterless() (settings map[string]interface{}, err error) {
-	_, ok := r.Provisioners[PuppetMasterless.String()]
+func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.Provisioners[ID]
 	if !ok {
 		return nil, configNotFoundErr()
 	}
@@ -466,7 +470,7 @@ func (r *rawTemplate) createPuppetMasterless() (settings map[string]interface{},
 	var hasManifestFile bool
 	// For each value, extract its key value pair and then process. Only process the supported
 	// keys. Key validation isn't done here, leaving that for Packer.
-	for _, s := range r.Provisioners[PuppetMasterless.String()].Settings {
+	for _, s := range r.Provisioners[ID].Settings {
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -536,7 +540,7 @@ func (r *rawTemplate) createPuppetMasterless() (settings map[string]interface{},
 	if !hasManifestFile {
 		return nil, requiredSettingErr("manifest_file")
 	}
-	for name, val := range r.Provisioners[PuppetMasterless.String()].Arrays {
+	for name, val := range r.Provisioners[ID].Arrays {
 		if name == "facter" {
 			settings[name] = val
 			continue
@@ -548,7 +552,7 @@ func (r *rawTemplate) createPuppetMasterless() (settings map[string]interface{},
 	return settings, nil
 }
 
-// createPuppetServer() creates a map of settings for Packer's puppet-client
+// createPuppetServer creates a map of settings for Packer's puppet-client
 // provisioner.  Any values that aren't supported by the puppet-client
 // provisioner are ignored. For more information, refer to:
 // https://www.packer.io/docs/provisioners/chef-client.html
@@ -564,8 +568,8 @@ func (r *rawTemplate) createPuppetMasterless() (settings map[string]interface{},
 //   puppet_node              string
 //   puppet_server            string
 //   staging_directroy        string
-func (r *rawTemplate) createPuppetServer() (settings map[string]interface{}, err error) {
-	_, ok := r.Provisioners[PuppetServer.String()]
+func (r *rawTemplate) createPuppetServer(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.Provisioners[ID]
 	if !ok {
 		return nil, configNotFoundErr()
 	}
@@ -583,7 +587,7 @@ func (r *rawTemplate) createPuppetServer() (settings map[string]interface{}, err
 			settings[k], _ = strconv.ParseBool(v)
 		}
 	}
-	for name, val := range r.Provisioners[PuppetMasterless.String()].Arrays {
+	for name, val := range r.Provisioners[ID].Arrays {
 		if name == "facter" {
 			settings[name] = val
 		}
@@ -591,7 +595,7 @@ func (r *rawTemplate) createPuppetServer() (settings map[string]interface{}, err
 	return settings, nil
 }
 
-// createFileUploads() creates a map of settings for Packer's file uploads
+// createFileUploads creates a map of settings for Packer's file uploads
 // provisioner. Any values that aren't supported by the file provisioner are
 // ignored. For more information, refer to
 // https://packer.io/docs/provisioners/file.html
@@ -599,8 +603,8 @@ func (r *rawTemplate) createPuppetServer() (settings map[string]interface{}, err
 // Required configuration options:
 //   destination  string
 //   source       string
-func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, err error) {
-	_, ok := r.Provisioners[FileUploads.String()]
+func (r *rawTemplate) createFileUploads(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.Provisioners[ID]
 	if !ok {
 		return nil, configNotFoundErr()
 	}
@@ -610,7 +614,7 @@ func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, err 
 	// keys. Key validation isn't done here, leaving that for Packer.
 	var k, v string
 	var hasSource, hasDestination bool
-	for _, s := range r.Provisioners[FileUploads.String()].Settings {
+	for _, s := range r.Provisioners[ID].Settings {
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -643,7 +647,7 @@ func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, err 
 	return settings, nil
 }
 
-// createSalt() creates a map of settings for Packer's salt provisioner. Any
+// createSalt creates a map of settings for Packer's salt provisioner. Any
 // values that aren't supported by the salt provisioner are ignored. For more
 // information, refer to
 // https://packer.io/docs/provisioners/salt-masterless.html
@@ -657,8 +661,8 @@ func (r *rawTemplate) createFileUploads() (settings map[string]interface{}, err 
 //   minion_config        string
 //   skip_bootstrap       boolean
 //   temp_config_dir      string
-func (r *rawTemplate) createSalt() (settings map[string]interface{}, err error) {
-	_, ok := r.Provisioners[Salt.String()]
+func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.Provisioners[ID]
 	if !ok {
 		return nil, configNotFoundErr()
 	}
@@ -668,7 +672,7 @@ func (r *rawTemplate) createSalt() (settings map[string]interface{}, err error) 
 	// keys. Key validation isn't done here, leaving that for Packer.
 	var k, v string
 	var hasLocalStateTree bool
-	for _, s := range r.Provisioners[Salt.String()].Settings {
+	for _, s := range r.Provisioners[ID].Settings {
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -728,7 +732,7 @@ func (r *rawTemplate) createSalt() (settings map[string]interface{}, err error) 
 	return settings, nil
 }
 
-// createShellScript() creates a map of settings for Packer's shell script
+// createShellScript creates a map of settings for Packer's shell script
 // provisioner. Any values that aren't supported by the shell provisioner are
 // ignored. For more information, refer to
 // https://packer.io/docs/provisioners/shell.html
@@ -745,8 +749,8 @@ func (r *rawTemplate) createSalt() (settings map[string]interface{}, err error) 
 //   inline_shebang       string
 //   remote_path          string
 //   start_retry_timeout  string
-func (r *rawTemplate) createShellScript() (settings map[string]interface{}, err error) {
-	_, ok := r.Provisioners[ShellScript.String()]
+func (r *rawTemplate) createShellScript(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.Provisioners[ID]
 	if !ok {
 		return nil, configNotFoundErr()
 	}
@@ -755,7 +759,7 @@ func (r *rawTemplate) createShellScript() (settings map[string]interface{}, err 
 	// For each value, extract its key value pair and then process. Only process the supported
 	// keys. Key validation isn't done here, leaving that for Packer.
 	var k, v string
-	for _, s := range r.Provisioners[ShellScript.String()].Settings {
+	for _, s := range r.Provisioners[ID].Settings {
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -783,7 +787,7 @@ func (r *rawTemplate) createShellScript() (settings map[string]interface{}, err 
 	}
 	// Process the Arrays.
 	var scripts []string
-	for name, val := range r.Provisioners[ShellScript.String()].Arrays {
+	for name, val := range r.Provisioners[ID].Arrays {
 		// if this is a scripts array, special processing needs to be done.
 		if name == "scripts" {
 			scripts = deepcopy.InterfaceToSliceOfStrings(val)
@@ -831,15 +835,15 @@ func (r *rawTemplate) updateProvisioners(newP map[string]provisioner) error {
 	if len(newP) <= 0 || newP == nil {
 		return nil
 	}
-	// Convert the existing provisioners to interface.
-	var ifaceOld = make(map[string]interface{}, len(r.Provisioners))
-	ifaceOld = DeepCopyMapStringProvisioner(r.Provisioners)
-	// Convert the new provisioners to interface.
-	var ifaceNew = make(map[string]interface{}, len(newP))
-	ifaceNew = DeepCopyMapStringProvisioner(newP)
+	// Convert the existing provisioners to Componenter.
+	var oldC = make(map[string]Componenter, len(r.Provisioners))
+	oldC = DeepCopyMapStringProvisioner(r.Provisioners)
+	// Convert the new provisioners to Componenter.
+	var newC = make(map[string]Componenter, len(newP))
+	newC = DeepCopyMapStringProvisioner(newP)
 	// Get the all keys from both maps
 	var keys []string
-	keys = mergedKeysFromMaps(ifaceOld, ifaceNew)
+	keys = mergeKeysFromComponentMaps(oldC, newC)
 	if r.Provisioners == nil {
 		r.Provisioners = map[string]provisioner{}
 	}
@@ -891,9 +895,9 @@ func (p *provisioner) settingsToMap(Type string, r *rawTemplate) map[string]inte
 }
 
 // DeepCopyMapStringProvisioner makes a deep copy of each builder passed and
-// returns the copie map[string]provisioner as a map[string]interface{}
-func DeepCopyMapStringProvisioner(p map[string]provisioner) map[string]interface{} {
-	c := map[string]interface{}{}
+// returns the copied map[string]provisioner as a map[string]interface{}
+func DeepCopyMapStringProvisioner(p map[string]provisioner) map[string]Componenter {
+	c := map[string]Componenter{}
 	for k, v := range p {
 		tmpP := provisioner{}
 		tmpP = v.DeepCopy()

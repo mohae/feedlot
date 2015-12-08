@@ -70,10 +70,11 @@ var testDistroDefaultUbuntu = rawTemplate{
 	dirs:    map[string]string{},
 	files:   map[string]string{},
 	build: build{
-		BuilderTypes: []string{"virtualbox-iso", "vmware-iso"},
+		BuilderIDs: []string{"virtualbox-iso", "vmware-iso"},
 		Builders: map[string]builder{
 			"common": {
 				templateSection{
+					//ID: "common",
 					Settings: []string{
 						"boot_wait = 5s",
 						"disk_size = 20000",
@@ -92,6 +93,7 @@ var testDistroDefaultUbuntu = rawTemplate{
 			},
 			"virtualbox-iso": {
 				templateSection{
+					//ID: "virtualbox-iso",
 					Settings: []string{
 						"virtualbox_version_file = .vbox_version",
 					},
@@ -116,7 +118,7 @@ var testDistroDefaultUbuntu = rawTemplate{
 				},
 			},
 		},
-		PostProcessorTypes: []string{
+		PostProcessorIDs: []string{
 			"vagrant",
 			"vagrant-cloud",
 		},
@@ -148,7 +150,7 @@ var testDistroDefaultUbuntu = rawTemplate{
 				},
 			},
 		},
-		ProvisionerTypes: []string{"shell"},
+		ProvisionerIDs: []string{"shell"},
 		Provisioners: map[string]provisioner{
 			"shell": {
 				templateSection{
@@ -199,7 +201,7 @@ var testDistroDefaultCentOS = rawTemplate{
 	dirs:    map[string]string{},
 	files:   map[string]string{},
 	build: build{
-		BuilderTypes: []string{"virtualbox-iso", "vmware-iso"},
+		BuilderIDs: []string{"virtualbox-iso", "vmware-iso"},
 		Builders: map[string]builder{
 			"common": {
 				templateSection{
@@ -246,7 +248,7 @@ var testDistroDefaultCentOS = rawTemplate{
 				},
 			},
 		},
-		PostProcessorTypes: []string{
+		PostProcessorIDs: []string{
 			"vagrant",
 			"vagrant-cloud",
 		},
@@ -281,7 +283,7 @@ var testDistroDefaultCentOS = rawTemplate{
 				},
 			},
 		},
-		ProvisionerTypes: []string{
+		ProvisionerIDs: []string{
 			"shell",
 		},
 		Provisioners: map[string]provisioner{
@@ -778,28 +780,6 @@ func TestAppendSlash(t *testing.T) {
 	}
 }
 
-func TestTrimSuffix(t *testing.T) {
-	s := trimSuffix("", "")
-	if s != "" {
-		t.Errorf("Expected an empty string, got %q", s)
-	}
-
-	s = trimSuffix("aStringWithaSuffix", "")
-	if s != "aStringWithaSuffix" {
-		t.Errorf("Expected \"aStringWithaSuffix\", got %q", s)
-	}
-
-	s = trimSuffix("aStringWithaSuffix", "aszc")
-	if s != "aStringWithaSuffix" {
-		t.Errorf("Expected \"aStringWithaSuffix\", got %q", s)
-	}
-
-	s = trimSuffix("aStringWithaSuffix", "Suffix")
-	if s != "aStringWitha" {
-		t.Errorf("Expected \"aStringWitha\", got %q", s)
-	}
-}
-
 func TestCopyFile(t *testing.T) {
 	_, err := copyFile("", "test")
 	if err == nil {
@@ -941,17 +921,14 @@ func TestSubString(t *testing.T) {
 	}
 }
 
-func TestMergedKeysFromMaps(t *testing.T) {
-	map1 := map[string]interface{}{
-		"key1": "value1",
-		"key2": "value2",
-		"key3": []string{
-			"element1",
-			"element2",
-		},
+func TestMergedKeysFromComponentMaps(t *testing.T) {
+	map1 := map[string]Componenter{
+		"key1": provisioner{},
+		"key2": provisioner{},
+		"key3": builder{},
 	}
 
-	keys := mergedKeysFromMaps(map1)
+	keys := mergeKeysFromComponentMaps(map1)
 	if len(keys) != 3 {
 		t.Errorf("expected 3 keys, got %d", len(keys))
 	} else {
@@ -968,12 +945,12 @@ func TestMergedKeysFromMaps(t *testing.T) {
 			t.Error("expected \"key3\" to be in merged keys, not found")
 		}
 	}
-	map2 := map[string]interface{}{
-		"key1": "another value",
-		"key4": "value4",
+	map2 := map[string]Componenter{
+		"key1": provisioner{},
+		"key4": builder{},
 	}
 
-	keys = mergedKeysFromMaps(map1, map2)
+	keys = mergeKeysFromComponentMaps(map1, map2)
 	if len(keys) != 4 {
 		t.Errorf("expected 3 keys, got %d", len(keys))
 	} else {

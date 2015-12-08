@@ -24,45 +24,53 @@ import (
 	jww "github.com/spf13/jwalterweatherman"
 )
 
+// Componenter is an interface for Packer components, i.e. builder,
+// post-processor, and provisioner.
+type Componenter interface {
+	getType() string
+}
+
 // Contains most of the information for Packer templates within a Rancher
-// Build.
+// Build.  The keys of the maps are the IDs
 type build struct {
-	// Targeted builders: the values are consistent with Packer's, e.g.
-	// `virtualbox.iso` is used for VirtualBox.
-	BuilderTypes []string `toml:"builder_types" json:"builder_types"`
-	// A map of builder configuration. There should always be a `common`
-	// builder, which has settings common to both VMWare and VirtualBox.
-	Builders map[string]builder `toml:"builders"`
-	// Targeted post-processors: the values are consistent with Packer's, e.g.
-	// `vagrant` is used for Vagrant.
-	PostProcessorTypes []string `toml:"post_processor_types" json:"post_processor_types"`
+	// Targeted builders: either the ID of the builder section or the Packer
+	// component type value can be used, e.g. ID: "vbox" or "virtualbox-iso".
+	BuilderIDs []string `toml:"builder_ids" json:"builder_ids"`
+	// A map of builder configurations.  When using a VMWare or VirtualBox
+	// builder, there is usually a 'common' builder, which has settings common
+	// to both VMWare and VirtualBox.
+	Builders map[string]builder `toml:"builders" json:"builders"`
+	// Targeted post-processors: either the ID of the post-processor or the
+	// Packer component type value can be used, e.g. ID: "docker" or
+	// "docker-push".
+	PostProcessorIDs []string `toml:"post_processor_ids" json:"post_processor_ids"`
 	// A map of post-processor configurations.
 	PostProcessors map[string]postProcessor `toml:"post_processors" json:"post_processors"`
-	// Targeted provisioners: the values are consistent with Packer's, e.g.
-	// `shell` is used for shell.
-	ProvisionerTypes []string `toml:"provisioner_types" json:"provisioner_types"`
+	// Targeted provisioners: either the ID of the provisioners or the Packer
+	// component type value can be used, e.g. ID: "preprocess" or "shell".
+	ProvisionerIDs []string `toml:"provisioner_ids" json:"provisioner_ids"`
 	// A map of provisioner configurations.
 	Provisioners map[string]provisioner `toml:"provisioners"`
 }
 
-// build.DeepCopy makes a deep copy of the build and returns it.
+// copy makes a deep copy of the build and returns it.
 func (b *build) copy() build {
 	newB := build{
 		Builders:       map[string]builder{},
 		PostProcessors: map[string]postProcessor{},
 		Provisioners:   map[string]provisioner{},
 	}
-	if b.BuilderTypes != nil {
-		newB.BuilderTypes = make([]string, len(b.BuilderTypes), len(b.BuilderTypes))
-		copy(newB.BuilderTypes, b.BuilderTypes)
+	if b.BuilderIDs != nil {
+		newB.BuilderIDs = make([]string, len(b.BuilderIDs), len(b.BuilderIDs))
+		copy(newB.BuilderIDs, b.BuilderIDs)
 	}
-	if b.PostProcessorTypes != nil {
-		newB.PostProcessorTypes = make([]string, len(b.PostProcessorTypes), len(b.PostProcessorTypes))
-		copy(newB.PostProcessorTypes, b.PostProcessorTypes)
+	if b.PostProcessorIDs != nil {
+		newB.PostProcessorIDs = make([]string, len(b.PostProcessorIDs), len(b.PostProcessorIDs))
+		copy(newB.PostProcessorIDs, b.PostProcessorIDs)
 	}
-	if b.ProvisionerTypes != nil {
-		newB.ProvisionerTypes = make([]string, len(b.ProvisionerTypes), len(b.ProvisionerTypes))
-		copy(newB.ProvisionerTypes, b.ProvisionerTypes)
+	if b.ProvisionerIDs != nil {
+		newB.ProvisionerIDs = make([]string, len(b.ProvisionerIDs), len(b.ProvisionerIDs))
+		copy(newB.ProvisionerIDs, b.ProvisionerIDs)
 	}
 	for k, v := range b.Builders {
 		newB.Builders[k] = v.DeepCopy()
@@ -76,8 +84,34 @@ func (b *build) copy() build {
 	return newB
 }
 
+// setTypes goes through each component map and check's if the templateSection
+// Type is set.  If it isn't, the ID (key) is used to set it.
+func (b *build) setTypes() {
+	for k, v := range b.Builders {
+		if len(v.Type) == 0 {
+			v.Type = k
+			b.Builders[k] = v
+		}
+	}
+	for k, v := range b.PostProcessors {
+		if len(v.Type) == 0 {
+			v.Type = k
+			b.PostProcessors[k] = v
+		}
+	}
+	for k, v := range b.Provisioners {
+		if len(v.Type) == 0 {
+			v.Type = k
+			b.Provisioners[k] = v
+		}
+	}
+}
+
 // templateSection is used as an embedded type.
 type templateSection struct {
+	// Type is the actual Packer component type, this may or may not be the
+	// same as the map key (ID).
+	Type string
 	// Settings are string settings in "key=value" format.
 	Settings []string
 	// Arrays are the string array settings.
@@ -86,6 +120,8 @@ type templateSection struct {
 
 // templateSection.DeepCopy updates its information with new via a deep copy.
 func (t *templateSection) DeepCopy(ts templateSection) {
+	// Copy Type
+	t.Type = ts.Type
 	//Deep Copy of settings
 	t.Settings = make([]string, len(ts.Settings))
 	copy(t.Settings, ts.Settings)
@@ -93,38 +129,42 @@ func (t *templateSection) DeepCopy(ts templateSection) {
 	t.Arrays = deepcopy.Iface(ts.Arrays).(map[string]interface{})
 }
 
-// mergeArrays merges the arrays section of a template builder
-func (t *templateSection) mergeArrays(old map[string]interface{}, n map[string]interface{}) map[string]interface{} {
-	if old == nil && n == nil {
-		return nil
-	}
-	if old == nil {
-		return n
-	}
+// mergeArrays merges the received array with the current one.
+func (t *templateSection) mergeArrays(n map[string]interface{}) {
 	if n == nil {
-		return old
+		return
+	}
+	if t.Arrays == nil {
+		t.Arrays = n
+		return
 	}
 	// both are populated, merge them.
 	merged := map[string]interface{}{}
 	// Get the all keys from both maps
-	var keys []string
-	keys = mergedKeysFromMaps(old, n)
+	keys := mergeKeysFromMaps(t.Arrays, n)
 	// Process using the keys.
 	for _, v := range keys {
 		// If the element for this key doesn't exist in new, add old.
 		if _, ok := n[v]; !ok {
-			merged[v] = old[v]
+			merged[v] = t.Arrays[v]
 			continue
 		}
 		// Otherwise use the new value
 		merged[v] = n[v]
 	}
-	return merged
+	t.Arrays = merged
 }
 
 // builder represents a builder Packer template section.
 type builder struct {
 	templateSection
+}
+
+// getType returns the type for this component.  This is on builder instead of
+// templateSection because the component needs to fulfill the interface,
+// not the templateSection.
+func (b builder) getType() string {
+	return b.Type
 }
 
 // builder.DeepCopy copies the builder values instead of the pointers.
@@ -148,14 +188,16 @@ func (b *builder) mergeSettings(sl []string) error {
 	return nil
 }
 
-// mergeArrays merges the arrays section of a template builder
-func (b *builder) mergeArrays(m map[string]interface{}) {
-	b.Arrays = b.templateSection.mergeArrays(b.Arrays, m)
-}
-
 // Type for handling the post-processor section of the configs.
 type postProcessor struct {
 	templateSection
+}
+
+// getType returns the type for this component.  This is on postProcessor
+// instead of templateSection because the component needs to fulfill the
+// interface, not the templateSection.
+func (p postProcessor) getType() string {
+	return p.Type
 }
 
 // postProcessor.DeepCopy copies the postProcessor values instead of the
@@ -185,18 +227,19 @@ func (p *postProcessor) mergeSettings(sl []string) error {
 	return nil
 }
 
-// postProcessor.mergeArrays wraps templateSection.mergeArrays
-func (p *postProcessor) mergeArrays(m map[string]interface{}) {
-	// merge the arrays:
-	p.Arrays = p.templateSection.mergeArrays(p.Arrays, m)
-}
-
 // provisioner: type for common elements for provisioners.
 type provisioner struct {
 	templateSection
 }
 
-// postProcessor.DeepCopy copies the postProcessor values instead of the
+// getType returns the type for this component.  This is on provisioner
+// instead of templateSection because the component needs to fulfill the
+// interface, not the templateSection.
+func (p provisioner) getType() string {
+	return p.Type
+}
+
+// provisioner.DeepCopy copies the postProcessor values instead of the
 // pointers.
 func (p *provisioner) DeepCopy() provisioner {
 	c := provisioner{templateSection: templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
@@ -223,12 +266,6 @@ func (p *provisioner) mergeSettings(sl []string) error {
 	return nil
 }
 
-// provisioner.mergeArrays wraps templateSection.mergeArrays
-func (p *provisioner) mergeArrays(m map[string]interface{}) {
-	// merge the arrays:
-	p.Arrays = p.templateSection.mergeArrays(p.Arrays, m)
-}
-
 // defaults is used to store Rancher application level defaults for Packer templates.
 type defaults struct {
 	IODirInf
@@ -244,7 +281,7 @@ func (d *defaults) Load(p string) error {
 	if d.loaded {
 		return nil
 	}
-	name := GetConfFile(p, Default)
+	name := GetConfFile(p, "default")
 	switch contour.GetString(Format) {
 	case "toml", "tml":
 		_, err := toml.DecodeFile(name, &d)
@@ -270,6 +307,7 @@ func (d *defaults) Load(p string) error {
 	default:
 		return ErrUnsupportedFormat
 	}
+	d.build.setTypes()
 	d.loaded = true
 	return nil
 }
@@ -402,7 +440,7 @@ type supported struct {
 
 // Load the supported distro info.
 func (s *supported) Load(p string) error {
-	name := GetConfFile(p, Supported)
+	name := GetConfFile(p, "supported")
 	switch contour.GetString(Format) {
 	case "toml", "tml":
 		_, err := toml.DecodeFile(name, &s.Distro)
@@ -463,6 +501,9 @@ func (b *builds) Load(name string) error {
 	default:
 		return ErrUnsupportedFormat
 	}
+	for _, v := range b.Build {
+		v.build.setTypes()
+	}
 	b.loaded = true
 	return nil
 }
@@ -500,10 +541,7 @@ type list struct {
 func (bl *buildLists) Load(p string) error {
 
 	// Load the build lists.
-	name := GetConfFile(p, BuildList)
-	if name == "" {
-		return filenameNotSetErr(BuildList)
-	}
+	name := GetConfFile(p, "build_list")
 	switch contour.GetString(Format) {
 	case "toml", "tml":
 		_, err := toml.DecodeFile(name, &bl.List)
@@ -539,6 +577,25 @@ func (b *buildLists) Get(s string) (list, error) {
 		return list{}, fmt.Errorf("%s is not a valid build_list name", s)
 	}
 	return l, nil
+}
+
+// mergeKeysFromComponentMaps takes a variadic array of packer component maps
+// and returns a merged, de-duped slice of keys for those maps.
+func mergeKeysFromComponentMaps(m ...map[string]Componenter) []string {
+	cnt := 0
+	keys := make([][]string, len(m))
+	// For each passed interface
+	for i, tmpM := range m {
+		cnt = 0
+		tmpK := make([]string, len(tmpM))
+		for k := range tmpM {
+			tmpK[cnt] = k
+			cnt++
+		}
+		keys[i] = tmpK
+	}
+	// Merge the slices, de-dupes keys.
+	return MergeSlices(keys...)
 }
 
 // SetCfgFile set's the appCFg from the app's cfg file and then applies any env
@@ -602,7 +659,7 @@ func GetConfFile(p, name string) string {
 	// if the path wasn't passed, use the confdir, unless this file is the supported
 	// file. A path is prefixed to supported file only if this func receives one;
 	// the ConfDir is not used for supported.
-	if fname != Supported {
+	if fname != "supported" {
 		p = filepath.Join(p, contour.GetString(ConfDir))
 	}
 	if contour.GetBool(Example) {
