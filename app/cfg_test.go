@@ -29,6 +29,7 @@ var testDefaults = &defaults{
 		Builders: map[string]builder{
 			"common": {
 				templateSection{
+					Type: "common",
 					Settings: []string{
 						"boot_command = boot_test.command",
 						"boot_wait = 5s",
@@ -48,6 +49,7 @@ var testDefaults = &defaults{
 			},
 			"virtualbox-iso": {
 				templateSection{
+					Type: "virtualbox-iso",
 					Settings: []string{
 						"guest_additions_path = VBoxGuestAdditions_{{ .Version }}.iso",
 						"virtualbox_version_file = .vbox_version",
@@ -67,6 +69,7 @@ var testDefaults = &defaults{
 		PostProcessors: map[string]postProcessor{
 			"vagrant": {
 				templateSection{
+					Type: "vagrant",
 					Settings: []string{
 						"compression_level = 9",
 						"keep_input_artifact = false",
@@ -81,6 +84,7 @@ var testDefaults = &defaults{
 		Provisioners: map[string]provisioner{
 			"shell": {
 				templateSection{
+					Type: "shell",
 					Settings: []string{
 						"execute_command = execute_test.command",
 					},
