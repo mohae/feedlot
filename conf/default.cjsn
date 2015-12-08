@@ -2,21 +2,9 @@
 # with the supported config file settings results in the default template for
 # Rancher.
 {
-	"description": "Default Rancher template",
-	"name": ":build_name",
-	"output_dir": "../packer_templates/:build_name",
-	"source_dir": "packer_sources",
-	"include_component_string": "true",
-	"min_packer_version": "0.7.0",
 	"builder_ids": [
 		"virtualbox-iso",
 		"vmware-iso"
-	],
-	"post_processor_ids": [
-		"vagrant"
-	],
-	"provisioner_ids": [
-		"shell"
 	],
 	"builders": {
 		"common": {
@@ -38,16 +26,16 @@
 			]
 		},
 		"virtualbox-iso": {
-			"settings": [
-				"guest_additions_path = VBoxGuestAdditions.iso",
-				"virtualbox_version_file = .vbox_version"
-			],
 			"arrays": {
 				"vboxmanage": [
 					"cpus=1",
 					"memory=1024"
 				]
-			}
+			},
+			"settings": [
+				"guest_additions_path = VBoxGuestAdditions.iso",
+				"virtualbox_version_file = .vbox_version"
+			]
 		},
 		"vmware-iso": {
 			"arrays": {
@@ -59,6 +47,14 @@
 			}
 		}
 	},
+	"description": "Default Rancher template",
+	"include_component_string": "true",
+	"min_packer_version": "0.7.0",
+	"name": ":build_name",
+	"output_dir": "../packer_templates/:build_name",
+	"post_processor_ids": [
+		"vagrant"
+	],
 	"post_processors": {
 		"vagrant": {
 			"settings": [
@@ -68,11 +64,11 @@
 			]
 		}
 	},
+	"provisioner_ids": [
+		"shell"
+	],
 	"provisioners": {
 		"shell": {
-			"settings": [
-				"execute_command = execute.command"
-			],
 			"arrays": {
 				"scripts": [
 					"setup",
@@ -80,7 +76,11 @@
 					"user_vagrant",
 					"cleanup"
 				]
-			}
+			},
+			"settings": [
+				"execute_command = execute.command"
+			]
 		}
-	}
+	},
+	"source_dir": "packer_sources"
 }
