@@ -5,78 +5,6 @@ import (
 	"testing"
 )
 
-var testPostProcessorTemplate = &rawTemplate{
-	PackerInf: PackerInf{
-		Description: "Test build template #1",
-	},
-	Distro:  "ubuntu",
-	Arch:    "amd64",
-	Image:   "server",
-	Release: "12.04",
-	varVals: map[string]string{},
-	dirs:    map[string]string{},
-	files:   map[string]string{},
-	build: build{
-		BuilderIDs: []string{
-			"virtualbox-iso",
-		},
-		Builders: map[string]builder{
-			"common": {
-				templateSection{
-					Settings: []string{
-						"ssh_wait_timeout = 300m",
-					},
-				},
-			},
-			"virtualbox-iso": {
-				templateSection{
-					Arrays: map[string]interface{}{
-						"vm_settings": []string{
-							"memory=4096",
-						},
-					},
-				},
-			},
-		},
-		PostProcessorIDs: []string{
-			"vagrant",
-		},
-		PostProcessors: map[string]postProcessor{
-			"vagrant": {
-				templateSection{
-					Settings: []string{
-						"output = :out_dir/packer.box",
-					},
-					Arrays: map[string]interface{}{
-						"except": []string{
-							"docker",
-						},
-					},
-				},
-			},
-		},
-		ProvisionerIDs: []string{
-			"shell",
-		},
-		Provisioners: map[string]provisioner{
-			"shell": {
-				templateSection{
-					Settings: []string{
-						"execute_command = execute_test.command",
-					},
-					Arrays: map[string]interface{}{
-						"scripts": []string{
-							"setup_test.sh",
-							"vagrant_test.sh",
-							"cleanup_test.sh",
-						},
-					},
-				},
-			},
-		},
-	},
-}
-
 var testPostProcessorsAllTemplate = &rawTemplate{
 	PackerInf: PackerInf{
 		Description: "Test build template #1",
@@ -303,6 +231,12 @@ var ppNew = map[string]postProcessor{
 				"keep_input_artifact=true",
 			},
 			Arrays: map[string]interface{}{
+				"only": []string{
+					"digitalocean",
+				},
+				"except": []string{
+					"googlecompute",
+				},
 				"override": map[string]interface{}{
 					"virtualbox-iso": map[string]interface{}{
 						"output": "overridden-virtualbox.box",
@@ -325,12 +259,15 @@ var ppMerged = map[string]postProcessor{
 				"output = out/rancher-packer.box",
 			},
 			Arrays: map[string]interface{}{
+				"except": []string{
+					"googlecompute",
+				},
 				"include": []string{
 					"include1",
 					"include2",
 				},
 				"only": []string{
-					"virtualbox-iso",
+					"digitalocean",
 				},
 				"override": map[string]interface{}{
 					"virtualbox-iso": map[string]interface{}{

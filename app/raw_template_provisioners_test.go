@@ -524,6 +524,9 @@ var prNew = map[string]provisioner{
 				"only": []string{
 					"vmware-iso",
 				},
+				"except": []string{
+					"digitalocean",
+				},
 				"override": map[string]interface{}{
 					"vmware-iso": map[string]interface{}{
 						"scripts": []string{
@@ -554,7 +557,7 @@ var prMerged = map[string]provisioner{
 			},
 			Arrays: map[string]interface{}{
 				"except": []string{
-					"docker",
+					"digitalocean",
 				},
 				"only": []string{
 					"vmware-iso",
