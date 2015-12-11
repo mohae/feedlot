@@ -20,23 +20,19 @@ const (
 	ArchivePriorBuild = "archive_prior_build"
 	// ConfDir is the directory that contains the Rancher build information.
 	ConfDir = "conf_dir"
+	// Example is a bool that let's Rancher know that the current run is an
+	// example run.  Rancher will look for the configurations and source in
+	// the configured ExampleDir.
+	Example = "example"
 	// ExampleDir is the directory that contains Rancher examples.  Examples
 	// are used to show how Rancher build templates may be configured and to
 	// provide an easy way to generated example Packer templates.
 	ExampleDir = "example_dir"
-	// SourceDir is the directory that contains the files referenced by a
-	// Rancher template.  The referenced files are copied to the generated
-	// Packer template directory.
-	SourceDir = "source_dir"
 	// Format is the format used for the Rancher configuration files: either
 	// TOML or JSON.  TOML expects all configuration files to have the '.toml'
 	// extension.  JSON expects all configuration files to have either a
 	// '.json' or '.cjsn' extension.  JSON is the default format.
 	Format = "format"
-	// Example is a bool that let's Rancher know that the current run is an
-	// example run.  Rancher will look for the configurations and source in
-	// the configured ExampleDir.
-	Example = "example"
 	// ParamDelimStart is the delimiter used to indicate the start of a Rancher
 	// parameter.  The default start delimiter is ':'.  This is used so that
 	// Rancher parameters in templates do not conflict with Packer parameters.
@@ -55,6 +51,10 @@ const (
 	// LogLevelStdOut is the minimum log level used for printing log messages
 	// to stdout.  The default log level for stdout is 'ERROR'.
 	LogLevelStdOut = "log_level_stdout"
+	// SourceDir is the directory that contains the files referenced by a
+	// Rancher template.  The referenced files are copied to the generated
+	// Packer template directory.
+	SourceDir = "source_dir"
 )
 
 // CfgFile is the suffix for the ENV variable name that holds the override
@@ -69,14 +69,15 @@ var AppCfg appCfg
 
 type appCfg struct {
 	ConfDir         string `toml:"conf_dir",json:"conf_dir"`
+	Example         bool
 	ExampleDir      string `toml:"example_dir",json:"example_dir"`
 	Format          string
-	ParamDelimStart string `toml:"param_delim_start",json:"param_delim_start"`
-	Example         bool
 	Log             bool
 	LogFile         string `toml:"log_file",json:"log_file"`
 	LogLevelFile    string `toml:"log_level_file",json:"log_level_file"`
 	LogLevelStdout  string `toml:"log_level_stdout",json:"log_level_stdout"`
+	ParamDelimStart string `toml:"param_delim_start",json:"param_delim_start"`
+	SourceDir       string `toml:"source_dir",json:"source_dir"`
 }
 
 func init() {
@@ -92,21 +93,21 @@ func init() {
 	// missing main application cfg isn't considered an error state.
 	contour.SetErrOnMissingCfg(false)
 	contour.RegisterCfgFile(CfgFile, cfgFilename)
-	contour.RegisterStringFlag(Format, "", "json", "json", "the format of the Rancher conf files: toml or json")
-	// shortcuts used: a, d, , eg, f, i, l, n, p, r, s, v, x
+	// shortcuts used: a, d, e, f, i, g, l, n, o, p, r, s, t, v, 	x
 	contour.RegisterBoolFlag(ArchivePriorBuild, "v", false, "false", "archive prior build before writing new packer template files")
-	contour.RegisterBoolFlag(Example, "eg", false, "false", "whether or not to generate from examples")
 	contour.RegisterBoolFlag(Log, "l", false, "false", "enable/disable logging")
-	contour.RegisterStringFlag(ConfDir, "", "conf/", "conf/", "location of the root configuration directory for conf")
-	contour.RegisterStringFlag(ExampleDir, "x", "examples/", "examples/", "the location of the root directory for example rancher configuration files")
-	contour.RegisterStringFlag(ParamDelimStart, "p", ":", ":", "the start delimiter for template variabes")
-	contour.RegisterStringFlag(LogFile, "", "rancher.log", "rancher.log", "log filename")
+	contour.RegisterStringFlag(ConfDir, "c", "conf/", "conf/", "location of the directory with the rancher build configuration files")
+	contour.RegisterBoolFlag(Example, "e", false, "false", "whether or not to generate from examples")
+	contour.RegisterStringFlag(ExampleDir, "x", "examples/", "examples/", "location of the directory with the example rancher build configuration files")
+	contour.RegisterStringFlag(Format, "t", "json", "json", "the format of the Rancher conf files: toml or json")
+	contour.RegisterStringFlag(LogFile, "g", "rancher.log", "rancher.log", "log filename")
 	contour.RegisterStringFlag(LogLevelFile, "f", "WARN", "WARN", "log level for writing to the log file")
-	contour.RegisterStringFlag(LogLevelStdOut, "s", "ERROR", "ERROR", "log level for writing to stdout")
-	contour.RegisterStringFlag("envs", "e", "", "", "additional environments from within which config additional config information should be loaded")
+	contour.RegisterStringFlag(LogLevelStdOut, "o", "ERROR", "ERROR", "log level for writing to stdout")
+	contour.RegisterStringFlag(ParamDelimStart, "p", ":", ":", "the start delimiter for template variabes")
+	contour.RegisterStringFlag(SourceDir, "s", "packer_sources/", "packer_sources/", "location of the directory containing the sources for Packer template resources")
+	contour.RegisterStringFlag("envs", "n", "", "", "additional environments from within which config additional config information should be loaded")
 	contour.RegisterStringFlag("distro", "d", "", "", "distro override for default builds")
 	contour.RegisterStringFlag("arch", "a", "", "", "os arch override for default builds")
 	contour.RegisterStringFlag("image", "i", "", "", "os image override for default builds")
 	contour.RegisterStringFlag("release", "r", "", "", "os release override for default builds")
-	contour.RegisterStringFlag(ExampleDir, "", "examples/", "examples/", "example directory")
 }
