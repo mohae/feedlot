@@ -51,10 +51,6 @@ const (
 	// LogLevelStdOut is the minimum log level used for printing log messages
 	// to stdout.  The default log level for stdout is 'ERROR'.
 	LogLevelStdOut = "log_level_stdout"
-	// SourceDir is the directory that contains the files referenced by a
-	// Rancher template.  The referenced files are copied to the generated
-	// Packer template directory.
-	SourceDir = "source_dir"
 )
 
 // CfgFile is the suffix for the ENV variable name that holds the override
@@ -77,7 +73,6 @@ type appCfg struct {
 	LogLevelFile    string `toml:"log_level_file",json:"log_level_file"`
 	LogLevelStdout  string `toml:"log_level_stdout",json:"log_level_stdout"`
 	ParamDelimStart string `toml:"param_delim_start",json:"param_delim_start"`
-	SourceDir       string `toml:"source_dir",json:"source_dir"`
 }
 
 func init() {
@@ -104,7 +99,6 @@ func init() {
 	contour.RegisterStringFlag(LogLevelFile, "f", "WARN", "WARN", "log level for writing to the log file")
 	contour.RegisterStringFlag(LogLevelStdOut, "o", "ERROR", "ERROR", "log level for writing to stdout")
 	contour.RegisterStringFlag(ParamDelimStart, "p", ":", ":", "the start delimiter for template variabes")
-	contour.RegisterStringFlag(SourceDir, "s", "packer_sources/", "packer_sources/", "location of the directory containing the sources for Packer template resources")
 	contour.RegisterStringFlag("envs", "n", "", "", "additional environments from within which config additional config information should be loaded")
 	contour.RegisterStringFlag("distro", "d", "", "", "distro override for default builds")
 	contour.RegisterStringFlag("arch", "a", "", "", "os arch override for default builds")
