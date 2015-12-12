@@ -12,6 +12,7 @@
 package app
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -104,6 +105,14 @@ func (d *distroDefaults) Set() error {
 		jww.ERROR.Println(err)
 		return err
 	}
+	// get the source settings from the defaults; If the source_dir setting isn't set
+	// return an error
+	if len(dflts.IODirInf.SourceDir) == 0 {
+		err = errors.New("default template: required setting source_dir not set")
+		jww.ERROR.Println(err)
+		return err
+	}
+
 	s := &supported{}
 	err = s.Load("")
 	if err != nil {
@@ -158,6 +167,9 @@ func (d *distroDefaults) Set() error {
 // be concatonated together, using the env_separator_char as the separator; '-'
 // is the default value.
 //
+// The sourceDir and sourceDirIsRelative settings from the defaults file is
+// passed so that each build template's Packer source directory can be set
+// if the template doesn't define its own.
 // TODO: add env support
 func loadBuilds() error {
 	// index all the files in the configuration directory, including subdir

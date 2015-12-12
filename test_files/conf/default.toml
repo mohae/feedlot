@@ -5,6 +5,7 @@ name = ":build_name"
 #command_dir = "commands"
 output_dir = "out/:build_name"
 source_dir = "src"
+dir_is_relative = true
 min_packer_version = "0.4.0"
 include_component_string = "true"
 builder_ids = [

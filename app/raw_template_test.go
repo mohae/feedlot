@@ -359,11 +359,11 @@ func TestRawTemplateUpdateBuildSettings(t *testing.T) {
 func TestMergeVariables(t *testing.T) {
 	r := testDistroDefaults.Templates[Ubuntu]
 	r.mergeVariables()
-	if r.OutputDir != "../test_files/out/ubuntu" {
-		t.Errorf("Expected \"../test_files/out/ubuntu\", got %q", r.OutputDir)
+	if r.OutputDir != "../test_files/out/ubuntu/" {
+		t.Errorf("Expected \"../test_files/out/ubuntu/\", got %q", r.OutputDir)
 	}
 	if r.SourceDir != "../test_files/src/ubuntu" {
-		t.Errorf("Expected \"../test_files/src/ubuntu\", got %q", r.SourceDir)
+		t.Errorf("Expected \"../test_files/src/ubuntu/\", got %q", r.SourceDir)
 	}
 }
 
@@ -445,11 +445,11 @@ func TestRawTemplateMergeSrcDir(t *testing.T) {
 		SrcDir         string
 		ExpectedSrcDir string
 	}{
-		{"src/", "src"},
-		{"src/custom/", "src/custom"},
-		{"src/:distro/", "src/ubuntu"},
-		{"src/:distro/", "src/ubuntu"},
-		{"src/files/", "src/files"},
+		{"src/", "src/"},
+		{"src/custom/", "src/custom/"},
+		{"src/:distro/", "src/ubuntu/"},
+		{"src/:distro/", "src/ubuntu/"},
+		{"src/files/", "src/files/"},
 	}
 	rawTpl := newRawTemplate()
 	rawTpl.delim = ":"
@@ -457,7 +457,7 @@ func TestRawTemplateMergeSrcDir(t *testing.T) {
 	rawTpl.setBaseVarVals()
 	for i, test := range tests {
 		rawTpl.SourceDir = test.SrcDir
-		rawTpl.mergeSourceDir()
+		rawTpl.replaceSourceDirVars()
 		if rawTpl.SourceDir != test.ExpectedSrcDir {
 			t.Errorf("MergeSrcDir test %d: expected SrcDir to be %s; got %s", i, test.ExpectedSrcDir, rawTpl.SourceDir)
 		}
@@ -470,10 +470,10 @@ func TestRawTemplateMergeOutDir(t *testing.T) {
 		ExpectedOutDir string
 	}{
 		{"out", "out"},
-		{"out/custom/", "out/custom"},
-		{"out/:distro/", "out/ubuntu"},
-		{"out/:distro/", "out/ubuntu"},
-		{"out/files/", "out/files"},
+		{"out/custom/", "out/custom/"},
+		{"out/:distro/", "out/ubuntu/"},
+		{"out/:distro/", "out/ubuntu/"},
+		{"out/files/", "out/files/"},
 	}
 	rawTpl := newRawTemplate()
 	rawTpl.delim = ":"
@@ -481,7 +481,7 @@ func TestRawTemplateMergeOutDir(t *testing.T) {
 	rawTpl.setBaseVarVals()
 	for i, test := range tests {
 		rawTpl.OutputDir = test.OutDir
-		rawTpl.mergeOutDir()
+		rawTpl.replaceOutDirVars()
 		if rawTpl.OutputDir != test.ExpectedOutDir {
 			t.Errorf("MergeOutDirtest %d: expected OutDir to be %s; got %s", i, test.ExpectedOutDir, rawTpl.OutputDir)
 		}
@@ -573,9 +573,9 @@ func TestRawTemplateMergeString(t *testing.T) {
 		{"", "", ""},
 		{"", "src", "src"},
 		{"dir", "src", "dir"},
-		{"dir/", "src", "dir"},
+		{"dir/", "src", "dir/"},
 		{"dir", "", "dir"},
-		{"dir/", "", "dir"},
+		{"dir/", "", "dir/"},
 	}
 	r := newRawTemplate()
 	for i, test := range tests {

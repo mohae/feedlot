@@ -1482,7 +1482,7 @@ func TestCreateAmazonInstance(t *testing.T) {
 		"x509_key_path":    "/path/to/x509/key",
 		"x509_upload_path": "/etc/x509",
 	}
-	contour.UpdateString(SourceDir, "../test_files/src")
+	contour.UpdateString("source_dir", "../test_files/src")
 	bldr, err := testAllBuilders.createAmazonInstance("amazon-instance")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)

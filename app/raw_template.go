@@ -190,6 +190,42 @@ func (r *rawTemplate) setDefaults(d *distro) error {
 	return nil
 }
 
+// setSourceDir handles setting the sourceDir for a template (less the variable
+// replacement part).  The source dir may come from the build template or the
+// distro default.  If it's not set, it will be an empty string.
+//
+// The distro default setting may come from either the default config or the
+// supported distro config.
+//
+// The setting may be further modified by the dir_is_relative setting.  When
+// true the path will be built relative to the directory of the build config
+// file from which this template came.
+func (r *rawTemplate) setSourceDir(dir string) {
+	if r.IODirInf.SourceDir == "" {
+		// ignore possible error because the distro should be validated
+		// at this point.
+		d, _ := DistroDefaults.Templates[DistroFromString(r.Distro)]
+		if d.IODirInf.SourceDir != "" {
+			r.IODirInf.SourceDir = d.IODirInf.SourceDir
+		}
+	}
+	// check if it's relative: nothing to do if it isn't
+	//
+	var b bool
+	if r.IODirInf.DirIsRelative == nil {
+		// check the distro default
+		d, _ := DistroDefaults.Templates[DistroFromString(r.Distro)]
+		if d.IODirInf.DirIsRelative != nil {
+			b = *d.IODirInf.DirIsRelative
+		}
+	} else {
+		b = *r.IODirInf.DirIsRelative
+	}
+	if b {
+		r.IODirInf.SourceDir = filepath.Join(dir, r.IODirInf.SourceDir)
+	}
+}
+
 // r.updateBuildSettings merges Settings between an old and new template.
 // Note:  Arch, Image, and Release are not updated here as how these fields are
 // updated depends on whether this is a build from a distribution's default
@@ -257,8 +293,8 @@ func (r *rawTemplate) mergeVariables() {
 	r.Name = r.replaceVariables(r.Name)
 	r.varVals[r.delim+"name"] = r.Name
 	// then merge the sourc and out dirs and set them
-	r.mergeSourceDir()
-	r.mergeOutDir()
+	r.replaceSourceDirVars()
+	r.replaceOutDirVars()
 	r.varVals[r.delim+"output_dir"] = r.OutputDir
 	r.varVals[r.delim+"source_dir"] = r.SourceDir
 }
@@ -275,39 +311,34 @@ func (r *rawTemplate) setBaseVarVals() {
 	}
 }
 
-// mergeVariable does a variable replacement on the passed string and returns
+// mergeString does a variable replacement on the passed string and returns
 // the finalized value. If the passed string is empty, the default value, d, is
 // returned
 func (r *rawTemplate) mergeString(s, d string) string {
 	if s == "" {
 		return d
 	}
-	return strings.TrimSuffix(r.replaceVariables(s), "/")
+	return r.replaceVariables(s)
 }
 
-// mergeSourceDir sets whether or not a custom source directory was used, does any
-// necessary variable replacement, and normalizes the string to not end in /
-func (r *rawTemplate) mergeSourceDir() {
+// replaceSourceDirVars does variable replacement on the sourceDir if it contains
+// any variables.
+func (r *rawTemplate) replaceSourceDirVars() {
 	// variable replacement is only necessary if the SourceDir has the variable delims
-	if !strings.Contains(r.SourceDir, r.delim) {
-		// normalize to no ending /
-		r.SourceDir = strings.TrimSuffix(r.replaceVariables(r.SourceDir), "/")
-		return
+	if strings.Contains(r.SourceDir, r.delim) {
+		r.SourceDir = r.replaceVariables(r.SourceDir)
 	}
-	// normalize to no ending /
-	r.SourceDir = strings.TrimSuffix(r.replaceVariables(r.SourceDir), "/")
 }
 
-// mergeOutDir resolves the output_dir for this template.
-func (r *rawTemplate) mergeOutDir() {
+// replaceOutDirVars does variable replacement on the outDir if it contains any
+// variables.
+func (r *rawTemplate) replaceOutDirVars() {
 	// variable replacement is only necessary if the SourceDir has the variable delims
-	if !strings.Contains(r.OutputDir, r.delim) {
+	if strings.Contains(r.OutputDir, r.delim) {
 		// normalize to no ending /
-		r.OutputDir = strings.TrimSuffix(r.replaceVariables(r.OutputDir), "/")
+		r.OutputDir = r.replaceVariables(r.OutputDir)
 		return
 	}
-	// normalize to no ending /
-	r.OutputDir = strings.TrimSuffix(r.replaceVariables(r.OutputDir), "/")
 }
 
 // ISOInfo sets the ISO info for the template's supported distro type. This

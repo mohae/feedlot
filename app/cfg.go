@@ -266,52 +266,6 @@ func (p *provisioner) mergeSettings(sl []string) error {
 	return nil
 }
 
-// defaults is used to store Rancher application level defaults for Packer templates.
-type defaults struct {
-	IODirInf
-	PackerInf
-	BuildInf
-	build
-	loaded bool
-}
-
-// Load loads the defualt settings. If the defaults have already been loaded
-// nothing is done.
-func (d *defaults) Load(p string) error {
-	if d.loaded {
-		return nil
-	}
-	name := GetConfFile(p, "default")
-	switch contour.GetString(Format) {
-	case "toml", "tml":
-		_, err := toml.DecodeFile(name, &d)
-		if err != nil {
-			return decodeErr(name, err)
-		}
-	case "cjsn", "json":
-		var b []byte
-		var err, alterr error
-		b, err = ioutil.ReadFile(name)
-		if err != nil {
-			// try alternate
-			name, _ = getAltJSONName(name)
-			b, alterr = ioutil.ReadFile(name)
-			if alterr != nil {
-				return decodeErr(name, err)
-			}
-		}
-		err = cjsn.Unmarshal(b, &d)
-		if err != nil {
-			return decodeErr(name, err)
-		}
-	default:
-		return ErrUnsupportedFormat
-	}
-	d.build.setTypes()
-	d.loaded = true
-	return nil
-}
-
 // BuildInf is a container for information about a specific build.
 type BuildInf struct {
 	// Name is the name for the build. This may be an assigned value from
@@ -350,6 +304,12 @@ type IODirInf struct {
 	OutputDir string `toml:"output_dir" json:"output_dir"`
 	// The directory that contains the source files for this build.
 	SourceDir string `toml:"source_dir" json:"source_dir"`
+	// If the dir path is relative to the conf_dir.  If true, the path is resolved
+	// relative to the conf_dir.  Otherwise, the path is used as is.  This is a
+	// pointer so that whether or not this setting was actually set can be determined,
+	// otherwise determining whether it was an explicit false or empty would not be
+	// possible.
+	DirIsRelative *bool `toml:"dir_is_relative" json:"dir_is_relative"`
 }
 
 func (i *IODirInf) update(inf IODirInf) {
@@ -401,6 +361,52 @@ func (i *PackerInf) update(inf PackerInf) {
 	if inf.Description != "" {
 		i.Description = inf.Description
 	}
+}
+
+// defaults is used to store Rancher application level defaults for Packer templates.
+type defaults struct {
+	IODirInf
+	PackerInf
+	BuildInf
+	build
+	loaded bool
+}
+
+// Load loads the defualt settings. If the defaults have already been loaded
+// nothing is done.
+func (d *defaults) Load(p string) error {
+	if d.loaded {
+		return nil
+	}
+	name := GetConfFile(p, "default")
+	switch contour.GetString(Format) {
+	case "toml", "tml":
+		_, err := toml.DecodeFile(name, &d)
+		if err != nil {
+			return decodeErr(name, err)
+		}
+	case "cjsn", "json":
+		var b []byte
+		var err, alterr error
+		b, err = ioutil.ReadFile(name)
+		if err != nil {
+			// try alternate
+			name, _ = getAltJSONName(name)
+			b, alterr = ioutil.ReadFile(name)
+			if alterr != nil {
+				return decodeErr(name, err)
+			}
+		}
+		err = cjsn.Unmarshal(b, &d)
+		if err != nil {
+			return decodeErr(name, err)
+		}
+	default:
+		return ErrUnsupportedFormat
+	}
+	d.build.setTypes()
+	d.loaded = true
+	return nil
 }
 
 // Struct to hold the details of supported distros. From this information a
@@ -478,7 +484,7 @@ type builds struct {
 	loaded bool
 }
 
-// Load the build information.
+// Load the build information from the provided name.
 func (b *builds) Load(name string) error {
 	if name == "" {
 		return filenameNotSetErr("build")
@@ -501,8 +507,12 @@ func (b *builds) Load(name string) error {
 	default:
 		return ErrUnsupportedFormat
 	}
+	// get the dir of the filepath
+	dir := filepath.Dir(name)
+	// get the path info from the name
 	for _, v := range b.Build {
 		v.build.setTypes()
+		v.setSourceDir(dir)
 	}
 	b.loaded = true
 	return nil

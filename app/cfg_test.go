@@ -551,6 +551,12 @@ func TestTemplateSectionMergeArrays(t *testing.T) {
 	}
 }
 
+func init() {
+	var b bool
+	b = true
+	testDefaults.DirIsRelative = &b
+}
+
 func TestBuilderMergeSettings(t *testing.T) {
 	b := builder{}
 	key1 := "key1=value1"
