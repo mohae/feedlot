@@ -246,9 +246,8 @@ var testCentOS = rawTemplate{
 
 var testAllBuilders = rawTemplate{
 	IODirInf: IODirInf{
-		IncludeComponentString: "true",
-		OutputDir:              "../test_files/out",
-		SourceDir:              "../test_files/src",
+		OutputDir: "../test_files/out",
+		SourceDir: "../test_files/src",
 	},
 	PackerInf: PackerInf{
 		MinPackerVersion: "",
@@ -1125,6 +1124,11 @@ var vbB = builder{
 			},
 		},
 	},
+}
+
+func init() {
+	b := true
+	testAllBuilders.IncludeComponentString = &b
 }
 
 func TestCreateBuilders(t *testing.T) {

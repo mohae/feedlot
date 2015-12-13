@@ -8,7 +8,7 @@ output_dir_is_relative = true
 source_dir = "src"
 source_dir_is_relative = true
 min_packer_version = "0.4.0"
-include_component_string = "true"
+include_component_string = true
 builder_ids = [
     "virtualbox-iso",
 ]

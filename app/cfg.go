@@ -14,7 +14,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/BurntSushi/toml"
@@ -293,14 +292,13 @@ func (i *BuildInf) update(b BuildInf) {
 // IODirInf is used to store information about where Rancher can find and put
 // things. Source files are always in a SourceDir.
 type IODirInf struct {
-	// Include the packer component name in the path. Even though it is used as
-	// a bool, it is defined as a string so that it makes absense from a
-	// template detectable.  Any value that strconv.ParseBool can parse to true
-	// is accepted as true. If the
-	// value is empty, parsed to false, or cannot be properly parsed, false is assumed.
-	// If this is true, the component.String() value will be added as the parent of the
-	// output resource: i.e. OutDir/component.String()/resource_name
-	IncludeComponentString string `toml:"include_component_string" json:"include_component_string"`
+	// Include the packer component name in the path. If true, the
+	// component.String() value will be added as the parent of the output
+	// resource path: i.e. OutDir/component.String()/resource_name.  This is a
+	// pointer so that whether or not this setting was actually set can be
+	// determined, otherwise determining whether it was an explicit false or
+	// empty would not be possible.
+	IncludeComponentString *bool `toml:"include_component_string" json:"include_component_string"`
 	// The directory to use for example runs
 	OutputDir string `toml:"output_dir" json:"output_dir"`
 	// If the output dir path is relative to the conf_dir.  If true, the path is
@@ -333,20 +331,9 @@ func (i *IODirInf) update(inf IODirInf) {
 	if inf.SourceDirIsRelative != nil {
 		i.SourceDirIsRelative = inf.SourceDirIsRelative
 	}
-	if inf.IncludeComponentString != "" {
+	if inf.IncludeComponentString != nil {
 		i.IncludeComponentString = inf.IncludeComponentString
 	}
-}
-
-// includeComponentString returns whether, or not, the name of the component
-// should be included. Any string that results in a parse error will be
-// evaluated as false, otherwise any string that strconv.ParseBool() can parse
-// is valid.
-//
-// Any value that errors is evaluated to false
-func (i *IODirInf) includeComponentString() bool {
-	b, _ := strconv.ParseBool(i.IncludeComponentString)
-	return b
 }
 
 // check to see if the dirinf is set, if not, set them to their defaults

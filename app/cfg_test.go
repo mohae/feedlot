@@ -9,9 +9,8 @@ import (
 
 var testDefaults = &defaults{
 	IODirInf: IODirInf{
-		IncludeComponentString: "true",
-		OutputDir:              "out/:build_name",
-		SourceDir:              "src",
+		OutputDir: "out/:build_name",
+		SourceDir: "src",
 	},
 	PackerInf: PackerInf{
 		Description:      "Test Default Rancher template",
@@ -554,6 +553,7 @@ func TestTemplateSectionMergeArrays(t *testing.T) {
 func init() {
 	var b bool
 	b = true
+	testDefaults.IncludeComponentString = &b
 	testDefaults.OutputDirIsRelative = &b
 	testDefaults.SourceDirIsRelative = &b
 }

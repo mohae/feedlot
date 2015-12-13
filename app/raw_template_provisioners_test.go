@@ -161,9 +161,8 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 		Description:      "Test template config and Rancher options for CentOS",
 	},
 	IODirInf: IODirInf{
-		IncludeComponentString: "true",
-		OutputDir:              "../test_files/out/:build_name",
-		SourceDir:              "../test_files/src",
+		OutputDir: "../test_files/out/:build_name",
+		SourceDir: "../test_files/src",
 	},
 	BuildInf: BuildInf{
 		Name:      ":build_name",
@@ -591,6 +590,11 @@ var prMerged = map[string]provisioner{
 			Arrays: map[string]interface{}{},
 		},
 	},
+}
+
+func init() {
+	b := true
+	testRawTemplateProvisionersAll.IncludeComponentString = &b
 }
 
 func TestRawTemplateUpdateProvisioners(t *testing.T) {
