@@ -190,6 +190,42 @@ func (r *rawTemplate) setDefaults(d *distro) error {
 	return nil
 }
 
+// setOutputDir handles setting the outputDir for a template (less the
+// variable replacement part).  The output dir may come from the build
+// template or the distro default.  If it's not set, it will be an empty
+// string.
+//
+// The distro default setting may come from either the default config or the
+// supported config.
+//
+// The setting may be further modified by the output_dir_is_relative setting.
+//  When true the path will be built relative to the directory of the build
+// config file from which this template came.
+func (r *rawTemplate) setOutputDir(dir string) {
+	if r.IODirInf.OutputDir == "" {
+		// ignore possible error because the distro should be validated
+		// at this point.
+		d, _ := DistroDefaults.Templates[DistroFromString(r.Distro)]
+		if d.IODirInf.OutputDir != "" {
+			r.IODirInf.OutputDir = d.IODirInf.OutputDir
+		}
+	}
+	// check if it's relative: nothing to do if it isn't
+	var b bool
+	if r.IODirInf.OutputDirIsRelative == nil {
+		// check the distro default
+		d, _ := DistroDefaults.Templates[DistroFromString(r.Distro)]
+		if d.IODirInf.OutputDirIsRelative != nil {
+			b = *d.IODirInf.OutputDirIsRelative
+		}
+	} else {
+		b = *r.IODirInf.OutputDirIsRelative
+	}
+	if b {
+		r.IODirInf.OutputDir = filepath.Join(dir, r.IODirInf.OutputDir)
+	}
+}
+
 // setSourceDir handles setting the sourceDir for a template (less the variable
 // replacement part).  The source dir may come from the build template or the
 // distro default.  If it's not set, it will be an empty string.
@@ -197,9 +233,9 @@ func (r *rawTemplate) setDefaults(d *distro) error {
 // The distro default setting may come from either the default config or the
 // supported distro config.
 //
-// The setting may be further modified by the dir_is_relative setting.  When
-// true the path will be built relative to the directory of the build config
-// file from which this template came.
+// The setting may be further modified by the source_dir_is_relative setting.
+// When true the path will be built relative to the directory of the build
+// config file from which this template came.
 func (r *rawTemplate) setSourceDir(dir string) {
 	if r.IODirInf.SourceDir == "" {
 		// ignore possible error because the distro should be validated
@@ -210,16 +246,15 @@ func (r *rawTemplate) setSourceDir(dir string) {
 		}
 	}
 	// check if it's relative: nothing to do if it isn't
-	//
 	var b bool
-	if r.IODirInf.DirIsRelative == nil {
+	if r.IODirInf.SourceDirIsRelative == nil {
 		// check the distro default
 		d, _ := DistroDefaults.Templates[DistroFromString(r.Distro)]
-		if d.IODirInf.DirIsRelative != nil {
-			b = *d.IODirInf.DirIsRelative
+		if d.IODirInf.SourceDirIsRelative != nil {
+			b = *d.IODirInf.SourceDirIsRelative
 		}
 	} else {
-		b = *r.IODirInf.DirIsRelative
+		b = *r.IODirInf.SourceDirIsRelative
 	}
 	if b {
 		r.IODirInf.SourceDir = filepath.Join(dir, r.IODirInf.SourceDir)

@@ -554,7 +554,8 @@ func TestTemplateSectionMergeArrays(t *testing.T) {
 func init() {
 	var b bool
 	b = true
-	testDefaults.DirIsRelative = &b
+	testDefaults.OutputDirIsRelative = &b
+	testDefaults.SourceDirIsRelative = &b
 }
 
 func TestBuilderMergeSettings(t *testing.T) {

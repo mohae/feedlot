@@ -293,31 +293,45 @@ func (i *BuildInf) update(b BuildInf) {
 // IODirInf is used to store information about where Rancher can find and put
 // things. Source files are always in a SourceDir.
 type IODirInf struct {
-	// Include the packer component name in the path. Even though it is used as a bool,
-	// it is defined as a string so that it makes absense from a template detectable.
-	// Any value that strconv.ParseBool can parse to true is accepted as true. If the
+	// Include the packer component name in the path. Even though it is used as
+	// a bool, it is defined as a string so that it makes absense from a
+	// template detectable.  Any value that strconv.ParseBool can parse to true
+	// is accepted as true. If the
 	// value is empty, parsed to false, or cannot be properly parsed, false is assumed.
 	// If this is true, the component.String() value will be added as the parent of the
 	// output resource: i.e. OutDir/component.String()/resource_name
 	IncludeComponentString string `toml:"include_component_string" json:"include_component_string"`
 	// The directory to use for example runs
 	OutputDir string `toml:"output_dir" json:"output_dir"`
+	// If the output dir path is relative to the conf_dir.  If true, the path is
+	// resolved relative to the conf_dir.  Otherwise, the path is used as is.
+	// This is a pointer so that whether or not this setting was actually set can
+	// be determined, otherwise determining whether it was an explicit false or
+	// empty would not be possible.
+	OutputDirIsRelative *bool `toml:"output_dir_is_relative" json:"output_dir_is_relative"`
 	// The directory that contains the source files for this build.
 	SourceDir string `toml:"source_dir" json:"source_dir"`
-	// If the dir path is relative to the conf_dir.  If true, the path is resolved
-	// relative to the conf_dir.  Otherwise, the path is used as is.  This is a
-	// pointer so that whether or not this setting was actually set can be determined,
-	// otherwise determining whether it was an explicit false or empty would not be
-	// possible.
-	DirIsRelative *bool `toml:"dir_is_relative" json:"dir_is_relative"`
+	// If the source dir path is relative to the conf_dir.  If true, the path is
+	// resolved relative to the conf_dir.  Otherwise, the path is used as is.
+	// This is a pointer so that whether or not this setting was actually set can
+	// be determined, otherwise determining whether it was an explicit false or
+	// empty would not be possible.
+	SourceDirIsRelative *bool `toml:"source_dir_is_relative" json:"source_dir_is_relative"`
 }
 
+// Only update when a value exists; empty strings don't count as being set.
 func (i *IODirInf) update(inf IODirInf) {
 	if inf.OutputDir != "" {
 		i.OutputDir = appendSlash(inf.OutputDir)
 	}
+	if inf.OutputDirIsRelative != nil {
+		i.OutputDirIsRelative = inf.OutputDirIsRelative
+	}
 	if inf.SourceDir != "" {
 		i.SourceDir = appendSlash(inf.SourceDir)
+	}
+	if inf.SourceDirIsRelative != nil {
+		i.SourceDirIsRelative = inf.SourceDirIsRelative
 	}
 	if inf.IncludeComponentString != "" {
 		i.IncludeComponentString = inf.IncludeComponentString

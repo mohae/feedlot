@@ -2,8 +2,9 @@
   "description": "Test Default Rancher template",
   "name": ":build_name",
   "output_dir": "out/:build_name",
+  "output_dir_is_relative": true,
   "source_dir": "src",
-  "dir_is_relative": true,
+  "source_dir_is_relative": true,
   "include_component_string": "true",
   "min_packer_version": "0.4.0",
   "builder_ids": [
