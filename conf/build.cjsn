@@ -1,18 +1,21 @@
-# Builds are named configurations that specify the distro to use, at minimum, and
-# define the final overrides and settings for generating a Packer Template. The
-# generated Packer template will be the result of merging the settings within the
-# build configuration with the Rancher and distro defaults.
+# Builds are named configurations that specify the distro to use, at minimum,
+# and define the final overrides and settings for generating a Packer Template.
+# The generated Packer template will be the result of merging the settings
+# within the build configuration with the default template for the specified
+# distro.
 {
-        # basic build for Ubuntu 15.04 amd64 server for virtualbox using the vagrant
-        # post-processor.  The artifact is cleaned to minimize size before post-processing.
-	"1504-64": {
-		"arch": "amd64",
-		"builder_ids": [
-			"virtualbox-iso"
-		],
-		"description": "Ubuntu LTS 1504 amd64 virtualbox vagrant build",
+	# Basic build template for Ubuntu 14.04 LTS amd64, using the server image,
+	# for virtualbox with the vagrant post-processor.  The artifact is cleaned
+	# to minimize size before post-processing.
+	"1404-64": {
+		"description": "Ubuntu 14.04 LTS amd64 virtualbox vagrant build",
 		"distro": "ubuntu",
+		"release": "14.04",
+		"arch": "amd64",
 		"image": "server",
+		"builder_ids": [
+			"virtualbox-iso"
+		],
 		"provisioners": {
 			"shell": {
 				"arrays": {
@@ -25,20 +28,20 @@
 					]
 				}
 			}
-		},
-		"release": "15.04"
+		}
 	},
-        # basic build for CentOS 6 x86_64, based on the minimal image, for virtualbox using
-        # the vagrant post-processor.  The artifact is cleaned to minimize size before
-        # post-processing.
+	# Basic build template for CentOS 6 x86_64, using the minimal image, for
+	# virtualbox with the vagrant post-processor.  The artifact is cleaned to
+	# minimize size before post-processing.
 	"centos6-64": {
+		"description": "Base Centos 6 x86_64 virtualbox vagrant build",
+		"distro": "centos",
+		"release": "6",
+		"image": "Minimal",
 		"arch": "x86_64",
 		"builder_ids": [
 			"virtualbox-iso"
 		],
-		"description": "example Centos 6 x86_64 virtualbox vagrant build",
-		"distro": "centos",
-		"image": "Minimal",
 		"provisioners": {
 			"shell": {
 				"arrays": {
@@ -51,20 +54,20 @@
 					]
 				}
 			}
-		},
-		"release": "6"
+		}
 	},
-        # basic build for CentOS 7 x86_64, based on the minimal image, for virtualbox using
-        # the vagrant post-processor.  The artifact is cleaned to minimize size before
-        # post-processing.
+	# Basic build Template for CentOS 7 x86_64, using the minimal image, for
+	# virtualbox with the vagrant post-processor.  The artifact is cleaned to
+	# minimize size before post-processing.
 	"centos7-64": {
-		"arch": "x86_64",
-		"builder_ids": [
-			"virtualbox-iso"
-		],
 		"description": "example Centos 7 x86_64 virtualbox vagrant build",
 		"distro": "centos",
+		"release": "7",
 		"image": "Minimal",
+		"arch": "x86_64",
+		"builder_ids": [
+			"virtualbox-iso"
+		],
 		"provisioners": {
 			"shell": {
 				"arrays": {
@@ -77,20 +80,20 @@
 					]
 				}
 			}
-		},
-		"release": "7"
+		}
 	},
-        # basic build for Debian Jessie amd 64, based on the netinst image, for virtualbox
-        # using the vagrant post-processor.  The artifact is cleaned to minimize size before
-        # post-processing.
+	# Basic build template for Debian Jessie amd64, using the netinst image, for
+	# virtualbox with the vagrant post-processor.  The artifact is cleaned to
+	# minimize size before post-processing.
 	"jessie-64": {
+		"description": "example Debian Jessie amd64 virtualbox vagrant build",
+		"distro": "debian",
+		"release": "8"		
+		"image": "netinst",
 		"arch": "amd64",
 		"builder_ids": [
 			"virtualbox-iso"
 		],
-		"description": "example Debian Jessie amd64 virtualbox vagrant build",
-		"distro": "debian",
-		"image": "netinst",
 		"provisioners": {
 			"shell": {
 				"arrays": {
@@ -103,7 +106,6 @@
 					]
 				}
 			}
-		},
-		"release": "8"
+		}
 	}
 }

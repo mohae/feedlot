@@ -1,7 +1,14 @@
 # Default settings for Rancher templates.  Merging the contents of this file
-# with the supported config file settings results in the default template for
-# Rancher.
+# with the supported config file settings results in the default templates
+# for each supported distro.
 {
+	"include_component_string": true,
+	"min_packer_version": "0.7.0",
+	"name": ":build_name",
+	"output_dir": "../packer_templates/:build_name",
+	"output_dir_is_relative": false,
+	"source_dir": "packer_sources",
+	"source_dir_is_relative": false,
 	"builder_ids": [
 		"virtualbox-iso",
 		"vmware-iso"
@@ -47,11 +54,6 @@
 			}
 		}
 	},
-	"description": "Default Rancher template",
-	"include_component_string": "true",
-	"min_packer_version": "0.7.0",
-	"name": ":build_name",
-	"output_dir": "../packer_templates/:build_name",
 	"post_processor_ids": [
 		"vagrant"
 	],
@@ -81,6 +83,5 @@
 				"execute_command = execute.command"
 			]
 		}
-	},
-	"source_dir": "packer_sources"
+	}
 }
