@@ -2,6 +2,9 @@ package app
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/mohae/contour"
@@ -558,6 +561,7 @@ func init() {
 	testDefaults.SourceDirIsRelative = &b
 }
 
+/*
 func TestBuilderMergeSettings(t *testing.T) {
 	b := builder{}
 	key1 := "key1=value1"
@@ -674,22 +678,23 @@ func TestProvisionerMergeSettings(t *testing.T) {
 		t.Errorf("expected %s in slice: not found", "key3=value3")
 	}
 }
-
+*/
 func TestDefaults(t *testing.T) {
 	tests := []struct {
 		format      string
 		expectedErr string
 	}{
-		{"", "unsupported format"},
-		{"yaml", "unsupported format"},
+		{"", "decode of \"../test_files/conf/default. config file\" failed: unsupported config format: "},
+		{"yaml", "decode of \"../test_files/conf/default.yaml config file\" failed: unsupported config format: yaml"},
 		{"toml", ""},
 		{"json", ""},
 	}
-	contour.UpdateString(ConfDir, "conf")
+
+	contour.UpdateString(ConfDir, "../test_files/conf")
 	for i, test := range tests {
 		contour.UpdateString(Format, test.format)
 		d := defaults{}
-		err := d.Load("../test_files")
+		err := d.Load("")
 		if err != nil {
 			if err.Error() != test.expectedErr {
 				t.Errorf("%d: expected %q, got %q", i, test.expectedErr, err)
@@ -712,8 +717,8 @@ func TestSupported(t *testing.T) {
 		p           string
 		expectedErr string
 	}{
-		{"", "", "unsupported format"},
-		{"yaml", "", "unsupported format"},
+		{"", "", "decode of \"supported. config file\" failed: unsupported config format: "},
+		{"yaml", "", "decode of \"supported.yaml config file\" failed: unsupported config format: yaml"},
 		{"toml", "../test_files", ""},
 		{"json", "../test_files", ""},
 	}
@@ -777,8 +782,8 @@ func TestBuildListStuff(t *testing.T) {
 		format      string
 		expectedErr string
 	}{
-		{"", "unsupported format"},
-		{"yaml", "unsupported format"},
+		{"", "decode of \"../test_files/build_list config file\" failed: unsupported config format: "},
+		{"yaml", "decode of \"../test_files/build_list config file\" failed: unsupported config format: yaml"},
 		{"toml", ""},
 		{"json", ""},
 	}
@@ -835,24 +840,53 @@ func TestIODirInfUpdate(t *testing.T) {
 	}
 }
 
-func TestGetAltJSONName(t *testing.T) {
+func TestFindConfigFile(t *testing.T) {
 	tests := []struct {
-		fname    string
-		expected string
-		isJSON   bool
+		fName          string
+		findName       string
+		cfgFormat      string
+		expectedName   string
+		expectedFormat CfgFormat
+		expectedErr    string
 	}{
-		{"test.json", "test.cjsn", true},
-		{"test.cjsn", "test.json", true},
-		{"test.toml", "", false},
+		{"test.json", "test.json", "json", "test.cjsn", JSON, ""},
+		{"test.json", "test.json", "json", "test.cjon", JSON, ""},
+		{"test.cjson", "test.cjson", "json", "test.json", JSON, ""},
+		{"test.tml", "test.tml", "toml", "test.toml", TOML, ""},
+		{"atest.toml", "test.toml", "toml", "", TOML, "stat test.toml: no such file or directory"},
+		{"test.yaml", "test.yaml", "yaml", "", UnsupportedCfgFormat, ""},
 	}
 
-	for i, test := range tests {
-		name, ok := getAltJSONName(test.fname)
-		if ok != test.isJSON {
-			t.Errorf("%d: expected %t, got %t", i, test.isJSON, ok)
-		}
-		if name != test.expected {
-			t.Errorf("%d: expected %q, got %q", test.expected, name)
-		}
+	tmpDir, err := ioutil.TempDir("", "rancherCfgTest")
+	if err != nil {
+		t.Errorf("unable to create tmp dir; testing of FindconfigFile failed: %s", err)
+		return
 	}
+	b := []byte("this is a test")
+	contour.RegisterString(Format, "")
+	for i, test := range tests {
+		// create file
+		err := ioutil.WriteFile(filepath.Join(tmpDir, test.fName), b, 0777)
+		if err != nil {
+			t.Errorf("an error occurred while creating temp file %s: %s", test.fName, err)
+			continue
+		}
+		contour.UpdateString(Format, test.cfgFormat)
+		name, format, err := findConfigFile(filepath.Join(tmpDir, test.findName))
+		if err != nil {
+			if err.Error() != test.expectedErr {
+				t.Errorf("%d: expected error to be %q got %q", i, test.expectedErr, err)
+				continue
+			}
+			if test.expectedFormat != format {
+				t.Errorf("%d: expected CfgFormat to be %s, got %s", i, test.expectedFormat, format)
+			}
+			if filepath.Join(tmpDir, test.expectedName) != name {
+				t.Errorf("%d: expected filename to be %s, got %s", i, filepath.Join(tmpDir, test.expectedName), name)
+			}
+		}
+
+	}
+	os.RemoveAll(tmpDir)
+
 }

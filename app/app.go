@@ -8,7 +8,7 @@ import (
 
 const (
 	Name          = "rancher"
-	DefaultFormat = "json"
+	DefaultFormat = JSON
 )
 
 // Rancher setting names: these values are used in the config files, for flags,
@@ -29,13 +29,15 @@ const (
 	// provide an easy way to generated example Packer templates.
 	ExampleDir = "example_dir"
 	// Format is the format used for the Rancher configuration files: either
-	// TOML or JSON.  TOML expects all configuration files to have the '.toml'
-	// extension.  JSON expects all configuration files to have either a
-	// '.json' or '.cjsn' extension.  JSON is the default format.
+	// TOML or JSON.  TOML expects all configuration files to have either the
+	// '.toml' or '.tml' extension.  JSON expects all configuration files to have
+	// one of the following extensions: '.json', '.jsn', '.cjsn', or '.cjson'.
+	// JSON is the default format.
 	Format = "format"
 	// ParamDelimStart is the delimiter used to indicate the start of a Rancher
-	// parameter.  The default start delimiter is ':'.  This is used so that
-	// Rancher parameters in templates do not conflict with Packer parameters.
+	// parameter (variable).  The default start delimiter is ':'.  This is used
+	// so that Rancher parameters in templates do not conflict with Packer
+	// parameters, which use '{{ }}'.
 	ParamDelimStart = "param_delim_start"
 	// Log is a bool that indicates whether Rancher should use logging.  Log
 	// messages are written to both a file and stdout.
@@ -57,10 +59,12 @@ const (
 // value for the Rancher cfg file, if there is one.
 var CfgFile = "cfg_file"
 
-// CfgFilename is the default value for the optional Rancher cfg file.
+// CfgFilename is the default value for the optional Rancher cfg file.  This may
+// be overridden using the 'RANCHER_CFG_FILE' environment variable.
 var CfgFilename = "rancher.json"
 
-// AppCfg contains the current Rancher cfguration...loaded at start-up.
+// AppCfg contains the values for the loaded Rancher configuration.
+// TODO is this still necessary?
 var AppCfg appCfg
 
 type appCfg struct {
@@ -94,13 +98,13 @@ func init() {
 	contour.RegisterStringFlag(ConfDir, "c", "conf/", "conf/", "location of the directory with the rancher build configuration files")
 	contour.RegisterBoolFlag(Example, "e", false, "false", "whether or not to generate from examples")
 	contour.RegisterStringFlag(ExampleDir, "x", "examples/", "examples/", "location of the directory with the example rancher build configuration files")
-	contour.RegisterStringFlag(Format, "t", "json", "json", "the format of the Rancher conf files: toml or json")
+	contour.RegisterStringFlag(Format, "t", JSON.String(), JSON.String(), "the format of the Rancher conf files: toml or json")
 	contour.RegisterStringFlag(LogFile, "g", "rancher.log", "rancher.log", "log filename")
 	contour.RegisterStringFlag(LogLevelFile, "f", "WARN", "WARN", "log level for writing to the log file")
 	contour.RegisterStringFlag(LogLevelStdOut, "o", "ERROR", "ERROR", "log level for writing to stdout")
 	contour.RegisterStringFlag(ParamDelimStart, "p", ":", ":", "the start delimiter for template variabes")
 	contour.RegisterStringFlag("envs", "n", "", "", "additional environments from within which config additional config information should be loaded")
-	contour.RegisterStringFlag("distro", "d", "", "", "distro override for default builds")
+	contour.RegisterStringFlag("distro", "d", "", "", "specifies the distro for which a Packer template using defaults should be created")
 	contour.RegisterStringFlag("arch", "a", "", "", "os arch override for default builds")
 	contour.RegisterStringFlag("image", "i", "", "", "os image override for default builds")
 	contour.RegisterStringFlag("release", "r", "", "", "os release override for default builds")

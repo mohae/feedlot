@@ -26,6 +26,36 @@ import (
 	jww "github.com/spf13/jwalterweatherman"
 )
 
+// supported config formats
+const (
+	UnsupportedCfgFormat CfgFormat = iota
+	JSON
+	TOML
+)
+
+type CfgFormat int
+
+var cfgFormats = [...]string{
+	"unsupported configuration format",
+	"JSON",
+	"TOML",
+}
+
+func (c CfgFormat) String() string { return cfgFormats[c] }
+
+func CfgFormatFromString(s string) CfgFormat {
+	// make upper for consistency
+	s = strings.ToUpper(s)
+	switch s {
+	case "JSON", "JSN", "CJSON", "CJSN":
+		return JSON
+	case "TOML", "TML":
+		return TOML
+	default:
+		return UnsupportedCfgFormat
+	}
+}
+
 // supported distros
 const (
 	UnsupportedDistro Distro = iota
@@ -33,10 +63,6 @@ const (
 	Debian
 	Ubuntu
 )
-
-func init() {
-	Builds = map[string]builds{}
-}
 
 // Distro is the distribution type
 type Distro int
@@ -75,6 +101,10 @@ var Builds map[string]builds
 
 // Defaults for each supported distribution
 var DistroDefaults distroDefaults
+
+func init() {
+	Builds = map[string]builds{}
+}
 
 // distroDefaults contains the defaults for all supported distros and a flag
 // whether its been set or not.

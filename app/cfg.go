@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -83,8 +82,9 @@ func (b *build) copy() build {
 	return newB
 }
 
-// setTypes goes through each component map and check's if the templateSection
-// Type is set.  If it isn't, the ID (key) is used to set it.
+// setTypes goes through each component map and check's if the
+// templateSection Type is set.  If it isn't, the ID (key) is used to
+// set it.
 func (b *build) setTypes() {
 	for k, v := range b.Builders {
 		if len(v.Type) == 0 {
@@ -207,8 +207,9 @@ func (p *postProcessor) DeepCopy() postProcessor {
 	return c
 }
 
-// postProcessor.mergeSettings  merges the settings section of a post-processor
-// with the passed slice of settings. New values supercede existing ones.
+// postProcessor.mergeSettings  merges the settings section of a
+// post-processor with the passed slice of settings. New values supercede
+// existing ones.
 func (p *postProcessor) mergeSettings(sl []string) error {
 	if sl == nil {
 		return nil
@@ -346,10 +347,10 @@ func (i *IODirInf) check() {
 	}
 }
 
-// PackerInf is used to store information about a Packer Template. In Packer,
-// these fields are optional, put used here because they are always printed out
-// in a template as custom creation of template output hasn't been written--it
-// may never be written.
+// PackerInf is used to store information about a Packer Template. In
+// Packer, these fields are optional, put used here because they are
+// always printed out in a template as custom creation of template output
+// hasn't been written--it may never be written.
 type PackerInf struct {
 	MinPackerVersion string `toml:"min_packer_version" json:"min_packer_version"`
 	Description      string `toml:"description" json:"description"`
@@ -379,24 +380,21 @@ func (d *defaults) Load(p string) error {
 	if d.loaded {
 		return nil
 	}
-	name := GetConfFile(p, "default")
-	switch contour.GetString(Format) {
-	case "toml", "tml":
+	name, format, err := findConfigFile(getConfigFile(p, fmt.Sprintf("%s.%s", "default", contour.GetString(Format))))
+	if err != nil {
+		return decodeErr(fmt.Sprintf("%s config file", getConfigFile(p, fmt.Sprintf("%s.%s", "default", contour.GetString(Format)))), err)
+	}
+	switch format {
+	case TOML:
 		_, err := toml.DecodeFile(name, &d)
 		if err != nil {
 			return decodeErr(name, err)
 		}
-	case "cjsn", "json":
+	case JSON:
 		var b []byte
-		var err, alterr error
 		b, err = ioutil.ReadFile(name)
 		if err != nil {
-			// try alternate
-			name, _ = getAltJSONName(name)
-			b, alterr = ioutil.ReadFile(name)
-			if alterr != nil {
-				return decodeErr(name, err)
-			}
+			return decodeErr(name, err)
 		}
 		err = cjsn.Unmarshal(b, &d)
 		if err != nil {
@@ -447,26 +445,21 @@ type supported struct {
 
 // Load the supported distro info.
 func (s *supported) Load(p string) error {
-	name := GetConfFile(p, "supported")
-	switch contour.GetString(Format) {
-	case "toml", "tml":
+	name, format, err := findConfigFile(getConfigFile(p, "supported"))
+	if err != nil {
+		return decodeErr(fmt.Sprintf("%s config file", getConfigFile(p, "supported")), err)
+	}
+	switch format {
+	case TOML:
 		_, err := toml.DecodeFile(name, &s.Distro)
 		if err != nil {
 			return decodeErr(name, err)
 		}
-	case "cjsn", "json":
+	case JSON:
 		var b []byte
-		var err, alterr error
 		b, err = ioutil.ReadFile(name)
 		if err != nil {
-			// try alternate
-			name, _ = getAltJSONName(name)
-			b, alterr = ioutil.ReadFile(name)
-			if alterr != nil {
-				// use the original error because the filename will
-				// be what the user expects
-				return decodeErr(name, err)
-			}
+			return decodeErr(name, err)
 		}
 		err = cjsn.Unmarshal(b, &s.Distro)
 		if err != nil {
@@ -490,13 +483,13 @@ func (b *builds) Load(name string) error {
 	if name == "" {
 		return filenameNotSetErr("build")
 	}
-	switch contour.GetString(Format) {
-	case "toml", "tml":
+	switch CfgFormatFromString(contour.GetString(Format)) {
+	case TOML:
 		_, err := toml.DecodeFile(name, &b.Build)
 		if err != nil {
 			return decodeErr(name, err)
 		}
-	case "cjsn", "json", "jsn":
+	case JSON:
 		by, err := ioutil.ReadFile(name)
 		if err != nil {
 			return decodeErr(name, err)
@@ -550,26 +543,22 @@ type list struct {
 // Load loads the build lists. It accepts a path prefix; which is mainly used
 // for testing ATM.
 func (bl *buildLists) Load(p string) error {
-
 	// Load the build lists.
-	name := GetConfFile(p, "build_list")
-	switch contour.GetString(Format) {
-	case "toml", "tml":
+	name, format, err := findConfigFile(getConfigFile(p, "build_list"))
+	if err != nil {
+		return decodeErr(fmt.Sprintf("%s config file", filepath.Join(p, "build_list")), err)
+	}
+	switch format {
+	case TOML:
 		_, err := toml.DecodeFile(name, &bl.List)
 		if err != nil {
 			return decodeErr(name, err)
 		}
-	case "cjsn", "json":
+	case JSON:
 		var b []byte
-		var err, alterr error
 		b, err = ioutil.ReadFile(name)
 		if err != nil {
-			// try alternate
-			name, _ = getAltJSONName(name)
-			b, alterr = ioutil.ReadFile(name)
-			if alterr != nil {
-				return decodeErr(name, err)
-			}
+			return decodeErr(name, err)
 		}
 		err = cjsn.Unmarshal(b, &bl.List)
 		if err != nil {
@@ -609,40 +598,30 @@ func mergeKeysFromComponentMaps(m ...map[string]Componenter) []string {
 	return MergeSlices(keys...)
 }
 
-// SetCfgFile set's the appCFg from the app's cfg file and then applies any env
-// vars that have been set. After this, settings can only be updated
+// SetCfgFile set's the appCFg from the app's cfg file and then applies any
+// env vars that have been set. After this, settings can only be updated
 // programmatically or via command-line flags.
 //
-// The default cfg file may not be the one found as the app config file may be
-// in a different format. SetCfg first looks for it in the configured location.
-// If it is not found, the alternate format is checked.
+// The default cfg file may not be the one found as the app config file may
+// be in a different format. SetCfg first looks for it in the configured
+// location. If it is not found, the alternate format is checked.
 //
-// Since Rancher supports operations without a config file, not finding one is
-// not an error state.
+// Since Rancher supports operations without a config file, not finding one
+// is not an error state.
 //
 // Currently supported config file formats:
 //    TOML
 //    JSON || CJSN
 func SetCfgFile() error {
-	// determine the correct file, This is done here because it's less ugly than the alternatives.
-	fname := contour.GetString(CfgFile)
-	_, err := os.Stat(fname)
-	if err != nil && os.IsNotExist(err) {
-		// if this is json, try cjsn
-		var ok bool
-		fname, ok = getAltJSONName(fname)
-		if !ok {
-			return nil
-		}
-		_, err := os.Stat(fname)
-		if err != nil && os.IsNotExist(err) {
-			return nil
-		}
-	}
+	// find the actual config filename, it may have a different extension as
+	// formats can have more than one accepted extension, this is mainly to
+	// handle CJSON vs JSON though.
+	fname, _, err := findConfigFile(contour.GetString(CfgFile))
 	if err != nil {
 		jww.ERROR.Print(err)
 		return err
 	}
+	contour.UpdateCfgFile(CfgFile, fname)
 	err = contour.SetCfg()
 	if err != nil {
 		jww.ERROR.Print(err)
@@ -650,12 +629,47 @@ func SetCfgFile() error {
 	return err
 }
 
-// GetConfFile returns the location of the provided conf file. This accounts
+// Take a config file name and checks to see if it exists.  If it doesn't
+// exist, it checks to see if the file can be found under an alternate
+// extension by checking what config format Rancher is set to use and
+// iterating through the list of supported exts for that format.  If a file
+// exists under a particular file + ext combination, that is returned.  If
+// no match is found, the error on the original filename is returned so that
+// the message information is consistent with what is expected.
+func findConfigFile(fname string) (string, CfgFormat, error) {
+	cf := CfgFormatFromString(contour.GetString(Format))
+	_, err := os.Stat(fname)
+	if err == nil {
+		return fname, cf, nil
+	}
+	// if the file isn't found, look for it according to format extensions
+	var exts []string
+	switch cf {
+	case JSON:
+		exts = []string{"json", "jsn", "cjson", "cjsn", "JSON", "JSN", "CJSON", "CJSN"}
+	case TOML:
+		exts = []string{"toml", "tml", "TOML", "TML"}
+	default:
+		return "", UnsupportedCfgFormat, fmt.Errorf("unsupported config format: %s", contour.GetString(Format))
+	}
+	name := strings.TrimSuffix(fname, filepath.Ext(fname))
+	for _, ext := range exts {
+		n := fmt.Sprintf("%s.%s", name, ext)
+		_, err := os.Stat(n)
+		if err == nil {
+			return n, cf, nil
+		}
+	}
+	// nothing found
+	return "", cf, err
+}
+
+// GetConfigFile returns the location of the provided conf file. This accounts
 // for examples. An empty
 //
 // If the p field has a value, it is used as the dir path, instead of the
 // confDir,
-func GetConfFile(p, name string) string {
+func getConfigFile(p, name string) string {
 	if name == "" {
 		return name
 	}
@@ -678,19 +692,4 @@ func GetConfFile(p, name string) string {
 		return filepath.Join(contour.GetString(ExampleDir), p, name)
 	}
 	return filepath.Join(p, name)
-}
-
-// checks to see if the file ext is either .json or .cjsn.  If it is, it
-// returns the name with the alternate ext, otherwise it returns false.
-// This allows for transparent support of either JSON or CJSN.
-func getAltJSONName(fname string) (string, bool) {
-	ext := path.Ext(fname)
-	switch ext {
-	case ".json":
-		return fmt.Sprintf("%s.cjsn", strings.TrimSuffix(fname, ext)), true
-	case ".cjsn":
-		return fmt.Sprintf("%s.json", strings.TrimSuffix(fname, ext)), true
-	default:
-		return "", false
-	}
 }
