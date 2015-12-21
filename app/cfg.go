@@ -48,7 +48,7 @@ type build struct {
 	// component type value can be used, e.g. ID: "preprocess" or "shell".
 	ProvisionerIDs []string `toml:"provisioner_ids" json:"provisioner_ids"`
 	// A map of provisioner configurations.
-	Provisioners map[string]provisioner `toml:"provisioners"`
+	Provisioners map[string]provisioner `toml:"provisioners" json:"provisioners"`
 }
 
 // copy makes a deep copy of the build and returns it.
@@ -110,11 +110,11 @@ func (b *build) setTypes() {
 type templateSection struct {
 	// Type is the actual Packer component type, this may or may not be the
 	// same as the map key (ID).
-	Type string
+	Type string `toml:"type" json:"type"`
 	// Settings are string settings in "key=value" format.
-	Settings []string
+	Settings []string `toml:"settings" json:"settings"`
 	// Arrays are the string array settings.
-	Arrays map[string]interface{}
+	Arrays map[string]interface{} `toml:"arrays" json:"arrays"`
 }
 
 // templateSection.DeepCopy updates its information with new via a deep copy.
@@ -270,11 +270,12 @@ func (p *provisioner) mergeSettings(sl []string) error {
 type BuildInf struct {
 	// Name is the name for the build. This may be an assigned value from
 	// a TOML file setting.
-	Name string
+	Name string `toml:"name" json:"name"`
 	// BuildName is the name of the build. This is either the name, as
 	// specified in the build.toml file, or a generated name for -distro
 	// flag based builds.
 	BuildName string `toml:"build_name" json:"build_name"`
+	// BaseURL is the base url for the iso.
 	BaseURL   string `toml:"base_url" json:"base_url"`
 }
 
@@ -420,13 +421,13 @@ type distro struct {
 	BuildInf
 	// The supported Architectures, which can differ per distro. The labels can also
 	// differ, e.g. amd64 and x86_64.
-	Arch []string `toml:"Arch"`
+	Arch []string `toml:"arch" json:"arch"`
 	// Supported iso Images, e.g. server, minimal, etc.
-	Image []string `toml:"Image"`
+	Image []string `toml:"image" json:"image"`
 	// Supported Releases: the supported Releases are the Releases available for
 	// download from that distribution's download page. Archived and unsupported
 	// Releases are not used.
-	Release []string `toml:"Release"`
+	Release []string `toml:"release" json:"release"`
 	// The default Image configuration for this distribution. This usually consists of
 	// things like Release, Architecture, Image type, etc.
 	DefImage []string `toml:"default_image" json:"default_image"`
