@@ -15,7 +15,7 @@ import (
 )
 
 func newTestCentOS() centos {
-	c := centos{release{Release: "6", Image: "Minimal", Arch: "x86_64"}, ""}
+	c := centos{release{Release: "6", Image: "Minimal", Arch: "x86_64"}, "", "", "CA"}
 	c.ChecksumType = "sha256"
 	return c
 }
@@ -63,7 +63,7 @@ func TestCentOSsetReleaseInfo(t *testing.T) {
 }
 
 func TestCentOSGetOSType(t *testing.T) {
-	c := centos{release{Arch: "x86_64"}, ""}
+	c := centos{release{Arch: "x86_64"}, "", "", ""}
 	buildType := "vmware-iso"
 	res, err := c.getOSType(buildType)
 	if err != nil {
@@ -84,7 +84,7 @@ func TestCentOSGetOSType(t *testing.T) {
 		}
 	}
 
-	c = centos{release{Arch: "x386"}, ""}
+	c = centos{release{Arch: "x386"}, "", "", ""}
 	buildType = "vmware-iso"
 	res, err = c.getOSType(buildType)
 	if err != nil {
@@ -154,7 +154,7 @@ func TestCentOSSetChecksumURL(t *testing.T) {
 	if !strings.HasPrefix(checksumURL, "https://") && !strings.HasPrefix(checksumURL, "http://") {
 		t.Errorf("Expected %q to start with either \"http://\" or \"https://\", it did not.", checksumURL)
 	}
-	expected := c.FullVersion + "/isos/" + c.Arch + "/sha256sum.txt"
+	expected := c.Release + "/isos/" + c.Arch + "/sha256sum.txt"
 	if !strings.HasSuffix(checksumURL, expected) {
 		t.Errorf("Expected %q to end with %q, it did not.", checksumURL, expected)
 	}
@@ -589,5 +589,61 @@ func TestChecksumNotFoundError(t *testing.T) {
 		if err.Error() != test.expected {
 			t.Errorf("TestChecksumNotFoundError %d: expected %q, got %q", i, test.expected, err)
 		}
+	}
+}
+
+var records = [][]string{
+	[]string{"EU","Ireland","Strencom","http://www.strencom.net/","http://mirror.strencom.net/centos/","",""},
+	[]string{"EU","Italy","    GARR/CILEA","http://mirror.garr.it","http://ct.mirror.garr.it/mirrors/CentOS/","ftp://ct.mirror.garr.it/mirrors/CentOS/","rsync://ct.mirror.garr.it/CentOS/ "},
+	[]string{"US","","Oregon State University","http://osuosl.org/","http://ftp.osuosl.org/pub/centos/","ftp://ftp.osuosl.org/pub/centos/","rsync://ftp.osuosl.org/centos/"},
+	[]string{"US","","Rackspace","http://www.rackspace.com/","http://mirror.rackspace.com/CentOS/","",""},
+	[]string{"US","","Rackspace","http://www.rackspace.com/","http://mirror.rackspace.com/CentOS/","",""},
+	[]string{"US","CT","Connecticut Education Network","http://www.ct.gov/cen","http://mirror.net.cen.ct.gov/centos/","",""},
+	[]string{"US","CT","Connecticut Education Network","http://www.ct.gov/cen","http://mirror.net.cen.ct.gov/centos/","",""},
+	[]string{"US","DC","ServInt","http://www.servint.com/","http://centos.servint.com/","",""},
+	[]string{"US","DC","ServInt","http://www.servint.com/","http://centos.servint.com/","",""},
+}
+
+func TestFilterRecords(t *testing.T) {
+	tests := []struct{
+		value string
+		index int
+		expected [][]string
+	}{
+		{"", 0, [][]string{}},
+		{"", 1, [][]string{}},
+		{"EU", 0, [][]string{
+				[]string{"EU","Ireland","Strencom","http://www.strencom.net/","http://mirror.strencom.net/centos/","",""},
+				[]string{"EU","Italy","    GARR/CILEA","http://mirror.garr.it","http://ct.mirror.garr.it/mirrors/CentOS/","ftp://ct.mirror.garr.it/mirrors/CentOS/","rsync://ct.mirror.garr.it/CentOS/ "},
+			},
+		},
+		{"Italy", 1, [][]string{
+				[]string{"EU","Italy","    GARR/CILEA","http://mirror.garr.it","http://ct.mirror.garr.it/mirrors/CentOS/","ftp://ct.mirror.garr.it/mirrors/CentOS/","rsync://ct.mirror.garr.it/CentOS/ "},
+			},
+		},
+		{"DC", 1, [][]string{
+				[]string{"US","DC","ServInt","http://www.servint.com/","http://centos.servint.com/","",""},
+				[]string{"US","DC","ServInt","http://www.servint.com/","http://centos.servint.com/","",""},
+			},
+		},
+		{"Rackspace", 2, [][]string{
+				[]string{"US","","Rackspace","http://www.rackspace.com/","http://mirror.rackspace.com/CentOS/","",""},
+				[]string{"US","","Rackspace","http://www.rackspace.com/","http://mirror.rackspace.com/CentOS/","",""},
+			},
+		},
+		{"Oregon State University", 2, [][]string{
+				[]string{"US","","Oregon State University","http://osuosl.org/","http://ftp.osuosl.org/pub/centos/","ftp://ftp.osuosl.org/pub/centos/","rsync://ftp.osuosl.org/centos/"},
+			},
+		},
+	}
+	for i, test := range tests {
+		filtered := filterRecords(test.value, test.index, records)
+		if i < 2 {
+				if MarshalJSONToString.Get(filtered) != MarshalJSONToString.Get(records) {
+					t.Errorf("got %v; expected %v", filtered, records)
+				}
+				continue
+		}
+
 	}
 }

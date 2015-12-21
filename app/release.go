@@ -2,6 +2,8 @@ package app
 
 import (
 	"bytes"
+	"encoding/csv"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -70,18 +72,53 @@ type release struct {
 // centos wrapper to release.
 type centos struct {
 	release
-	isoredirectURL string
+	mirrorURL string
+	region string
+	country string
 }
 
-// isoRedirectURL returns the currect url for the desired version and architecture.
-func (r *centos) setISORedirectURL() {
-	var buff bytes.Buffer
-	buff.WriteString("http://isoredirect.centos.org/centos/")
-	buff.WriteString(r.Release)
-	buff.WriteString("/isos/")
-	buff.WriteString(r.Arch)
-	buff.WriteString("/")
-	r.isoredirectURL = buff.String()
+// setMirrorURL gets a mirror url.  If region or country is set, the mirror
+// list is filtered before obtaining the mirror url.  IF there is more than
+// 1 url in the possible mirror list; the mirror url is psuedo-randomly
+// selected.
+func (r *centos) setMirrorURL() error {
+	// get the mirror list
+	resp, err := http.Get("https://www.centos.org/download/full-mirrorlist.csv")
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	text, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	var buf bytes.Buffer
+	lines := bytes.Split(text, []byte("\n"))
+	for _, line := range lines {
+		if len(line) == 0 {
+			break
+		}
+		// replace \" with nothing as the csv Reader chokes on it intermitently
+		// we don't actually care about the quoting here
+		line = bytes.Replace(line, []byte(`\"`), []byte(""), -1)
+		buf.Write(line)
+		buf.WriteRune('\n')
+	}
+	rdr := csv.NewReader(&buf)
+	rdr.LazyQuotes = true
+	rdr.TrimLeadingSpace = true
+	records, err := rdr.ReadAll()
+	if err != nil {
+		return err
+	}
+	// TODO add special handling for rackspace and Oregon State University
+	// filter the mirrors
+	filtered := filterRecords(r.region, 0, records)
+	filtered = filterRecords(r.country, 1, filtered)
+	// get a random baseHTTPDownloadURL from the remainder
+	tmpURL := filtered[rand.Intn(len(filtered))][4]
+	r.mirrorURL = fmt.Sprintf("%s%s/isos/%s/", appendSlash(tmpURL), r.Release, r.Arch)
+	return nil
 }
 
 // setVersionInfo makes sure that the version info is properly set. Pre=CentOS
@@ -98,27 +135,16 @@ func (r *centos) setVersionInfo() error {
 	if !strings.HasPrefix(r.Release, "6") && !strings.HasPrefix(r.Release, "7") {
 		return unsupportedReleaseErr(CentOS, r.Release)
 	}
-	r.setISORedirectURL()
-	tokens, err := tokensFromURL(r.isoredirectURL)
-	if err != nil {
-		return setVersionInfoErr(r.isoredirectURL, fmt.Errorf("could not tokenize release page: %s", err))
+	// If the BaseURL isn't set, find a mirror to use
+	if r.BaseURL == "" {
+		r.setMirrorURL()
 	}
-	links := inlineElementsFromTokens("a", "href", tokens)
-	if len(links) == 0 || links == nil {
-		return setVersionInfoErr(r.isoredirectURL, fmt.Errorf("could not extract links from release page"))
-	}
-	// filter out non-http mirror links
-	links = filterLinksHasPrefix(links, []string{"http://www.", "ftp:", "http://wiki", "http://bugs", "http://bittorrent", "/"})
-	if len(links) == 0 {
-		return setVersionInfoErr(r.isoredirectURL, fmt.Errorf("filter of links from release page failed"))
-	}
-	r.BaseURL = strings.TrimSpace(links[rand.Intn(len(links)-1)])
 	if strings.HasPrefix(r.Release, "6") {
-		err = r.setVersion6Info()
+		err := r.setVersion6Info()
 		return err
 	}
 	if strings.HasPrefix(r.Release, "7") {
-		err = r.setVersion7Info()
+		err := r.setVersion7Info()
 		return err
 	}
 	return unsupportedReleaseErr(CentOS, r.Release)
@@ -127,25 +153,30 @@ func (r *centos) setVersionInfo() error {
 func (r *centos) setVersion6Info() error {
 	// ensure that the image is all lowercase
 	r.Image = strings.ToLower(r.Image)
-	parts := strings.Split(r.BaseURL, "/")
-	if len(parts) < 7 {
-		return ReleaseError{Name: CentOS.String(), Operation: "setVersion6Info", Problem: fmt.Sprintf("could not determine the current release of version %s", r.Release)}
+	tokens, err := tokensFromURL(r.mirrorURL)
+	if err != nil {
+		return setVersionInfoErr(r.mirrorURL, fmt.Errorf("could not tokenize release page: %s", err))
 	}
-	// go through each part until we get to the version
-	for _, part := range parts {
-		if strings.HasPrefix(part, r.Release) {
-			r.FullVersion = part
-			break
-		}
+	// get the tokens that are links
+	links := inlineElementsFromTokens("a", "href", tokens)
+	// get the links that start with CentOS-, these have the full version number
+	// and split it into it's parts
+	links = extractLinksHasPrefix(links, []string{"CentOS-"})
+	if len(links) == 0 {
+		return setVersionInfoErr(r.mirrorURL, errors.New("could not determine version information"))
 	}
-	if r.FullVersion == "" {
-		return ReleaseError{Name: CentOS.String(), Operation: "setVersion6Info", Problem: fmt.Sprintf("could not find the current point release for %s", r.Release)}
+	parts := strings.Split(links[0], "-")
+	// parts should be 5 elements: e.g. CentOS-6.7-x86_64-minimal.iso
+	if len(parts) < 4 {
+		return setVersionInfoErr(r.mirrorURL, errors.New("could not determine version information"))
 	}
-	nums := strings.Split(r.FullVersion, ".")
-	r.MajorVersion = nums[0]
-	if len(nums) > 1 {
-		r.MinorVersion = nums[1]
+	r.FullVersion = parts[1]
+	parts = strings.Split(parts[1], ".")
+	if len(parts) < 2 {
+		return setVersionInfoErr(r.mirrorURL, errors.New("could not determine version information"))
 	}
+	r.MajorVersion = parts[0]
+	r.MinorVersion = parts[1]
 	return nil
 }
 
@@ -154,17 +185,17 @@ func (r *centos) setVersion7Info() error {
 	// this will need to be revisited
 	r.Image = fmt.Sprintf("%s%s", strings.ToUpper(r.Image[:1]), r.Image[1:])
 	// get the page from the url
-	tokens, err := tokensFromURL(r.BaseURL)
+	tokens, err := tokensFromURL(r.mirrorURL)
 	if err != nil {
-		return setVersionInfoErr(r.isoredirectURL, fmt.Errorf("could not tokenize release page: %s", err))
+		return setVersionInfoErr(r.mirrorURL, fmt.Errorf("could not tokenize release page: %s", err))
 	}
 	links := inlineElementsFromTokens("a", "href", tokens)
 	if len(links) == 0 || links == nil {
-		return setVersionInfoErr(r.isoredirectURL, fmt.Errorf("could not extract links from release page"))
+		return setVersionInfoErr(r.mirrorURL, fmt.Errorf("could not extract links from release page"))
 	}
 	links = extractLinksHasPrefix(links, []string{fmt.Sprintf("CentOS-7-%s-%s", r.Arch, r.Image)})
 	if len(links) == 0 {
-		return setVersionInfoErr(r.isoredirectURL, fmt.Errorf("extract of links from release page failed"))
+		return setVersionInfoErr(r.mirrorURL, fmt.Errorf("extract of links from release page failed"))
 	}
 	// extract the monthstamp and fix number this may or may not include a fix number
 	parts := strings.Split(links[0], "-")
@@ -260,7 +291,7 @@ func (r *centos) findISOChecksum(page string) error {
 }
 
 func (r *centos) checksumURL() string {
-	return fmt.Sprintf("%s%ssum.txt", r.BaseURL, strings.ToLower(r.ChecksumType))
+	return fmt.Sprintf("%s%ssum.txt", r.mirrorURL, strings.ToLower(r.ChecksumType))
 }
 
 func (r *centos) setReleaseURL() {
@@ -289,6 +320,7 @@ func (r *centos) getOSType(buildType string) (string, error) {
 	// Shouldn't get here unless the buildType passed is an unsupported one.
 	return "", osTypeBuilderErr(CentOS.String(), buildType)
 }
+
 
 // An Debian specific wrapper to release
 type debian struct {
@@ -709,7 +741,8 @@ func inlineElementsFromTokens(element, attrVal string, tokens []html.Token) []st
 	return found
 }
 
-// filterLinksHasPrefix filters out links that start with the exclude pattern
+// filterLinksHasPrefix filters out links that start with the prefix and
+// returns the remaining links
 func filterLinksHasPrefix(links, prefixes []string) []string {
 	var filtered []string
 	for _, link := range links {
@@ -724,7 +757,7 @@ func filterLinksHasPrefix(links, prefixes []string) []string {
 	return filtered
 }
 
-// extractLinksHasPrefix filters out links that start with the exclude pattern
+// extractLinksHasPrefix returns the links that start with the prefix
 func extractLinksHasPrefix(links, prefixes []string) []string {
 	var extracted []string
 	for _, link := range links {
@@ -735,4 +768,20 @@ func extractLinksHasPrefix(links, prefixes []string) []string {
 		}
 	}
 	return extracted
+}
+
+// filterRecords filters the received records by comparing the value to match
+// with the value in  the field n
+func filterRecords(v string, n int, records [][]string) [][]string {
+	// if the string is empty, no filtering is done
+	if len(v) == 0 {
+		return records
+	}
+	var filtered [][]string
+	for _, record := range records {
+		if record[n] == v {
+			filtered = append(filtered, record)
+		}
+	}
+	return filtered
 }
