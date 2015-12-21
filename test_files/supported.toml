@@ -1,12 +1,14 @@
-# This file contains the supported OS images, and the default build config for 
+# This file contains the supported OS images, and the default build config for
 # each supported distribution, distro.
 #
-# To add another supported distribution, distro, the information about the 
-# supported distribution releases, architectures, and images, along with any 
+# To add another supported distribution, distro, the information about the
+# supported distribution releases, architectures, and images, along with any
 # distro specific settings must be added to this file in addition to adding
 # the code to support the distro.
 [centos]
 	base_url = ""
+	region = "US"
+	country = "CA"
 	description = "Default template config and Rancher options for CentOS"
 	arch = [
 		"i386",

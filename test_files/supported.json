@@ -1,6 +1,8 @@
 {
   "centos": {
     "base_url": "",
+    "region": "US",
+    "country": "CA",
     "description": "Default template config and Rancher options for CentOS",
     "arch": [
       "i386",
@@ -19,7 +21,7 @@
       "image = minimal",
       "arch = x86_64"
     ]
-  },	
+  },
   "debian": {
     "base_url": "http://cdimage.debian.org/debian-cd/",
     "description": "Default template config and Rancher options for Debian",

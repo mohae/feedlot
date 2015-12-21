@@ -277,6 +277,13 @@ type BuildInf struct {
 	BuildName string `toml:"build_name" json:"build_name"`
 	// BaseURL is the base url for the iso.
 	BaseURL   string `toml:"base_url" json:"base_url"`
+	// Region to use when selecting the image mirror; for use with CentOS.
+	// If empty, no region filtering will be applied.
+	Region string `toml:"region" json:"region"`
+	// Country to use when selecting the image mirror; for use with CentOS.
+	// If empty, no country filtering will be applied.  In the USA, this
+	// is used as the state field.
+	Country string `toml:"country" json:"country"`
 }
 
 func (i *BuildInf) update(b BuildInf) {
@@ -288,6 +295,12 @@ func (i *BuildInf) update(b BuildInf) {
 	}
 	if b.BaseURL != "" {
 		i.BaseURL = b.BaseURL
+	}
+	if b.Region != "" {
+		i.Region = b.Region
+	}
+	if b.Country != "" {
+		i.Country = b.Country
 	}
 }
 

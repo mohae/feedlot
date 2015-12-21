@@ -12,6 +12,8 @@
 {
 	"centos": {
 		"base_url": "",
+		"region": "US",
+		"country": "",
 		"description": "CentOS default",
 		"default_image": [
 			"release = 7",

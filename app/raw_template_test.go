@@ -182,6 +182,14 @@ var testBuildNewTPL = &rawTemplate{
 	},
 }
 
+var expecteNewTemplateBuildInf = BuildInf{
+	Name: "",
+	BuildName: "",
+	BaseURL: "",
+	Region: "US",
+	Country: "CA",
+}
+
 var testRawTemplateBuilderOnly = &rawTemplate{
 	PackerInf: PackerInf{MinPackerVersion: "0.4.0", Description: "Test supported distribution template"},
 	IODirInf: IODirInf{
@@ -333,8 +341,8 @@ func TestRawTemplateUpdateBuildSettings(t *testing.T) {
 	if MarshalJSONToString.Get(r.PackerInf) != MarshalJSONToString.Get(testBuildNewTPL.PackerInf) {
 		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testBuildNewTPL.PackerInf), MarshalJSONToString.Get(r.PackerInf))
 	}
-	if MarshalJSONToString.Get(r.BuildInf) != MarshalJSONToString.Get(testBuildNewTPL.BuildInf) {
-		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testBuildNewTPL.BuildInf), MarshalJSONToString.Get(r.BuildInf))
+	if MarshalJSONToString.Get(r.BuildInf) != MarshalJSONToString.Get(testSupportedCentOS.BuildInf) {
+		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testSupportedCentOS.BuildInf), MarshalJSONToString.Get(r.BuildInf))
 	}
 	if MarshalJSONToString.Get(r.BuilderIDs) != MarshalJSONToString.Get(testBuildNewTPL.BuilderIDs) {
 		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testBuildNewTPL.BuilderIDs), MarshalJSONToString.Get(r.BuilderIDs))

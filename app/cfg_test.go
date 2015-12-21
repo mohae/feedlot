@@ -109,6 +109,8 @@ var testSupported = map[string]distro{
 	"centos": distro{
 		BuildInf: BuildInf{
 			BaseURL: "",
+			Region: "US",
+			Country: "CA",
 		},
 		IODirInf: IODirInf{},
 		PackerInf: PackerInf{
@@ -264,7 +266,11 @@ var testSupportedUbuntu = &distro{
 }
 
 var testSupportedCentOS = &distro{
-	BuildInf: BuildInf{BaseURL: ""},
+	BuildInf: BuildInf{
+		BaseURL: "",
+		Region: "US",
+		Country: "CA",
+	},
 	IODirInf: IODirInf{},
 	PackerInf: PackerInf{
 		MinPackerVersion: "",
