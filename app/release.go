@@ -162,6 +162,10 @@ func (r *centos) setMirrorURL() error {
 	// filter the mirrors
 	filtered := filterRecords(r.region, 0, records)
 	filtered = filterRecords(r.country, 1, filtered)
+	// it's an error state if everything is filtered out
+	if len(filtered) == 0 {
+		return ReleaseError{Name: CentOS.String(), Operation: fmt.Sprintf("filter mirror: region: %q, country: %q", r.region, r.country), Problem: "no matches found"}
+	}
 	// get a random baseHTTPDownloadURL from the remainder
 	tmpURL := filtered[rand.Intn(len(filtered))][4]
 	r.mirrorURL = fmt.Sprintf("%s%s/isos/%s/", appendSlash(tmpURL), r.Release, r.Arch)
@@ -184,7 +188,10 @@ func (r *centos) setVersionInfo() error {
 	}
 	// If the BaseURL isn't set, find a mirror to use
 	if r.BaseURL == "" {
-		r.setMirrorURL()
+		err := r.setMirrorURL()
+		if err != nil {
+			return err
+		}
 	}
 	if strings.HasPrefix(r.Release, "6") {
 		err := r.setVersion6Info()
@@ -194,7 +201,7 @@ func (r *centos) setVersionInfo() error {
 		err := r.setVersion7Info()
 		return err
 	}
-	return unsupportedReleaseErr(CentOS, r.Release)
+	return nil
 }
 
 func (r *centos) setVersion6Info() error {

@@ -15,28 +15,31 @@ import (
 )
 
 func newTestCentOS() centos {
-	c := centos{release{Release: "6", Image: "Minimal", Arch: "x86_64"}, "", "", "CA"}
+	c := centos{release: release{Release: "6", Image: "Minimal", Arch: "x86_64"}, mirrorURL: "", region: "", country: ""}
 	c.ChecksumType = "sha256"
 	return c
 }
 
 func TestCentOSsetReleaseInfo(t *testing.T) {
 	tests := []struct{
+		country string
 		release string
 		fullVersion string
 		expMajor string
 		minor string
 		expError string
 	}{
-               {"", "", "", "", "centos SetISOInfo: release not set"},
-               {"6", "", "6", "", ""}, // minor is empty because it may chagne with a new release
-               {"6", "6.6", "6", "6", ""},
-               {"7", "", "7", "", ""},
-               {"8", "", "", "", "centos 8: unsupported release"},
+		{"", "", "", "", "", "centos SetISOInfo: release not set"},
+		{"IL", "6", "", "6", "", ""}, // minor is empty because it may chagne with a new release
+		{"IL", "6", "6.6", "6", "6", ""},
+		{"IL", "7", "", "7", "", ""},
+		{"ZZ", "7", "", "7", "", "centos filter mirror: region: \"\", country: \"ZZ\": no matches found"},
+		{"IL", "8", "", "", "", "centos 8: unsupported release"},
 	}
 	c := newTestCentOS()
 	for i, test := range tests {
 		c.Release = test.release
+		c.country = test.country
 		err := c.setVersionInfo()
 		if err != nil {
 			if err.Error() != test.expError {
@@ -623,28 +626,33 @@ func TestFilterRecords(t *testing.T) {
 	}{
 		{"", 0, [][]string{}},
 		{"", 1, [][]string{}},
-		{"EU", 0, [][]string{
-			[]string{"EU", "Ireland", "Strencom", "http://www.strencom.net/", "http://mirror.strencom.net/centos/", "", ""},
-			[]string{"EU", "Italy", "    GARR/CILEA", "http://mirror.garr.it", "http://ct.mirror.garr.it/mirrors/CentOS/", "ftp://ct.mirror.garr.it/mirrors/CentOS/", "rsync://ct.mirror.garr.it/CentOS/ "},
+		{
+			"EU", 0, [][]string{
+				[]string{"EU", "Ireland", "Strencom", "http://www.strencom.net/", "http://mirror.strencom.net/centos/", "", ""},
+				[]string{"EU", "Italy", "    GARR/CILEA", "http://mirror.garr.it", "http://ct.mirror.garr.it/mirrors/CentOS/", "ftp://ct.mirror.garr.it/mirrors/CentOS/", "rsync://ct.mirror.garr.it/CentOS/ "},
+			},
+	       },
+	       {
+			"Italy", 1, [][]string{
+				[]string{"EU", "Italy", "    GARR/CILEA", "http://mirror.garr.it", "http://ct.mirror.garr.it/mirrors/CentOS/", "ftp://ct.mirror.garr.it/mirrors/CentOS/", "rsync://ct.mirror.garr.it/CentOS/ "},
+			},
 		},
+		{
+			"DC", 1, [][]string{
+				[]string{"US", "DC", "ServInt", "http://www.servint.com/", "http://centos.servint.com/", "", ""},
+				[]string{"US", "DC", "ServInt", "http://www.servint.com/", "http://centos.servint.com/", "", ""},
+			},
 		},
-		{"Italy", 1, [][]string{
-			[]string{"EU", "Italy", "    GARR/CILEA", "http://mirror.garr.it", "http://ct.mirror.garr.it/mirrors/CentOS/", "ftp://ct.mirror.garr.it/mirrors/CentOS/", "rsync://ct.mirror.garr.it/CentOS/ "},
+		{
+			"Rackspace", 2, [][]string{
+				[]string{"US", "", "Rackspace", "http://www.rackspace.com/", "http://mirror.rackspace.com/CentOS/", "", ""},
+				[]string{"US", "", "Rackspace", "http://www.rackspace.com/", "http://mirror.rackspace.com/CentOS/", "", ""},
+			},
 		},
-		},
-		{"DC", 1, [][]string{
-			[]string{"US", "DC", "ServInt", "http://www.servint.com/", "http://centos.servint.com/", "", ""},
-			[]string{"US", "DC", "ServInt", "http://www.servint.com/", "http://centos.servint.com/", "", ""},
-		},
-		},
-		{"Rackspace", 2, [][]string{
-			[]string{"US", "", "Rackspace", "http://www.rackspace.com/", "http://mirror.rackspace.com/CentOS/", "", ""},
-			[]string{"US", "", "Rackspace", "http://www.rackspace.com/", "http://mirror.rackspace.com/CentOS/", "", ""},
-		},
-		},
-		{"Oregon State University", 2, [][]string{
-			[]string{"US", "", "Oregon State University", "http://osuosl.org/", "http://ftp.osuosl.org/pub/centos/", "ftp://ftp.osuosl.org/pub/centos/", "rsync://ftp.osuosl.org/centos/"},
-		},
+		{
+			"Oregon State University", 2, [][]string{
+				[]string{"US", "", "Oregon State University", "http://osuosl.org/", "http://ftp.osuosl.org/pub/centos/", "ftp://ftp.osuosl.org/pub/centos/", "rsync://ftp.osuosl.org/centos/"},
+			},
 		},
 	}
 	for i, test := range tests {
