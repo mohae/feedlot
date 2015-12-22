@@ -26,8 +26,53 @@ type ReleaseError struct {
 }
 
 func (r ReleaseError) Error() string {
-	return fmt.Sprintf("%s %s error: %s", r.Name, r.Operation, r.Problem)
+	return fmt.Sprintf("%s %s: %s", r.Name, r.Operation, r.Problem)
 }
+
+func emptyPageErr(name, operation string) error {
+	return ReleaseError{Name: name, Operation: operation, Problem: "page empty"}
+}
+
+func checksumNotFoundErr(name, operation string) error {
+	return ReleaseError{Name: name, Operation: operation, Problem: "checksum not found on page"}
+}
+
+func checksumNotSetErr(name string) error {
+	return ReleaseError{Name: name, Operation: "setISOChecksum", Problem: "checksum not set"}
+}
+
+func noArchErr(name string) error {
+	return ReleaseError{Name: name, Operation: "SetISOInfo", Problem: "arch not set"}
+}
+
+func noFullVersionErr(name string) error {
+	return ReleaseError{Name: name, Operation: "SetISOInfo", Problem: "full version not set"}
+}
+
+func noMajorVersionErr(name string) error {
+	return ReleaseError{Name: name, Operation: "SetISOInfo", Problem: "major version not set"}
+}
+
+func noMinorVersionErr(name string) error {
+	return ReleaseError{Name: name, Operation: "SetISOInfo", Problem: "minor version not set"}
+}
+
+func noReleaseErr(name string) error {
+	return ReleaseError{Name: name, Operation: "SetISOInfo", Problem: "release not set"}
+}
+
+func setVersionInfoErr(name string, err error) error {
+	return ReleaseError{Name: name, Operation: "SetVersionInfo", Problem: err.Error()}
+}
+
+func unsupportedReleaseErr(d Distro, name string) error {
+	return fmt.Errorf("%s %s: unsupported release", d, name)
+}
+
+func osTypeBuilderErr(name, typ string) error {
+	return ReleaseError{Name: name, Operation: "getOSType", Problem: fmt.Sprintf("%s is not supported by this distro", typ)}
+}
+
 
 // Iso image information
 type iso struct {
@@ -81,6 +126,8 @@ type centos struct {
 // list is filtered before obtaining the mirror url.  IF there is more than
 // 1 url in the possible mirror list; the mirror url is psuedo-randomly
 // selected.
+//
+// Mirrors only have  the latest release for a given version.
 func (r *centos) setMirrorURL() error {
 	// get the mirror list
 	resp, err := http.Get("https://www.centos.org/download/full-mirrorlist.csv")
@@ -155,25 +202,28 @@ func (r *centos) setVersion6Info() error {
 	r.Image = strings.ToLower(r.Image)
 	tokens, err := tokensFromURL(r.mirrorURL)
 	if err != nil {
-		return setVersionInfoErr(r.mirrorURL, fmt.Errorf("could not tokenize release page: %s", err))
+		return setVersionInfoErr(r.mirrorURL, fmt.Errorf("could not determine version information: tokenizing release page: %s", err))
 	}
 	// get the tokens that are links
 	links := inlineElementsFromTokens("a", "href", tokens)
+	if len(links) == 0 || links == nil {
+               return setVersionInfoErr(r.mirrorURL, fmt.Errorf("could not determine version information: extract release page links failed"))
+	}
 	// get the links that start with CentOS-, these have the full version number
 	// and split it into it's parts
 	links = extractLinksHasPrefix(links, []string{"CentOS-"})
 	if len(links) == 0 {
-		return setVersionInfoErr(r.mirrorURL, errors.New("could not determine version information"))
+		return setVersionInfoErr(r.mirrorURL, errors.New("could not determine version information: no CentOS iso links found"))
 	}
 	parts := strings.Split(links[0], "-")
 	// parts should be 5 elements: e.g. CentOS-6.7-x86_64-minimal.iso
 	if len(parts) < 4 {
-		return setVersionInfoErr(r.mirrorURL, errors.New("could not determine version information"))
+		return setVersionInfoErr(r.mirrorURL, errors.New("could not determine version information: parse of CentOS iso links failed"))
 	}
 	r.FullVersion = parts[1]
 	parts = strings.Split(parts[1], ".")
 	if len(parts) < 2 {
-		return setVersionInfoErr(r.mirrorURL, errors.New("could not determine version information"))
+		return setVersionInfoErr(r.mirrorURL, errors.New("could not determine version information: could not parse version info from CentOS iso links"))
 	}
 	r.MajorVersion = parts[0]
 	r.MinorVersion = parts[1]
@@ -187,27 +237,24 @@ func (r *centos) setVersion7Info() error {
 	// get the page from the url
 	tokens, err := tokensFromURL(r.mirrorURL)
 	if err != nil {
-		return setVersionInfoErr(r.mirrorURL, fmt.Errorf("could not tokenize release page: %s", err))
+		return setVersionInfoErr(r.mirrorURL, fmt.Errorf("could not determine version information: tokenizing release page: %s", err))
 	}
 	links := inlineElementsFromTokens("a", "href", tokens)
 	if len(links) == 0 || links == nil {
-		return setVersionInfoErr(r.mirrorURL, fmt.Errorf("could not extract links from release page"))
+		 return setVersionInfoErr(r.mirrorURL, fmt.Errorf("could not determine version information: extract release page links failed"))
 	}
-	links = extractLinksHasPrefix(links, []string{fmt.Sprintf("CentOS-7-%s-%s", r.Arch, r.Image)})
+	links = extractLinksHasPrefix(links, []string{"CentOS-"})
 	if len(links) == 0 {
-		return setVersionInfoErr(r.mirrorURL, fmt.Errorf("extract of links from release page failed"))
+		return setVersionInfoErr(r.mirrorURL, fmt.Errorf("could not determine version information: no CentOS iso links found"))
 	}
 	// extract the monthstamp and fix number this may or may not include a fix number
 	parts := strings.Split(links[0], "-")
 	r.MajorVersion = parts[1]
-	if len(parts) > 5 {
-		monthstamp := parts[4]
-		tmp := strings.Split(parts[5], ".")
-		r.MinorVersion = fmt.Sprintf("%s-%s", monthstamp, tmp[0])
-	} else {
-		tmp := strings.Split(parts[4], ".")
-		r.MinorVersion = tmp[0]
-	}
+	if len(parts) < 5 {
+               return setVersionInfoErr(r.mirrorURL, errors.New("could not determine version information: parse of CentOS iso links failed"))
+       }
+       tmp := strings.Split(parts[4], ".")
+       r.MinorVersion = tmp[0]
 	return nil
 }
 

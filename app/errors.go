@@ -72,50 +72,6 @@ func PackerCreateErr(name string, err error) error {
 	return fmt.Errorf("create of Packer template for %q failed: %s", name, err)
 }
 
-func emptyPageErr(name, operation string) error {
-	return ReleaseError{Name: name, Operation: operation, Problem: "page was empty"}
-}
-
-func checksumNotFoundErr(name, operation string) error {
-	return ReleaseError{Name: name, Operation: operation, Problem: "checksum not found on page"}
-}
-
-func checksumNotSetErr(name string) error {
-	return ReleaseError{Name: name, Operation: "setISOChecksum", Problem: "checksum not set"}
-}
-
-func noArchErr(name string) error {
-	return ReleaseError{Name: name, Operation: "SetISOInfo", Problem: "arch was not set"}
-}
-
-func noFullVersionErr(name string) error {
-	return ReleaseError{Name: name, Operation: "SetISOInfo", Problem: "full version was not set"}
-}
-
-func noMajorVersionErr(name string) error {
-	return ReleaseError{Name: name, Operation: "SetISOInfo", Problem: "major version was not set"}
-}
-
-func noMinorVersionErr(name string) error {
-	return ReleaseError{Name: name, Operation: "SetISOInfo", Problem: "minor version was not set"}
-}
-
-func noReleaseErr(name string) error {
-	return ReleaseError{Name: name, Operation: "SetISOInfo", Problem: "release was not set"}
-}
-
-func setVersionInfoErr(name string, err error) error {
-	return ReleaseError{Name: name, Operation: "SetVersionInfo", Problem: err.Error()}
-}
-
-func unsupportedReleaseErr(d Distro, name string) error {
-	return fmt.Errorf("%s %s: unsupported release", d, name)
-}
-
-func osTypeBuilderErr(name, typ string) error {
-	return ReleaseError{Name: name, Operation: "getOSType", Problem: fmt.Sprintf("%s is not supported by this distro", typ)}
-}
-
 type RancherError struct {
 	BuildName string
 	Distro    string
