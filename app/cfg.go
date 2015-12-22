@@ -276,7 +276,7 @@ type BuildInf struct {
 	// flag based builds.
 	BuildName string `toml:"build_name" json:"build_name"`
 	// BaseURL is the base url for the iso.
-	BaseURL   string `toml:"base_url" json:"base_url"`
+	BaseURL string `toml:"base_url" json:"base_url"`
 	// Region to use when selecting the image mirror; for use with CentOS.
 	// If empty, no region filtering will be applied.
 	Region string `toml:"region" json:"region"`

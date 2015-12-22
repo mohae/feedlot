@@ -183,11 +183,11 @@ var testBuildNewTPL = &rawTemplate{
 }
 
 var expecteNewTemplateBuildInf = BuildInf{
-	Name: "",
+	Name:      "",
 	BuildName: "",
-	BaseURL: "",
-	Region: "US",
-	Country: "CA",
+	BaseURL:   "",
+	Region:    "US",
+	Country:   "CA",
 }
 
 var testRawTemplateBuilderOnly = &rawTemplate{

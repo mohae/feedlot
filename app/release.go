@@ -73,8 +73,8 @@ type release struct {
 type centos struct {
 	release
 	mirrorURL string
-	region string
-	country string
+	region    string
+	country   string
 }
 
 // setMirrorURL gets a mirror url.  If region or country is set, the mirror
@@ -320,7 +320,6 @@ func (r *centos) getOSType(buildType string) (string, error) {
 	// Shouldn't get here unless the buildType passed is an unsupported one.
 	return "", osTypeBuilderErr(CentOS.String(), buildType)
 }
-
 
 // An Debian specific wrapper to release
 type debian struct {

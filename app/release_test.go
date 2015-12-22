@@ -593,56 +593,56 @@ func TestChecksumNotFoundError(t *testing.T) {
 }
 
 var records = [][]string{
-	[]string{"EU","Ireland","Strencom","http://www.strencom.net/","http://mirror.strencom.net/centos/","",""},
-	[]string{"EU","Italy","    GARR/CILEA","http://mirror.garr.it","http://ct.mirror.garr.it/mirrors/CentOS/","ftp://ct.mirror.garr.it/mirrors/CentOS/","rsync://ct.mirror.garr.it/CentOS/ "},
-	[]string{"US","","Oregon State University","http://osuosl.org/","http://ftp.osuosl.org/pub/centos/","ftp://ftp.osuosl.org/pub/centos/","rsync://ftp.osuosl.org/centos/"},
-	[]string{"US","","Rackspace","http://www.rackspace.com/","http://mirror.rackspace.com/CentOS/","",""},
-	[]string{"US","","Rackspace","http://www.rackspace.com/","http://mirror.rackspace.com/CentOS/","",""},
-	[]string{"US","CT","Connecticut Education Network","http://www.ct.gov/cen","http://mirror.net.cen.ct.gov/centos/","",""},
-	[]string{"US","CT","Connecticut Education Network","http://www.ct.gov/cen","http://mirror.net.cen.ct.gov/centos/","",""},
-	[]string{"US","DC","ServInt","http://www.servint.com/","http://centos.servint.com/","",""},
-	[]string{"US","DC","ServInt","http://www.servint.com/","http://centos.servint.com/","",""},
+	[]string{"EU", "Ireland", "Strencom", "http://www.strencom.net/", "http://mirror.strencom.net/centos/", "", ""},
+	[]string{"EU", "Italy", "    GARR/CILEA", "http://mirror.garr.it", "http://ct.mirror.garr.it/mirrors/CentOS/", "ftp://ct.mirror.garr.it/mirrors/CentOS/", "rsync://ct.mirror.garr.it/CentOS/ "},
+	[]string{"US", "", "Oregon State University", "http://osuosl.org/", "http://ftp.osuosl.org/pub/centos/", "ftp://ftp.osuosl.org/pub/centos/", "rsync://ftp.osuosl.org/centos/"},
+	[]string{"US", "", "Rackspace", "http://www.rackspace.com/", "http://mirror.rackspace.com/CentOS/", "", ""},
+	[]string{"US", "", "Rackspace", "http://www.rackspace.com/", "http://mirror.rackspace.com/CentOS/", "", ""},
+	[]string{"US", "CT", "Connecticut Education Network", "http://www.ct.gov/cen", "http://mirror.net.cen.ct.gov/centos/", "", ""},
+	[]string{"US", "CT", "Connecticut Education Network", "http://www.ct.gov/cen", "http://mirror.net.cen.ct.gov/centos/", "", ""},
+	[]string{"US", "DC", "ServInt", "http://www.servint.com/", "http://centos.servint.com/", "", ""},
+	[]string{"US", "DC", "ServInt", "http://www.servint.com/", "http://centos.servint.com/", "", ""},
 }
 
 func TestFilterRecords(t *testing.T) {
-	tests := []struct{
-		value string
-		index int
+	tests := []struct {
+		value    string
+		index    int
 		expected [][]string
 	}{
 		{"", 0, [][]string{}},
 		{"", 1, [][]string{}},
 		{"EU", 0, [][]string{
-				[]string{"EU","Ireland","Strencom","http://www.strencom.net/","http://mirror.strencom.net/centos/","",""},
-				[]string{"EU","Italy","    GARR/CILEA","http://mirror.garr.it","http://ct.mirror.garr.it/mirrors/CentOS/","ftp://ct.mirror.garr.it/mirrors/CentOS/","rsync://ct.mirror.garr.it/CentOS/ "},
-			},
+			[]string{"EU", "Ireland", "Strencom", "http://www.strencom.net/", "http://mirror.strencom.net/centos/", "", ""},
+			[]string{"EU", "Italy", "    GARR/CILEA", "http://mirror.garr.it", "http://ct.mirror.garr.it/mirrors/CentOS/", "ftp://ct.mirror.garr.it/mirrors/CentOS/", "rsync://ct.mirror.garr.it/CentOS/ "},
+		},
 		},
 		{"Italy", 1, [][]string{
-				[]string{"EU","Italy","    GARR/CILEA","http://mirror.garr.it","http://ct.mirror.garr.it/mirrors/CentOS/","ftp://ct.mirror.garr.it/mirrors/CentOS/","rsync://ct.mirror.garr.it/CentOS/ "},
-			},
+			[]string{"EU", "Italy", "    GARR/CILEA", "http://mirror.garr.it", "http://ct.mirror.garr.it/mirrors/CentOS/", "ftp://ct.mirror.garr.it/mirrors/CentOS/", "rsync://ct.mirror.garr.it/CentOS/ "},
+		},
 		},
 		{"DC", 1, [][]string{
-				[]string{"US","DC","ServInt","http://www.servint.com/","http://centos.servint.com/","",""},
-				[]string{"US","DC","ServInt","http://www.servint.com/","http://centos.servint.com/","",""},
-			},
+			[]string{"US", "DC", "ServInt", "http://www.servint.com/", "http://centos.servint.com/", "", ""},
+			[]string{"US", "DC", "ServInt", "http://www.servint.com/", "http://centos.servint.com/", "", ""},
+		},
 		},
 		{"Rackspace", 2, [][]string{
-				[]string{"US","","Rackspace","http://www.rackspace.com/","http://mirror.rackspace.com/CentOS/","",""},
-				[]string{"US","","Rackspace","http://www.rackspace.com/","http://mirror.rackspace.com/CentOS/","",""},
-			},
+			[]string{"US", "", "Rackspace", "http://www.rackspace.com/", "http://mirror.rackspace.com/CentOS/", "", ""},
+			[]string{"US", "", "Rackspace", "http://www.rackspace.com/", "http://mirror.rackspace.com/CentOS/", "", ""},
+		},
 		},
 		{"Oregon State University", 2, [][]string{
-				[]string{"US","","Oregon State University","http://osuosl.org/","http://ftp.osuosl.org/pub/centos/","ftp://ftp.osuosl.org/pub/centos/","rsync://ftp.osuosl.org/centos/"},
-			},
+			[]string{"US", "", "Oregon State University", "http://osuosl.org/", "http://ftp.osuosl.org/pub/centos/", "ftp://ftp.osuosl.org/pub/centos/", "rsync://ftp.osuosl.org/centos/"},
+		},
 		},
 	}
 	for i, test := range tests {
 		filtered := filterRecords(test.value, test.index, records)
 		if i < 2 {
-				if MarshalJSONToString.Get(filtered) != MarshalJSONToString.Get(records) {
-					t.Errorf("got %v; expected %v", filtered, records)
-				}
-				continue
+			if MarshalJSONToString.Get(filtered) != MarshalJSONToString.Get(records) {
+				t.Errorf("got %v; expected %v", filtered, records)
+			}
+			continue
 		}
 
 	}

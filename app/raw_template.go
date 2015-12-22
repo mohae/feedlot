@@ -404,7 +404,7 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 				Image:   r.Image,
 				Release: r.Release,
 			},
-			region: r.Region,
+			region:  r.Region,
 			country: r.Country,
 		}
 		err = r.releaseISO.setVersionInfo()
