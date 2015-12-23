@@ -278,12 +278,31 @@ type BuildInf struct {
 	// BaseURL is the base url for the iso.
 	BaseURL string `toml:"base_url" json:"base_url"`
 	// Region to use when selecting the image mirror; for use with CentOS.
+	// This corresponds to the 'Region' column in the
+	// https://centos.org/download/full-mirrorlist.csv file.
+	//
 	// If empty, no region filtering will be applied.
 	Region string `toml:"region" json:"region"`
 	// Country to use when selecting the image mirror; for use with CentOS.
-	// If empty, no country filtering will be applied.  In the USA, this
-	// is used as the state field.
+	// This corresponds to the 'Country' column in the
+	// https://centos.org/download/full-mirrorlist.csv file.
+	//
+	// If empty, no country filtering will be applied.
+	//
+	//  For Region 'US', this is used as the state field.
 	Country string `toml:"country" json:"country"`
+	// Sponsor to use when selecting the image mirror: for use with CentOS.
+	// This corresponds to the 'Sponsor' column in the
+	// https://centos.org/download/full-mirrorlist.csv file.
+	//
+	// If a value is specified, the country setting is ignored so that
+	// Rackspace and Oregon State University, OSUOSL, are not filtered out.
+	//
+	// For Oregon State University, aside from it's name, OSUOSL and osuosl
+	// are accepted values.
+	//
+	// If empty, no sponsor filtering will be applied.
+	Sponsor string `toml:"sponsor" json:"country"`
 }
 
 func (i *BuildInf) update(b BuildInf) {

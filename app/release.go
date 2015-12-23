@@ -22,7 +22,7 @@ func init() {
 type ReleaseError struct {
 	name      string
 	operation string
-	slug   string
+	slug      string
 }
 
 func (r ReleaseError) Error() string {
@@ -73,7 +73,6 @@ func osTypeBuilderErr(name, typ string) error {
 	return ReleaseError{name: name, operation: "getOSType", slug: fmt.Sprintf("%s is not supported by this distro", typ)}
 }
 
-
 // Iso image information
 type iso struct {
 	// The baseURL for download url formation. Usage of this is distro
@@ -120,6 +119,7 @@ type centos struct {
 	mirrorURL string
 	region    string
 	country   string
+	sponsor   string
 }
 
 // setMirrorURL gets a mirror url.  If region or country is set, the mirror
@@ -158,15 +158,30 @@ func (r *centos) setMirrorURL() error {
 	if err != nil {
 		return err
 	}
-	// TODO add special handling for rackspace and Oregon State University
-	// filter the mirrors
-	filtered := filterRecords(r.region, 0, records)
+	// remove any records that don't have a http mirror link
+	filtered := excludeRecords("", 4, records)
+	// filter on region
+	filtered = filterRecords(r.region, 0, filtered)
+	// if sponsor is specified; filter on sponsor
+	if len(r.sponsor) > 0 {
+		// if OSUOSL make it Oregon State Univiersity
+		if strings.ToUpper(r.sponsor) == "OSUOSL" {
+			r.sponsor = "Oregon State University"
+		}
+		filtered = filterRecords(r.sponsor, 2, filtered)
+		if len(filtered) == 0 {
+			return ReleaseError{name: CentOS.String(), operation: fmt.Sprintf("filter mirror: region: %q, sponsor: %q", r.region, r.sponsor), slug: "no matches found"}
+		}
+		goto PICK
+	}
+	// filter on country
 	filtered = filterRecords(r.country, 1, filtered)
 	// it's an error state if everything is filtered out
 	if len(filtered) == 0 {
 		return ReleaseError{name: CentOS.String(), operation: fmt.Sprintf("filter mirror: region: %q, country: %q", r.region, r.country), slug: "no matches found"}
 	}
-	// get a random baseHTTPDownloadURL from the remainder
+PICK:
+	// get a random mirror url
 	tmpURL := filtered[rand.Intn(len(filtered))][4]
 	r.mirrorURL = fmt.Sprintf("%s%s/isos/%s/", appendSlash(tmpURL), r.Release, r.Arch)
 	return nil
@@ -214,7 +229,7 @@ func (r *centos) setVersion6Info() error {
 	// get the tokens that are links
 	links := inlineElementsFromTokens("a", "href", tokens)
 	if len(links) == 0 || links == nil {
-               return setVersionInfoErr(r.mirrorURL, fmt.Errorf("could not determine version information: extract release page links failed"))
+		return setVersionInfoErr(r.mirrorURL, fmt.Errorf("could not determine version information: extract release page links failed"))
 	}
 	// get the links that start with CentOS-, these have the full version number
 	// and split it into it's parts
@@ -248,7 +263,7 @@ func (r *centos) setVersion7Info() error {
 	}
 	links := inlineElementsFromTokens("a", "href", tokens)
 	if len(links) == 0 || links == nil {
-		 return setVersionInfoErr(r.mirrorURL, fmt.Errorf("could not determine version information: extract release page links failed"))
+		return setVersionInfoErr(r.mirrorURL, fmt.Errorf("could not determine version information: extract release page links failed"))
 	}
 	links = extractLinksHasPrefix(links, []string{"CentOS-"})
 	if len(links) == 0 {
@@ -258,10 +273,10 @@ func (r *centos) setVersion7Info() error {
 	parts := strings.Split(links[0], "-")
 	r.MajorVersion = parts[1]
 	if len(parts) < 5 {
-               return setVersionInfoErr(r.mirrorURL, errors.New("could not determine version information: parse of CentOS iso links failed"))
-       }
-       tmp := strings.Split(parts[4], ".")
-       r.MinorVersion = tmp[0]
+		return setVersionInfoErr(r.mirrorURL, errors.New("could not determine version information: parse of CentOS iso links failed"))
+	}
+	tmp := strings.Split(parts[4], ".")
+	r.MinorVersion = tmp[0]
 	return nil
 }
 
@@ -835,6 +850,19 @@ func filterRecords(v string, n int, records [][]string) [][]string {
 		if record[n] == v {
 			filtered = append(filtered, record)
 		}
+	}
+	return filtered
+}
+
+// excludeRecords excludes records whose field, n, matches v.  The remaining
+// records are returned
+func excludeRecords(v string, n int, records [][]string) [][]string {
+	var filtered [][]string
+	for _, record := range records {
+		if record[n] == v {
+			continue
+		}
+		filtered = append(filtered, record)
 	}
 	return filtered
 }

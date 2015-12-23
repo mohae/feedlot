@@ -15,31 +15,41 @@ import (
 )
 
 func newTestCentOS() centos {
-	c := centos{release: release{Release: "6", Image: "Minimal", Arch: "x86_64"}, mirrorURL: "", region: "", country: ""}
+	c := centos{release: release{Release: "6", Image: "Minimal", Arch: "x86_64"}, mirrorURL: "", region: "", country: "CA"}
 	c.ChecksumType = "sha256"
 	return c
 }
 
 func TestCentOSsetReleaseInfo(t *testing.T) {
-	tests := []struct{
-		country string
-		release string
+	tests := []struct {
+		region      string
+		country     string
+		sponsor     string
+		release     string
 		fullVersion string
-		expMajor string
-		minor string
-		expError string
+		expMajor    string
+		minor       string
+		expError    string
 	}{
-		{"", "", "", "", "", "centos SetISOInfo: release not set"},
-		{"IL", "6", "", "6", "", ""}, // minor is empty because it may chagne with a new release
-		{"IL", "6", "6.6", "6", "6", ""},
-		{"IL", "7", "", "7", "", ""},
-		{"ZZ", "7", "", "7", "", "centos filter mirror: region: \"\", country: \"ZZ\": no matches found"},
-		{"IL", "8", "", "", "", "centos 8: unsupported release"},
+		{"", "", "", "", "", "", "", "centos SetISOInfo: release not set"},
+		{"", "IL", "", "6", "", "6", "", ""}, // minor is empty because it may chagne with a new release
+		{"", "IL", "", "6", "6.6", "6", "6", ""},
+		{"", "IL", "", "6", "6.6", "6", "6", ""},
+		{"", "IL", "", "7", "", "7", "", ""},
+		{"North America", "", "", "7", "", "7", "", ""},
+		{"US", "", "Oregon State University", "7", "", "7", "", ""},
+		{"", "", "osuosl", "7", "", "7", "", ""},
+		{"", "", "OSUOSL", "7", "", "7", "", ""},
+		{"", "", "Rackspace", "7", "", "7", "", ""},
+		{"", "ZZ", "", "7", "", "7", "", "centos filter mirror: region: \"\", country: \"ZZ\": no matches found"},
+		{"", "IL", "", "8", "", "", "", "centos 8: unsupported release"},
 	}
 	c := newTestCentOS()
 	for i, test := range tests {
 		c.Release = test.release
+		c.region = test.region
 		c.country = test.country
+		c.sponsor = test.sponsor
 		err := c.setVersionInfo()
 		if err != nil {
 			if err.Error() != test.expError {
@@ -48,8 +58,8 @@ func TestCentOSsetReleaseInfo(t *testing.T) {
 			continue
 		}
 		if test.expError != "" {
-		       t.Errorf("%d: got no error, want %q", i, test.expError)
-		       continue
+			t.Errorf("%d: got no error, want %q", i, test.expError)
+			continue
 		}
 		if c.MajorVersion != test.expMajor {
 			t.Errorf("%d: got %s, want %s", i, c.MajorVersion, test.expMajor)
@@ -60,14 +70,14 @@ func TestCentOSsetReleaseInfo(t *testing.T) {
 			t.Errorf("%d: minorVersion was empty, want a value", i)
 			continue
 		}
-		if c.MinorVersion == test.minor  {
+		if c.MinorVersion == test.minor {
 			t.Errorf("%d: minor versions should not match; it should be the latest minor version, not %s", i, c.MinorVersion)
 		}
 	}
 }
 
 func TestCentOSGetOSType(t *testing.T) {
-	c := centos{release{Arch: "x86_64"}, "", "", ""}
+	c := centos{release{Arch: "x86_64"}, "", "", "", ""}
 	buildType := "vmware-iso"
 	res, err := c.getOSType(buildType)
 	if err != nil {
@@ -88,7 +98,7 @@ func TestCentOSGetOSType(t *testing.T) {
 		}
 	}
 
-	c = centos{release{Arch: "x386"}, "", "", ""}
+	c = centos{release{Arch: "x386"}, "", "", "", ""}
 	buildType = "vmware-iso"
 	res, err = c.getOSType(buildType)
 	if err != nil {
@@ -130,7 +140,7 @@ func TestCentOSSetISOChecksum(t *testing.T) {
 	} else {
 		if err.Error() != "centos 6 setISOChecksum: checksum not set" {
 			t.Errorf("expected \"centos 6 setISOChecksum: checksum not set\", got %q", err)
-                }
+		}
 	}
 
 	c = newTestCentOS()
@@ -217,7 +227,7 @@ func TestCentOSFindISOChecksum(t *testing.T) {
 		expected    string
 		expectedErr string
 	}{
-	        {"6", "x86", "", "", "CentOS-6.6-x86-minimal.iso findISOChecksum: page empty"},
+		{"6", "x86", "", "", "CentOS-6.6-x86-minimal.iso findISOChecksum: page empty"},
 		{"6", "x86_64",
 			`a63241b0f767afa1f9f7e59e6f0f00d6b8d19ed85936a7934222c03a92e61bf3  CentOS-6.6-x86_64-bin-DVD1.iso
 89dac78769b26f8facf98ce85020a605b7601fec1946b0597e22ced5498b3597  CentOS-6.6-x86_64-bin-DVD2.iso
@@ -631,8 +641,8 @@ func TestFilterRecords(t *testing.T) {
 				[]string{"EU", "Ireland", "Strencom", "http://www.strencom.net/", "http://mirror.strencom.net/centos/", "", ""},
 				[]string{"EU", "Italy", "    GARR/CILEA", "http://mirror.garr.it", "http://ct.mirror.garr.it/mirrors/CentOS/", "ftp://ct.mirror.garr.it/mirrors/CentOS/", "rsync://ct.mirror.garr.it/CentOS/ "},
 			},
-	       },
-	       {
+		},
+		{
 			"Italy", 1, [][]string{
 				[]string{"EU", "Italy", "    GARR/CILEA", "http://mirror.garr.it", "http://ct.mirror.garr.it/mirrors/CentOS/", "ftp://ct.mirror.garr.it/mirrors/CentOS/", "rsync://ct.mirror.garr.it/CentOS/ "},
 			},

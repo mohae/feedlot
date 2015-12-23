@@ -11,9 +11,35 @@
 # the code to support the distro.
 {
 	"centos": {
+		# Leave empty to have the iso file automatically selected
+		# using a mirror and have the checksum information populated.
+		# If non-empty; this must be a valid iso.  The checksum
+		# information will not be retrieved.
 		"base_url": "",
-		"region": "US",
+		# Mirror list filters: valid values can be obtained from:
+		# https://www.centos.org/download/full-mirrorlist.csv
+		# Mirrors are not necessarily permanent, one that is valid
+		# today may not exist tomorrow.
+		#
+		# When non-empty; filter the mirror list by the specified
+		# region. Can be used with country.
+		#
+		"region": "",
+		# When non-empty; filter the mirror list by the specified
+		# country (state for USA). Can be used with region.
+		#
 		"country": "",
+		# Sponsor: filter the mirror list by the specified sponsor.
+		# If non-empty, the country filter is ignored.  This is mainly
+		# to support the OSUOSL and Rackspace mirrors as they are not
+		# tied to a specific country (state).
+		# For OSUOSL; both OSUOSL and Oregon State University are
+		# valid values.
+		# Some sponsors have escaped quotes, \", in their name.  Do not
+		# use these: e.g. Sofia University \"St. Kliment Ohridski\"
+		# would be Sofia University St. Kliment Ohridski
+		#
+		"sponsor": "OSUOSL"
 		"description": "CentOS default",
 		"default_image": [
 			"release = 7",
