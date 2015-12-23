@@ -22,47 +22,47 @@ func init() {
 type ReleaseError struct {
 	name      string
 	operation string
-	problem   string
+	slug   string
 }
 
 func (r ReleaseError) Error() string {
-	return fmt.Sprintf("%s %s: %s", r.name, r.operation, r.problem)
+	return fmt.Sprintf("%s %s: %s", r.name, r.operation, r.slug)
 }
 
 func emptyPageErr(name, operation string) error {
-	return ReleaseError{name: name, operation: operation, problem: "page empty"}
+	return ReleaseError{name: name, operation: operation, slug: "page empty"}
 }
 
 func checksumNotFoundErr(name, operation string) error {
-	return ReleaseError{name: name, operation: operation, problem: "checksum not found on page"}
+	return ReleaseError{name: name, operation: operation, slug: "checksum not found on page"}
 }
 
 func checksumNotSetErr(name string) error {
-	return ReleaseError{name: name, operation: "setISOChecksum", problem: "checksum not set"}
+	return ReleaseError{name: name, operation: "setISOChecksum", slug: "checksum not set"}
 }
 
 func noArchErr(name string) error {
-	return ReleaseError{name: name, operation: "SetISOInfo", problem: "arch not set"}
+	return ReleaseError{name: name, operation: "SetISOInfo", slug: "arch not set"}
 }
 
 func noFullVersionErr(name string) error {
-	return ReleaseError{name: name, operation: "SetISOInfo", problem: "full version not set"}
+	return ReleaseError{name: name, operation: "SetISOInfo", slug: "full version not set"}
 }
 
 func noMajorVersionErr(name string) error {
-	return ReleaseError{name: name, operation: "SetISOInfo", problem: "major version not set"}
+	return ReleaseError{name: name, operation: "SetISOInfo", slug: "major version not set"}
 }
 
 func noMinorVersionErr(name string) error {
-	return ReleaseError{name: name, operation: "SetISOInfo", problem: "minor version not set"}
+	return ReleaseError{name: name, operation: "SetISOInfo", slug: "minor version not set"}
 }
 
 func noReleaseErr(name string) error {
-	return ReleaseError{name: name, operation: "SetISOInfo", problem: "release not set"}
+	return ReleaseError{name: name, operation: "SetISOInfo", slug: "release not set"}
 }
 
 func setVersionInfoErr(name string, err error) error {
-	return ReleaseError{name: name, operation: "SetVersionInfo", problem: err.Error()}
+	return ReleaseError{name: name, operation: "SetVersionInfo", slug: err.Error()}
 }
 
 func unsupportedReleaseErr(d Distro, name string) error {
@@ -70,7 +70,7 @@ func unsupportedReleaseErr(d Distro, name string) error {
 }
 
 func osTypeBuilderErr(name, typ string) error {
-	return ReleaseError{name: name, operation: "getOSType", problem: fmt.Sprintf("%s is not supported by this distro", typ)}
+	return ReleaseError{name: name, operation: "getOSType", slug: fmt.Sprintf("%s is not supported by this distro", typ)}
 }
 
 
@@ -164,7 +164,7 @@ func (r *centos) setMirrorURL() error {
 	filtered = filterRecords(r.country, 1, filtered)
 	// it's an error state if everything is filtered out
 	if len(filtered) == 0 {
-		return ReleaseError{name: CentOS.String(), operation: fmt.Sprintf("filter mirror: region: %q, country: %q", r.region, r.country), problem: "no matches found"}
+		return ReleaseError{name: CentOS.String(), operation: fmt.Sprintf("filter mirror: region: %q, country: %q", r.region, r.country), slug: "no matches found"}
 	}
 	// get a random baseHTTPDownloadURL from the remainder
 	tmpURL := filtered[rand.Intn(len(filtered))][4]
@@ -463,7 +463,7 @@ func (r *debian) setISOChecksum() error {
 	}
 	page, err := bodyStringFromURL(r.checksumURL())
 	if err != nil {
-		return ReleaseError{name: r.Name, operation: "setISOChecksum", problem: err.Error()}
+		return ReleaseError{name: r.Name, operation: "setISOChecksum", slug: err.Error()}
 	}
 	// Now that we have a page...we need to find the checksum and set it
 	return r.findISOChecksum(page)
@@ -654,7 +654,7 @@ func (r *ubuntu) setISOChecksum() error {
 	}
 	page, err := bodyStringFromURL(r.checksumURL())
 	if err != nil {
-		return ReleaseError{name: r.Name, operation: "setISOChecksum", problem: err.Error()}
+		return ReleaseError{name: r.Name, operation: "setISOChecksum", slug: err.Error()}
 	}
 	return r.findISOChecksum(page)
 }
