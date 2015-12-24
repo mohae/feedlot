@@ -64,10 +64,6 @@ func requiredSettingErr(s string) error {
 	return fmt.Errorf("required setting not found: %s", s)
 }
 
-func settingErr(s string, err error) error {
-	return fmt.Errorf("encountered a problem processing the %s setting: %s", s, err)
-}
-
 func PackerCreateErr(name string, err error) error {
 	return fmt.Errorf("create of Packer template for %q failed: %s", name, err)
 }

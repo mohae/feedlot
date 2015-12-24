@@ -223,7 +223,10 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 //   copy_files               array of strings
 //   device_path              string
 //   enhanced_networking      bool
+//   force_deregister         bool
+//   mount_options            array of strings
 //   mount_path               string
+//   root_volume_size         int
 //   tags                     object of key/value strings
 func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[AmazonChroot.String()]
@@ -269,8 +272,11 @@ func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 		case "ami_description", "ami_virtualization_type", "command_wrapper",
 			"device_path", "mount_path":
 			settings[k] = v
-		case "enhanced_networking":
+		case "enhanced_networking", "force_deregister":
 			settings[k], _ = strconv.ParseBool(v)
+		case "root_volume_size":
+			settings[k], err = strconv.Atoi(v)
+			return nil, settingErr(AmazonChroot.String(), k, v, err)
 		}
 	}
 	if !hasAccessKey {
@@ -288,15 +294,22 @@ func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 	// Process the Arrays.
 	for name, val := range r.Builders[ID].Arrays {
 		// if it's not a supported array group, log a warning and move on
-		if name == "ami_groups" || name == "ami_product_codes" || name == "ami_regions" || name == "ami_users" || name == "chroot_mounts" || name == "copy_files" {
-			array := deepcopy.Iface(val)
-			if array != nil {
-				settings[name] = array
-			}
+		switch name {
+		case "ami_groups":
+		case "ami_product_codes":
+		case "ami_regions":
+		case "ami_users":
+		case "chroot_mounts":
+		case "copy_files":
+		case "mount_options":
+		case "tags":
+		default:
+			// not supported; skip
 			continue
 		}
-		if name == "tags" {
-			settings[name] = val
+		array := deepcopy.Iface(val)
+		if array != nil {
+			settings[name] = array
 		}
 	}
 	return settings, nil
@@ -323,26 +336,38 @@ func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 //   ami_product_codes             array of strings
 //   ami_regions                   array of strings
 //   ami_users                     array of strings
-//   associate_public_ip_address   boolean
+//   associate_public_ip_address   bool
 //   availability_zone             string
-//   enhanced_networking           string
+//   enhanced_networking           bool
+//   delete_on_termination         bool
+//   device_name                   string
+//   encrypted                     bool
+//   force_deregister              bool
 //   iam_instance_profile          string
+//   iops                          bool
 //   launch_block_device_mappings  array of block device mappings
+//   no_device                     bool
+//   run_tags                      object of key/value strings
 //   security_group_id             string
 //   security_group_ids            array of strings
+//   snapshot_id                   string
 //   spot_price                    string
 //   spot_price_auto_product       string
-//   shh_port                      integer
-//   ssh_private_key_file          string
+//   ssh_keypair_name              string
+//   ssh_port                      int
 //   ssh_private_ip                bool
-//   ssh_timeout                   string
+//   ssh_private_key_file          string
 //   subnet_id                     string
 //   tags                          object of key/value strings
 //   temporary_key_pair_name       string
 //   token                         string
 //   user_data                     string
 //   user_data_file                string
+//   virtual_name                  string
+//   volume_size                   int
+//   volume_type                   int
 //   vpc_id                        string
+//   windows_password_timeout      string
 func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
@@ -392,17 +417,18 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 		case "ssh_username":
 			settings[k] = v
 			hasSSHUsername = true
-		case "ami_description", "availability_zone", "iam_instance_profile",
-			"security_group_id", "spot_price", "spot_price_auto_product",
-			"ssh_private_key_file", "ssh_timeout", "subnet_id",
-			"temporary_key_pair_name", "token", "user_data",
-			"vpc_id":
+		case "ami_description", "availability_zone", "device_name",
+			"iam_instance_profile", "security_group_id", "snapshot_id",
+			"spot_price", "spot_price_auto_product", "ssh_keypair_name",
+			"ssh_private_key_file", "subnet_id", "temporary_key_pair_name",
+			"token", "user_data", "virtual_name",
+			"vpc_id", "windows_password_timeout":
 			settings[k] = v
-		case "ssh_port":
+		case "ssh_port", "volume_size", "volume_type":
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, settingErr("ssh_port", err)
+				return nil, settingErr(AmazonEBS.String(), k, v, err)
 			}
 			settings[k] = i
 		case "user_data_file":
@@ -419,7 +445,9 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 				r.files[r.buildOutPath(AmazonEBS.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(AmazonEBS.String(), v)
-		case "associate_public_ip_address", "enhanced_networking", "ssh_private_ip":
+		case "associate_public_ip_address", "enhanced_networking", "delete_termination",
+			"encrypted", "force_deregister", "iops",
+			"no_device", "ssh_private_ip":
 			settings[k], _ = strconv.ParseBool(v)
 		}
 	}
@@ -446,20 +474,23 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 	}
 	// Process the Arrays.
 	for name, val := range r.Builders[ID].Arrays {
-		// if it's not a supported array group, log a warning and move on
-		if name == "ami_block_device_mappings" || name == "launch_block_device_mappings" {
-			settings[name] = val
+		// only process supported array stuff
+		switch name {
+		case "ami_block_device_mappings":
+		case "ami_groups":
+		case "ami_product_codes":
+		case "ami_regions":
+		case "ami_users":
+		case "launch_block_device_mappings":
+		case "run_tags":
+		case "security_group_ids":
+		case "tags":
+		default:
 			continue
 		}
-		if name == "ami_groups" || name == "ami_product_codes" || name == "ami_regions" || name == "security_group_ids" {
-			array := deepcopy.Iface(val)
-			if array != nil {
-				settings[name] = array
-			}
-			continue
-		}
-		if name == "tags" || name == "run_tags" {
-			settings[name] = val
+		array := deepcopy.Iface(val)
+		if array != nil {
+			settings[name] = array
 		}
 	}
 	return settings, nil
@@ -490,31 +521,43 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 //   ami_product_codes             array of strings
 //   ami_regions                   array of strings
 //   ami_users                     array of strings
-//   associate_public_ip_address   boolean
+//   ami_virtualization_type       string
+//   associate_public_ip_address   bool
 //   availability_zone             string
 //   bundle_destination            string
 //   bundle_prefix                 string
 //   bundle_upload_command         string
 //   bundle_vol_command            string
+//   delete_on_termination         bool
+//   device_name                   string
+//   encrypted                     bool
 //   enhanced_networking           bool
+//   force_deregister              bool
 //   iam_instance_profile          string
+//   iops                          int
 //   launch_block_device_mappings  array of block device mappings
+//   no_device                     bool
+//   run_tags                      object of key/value strings
 //   security_group_id             string
 //   security_group_ids            array of strings
+//   snapshot_id                   string
 //   spot_price                    string
 //   spot_price_auto_product       string
-//   shh_port                      integer
+//   ssh_keypair_name              string
+//   shh_port                      int
 //   ssh_private_key_file          string
 //   ssh_private_ip                bool
-//   ssh_timeout                   string
 //   subnet_id                     string
-//   run_tags                      object of key/value strings
 //   tags                          object of key/value strings
 //   temporary_key_pair_name       string
 //   user_data                     string
 //   user_data_file                string
+//   virtual_name                  string
+//   volume_size                   int
+//   volume_type                   string
 //   vpc_id                        string
 //   x509_upload_path              string
+//   windows_password_timeout      string
 func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
@@ -577,14 +620,16 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 		case "x509_key_path":
 			settings[k] = v
 			hasX509KeyPath = true
-		case "ami_description", "availability_zone", "bundle_destination",
-			"bundle_prefix", "iam_instance_profile", "security_group_id",
-			"spot_price", "spot_price_auto_product", "ssh_private_key_file",
-			"ssh_timeout", "subnet_id", "temporary_key_pair_name",
-			"token", "user_data", "vpc_id",
-			"x509_upload_path":
+		case "ami_description", "ami_virtualization_type", "availability_zone",
+			"bundle_destination", "bundle_prefix", "bundle_upload_command",
+			"bundle_vol_command", "device_name", "iam_instance_profile",
+			"security_group_id", "snapshot_id", "spot_price",
+			"spot_price_auto_product", "ssh_keypair_name", "ssh_private_key_file",
+			"subnet_id", "temporary_key_pair_name", "user_data",
+			"virtual_name", "vpc_id", "x509_upload_path",
+			"windows_password_timeout":
 			settings[k] = v
-		case "ssh_port":
+		case "iops", "ssh_port", "volume_size":
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
@@ -604,7 +649,9 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 				r.files[r.buildOutPath(AmazonEBS.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(AmazonInstance.String(), v)
-		case "associate_public_ip_address", "enhanced_networking", "ssh_private_ip":
+		case "associate_public_ip_address", "delete_on_termination", "encrypted",
+			"enhanced_networking", "force_deregister", "no_device",
+			"ssh_private_ip":
 			settings[k], _ = strconv.ParseBool(v)
 		case "bundle_upload_command", "bundle_vol_command":
 			cmds, err := r.commandsFromFile(AmazonInstance.String(), v)
@@ -653,20 +700,23 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 	}
 	// Process the Arrays.
 	for name, val := range r.Builders[ID].Arrays {
-		// if it's not a supported array group, log a warning and move on
-		if name == "ami_block_device_mappings" || name == "launch_block_device_mappings" {
-			settings[name] = val
+		// if it's not a supported array group skip
+		switch name {
+		case "ami_block_device_mappings":
+		case "ami_groups":
+		case "ami_product_codes":
+		case "ami_regions":
+		case "ami_users":
+		case "launch_block_device_mappings":
+		case "run_tags":
+		case "security_group_ids":
+		case "tags":
+		default:
 			continue
 		}
-		if name == "ami_groups" || name == "ami_product_codes" || name == "ami_regions" || name == "ami_users" || name == "security_group_ids" {
-			array := deepcopy.Iface(val)
-			if array != nil {
-				settings[name] = array
-			}
-			continue
-		}
-		if name == "tags" || name == "run_tags" {
-			settings[name] = val
+		array := deepcopy.Iface(val)
+		if array != nil {
+			settings[name] = array
 		}
 	}
 	return settings, nil
