@@ -56,11 +56,6 @@ func provisionerErr(p Provisioner, err error) error {
 	return fmt.Errorf("%s provisioner error: %s", p.String(), err)
 }
 
-func postProcessorErr(p PostProcessor, err error) error {
-	return fmt.Errorf("%s post-processor error: %s", p.String(), err)
-}
-
-
 func PackerCreateErr(name string, err error) error {
 	return fmt.Errorf("create of Packer template for %q failed: %s", name, err)
 }

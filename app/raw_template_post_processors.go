@@ -67,6 +67,10 @@ func PostProcessorFromString(s string) PostProcessor {
 	return UnsupportedPostProcessor
 }
 
+func postProcessorErr(p PostProcessor, err error) error {
+	return fmt.Errorf("%s post-processor error: %s", p.String(), err)
+}
+
 // Merges the new config with the old. The updates occur as follows:
 //   * The existing configuration is used when no `new` postProcessors are
 //     specified.
