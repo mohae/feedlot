@@ -260,9 +260,11 @@ func (r *rawTemplate) createAtlas(ID string) (settings map[string]interface{}, e
 // https://packer.io/docs/post-processors/compress.html
 //
 // Required configuration options:
-//   output  string
-// Optional configuration options:
 //   none
+// Optional configuration options:
+//   compression_level    int
+//   keep_input_artifact  bool
+//   output               string
 func (r *rawTemplate) createCompress(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[ID]
 	if !ok {
@@ -274,14 +276,22 @@ func (r *rawTemplate) createCompress(ID string) (settings map[string]interface{}
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
 	var k, v string
-	var hasOutput bool
 	for _, s := range r.PostProcessors[ID].Settings {
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
+		case "compression_level":
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return errPostProcessor(Compress, err)
+			}
+			settings[k] = i
+		case "keep_input_artifact":
+			// Invalid values are treated as false so the error is
+			// ignored.
+			settings[k], _ := strconv.ParseBool(v)
 		case "output":
 			settings[k] = v
-			hasOutput = true
 		}
 	}
 	if !hasOutput {
