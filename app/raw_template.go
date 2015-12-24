@@ -17,6 +17,11 @@ func settingErr(component, k, v string, err error) error {
 	return fmt.Errorf("%s.%s: %s: %s", component, k, v, err)
 }
 
+func requiredSettingErr(component, k string) error {
+	return fmt.Errorf("%s.%s: required setting missing", component, k)
+}
+
+
 // rawTemplate holds all the information for a Rancher template. This is used
 // to generate the Packer Build.
 type rawTemplate struct {

@@ -60,9 +60,6 @@ func postProcessorErr(p PostProcessor, err error) error {
 	return fmt.Errorf("%s post-processor error: %s", p.String(), err)
 }
 
-func requiredSettingErr(s string) error {
-	return fmt.Errorf("required setting not found: %s", s)
-}
 
 func PackerCreateErr(name string, err error) error {
 	return fmt.Errorf("create of Packer template for %q failed: %s", name, err)
