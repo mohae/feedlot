@@ -245,7 +245,10 @@ func (r *rawTemplate) createAtlas(ID string) (settings map[string]interface{}, e
 	}
 	for name, val := range r.PostProcessors[ID].Arrays {
 		if name == "metadata" {
-			settings[name] = val
+			array := deepcopy.Iface(val)
+			if array != nil {
+				settings[name] = array
+			}
 		}
 	}
 	return settings, nil
