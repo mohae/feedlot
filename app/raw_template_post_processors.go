@@ -289,7 +289,7 @@ func (r *rawTemplate) createCompress(ID string) (settings map[string]interface{}
 		case "keep_input_artifact":
 			// Invalid values are treated as false so the error is
 			// ignored.
-			settings[k], _ := strconv.ParseBool(v)
+			settings[k], _ = strconv.ParseBool(v)
 		case "output":
 			settings[k] = v
 		}
@@ -307,8 +307,9 @@ func (r *rawTemplate) createCompress(ID string) (settings map[string]interface{}
 //
 // Required configuration options:
 //   repository  string
-// Optional configuration options:
 //   tag         string
+// Optional configuration options:
+//   none
 func (r *rawTemplate) createDockerImport(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[ID]
 	if !ok {
@@ -320,7 +321,7 @@ func (r *rawTemplate) createDockerImport(ID string) (settings map[string]interfa
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
 	var k, v string
-	var hasRepository bool
+	var hasRepository, hasTag bool
 	for _, s := range r.PostProcessors[ID].Settings {
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
@@ -330,10 +331,14 @@ func (r *rawTemplate) createDockerImport(ID string) (settings map[string]interfa
 			hasRepository = true
 		case "tag":
 			settings[k] = v
+			hasTag = true
 		}
 	}
 	if !hasRepository {
-		return nil, requiredSettingErr("repository")
+		return nil, requiredSettingErr(DockerImport.String(), "repository")
+	}
+	if !hasTag {
+		return nil, requiredSettingerr(DockerImport.String(), "tag")
 	}
 	return settings, nil
 }
