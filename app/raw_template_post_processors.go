@@ -461,14 +461,16 @@ func (r *rawTemplate) createDockerTag(ID string) (settings map[string]interface{
 // post-processor are ignored. For more information refer to
 // https://packer.io/docs/post-processors/vagrant.html.
 //
-// Configuration options:
-//   compression_level     integer
+// Required configuration options:
+//   none
+// Optional configuration options:
+//   compression_level     int
 //   include               array of strings
-//   keep_input_artifact   boolean
+//   keep_input_artifact   bool
 //   output                string
 //   vagrantfile_template  string
 // Provider-Specific Overrides:
-//   override	              array of strings
+//   override	           array of strings
 func (r *rawTemplate) createVagrant(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[ID]
 	if !ok {
@@ -483,7 +485,7 @@ func (r *rawTemplate) createVagrant(ID string) (settings map[string]interface{},
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
-		case "output", "vagrantfile_template":
+		case "output":
 			settings[k] = v
 		case "keep_input_artifact":
 			settings[k], _ = strconv.ParseBool(v)
@@ -494,16 +496,35 @@ func (r *rawTemplate) createVagrant(ID string) (settings map[string]interface{},
 				return nil, settingErr(k, err)
 			}
 			settings[k] = i
+		case "vagrantfile_template":
+			// locate the file
+			src, err := r.findComponentSource(Vagrant.String(), v, false)
+			if err != nil {
+				return nil, settingErr(k, err)
+			}
+			jww.ERROR.Printf("vagrantfile_template: %v", src)
+			// if the source couldn't be found and an error wasn't generated, replace
+			// s with the original value; this occurs when it is an example.
+			// Nothing should be copied in this instancel it should not be added
+			// to the copy info
+			if src != "" {
+				r.files[r.buildOutPath(Vagrant.String(), v)] = src
+			}
+			settings[k] = r.buildTemplateResourcePath(Vagrant.String(), v)
 		}
 	}
 	// Process the Arrays.
 	for name, val := range r.PostProcessors[ID].Arrays {
 		switch name {
-		case "except", "include", "only", "override":
-			array := deepcopy.Iface(val)
-			if array != nil {
-				settings[name] = array
-			}
+		case "except":
+		case "only":
+		case "override":
+		default:
+			continue
+		}
+		array := deepcopy.Iface(val)
+		if array != nil {
+			settings[name] = array
 		}
 	}
 	return settings, nil
