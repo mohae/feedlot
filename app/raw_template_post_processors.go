@@ -243,12 +243,18 @@ func (r *rawTemplate) createAtlas(ID string) (settings map[string]interface{}, e
 	if !hasToken {
 		return nil, requiredSettingErr(Atlas.String(), "token")
 	}
+	// Process the Arrays.
 	for name, val := range r.PostProcessors[ID].Arrays {
-		if name == "metadata" {
-			array := deepcopy.Iface(val)
-			if array != nil {
-				settings[name] = array
-			}
+		switch name {
+		case "metadata":
+		case "except":
+		case "only":
+		default:
+			continue
+		}
+		array := deepcopy.Iface(val)
+		if array != nil {
+			settings[name] = array
 		}
 	}
 	return settings, nil
@@ -294,6 +300,19 @@ func (r *rawTemplate) createCompress(ID string) (settings map[string]interface{}
 			settings[k] = v
 		}
 	}
+	// Process the Arrays.
+	for name, val := range r.PostProcessors[ID].Arrays {
+		switch name {
+		case "except":
+		case "only":
+		default:
+			continue
+		}
+		array := deepcopy.Iface(val)
+		if array != nil {
+			settings[name] = array
+		}
+	}
 	return settings, nil
 }
 
@@ -337,6 +356,19 @@ func (r *rawTemplate) createDockerImport(ID string) (settings map[string]interfa
 	if !hasTag {
 		return nil, requiredSettingerr(DockerImport.String(), "tag")
 	}
+	// Process the Arrays.
+	for name, val := range r.PostProcessors[ID].Arrays {
+		switch name {
+		case "except":
+		case "only":
+		default:
+			continue
+		}
+		array := deepcopy.Iface(val)
+		if array != nil {
+			settings[name] = array
+		}
+	}
 	return settings, nil
 }
 
@@ -374,6 +406,19 @@ func (r *rawTemplate) createDockerPush(ID string) (settings map[string]interface
 			settings[k], _ = strconv.ParseBool(v)
 		}
 	}
+	// Process the Arrays.
+	for name, val := range r.PostProcessors[ID].Arrays {
+		switch name {
+		case "except":
+		case "only":
+		default:
+			continue
+		}
+		array := deepcopy.Iface(val)
+		if array != nil {
+			settings[name] = array
+		}
+	}
 	return settings, nil
 }
 
@@ -409,6 +454,19 @@ func (r *rawTemplate) createDockerSave(ID string) (settings map[string]interface
 	}
 	if !hasPath {
 		return nil, requiredSettingErr(DockerSave.String(), "path")
+	}
+	// Process the Arrays.
+	for name, val := range r.PostProcessors[ID].Arrays {
+		switch name {
+		case "except":
+		case "only":
+		default:
+			continue
+		}
+		array := deepcopy.Iface(val)
+		if array != nil {
+			settings[name] = array
+		}
 	}
 	return settings, nil
 }
@@ -452,6 +510,19 @@ func (r *rawTemplate) createDockerTag(ID string) (settings map[string]interface{
 	}
 	if !hasRepository {
 		return nil, requiredSettingErr(DockerTag.String(), "repository")
+	}
+	// Process the Arrays.
+	for name, val := range r.PostProcessors[ID].Arrays {
+		switch name {
+		case "except":
+		case "only":
+		default:
+			continue
+		}
+		array := deepcopy.Iface(val)
+		if array != nil {
+			settings[name] = array
+		}
 	}
 	return settings, nil
 }
