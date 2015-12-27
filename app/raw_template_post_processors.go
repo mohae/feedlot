@@ -578,6 +578,19 @@ func (r *rawTemplate) createVagrantCloud(ID string) (settings map[string]interfa
 	if !hasVersion {
 		return nil, requiredSettingErr("version")
 	}
+	// Process the Arrays.
+	for name, val := range r.PostProcessors[ID].Arrays {
+		switch name {
+		case "except":
+		case "only":
+		default:
+			continue
+		}
+		array := deepcopy.Iface(val)
+		if array != nil {
+			settings[name] = array
+		}
+	}
 	return settings, nil
 }
 
