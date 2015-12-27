@@ -421,6 +421,7 @@ func (r *rawTemplate) createDockerSave(ID string) (settings map[string]interface
 // Required configuration options:
 //   repository  string
 // Optional configuration options:
+//   force       bool
 //   tag         string
 func (r *rawTemplate) createDockerTag(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[ID]
@@ -441,12 +442,16 @@ func (r *rawTemplate) createDockerTag(ID string) (settings map[string]interface{
 		case "repository":
 			settings[k] = v
 			hasRepository = true
+		case "force":
+			// Invalid values are treated as false so the error is
+			// ignored.
+			settings[k], _ = strconv.ParseBool(v)
 		case "tag":
 			settings[k] = v
 		}
 	}
 	if !hasRepository {
-		return nil, requiredSettingErr("repository")
+		return nil, requiredSettingErr(DockerTag.String(), "repository")
 	}
 	return settings, nil
 }
