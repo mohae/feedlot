@@ -235,13 +235,13 @@ func (r *rawTemplate) createAtlas(ID string) (settings map[string]interface{}, e
 		}
 	}
 	if !hasArtifact {
-		return nil, requiredSettingErr("artifact")
+		return nil, requiredSettingErr(Atlas.String(), "artifact")
 	}
 	if !hasArtifactType {
-		return nil, requiredSettingErr("artifact_type")
+		return nil, requiredSettingErr(Atlas.String(), "artifact_type")
 	}
 	if !hasToken {
-		return nil, requiredSettingErr("token")
+		return nil, requiredSettingErr(Atlas.String(), "token")
 	}
 	for name, val := range r.PostProcessors[ID].Arrays {
 		if name == "metadata" {
@@ -293,9 +293,6 @@ func (r *rawTemplate) createCompress(ID string) (settings map[string]interface{}
 		case "output":
 			settings[k] = v
 		}
-	}
-	if !hasOutput {
-		return nil, requiredSettingErr("output")
 	}
 	return settings, nil
 }
