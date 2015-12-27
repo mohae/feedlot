@@ -601,16 +601,16 @@ func (r *rawTemplate) createVagrantCloud(ID string) (settings map[string]interfa
 //
 // Required configuration options:
 //   cluster         string
+//   datacenter      string
 //   datastore*      string
 //   host            string
 //   password        string
-//   resource_pool*  string
 //   username        string
 //   vm_name         string
 // Optional configuration options:
-//   datastore       string
 //   disk_mode       string
-//   insecure        boolean
+//   insecure        bool
+//   resource_pool   string
 //   vm_folder       string
 //   vm_network      string
 //
@@ -663,27 +663,40 @@ func (r *rawTemplate) createVSphere(ID string) (settings map[string]interface{},
 		}
 	}
 	if !hasCluster {
-		return nil, requiredSettingErr("cluster")
+		return nil, requiredSettingErr(VSphere.String(), "cluster")
 	}
 	if !hasDatacenter {
-		return nil, requiredSettingErr("datacenter")
+		return nil, requiredSettingErr(VSphere.String(), "datacenter")
 	}
 	if !hasDatastore {
 		if !hasResourcePool {
-			return nil, fmt.Errorf("%s; if the datastore is not set a resource_pool must be specified.", requiredSettingErr("datastore/resource_pool"))
+			return nil, fmt.Errorf("%s; if the datastore is not set a resource_pool must be specified.", requiredSettingErr(VSphere.String(), "datastore/resource_pool"))
 		}
 	}
 	if !hasHost {
-		return nil, requiredSettingErr("host")
+		return nil, requiredSettingErr(VSphere.String(), "host")
 	}
 	if !hasPassword {
-		return nil, requiredSettingErr("password")
+		return nil, requiredSettingErr(VSphere.String(), "password")
 	}
 	if !hasUsername {
-		return nil, requiredSettingErr("username")
+		return nil, requiredSettingErr(VSphere.String(), "username")
 	}
 	if !hasVMName {
-		return nil, requiredSettingErr("vm_name")
+		return nil, requiredSettingErr(VSphere.String(), "vm_name")
+	}
+	// Process the Arrays.
+	for name, val := range r.PostProcessors[ID].Arrays {
+		switch name {
+		case "except":
+		case "only":
+		default:
+			continue
+		}
+		array := deepcopy.Iface(val)
+		if array != nil {
+			settings[name] = array
+		}
 	}
 	return settings, nil
 }
