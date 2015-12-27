@@ -408,7 +408,7 @@ func (r *rawTemplate) createDockerSave(ID string) (settings map[string]interface
 		}
 	}
 	if !hasPath {
-		return nil, requiredSettingErr("path")
+		return nil, requiredSettingErr(DockerSave.String(), "path")
 	}
 	return settings, nil
 }
