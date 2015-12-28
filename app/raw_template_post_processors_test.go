@@ -2,6 +2,8 @@
 package app
 
 import (
+	"errors"
+	"fmt"
 	"testing"
 )
 
@@ -291,6 +293,13 @@ var ppMerged = map[string]postProcessor{
 			Arrays: map[string]interface{}{},
 		},
 	},
+}
+
+func TestPostProcessorError(t *testing.T) {
+	err := &PostProcessorError{Vagrant, "testing", errors.New("error foo bar")}
+	if err.Error() != fmt.Sprintf("post-processor %s: testing error foo bar", Vagrant.String()) {
+		t.Errorf("expected \"post-processor %s: testing error foo bar\" got %q", Vagrant.String(), err)
+	}
 }
 
 func TestRawTemplateUpdatePostProcessors(t *testing.T) {

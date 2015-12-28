@@ -276,20 +276,20 @@ func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 			settings[k], _ = strconv.ParseBool(v)
 		case "root_volume_size":
 			settings[k], err = strconv.Atoi(v)
-			return nil, settingErr(AmazonChroot.String(), k, v, err)
+			return nil, &SettingError{AmazonChroot.String(), k, v, err}
 		}
 	}
 	if !hasAccessKey {
-		return nil, requiredSettingErr("access_key")
+		return nil, &RequiredSettingError{AmazonChroot.String(), "access_key"}
 	}
 	if !hasAmiName {
-		return nil, requiredSettingErr("ami_name")
+		return nil, &RequiredSettingError{AmazonChroot.String(), "ami_name"}
 	}
 	if !hasSecretKey {
-		return nil, requiredSettingErr("secret_key")
+		return nil, &RequiredSettingError{AmazonChroot.String(), "secret_key"}
 	}
 	if !hasSourceAmi {
-		return nil, requiredSettingErr("source_ami")
+		return nil, &RequiredSettingError{AmazonChroot.String(), "source_ami"}
 	}
 	// Process the Arrays.
 	for name, val := range r.Builders[ID].Arrays {
@@ -428,7 +428,7 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, settingErr(AmazonEBS.String(), k, v, err)
+				return nil, &SettingError{AmazonEBS.String(), k, v, err}
 			}
 			settings[k] = i
 		case "user_data_file":
@@ -452,25 +452,25 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 		}
 	}
 	if !hasAccessKey {
-		return nil, requiredSettingErr("access_key")
+		return nil, &RequiredSettingError{AmazonEBS.String(), "access_key"}
 	}
 	if !hasAmiName {
-		return nil, requiredSettingErr("ami_name")
+		return nil, &RequiredSettingError{AmazonEBS.String(), "ami_name"}
 	}
 	if !hasInstanceType {
-		return nil, requiredSettingErr("instance_type")
+		return nil, &RequiredSettingError{AmazonEBS.String(), "instance_type"}
 	}
 	if !hasRegion {
-		return nil, requiredSettingErr("region")
+		return nil, &RequiredSettingError{AmazonEBS.String(), "region"}
 	}
 	if !hasSecretKey {
-		return nil, requiredSettingErr("secret_key")
+		return nil, &RequiredSettingError{AmazonEBS.String(), "secret_key"}
 	}
 	if !hasSourceAmi {
-		return nil, requiredSettingErr("source_ami")
+		return nil, &RequiredSettingError{AmazonEBS.String(), "source_ami"}
 	}
 	if !hasSSHUsername {
-		return nil, requiredSettingErr("ssh_username")
+		return nil, &RequiredSettingError{AmazonEBS.String(), "ssh_username"}
 	}
 	// Process the Arrays.
 	for name, val := range r.Builders[ID].Arrays {
@@ -621,13 +621,12 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 			settings[k] = v
 			hasX509KeyPath = true
 		case "ami_description", "ami_virtualization_type", "availability_zone",
-			"bundle_destination", "bundle_prefix", "bundle_upload_command",
-			"bundle_vol_command", "device_name", "iam_instance_profile",
-			"security_group_id", "snapshot_id", "spot_price",
-			"spot_price_auto_product", "ssh_keypair_name", "ssh_private_key_file",
-			"subnet_id", "temporary_key_pair_name", "user_data",
-			"virtual_name", "vpc_id", "x509_upload_path",
-			"windows_password_timeout":
+			"bundle_destination", "bundle_prefix", "device_name",
+			"iam_instance_profile", "security_group_id", "snapshot_id",
+			"spot_price", "spot_price_auto_product", "ssh_keypair_name",
+			"ssh_private_key_file", "subnet_id", "temporary_key_pair_name",
+			"user_data", "virtual_name", "vpc_id",
+			"x509_upload_path", "windows_password_timeout":
 			settings[k] = v
 		case "iops", "ssh_port", "volume_size":
 			// only add if its an int
@@ -666,37 +665,37 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 		}
 	}
 	if !hasAccessKey {
-		return nil, requiredSettingErr("access_key")
+		return nil, &RequiredSettingError{AmazonInstance.String(), "access_key"}
 	}
 	if !hasAccountId {
-		return nil, requiredSettingErr("account_id")
+		return nil, &RequiredSettingError{AmazonInstance.String(), "account_id"}
 	}
 	if !hasAmiName {
-		return nil, requiredSettingErr("ami_name")
+		return nil, &RequiredSettingError{AmazonInstance.String(), "ami_name"}
 	}
 	if !hasInstanceType {
-		return nil, requiredSettingErr("instance_type")
+		return nil, &RequiredSettingError{AmazonInstance.String(), "instance_type"}
 	}
 	if !hasRegion {
-		return nil, requiredSettingErr("region")
+		return nil, &RequiredSettingError{AmazonInstance.String(), "region"}
 	}
 	if !hasS3Bucket {
-		return nil, requiredSettingErr("s3_buvket")
+		return nil, &RequiredSettingError{AmazonInstance.String(), "s3_bucket"}
 	}
 	if !hasSecretKey {
-		return nil, requiredSettingErr("secret_key")
+		return nil, &RequiredSettingError{AmazonInstance.String(), "secret_key"}
 	}
 	if !hasSourceAmi {
-		return nil, requiredSettingErr("source_ami")
+		return nil, &RequiredSettingError{AmazonInstance.String(), "source_ami"}
 	}
 	if !hasSSHUsername {
-		return nil, requiredSettingErr("ssh_username")
+		return nil, &RequiredSettingError{AmazonInstance.String(), "ssh_username"}
 	}
 	if !hasX509CertPath {
-		return nil, requiredSettingErr("x509_cert_path")
+		return nil, &RequiredSettingError{AmazonInstance.String(), "x509_cert_path"}
 	}
 	if !hasX509KeyPath {
-		return nil, requiredSettingErr("x509_key_path")
+		return nil, &RequiredSettingError{AmazonInstance.String(), "x509_key_path"}
 	}
 	// Process the Arrays.
 	for name, val := range r.Builders[ID].Arrays {
@@ -806,8 +805,7 @@ func (r *rawTemplate) createDigitalOcean(ID string) (settings map[string]interfa
 	if hasApiKey && hasClientID {
 		return settings, nil
 	}
-	err = requiredSettingErr("either api_token or (api_key && client_id)")
-	return nil, err
+	return nil, &RequiredSettingError{DigitalOcean.String(), "either api_token or (api_key && client_id)"}
 }
 
 // createDocker creates a map of settings for Packer's docker builder. Any
@@ -875,16 +873,13 @@ func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 		}
 	}
 	if !hasCommit {
-		err := requiredSettingErr("commit")
-		return nil, err
+		return nil, &RequiredSettingError{Docker.String(), "commit"}
 	}
 	if !hasExportPath {
-		err := requiredSettingErr("export_path")
-		return nil, err
+		return nil, &RequiredSettingError{Docker.String(), "export_path"}
 	}
 	if !hasImage {
-		err := requiredSettingErr("image")
-		return nil, err
+		return nil, &RequiredSettingError{Docker.String(), "image"}
 	}
 	// Process the Arrays.
 	for name, val := range r.Builders[ID].Arrays {
@@ -1001,13 +996,13 @@ func (r *rawTemplate) createGoogleCompute(ID string) (settings map[string]interf
 		}
 	}
 	if !hasProjectID {
-		return nil, requiredSettingErr("project_id")
+		return nil, &RequiredSettingError{GoogleCompute.String(), "project_id"}
 	}
 	if !hasSourceImage {
-		return nil, requiredSettingErr("source_image")
+		return nil, &RequiredSettingError{GoogleCompute.String(), "source_image"}
 	}
 	if !hasZone {
-		return nil, requiredSettingErr("zone")
+		return nil, &RequiredSettingError{GoogleCompute.String(), "zone"}
 	}
 	// Process the Arrays.
 	for name, val := range r.Builders[ID].Arrays {
@@ -1215,7 +1210,7 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 	}
 	// Only check to see if the required ssh_username field was set. The required iso info is checked after Array processing
 	if !hasSSHUsername {
-		return nil, requiredSettingErr("ssh_username")
+		return nil, &RequiredSettingError{VirtualBoxISO.String(), "ssh_username"}
 	}
 	// Process arrays, iso_urls is only valid if iso_url is not set so we first
 	// check to see if it has been set, and if not, if it's in this array prior
@@ -1446,10 +1441,10 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 	}
 	// Check to see if the required info was processed.
 	if !hasSSHUsername {
-		return nil, requiredSettingErr("ssh_username")
+		return nil, &RequiredSettingError{VirtualBoxISO.String(), "ssh_username"}
 	}
 	if !hasSourcePath {
-		return nil, requiredSettingErr("source_path")
+		return nil, &RequiredSettingError{VirtualBoxISO.String(), "source_path"}
 	}
 
 	// make sure http_directory is set and add to dir list
@@ -1643,7 +1638,7 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 	}
 	// Only check to see if the required ssh_username field was set. The required iso info is checked after Array processing
 	if !hasSSHUsername {
-		return nil, requiredSettingErr("ssh_username")
+		return nil, &RequiredSettingError{VirtualBoxISO.String(), "ssh_username"}
 	}
 	// make sure http_directory is set and add to dir list
 	err = r.setHTTP(VMWareISO.String(), settings)
@@ -1844,10 +1839,10 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 	}
 	// Check if required fields were processed
 	if !hasSSHUsername {
-		return nil, requiredSettingErr("ssh_username")
+		return nil, &RequiredSettingError{VirtualBoxISO.String(), "ssh_username"}
 	}
 	if !hasSourcePath {
-		return nil, requiredSettingErr("source_path")
+		return nil, &RequiredSettingError{VirtualBoxISO.String(), "source_path"}
 	}
 	// make sure http_directory is set and add to dir list
 	err = r.setHTTP(VMWareVMX.String(), settings)

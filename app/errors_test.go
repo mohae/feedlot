@@ -53,24 +53,3 @@ func TestProvisionerErr(t *testing.T) {
 		t.Errorf("expected \"%s provisioner error: error foo bar\" got %q", ShellScript.String(), err)
 	}
 }
-
-func TestPostProcessorErr(t *testing.T) {
-	err := postProcessorErr(Vagrant, fmt.Errorf("error foo bar"))
-	if err.Error() != fmt.Sprintf("%s post-processor error: error foo bar", Vagrant.String()) {
-		t.Errorf("expected \"%s post-processor: error foo bar\" got %q", Vagrant.String(), err)
-	}
-}
-
-func TestRequiredSettingErr(t *testing.T) {
-	err := requiredSettingErr("test_setting")
-	if err.Error() != "required setting not found: test_setting" {
-		t.Errorf("Expected \"required setting not found: test_setting\", got %q", err)
-	}
-}
-
-func TestSettingErr(t *testing.T) {
-	err := settingErr("test_setting", fmt.Errorf("error foo bar"))
-	if err.Error() != "encountered a problem processing the test_setting setting: error foo bar" {
-		t.Errorf("Expected \"encountered a problem processing the test_setting setting: error foo bar\", got %q", err)
-	}
-}

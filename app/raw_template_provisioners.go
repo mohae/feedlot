@@ -210,7 +210,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 		}
 	}
 	if !hasPlaybook {
-		return nil, requiredSettingErr("playbook_file")
+		return nil, &RequiredSettingError{Ansible.String(), "playbook_file"}
 	}
 	// Process the Arrays.
 	for name, val := range r.Provisioners[ID].Arrays {
@@ -538,7 +538,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 		}
 	}
 	if !hasManifestFile {
-		return nil, requiredSettingErr("manifest_file")
+		return nil, &RequiredSettingError{PuppetMasterless.String(), "manifest_file"}
 	}
 	for name, val := range r.Provisioners[ID].Arrays {
 		if name == "facter" {
@@ -639,10 +639,10 @@ func (r *rawTemplate) createFileUploads(ID string) (settings map[string]interfac
 		}
 	}
 	if !hasSource {
-		return nil, requiredSettingErr("source")
+		return nil, &RequiredSettingError{FileUploads.String(), "source"}
 	}
 	if !hasDestination {
-		return nil, requiredSettingErr("destination")
+		return nil, &RequiredSettingError{FileUploads.String(), "destination"}
 	}
 	return settings, nil
 }
@@ -726,7 +726,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 		}
 	}
 	if !hasLocalStateTree {
-		return nil, requiredSettingErr("local_state_tree")
+		return nil, &RequiredSettingError{Salt.String(), "local_state_tree"}
 	}
 	// salt does not have any arrays to support
 	return settings, nil
@@ -816,7 +816,7 @@ func (r *rawTemplate) createShellScript(ID string) (settings map[string]interfac
 		}
 	}
 	if len(scripts) == 0 {
-		return nil, requiredSettingErr("scripts")
+		return nil, &RequiredSettingError{ShellScript.String(), "scripts"}
 	}
 	return settings, nil
 }

@@ -445,7 +445,6 @@ var testAllBuilders = rawTemplate{
 						"ssh_private_key_file=myKey",
 						"subnet_id=subnet-12345def",
 						"temporary_key_pair_name=TMP_KEYPAIR",
-						"token=AWS_SECURITY_TOKEN",
 						"user_data=SOME_USER_DATA",
 						"user_data_file=amazon.userdata",
 						"vpc_id=VPC_ID",
@@ -1353,6 +1352,9 @@ func TestCreateAmazonEBS(t *testing.T) {
 		"ami_regions": []string{
 			"us-east-1",
 		},
+		"ami_users": []string{
+			"ami-account",
+		},
 		"associate_public_ip_address": false,
 		"availability_zone":           "us-east-1b",
 		"enhanced_networking":         false,
@@ -1384,7 +1386,6 @@ func TestCreateAmazonEBS(t *testing.T) {
 		"ssh_port":                22,
 		"ssh_username":            "vagrant",
 		"ssh_private_key_file":    "myKey",
-		"ssh_timeout":             "30m",
 		"tags": map[string]string{
 			"OS_Version": "Ubuntu",
 			"Release":    "Latest",
@@ -1470,14 +1471,12 @@ func TestCreateAmazonInstance(t *testing.T) {
 		"ssh_port":                22,
 		"ssh_username":            "vagrant",
 		"ssh_private_key_file":    "myKey",
-		"ssh_timeout":             "30m",
 		"subnet_id":               "subnet-12345def",
 		"temporary_key_pair_name": "TMP_KEYPAIR",
 		"tags": map[string]string{
 			"OS_Version": "Ubuntu",
 			"Release":    "Latest",
 		},
-		"token":            "AWS_SECURITY_TOKEN",
 		"type":             "amazon-instance",
 		"user_data":        "SOME_USER_DATA",
 		"user_data_file":   "amazon-instance/amazon.userdata",

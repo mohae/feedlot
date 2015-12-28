@@ -13,12 +13,28 @@ import (
 	jww "github.com/spf13/jwalterweatherman"
 )
 
-func settingErr(component, k, v string, err error) error {
-	return fmt.Errorf("%s.%s: %s: %s", component, k, v, err)
+func settingErr(a string, err error) error {
+	return nil
 }
 
-func requiredSettingErr(component, k string) error {
-	return fmt.Errorf("%s.%s: required setting missing", component, k)
+type SettingError struct {
+	Component string
+	Key       string
+	Value     string
+	err       error
+}
+
+func (e *SettingError) Error() string {
+	return e.Component + "." + e.Key + ": " + e.Value + ": " + e.err.Error()
+}
+
+type RequiredSettingError struct {
+	Component string
+	Key       string
+}
+
+func (e *RequiredSettingError) Error() string {
+	return e.Component + "." + e.Key + ": required setting"
 }
 
 // rawTemplate holds all the information for a Rancher template. This is used
