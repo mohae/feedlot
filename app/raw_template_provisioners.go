@@ -166,7 +166,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(Ansible.String(), v, false)
 			if err != nil {
-				return nil, settingErr(k, err)
+				return nil, &SettingError{Ansible.String(), k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -181,7 +181,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(Ansible.String(), v, false)
 			if err != nil {
-				return nil, settingErr(k, err)
+				return nil, &SettingError{Ansible.String(), k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -195,7 +195,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(Ansible.String(), v, true)
 			if err != nil {
-				return nil, settingErr(k, err)
+				return nil, &SettingError{Ansible.String(), k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -221,7 +221,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 				v = r.replaceVariables(v)
 				src, err := r.findComponentSource(Ansible.String(), v, true)
 				if err != nil {
-					return nil, settingErr(k, err)
+					return nil, &SettingError{Ansible.String(), k, v, err}
 				}
 				// if the source couldn't be found and an error wasn't generated, replace
 				// s with the original value; this occurs when it is an example.
@@ -292,7 +292,7 @@ func (r *rawTemplate) createChefClient(ID string) (settings map[string]interface
 			// find the actual location of the source file and add it to the files map for copying
 			src, err := r.findComponentSource(ChefClient.String(), v, false)
 			if err != nil {
-				return nil, settingErr(k, err)
+				return nil, &SettingError{ChefClient.String(), k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -374,7 +374,7 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(ChefSolo.String(), v, false)
 			if err != nil {
-				return nil, settingErr(k, err)
+				return nil, &SettingError{ChefSolo.String(), k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -387,7 +387,7 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 		case "data_bags_path", "environments_path", "roles_path":
 			src, err := r.findComponentSource(ChefSolo.String(), v, true)
 			if err != nil {
-				return nil, settingErr(k, err)
+				return nil, &SettingError{ChefSolo.String(), k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -422,7 +422,7 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 				// find the actual location and add it to the files map for copying
 				src, err := r.findComponentSource(ChefSolo.String(), v, true)
 				if err != nil {
-					return nil, settingErr(name, err)
+					return nil, &SettingError{ChefSolo.String(), name, v, err}
 				}
 				// if the source couldn't be found and an error wasn't generated, replace
 				// s with the original value; this occurs when it is an example.
@@ -477,7 +477,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 		case "manifest_file":
 			src, err := r.findComponentSource(PuppetMasterless.String(), v, false)
 			if err != nil {
-				return nil, settingErr(k, err)
+				return nil, &SettingError{PuppetMasterless.String(), k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -496,7 +496,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 			// find the actual location of the source file and add it to the files map for copying
 			src, err := r.findComponentSource(PuppetMasterless.String(), v, false)
 			if err != nil {
-				return nil, settingErr(k, err)
+				return nil, &SettingError{PuppetMasterless.String(), k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -510,7 +510,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 			// find the actual location of the directory and add it to the dir map for copying contents
 			src, err := r.findComponentSource(PuppetMasterless.String(), v, true)
 			if err != nil {
-				return nil, settingErr(k, err)
+				return nil, &SettingError{PuppetMasterless.String(), k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -622,7 +622,7 @@ func (r *rawTemplate) createFileUploads(ID string) (settings map[string]interfac
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(FileUploads.String(), v, true)
 			if err != nil {
-				return nil, settingErr(k, err)
+				return nil, &SettingError{FileUploads.String(), k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -680,7 +680,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(Salt.String(), v, true)
 			if err != nil {
-				return nil, settingErr(k, err)
+				return nil, &SettingError{Salt.String(), k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -695,7 +695,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(Salt.String(), v, true)
 			if err != nil {
-				return nil, settingErr(k, err)
+				return nil, &SettingError{Salt.String(), k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -709,7 +709,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(Salt.String(), filepath.Join(v, "minion"), false)
 			if err != nil {
-				return nil, settingErr(k, err)
+				return nil, &SettingError{Salt.String(), k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -796,7 +796,7 @@ func (r *rawTemplate) createShellScript(ID string) (settings map[string]interfac
 				// find the source
 				src, err := r.findComponentSource(ShellScript.String(), v, false)
 				if err != nil {
-					return nil, settingErr(k, err)
+					return nil, &SettingError{ShellScript.String(), k, v, err}
 				}
 				// if the source couldn't be found and an error wasn't generated, replace
 				// s with the original value; this occurs when it is an example.

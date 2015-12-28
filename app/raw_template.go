@@ -13,10 +13,6 @@ import (
 	jww "github.com/spf13/jwalterweatherman"
 )
 
-func settingErr(a string, err error) error {
-	return nil
-}
-
 type SettingError struct {
 	Component string
 	Key       string

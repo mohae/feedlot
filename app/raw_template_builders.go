@@ -434,7 +434,7 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 		case "user_data_file":
 			src, err := r.findComponentSource(AmazonEBS.String(), v, false)
 			if err != nil {
-				return nil, settingErr(k, err)
+				return nil, &SettingError{AmazonEBS.String(), k, v, err}
 			}
 			jww.ERROR.Printf("EBS user_data_file: %v", src)
 			// if the source couldn't be found and an error wasn't generated, replace
@@ -632,13 +632,13 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, settingErr("ssh_port", err)
+				return nil, &SettingError{AmazonInstance.String(), k, v, err}
 			}
 			settings[k] = i
 		case "user_data_file":
 			src, err := r.findComponentSource(AmazonInstance.String(), v, false)
 			if err != nil {
-				return nil, settingErr("user_data_file", err)
+				return nil, &SettingError{AmazonInstance.String(), k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -794,7 +794,7 @@ func (r *rawTemplate) createDigitalOcean(ID string) (settings map[string]interfa
 		case "ssh_port":
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, settingErr(k, err)
+				return nil, &SettingError{DigitalOcean.String(), k, v, err}
 			}
 			settings[k] = i
 		}
@@ -990,7 +990,7 @@ func (r *rawTemplate) createGoogleCompute(ID string) (settings map[string]interf
 		case "disk_size", "ssh_port":
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, settingErr(k, err)
+				return nil, &SettingError{GoogleCompute.String(), k, v, err}
 			}
 			settings[k] = i
 		}
@@ -1064,7 +1064,7 @@ func (r *rawTemplate) createNull(ID string) (settings map[string]interface{}, er
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, settingErr(k, err)
+				return nil, &SettingError{Null.String(), k, v, err}
 			}
 			settings[k] = i
 		}
@@ -1203,7 +1203,7 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, settingErr(k, err)
+				return nil, &SettingError{VirtualBoxISO.String(), k, v, err}
 			}
 			settings[k] = i
 		}
@@ -1417,7 +1417,7 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				err = settingErr(k, err)
+				err = &SettingError{VirtualBoxOVF.String(), k, v, err}
 				return nil, err
 			}
 			settings[k] = i
@@ -1631,7 +1631,7 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, settingErr(k, err)
+				return nil, &SettingError{VMWareISO.String(), k, v, err}
 			}
 			settings[k] = i
 		}
@@ -1832,7 +1832,7 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, settingErr(k, err)
+				return nil, &SettingError{VMWareVMX.String(), k, v, err}
 			}
 			settings[k] = i
 		}
