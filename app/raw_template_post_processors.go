@@ -67,8 +67,16 @@ func PostProcessorFromString(s string) PostProcessor {
 	return UnsupportedPostProcessor
 }
 
-func postProcessorErr(p PostProcessor, err error) error {
-	return fmt.Errorf("%s post-processor error: %s", p.String(), err)
+// PostProcessorError records an error during the processing of a 
+// post-processor.
+type PostProcessorError struct {
+	P PostProcessor
+	Op string
+	Err error
+}
+
+func (e PostProcessorError) Error() string {
+	return "post-processor " + e.P.String() + ": " + e.Op + " " + e.Err.Error()
 }
 
 // Merges the new config with the old. The updates occur as follows:
@@ -141,51 +149,51 @@ func (r *rawTemplate) createPostProcessors() (pp []interface{}, err error) {
 		case Atlas:
 			tmpS, err = r.createAtlas(ID)
 			if err != nil {
-				return nil, postProcessorErr(Atlas, err)
+				return nil, PostProcessorError{Atlas, "create", err}
 			}
 		case Compress:
 			tmpS, err = r.createCompress(ID)
 			if err != nil {
-				return nil, postProcessorErr(Compress, err)
+				return nil, err
 			}
 		case DockerImport:
 			tmpS, err = r.createDockerImport(ID)
 			if err != nil {
-				return nil, postProcessorErr(DockerImport, err)
+				return nil, err
 			}
 		case DockerPush:
 			tmpS, err = r.createDockerPush(ID)
 			if err != nil {
-				return nil, postProcessorErr(DockerPush, err)
+				return nil, err
 			}
 		case DockerSave:
 			tmpS, err = r.createDockerSave(ID)
 			if err != nil {
-				return nil, postProcessorErr(DockerSave, err)
+				return nil, err
 			}
 		case DockerTag:
 			tmpS, err = r.createDockerTag(ID)
 			if err != nil {
-				return nil, postProcessorErr(DockerTag, err)
+				return nil, err
 			}
 		case Vagrant:
 			tmpS, err = r.createVagrant(ID)
 			if err != nil {
-				return nil, postProcessorErr(Vagrant, err)
+				return nil, err
 			}
 		case VagrantCloud:
 			// Create the settings
 			tmpS, err = r.createVagrantCloud(ID)
 			if err != nil {
-				return nil, postProcessorErr(VagrantCloud, err)
+				return nil, err
 			}
 		case VSphere:
 			tmpS, err = r.createVSphere(ID)
 			if err != nil {
-				return nil, postProcessorErr(VSphere, err)
+				return nil, err
 			}
 		default:
-			return nil, postProcessorErr(UnsupportedPostProcessor, fmt.Errorf("%q is not supported", tmpPP.Type))
+			return nil, PostProcessorError{UnsupportedPostProcessor, "create " + ID, fmt.Errorf("%q is not supported", tmpPP.Type)}
 		}
 		pp[ndx] = tmpS
 		ndx++
@@ -246,7 +254,7 @@ func (r *rawTemplate) createAtlas(ID string) (settings map[string]interface{}, e
 	// Process the Arrays.
 	for name, val := range r.PostProcessors[ID].Arrays {
 		switch name {
-		case "metadata":
+		case "metadata":			
 		case "except":
 		case "only":
 		default:
@@ -289,7 +297,7 @@ func (r *rawTemplate) createCompress(ID string) (settings map[string]interface{}
 		case "compression_level":
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return errPostProcessor(Compress, err)
+				return nil, PostProcessorError{Compress, v + ": ",err}
 			}
 			settings[k] = i
 		case "keep_input_artifact":
@@ -467,7 +475,7 @@ func (r *rawTemplate) createDockerSave(ID string) (settings map[string]interface
 		if array != nil {
 			settings[name] = array
 		}
-	}
+	}	
 	return settings, nil
 }
 
@@ -564,16 +572,15 @@ func (r *rawTemplate) createVagrant(ID string) (settings map[string]interface{},
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, settingErr(k, err)
+				return nil, PostProcessorError{Vagrant, v + ": ",err}
 			}
 			settings[k] = i
 		case "vagrantfile_template":
 			// locate the file
 			src, err := r.findComponentSource(Vagrant.String(), v, false)
 			if err != nil {
-				return nil, settingErr(k, err)
+				return nil, PostProcessorError{Compress, "find " + v + " source: ",err}
 			}
-			jww.ERROR.Printf("vagrantfile_template: %v", src)
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
 			// Nothing should be copied in this instancel it should not be added
@@ -673,7 +680,7 @@ func (r *rawTemplate) createVagrantCloud(ID string) (settings map[string]interfa
 // Required configuration options:
 //   cluster         string
 //   datacenter      string
-//   datastore*      string
+//   datastore*      string 
 //   host            string
 //   password        string
 //   username        string
