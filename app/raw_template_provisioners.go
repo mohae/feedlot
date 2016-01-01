@@ -160,7 +160,7 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
-		return nil, configNotFoundErr()
+		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = Ansible.String()
@@ -285,7 +285,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 func (r *rawTemplate) createChefClient(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ChefClient.String()]
 	if !ok {
-		return nil, configNotFoundErr()
+		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = ChefClient.String()
@@ -366,7 +366,7 @@ func (r *rawTemplate) createChefClient(ID string) (settings map[string]interface
 func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
-		return nil, configNotFoundErr()
+		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = ChefSolo.String()
@@ -474,7 +474,7 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
-		return nil, configNotFoundErr()
+		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = PuppetMasterless.String()
@@ -582,7 +582,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 func (r *rawTemplate) createPuppetServer(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
-		return nil, configNotFoundErr()
+		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = PuppetServer.String()
@@ -617,7 +617,7 @@ func (r *rawTemplate) createPuppetServer(ID string) (settings map[string]interfa
 func (r *rawTemplate) createFileUploads(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
-		return nil, configNotFoundErr()
+		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = FileUploads.String()
@@ -675,7 +675,7 @@ func (r *rawTemplate) createFileUploads(ID string) (settings map[string]interfac
 func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
-		return nil, configNotFoundErr()
+		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = Salt.String()
@@ -763,7 +763,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 func (r *rawTemplate) createShellScript(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
-		return nil, configNotFoundErr()
+		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = ShellScript.String()

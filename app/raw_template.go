@@ -2,6 +2,7 @@ package app
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -12,6 +13,15 @@ import (
 	"github.com/mohae/contour"
 	jww "github.com/spf13/jwalterweatherman"
 )
+
+// Common errors
+var (
+	ErrConfigNotFound = errors.New("configuration not found")
+)
+
+func NewErrConfigNotFound(s string) error {
+	return Error{slug: s, err: ErrConfigNotFound}
+}
 
 type SettingError struct {
 	Component string
@@ -32,6 +42,11 @@ type RequiredSettingError struct {
 func (e *RequiredSettingError) Error() string {
 	return e.Component + "." + e.Key + ": required setting"
 }
+
+var (
+	configNotFoundErr = errors.New("configuration not found")
+)
+
 
 // rawTemplate holds all the information for a Rancher template. This is used
 // to generate the Packer Build.

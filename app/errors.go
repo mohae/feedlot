@@ -24,10 +24,6 @@ func commandFileErr(s, path string, err error) error {
 	return fmt.Errorf("extracting commands for %s from %s failed: %s", s, path, err)
 }
 
-func configNotFoundErr() error {
-	return fmt.Errorf("configuration not found")
-}
-
 func decodeErr(name string, err error) error {
 	return fmt.Errorf("decode of %q failed: %s", name, err)
 }

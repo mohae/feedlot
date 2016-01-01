@@ -142,7 +142,7 @@ func (r *rawTemplate) createPostProcessors() (pp []interface{}, err error) {
 	for _, ID := range r.PostProcessorIDs {
 		tmpPP, ok := r.PostProcessors[ID]
 		if !ok {
-			return nil, fmt.Errorf("post-processor configuration for %s not found", ID)
+			return nil,NewErrConfigNotFound(ID)
 		}
 		typ := PostProcessorFromString(tmpPP.Type)
 		switch typ {
@@ -216,7 +216,7 @@ func (r *rawTemplate) createPostProcessors() (pp []interface{}, err error) {
 func (r *rawTemplate) createAtlas(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[ID]
 	if !ok {
-		return nil, configNotFoundErr()
+		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = Atlas.String()
@@ -282,7 +282,7 @@ func (r *rawTemplate) createAtlas(ID string) (settings map[string]interface{}, e
 func (r *rawTemplate) createCompress(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[ID]
 	if !ok {
-		return nil, configNotFoundErr()
+		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = Compress.String()
@@ -337,7 +337,7 @@ func (r *rawTemplate) createCompress(ID string) (settings map[string]interface{}
 func (r *rawTemplate) createDockerImport(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[ID]
 	if !ok {
-		return nil, configNotFoundErr()
+		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = DockerImport.String()
@@ -396,7 +396,7 @@ func (r *rawTemplate) createDockerImport(ID string) (settings map[string]interfa
 func (r *rawTemplate) createDockerPush(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[ID]
 	if !ok {
-		return nil, configNotFoundErr()
+		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = DockerPush.String()
@@ -442,7 +442,7 @@ func (r *rawTemplate) createDockerPush(ID string) (settings map[string]interface
 func (r *rawTemplate) createDockerSave(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[ID]
 	if !ok {
-		return nil, configNotFoundErr()
+		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = DockerSave.String()
@@ -492,7 +492,7 @@ func (r *rawTemplate) createDockerSave(ID string) (settings map[string]interface
 func (r *rawTemplate) createDockerTag(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[ID]
 	if !ok {
-		return nil, configNotFoundErr()
+		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = DockerTag.String()
@@ -553,7 +553,7 @@ func (r *rawTemplate) createDockerTag(ID string) (settings map[string]interface{
 func (r *rawTemplate) createVagrant(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[ID]
 	if !ok {
-		return nil, configNotFoundErr()
+		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = Vagrant.String()
@@ -625,7 +625,7 @@ func (r *rawTemplate) createVagrant(ID string) (settings map[string]interface{},
 func (r *rawTemplate) createVagrantCloud(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[ID]
 	if !ok {
-		return nil, configNotFoundErr()
+		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = VagrantCloud.String()
@@ -697,7 +697,7 @@ func (r *rawTemplate) createVagrantCloud(ID string) (settings map[string]interfa
 func (r *rawTemplate) createVSphere(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[ID]
 	if !ok {
-		return nil, configNotFoundErr()
+		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = VSphere.String()

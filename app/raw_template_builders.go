@@ -231,7 +231,7 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[AmazonChroot.String()]
 	if !ok {
-		return nil, configNotFoundErr()
+		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -371,7 +371,7 @@ func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, configNotFoundErr()
+		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -561,7 +561,7 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, configNotFoundErr()
+		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -753,7 +753,7 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 func (r *rawTemplate) createDigitalOcean(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, configNotFoundErr()
+		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -830,7 +830,7 @@ func (r *rawTemplate) createDigitalOcean(ID string) (settings map[string]interfa
 func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, configNotFoundErr()
+		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -939,7 +939,7 @@ func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 func (r *rawTemplate) createGoogleCompute(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, configNotFoundErr()
+		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -1036,7 +1036,7 @@ func (r *rawTemplate) createGoogleCompute(ID string) (settings map[string]interf
 func (r *rawTemplate) createNull(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, configNotFoundErr()
+		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -1118,7 +1118,7 @@ func (r *rawTemplate) createNull(ID string) (settings map[string]interface{}, er
 func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, configNotFoundErr()
+		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -1347,7 +1347,7 @@ noISOURL:
 func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, configNotFoundErr()
+		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -1546,7 +1546,7 @@ func (r *rawTemplate) createVBoxManage(v interface{}) [][]string {
 func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, configNotFoundErr()
+		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -1748,7 +1748,7 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, configNotFoundErr()
+		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.

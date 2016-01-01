@@ -26,6 +26,16 @@ import (
 	jww "github.com/spf13/jwalterweatherman"
 )
 
+//
+type Error struct {
+	slug string
+	err error
+}
+
+func (e Error) Error() string {
+	return fmt.Sprintf("%s: %s", e.slug, e.err)
+}
+
 // supported config formats
 const (
 	UnsupportedCfgFormat CfgFormat = iota
