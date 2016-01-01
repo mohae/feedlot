@@ -64,16 +64,6 @@ func ProvisionerFromString(s string) Provisioner {
 	return UnsupportedProvisioner
 }
 
-// ProvisionerError records an error during the processing of a provisioner.
-type ProvisionerError struct {
-	P   Provisioner
-	Op  string
-	Err error
-}
-
-func (e ProvisionerError) Error() string {
-	return "provisioner " + e.P.String() + ": " + e.Op + " " + e.Err.Error()
-}
 
 // createProvisioner creates the provisioners for a build.
 func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
@@ -94,45 +84,45 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 		case Ansible:
 			tmpS, err = r.createAnsible(ID)
 			if err != nil {
-				return nil, ProvisionerError{P: Ansible, Op: "create", Err: err}
+				return nil, &Error{Slug: Ansible.String(), Err: err}
 			}
 		case FileUploads:
 			tmpS, err = r.createFileUploads(ID)
 			if err != nil {
-				return nil, ProvisionerError{P: FileUploads, Op: "create", Err: err}
+				return nil, &Error{Slug: FileUploads.String(), Err: err}
 			}
 		case Salt:
 			tmpS, err = r.createSalt(ID)
 			if err != nil {
-				return nil, ProvisionerError{P: Salt, Op: "create", Err: err}
+				return nil, &Error{Slug: Salt.String(), Err: err}
 			}
 		case ShellScript:
 			tmpS, err = r.createShellScript(ID)
 			if err != nil {
-				return nil, ProvisionerError{P: ShellScript, Op: "create", Err: err}
+				return nil, &Error{Slug: ShellScript.String(), Err: err}
 			}
 		case ChefClient:
 			tmpS, err = r.createChefClient(ID)
 			if err != nil {
-				return nil, ProvisionerError{P: ChefClient, Op: "create", Err: err}
+				return nil, &Error{Slug: ChefClient.String(), Err: err}
 			}
 		case ChefSolo:
 			tmpS, err = r.createChefSolo(ID)
 			if err != nil {
-				return nil, ProvisionerError{P: ChefSolo, Op: "create", Err: err}
+				return nil, &Error{Slug: ChefSolo.String(), Err: err}
 			}
 		case PuppetMasterless:
 			tmpS, err = r.createPuppetMasterless(ID)
 			if err != nil {
-				return nil, ProvisionerError{P: PuppetMasterless, Op: "create", Err: err}
+				return nil, &Error{Slug: PuppetMasterless.String(), Err: err}
 			}
 		case PuppetServer:
 			tmpS, err = r.createPuppetServer(ID)
 			if err != nil {
-				return nil, ProvisionerError{P: PuppetServer, Op: "create", Err: err}
+				return nil, &Error{Slug: PuppetServer.String(), Err: err}
 			}
 		default:
-			return nil, ProvisionerError{P: UnsupportedProvisioner, Op: "", Err: fmt.Errorf("%s is not supported", tmpP.Type)}
+			return nil, &Error{Slug: UnsupportedProvisioner.String(), Err: fmt.Errorf("%s is not supported", tmpP.Type)}
 		}
 		p[ndx] = tmpS
 		ndx++
