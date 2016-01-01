@@ -29,7 +29,7 @@ import (
 //
 type Error struct {
 	slug string
-	err error
+	err  error
 }
 
 func (e Error) Error() string {

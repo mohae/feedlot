@@ -415,23 +415,23 @@ func (d *defaults) Load(p string) error {
 	}
 	name, format, err := findConfigFile(getConfigFile(p, fmt.Sprintf("%s.%s", "default", contour.GetString(Format))))
 	if err != nil {
-		return decodeErr(fmt.Sprintf("%s config file", getConfigFile(p, fmt.Sprintf("%s.%s", "default", contour.GetString(Format)))), err)
+		return err
 	}
 	switch format {
 	case TOML:
 		_, err := toml.DecodeFile(name, &d)
 		if err != nil {
-			return decodeErr(name, err)
+			return err
 		}
 	case JSON:
 		var b []byte
 		b, err = ioutil.ReadFile(name)
 		if err != nil {
-			return decodeErr(name, err)
+			return err
 		}
 		err = cjsn.Unmarshal(b, &d)
 		if err != nil {
-			return decodeErr(name, err)
+			return err
 		}
 	default:
 		return ErrUnsupportedFormat
@@ -480,23 +480,23 @@ type supported struct {
 func (s *supported) Load(p string) error {
 	name, format, err := findConfigFile(getConfigFile(p, "supported"))
 	if err != nil {
-		return decodeErr(fmt.Sprintf("%s config file", getConfigFile(p, "supported")), err)
+		return err
 	}
 	switch format {
 	case TOML:
 		_, err := toml.DecodeFile(name, &s.Distro)
 		if err != nil {
-			return decodeErr(name, err)
+			return err
 		}
 	case JSON:
 		var b []byte
 		b, err = ioutil.ReadFile(name)
 		if err != nil {
-			return decodeErr(name, err)
+			return err
 		}
 		err = cjsn.Unmarshal(b, &s.Distro)
 		if err != nil {
-			return decodeErr(name, err)
+			return err
 		}
 	default:
 		return ErrUnsupportedFormat
@@ -520,16 +520,16 @@ func (b *builds) Load(name string) error {
 	case TOML:
 		_, err := toml.DecodeFile(name, &b.Build)
 		if err != nil {
-			return decodeErr(name, err)
+			return err
 		}
 	case JSON:
 		by, err := ioutil.ReadFile(name)
 		if err != nil {
-			return decodeErr(name, err)
+			return err
 		}
 		err = cjsn.Unmarshal(by, &b.Build)
 		if err != nil {
-			return decodeErr(name, err)
+			return err
 		}
 	default:
 		return ErrUnsupportedFormat
@@ -579,23 +579,23 @@ func (bl *buildLists) Load(p string) error {
 	// Load the build lists.
 	name, format, err := findConfigFile(getConfigFile(p, "build_list"))
 	if err != nil {
-		return decodeErr(fmt.Sprintf("%s config file", filepath.Join(p, "build_list")), err)
+		return err
 	}
 	switch format {
 	case TOML:
 		_, err := toml.DecodeFile(name, &bl.List)
 		if err != nil {
-			return decodeErr(name, err)
+			return err
 		}
 	case JSON:
 		var b []byte
 		b, err = ioutil.ReadFile(name)
 		if err != nil {
-			return decodeErr(name, err)
+			return err
 		}
 		err = cjsn.Unmarshal(b, &bl.List)
 		if err != nil {
-			return decodeErr(name, err)
+			return err
 		}
 	default:
 		return ErrUnsupportedFormat

@@ -47,7 +47,6 @@ var (
 	configNotFoundErr = errors.New("configuration not found")
 )
 
-
 // rawTemplate holds all the information for a Rancher template. This is used
 // to generate the Packer Build.
 type rawTemplate struct {

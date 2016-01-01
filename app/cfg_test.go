@@ -690,8 +690,8 @@ func TestDefaults(t *testing.T) {
 		format      string
 		expectedErr string
 	}{
-		{"", "decode of \"../test_files/conf/default. config file\" failed: unsupported config format: "},
-		{"yaml", "decode of \"../test_files/conf/default.yaml config file\" failed: unsupported config format: yaml"},
+		{"", "unsupported config format: "},
+		{"yaml", "unsupported config format: yaml"},
 		{"toml", ""},
 		{"json", ""},
 	}
@@ -723,8 +723,8 @@ func TestSupported(t *testing.T) {
 		p           string
 		expectedErr string
 	}{
-		{"", "", "decode of \"supported. config file\" failed: unsupported config format: "},
-		{"yaml", "", "decode of \"supported.yaml config file\" failed: unsupported config format: yaml"},
+		{"", "", "unsupported config format: "},
+		{"yaml", "", "unsupported config format: yaml"},
 		{"toml", "../test_files", ""},
 		{"json", "../test_files", ""},
 	}
@@ -788,8 +788,8 @@ func TestBuildListStuff(t *testing.T) {
 		format      string
 		expectedErr string
 	}{
-		{"", "decode of \"../test_files/build_list config file\" failed: unsupported config format: "},
-		{"yaml", "decode of \"../test_files/build_list config file\" failed: unsupported config format: yaml"},
+		{"", "unsupported config format: "},
+		{"yaml", "unsupported config format: yaml"},
 		{"toml", ""},
 		{"json", ""},
 	}

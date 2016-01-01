@@ -18,10 +18,6 @@ func commandFileErr(s, path string, err error) error {
 	return fmt.Errorf("extracting commands for %s from %s failed: %s", s, path, err)
 }
 
-func decodeErr(name string, err error) error {
-	return fmt.Errorf("decode of %q failed: %s", name, err)
-}
-
 func dependentSettingErr(s1, s2 string) error {
 	return fmt.Errorf("setting %s found but setting %s was not found-both are required", s1, s2)
 }

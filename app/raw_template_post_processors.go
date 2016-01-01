@@ -67,11 +67,11 @@ func PostProcessorFromString(s string) PostProcessor {
 	return UnsupportedPostProcessor
 }
 
-// PostProcessorError records an error during the processing of a 
+// PostProcessorError records an error during the processing of a
 // post-processor.
 type PostProcessorError struct {
-	P PostProcessor
-	Op string
+	P   PostProcessor
+	Op  string
 	Err error
 }
 
@@ -142,7 +142,7 @@ func (r *rawTemplate) createPostProcessors() (pp []interface{}, err error) {
 	for _, ID := range r.PostProcessorIDs {
 		tmpPP, ok := r.PostProcessors[ID]
 		if !ok {
-			return nil,NewErrConfigNotFound(ID)
+			return nil, NewErrConfigNotFound(ID)
 		}
 		typ := PostProcessorFromString(tmpPP.Type)
 		switch typ {
@@ -254,7 +254,7 @@ func (r *rawTemplate) createAtlas(ID string) (settings map[string]interface{}, e
 	// Process the Arrays.
 	for name, val := range r.PostProcessors[ID].Arrays {
 		switch name {
-		case "metadata":			
+		case "metadata":
 		case "except":
 		case "only":
 		default:
@@ -297,7 +297,7 @@ func (r *rawTemplate) createCompress(ID string) (settings map[string]interface{}
 		case "compression_level":
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, PostProcessorError{Compress, v + ": ",err}
+				return nil, PostProcessorError{Compress, v + ": ", err}
 			}
 			settings[k] = i
 		case "keep_input_artifact":
@@ -475,7 +475,7 @@ func (r *rawTemplate) createDockerSave(ID string) (settings map[string]interface
 		if array != nil {
 			settings[name] = array
 		}
-	}	
+	}
 	return settings, nil
 }
 
@@ -572,14 +572,14 @@ func (r *rawTemplate) createVagrant(ID string) (settings map[string]interface{},
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, PostProcessorError{Vagrant, v + ": ",err}
+				return nil, PostProcessorError{Vagrant, v + ": ", err}
 			}
 			settings[k] = i
 		case "vagrantfile_template":
 			// locate the file
 			src, err := r.findComponentSource(Vagrant.String(), v, false)
 			if err != nil {
-				return nil, PostProcessorError{Compress, "find " + v + " source: ",err}
+				return nil, PostProcessorError{Compress, "find " + v + " source: ", err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -680,7 +680,7 @@ func (r *rawTemplate) createVagrantCloud(ID string) (settings map[string]interfa
 // Required configuration options:
 //   cluster         string
 //   datacenter      string
-//   datastore*      string 
+//   datastore*      string
 //   host            string
 //   password        string
 //   username        string

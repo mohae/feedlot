@@ -66,8 +66,8 @@ func ProvisionerFromString(s string) Provisioner {
 
 // ProvisionerError records an error during the processing of a provisioner.
 type ProvisionerError struct {
-	P Provisioner
-	Op string
+	P   Provisioner
+	Op  string
 	Err error
 }
 
