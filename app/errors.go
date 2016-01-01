@@ -10,12 +10,6 @@ var (
 	ErrEmptyParam        = errors.New("received an empty paramater, expected a value")
 )
 
-// archivePriorBuildErr is a helper function to help generate consistent
-// errors
-func archivePriorBuildErr(err error) error {
-	return fmt.Errorf("archive of prior build failed: %s", err)
-}
-
 func builderErr(b Builder, err error) error {
 	return fmt.Errorf("%s builder error: %s", b.String(), err)
 }

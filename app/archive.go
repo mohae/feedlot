@@ -32,13 +32,13 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 	// TODO check ownership/permissions
 	file, err := os.Open(filename)
 	if err != nil {
-		return archivePriorBuildErr(err)
+		return err
 	}
 	defer file.Close()
 	var fileStat os.FileInfo
 	fileStat, err = file.Stat()
 	if err != nil {
-		return archivePriorBuildErr(err)
+		return err
 	}
 	// Don't add directories--they result in tar header errors.
 	fileMode := fileStat.Mode()
@@ -54,12 +54,12 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 	// Write the file header to the tarball.
 	err = tW.WriteHeader(tH)
 	if err != nil {
-		return archivePriorBuildErr(err)
+		return err
 	}
 	// Add the file to the tarball.
 	_, err = io.Copy(tW, file)
 	if err != nil {
-		return archivePriorBuildErr(err)
+		return err
 	}
 	return nil
 }
@@ -77,17 +77,17 @@ func (a *Archive) priorBuild(p string) error {
 		if os.IsNotExist(err) {
 			return nil
 		}
-		return archivePriorBuildErr(err)
+		return Error{"archive prior build failed", err}
 	}
 	// Archive the old artifacts.
 	err = a.create(p)
 	if err != nil {
-		return archivePriorBuildErr(err)
+		return Error{"archive prior build failed", err}
 	}
 	// Delete the old artifacts.
 	err = a.deletePriorBuild(p)
 	if err != nil {
-		return err
+		return Error{"delete prior build dailed", err}
 	}
 	return nil
 }
@@ -156,7 +156,7 @@ func (a *Archive) deletePriorBuild(p string) error {
 	//delete the contents of the passed directory
 	err := deleteDir(p)
 	if err != nil {
-		return fmt.Errorf("deletePriorBuild failed: %s", err)
+		return err
 	}
 	return nil
 }
@@ -187,14 +187,14 @@ func (d *directory) DirWalk(dirPath string) error {
 	// See if the path exists
 	exists, err := pathExists(dirPath)
 	if err != nil {
-		return archivePriorBuildErr(err)
+		return err
 	}
 	if !exists {
-		return archivePriorBuildErr(fmt.Errorf("%s does not exist", dirPath))
+		return fmt.Errorf("%s does not exist", dirPath)
 	}
 	fullPath, err := filepath.Abs(dirPath)
 	if err != nil {
-		return archivePriorBuildErr(err)
+		return err
 	}
 	// Set up the call back function.
 	callback := func(p string, fi os.FileInfo, err error) error {
@@ -214,12 +214,12 @@ func (d *directory) addFilename(root, p string, fi os.FileInfo, err error) error
 		return err
 	}
 	if !exists {
-		return archivePriorBuildErr(fmt.Errorf("%s does not exist", p))
+		return fmt.Errorf("%s does not exist", p)
 	}
 	// Get the relative information.
 	rel, err := filepath.Rel(root, p)
 	if err != nil {
-		return archivePriorBuildErr(err)
+		return err
 	}
 	if rel == "." {
 		return nil
@@ -249,7 +249,7 @@ func deleteDir(dir string) error {
 		}
 		err := os.Remove(dir + file.p)
 		if err != nil {
-			return fmt.Errorf("deleteDir: %s", err)
+			return err
 		}
 	}
 	// all the files should now be deleted so its safe to delete the directories
@@ -257,7 +257,7 @@ func deleteDir(dir string) error {
 	for i := len(dirs) - 1; i >= 0; i-- {
 		err = os.Remove(dirs[i])
 		if err != nil {
-			return fmt.Errorf("deleteDir: %s", err)
+			return err
 		}
 	}
 	return nil
