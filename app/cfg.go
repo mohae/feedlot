@@ -9,6 +9,7 @@
 package app
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -514,7 +515,7 @@ type builds struct {
 // Load the build information from the provided name.
 func (b *builds) Load(name string) error {
 	if name == "" {
-		return filenameNotSetErr("build")
+		return errors.New("build: name was empty")
 	}
 	switch CfgFormatFromString(contour.GetString(Format)) {
 	case TOML:

@@ -30,19 +30,19 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, dirs, files map[string]s
 	err := a.priorBuild(appendSlash(i.OutputDir))
 	if err != nil {
 		jww.ERROR.Println(err)
-		return PackerCreateErr(b.BuildName, err)
+		return Error{b.BuildName, err}
 	}
 	// create the destination directory if it doesn't already exist
 	err = os.MkdirAll(i.OutputDir, 0754)
 	if err != nil {
-		return PackerCreateErr(b.BuildName, err)
+		return Error{b.BuildName, err}
 	}
 	// copy any directories associated with the template
 	for dst, src := range dirs {
 		err = copyDir(src, dst)
 		if err != nil {
 			jww.ERROR.Println(err)
-			return PackerCreateErr(b.BuildName, err)
+			return Error{b.BuildName, err}
 		}
 	}
 	// copy the files associated with the template
@@ -50,32 +50,32 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, dirs, files map[string]s
 		_, err = copyFile(src, dst)
 		if err != nil {
 			jww.ERROR.Println(err)
-			return PackerCreateErr(b.BuildName, err)
+			return Error{b.BuildName, err}
 		}
 	}
 	// Write it out as JSON
 	tplJSON, err := json.MarshalIndent(p, "", "\t")
 	if err != nil {
 		jww.ERROR.Print(err)
-		return PackerCreateErr(b.BuildName, err)
+		return Error{b.BuildName, err}
 	}
 	fname := filepath.Join(i.OutputDir, fmt.Sprintf("%s.json", b.Name))
 	f, err := os.Create(fname)
 	if err != nil {
 		jww.ERROR.Print(err)
-		return PackerCreateErr(b.BuildName, err)
+		return Error{b.BuildName, err}
 	}
 	// Close the file with error handling
 	defer func() {
 		if cerr := f.Close(); cerr != nil && err == nil {
 			jww.ERROR.Print(err)
-			err = PackerCreateErr(b.BuildName, err)
+			err = Error{b.BuildName, err}
 		}
 	}()
 	_, err = io.WriteString(f, string(tplJSON[:]))
 	if err != nil {
 		jww.ERROR.Print(err)
-		return PackerCreateErr(b.BuildName, err)
+		return Error{b.BuildName, err}
 	}
 	return nil
 }

@@ -754,10 +754,10 @@ func TestBuildStuff(t *testing.T) {
 		format      string
 		expectedErr string
 	}{
-		{"", "", "\"build\" not set, unable to retrieve the build file"},
-		{"", "yaml", "\"build\" not set, unable to retrieve the build file"},
-		{"", "toml", "\"build\" not set, unable to retrieve the build file"},
-		{"", "json", "\"build\" not set, unable to retrieve the build file"},
+		{"", "", "build: name was empty"},
+		{"", "yaml", "build: name was empty"},
+		{"", "toml", "build: name was empty"},
+		{"", "json", "build: name was empty"},
 		{"../test_files/conf/build2.yaml", "yaml", "unsupported format"},
 		{"../test_files/conf/build2.toml", "toml", ""},
 		{"../test_files/conf/build2.json", "json", ""},

@@ -36,6 +36,22 @@ func (e Error) Error() string {
 	return fmt.Sprintf("%s: %s", e.slug, e.err)
 }
 
+var (
+	ErrUnsupportedFormat = errors.New("unsupported format")
+	ErrEmptyParam        = errors.New("received an empty paramater, expected a value")
+)
+
+type RancherError struct {
+	BuildName string
+	Distro    string
+	Operation string
+	Problem   string
+}
+
+func (e RancherError) Error() string {
+	return fmt.Sprintf("%s: %s %s, %s", e.BuildName, e.Distro, e.Operation, e.Problem)
+}
+
 // supported config formats
 const (
 	UnsupportedCfgFormat CfgFormat = iota

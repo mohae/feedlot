@@ -122,37 +122,37 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 		case AmazonChroot:
 			tmpS, err = r.createAmazonChroot(ID)
 			if err != nil {
-				return nil, builderErr(AmazonChroot, err)
+				return nil, &Error{AmazonChroot.String(), err}
 			}
 		case AmazonEBS:
 			tmpS, err = r.createAmazonEBS(ID)
 			if err != nil {
-				return nil, builderErr(AmazonEBS, err)
+				return nil, &Error{AmazonEBS.String(), err}
 			}
 		case AmazonInstance:
 			tmpS, err = r.createAmazonInstance(ID)
 			if err != nil {
-				return nil, builderErr(AmazonInstance, err)
+				return nil, &Error{AmazonInstance.String(), err}
 			}
 		case DigitalOcean:
 			tmpS, err = r.createDigitalOcean(ID)
 			if err != nil {
-				return nil, builderErr(DigitalOcean, err)
+				return nil, &Error{DigitalOcean.String(), err}
 			}
 		case Docker:
 			tmpS, err = r.createDocker(ID)
 			if err != nil {
-				return nil, builderErr(Docker, err)
+				return nil, &Error{Docker.String(), err}
 			}
 		case GoogleCompute:
 			tmpS, err = r.createGoogleCompute(ID)
 			if err != nil {
-				return nil, builderErr(GoogleCompute, err)
+				return nil, &Error{GoogleCompute.String(), err}
 			}
 		case Null:
 			tmpS, err = r.createNull(ID)
 			if err != nil {
-				return nil, builderErr(Null, err)
+				return nil, &Error{Null.String(), err}
 			}
 		//	case Openstack:
 		//	case ParallelsISO, ParallelsPVM:
@@ -160,25 +160,25 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 		case VirtualBoxISO:
 			tmpS, err = r.createVirtualBoxISO(ID)
 			if err != nil {
-				return nil, builderErr(VirtualBoxISO, err)
+				return nil, &Error{VirtualBoxISO.String(), err}
 			}
 		case VirtualBoxOVF:
 			tmpS, err = r.createVirtualBoxOVF(ID)
 			if err != nil {
-				return nil, builderErr(VirtualBoxOVF, err)
+				return nil, &Error{VirtualBoxOVF.String(), err}
 			}
 		case VMWareISO:
 			tmpS, err = r.createVMWareISO(ID)
 			if err != nil {
-				return nil, builderErr(VMWareISO, err)
+				return nil, &Error{VMWareISO.String(), err}
 			}
 		case VMWareVMX:
 			tmpS, err = r.createVMWareVMX(ID)
 			if err != nil {
-				return nil, builderErr(VMWareVMX, err)
+				return nil, &Error{VMWareVMX.String(), err}
 			}
 		default:
-			return nil, builderErr(UnsupportedBuilder, fmt.Errorf("%q is not supported", typ.String()))
+			return nil, &Error{UnsupportedBuilder.String(), fmt.Errorf("%q is not supported", typ.String())}
 		}
 		bldrs[ndx] = tmpS
 		ndx++
@@ -242,7 +242,7 @@ func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
-			return nil, mergeCommonSettingsErr(err)
+			return nil, err
 		}
 
 	} else {
@@ -382,7 +382,7 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
-			return nil, mergeCommonSettingsErr(err)
+			return nil, err
 		}
 	} else {
 		workSlice = r.Builders[ID].Settings
@@ -572,7 +572,7 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
-			return nil, mergeCommonSettingsErr(err)
+			return nil, err
 		}
 	} else {
 		workSlice = r.Builders[ID].Settings
@@ -655,10 +655,10 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 		case "bundle_upload_command", "bundle_vol_command":
 			cmds, err := r.commandsFromFile(AmazonInstance.String(), v)
 			if err != nil {
-				return nil, commandFileErr(k, v, err)
+				return nil, &ProcessingError{k, v, err}
 			}
 			if len(cmds) == 0 {
-				return nil, noCommandsFoundErr(k, v)
+				return nil, &ProcessingError{k, v, noCommandsErr}
 			}
 			// the setting is a string so don't use the full slice
 			settings[k] = cmds[0]
@@ -764,7 +764,7 @@ func (r *rawTemplate) createDigitalOcean(ID string) (settings map[string]interfa
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
-			return nil, mergeCommonSettingsErr(err)
+			return nil, err
 		}
 	} else {
 		workSlice = r.Builders[ID].Settings
@@ -841,7 +841,7 @@ func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
-			return nil, mergeCommonSettingsErr(err)
+			return nil, err
 		}
 	} else {
 		workSlice = r.Builders[ID].Settings
@@ -901,10 +901,10 @@ func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 		if runCommandFile != "" {
 			commands, err := r.commandsFromFile(Docker.String(), runCommandFile)
 			if err != nil {
-				return nil, commandFileErr("run_command", runCommandFile, err)
+				return nil, &ProcessingError{"run_command", runCommandFile, err}
 			}
 			if len(commands) == 0 {
-				return nil, noCommandsFoundErr("run_command", runCommandFile)
+				return nil, &ProcessingError{"run_command", runCommandFile, noCommandsErr}
 			}
 			settings["run_command"] = commands
 		}
@@ -950,7 +950,7 @@ func (r *rawTemplate) createGoogleCompute(ID string) (settings map[string]interf
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
-			return nil, mergeCommonSettingsErr(err)
+			return nil, err
 		}
 	} else {
 		workSlice = r.Builders[ID].Settings
@@ -1047,7 +1047,7 @@ func (r *rawTemplate) createNull(ID string) (settings map[string]interface{}, er
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
-			return nil, mergeCommonSettingsErr(err)
+			return nil, err
 		}
 	} else {
 		workSlice = r.Builders[Null.String()].Settings
@@ -1129,7 +1129,7 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
-			return nil, mergeCommonSettingsErr(err)
+			return nil, err
 		}
 	} else {
 		workSlice = r.Builders[ID].Settings
@@ -1152,10 +1152,10 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					return nil, commandFileErr(k, v, err)
+					return nil, &ProcessingError{k, v, err}
 				}
 				if len(commands) == 0 {
-					return nil, noCommandsFoundErr(k, v)
+					return nil, &ProcessingError{k, v, noCommandsErr}
 				}
 				settings[k] = commands
 				bootCmdProcessed = true
@@ -1166,10 +1166,10 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					return nil, commandFileErr(k, v, err)
+					return nil, &ProcessingError{k, v, err}
 				}
 				if len(commands) == 0 {
-					return nil, noCommandsFoundErr(k, v)
+					return nil, &ProcessingError{k, v, noCommandsErr}
 				}
 				// Assume it's the first element.
 				settings[k] = commands[0]
@@ -1222,10 +1222,10 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 		}
 		tmpISOUrl = isoURL
 		if tmpISOChecksum == "" {
-			return nil, dependentSettingErr("iso_url", "iso_checksum")
+			return nil, &Error{"iso_url, iso_checksum", requiredErr}
 		}
 		if tmpISOChecksumType == "" {
-			return nil, dependentSettingErr("iso_url", "iso_checksum_type")
+			return nil, &Error{"iso_url, iso_checksum_type", requiredErr}
 		}
 		settings["iso_url"] = isoURL
 	}
@@ -1252,10 +1252,10 @@ noISOURL:
 			// these are only added if iso_url isn't set
 			if tmpISOUrl == "" {
 				if tmpISOChecksum == "" {
-					return nil, dependentSettingErr("iso_urls", "iso_checksum")
+					return nil, &Error{"iso_urls, iso_checksum", requiredErr}
 				}
 				if tmpISOChecksumType == "" {
-					return nil, dependentSettingErr("iso_urls", "iso_checksum_type")
+					return nil, &Error{"iso_urls, iso_checksum_type", requiredErr}
 				}
 				settings[name] = val
 			}
@@ -1298,10 +1298,10 @@ noISOURL:
 		return settings, nil
 	}
 	if tmpISOChecksum == "" {
-		return nil, dependentSettingErr("iso_url", "iso_checksum")
+		return nil, &Error{"iso_url, iso_checksum", requiredErr}
 	}
 	if tmpISOChecksumType == "" {
-		return nil, dependentSettingErr("iso_url", "iso_checksum_type")
+		return nil, &Error{"iso_url, iso_checksum_type", requiredErr}
 	}
 	return settings, nil
 }
@@ -1358,7 +1358,7 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
-			return nil, mergeCommonSettingsErr(err)
+			return nil, err
 		}
 	} else {
 		workSlice = r.Builders[ID].Settings
@@ -1379,10 +1379,10 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					return nil, commandFileErr(k, v, err)
+					return nil, &ProcessingError{k, v, err}
 				}
 				if len(commands) == 0 {
-					return nil, noCommandsFoundErr(k, v)
+					return nil, &ProcessingError{k, v, noCommandsErr}
 				}
 				settings[k] = commands
 				bootCmdProcessed = true
@@ -1427,10 +1427,10 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					return nil, commandFileErr(k, v, err)
+					return nil, &ProcessingError{k, v, err}
 				}
 				if len(commands) == 0 {
-					return nil, noCommandsFoundErr(k, v)
+					return nil, &ProcessingError{k, v, noCommandsErr}
 				}
 				// Assume it's the first element.
 				settings[k] = commands[0]
@@ -1557,7 +1557,7 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
-			return nil, mergeCommonSettingsErr(err)
+			return nil, err
 		}
 	} else {
 		workSlice = r.Builders[ID].Settings
@@ -1579,10 +1579,10 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					return nil, commandFileErr(k, v, err)
+					return nil, &ProcessingError{k, v, err}
 				}
 				if len(commands) == 0 {
-					return nil, noCommandsFoundErr(k, v)
+					return nil, &ProcessingError{k, v, noCommandsErr}
 				}
 				settings[k] = commands
 				bootCmdProcessed = true
@@ -1593,10 +1593,10 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					return nil, commandFileErr(k, v, err)
+					return nil, &ProcessingError{k, v, err}
 				}
 				if len(commands) == 0 {
-					return nil, noCommandsFoundErr(k, v)
+					return nil, &ProcessingError{k, v, noCommandsErr}
 				}
 				// Assume it's the first element.
 				settings[k] = commands[0]
@@ -1660,10 +1660,10 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 			if tmpISOUrl == "" {
 				if tmpISOChecksum == "" {
 					err = fmt.Errorf("\"iso_urls\" found for vmware-iso but no \"iso_checksum\" information was found")
-					return nil, dependentSettingErr("iso_urls", "iso_checksum")
+					return nil, &Error{"iso_urls, iso_checksum", requiredErr}
 				}
 				if tmpISOChecksumType == "" {
-					return nil, dependentSettingErr("iso_urls", "iso_checksum")
+					return nil, &Error{"iso_urls, iso_checksum", requiredErr}
 				}
 				settings[name] = val
 			}
@@ -1705,10 +1705,10 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 		return settings, nil
 	}
 	if tmpISOChecksum == "" {
-		return nil, dependentSettingErr("iso_url", "iso_checksum")
+		return nil, &Error{"iso_url, iso_checksum", requiredErr}
 	}
 	if tmpISOChecksumType == "" {
-		return nil, dependentSettingErr("iso_url", "iso_checksum_type")
+		return nil, &Error{"iso_url, iso_checksum_type", requiredErr}
 	}
 	return settings, nil
 }
@@ -1759,7 +1759,7 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
-			return nil, mergeCommonSettingsErr(err)
+			return nil, err
 		}
 	} else {
 		workSlice = r.Builders[ID].Settings
@@ -1780,10 +1780,10 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					return nil, commandFileErr(k, v, err)
+					return nil, &ProcessingError{k, v, err}
 				}
 				if len(commands) == 0 {
-					return nil, noCommandsFoundErr(k, v)
+					return nil, &ProcessingError{k, v, noCommandsErr}
 				}
 				settings[k] = commands
 				bootCmdProcessed = true
@@ -1794,10 +1794,10 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					return nil, commandFileErr(k, v, err)
+					return nil, &ProcessingError{k, v, err}
 				}
 				if len(commands) == 0 {
-					return nil, noCommandsFoundErr(k, v)
+					return nil, &ProcessingError{k, v, noCommandsErr}
 				}
 				// Assume it's the first element.
 				settings[k] = commands[0]
@@ -1970,7 +1970,7 @@ func (r *rawTemplate) updateCommon(newB builder) error {
 	// Otherwise merge the two
 	err := b.mergeSettings(b.Settings)
 	if err != nil {
-		return mergeCommonSettingsErr(err)
+		return err
 	}
 	r.Builders[Common.String()] = b
 	return nil

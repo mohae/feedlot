@@ -122,7 +122,7 @@ func (r *rawTemplate) updatePostProcessors(newP map[string]postProcessor) error 
 		}
 		err := p.mergeSettings(pp.Settings)
 		if err != nil {
-			return mergeSettingsErr(err)
+			return err
 		}
 		p.mergeArrays(pp.Arrays)
 		r.PostProcessors[v] = p

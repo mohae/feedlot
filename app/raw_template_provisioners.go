@@ -319,10 +319,10 @@ func (r *rawTemplate) createChefClient(ID string) (settings map[string]interface
 			if strings.HasSuffix(v, ".command") {
 				commands, err := r.commandsFromFile(ChefClient.String(), v)
 				if err != nil {
-					return nil, commandFileErr(k, v, err)
+					return nil, &ProcessingError{k, v, err}
 				}
 				if len(commands) == 0 {
-					return nil, noCommandsFoundErr(k, v)
+					return nil, &ProcessingError{k, v, noCommandsErr}
 				}
 				settings[k] = commands[0]
 				continue
@@ -414,10 +414,10 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 			if strings.HasSuffix(v, ".command") {
 				commands, err := r.commandsFromFile(ChefSolo.String(), v)
 				if err != nil {
-					return nil, commandFileErr(k, v, err)
+					return nil, &ProcessingError{k, v, err}
 				}
 				if len(commands) == 0 {
-					return nil, noCommandsFoundErr(k, v)
+					return nil, &ProcessingError{k, v, noCommandsErr}
 				}
 				settings[k] = commands[0]
 				continue
@@ -537,10 +537,10 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 			if strings.HasSuffix(v, ".command") {
 				commands, err := r.commandsFromFile(PuppetMasterless.String(), v)
 				if err != nil {
-					return nil, commandFileErr(k, v, err)
+					return nil, &ProcessingError{k, v, err}
 				}
 				if len(commands) == 0 {
-					return nil, noCommandsFoundErr(k, v)
+					return nil, &ProcessingError{k, v, noCommandsErr}
 				}
 				settings[k] = commands[0]
 				continue
@@ -781,10 +781,10 @@ func (r *rawTemplate) createShellScript(ID string) (settings map[string]interfac
 				var commands []string
 				commands, err = r.commandsFromFile(ShellScript.String(), v)
 				if err != nil {
-					return nil, commandFileErr(k, v, err)
+					return nil, &ProcessingError{k, v, err}
 				}
 				if len(commands) == 0 {
-					return nil, noCommandsFoundErr(k, v)
+					return nil, &ProcessingError{k, v, noCommandsErr}
 				}
 				settings[k] = commands[0] // for execute_command, only the first element is used
 				continue
@@ -876,7 +876,7 @@ func (r *rawTemplate) updateProvisioners(newP map[string]provisioner) error {
 		}
 		err := p.mergeSettings(pp.Settings)
 		if err != nil {
-			return mergeSettingsErr(err)
+			return err
 		}
 		p.mergeArrays(pp.Arrays)
 		r.Provisioners[v] = p

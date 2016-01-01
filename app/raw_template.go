@@ -43,8 +43,23 @@ func (e *RequiredSettingError) Error() string {
 	return e.Component + "." + e.Key + ": required setting"
 }
 
+type ProcessingError struct {
+	Name string
+	Slug string
+	Err  error
+}
+
+func (e *ProcessingError) Error() string {
+	if e.Slug == "" {
+		return e.Name + ": " + e.Err.Error()
+	}
+	return e.Name + ": " + e.Slug + ": " + e.Err.Error()
+}
+
 var (
 	configNotFoundErr = errors.New("configuration not found")
+	noCommandsErr     = errors.New("no commands found")
+	requiredErr       = errors.New("required")
 )
 
 // rawTemplate holds all the information for a Rancher template. This is used
