@@ -64,7 +64,6 @@ func ProvisionerFromString(s string) Provisioner {
 	return UnsupportedProvisioner
 }
 
-
 // createProvisioner creates the provisioners for a build.
 func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 	if r.ProvisionerIDs == nil || len(r.ProvisionerIDs) <= 0 {
@@ -84,45 +83,45 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 		case Ansible:
 			tmpS, err = r.createAnsible(ID)
 			if err != nil {
-				return nil, &Error{Slug: Ansible.String(), Err: err}
+				return nil, &Error{slug: Ansible.String(), err: err}
 			}
 		case FileUploads:
 			tmpS, err = r.createFileUploads(ID)
 			if err != nil {
-				return nil, &Error{Slug: FileUploads.String(), Err: err}
+				return nil, &Error{slug: FileUploads.String(), err: err}
 			}
 		case Salt:
 			tmpS, err = r.createSalt(ID)
 			if err != nil {
-				return nil, &Error{Slug: Salt.String(), Err: err}
+				return nil, &Error{slug: Salt.String(), err: err}
 			}
 		case ShellScript:
 			tmpS, err = r.createShellScript(ID)
 			if err != nil {
-				return nil, &Error{Slug: ShellScript.String(), Err: err}
+				return nil, &Error{slug: ShellScript.String(), err: err}
 			}
 		case ChefClient:
 			tmpS, err = r.createChefClient(ID)
 			if err != nil {
-				return nil, &Error{Slug: ChefClient.String(), Err: err}
+				return nil, &Error{slug: ChefClient.String(), err: err}
 			}
 		case ChefSolo:
 			tmpS, err = r.createChefSolo(ID)
 			if err != nil {
-				return nil, &Error{Slug: ChefSolo.String(), Err: err}
+				return nil, &Error{slug: ChefSolo.String(), err: err}
 			}
 		case PuppetMasterless:
 			tmpS, err = r.createPuppetMasterless(ID)
 			if err != nil {
-				return nil, &Error{Slug: PuppetMasterless.String(), Err: err}
+				return nil, &Error{slug: PuppetMasterless.String(), err: err}
 			}
 		case PuppetServer:
 			tmpS, err = r.createPuppetServer(ID)
 			if err != nil {
-				return nil, &Error{Slug: PuppetServer.String(), Err: err}
+				return nil, &Error{slug: PuppetServer.String(), err: err}
 			}
 		default:
-			return nil, &Error{Slug: UnsupportedProvisioner.String(), Err: fmt.Errorf("%s is not supported", tmpP.Type)}
+			return nil, &Error{slug: UnsupportedProvisioner.String(), err: fmt.Errorf("%s is not supported", tmpP.Type)}
 		}
 		p[ndx] = tmpS
 		ndx++
