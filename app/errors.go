@@ -52,10 +52,6 @@ func noCommandsFoundErr(s, path string) error {
 	return fmt.Errorf("no commands for %s were found in %s", s, path)
 }
 
-func provisionerErr(p Provisioner, err error) error {
-	return fmt.Errorf("%s provisioner error: %s", p.String(), err)
-}
-
 func PackerCreateErr(name string, err error) error {
 	return fmt.Errorf("create of Packer template for %q failed: %s", name, err)
 }
