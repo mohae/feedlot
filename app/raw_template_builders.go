@@ -276,20 +276,20 @@ func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 			settings[k], _ = strconv.ParseBool(v)
 		case "root_volume_size":
 			settings[k], err = strconv.Atoi(v)
-			return nil, &SettingError{AmazonChroot.String(), k, v, err}
+			return nil, &SettingError{ID, k, v, err}
 		}
 	}
 	if !hasAccessKey {
-		return nil, &RequiredSettingError{AmazonChroot.String(), "access_key"}
+		return nil, &RequiredSettingError{ID, "access_key"}
 	}
 	if !hasAmiName {
-		return nil, &RequiredSettingError{AmazonChroot.String(), "ami_name"}
+		return nil, &RequiredSettingError{ID, "ami_name"}
 	}
 	if !hasSecretKey {
-		return nil, &RequiredSettingError{AmazonChroot.String(), "secret_key"}
+		return nil, &RequiredSettingError{ID, "secret_key"}
 	}
 	if !hasSourceAmi {
-		return nil, &RequiredSettingError{AmazonChroot.String(), "source_ami"}
+		return nil, &RequiredSettingError{ID, "source_ami"}
 	}
 	// Process the Arrays.
 	for name, val := range r.Builders[ID].Arrays {
@@ -428,13 +428,13 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{AmazonEBS.String(), k, v, err}
+				return nil, &SettingError{ID, k, v, err}
 			}
 			settings[k] = i
 		case "user_data_file":
 			src, err := r.findComponentSource(AmazonEBS.String(), v, false)
 			if err != nil {
-				return nil, &SettingError{AmazonEBS.String(), k, v, err}
+				return nil, &SettingError{ID, k, v, err}
 			}
 			jww.ERROR.Printf("EBS user_data_file: %v", src)
 			// if the source couldn't be found and an error wasn't generated, replace
@@ -632,13 +632,13 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{AmazonInstance.String(), k, v, err}
+				return nil, &SettingError{ID, k, v, err}
 			}
 			settings[k] = i
 		case "user_data_file":
 			src, err := r.findComponentSource(AmazonInstance.String(), v, false)
 			if err != nil {
-				return nil, &SettingError{AmazonInstance.String(), k, v, err}
+				return nil, &SettingError{ID, k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -655,47 +655,47 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 		case "bundle_upload_command", "bundle_vol_command":
 			cmds, err := r.commandsFromFile(AmazonInstance.String(), v)
 			if err != nil {
-				return nil, &ProcessingError{k, v, err}
+				return nil, &SettingError{ID, k, v, err}
 			}
 			if len(cmds) == 0 {
-				return nil, &ProcessingError{k, v, noCommandsErr}
+				return nil, &SettingError{ID, k, v, ErrNoCommands}
 			}
 			// the setting is a string so don't use the full slice
 			settings[k] = cmds[0]
 		}
 	}
 	if !hasAccessKey {
-		return nil, &RequiredSettingError{AmazonInstance.String(), "access_key"}
+		return nil, &RequiredSettingError{ID, "access_key"}
 	}
 	if !hasAccountId {
-		return nil, &RequiredSettingError{AmazonInstance.String(), "account_id"}
+		return nil, &RequiredSettingError{ID, "account_id"}
 	}
 	if !hasAmiName {
-		return nil, &RequiredSettingError{AmazonInstance.String(), "ami_name"}
+		return nil, &RequiredSettingError{ID, "ami_name"}
 	}
 	if !hasInstanceType {
-		return nil, &RequiredSettingError{AmazonInstance.String(), "instance_type"}
+		return nil, &RequiredSettingError{ID, "instance_type"}
 	}
 	if !hasRegion {
-		return nil, &RequiredSettingError{AmazonInstance.String(), "region"}
+		return nil, &RequiredSettingError{ID, "region"}
 	}
 	if !hasS3Bucket {
-		return nil, &RequiredSettingError{AmazonInstance.String(), "s3_bucket"}
+		return nil, &RequiredSettingError{ID, "s3_bucket"}
 	}
 	if !hasSecretKey {
-		return nil, &RequiredSettingError{AmazonInstance.String(), "secret_key"}
+		return nil, &RequiredSettingError{ID, "secret_key"}
 	}
 	if !hasSourceAmi {
-		return nil, &RequiredSettingError{AmazonInstance.String(), "source_ami"}
+		return nil, &RequiredSettingError{ID, "source_ami"}
 	}
 	if !hasSSHUsername {
-		return nil, &RequiredSettingError{AmazonInstance.String(), "ssh_username"}
+		return nil, &RequiredSettingError{ID, "ssh_username"}
 	}
 	if !hasX509CertPath {
-		return nil, &RequiredSettingError{AmazonInstance.String(), "x509_cert_path"}
+		return nil, &RequiredSettingError{ID, "x509_cert_path"}
 	}
 	if !hasX509KeyPath {
-		return nil, &RequiredSettingError{AmazonInstance.String(), "x509_key_path"}
+		return nil, &RequiredSettingError{ID, "x509_key_path"}
 	}
 	// Process the Arrays.
 	for name, val := range r.Builders[ID].Arrays {
@@ -739,14 +739,14 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 //   api_url             string
 //   droplet_name        string
 //   image               string
-//   image_id            integer
-//   private_networking  boolean
+//   image_id            int
+//   private_networking  bool
 //   region              string
-//   region_id           integer
+//   region_id           int
 //   size                string
-//   size_id             integer
+//   size_id             int
 //   snapshot_name       string
-//   ssh_port            integer
+//   ssh_port            int
 //   ssh_timeout         string
 //   ssh_username        string
 //   state_timeout       string
@@ -794,7 +794,7 @@ func (r *rawTemplate) createDigitalOcean(ID string) (settings map[string]interfa
 		case "ssh_port":
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{DigitalOcean.String(), k, v, err}
+				return nil, &SettingError{ID, k, v, err}
 			}
 			settings[k] = i
 		}
@@ -805,7 +805,7 @@ func (r *rawTemplate) createDigitalOcean(ID string) (settings map[string]interfa
 	if hasApiKey && hasClientID {
 		return settings, nil
 	}
-	return nil, &RequiredSettingError{DigitalOcean.String(), "either api_token or (api_key && client_id)"}
+	return nil, &RequiredSettingError{ID, "either api_token or (api_key && client_id)"}
 }
 
 // createDocker creates a map of settings for Packer's docker builder. Any
@@ -815,16 +815,16 @@ func (r *rawTemplate) createDigitalOcean(ID string) (settings map[string]interfa
 // https://packer.io/docs/builders/docker.html
 //
 // Required configuration options:
-//   commit         boolean
+//   commit         bool
 //   export_path    string
 //   image          string
 // Optional configuration options:
-//   login          boolean
+//   login          bool
 //   login_email    string
 //   login_username  string
 //   login_password  string
 //   login_server    string
-//   pull            boolean
+//   pull            bool
 //   run_command     array of strings
 //   volumes         map of strings to strings
 func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, err error) {
@@ -873,13 +873,13 @@ func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 		}
 	}
 	if !hasCommit {
-		return nil, &RequiredSettingError{Docker.String(), "commit"}
+		return nil, &RequiredSettingError{ID, "commit"}
 	}
 	if !hasExportPath {
-		return nil, &RequiredSettingError{Docker.String(), "export_path"}
+		return nil, &RequiredSettingError{ID, "export_path"}
 	}
 	if !hasImage {
-		return nil, &RequiredSettingError{Docker.String(), "image"}
+		return nil, &RequiredSettingError{ID, "image"}
 	}
 	// Process the Arrays.
 	for name, val := range r.Builders[ID].Arrays {
@@ -901,10 +901,10 @@ func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 		if runCommandFile != "" {
 			commands, err := r.commandsFromFile(Docker.String(), runCommandFile)
 			if err != nil {
-				return nil, &ProcessingError{"run_command", runCommandFile, err}
+				return nil, &SettingError{ID, "run_command", runCommandFile, err}
 			}
 			if len(commands) == 0 {
-				return nil, &ProcessingError{"run_command", runCommandFile, noCommandsErr}
+				return nil, &SettingError{ID, "run_command", runCommandFile, ErrNoCommands}
 			}
 			settings["run_command"] = commands
 		}
@@ -924,14 +924,14 @@ func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 //   zone               string
 // Optional configuration options:
 //   account_file       string
-//   disk_size          integer
+//   disk_size          int
 //   image_name         string
 //   image_description  string
 //   instance_name      string
 //   machine_type       string
 //   metadata           object of key/value strings
 //   network            string
-//   ssh_port           integer
+//   ssh_port           int
 //   ssh_timeout        string
 //   ssh_username       string
 //   state_timeout      string
@@ -990,19 +990,19 @@ func (r *rawTemplate) createGoogleCompute(ID string) (settings map[string]interf
 		case "disk_size", "ssh_port":
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{GoogleCompute.String(), k, v, err}
+				return nil, &SettingError{ID, k, v, err}
 			}
 			settings[k] = i
 		}
 	}
 	if !hasProjectID {
-		return nil, &RequiredSettingError{GoogleCompute.String(), "project_id"}
+		return nil, &RequiredSettingError{ID, "project_id"}
 	}
 	if !hasSourceImage {
-		return nil, &RequiredSettingError{GoogleCompute.String(), "source_image"}
+		return nil, &RequiredSettingError{ID, "source_image"}
 	}
 	if !hasZone {
-		return nil, &RequiredSettingError{GoogleCompute.String(), "zone"}
+		return nil, &RequiredSettingError{ID, "zone"}
 	}
 	// Process the Arrays.
 	for name, val := range r.Builders[ID].Arrays {
@@ -1028,11 +1028,11 @@ func (r *rawTemplate) createGoogleCompute(ID string) (settings map[string]interf
 //
 // Required configuration options:
 //   host string
-//   ssh_password string
-//   ssh_privateKey_file string
-//   ssh_username string
+//   ssh_password         string
+//   ssh_privateKey_file  string
+//   ssh_username         string
 // Optional configuration options:
-//   port            integer
+//   port                 int
 func (r *rawTemplate) createNull(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
@@ -1064,7 +1064,7 @@ func (r *rawTemplate) createNull(ID string) (settings map[string]interface{}, er
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{Null.String(), k, v, err}
+				return nil, &SettingError{ID, k, v, err}
 			}
 			settings[k] = i
 		}
@@ -1086,7 +1086,7 @@ func (r *rawTemplate) createNull(ID string) (settings map[string]interface{}, er
 // Optional configuration options:
 //   boot_command             array of strings
 //   boot_wait                string
-//   disk_size                integer
+//   disk_size                int
 //   export_opts              array of strings
 //   floppy_files             array of strings
 //   format                   string; "ovf" or "ova"
@@ -1096,20 +1096,20 @@ func (r *rawTemplate) createNull(ID string) (settings map[string]interface{}, er
 //   guest_additions_url      string
 //   guest_os_type            string; if empty, generated by rancher
 //   hard_drive_interface     string
-//   headless                 boolean
+//   headless                 bool
 //   http_directory           string
-//   http_port_min            integer
-//   http_port_max            integer
+//   http_port_min            int
+//   http_port_max            int
 //   iso_interface            string
 //   iso_urls                 array_of_strings
 //   output_directory         string
 //   shutdown_command         string
 //   shutdown_timeout         string
-//   ssh_host_port_min        integer
-//   ssh_host_port_max        integer
+//   ssh_host_port_min        int
+//   ssh_host_port_max        int
 //   ssh_key_path             string
 //   ssh_password             string
-//   ssh_port                 integer
+//   ssh_port                 int
 //   ssh_wait_timeout         string
 //   vboxmanage               array of array of strings
 //   vboxmanage_post          array of array of strings
@@ -1152,10 +1152,10 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					return nil, &ProcessingError{k, v, err}
+					return nil, &SettingError{ID, k, v, err}
 				}
 				if len(commands) == 0 {
-					return nil, &ProcessingError{k, v, noCommandsErr}
+					return nil, &SettingError{ID, k, v, ErrNoCommands}
 				}
 				settings[k] = commands
 				bootCmdProcessed = true
@@ -1166,10 +1166,10 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					return nil, &ProcessingError{k, v, err}
+					return nil, &SettingError{ID, k, v, err}
 				}
 				if len(commands) == 0 {
-					return nil, &ProcessingError{k, v, noCommandsErr}
+					return nil, &SettingError{ID, k, v, ErrNoCommands}
 				}
 				// Assume it's the first element.
 				settings[k] = commands[0]
@@ -1203,14 +1203,14 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{VirtualBoxISO.String(), k, v, err}
+				return nil, &SettingError{ID, k, v, err}
 			}
 			settings[k] = i
 		}
 	}
 	// Only check to see if the required ssh_username field was set. The required iso info is checked after Array processing
 	if !hasSSHUsername {
-		return nil, &RequiredSettingError{VirtualBoxISO.String(), "ssh_username"}
+		return nil, &RequiredSettingError{ID, "ssh_username"}
 	}
 	// Process arrays, iso_urls is only valid if iso_url is not set so we first
 	// check to see if it has been set, and if not, if it's in this array prior
@@ -1222,10 +1222,10 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 		}
 		tmpISOUrl = isoURL
 		if tmpISOChecksum == "" {
-			return nil, &Error{"iso_url, iso_checksum", requiredErr}
+			return nil, &Error{"iso_url, iso_checksum", ErrRequired}
 		}
 		if tmpISOChecksumType == "" {
-			return nil, &Error{"iso_url, iso_checksum_type", requiredErr}
+			return nil, &Error{"iso_url, iso_checksum_type", ErrRequired}
 		}
 		settings["iso_url"] = isoURL
 	}
@@ -1252,10 +1252,10 @@ noISOURL:
 			// these are only added if iso_url isn't set
 			if tmpISOUrl == "" {
 				if tmpISOChecksum == "" {
-					return nil, &Error{"iso_urls, iso_checksum", requiredErr}
+					return nil, &Error{"iso_urls, iso_checksum", ErrRequired}
 				}
 				if tmpISOChecksumType == "" {
-					return nil, &Error{"iso_urls, iso_checksum_type", requiredErr}
+					return nil, &Error{"iso_urls, iso_checksum_type", ErrRequired}
 				}
 				settings[name] = val
 			}
@@ -1298,10 +1298,10 @@ noISOURL:
 		return settings, nil
 	}
 	if tmpISOChecksum == "" {
-		return nil, &Error{"iso_url, iso_checksum", requiredErr}
+		return nil, &Error{"iso_url, iso_checksum", ErrRequired}
 	}
 	if tmpISOChecksumType == "" {
-		return nil, &Error{"iso_url, iso_checksum_type", requiredErr}
+		return nil, &Error{"iso_url, iso_checksum_type", ErrRequired}
 	}
 	return settings, nil
 }
@@ -1325,20 +1325,20 @@ noISOURL:
 //   guest_additions_path     string
 //   guest_additions_sha256   string
 //   guest_additions_url      string
-//   headless                 boolean
+//   headless                 bool
 //   http_directory           string
-//   http_port_min            integer
-//   http_port_max            integer
+//   http_port_min            int
+//   http_port_max            int
 //   import_flags             array of strings
 //   import_opts              string
 //   output_directory         string
 //   shutdown_command         string
 //   shutdown_timeout         string
-//   ssh_host_port_min        integer
-//   ssh_host_port_max        integer
+//   ssh_host_port_min        int
+//   ssh_host_port_max        int
 //   ssh_key_path             string
 //   ssh_password             string
-//   ssh_port                 integer
+//   ssh_port                 int
 //   ssh_wait_timeout         string
 //   vboxmanage               array of strings
 //   vboxmanage_post          array of strings
@@ -1379,10 +1379,10 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					return nil, &ProcessingError{k, v, err}
+					return nil, &SettingError{ID, k, v, err}
 				}
 				if len(commands) == 0 {
-					return nil, &ProcessingError{k, v, noCommandsErr}
+					return nil, &SettingError{ID, k, v, ErrNoCommands}
 				}
 				settings[k] = commands
 				bootCmdProcessed = true
@@ -1417,7 +1417,7 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				err = &SettingError{VirtualBoxOVF.String(), k, v, err}
+				err = &SettingError{ID, k, v, err}
 				return nil, err
 			}
 			settings[k] = i
@@ -1427,10 +1427,10 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					return nil, &ProcessingError{k, v, err}
+					return nil, &SettingError{ID, k, v, err}
 				}
 				if len(commands) == 0 {
-					return nil, &ProcessingError{k, v, noCommandsErr}
+					return nil, &SettingError{ID, k, v, ErrNoCommands}
 				}
 				// Assume it's the first element.
 				settings[k] = commands[0]
@@ -1441,10 +1441,10 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 	}
 	// Check to see if the required info was processed.
 	if !hasSSHUsername {
-		return nil, &RequiredSettingError{VirtualBoxISO.String(), "ssh_username"}
+		return nil, &RequiredSettingError{ID, "ssh_username"}
 	}
 	if !hasSourcePath {
-		return nil, &RequiredSettingError{VirtualBoxISO.String(), "source_path"}
+		return nil, &RequiredSettingError{ID, "source_path"}
 	}
 
 	// make sure http_directory is set and add to dir list
@@ -1506,15 +1506,15 @@ func (r *rawTemplate) createVBoxManage(v interface{}) [][]string {
 // Optional configuration options
 //   boot_command            array of strings
 //   boot_wait               string
-//   disk_size               integer
+//   disk_size               int
 //   disk_type_id            string
 //   floppy_files            array of strings
 //   fusion_app_path         string
 //   guest_os_type           string; if not set, will be generated
-//   headless                boolean
+//   headless                bool
 //   http_directory          string
-//   http_port_min           integer
-//   http_port_max           integer
+//   http_port_min           int
+//   http_port_max           int
 //   iso_urls                array of strings
 //   output_directory        string
 //   remote_cache_datastore  string
@@ -1526,12 +1526,12 @@ func (r *rawTemplate) createVBoxManage(v interface{}) [][]string {
 //   remote_username         string
 //   shutdown_command        string
 //   shutdown_timeout        string
-//   skip_compaction         boolean
+//   skip_compaction         bool
 //   ssh_host                string
 //   ssh_key_path            string
 //   ssh_password            string
-//   ssh_port                integer
-//   ssh_skip_request_pty    boolean
+//   ssh_port                int
+//   ssh_skip_request_pty    bool
 //   ssh_wait_timeout        string
 //   tools_upload_flavor     string
 //   tools_upload_path       string
@@ -1541,8 +1541,8 @@ func (r *rawTemplate) createVBoxManage(v interface{}) [][]string {
 //   vmx_data                object of key/value strings
 //   vmx_data_post           object of key/value strings
 //   vmx_template_path       string
-//   vnc_port_min            integer
-//   vnc_port_max            integer
+//   vnc_port_min            int
+//   vnc_port_max            int
 func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
@@ -1579,10 +1579,10 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					return nil, &ProcessingError{k, v, err}
+					return nil, &SettingError{ID, k, v, err}
 				}
 				if len(commands) == 0 {
-					return nil, &ProcessingError{k, v, noCommandsErr}
+					return nil, &SettingError{ID, k, v, ErrNoCommands}
 				}
 				settings[k] = commands
 				bootCmdProcessed = true
@@ -1593,10 +1593,10 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					return nil, &ProcessingError{k, v, err}
+					return nil, &SettingError{ID, k, v, err}
 				}
 				if len(commands) == 0 {
-					return nil, &ProcessingError{k, v, noCommandsErr}
+					return nil, &SettingError{ID, k, v, ErrNoCommands}
 				}
 				// Assume it's the first element.
 				settings[k] = commands[0]
@@ -1631,14 +1631,14 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{VMWareISO.String(), k, v, err}
+				return nil, &SettingError{ID, k, v, err}
 			}
 			settings[k] = i
 		}
 	}
 	// Only check to see if the required ssh_username field was set. The required iso info is checked after Array processing
 	if !hasSSHUsername {
-		return nil, &RequiredSettingError{VirtualBoxISO.String(), "ssh_username"}
+		return nil, &RequiredSettingError{ID, "ssh_username"}
 	}
 	// make sure http_directory is set and add to dir list
 	err = r.setHTTP(VMWareISO.String(), settings)
@@ -1660,10 +1660,10 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 			if tmpISOUrl == "" {
 				if tmpISOChecksum == "" {
 					err = fmt.Errorf("\"iso_urls\" found for vmware-iso but no \"iso_checksum\" information was found")
-					return nil, &Error{"iso_urls, iso_checksum", requiredErr}
+					return nil, &Error{"iso_urls, iso_checksum", ErrRequired}
 				}
 				if tmpISOChecksumType == "" {
-					return nil, &Error{"iso_urls, iso_checksum", requiredErr}
+					return nil, &Error{"iso_urls, iso_checksum", ErrRequired}
 				}
 				settings[name] = val
 			}
@@ -1705,10 +1705,10 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 		return settings, nil
 	}
 	if tmpISOChecksum == "" {
-		return nil, &Error{"iso_url, iso_checksum", requiredErr}
+		return nil, &Error{"iso_url, iso_checksum", ErrRequired}
 	}
 	if tmpISOChecksumType == "" {
-		return nil, &Error{"iso_url, iso_checksum_type", requiredErr}
+		return nil, &Error{"iso_url, iso_checksum_type", ErrRequired}
 	}
 	return settings, nil
 }
@@ -1720,31 +1720,31 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 // https://packer.io/docs/builders/vmware-vmx.html
 //
 // Required configuration options:
-//   source_name              // string
-//   ssh_username             // string
+//   source_name              string
+//   ssh_username             string
 // Optional configuration options
-//   boot_command             // array of strings*
-//   boot_wait                // string
-//   floppy_files             // array of strings
-//   fusion_app_path          // string
-//   headless                 // boolean
-//   http_directory           // string
-//   http_port_min            // integer
-//   http_port_max            // integer
-//   output_directory         // string
-//   shutdown_command         // string
-//   shutdown_timeout         // string
-//   skip_compaction          // boolean
-//   ssh_key_path             // string
-//   ssh_password             // string
-//   ssh_port                 // integer
-//   ssh_skip_request_pty     // boolean
-//   ssh_wait_timeout         // string
-//   vm_name                  // string
-//   vmx_data                 // object of key/value strings
-//   vmx_data_post            // object of key/value strings
-//   vnc_port_min             // integer
-//   vnc_port_max             // integer
+//   boot_command             array of strings*
+//   boot_wait                string
+//   floppy_files             array of strings
+//   fusion_app_path          string
+//   headless                 bool
+//   http_directory           string
+//   http_port_min            int
+//   http_port_max            int
+//   output_directory         string
+//   shutdown_command         string
+//   shutdown_timeout         string
+//   skip_compaction          bool
+//   ssh_key_path             string
+//   ssh_password             string
+//   ssh_port                 int
+//   ssh_skip_request_pty     bool
+//   ssh_wait_timeout         string
+//   vm_name                  string
+//   vmx_data                 object of key/value strings
+//   vmx_data_post            object of key/value strings
+//   vnc_port_min             int
+//   vnc_port_max             int
 func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
@@ -1780,10 +1780,10 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					return nil, &ProcessingError{k, v, err}
+					return nil, &SettingError{ID, k, v, err}
 				}
 				if len(commands) == 0 {
-					return nil, &ProcessingError{k, v, noCommandsErr}
+					return nil, &SettingError{ID, k, v, ErrNoCommands}
 				}
 				settings[k] = commands
 				bootCmdProcessed = true
@@ -1794,10 +1794,10 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 				var commands []string
 				commands, err = r.commandsFromFile("", v)
 				if err != nil {
-					return nil, &ProcessingError{k, v, err}
+					return nil, &SettingError{ID, k, v, err}
 				}
 				if len(commands) == 0 {
-					return nil, &ProcessingError{k, v, noCommandsErr}
+					return nil, &SettingError{ID, k, v, ErrNoCommands}
 				}
 				// Assume it's the first element.
 				settings[k] = commands[0]
@@ -1832,17 +1832,17 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{VMWareVMX.String(), k, v, err}
+				return nil, &SettingError{ID, k, v, err}
 			}
 			settings[k] = i
 		}
 	}
 	// Check if required fields were processed
 	if !hasSSHUsername {
-		return nil, &RequiredSettingError{VirtualBoxISO.String(), "ssh_username"}
+		return nil, &RequiredSettingError{ID, "ssh_username"}
 	}
 	if !hasSourcePath {
-		return nil, &RequiredSettingError{VirtualBoxISO.String(), "source_path"}
+		return nil, &RequiredSettingError{ID, "source_path"}
 	}
 	// make sure http_directory is set and add to dir list
 	err = r.setHTTP(VMWareVMX.String(), settings)

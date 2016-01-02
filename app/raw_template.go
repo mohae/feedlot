@@ -14,53 +14,36 @@ import (
 	jww "github.com/spf13/jwalterweatherman"
 )
 
+type SettingError struct {
+	ID    string
+	Key   string
+	Value string
+	err   error
+}
+
+func (e *SettingError) Error() string {
+	return e.ID + ": " + e.Key + ": " + e.Value + ": " + e.err.Error()
+}
+
+type RequiredSettingError struct {
+	ID  string
+	Key string
+}
+
+func (e *RequiredSettingError) Error() string {
+	return e.ID + "." + e.Key + ": required setting"
+}
+
 // Common errors
 var (
 	ErrConfigNotFound = errors.New("configuration not found")
+	ErrNoCommands     = errors.New("no commands found")
+	ErrRequired       = errors.New("required")
 )
 
 func NewErrConfigNotFound(s string) error {
 	return Error{slug: s, err: ErrConfigNotFound}
 }
-
-type SettingError struct {
-	Component string
-	Key       string
-	Value     string
-	err       error
-}
-
-func (e *SettingError) Error() string {
-	return e.Component + "." + e.Key + ": " + e.Value + ": " + e.err.Error()
-}
-
-type RequiredSettingError struct {
-	Component string
-	Key       string
-}
-
-func (e *RequiredSettingError) Error() string {
-	return e.Component + "." + e.Key + ": required setting"
-}
-
-type ProcessingError struct {
-	Name string
-	Slug string
-	Err  error
-}
-
-func (e *ProcessingError) Error() string {
-	if e.Slug == "" {
-		return e.Name + ": " + e.Err.Error()
-	}
-	return e.Name + ": " + e.Slug + ": " + e.Err.Error()
-}
-
-var (
-	configNotFoundErr = errors.New("configuration not found")
-	noCommandsErr     = errors.New("no commands found")
-	requiredErr       = errors.New("required")
-)
 
 // rawTemplate holds all the information for a Rancher template. This is used
 // to generate the Packer Build.

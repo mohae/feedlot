@@ -83,45 +83,45 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 		case Ansible:
 			tmpS, err = r.createAnsible(ID)
 			if err != nil {
-				return nil, &Error{slug: Ansible.String(), err: err}
+				return nil, &Error{Ansible.String(), err}
 			}
 		case FileUploads:
 			tmpS, err = r.createFileUploads(ID)
 			if err != nil {
-				return nil, &Error{slug: FileUploads.String(), err: err}
+				return nil, &Error{FileUploads.String(), err}
 			}
 		case Salt:
 			tmpS, err = r.createSalt(ID)
 			if err != nil {
-				return nil, &Error{slug: Salt.String(), err: err}
+				return nil, &Error{Salt.String(), err}
 			}
 		case ShellScript:
 			tmpS, err = r.createShellScript(ID)
 			if err != nil {
-				return nil, &Error{slug: ShellScript.String(), err: err}
+				return nil, &Error{ShellScript.String(), err}
 			}
 		case ChefClient:
 			tmpS, err = r.createChefClient(ID)
 			if err != nil {
-				return nil, &Error{slug: ChefClient.String(), err: err}
+				return nil, &Error{ChefClient.String(), err}
 			}
 		case ChefSolo:
 			tmpS, err = r.createChefSolo(ID)
 			if err != nil {
-				return nil, &Error{slug: ChefSolo.String(), err: err}
+				return nil, &Error{ChefSolo.String(), err}
 			}
 		case PuppetMasterless:
 			tmpS, err = r.createPuppetMasterless(ID)
 			if err != nil {
-				return nil, &Error{slug: PuppetMasterless.String(), err: err}
+				return nil, &Error{PuppetMasterless.String(), err}
 			}
 		case PuppetServer:
 			tmpS, err = r.createPuppetServer(ID)
 			if err != nil {
-				return nil, &Error{slug: PuppetServer.String(), err: err}
+				return nil, &Error{PuppetServer.String(), err}
 			}
 		default:
-			return nil, &Error{slug: UnsupportedProvisioner.String(), err: fmt.Errorf("%s is not supported", tmpP.Type)}
+			return nil, &Error{UnsupportedProvisioner.String(), fmt.Errorf("%s is not supported", tmpP.Type)}
 		}
 		p[ndx] = tmpS
 		ndx++
@@ -166,7 +166,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(Ansible.String(), v, false)
 			if err != nil {
-				return nil, &SettingError{Ansible.String(), k, v, err}
+				return nil, &SettingError{ID, k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -181,7 +181,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(Ansible.String(), v, false)
 			if err != nil {
-				return nil, &SettingError{Ansible.String(), k, v, err}
+				return nil, &SettingError{ID, k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -195,7 +195,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(Ansible.String(), v, true)
 			if err != nil {
-				return nil, &SettingError{Ansible.String(), k, v, err}
+				return nil, &SettingError{ID, k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -210,7 +210,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 		}
 	}
 	if !hasPlaybook {
-		return nil, &RequiredSettingError{Ansible.String(), "playbook_file"}
+		return nil, &RequiredSettingError{ID, "playbook_file"}
 	}
 	// Process the Arrays.
 	for name, val := range r.Provisioners[ID].Arrays {
@@ -221,7 +221,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 				v = r.replaceVariables(v)
 				src, err := r.findComponentSource(Ansible.String(), v, true)
 				if err != nil {
-					return nil, &SettingError{Ansible.String(), k, v, err}
+					return nil, &SettingError{ID, k, v, err}
 				}
 				// if the source couldn't be found and an error wasn't generated, replace
 				// s with the original value; this occurs when it is an example.
@@ -292,7 +292,7 @@ func (r *rawTemplate) createChefClient(ID string) (settings map[string]interface
 			// find the actual location of the source file and add it to the files map for copying
 			src, err := r.findComponentSource(ChefClient.String(), v, false)
 			if err != nil {
-				return nil, &SettingError{ChefClient.String(), k, v, err}
+				return nil, &SettingError{ID, k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -308,10 +308,10 @@ func (r *rawTemplate) createChefClient(ID string) (settings map[string]interface
 			if strings.HasSuffix(v, ".command") {
 				commands, err := r.commandsFromFile(ChefClient.String(), v)
 				if err != nil {
-					return nil, &ProcessingError{k, v, err}
+					return nil, &SettingError{ID, k, v, err}
 				}
 				if len(commands) == 0 {
-					return nil, &ProcessingError{k, v, noCommandsErr}
+					return nil, &SettingError{ID, k, v, ErrNoCommands}
 				}
 				settings[k] = commands[0]
 				continue
@@ -374,7 +374,7 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(ChefSolo.String(), v, false)
 			if err != nil {
-				return nil, &SettingError{ChefSolo.String(), k, v, err}
+				return nil, &SettingError{ID, k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -387,7 +387,7 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 		case "data_bags_path", "environments_path", "roles_path":
 			src, err := r.findComponentSource(ChefSolo.String(), v, true)
 			if err != nil {
-				return nil, &SettingError{ChefSolo.String(), k, v, err}
+				return nil, &SettingError{ID, k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -403,10 +403,10 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 			if strings.HasSuffix(v, ".command") {
 				commands, err := r.commandsFromFile(ChefSolo.String(), v)
 				if err != nil {
-					return nil, &ProcessingError{k, v, err}
+					return nil, &SettingError{ID, k, v, err}
 				}
 				if len(commands) == 0 {
-					return nil, &ProcessingError{k, v, noCommandsErr}
+					return nil, &SettingError{ID, k, v, ErrNoCommands}
 				}
 				settings[k] = commands[0]
 				continue
@@ -422,7 +422,7 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 				// find the actual location and add it to the files map for copying
 				src, err := r.findComponentSource(ChefSolo.String(), v, true)
 				if err != nil {
-					return nil, &SettingError{ChefSolo.String(), name, v, err}
+					return nil, &SettingError{ID, name, v, err}
 				}
 				// if the source couldn't be found and an error wasn't generated, replace
 				// s with the original value; this occurs when it is an example.
@@ -477,7 +477,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 		case "manifest_file":
 			src, err := r.findComponentSource(PuppetMasterless.String(), v, false)
 			if err != nil {
-				return nil, &SettingError{PuppetMasterless.String(), k, v, err}
+				return nil, &SettingError{ID, k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -496,7 +496,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 			// find the actual location of the source file and add it to the files map for copying
 			src, err := r.findComponentSource(PuppetMasterless.String(), v, false)
 			if err != nil {
-				return nil, &SettingError{PuppetMasterless.String(), k, v, err}
+				return nil, &SettingError{ID, k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -510,7 +510,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 			// find the actual location of the directory and add it to the dir map for copying contents
 			src, err := r.findComponentSource(PuppetMasterless.String(), v, true)
 			if err != nil {
-				return nil, &SettingError{PuppetMasterless.String(), k, v, err}
+				return nil, &SettingError{ID, k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -526,10 +526,10 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 			if strings.HasSuffix(v, ".command") {
 				commands, err := r.commandsFromFile(PuppetMasterless.String(), v)
 				if err != nil {
-					return nil, &ProcessingError{k, v, err}
+					return nil, &SettingError{ID, k, v, err}
 				}
 				if len(commands) == 0 {
-					return nil, &ProcessingError{k, v, noCommandsErr}
+					return nil, &SettingError{ID, k, v, ErrNoCommands}
 				}
 				settings[k] = commands[0]
 				continue
@@ -622,7 +622,7 @@ func (r *rawTemplate) createFileUploads(ID string) (settings map[string]interfac
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(FileUploads.String(), v, true)
 			if err != nil {
-				return nil, &SettingError{FileUploads.String(), k, v, err}
+				return nil, &SettingError{ID, k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -639,10 +639,10 @@ func (r *rawTemplate) createFileUploads(ID string) (settings map[string]interfac
 		}
 	}
 	if !hasSource {
-		return nil, &RequiredSettingError{FileUploads.String(), "source"}
+		return nil, &RequiredSettingError{ID, "source"}
 	}
 	if !hasDestination {
-		return nil, &RequiredSettingError{FileUploads.String(), "destination"}
+		return nil, &RequiredSettingError{ID, "destination"}
 	}
 	return settings, nil
 }
@@ -659,7 +659,7 @@ func (r *rawTemplate) createFileUploads(ID string) (settings map[string]interfac
 //   local_pillar_roots   string
 //   local_state_tree     string
 //   minion_config        string
-//   skip_bootstrap       boolean
+//   skip_bootstrap       bool
 //   temp_config_dir      string
 func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
@@ -680,7 +680,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(Salt.String(), v, true)
 			if err != nil {
-				return nil, &SettingError{Salt.String(), k, v, err}
+				return nil, &SettingError{ID, k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -695,7 +695,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(Salt.String(), v, true)
 			if err != nil {
-				return nil, &SettingError{Salt.String(), k, v, err}
+				return nil, &SettingError{ID, k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -709,7 +709,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 			// find the actual location and add it to the files map for copying
 			src, err := r.findComponentSource(Salt.String(), filepath.Join(v, "minion"), false)
 			if err != nil {
-				return nil, &SettingError{Salt.String(), k, v, err}
+				return nil, &SettingError{ID, k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -726,7 +726,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 		}
 	}
 	if !hasLocalStateTree {
-		return nil, &RequiredSettingError{Salt.String(), "local_state_tree"}
+		return nil, &RequiredSettingError{ID, "local_state_tree"}
 	}
 	// salt does not have any arrays to support
 	return settings, nil
@@ -743,7 +743,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 // Required configuration options:
 //   scripts              array of strings
 // Optional confinguration parameters:
-//   binary               boolean
+//   binary               bool
 //   environment_vars     array of strings
 //   execute_command      string
 //   inline_shebang       string
@@ -770,10 +770,10 @@ func (r *rawTemplate) createShellScript(ID string) (settings map[string]interfac
 				var commands []string
 				commands, err = r.commandsFromFile(ShellScript.String(), v)
 				if err != nil {
-					return nil, &ProcessingError{k, v, err}
+					return nil, &SettingError{ID, k, v, err}
 				}
 				if len(commands) == 0 {
-					return nil, &ProcessingError{k, v, noCommandsErr}
+					return nil, &SettingError{ID, k, v, ErrNoCommands}
 				}
 				settings[k] = commands[0] // for execute_command, only the first element is used
 				continue
@@ -796,7 +796,7 @@ func (r *rawTemplate) createShellScript(ID string) (settings map[string]interfac
 				// find the source
 				src, err := r.findComponentSource(ShellScript.String(), v, false)
 				if err != nil {
-					return nil, &SettingError{ShellScript.String(), k, v, err}
+					return nil, &SettingError{ID, k, v, err}
 				}
 				// if the source couldn't be found and an error wasn't generated, replace
 				// s with the original value; this occurs when it is an example.
@@ -816,7 +816,7 @@ func (r *rawTemplate) createShellScript(ID string) (settings map[string]interfac
 		}
 	}
 	if len(scripts) == 0 {
-		return nil, &RequiredSettingError{ShellScript.String(), "scripts"}
+		return nil, &RequiredSettingError{ID, "scripts"}
 	}
 	return settings, nil
 }

@@ -67,18 +67,6 @@ func PostProcessorFromString(s string) PostProcessor {
 	return UnsupportedPostProcessor
 }
 
-// PostProcessorError records an error during the processing of a
-// post-processor.
-type PostProcessorError struct {
-	P   PostProcessor
-	Op  string
-	Err error
-}
-
-func (e PostProcessorError) Error() string {
-	return "post-processor " + e.P.String() + ": " + e.Op + " " + e.Err.Error()
-}
-
 // Merges the new config with the old. The updates occur as follows:
 //   * The existing configuration is used when no `new` postProcessors are
 //     specified.
@@ -149,51 +137,51 @@ func (r *rawTemplate) createPostProcessors() (pp []interface{}, err error) {
 		case Atlas:
 			tmpS, err = r.createAtlas(ID)
 			if err != nil {
-				return nil, PostProcessorError{Atlas, "create", err}
+				return nil, &Error{Atlas.String(), err}
 			}
 		case Compress:
 			tmpS, err = r.createCompress(ID)
 			if err != nil {
-				return nil, err
+				return nil, &Error{Compress.String(), err}
 			}
 		case DockerImport:
 			tmpS, err = r.createDockerImport(ID)
 			if err != nil {
-				return nil, err
+				return nil, &Error{DockerImport.String(), err}
 			}
 		case DockerPush:
 			tmpS, err = r.createDockerPush(ID)
 			if err != nil {
-				return nil, err
+				return nil, &Error{DockerPush.String(), err}
 			}
 		case DockerSave:
 			tmpS, err = r.createDockerSave(ID)
 			if err != nil {
-				return nil, err
+				return nil, &Error{DockerSave.String(), err}
 			}
 		case DockerTag:
 			tmpS, err = r.createDockerTag(ID)
 			if err != nil {
-				return nil, err
+				return nil, &Error{DockerTag.String(), err}
 			}
 		case Vagrant:
 			tmpS, err = r.createVagrant(ID)
 			if err != nil {
-				return nil, err
+				return nil, &Error{Vagrant.String(), err}
 			}
 		case VagrantCloud:
 			// Create the settings
 			tmpS, err = r.createVagrantCloud(ID)
 			if err != nil {
-				return nil, err
+				return nil, &Error{VagrantCloud.String(), err}
 			}
 		case VSphere:
 			tmpS, err = r.createVSphere(ID)
 			if err != nil {
-				return nil, err
+				return nil, &Error{VSphere.String(), err}
 			}
 		default:
-			return nil, PostProcessorError{UnsupportedPostProcessor, "create " + ID, fmt.Errorf("%q is not supported", tmpPP.Type)}
+			return nil, &Error{UnsupportedPostProcessor.String(), fmt.Errorf("%q is not supported", tmpPP.Type)}
 		}
 		pp[ndx] = tmpS
 		ndx++
@@ -243,13 +231,13 @@ func (r *rawTemplate) createAtlas(ID string) (settings map[string]interface{}, e
 		}
 	}
 	if !hasArtifact {
-		return nil, &RequiredSettingError{Atlas.String(), "artifact"}
+		return nil, &RequiredSettingError{ID, "artifact"}
 	}
 	if !hasArtifactType {
-		return nil, &RequiredSettingError{Atlas.String(), "artifact_type"}
+		return nil, &RequiredSettingError{ID, "artifact_type"}
 	}
 	if !hasToken {
-		return nil, &RequiredSettingError{Atlas.String(), "token"}
+		return nil, &RequiredSettingError{ID, "token"}
 	}
 	// Process the Arrays.
 	for name, val := range r.PostProcessors[ID].Arrays {
@@ -297,7 +285,7 @@ func (r *rawTemplate) createCompress(ID string) (settings map[string]interface{}
 		case "compression_level":
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, PostProcessorError{Compress, v + ": ", err}
+				return nil, &SettingError{ID, k, v, err}
 			}
 			settings[k] = i
 		case "keep_input_artifact":
@@ -359,10 +347,10 @@ func (r *rawTemplate) createDockerImport(ID string) (settings map[string]interfa
 		}
 	}
 	if !hasRepository {
-		return nil, &RequiredSettingError{DockerImport.String(), "repository"}
+		return nil, &RequiredSettingError{ID, "repository"}
 	}
 	if !hasTag {
-		return nil, &RequiredSettingError{DockerImport.String(), "tag"}
+		return nil, &RequiredSettingError{ID, "tag"}
 	}
 	// Process the Arrays.
 	for name, val := range r.PostProcessors[ID].Arrays {
@@ -388,7 +376,7 @@ func (r *rawTemplate) createDockerImport(ID string) (settings map[string]interfa
 // Required configuration options:
 //   none
 // Optional configuration options:
-//   login           boolean
+//   login           bool
 //   login_email     string
 //   login_username  string
 //   login_password  string
@@ -461,7 +449,7 @@ func (r *rawTemplate) createDockerSave(ID string) (settings map[string]interface
 		}
 	}
 	if !hasPath {
-		return nil, &RequiredSettingError{DockerSave.String(), "path"}
+		return nil, &RequiredSettingError{ID, "path"}
 	}
 	// Process the Arrays.
 	for name, val := range r.PostProcessors[ID].Arrays {
@@ -517,7 +505,7 @@ func (r *rawTemplate) createDockerTag(ID string) (settings map[string]interface{
 		}
 	}
 	if !hasRepository {
-		return nil, &RequiredSettingError{DockerTag.String(), "repository"}
+		return nil, &RequiredSettingError{ID, "repository"}
 	}
 	// Process the Arrays.
 	for name, val := range r.PostProcessors[ID].Arrays {
@@ -572,14 +560,14 @@ func (r *rawTemplate) createVagrant(ID string) (settings map[string]interface{},
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, PostProcessorError{Vagrant, v + ": ", err}
+				return nil, &SettingError{ID, k, v, err}
 			}
 			settings[k] = i
 		case "vagrantfile_template":
 			// locate the file
 			src, err := r.findComponentSource(Vagrant.String(), v, false)
 			if err != nil {
-				return nil, PostProcessorError{Compress, "find " + v + " source: ", err}
+				return nil, &SettingError{ID, k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -648,13 +636,13 @@ func (r *rawTemplate) createVagrantCloud(ID string) (settings map[string]interfa
 		}
 	}
 	if !hasAccessToken {
-		return nil, &RequiredSettingError{VagrantCloud.String(), "access_token"}
+		return nil, &RequiredSettingError{ID, "access_token"}
 	}
 	if !hasBoxTag {
-		return nil, &RequiredSettingError{VagrantCloud.String(), "box_tag"}
+		return nil, &RequiredSettingError{ID, "box_tag"}
 	}
 	if !hasVersion {
-		return nil, &RequiredSettingError{VagrantCloud.String(), "version"}
+		return nil, &RequiredSettingError{ID, "version"}
 	}
 	// Process the Arrays.
 	for name, val := range r.PostProcessors[ID].Arrays {
@@ -741,10 +729,10 @@ func (r *rawTemplate) createVSphere(ID string) (settings map[string]interface{},
 		}
 	}
 	if !hasCluster {
-		return nil, &RequiredSettingError{VSphere.String(), "cluster"}
+		return nil, &RequiredSettingError{ID, "cluster"}
 	}
 	if !hasDatacenter {
-		return nil, &RequiredSettingError{VSphere.String(), "datacenter"}
+		return nil, &RequiredSettingError{ID, "datacenter"}
 	}
 	if !hasDatastore {
 		if !hasResourcePool {
@@ -752,16 +740,16 @@ func (r *rawTemplate) createVSphere(ID string) (settings map[string]interface{},
 		}
 	}
 	if !hasHost {
-		return nil, &RequiredSettingError{VSphere.String(), "host"}
+		return nil, &RequiredSettingError{ID, "host"}
 	}
 	if !hasPassword {
-		return nil, &RequiredSettingError{VSphere.String(), "password"}
+		return nil, &RequiredSettingError{ID, "password"}
 	}
 	if !hasUsername {
-		return nil, &RequiredSettingError{VSphere.String(), "username"}
+		return nil, &RequiredSettingError{ID, "username"}
 	}
 	if !hasVMName {
-		return nil, &RequiredSettingError{VSphere.String(), "vm_name"}
+		return nil, &RequiredSettingError{ID, "vm_name"}
 	}
 	// Process the Arrays.
 	for name, val := range r.PostProcessors[ID].Arrays {
