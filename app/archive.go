@@ -11,6 +11,14 @@ import (
 	"github.com/mohae/contour"
 )
 
+type ArchiveError struct {
+	err error
+}
+
+func (e *ArchiveError) Error() string {
+	return "archive error: " + e.err.Error()
+}
+
 // Archive holds information about an archive.
 type Archive struct {
 	// Name is the name of the archive, w/o extensions
@@ -77,17 +85,17 @@ func (a *Archive) priorBuild(p string) error {
 		if os.IsNotExist(err) {
 			return nil
 		}
-		return Error{"archive prior build failed", err}
+		return &ArchiveError{err}
 	}
 	// Archive the old artifacts.
 	err = a.create(p)
 	if err != nil {
-		return Error{"archive prior build failed", err}
+		return &ArchiveError{err}
 	}
 	// Delete the old artifacts.
 	err = a.deletePriorBuild(p)
 	if err != nil {
-		return Error{"delete prior build dailed", err}
+		return Error{"delete prior build error", err}
 	}
 	return nil
 }
@@ -187,14 +195,14 @@ func (d *directory) DirWalk(dirPath string) error {
 	// See if the path exists
 	exists, err := pathExists(dirPath)
 	if err != nil {
-		return err
+		return &ArchiveError{err}
 	}
 	if !exists {
-		return fmt.Errorf("%s does not exist", dirPath)
+		return &ArchiveError{fmt.Errorf("%s does not exist", dirPath)}
 	}
 	fullPath, err := filepath.Abs(dirPath)
 	if err != nil {
-		return err
+		return &ArchiveError{err}
 	}
 	// Set up the call back function.
 	callback := func(p string, fi os.FileInfo, err error) error {

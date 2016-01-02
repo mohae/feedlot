@@ -1548,8 +1548,8 @@ func TestCreateDigitalOcean(t *testing.T) {
 	if err == nil {
 		t.Errorf("Expected an error, got nil")
 	} else {
-		if err.Error() != "required setting not found: either api_token or (api_key && client_id)" {
-			t.Errorf("Expected \"required setting not found: either api_token or (api_key && client_id)\", got %q", err)
+		if err.Error() != "digitalocean.(either api_token or (api_key && client_id)): required setting" {
+			t.Errorf("Expected \"digitalocean.(either api_token or (api_key && client_id)): required setting\", got %q", err)
 		}
 	}
 }

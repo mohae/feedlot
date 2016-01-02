@@ -538,7 +538,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 		}
 	}
 	if !hasManifestFile {
-		return nil, &RequiredSettingError{PuppetMasterless.String(), "manifest_file"}
+		return nil, &RequiredSettingError{ID, "manifest_file"}
 	}
 	for name, val := range r.Provisioners[ID].Arrays {
 		if name == "facter" {

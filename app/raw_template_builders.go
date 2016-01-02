@@ -452,25 +452,25 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 		}
 	}
 	if !hasAccessKey {
-		return nil, &RequiredSettingError{AmazonEBS.String(), "access_key"}
+		return nil, &RequiredSettingError{ID, "access_key"}
 	}
 	if !hasAmiName {
-		return nil, &RequiredSettingError{AmazonEBS.String(), "ami_name"}
+		return nil, &RequiredSettingError{ID, "ami_name"}
 	}
 	if !hasInstanceType {
-		return nil, &RequiredSettingError{AmazonEBS.String(), "instance_type"}
+		return nil, &RequiredSettingError{ID, "instance_type"}
 	}
 	if !hasRegion {
-		return nil, &RequiredSettingError{AmazonEBS.String(), "region"}
+		return nil, &RequiredSettingError{ID, "region"}
 	}
 	if !hasSecretKey {
-		return nil, &RequiredSettingError{AmazonEBS.String(), "secret_key"}
+		return nil, &RequiredSettingError{ID, "secret_key"}
 	}
 	if !hasSourceAmi {
-		return nil, &RequiredSettingError{AmazonEBS.String(), "source_ami"}
+		return nil, &RequiredSettingError{ID, "source_ami"}
 	}
 	if !hasSSHUsername {
-		return nil, &RequiredSettingError{AmazonEBS.String(), "ssh_username"}
+		return nil, &RequiredSettingError{ID, "ssh_username"}
 	}
 	// Process the Arrays.
 	for name, val := range r.Builders[ID].Arrays {
@@ -805,7 +805,7 @@ func (r *rawTemplate) createDigitalOcean(ID string) (settings map[string]interfa
 	if hasApiKey && hasClientID {
 		return settings, nil
 	}
-	return nil, &RequiredSettingError{ID, "either api_token or (api_key && client_id)"}
+	return nil, &RequiredSettingError{ID, "(either api_token or (api_key && client_id))"}
 }
 
 // createDocker creates a map of settings for Packer's docker builder. Any

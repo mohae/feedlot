@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -1027,7 +1028,26 @@ func TestGetUniqueFilename(t *testing.T) {
 			continue
 		}
 		if test.expected != f {
-			t.Errorf("TestGetUniqueFilename %d: Expected %q, got %q", i, test.expected, f)
+			// test that paths are the same
+			dirW, tmpW := filepath.Split(test.expected)
+			dirG, tmpG := filepath.Split(f)
+			if dirW != dirG {
+				t.Errorf("TestGetUniqueFilename %d: Expected %q, got %q", i, test.expected, f)
+				continue
+			}
+			// test that the ext is t he same
+			if filepath.Ext(tmpW) != filepath.Ext(tmpG) {
+				t.Errorf("TestGetUniqueFilename %d: Expected %q, got %q", i, test.expected, f)
+				continue
+			}
+			// test that the first part of the file is the same
+			// portion between first element and ext is ignored; makes it
+			// stable over time.
+			partsW := strings.Split(tmpW, ".")
+			partsG := strings.Split(tmpG, ".")
+			if partsW[0] != partsG[0] {
+				t.Errorf("TestGetUniqueFilename %d: Expected %q, got %q", i, test.expected, f)
+			}
 		}
 	}
 }

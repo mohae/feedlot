@@ -108,7 +108,7 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 						"compression_level = 6",
 						"keep_input_artifact = false",
 						"output = :out_dir/packer.box",
-						"vagrantfile_template = template/path",
+						"vagrantfile_template = template/VagrantFile.template",
 					},
 					Arrays: map[string]interface{}{
 						"except": []string{
@@ -431,7 +431,7 @@ func TestVagrantPostProcessor(t *testing.T) {
 		"keep_input_artifact":  false,
 		"output":               ":out_dir/packer.box",
 		"type":                 "vagrant",
-		"vagrantfile_template": "template/path",
+		"vagrantfile_template": "template/VagrantFile.template",
 	}
 
 	pp, err := testPostProcessorsAllTemplate.createVagrant("vagrant")

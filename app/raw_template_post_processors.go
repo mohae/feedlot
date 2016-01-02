@@ -585,6 +585,7 @@ func (r *rawTemplate) createVagrant(ID string) (settings map[string]interface{},
 		case "except":
 		case "only":
 		case "override":
+		case "include":
 		default:
 			continue
 		}
