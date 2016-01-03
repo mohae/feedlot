@@ -45,11 +45,11 @@ type RancherError struct {
 	BuildName string
 	Distro    string
 	Operation string
-	Problem   string
+	Slug   string
 }
 
 func (e RancherError) Error() string {
-	return fmt.Sprintf("%s: %s %s, %s", e.BuildName, e.Distro, e.Operation, e.Problem)
+	return fmt.Sprintf("%s: %s %s, %s", e.BuildName, e.Distro, e.Operation, e.Slug)
 }
 
 // supported config formats
