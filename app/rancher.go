@@ -41,17 +41,6 @@ var (
 	ErrEmptyParam        = errors.New("received an empty paramater, expected a value")
 )
 
-type RancherError struct {
-	BuildName string
-	Distro    string
-	Operation string
-	Slug   string
-}
-
-func (e RancherError) Error() string {
-	return fmt.Sprintf("%s: %s %s, %s", e.BuildName, e.Distro, e.Operation, e.Slug)
-}
-
 // supported config formats
 const (
 	UnsupportedCfgFormat CfgFormat = iota

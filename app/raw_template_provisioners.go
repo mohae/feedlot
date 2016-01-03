@@ -26,7 +26,7 @@ const (
 type Provisioner int
 
 var provisioners = [...]string{
-	"unsupported",
+	"unsupported provisioner",
 	"ansible-local",
 	"chef-client",
 	"chef-solo",

@@ -26,8 +26,8 @@ func (e *SettingError) Error() string {
 }
 
 type RequiredSettingError struct {
-	ID  string
-	Key string
+	ID string
+	Key       string
 }
 
 func (e *RequiredSettingError) Error() string {
@@ -124,7 +124,6 @@ func (r *rawTemplate) copy() *rawTemplate {
 
 // r.createPackerTemplate creates a Packer template from the rawTemplate.
 // TODO:
-// 		Generate JSON
 //		Write to output
 //		Copy resources to output
 func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
@@ -314,16 +313,14 @@ func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
 	if bld.BuilderIDs != nil && len(bld.BuilderIDs) > 0 {
 		r.BuilderIDs = bld.BuilderIDs
 	}
-	// For post_processor_types and provisioner_types the following logic is used
-	// if nil don't do anything (this means prior settings are used, e.g. default)
-	// if len == 0 unset. A len of 0 means that the build template purposely unsets
-	//   any build
-	// if len > 0 replace the existing types with the builder's.
-
+	// For post_processor_ids and provisioner_ids, the following logic is used:
+	//   if nil don't do anything (this means prior settings are used, e.g. default)
+	//   if len == 0 unset. A len of 0 means that the build template purposely unsets
+	//     any build
+	//   if len > 0 replace the existing types with the builder's.
 	if bld.PostProcessorIDs != nil {
 		r.PostProcessorIDs = bld.PostProcessorIDs
 	}
-
 	if bld.ProvisionerIDs != nil {
 		r.ProvisionerIDs = bld.ProvisionerIDs
 	}
