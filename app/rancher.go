@@ -91,6 +91,15 @@ var distros = [...]string{
 
 func (d Distro) String() string { return distros[d] }
 
+var casedDistros = [...]string{
+	"Unsupported Distro",
+	"CentOS",
+	"Debian",
+	"Ubuntu",
+}
+
+func (d Distro) CasedString() string { return casedDistros[d] }
+
 // DistroFromString returns the Distro constant for the passed string or
 // unsupported.
 //

@@ -31,7 +31,7 @@ func TestCentOSsetReleaseInfo(t *testing.T) {
 		minor       string
 		expError    string
 	}{
-		{"", "", "", "", "", "", "", "centos SetISOInfo: release not set"},
+		{"", "", "", "", "", "", "", "release not set"},
 		{"", "IL", "", "6", "", "6", "", ""}, // minor is empty because it may chagne with a new release
 		{"", "IL", "", "6", "6.6", "6", "6", ""},
 		{"", "IL", "", "6", "6.6", "6", "6", ""},
@@ -41,8 +41,8 @@ func TestCentOSsetReleaseInfo(t *testing.T) {
 		{"", "", "osuosl", "7", "", "7", "", ""},
 		{"", "", "OSUOSL", "7", "", "7", "", ""},
 		{"", "", "Rackspace", "7", "", "7", "", ""},
-		{"", "ZZ", "", "7", "", "7", "", "centos filter mirror: region: \"\", country: \"ZZ\": no matches found"},
-		{"", "IL", "", "8", "", "", "", "centos 8: unsupported release"},
+		{"", "ZZ", "", "7", "", "7", "", "filter mirror: region: \"\", country: \"ZZ\": no matches found"},
+		{"", "IL", "", "8", "", "", "", "CentOS 8: not supported"},
 	}
 	c := newTestCentOS()
 	for i, test := range tests {
@@ -124,8 +124,8 @@ func TestCentOSGetOSType(t *testing.T) {
 	if err == nil {
 		t.Error("Expected error to not be nil, it was")
 	} else {
-		if err.Error() != "centos getOSType: voodoo is not supported by this distro" {
-			t.Errorf("Expected \"centos getOSType: voodoo is not supported by this distro\", got %q", err)
+		if err.Error() != fmt.Sprintf("CentOS %s: not supported", buildType) {
+			t.Errorf("Expected \"CentOS %s: not supported\", got %q", buildType, err)
 		}
 	}
 }
@@ -136,10 +136,10 @@ func TestCentOSSetISOChecksum(t *testing.T) {
 	c.ChecksumType = ""
 	err := c.setISOChecksum()
 	if err == nil {
-		t.Error("Expected \"centos 6 setISOChecksum: checksum not set\", got nil")
+		t.Errorf("Got nil, want %q", ErrChecksumTypeNotSet)
 	} else {
-		if err.Error() != "centos 6 setISOChecksum: checksum not set" {
-			t.Errorf("expected \"centos 6 setISOChecksum: checksum not set\", got %q", err)
+		if err != ErrChecksumTypeNotSet {
+			t.Errorf("got %q, want %q", err, ErrChecksumTypeNotSet)
 		}
 	}
 
@@ -227,7 +227,7 @@ func TestCentOSFindISOChecksum(t *testing.T) {
 		expected    string
 		expectedErr string
 	}{
-		{"6", "x86", "", "", "CentOS-6.6-x86-minimal.iso findISOChecksum: page empty"},
+		{"6", "x86", "", "", "page empty"},
 		{"6", "x86_64",
 			`a63241b0f767afa1f9f7e59e6f0f00d6b8d19ed85936a7934222c03a92e61bf3  CentOS-6.6-x86_64-bin-DVD1.iso
 89dac78769b26f8facf98ce85020a605b7601fec1946b0597e22ced5498b3597  CentOS-6.6-x86_64-bin-DVD2.iso
@@ -239,7 +239,7 @@ ad8f6de098503174c7609d172679fa0dd276f4b669708933d9c4927bd3fe1017  CentOS-6.6-x86
 89dac78769b26f8facf98ce85020a605b7601fec1946b0597e22ced5498b3597  CentOS-6.6-x86_64-bin-DVD2.iso
 5458f357e8a55e3a866dd856896c7e0ac88e7f9220a3dd74c58a3b0acede8e4d  CentOS-6.6-x86_64-minimal.iso
 ad8f6de098503174c7609d172679fa0dd276f4b669708933d9c4927bd3fe1017  CentOS-6.6-x86_64-netinstall.iso`,
-			"", "CentOS-6.6-x86-minimal.iso findISOChecksum: checksum not found on page"},
+			"", "checksum not found"},
 	}
 	for i, test := range tests {
 		c := newTestCentOS()
@@ -309,8 +309,8 @@ func TestDebianFindISOChecksum(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, got nil")
 	} else {
-		if err.Error() != " findISOChecksum: page empty" {
-			t.Errorf("expected \"findISOChecksum: page empty\", got %q ", err)
+		if err != ErrPageEmpty {
+			t.Errorf("expected \"%q\", got %q ", ErrPageEmpty, err)
 		}
 	}
 
@@ -328,8 +328,8 @@ fb1c1c30815da3e7189d44b6699cf9114b16e44ea139f0cd4df5f1dde3659272  debian-7.8.0-a
 	if err == nil {
 		t.Error("Expected an error, got nil")
 	} else {
-		if err.Error() != "debian-7.8.0-amd64-whatever.iso findISOChecksum: checksum not found on page" {
-			t.Errorf("TestDebianFindISOChecksum: expected \"debian-7.8.0-amd64-whatever.iso findISOChecksum: checksum not found on page\", got %q", err)
+		if err != ErrChecksumTypeNotSet {
+			t.Errorf("got %q; want %q", err, ErrChecksumTypeNotSet)
 		}
 	}
 
@@ -411,8 +411,8 @@ func TestDebianGetOSType(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, received nil")
 	} else {
-		if err.Error() != "debian getOSType: voodoo is not supported by this distro" {
-			t.Errorf("Expected \"debian getOSType: voodoo is not supported by this distro\", got %q", err)
+		if err.Error() != "Debian voodoo: not supported" {
+			t.Errorf("Expected \"Debian voodoo: not supported\", got %q", err)
 		}
 	}
 }
@@ -430,8 +430,8 @@ func TestUbuntuFindISOChecksum(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, got nil")
 	} else {
-		if err.Error() != " findISOChecksum: page empty" {
-			t.Errorf("TestUbuntuFindISOChecksum: expected \" findISOChecksum error: page empty\", got %q", err)
+		if err != ErrPageEmpty {
+			t.Errorf("got %q; want %q", err, ErrPageEmpty)
 		}
 	}
 
@@ -446,8 +446,8 @@ bc3b20ad00f19d0169206af0df5a4186c61ed08812262c55dbca3b7b1f1c4a0b *wubi.exe`
 	if err == nil {
 		t.Error("Expected an error, got nil")
 	} else {
-		if err.Error() != "ubuntu-14.04-whatever.iso findISOChecksum: checksum not found on page" {
-			t.Errorf("TestUbuntuFindISOChecksum: expected \"ubuntu-14.04-whatever.iso findISOChecksum: checksum not found on page\", got %q", err)
+		if err != ErrChecksumNotFound {
+			t.Errorf("TestUbuntuFindISOChecksum: got %q, want %q", err)
 		}
 	}
 
@@ -534,84 +534,8 @@ func TestUbuntuGetOSType(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, received nil")
 	} else {
-		if err.Error() != "ubuntu getOSType: voodoo is not supported by this distro" {
-			t.Errorf("Expected \"ubuntu getOSType: voodoo is not supported by this distro\", got %q", err)
-		}
-	}
-}
-
-func TestNoArchError(t *testing.T) {
-	tests := []struct {
-		name     string
-		expected string
-	}{
-		{"", " SetISOInfo: arch not set"},
-		{"CentOS", "CentOS SetISOInfo: arch not set"},
-		{"CentOS", "CentOS SetISOInfo: arch not set"},
-	}
-	for i, test := range tests {
-		err := noArchErr(test.name)
-		if err.Error() != test.expected {
-			t.Errorf("TestNoArchError %d: expected %q, got %q", i, test.expected, err)
-		}
-	}
-}
-
-func TestNoReleaseError(t *testing.T) {
-	tests := []struct {
-		name     string
-		expected string
-	}{
-		{"", " SetISOInfo: release not set"},
-		{"CentOS", "CentOS SetISOInfo: release not set"},
-		{"CentOS", "CentOS SetISOInfo: release not set"},
-	}
-	for i, test := range tests {
-		err := noReleaseErr(test.name)
-		if err.Error() != test.expected {
-			t.Errorf("TestNoReleaseError %d: expected %q, got %q", i, test.expected, err)
-		}
-	}
-}
-
-func TestEmptyPageError(t *testing.T) {
-	tests := []struct {
-		name      string
-		operation string
-		expected  string
-	}{
-		{"", "", " : page empty"},
-		{"", "test", " test: page empty"},
-		{"CentOS-6.6-x86_64-minimal.iso", "", "CentOS-6.6-x86_64-minimal.iso : page empty"},
-		{"CentOS-6.6-x86_64-minimal.iso", "find something", "CentOS-6.6-x86_64-minimal.iso find something: page empty"},
-		{"CentOS-6.5-whatever.iso", "", "CentOS-6.5-whatever.iso : page empty"},
-		{"CentOS-6.5-whatever.iso", "test", "CentOS-6.5-whatever.iso test: page empty"},
-	}
-	for i, test := range tests {
-		err := emptyPageErr(test.name, test.operation)
-		if err.Error() != test.expected {
-			t.Errorf("TestEmptyPageError %d: expected %q, got %q", i, test.expected, err)
-		}
-	}
-}
-
-func TestChecksumNotFoundError(t *testing.T) {
-	tests := []struct {
-		name      string
-		operation string
-		expected  string
-	}{
-		{"", "", " : checksum not found on page"},
-		{"", "test", " test: checksum not found on page"},
-		{"CentOS-6.6-x86_64-minimal.iso", "", "CentOS-6.6-x86_64-minimal.iso : checksum not found on page"},
-		{"CentOS-6.6-x86_64-minimal.iso", "checksum search", "CentOS-6.6-x86_64-minimal.iso checksum search: checksum not found on page"},
-		{"CentOS-6.5-whatever.iso", "", "CentOS-6.5-whatever.iso : checksum not found on page"},
-		{"CentOS-6.5-whatever.iso", "checksum parse", "CentOS-6.5-whatever.iso checksum parse: checksum not found on page"},
-	}
-	for i, test := range tests {
-		err := checksumNotFoundErr(test.name, test.operation)
-		if err.Error() != test.expected {
-			t.Errorf("TestChecksumNotFoundError %d: expected %q, got %q", i, test.expected, err)
+		if err.Error() != "Ubuntu voodoo: not supported" {
+			t.Errorf("Expected \"Ubuntu voodoo: not supported\", got %q", err)
 		}
 	}
 }

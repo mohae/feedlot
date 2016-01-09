@@ -14,6 +14,8 @@ import (
 	jww "github.com/spf13/jwalterweatherman"
 )
 
+// SettingError occurs when there is a problem with a packer component
+// setting.
 type SettingError struct {
 	ID    string
 	Key   string
@@ -25,20 +27,24 @@ func (e *SettingError) Error() string {
 	return e.ID + ": " + e.Key + ": " + e.Value + ": " + e.err.Error()
 }
 
+// RequiredSettingError occurs when a setting required by the Packer
+// component being processed isn't set.
 type RequiredSettingError struct {
-	ID string
-	Key       string
+	ID  string
+	Key string
 }
 
 func (e *RequiredSettingError) Error() string {
 	return e.ID + "." + e.Key + ": required setting"
 }
 
-// Common errors
 var (
+	// ErrConfigNotFound occurs when the specified configuration resource
+	// cannot be found.  This may result in Rancher using its defaults.
 	ErrConfigNotFound = errors.New("configuration not found")
-	ErrNoCommands     = errors.New("no commands found")
-	ErrRequired       = errors.New("required")
+	// ErrNoCommands occurs when a referenced command file doesn't have any
+	// contents.
+	ErrNoCommands = errors.New("no commands found")
 )
 
 func NewErrConfigNotFound(s string) error {

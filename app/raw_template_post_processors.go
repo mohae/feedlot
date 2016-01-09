@@ -26,7 +26,7 @@ const (
 type PostProcessor int
 
 var postProcessors = [...]string{
-	"unsupported",
+	"unsupported post-processor",
 	"atlas",
 	"compress",
 	"docker-import",

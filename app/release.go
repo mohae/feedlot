@@ -14,64 +14,66 @@ import (
 	"golang.org/x/net/html"
 )
 
+// FilterErrors are errors that occur while filtering mirror results.
+type FilterError struct {
+	filter string
+	slug   string
+}
+
+func (e *FilterError) Error() string {
+	return "filter " + e.filter + ": " + e.slug
+}
+
+// NotSupportedErrors occur when something that isn't supported is specified;
+// e.g. an unsupported release for a distro, unsupported architecture, etc.
+type NotSupportedError struct {
+	Distro
+	slug string
+}
+
+func (e *NotSupportedError) Error() string {
+	return e.Distro.CasedString() + " " + e.slug + ": not supported"
+}
+
+// VersionInfoErrors occur when there is a problem when parsing version
+// information for a build.
+type VersionInfoError struct {
+	info string
+	slug string
+}
+
+func (e *VersionInfoError) Error() string {
+	return "version info error: " + e.info + ": " + e.slug
+}
+
+var (
+	// ErrPageEmpty: the contents of the retrieved url was empty.
+	ErrPageEmpty = errors.New("page empty")
+	// ErrChecksumNotFound: the checksum for the iso cannot be found.
+	ErrChecksumNotFound = errors.New("checksum not found")
+	// ErrChecksumTypeNotSet: the hash type of the checksum was either not set
+	// or a valid value.
+	ErrChecksumTypeNotSet = errors.New("checksum type not set")
+	// ErrNoArch: the architecture of the iso was not set.
+	ErrNoArch = errors.New("arch not set")
+	// ErrNoFullVersion: the full version information was not set.
+	ErrNoFullVersion = errors.New("full version not set")
+	// ErrNoMajorVersion: the major version information was not set.
+	ErrNoMajorVersion = errors.New("major version not set")
+	// ErrNoMinorVersion: the minor version information was not set.
+	ErrNoMinorVersion = errors.New("minor version not set")
+	// ErrNoRelease: the release of the iso was not set.
+	ErrNoRelease = errors.New("release not set")
+)
+
 func init() {
 	// Psuedo-random is fine here
 	rand.Seed(time.Now().UTC().UnixNano())
 }
 
-type ReleaseError struct {
-	name      string
-	operation string
-	slug      string
-}
-
-func (r ReleaseError) Error() string {
-	return fmt.Sprintf("%s %s: %s", r.name, r.operation, r.slug)
-}
-
-func emptyPageErr(name, operation string) error {
-	return ReleaseError{name: name, operation: operation, slug: "page empty"}
-}
-
-func checksumNotFoundErr(name, operation string) error {
-	return ReleaseError{name: name, operation: operation, slug: "checksum not found on page"}
-}
-
-func checksumNotSetErr(name string) error {
-	return ReleaseError{name: name, operation: "setISOChecksum", slug: "checksum not set"}
-}
-
-func noArchErr(name string) error {
-	return ReleaseError{name: name, operation: "SetISOInfo", slug: "arch not set"}
-}
-
-func noFullVersionErr(name string) error {
-	return ReleaseError{name: name, operation: "SetISOInfo", slug: "full version not set"}
-}
-
-func noMajorVersionErr(name string) error {
-	return ReleaseError{name: name, operation: "SetISOInfo", slug: "major version not set"}
-}
-
-func noMinorVersionErr(name string) error {
-	return ReleaseError{name: name, operation: "SetISOInfo", slug: "minor version not set"}
-}
-
-func noReleaseErr(name string) error {
-	return ReleaseError{name: name, operation: "SetISOInfo", slug: "release not set"}
-}
-
-func setVersionInfoErr(name string, err error) error {
-	return ReleaseError{name: name, operation: "SetVersionInfo", slug: err.Error()}
-}
-
-func unsupportedReleaseErr(d Distro, name string) error {
-	return fmt.Errorf("%s %s: unsupported release", d, name)
-}
-
-func osTypeBuilderErr(name, typ string) error {
-	return ReleaseError{name: name, operation: "getOSType", slug: fmt.Sprintf("%s is not supported by this distro", typ)}
-}
+//func osTypeBuilderErr(name, typ string) error {
+//	return ReleaseError{name: name, operation: "getOSType", slug: fmt.Sprintf("%s is not supported by this distro", typ)}
+//}
 
 // Iso image information
 type iso struct {
@@ -170,7 +172,7 @@ func (r *centos) setMirrorURL() error {
 		}
 		filtered = filterRecords(r.sponsor, 2, filtered)
 		if len(filtered) == 0 {
-			return ReleaseError{name: CentOS.String(), operation: fmt.Sprintf("filter mirror: region: %q, sponsor: %q", r.region, r.sponsor), slug: "no matches found"}
+			return &FilterError{filter: fmt.Sprintf("region: %q, sponsor: %q", r.region, r.sponsor), slug: "no matches found"}
 		}
 		goto PICK
 	}
@@ -178,7 +180,7 @@ func (r *centos) setMirrorURL() error {
 	filtered = filterRecords(r.country, 1, filtered)
 	// it's an error state if everything is filtered out
 	if len(filtered) == 0 {
-		return ReleaseError{name: CentOS.String(), operation: fmt.Sprintf("filter mirror: region: %q, country: %q", r.region, r.country), slug: "no matches found"}
+		return &FilterError{filter: fmt.Sprintf("mirror: region: %q, country: %q", r.region, r.country), slug: "no matches found"}
 	}
 PICK:
 	// get a random mirror url
@@ -196,10 +198,10 @@ PICK:
 // iso name string.
 func (r *centos) setVersionInfo() error {
 	if r.Release == "" {
-		return noReleaseErr(CentOS.String())
+		return ErrNoRelease
 	}
 	if !strings.HasPrefix(r.Release, "6") && !strings.HasPrefix(r.Release, "7") {
-		return unsupportedReleaseErr(CentOS, r.Release)
+		return &NotSupportedError{Distro: CentOS, slug: r.Release}
 	}
 	// If the BaseURL isn't set, find a mirror to use
 	if r.BaseURL == "" {
@@ -224,28 +226,28 @@ func (r *centos) setVersion6Info() error {
 	r.Image = strings.ToLower(r.Image)
 	tokens, err := tokensFromURL(r.mirrorURL)
 	if err != nil {
-		return setVersionInfoErr(r.mirrorURL, fmt.Errorf("could not determine version information: tokenizing release page: %s", err))
+		return &VersionInfoError{info: r.mirrorURL, slug: "tokenize release page: " + err.Error()}
 	}
 	// get the tokens that are links
 	links := inlineElementsFromTokens("a", "href", tokens)
 	if len(links) == 0 || links == nil {
-		return setVersionInfoErr(r.mirrorURL, fmt.Errorf("could not determine version information: extract release page links failed"))
+		return &VersionInfoError{info: r.mirrorURL, slug: "extract of links from the release page failed"}
 	}
 	// get the links that start with CentOS-, these have the full version number
 	// and split it into it's parts
 	links = extractLinksHasPrefix(links, []string{"CentOS-"})
 	if len(links) == 0 {
-		return setVersionInfoErr(r.mirrorURL, errors.New("could not determine version information: no CentOS iso links found"))
+		return &VersionInfoError{info: r.mirrorURL, slug: "no CentOS iso links found"}
 	}
 	parts := strings.Split(links[0], "-")
 	// parts should be 5 elements: e.g. CentOS-6.7-x86_64-minimal.iso
 	if len(parts) < 4 {
-		return setVersionInfoErr(r.mirrorURL, errors.New("could not determine version information: parse of CentOS iso links failed"))
+		return &VersionInfoError{info: r.mirrorURL, slug: "parse of CentOS iso links failed"}
 	}
 	r.FullVersion = parts[1]
 	parts = strings.Split(parts[1], ".")
 	if len(parts) < 2 {
-		return setVersionInfoErr(r.mirrorURL, errors.New("could not determine version information: could not parse version info from CentOS iso links"))
+		return &VersionInfoError{info: r.mirrorURL, slug: "parse of version info from CentOS iso links failed"}
 	}
 	r.MajorVersion = parts[0]
 	r.MinorVersion = parts[1]
@@ -259,21 +261,21 @@ func (r *centos) setVersion7Info() error {
 	// get the page from the url
 	tokens, err := tokensFromURL(r.mirrorURL)
 	if err != nil {
-		return setVersionInfoErr(r.mirrorURL, fmt.Errorf("could not determine version information: tokenizing release page: %s", err))
+		return &VersionInfoError{info: r.mirrorURL, slug: "tokenize release page: " + err.Error()}
 	}
 	links := inlineElementsFromTokens("a", "href", tokens)
 	if len(links) == 0 || links == nil {
-		return setVersionInfoErr(r.mirrorURL, fmt.Errorf("could not determine version information: extract release page links failed"))
+		return &VersionInfoError{info: r.mirrorURL, slug: "extract of links from the release page failed"}
 	}
 	links = extractLinksHasPrefix(links, []string{"CentOS-"})
 	if len(links) == 0 {
-		return setVersionInfoErr(r.mirrorURL, fmt.Errorf("could not determine version information: no CentOS iso links found"))
+		return &VersionInfoError{info: r.mirrorURL, slug: "no CentOS iso links found"}
 	}
 	// extract the monthstamp and fix number this may or may not include a fix number
 	parts := strings.Split(links[0], "-")
 	r.MajorVersion = parts[1]
 	if len(parts) < 5 {
-		return setVersionInfoErr(r.mirrorURL, errors.New("could not determine version information: parse of CentOS iso links failed"))
+		return &VersionInfoError{info: r.mirrorURL, slug: "parse of CentOS iso links failed"}
 	}
 	tmp := strings.Split(parts[4], ".")
 	r.MinorVersion = tmp[0]
@@ -283,7 +285,7 @@ func (r *centos) setVersion7Info() error {
 // Sets the ISO information for a Packer template.
 func (r *centos) SetISOInfo() error {
 	if r.Arch == "" {
-		return noArchErr(CentOS.String())
+		return ErrNoArch
 	}
 	r.setISOName()
 	r.setReleaseURL()
@@ -329,7 +331,7 @@ func (r *centos) setISOName7() {
 // retrieves the page, and finds the checksum for the release ISO.
 func (r *centos) setISOChecksum() error {
 	if r.ChecksumType == "" {
-		return checksumNotSetErr(fmt.Sprintf("%s %s", CentOS.String(), r.Release))
+		return ErrChecksumTypeNotSet
 	}
 	url := r.checksumURL()
 	page, err := bodyStringFromURL(url)
@@ -346,11 +348,11 @@ func (r *centos) setISOChecksum() error {
 
 func (r *centos) findISOChecksum(page string) error {
 	if page == "" {
-		return emptyPageErr(r.Name, "findISOChecksum")
+		return ErrPageEmpty
 	}
 	pos := strings.Index(page, r.Name)
 	if pos < 0 {
-		return checksumNotFoundErr(r.Name, "findISOChecksum")
+		return ErrChecksumNotFound
 	}
 	tmpRel := page[:pos]
 	tmpSl := strings.Split(tmpRel, "\n")
@@ -387,7 +389,7 @@ func (r *centos) getOSType(buildType string) (string, error) {
 		}
 	}
 	// Shouldn't get here unless the buildType passed is an unsupported one.
-	return "", osTypeBuilderErr(CentOS.String(), buildType)
+	return "", &NotSupportedError{Distro: CentOS, slug: buildType}
 }
 
 // An Debian specific wrapper to release
@@ -400,16 +402,16 @@ type debian struct {
 // same value as r.MajorVersion. Images use major.minor.fix numbering system.
 func (r *debian) setVersionInfo() error {
 	if r.Release == "" {
-		return noReleaseErr(Debian.String())
+		return ErrNoRelease
 	}
 	// to find the current release number, get the index of debian-cd
 	tokens, err := tokensFromURL(r.BaseURL)
 	if err != nil {
-		return setVersionInfoErr(r.BaseURL, err)
+		return &VersionInfoError{info: r.BaseURL, slug: err.Error()}
 	}
 	hrefs := inlineElementsFromTokens("a", "href", tokens)
 	if len(hrefs) == 0 || hrefs == nil {
-		return setVersionInfoErr(r.BaseURL, fmt.Errorf("could not tokenize release page: %s", err))
+		return &VersionInfoError{info: r.BaseURL, slug: "could not tokenize release page: " + err.Error()}
 	}
 	for _, href := range hrefs {
 		if strings.HasPrefix(href, r.Release) {
@@ -417,7 +419,7 @@ func (r *debian) setVersionInfo() error {
 			r.FullVersion = parts[0]
 			nums := strings.Split(parts[0], ".")
 			if len(nums) != 3 {
-				return setVersionInfoErr(r.Release, fmt.Errorf("unable to parse release number into its parts"))
+				return &VersionInfoError{info: r.BaseURL + ": " + r.Release, slug: "unable to parse release number into its parts"}
 			}
 			r.MajorVersion = nums[0]
 			r.MinorVersion = nums[1]
@@ -426,7 +428,7 @@ func (r *debian) setVersionInfo() error {
 		}
 	}
 	if r.FullVersion == "" {
-		return setVersionInfoErr(r.Release, fmt.Errorf("could not set the current release number"))
+		return &VersionInfoError{info: r.BaseURL + ": " + r.Release, slug: "could not set the current release number"}
 	}
 	r.setReleaseURL()
 	return nil
@@ -450,7 +452,7 @@ func (r *debian) checksumURL() string {
 // Sets the ISO information for a Packer template.
 func (r *debian) SetISOInfo() error {
 	if r.Arch == "" {
-		return noArchErr(Debian.String())
+		return ErrNoArch
 	}
 	r.setISOName()
 	r.setReleaseURL()
@@ -474,11 +476,11 @@ func (r *debian) setISOName() {
 // setISOChecksum: Set the checksum value for the iso.
 func (r *debian) setISOChecksum() error {
 	if r.ChecksumType == "" {
-		return checksumNotSetErr(fmt.Sprintf("%s %s", Debian.String(), r.Release))
+		return ErrChecksumTypeNotSet
 	}
 	page, err := bodyStringFromURL(r.checksumURL())
 	if err != nil {
-		return ReleaseError{name: r.Name, operation: "setISOChecksum", slug: err.Error()}
+		return err
 	}
 	// Now that we have a page...we need to find the checksum and set it
 	return r.findISOChecksum(page)
@@ -495,11 +497,11 @@ func (r *debian) setISOChecksum() error {
 //   * since this is plain text processing we don't worry about runes
 func (r *debian) findISOChecksum(page string) error {
 	if page == "" {
-		return emptyPageErr(r.Name, "findISOChecksum")
+		return ErrPageEmpty
 	}
 	pos := strings.Index(page, r.Name)
 	if pos < 0 {
-		return checksumNotFoundErr(r.Name, "findISOChecksum")
+		return ErrChecksumTypeNotSet
 	}
 	tmpRel := page[:pos]
 	tmpSl := strings.Split(tmpRel, "\n")
@@ -528,7 +530,7 @@ func (r *debian) getOSType(buildType string) (string, error) {
 		}
 	}
 	// Shouldn't get here unless the buildType passed is an unsupported one.
-	return "", osTypeBuilderErr(Debian.String(), buildType)
+	return "", &NotSupportedError{Distro: Debian, slug: buildType}
 }
 
 // getReleaseVersion() get's the directory info so that the current version
@@ -593,12 +595,12 @@ type ubuntu struct {
 // version number in Ubuntu release URLs.
 func (r *ubuntu) setVersionInfo() error {
 	if r.Release == "" {
-		return noReleaseErr(Ubuntu.String())
+		return ErrNoRelease
 	}
 	// get the major version from the release
 	parts := strings.Split(r.Release, ".")
 	if len(parts) != 2 {
-		return setVersionInfoErr(Ubuntu.String(), fmt.Errorf("cannot parse %q into version info", r.Release))
+		return &VersionInfoError{info: Ubuntu.String(), slug: "cannot parse " + r.Release + " into version info"}
 	}
 	r.MajorVersion = parts[0]
 	r.MinorVersion = parts[1]
@@ -608,11 +610,11 @@ func (r *ubuntu) setVersionInfo() error {
 	r.setReleaseURL()
 	tokens, err := tokensFromURL(r.ReleaseURL)
 	if err != nil {
-		return setVersionInfoErr(Ubuntu.String(), err)
+		return &VersionInfoError{info: Ubuntu.String(), slug: err.Error()}
 	}
 	elements := elementsFromTokens("title", tokens)
 	if len(elements) == 0 {
-		return setVersionInfoErr(Ubuntu.String(), fmt.Errorf("cannot find title on %s", r.ReleaseURL))
+		return &VersionInfoError{info: Ubuntu.String() + ": " + r.ReleaseURL, slug: "cannot find any title elements"}
 	}
 	// get the full version from the title:
 	parts = strings.Split(elements[0], " ")
@@ -629,7 +631,7 @@ func (r *ubuntu) setVersionInfo() error {
 // SetISOInfo set the ISO URL and ISO checksum information.
 func (r *ubuntu) SetISOInfo() error {
 	if r.Arch == "" {
-		return noArchErr(Ubuntu.String())
+		return ErrNoArch
 	}
 	// Set the ISO name.
 	r.setISOName()
@@ -665,11 +667,11 @@ func (r *ubuntu) setReleaseURL() {
 // is done in findISOChecksum for testability reasons.
 func (r *ubuntu) setISOChecksum() error {
 	if r.ChecksumType == "" {
-		return checksumNotSetErr(fmt.Sprintf("%s %s", Ubuntu.String(), r.Release))
+		return ErrChecksumTypeNotSet
 	}
 	page, err := bodyStringFromURL(r.checksumURL())
 	if err != nil {
-		return ReleaseError{name: r.Name, operation: "setISOChecksum", slug: err.Error()}
+		return err
 	}
 	return r.findISOChecksum(page)
 }
@@ -677,26 +679,26 @@ func (r *ubuntu) setISOChecksum() error {
 func (r *ubuntu) findISOChecksum(page string) error {
 	// Now that we have a page...we need to find the checksum and set it
 	if page == "" {
-		return emptyPageErr(r.Name, "findISOChecksum")
+		return ErrPageEmpty
 	}
 	pos := strings.Index(page, r.Name)
 	if pos <= 0 {
-		return checksumNotFoundErr(r.Name, "findISOChecksum")
+		return ErrChecksumNotFound
 	}
 	tmpRel := page[:pos]
 	tmpSl := strings.Split(tmpRel, "-")
 	// the slice should contain 4 elements, unless Ubuntu has changed their naming
 	// pattern .
 	if len(tmpSl) < 4 {
-		return checksumNotFoundErr(r.Name, "findISOChecksum")
+		return ErrChecksumNotFound
 	}
 	pos = strings.Index(page, r.Name)
 	if pos < 0 {
-		return checksumNotFoundErr(r.Name, "findISOChecksum")
+		return ErrChecksumNotFound
 	}
 	// Safety check...should never occur, but sanity check it anyways.
 	if len(page) < pos-2 {
-		return checksumNotFoundErr(r.Name, "findISOChecksum")
+		return ErrChecksumNotFound
 	}
 	// Get the checksum string. If the substring request goes beyond the
 	// variable boundary, be safe and make the request equal to the length
@@ -732,7 +734,7 @@ func (r *ubuntu) getOSType(buildType string) (string, error) {
 			return "Ubuntu_32", nil
 		}
 	}
-	return "", osTypeBuilderErr(Ubuntu.String(), buildType)
+	return "", &NotSupportedError{Distro: Ubuntu, slug: buildType}
 }
 
 // bodyStringFromURL returns the response body for the passed url as a string.
@@ -750,7 +752,7 @@ func bodyStringFromURL(url string) (string, error) {
 		return "", err
 	}
 	if len(page) == 0 {
-		return "", emptyPageErr(url, "bodyStringFromURL")
+		return "", ErrPageEmpty
 	}
 	return string(page), nil
 }
