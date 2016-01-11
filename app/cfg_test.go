@@ -418,7 +418,7 @@ builderTypesEnd:
 		t.Errorf("Expected newBuild.BuilderTypoes to have a length of %d; got %d", len(tstTpl.Builders), len(newBuild.Builders))
 		goto buildersEnd
 	}
-	for k, _ := range tstTpl.Builders {
+	for k := range tstTpl.Builders {
 		_, ok := newBuild.Builders[k]
 		if !ok {
 			t.Errorf("Expected %s to be a builder in the copy, but it wasn't", k)
@@ -443,7 +443,7 @@ postProcessorTypesEnd:
 		t.Errorf("Expected newBuild.PostProcessors to have a length of %d; got %d", len(tstTpl.PostProcessors), len(newBuild.PostProcessors))
 		goto postProcessorsEnd
 	}
-	for k, _ := range tstTpl.PostProcessors {
+	for k := range tstTpl.PostProcessors {
 		_, ok := newBuild.PostProcessors[k]
 		if !ok {
 			t.Errorf("Expected %s to be a PostProcessors in the copy, but it wasn't", k)
@@ -468,7 +468,7 @@ provisionerTypesEnd:
 		t.Errorf("Expected newBuild.Provisioners types to have a length of %d; got %d", len(tstTpl.Provisioners), len(newBuild.Provisioners))
 		goto provisionersEnd
 	}
-	for k, _ := range tstTpl.Provisioners {
+	for k := range tstTpl.Provisioners {
 		_, ok := newBuild.Provisioners[k]
 		if !ok {
 			t.Errorf("Expected %s to be a Provisioners in the copy, but it wasn't", k)

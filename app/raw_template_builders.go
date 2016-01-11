@@ -578,7 +578,7 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 		workSlice = r.Builders[ID].Settings
 	}
 	var k, v string
-	var hasAccessKey, hasAccountId, hasAmiName, hasInstanceType, hasRegion, hasS3Bucket bool
+	var hasAccessKey, hasAccountID, hasAmiName, hasInstanceType, hasRegion, hasS3Bucket bool
 	var hasSecretKey, hasSourceAmi, hasSSHUsername, hasX509CertPath, hasX509KeyPath bool
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
@@ -592,7 +592,7 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 			hasAccessKey = true
 		case "account_id":
 			settings[k] = v
-			hasAccountId = true
+			hasAccountID = true
 		case "ami_name":
 			settings[k] = v
 			hasAmiName = true
@@ -667,7 +667,7 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 	if !hasAccessKey {
 		return nil, &RequiredSettingError{ID, "access_key"}
 	}
-	if !hasAccountId {
+	if !hasAccountID {
 		return nil, &RequiredSettingError{ID, "account_id"}
 	}
 	if !hasAmiName {
@@ -772,7 +772,7 @@ func (r *rawTemplate) createDigitalOcean(ID string) (settings map[string]interfa
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
 	// TODO look at snapshot name handling--it should be unique, e.g. timestamp
-	var hasApiToken, hasApiKey, hasClientID bool
+	var hasAPIToken, hasAPIKey, hasClientID bool
 	for _, s := range workSlice {
 		// var tmp interface{}
 		k, v := parseVar(s)
@@ -780,10 +780,10 @@ func (r *rawTemplate) createDigitalOcean(ID string) (settings map[string]interfa
 		switch k {
 		case "api_key":
 			settings[k] = v
-			hasApiKey = true
+			hasAPIKey = true
 		case "api_token":
 			settings[k] = v
-			hasApiToken = true
+			hasAPIToken = true
 		case "client_id":
 			settings[k] = v
 			hasClientID = true
@@ -799,10 +799,10 @@ func (r *rawTemplate) createDigitalOcean(ID string) (settings map[string]interfa
 			settings[k] = i
 		}
 	}
-	if hasApiToken {
+	if hasAPIToken {
 		return settings, nil
 	}
-	if hasApiKey && hasClientID {
+	if hasAPIKey && hasClientID {
 		return settings, nil
 	}
 	return nil, &RequiredSettingError{ID, "(either api_token or (api_key && client_id))"}
@@ -1298,10 +1298,10 @@ noISOURL:
 		return settings, nil
 	}
 	if tmpISOChecksum == "" {
-		return nil, &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum"}
+		return nil,  &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum"}
 	}
 	if tmpISOChecksumType == "" {
-		return nil, &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum_type"}
+		return nil,  &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum_type"}
 	}
 	return settings, nil
 }
@@ -1662,7 +1662,7 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 					return nil, &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum"}
 				}
 				if tmpISOChecksumType == "" {
-					return nil, &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum_type"}
+					return nil,  &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum_type"}
 				}
 				settings[name] = val
 			}
@@ -1704,10 +1704,10 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 		return settings, nil
 	}
 	if tmpISOChecksum == "" {
-		return nil, &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum"}
+		return nil,  &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum"}
 	}
 	if tmpISOChecksumType == "" {
-		return nil, &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum_type"}
+		return nil,  &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum_type"}
 	}
 	return settings, nil
 }

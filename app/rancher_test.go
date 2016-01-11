@@ -1062,8 +1062,8 @@ func TestIndexDir(t *testing.T) {
 	if err == nil {
 		t.Errorf("Expected an error, got nil")
 	} else {
-		if err.Error() != "received an empty paramater, expected a value" {
-			t.Errorf("Expected \"received an empty paramater, expected a value\", got %q", err)
+		if err.Error() != "received an empty parameter, expected a value" {
+			t.Errorf("Expected \"received an empty parameter, expected a value\", got %q", err)
 		}
 	}
 	_, _, err = indexDir(filepath.Join(dir, "notthere"))

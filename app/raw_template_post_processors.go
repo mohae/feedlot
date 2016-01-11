@@ -242,7 +242,7 @@ func (r *rawTemplate) createAtlas(ID string) (settings map[string]interface{}, e
 	// Process the Arrays.
 	for name, val := range r.PostProcessors[ID].Arrays {
 		switch name {
-		case "metadata":
+		case "metadata":			
 		case "except":
 		case "only":
 		default:
@@ -463,7 +463,7 @@ func (r *rawTemplate) createDockerSave(ID string) (settings map[string]interface
 		if array != nil {
 			settings[name] = array
 		}
-	}
+	}	
 	return settings, nil
 }
 
@@ -669,7 +669,7 @@ func (r *rawTemplate) createVagrantCloud(ID string) (settings map[string]interfa
 // Required configuration options:
 //   cluster         string
 //   datacenter      string
-//   datastore*      string
+//   datastore*      string 
 //   host            string
 //   password        string
 //   username        string
@@ -737,7 +737,7 @@ func (r *rawTemplate) createVSphere(ID string) (settings map[string]interface{},
 	}
 	if !hasDatastore {
 		if !hasResourcePool {
-			return nil, fmt.Errorf("%s; if the datastore is not set a resource_pool must be specified.", RequiredSettingError{VSphere.String(), "datastore/resource_pool"})
+			return nil, fmt.Errorf("%s: resource_pool is required when datastore is not set", RequiredSettingError{VSphere.String(), "datastore/resource_pool"})
 		}
 	}
 	if !hasHost {

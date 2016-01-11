@@ -447,7 +447,7 @@ bc3b20ad00f19d0169206af0df5a4186c61ed08812262c55dbca3b7b1f1c4a0b *wubi.exe`
 		t.Error("Expected an error, got nil")
 	} else {
 		if err != ErrChecksumNotFound {
-			t.Errorf("TestUbuntuFindISOChecksum: got %q, want %q", err)
+			t.Errorf("TestUbuntuFindISOChecksum: got %q, want %q", err, ErrChecksumNotFound)
 		}
 	}
 

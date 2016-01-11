@@ -11,6 +11,7 @@ import (
 	"github.com/mohae/contour"
 )
 
+// ArchiveError is generated during an archive process.
 type ArchiveError struct {
 	err error
 }
@@ -31,9 +32,11 @@ type Archive struct {
 	directory
 }
 
+// NewArchive returns an Archive, using the received string as its Name.
 func NewArchive(s string) *Archive {
 	return &Archive{Name: s}
 }
+
 func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 	// Add the passed file, if it exists, to the archive, otherwise error.
 	// This preserves mode and modification.

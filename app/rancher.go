@@ -7,8 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 //
 
-// Package ranchr is a package for organizing Rancher code. It also contains the package
-// level variables and sets up logging.
 package app
 
 import (
@@ -26,7 +24,7 @@ import (
 	jww "github.com/spf13/jwalterweatherman"
 )
 
-//
+// Error is the generic error wrapper used by this package.
 type Error struct {
 	slug string
 	err  error
@@ -37,8 +35,10 @@ func (e Error) Error() string {
 }
 
 var (
+	// ErrUnsupportedFormat occurs when the specified format is not supported.
 	ErrUnsupportedFormat = errors.New("unsupported format")
-	ErrEmptyParam        = errors.New("received an empty paramater, expected a value")
+	// ErrEmptyParam occurs when the received parameter was empy.
+	ErrEmptyParam        = errors.New("received an empty parameter, expected a value")
 )
 
 // supported config formats
@@ -48,6 +48,7 @@ const (
 	TOML
 )
 
+// CfgFormat: the configuration file's format.
 type CfgFormat int
 
 var cfgFormats = [...]string{
@@ -58,6 +59,9 @@ var cfgFormats = [...]string{
 
 func (c CfgFormat) String() string { return cfgFormats[c] }
 
+// CfgFormatFromString enables the ability to support multiple valid versions
+// of the same config format and return the CfgFormat for that string, if it 
+// is a valid, supported value.  The comparison is not case sensitive.
 func CfgFormatFromString(s string) CfgFormat {
 	// make upper for consistency
 	s = strings.ToUpper(s)
@@ -98,6 +102,7 @@ var casedDistros = [...]string{
 	"Ubuntu",
 }
 
+// CasedString returns the distro's name with proper casing.
 func (d Distro) CasedString() string { return casedDistros[d] }
 
 // DistroFromString returns the Distro constant for the passed string or

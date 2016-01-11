@@ -4,8 +4,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// Package ranchr implements the creation of Packer templates from Rancher
-// build definitions.
 package app
 
 import (
@@ -306,21 +304,21 @@ type BuildInf struct {
 	Sponsor string `toml:"sponsor" json:"country"`
 }
 
-func (i *BuildInf) update(b BuildInf) {
-	if b.Name != "" {
-		i.Name = b.Name
+func (b *BuildInf) update(v BuildInf) {
+	if v.Name != "" {
+		b.Name = v.Name
 	}
-	if b.BuildName != "" {
-		i.BuildName = b.BuildName
+	if v.BuildName != "" {
+		b.BuildName = v.BuildName
 	}
-	if b.BaseURL != "" {
-		i.BaseURL = b.BaseURL
+	if v.BaseURL != "" {
+		b.BaseURL = v.BaseURL
 	}
-	if b.Region != "" {
-		i.Region = b.Region
+	if v.Region != "" {
+		b.Region = v.Region
 	}
-	if b.Country != "" {
-		i.Country = b.Country
+	if v.Country != "" {
+		b.Country = v.Country
 	}
 }
 
@@ -353,21 +351,21 @@ type IODirInf struct {
 }
 
 // Only update when a value exists; empty strings don't count as being set.
-func (i *IODirInf) update(inf IODirInf) {
-	if inf.OutputDir != "" {
-		i.OutputDir = appendSlash(inf.OutputDir)
+func (i *IODirInf) update(v IODirInf) {
+	if v.OutputDir != "" {
+		i.OutputDir = appendSlash(v.OutputDir)
 	}
-	if inf.OutputDirIsRelative != nil {
-		i.OutputDirIsRelative = inf.OutputDirIsRelative
+	if v.OutputDirIsRelative != nil {
+		i.OutputDirIsRelative = v.OutputDirIsRelative
 	}
-	if inf.SourceDir != "" {
-		i.SourceDir = appendSlash(inf.SourceDir)
+	if v.SourceDir != "" {
+		i.SourceDir = appendSlash(v.SourceDir)
 	}
-	if inf.SourceDirIsRelative != nil {
-		i.SourceDirIsRelative = inf.SourceDirIsRelative
+	if v.SourceDirIsRelative != nil {
+		i.SourceDirIsRelative = v.SourceDirIsRelative
 	}
-	if inf.IncludeComponentString != nil {
-		i.IncludeComponentString = inf.IncludeComponentString
+	if v.IncludeComponentString != nil {
+		i.IncludeComponentString = v.IncludeComponentString
 	}
 }
 
@@ -390,12 +388,12 @@ type PackerInf struct {
 	Description      string `toml:"description" json:"description"`
 }
 
-func (i *PackerInf) update(inf PackerInf) {
-	if inf.MinPackerVersion != "" {
-		i.MinPackerVersion = inf.MinPackerVersion
+func (p *PackerInf) update(v PackerInf) {
+	if v.MinPackerVersion != "" {
+		p.MinPackerVersion = v.MinPackerVersion
 	}
-	if inf.Description != "" {
-		i.Description = inf.Description
+	if v.Description != "" {
+		p.Description = v.Description
 	}
 }
 
@@ -425,12 +423,12 @@ func (d *defaults) Load(p string) error {
 			return err
 		}
 	case JSON:
-		var b []byte
-		b, err = ioutil.ReadFile(name)
+		var buff []byte
+		buff, err = ioutil.ReadFile(name)
 		if err != nil {
 			return err
 		}
-		err = cjsn.Unmarshal(b, &d)
+		err = cjsn.Unmarshal(buff, &d)
 		if err != nil {
 			return err
 		}
@@ -490,12 +488,12 @@ func (s *supported) Load(p string) error {
 			return err
 		}
 	case JSON:
-		var b []byte
-		b, err = ioutil.ReadFile(name)
+		var buff []byte
+		buff, err = ioutil.ReadFile(name)
 		if err != nil {
 			return err
 		}
-		err = cjsn.Unmarshal(b, &s.Distro)
+		err = cjsn.Unmarshal(buff, &s.Distro)
 		if err != nil {
 			return err
 		}
@@ -524,11 +522,11 @@ func (b *builds) Load(name string) error {
 			return err
 		}
 	case JSON:
-		by, err := ioutil.ReadFile(name)
+		buff, err := ioutil.ReadFile(name)
 		if err != nil {
 			return err
 		}
-		err = cjsn.Unmarshal(by, &b.Build)
+		err = cjsn.Unmarshal(buff, &b.Build)
 		if err != nil {
 			return err
 		}
@@ -576,7 +574,7 @@ type list struct {
 
 // Load loads the build lists. It accepts a path prefix; which is mainly used
 // for testing ATM.
-func (bl *buildLists) Load(p string) error {
+func (b *buildLists) Load(p string) error {
 	// Load the build lists.
 	name, format, err := findConfigFile(getConfigFile(p, "build_list"))
 	if err != nil {
@@ -584,17 +582,17 @@ func (bl *buildLists) Load(p string) error {
 	}
 	switch format {
 	case TOML:
-		_, err := toml.DecodeFile(name, &bl.List)
+		_, err := toml.DecodeFile(name, &b.List)
 		if err != nil {
 			return err
 		}
 	case JSON:
-		var b []byte
-		b, err = ioutil.ReadFile(name)
+		var buff []byte
+		buff, err = ioutil.ReadFile(name)
 		if err != nil {
 			return err
 		}
-		err = cjsn.Unmarshal(b, &bl.List)
+		err = cjsn.Unmarshal(buff, &b.List)
 		if err != nil {
 			return err
 		}

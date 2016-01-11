@@ -14,7 +14,7 @@ import (
 	"golang.org/x/net/html"
 )
 
-// FilterErrors are errors that occur while filtering mirror results.
+// FilterError occur while filtering mirror results.
 type FilterError struct {
 	filter string
 	slug   string
@@ -24,7 +24,7 @@ func (e *FilterError) Error() string {
 	return "filter " + e.filter + ": " + e.slug
 }
 
-// NotSupportedErrors occur when something that isn't supported is specified;
+// NotSupportedError occur when something that isn't supported is specified;
 // e.g. an unsupported release for a distro, unsupported architecture, etc.
 type NotSupportedError struct {
 	Distro
@@ -35,7 +35,7 @@ func (e *NotSupportedError) Error() string {
 	return e.Distro.CasedString() + " " + e.slug + ": not supported"
 }
 
-// VersionInfoErrors occur when there is a problem when parsing version
+// VersionInfoError occur when there is a problem when parsing version
 // information for a build.
 type VersionInfoError struct {
 	info string
@@ -70,10 +70,6 @@ func init() {
 	// Psuedo-random is fine here
 	rand.Seed(time.Now().UTC().UnixNano())
 }
-
-//func osTypeBuilderErr(name, typ string) error {
-//	return ReleaseError{name: name, operation: "getOSType", slug: fmt.Sprintf("%s is not supported by this distro", typ)}
-//}
 
 // Iso image information
 type iso struct {
