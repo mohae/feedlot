@@ -2,30 +2,31 @@ package app
 
 import (
 	"errors"
+	"strconv"
 	"strings"
 )
 
 // This supports standard Packer communicators.  Builders with custom
 // communicators are associated with their builders.
 
-var invalidCommunicatorErr = errors.New("an invalid communicator was specified")
+var invalidCommunicatorErr = errors.New("invalid communicator")
 
 // Communicator constants
 const (
 	InvalidCommunicator Communicator = iota
-	None
-	SSH
-	WinRM
+	NoCommunicator
+	SSHCommunicator
+	WinRMCommunicator
 )
 
 // Communicator is a Packer supported communicator.
 type Communicator int
 
 var communicators = [...]string{
-	"invalid communicator"
+	"invalid communicator",
 	"none",
 	"ssh",
-	"winrm"
+	"winrm",
 }
 
 func (c Communicator) String() string { return communicators[c] }
@@ -39,9 +40,9 @@ func CommunicatorFromString(s string) Communicator {
 	case "none":
 		return NoCommunicator
 	case "ssh":
-		return SSH
+		return SSHCommunicator
 	case "winrm":
-		return WinRM
+		return WinRMCommunicator
 	default:
 		return InvalidCommunicator
 	}
@@ -49,8 +50,27 @@ func CommunicatorFromString(s string) Communicator {
 
 // comm is an interface for communicators.
 type comm interface {
-	isCommunicator bool
+	isCommunicator() bool
+	processSettings([]string, *rawTemplate) (map[string]interface{}, error)
 }
+
+// NewCommunicator returns the communicator for s.  If the communicator is
+// 'none', a nil is returned.  If the specified communicator does not match
+// a valid communicator, an invalidCommunicatorErr is returned.
+func NewCommunicator(s string) (comm, error) {
+	typ := CommunicatorFromString(s)
+	switch typ {
+	case NoCommunicator:
+		return nil, nil
+	case SSHCommunicator:
+		return SSH{}, nil
+	case WinRMCommunicator:
+		return WinRM{}, nil
+	default:
+		return nil, invalidCommunicatorErr
+	}
+}
+
 // SSH communicator.  In the templates, the actual field names are prefixed
 // with ssh_, e.g. ssh_host.  The field comments are copied from
 // https://www.packer.io/docs/templates/communicator.html
@@ -86,9 +106,62 @@ type SSH struct {
 	BastionPrivateKeyFile string
 }
 
-// Fulfill the comm interface.
+// Needed to fulfill the comm interface.
 func (s SSH) isCommunicator() bool {
 	return true
+}
+
+// ProcessSettings extracts the key value pairs that are relevant to the
+// SSH communicator.
+func (s SSH) processSettings(vals []string, r *rawTemplate) (map[string]interface{}, error) {
+	settings := map[string]interface{}{}
+	for _, val := range vals {
+		k, v := parseVar(val)
+		v = r.replaceVariables(v)
+		switch k {
+		case "ssh_host":
+			settings[k] = v
+		case "ssh_port":
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, err
+			}
+			settings[k] = i
+		case "ssh_username":
+			settings[k] = v
+		case "ssh_password":
+			settings[k] = v
+		case "ssh_private_key_file":
+			settings[k] = v
+		case "ssh_pty":
+			settings[k], _ = strconv.ParseBool(v)
+		case "ssh_timeout":
+			settings[k] = v
+		case "ssh_handshake_attempts":
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, err
+			}
+			settings[k] = i
+		case "ssh_disable_agent":
+			settings[k], _ = strconv.ParseBool(v)
+		case "ssh_bastion_host":
+			settings[k] = v
+		case "ssh_bastion_port":
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, err
+			}
+			settings[k] = i
+		case "ssh_bastion_username":
+			settings[k] = v
+		case "ssh_bastion_password":
+			settings[k] = v
+		case "ssh_bastion_private_key_file":
+			settings[k] = v
+		}
+	}
+	return settings, nil
 }
 
 // WinRm communicator.  In the templates, the actual field names are prefixed
@@ -112,25 +185,38 @@ type WinRM struct {
 	Insecure bool
 }
 
-// Fulfill the comm interface.
+// Needed to fulfill the comm interface.
 func (w WinRM) isCommunicator() bool {
 	return true
 }
 
-// NewCommunicator returns the communicator for s.  If the communicator is
-// 'none', a nil is returned.  If the specified communicator does not match
-// a valid communicator, an invalidCommunicatorErr is returned.
-func NewCommunicator(s string) (Comm, err) {
-	typ := CommunicatorFromString(s)
-	switch typ {
-	case None:
-		return nil, nil
-	case SSH:
-		return &SSH{}, nil
-	case WinRM:
-		return &WinRM{}, nil
-	default:
-	case InvalidCommunicator:
-		return InvalidCommunicator, invalidCommunicatorErr
+// ProcessSettings extracts the key value pairs that are relevant to the
+// SSH communicator.
+func (w WinRM) processSettings(vals []string, r *rawTemplate) (map[string]interface{}, error) {
+	settings := map[string]interface{}{}
+	for _, val := range vals {
+		k, v := parseVar(val)
+		v = r.replaceVariables(v)
+		switch k {
+		case "winrm_host":
+			settings[k] = v
+		case "winrm_port":
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, err
+			}
+			settings[k] = i
+		case "winrm_username":
+			settings[k] = v
+		case "winrm_password":
+			settings[k] = v
+		case "winrm_timeout":
+			settings[k] = v
+		case "winrm_use_ssl":
+			settings[k], _ = strconv.ParseBool(v)
+		case "winrm_insecure":
+			settings[k], _ = strconv.ParseBool(v)
+		}
 	}
+	return settings, nil
 }
