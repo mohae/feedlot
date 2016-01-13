@@ -9,7 +9,8 @@ import (
 
 // Communicator constants
 const (
-	None Communicator = iota
+	InvalidCommunicator Communicator = iota
+	None
 	SSH
 	WinRM
 )
@@ -18,6 +19,7 @@ const (
 type Communicator int
 
 var communicators = [...]string{
+	"invalid communicator"
 	"none",
 	"ssh",
 	"winrm"
@@ -31,15 +33,21 @@ func (c Communicator) String() string { return communicators[c] }
 func CommunicatorFromString(s string) Communicator {
 	s = strings.ToLower(s)
 	switch s {
+	case "none":
+		return NoCommunicator
 	case "ssh":
 		return SSH
 	case "winrm":
 		return WinRM
 	default:
-		return None
+		return InvalidCommunicator
 	}
 }
 
+// comm is an interface for communicators.
+type comm interface {
+	isCommunicator bool
+}
 // SSH communicator.  In the templates, the actual field names are prefixed
 // with ssh_, e.g. ssh_host.  The field comments are copied from
 // https://www.packer.io/docs/templates/communicator.html
@@ -75,6 +83,11 @@ type SSH struct {
 	BastionPrivateKeyFile string
 }
 
+// Fulfill the comm interface.
+func (s *SSH) isCommunicator() bool {
+	return true
+}
+
 // WinRm communicator.  In the templates, the actual field names are prefixed
 // with winrm_, e.g. winrm_host.  The field comments are copied from
 // https://www.packer.io/docs/templates/communicator.html
@@ -94,4 +107,9 @@ type WinRM struct {
 	UseSSL bool
 	// If true, do not check server certificate chain and host name
 	Insecure bool
+}
+
+// Fulfill the comm interface.
+func (s *SSH) isCommunicator() bool {
+	return true
 }
