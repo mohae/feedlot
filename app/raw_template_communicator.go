@@ -1,11 +1,14 @@
 package app
 
 import (
+	"errors"
 	"strings"
 )
 
 // This supports standard Packer communicators.  Builders with custom
 // communicators are associated with their builders.
+
+var invalidCommunicatorErr = errors.New("an invalid communicator was specified")
 
 // Communicator constants
 const (
@@ -84,7 +87,7 @@ type SSH struct {
 }
 
 // Fulfill the comm interface.
-func (s *SSH) isCommunicator() bool {
+func (s SSH) isCommunicator() bool {
 	return true
 }
 
@@ -110,6 +113,24 @@ type WinRM struct {
 }
 
 // Fulfill the comm interface.
-func (s *SSH) isCommunicator() bool {
+func (w WinRM) isCommunicator() bool {
 	return true
+}
+
+// NewCommunicator returns the communicator for s.  If the communicator is
+// 'none', a nil is returned.  If the specified communicator does not match
+// a valid communicator, an invalidCommunicatorErr is returned.
+func NewCommunicator(s string) (Comm, err) {
+	typ := CommunicatorFromString(s)
+	switch typ {
+	case None:
+		return nil, nil
+	case SSH:
+		return &SSH{}, nil
+	case WinRM:
+		return &WinRM{}, nil
+	default:
+	case InvalidCommunicator:
+		return InvalidCommunicator, invalidCommunicatorErr
+	}
 }
