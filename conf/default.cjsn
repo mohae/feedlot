@@ -3,7 +3,7 @@
 # for each supported distro.
 {
 	"include_component_string": true,
-	"min_packer_version": "0.7.0",
+	"min_packer_version": "0.8.0",
 	"name": ":build_name",
 	"output_dir": "../packer_templates/:build_name",
 	"output_dir_is_relative": false,
