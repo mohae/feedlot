@@ -18,6 +18,7 @@
 			"settings": [
 				"boot_command = boot.command",
 				"boot_wait = 5s",
+				"communicator=ssh"
 				"disk_size = 40000",
 				"guest_os_type=",
 				"headless = true",
@@ -28,7 +29,7 @@
 				"ssh_password = vagrant",
 				"ssh_port = 22",
 				"ssh_username = vagrant",
-				"ssh_wait_timeout = 60m",
+				"ssh_timeout = 60m",
 				"vm_name = :build_name"
 			]
 		},
