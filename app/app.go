@@ -8,7 +8,7 @@ import (
 
 const (
 	// Name is the name of the application
-	Name          = "rancher"
+	Name = "rancher"
 	// DefaultFormat is the default configuration format.
 	DefaultFormat = JSON
 )

@@ -38,7 +38,7 @@ var (
 	// ErrUnsupportedFormat occurs when the specified format is not supported.
 	ErrUnsupportedFormat = errors.New("unsupported format")
 	// ErrEmptyParam occurs when the received parameter was empy.
-	ErrEmptyParam        = errors.New("received an empty parameter, expected a value")
+	ErrEmptyParam = errors.New("received an empty parameter, expected a value")
 )
 
 // supported config formats
@@ -60,7 +60,7 @@ var cfgFormats = [...]string{
 func (c CfgFormat) String() string { return cfgFormats[c] }
 
 // CfgFormatFromString enables the ability to support multiple valid versions
-// of the same config format and return the CfgFormat for that string, if it 
+// of the same config format and return the CfgFormat for that string, if it
 // is a valid, supported value.  The comparison is not case sensitive.
 func CfgFormatFromString(s string) CfgFormat {
 	// make upper for consistency

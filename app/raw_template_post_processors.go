@@ -242,7 +242,7 @@ func (r *rawTemplate) createAtlas(ID string) (settings map[string]interface{}, e
 	// Process the Arrays.
 	for name, val := range r.PostProcessors[ID].Arrays {
 		switch name {
-		case "metadata":			
+		case "metadata":
 		case "except":
 		case "only":
 		default:
@@ -463,7 +463,7 @@ func (r *rawTemplate) createDockerSave(ID string) (settings map[string]interface
 		if array != nil {
 			settings[name] = array
 		}
-	}	
+	}
 	return settings, nil
 }
 
@@ -669,7 +669,7 @@ func (r *rawTemplate) createVagrantCloud(ID string) (settings map[string]interfa
 // Required configuration options:
 //   cluster         string
 //   datacenter      string
-//   datastore*      string 
+//   datastore*      string
 //   host            string
 //   password        string
 //   username        string

@@ -5,10 +5,10 @@ import (
 )
 
 func TestNewCommunicator(t *testing.T) {
-	tests := []struct{
+	tests := []struct {
 		commType string
 		expected comm
-		err string
+		err      string
 	}{
 		{"", nil, "invalid communicator"},
 		{"none", nil, ""},
@@ -85,19 +85,19 @@ var ssh = rawTemplate{
 }
 
 var sshExpected = map[string]interface{}{
-	"ssh_host": "host_string",
-	"ssh_port": 22,
-	"ssh_username": "vagrant",
-	"ssh_password": "vagrant",
-	"ssh_private_key_file": "path/to/key_file",
-	"ssh_pty": true,
-	"ssh_timeout": "10m",
-	"ssh_handshake_attempts": 10,
-	"ssh_disable_agent": true,
-	"ssh_bastion_host": "bastion_host",
-	"ssh_bastion_port": 22,
-	"ssh_bastion_username": "vagrant",
-	"ssh_bastion_password": "vagrant",
+	"ssh_host":                     "host_string",
+	"ssh_port":                     22,
+	"ssh_username":                 "vagrant",
+	"ssh_password":                 "vagrant",
+	"ssh_private_key_file":         "path/to/key_file",
+	"ssh_pty":                      true,
+	"ssh_timeout":                  "10m",
+	"ssh_handshake_attempts":       10,
+	"ssh_disable_agent":            true,
+	"ssh_bastion_host":             "bastion_host",
+	"ssh_bastion_port":             22,
+	"ssh_bastion_username":         "vagrant",
+	"ssh_bastion_password":         "vagrant",
 	"ssh_bastion_private_key_file": "path/to/bastion_key_file",
 }
 
@@ -152,7 +152,6 @@ var winRM = rawTemplate{
 						"winrm_use_ssl=true",
 						"winrm_insecure=true",
 					},
-
 				},
 			},
 		},
@@ -160,14 +159,15 @@ var winRM = rawTemplate{
 }
 
 var winRMExpected = map[string]interface{}{
-	"winrm_host": "host_string",
-	"winrm_port": 22,
+	"winrm_host":     "host_string",
+	"winrm_port":     22,
 	"winrm_username": "vagrant",
 	"winrm_password": "vagrant",
-	"winrm_timeout": "10m",
-	"winrm_use_ssl": true,
+	"winrm_timeout":  "10m",
+	"winrm_use_ssl":  true,
 	"winrm_insecure": true,
 }
+
 func TestWinRMCommunicator(t *testing.T) {
 	cm, _ := NewCommunicator("winrm")
 	res, err := cm.processSettings(winRM.Builders["virtualbox-iso"].Settings, &winRM)

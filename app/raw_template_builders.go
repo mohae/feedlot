@@ -1392,10 +1392,10 @@ noISOURL:
 		return settings, nil
 	}
 	if tmpISOChecksum == "" {
-		return nil,  &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum"}
+		return nil, &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum"}
 	}
 	if tmpISOChecksumType == "" {
-		return nil,  &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum_type"}
+		return nil, &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum_type"}
 	}
 	return settings, nil
 }
@@ -1756,7 +1756,7 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 					return nil, &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum"}
 				}
 				if tmpISOChecksumType == "" {
-					return nil,  &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum_type"}
+					return nil, &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum_type"}
 				}
 				settings[name] = val
 			}
@@ -1798,10 +1798,10 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 		return settings, nil
 	}
 	if tmpISOChecksum == "" {
-		return nil,  &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum"}
+		return nil, &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum"}
 	}
 	if tmpISOChecksumType == "" {
-		return nil,  &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum_type"}
+		return nil, &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum_type"}
 	}
 	return settings, nil
 }
