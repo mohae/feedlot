@@ -23,8 +23,8 @@ var testUbuntu = rawTemplate{
 	},
 	Distro:  "ubuntu",
 	Arch:    "amd64",
-	Image:   "desktop",
-	Release: "12.04",
+	Image:   "server",
+	Release: "14.04",
 	varVals: map[string]string{},
 	dirs:    map[string]string{},
 	files:   map[string]string{},
@@ -46,7 +46,7 @@ var testUbuntu = rawTemplate{
 						"ssh_password = vagrant",
 						"ssh_port = 22",
 						"ssh_username = vagrant",
-						"ssh_wait_timeout = 30m",
+						"ssh_timeout = 30m",
 					},
 					Arrays: map[string]interface{}{},
 				},
@@ -151,7 +151,7 @@ var testCentOS = rawTemplate{
 						"ssh_password = vagrant",
 						"ssh_port = 22",
 						"ssh_username = vagrant",
-						"ssh_wait_timeout = 30m",
+						"ssh_timeout = 30m",
 					},
 				},
 			},
@@ -260,7 +260,7 @@ var testAllBuilders = rawTemplate{
 	},
 	Distro:  "ubuntu",
 	Arch:    "amd64",
-	Image:   "minimal",
+	Image:   "server",
 	Release: "14.04",
 	varVals: map[string]string{},
 	dirs:    map[string]string{},
@@ -292,7 +292,7 @@ var testAllBuilders = rawTemplate{
 						"ssh_port = 22",
 						"ssh_username = vagrant",
 						"ssh_timeout=30m",
-						"ssh_wait_timeout = 30m",
+						"ssh_timeout = 30m",
 					},
 				},
 			},
@@ -601,7 +601,7 @@ var testAllBuilders = rawTemplate{
 						"shutdown_timeout=5m",
 						"ssh_host_port_min=22",
 						"ssh_host_port_max=40",
-						"ssh_key_path=key/path",
+						"ssh_private_key_file=key/path",
 						"virtualbox_version_file=.vbox_version",
 						"vm_name=test-vb-iso",
 					},
@@ -791,6 +791,174 @@ var testAllBuilders = rawTemplate{
 						"local_state_tree = ~/saltstates/centos6/salt",
 						"skip_bootstrap = true",
 					},
+				},
+			},
+		},
+	},
+}
+
+var testAllBuildersSSH = rawTemplate{
+	IODirInf: IODirInf{
+		OutputDir: "../test_files/out",
+		SourceDir: "../test_files/src",
+	},
+	PackerInf: PackerInf{
+		MinPackerVersion: "",
+		Description:      "Test build template for all builders",
+	},
+	BuildInf: BuildInf{
+		Name:      "docker-alt",
+		BuildName: "",
+		BaseURL:   "",
+	},
+	Distro:  "ubuntu",
+	Arch:    "amd64",
+	Image:   "server",
+	Release: "14.04",
+	varVals: map[string]string{},
+	dirs:    map[string]string{},
+	files:   map[string]string{},
+	build: build{
+		BuilderIDs: []string{
+			"amazon-ebs",
+			"amazon-instance",
+			"digitalocean",
+			"docker",
+			"googlecompute",
+			"null",
+			"virtualbox-iso",
+			"virtualbox-ovf",
+			"vmware-iso",
+			"vmware-vmx",
+		},
+		Builders: map[string]builder{
+			"common": {
+				templateSection{
+					Type: "common",
+					Settings: []string{
+						"boot_wait = 5s",
+						"disk_size = 20000",
+						"http_directory = http",
+						"iso_checksum_type = sha256",
+						"shutdown_command = echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
+						"ssh_password = vagrant",
+						"ssh_port = 22",
+						"ssh_username = vagrant",
+						"ssh_timeout=30m",
+						"ssh_timeout = 30m",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
+			"virtualbox-iso": {
+				templateSection{
+					Type: "virtualbox-iso",
+					Settings: []string{
+						"communicator=ssh",
+						"format = ovf",
+						"guest_additions_mode=upload",
+						"guest_additions_path=path/to/additions",
+						"guest_additions_sha256=89dac78769b26f8facf98ce85020a605b7601fec1946b0597e22ced5498b3597",
+						"guest_additions_url=file://guest-additions",
+						"hard_drive_interface=ide",
+						"headless=true",
+						"http_port_min=8000",
+						"http_port_max=9000",
+						"iso_checksum=ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
+						"iso_interface=ide",
+						"iso_url=http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+						"output_directory=out/dir",
+						"shutdown_timeout=5m",
+						"ssh_host_port_min=22",
+						"ssh_host_port_max=40",
+						"ssh_private_key_file=key/path",
+						"virtualbox_version_file=.vbox_version",
+						"vm_name=test-vb-iso",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
+		},
+	},
+}
+
+var testAllBuildersWinRM = rawTemplate{
+	IODirInf: IODirInf{
+		OutputDir: "../test_files/out",
+		SourceDir: "../test_files/src",
+	},
+	PackerInf: PackerInf{
+		MinPackerVersion: "",
+		Description:      "Test build template for all builders",
+	},
+	BuildInf: BuildInf{
+		Name:      "docker-alt",
+		BuildName: "",
+		BaseURL:   "",
+	},
+	Distro:  "ubuntu",
+	Arch:    "amd64",
+	Image:   "server",
+	Release: "14.04",
+	varVals: map[string]string{},
+	dirs:    map[string]string{},
+	files:   map[string]string{},
+	build: build{
+		BuilderIDs: []string{
+			"amazon-ebs",
+			"amazon-instance",
+			"digitalocean",
+			"docker",
+			"googlecompute",
+			"null",
+			"virtualbox-iso",
+			"virtualbox-ovf",
+			"vmware-iso",
+			"vmware-vmx",
+		},
+		Builders: map[string]builder{
+			"common": {
+				templateSection{
+					Type: "common",
+					Settings: []string{
+						"boot_wait = 5s",
+						"disk_size = 20000",
+						"http_directory = http",
+						"iso_checksum_type = sha256",
+						"shutdown_command = echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
+						"winrm_password = vagrant",
+						"winrm_port = 22",
+						"winrm_username = vagrant",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
+			"virtualbox-iso": {
+				templateSection{
+					Type: "virtualbox-iso",
+					Settings: []string{
+						"communicator=winrm",
+						"format = ovf",
+						"guest_additions_mode=upload",
+						"guest_additions_path=path/to/additions",
+						"guest_additions_sha256=89dac78769b26f8facf98ce85020a605b7601fec1946b0597e22ced5498b3597",
+						"guest_additions_url=file://guest-additions",
+						"hard_drive_interface=ide",
+						"headless=true",
+						"http_port_min=8000",
+						"http_port_max=9000",
+						"iso_checksum=ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
+						"iso_interface=ide",
+						"iso_url=http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+						"output_directory=out/dir",
+						"shutdown_timeout=5m",
+						"ssh_host_port_min=22",
+						"ssh_host_port_max=40",
+						"ssh_private_key_file=key/path",
+						"virtualbox_version_file=.vbox_version",
+						"vm_name=test-vb-iso",
+					},
+					Arrays: map[string]interface{}{},
 				},
 			},
 		},
@@ -1010,7 +1178,7 @@ var builderOrig = map[string]builder{
 				"ssh_password = vagrant",
 				"ssh_port = 22",
 				"ssh_username = vagrant",
-				"ssh_wait_timeout = 30m",
+				"ssh_timeout = 30m",
 			},
 			Arrays: map[string]interface{}{},
 		},
@@ -1051,7 +1219,7 @@ var builderNew = map[string]builder{
 				"ssh_password = vagrant",
 				"ssh_port = 22",
 				"ssh_username = vagrant",
-				"ssh_wait_timeout = 240m",
+				"ssh_timeout = 240m",
 			},
 		},
 	},
@@ -1080,7 +1248,7 @@ var builderMerged = map[string]builder{
 				"ssh_password = vagrant",
 				"ssh_port = 22",
 				"ssh_username = vagrant",
-				"ssh_wait_timeout = 240m",
+				"ssh_timeout = 240m",
 			},
 			Arrays: map[string]interface{}{},
 		},
@@ -1698,9 +1866,6 @@ func TestBuilderNull(t *testing.T) {
 	}
 }
 
-/*
-// elided because as the funcs are currently written, it requires call out to the site
-// and will error when the version changes, e.g. would require maintenance
 func TestCreateVirtualboxISO(t *testing.T) {
 	expected := map[string]interface{}{
 		"boot_command": []string{
@@ -1737,11 +1902,11 @@ func TestCreateVirtualboxISO(t *testing.T) {
 		"shutdown_timeout":       "5m",
 		"ssh_host_port_max":      40,
 		"ssh_host_port_min":      22,
-		"ssh_key_path":           "key/path",
 		"ssh_password":           "vagrant",
 		"ssh_port":               22,
+		"ssh_private_key_file":           "key/path",
 		"ssh_username":           "vagrant",
-		"ssh_wait_timeout":       "30m",
+		"ssh_timeout":       "30m",
 		"type":                   "virtualbox-iso",
 		"vboxmanage": [][]string{
 			[]string{
@@ -1769,7 +1934,7 @@ func TestCreateVirtualboxISO(t *testing.T) {
 		"vm_name":                 "test-vb-iso",
 	}
 	testAllBuilders.BaseURL = "http://releases.ubuntu.com/"
-	settings, err := testAllBuilders.createVirtualBoxISO()
+	settings, err := testAllBuilders.createVirtualBoxISO("virtualbox-iso")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
@@ -1777,9 +1942,92 @@ func TestCreateVirtualboxISO(t *testing.T) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
 		}
 	}
+	// ssh
+	expectedSSH := map[string]interface{}{
+		"boot_wait": "5s",
+		"communicator": "ssh",
+		"disk_size": 20000,
+		"format":                 "ovf",
+		"guest_additions_mode":   "upload",
+		"guest_additions_path":   "path/to/additions",
+		"guest_additions_sha256": "89dac78769b26f8facf98ce85020a605b7601fec1946b0597e22ced5498b3597",
+		"guest_additions_url":    "file://guest-additions",
+		"guest_os_type":          "Ubuntu_64",
+		"hard_drive_interface":   "ide",
+		"headless":               true,
+		"http_directory":         "http",
+		"http_port_max":          9000,
+		"http_port_min":          8000,
+		"iso_checksum":           "ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
+		"iso_checksum_type":      "sha256",
+		"iso_interface":          "ide",
+		"iso_url":                "http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+		"output_directory":       "out/dir",
+		"shutdown_command":       "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
+		"shutdown_timeout":       "5m",
+		"ssh_host_port_max":      40,
+		"ssh_host_port_min":      22,
+		"ssh_password":           "vagrant",
+		"ssh_port":               22,
+		"ssh_private_key_file":           "key/path",
+		"ssh_username":           "vagrant",
+		"ssh_timeout":       "30m",
+		"type":                   "virtualbox-iso",
+		"virtualbox_version_file": ".vbox_version",
+		"vm_name":                 "test-vb-iso",
+	}
+	testAllBuildersSSH.BaseURL = "http://releases.ubuntu.com/"
+	settings, err = testAllBuildersSSH.createVirtualBoxISO("virtualbox-iso")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expectedSSH) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedSSH), MarshalJSONToString.Get(settings))
+		}
+	}
+
+	// winrm communicator
+	expectedWinRM := map[string]interface{}{
+		"boot_wait": "5s",
+		"communicator": "winrm",
+		"disk_size": 20000,
+		"format":                 "ovf",
+		"guest_additions_mode":   "upload",
+		"guest_additions_path":   "path/to/additions",
+		"guest_additions_sha256": "89dac78769b26f8facf98ce85020a605b7601fec1946b0597e22ced5498b3597",
+		"guest_additions_url":    "file://guest-additions",
+		"guest_os_type":          "Ubuntu_64",
+		"hard_drive_interface":   "ide",
+		"headless":               true,
+		"http_directory":         "http",
+		"http_port_max":          9000,
+		"http_port_min":          8000,
+		"iso_checksum":           "ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
+		"iso_checksum_type":      "sha256",
+		"iso_interface":          "ide",
+		"iso_url":                "http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+		"output_directory":       "out/dir",
+		"shutdown_command":       "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
+		"shutdown_timeout":       "5m",
+		"type": "virtualbox-iso",
+		"winrm_password":           "vagrant",
+		"winrm_port":               22,
+		"winrm_username":           "vagrant",
+		"virtualbox_version_file": ".vbox_version",
+		"vm_name":                 "test-vb-iso",
+	}
+	testAllBuildersWinRM.BaseURL = "http://releases.ubuntu.com/"
+	settings, err = testAllBuildersWinRM.createVirtualBoxISO("virtualbox-iso")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expectedWinRM) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(settings))
+		}
+	}
 }
 
-
+/*
 func TestCreateVirtualboxOVF(t *testing.T) {
 	expected := map[string]interface{}{
 		"boot_command": []string{
@@ -1815,7 +2063,7 @@ func TestCreateVirtualboxOVF(t *testing.T) {
 		"ssh_password":           "vagrant",
 		"ssh_port":               22,
 		"ssh_username":           "vagrant",
-		"ssh_wait_timeout":       "30m",
+		"ssh_timeout":       "30m",
 		"type":                   "virtualbox-ovf",
 		"vboxmanage": [][]string{
 			[]string{
@@ -1893,7 +2141,7 @@ func TestCreateVMWareISO(t *testing.T) {
 		"ssh_password":           "vagrant",
 		"ssh_port":               22,
 		"ssh_username":           "vagrant",
-		"ssh_wait_timeout":       "30m",
+		"ssh_timeout":       "30m",
 		"tools_upload_flavor":    "linux",
 		"tools_upload_path":      "{{.Flavor}}.iso",
 		"type":                   "vmware-iso",
@@ -1951,7 +2199,7 @@ func TestCreateVMWareVMX(t *testing.T) {
 		"ssh_port":             22,
 		"ssh_skip_request_pty": false,
 		"ssh_username":         "vagrant",
-		"ssh_wait_timeout":     "30m",
+		"ssh_timeout":     "30m",
 		"type":                 "vmware-vmx",
 		"vmx_data": map[string]string{
 			"cpuid.coresPerSocket": "1",

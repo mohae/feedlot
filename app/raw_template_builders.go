@@ -1078,6 +1078,9 @@ func (r *rawTemplate) createNull(ID string) (settings map[string]interface{}, er
 // processing of the builder is stopped. For more information, refer to
 // https://packer.io/docs/builders/virtualbox-iso.html
 //
+// In addition to the following options, Packer communicators are supported.
+// Check the communicator docs for valid options.
+//
 // Required configuration options:
 //   iso_checksum             string
 //   iso_checksum_type        string
@@ -1107,10 +1110,10 @@ func (r *rawTemplate) createNull(ID string) (settings map[string]interface{}, er
 //   shutdown_timeout         string
 //   ssh_host_port_min        int
 //   ssh_host_port_max        int
-//   ssh_key_path             string
+//   ssh_private_key_file     string
 //   ssh_password             string
 //   ssh_port                 int
-//   ssh_wait_timeout         string
+//   ssh_timeout              string
 //   vboxmanage               array of array of strings
 //   vboxmanage_post          array of array of strings
 //   virtualbox_version_file  string
@@ -1134,9 +1137,55 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 	} else {
 		workSlice = r.Builders[ID].Settings
 	}
-	var k, v string
-	var bootCmdProcessed, hasSSHUsername bool
+	var bootCmdProcessed, hasUsername, hasPassword, hasSSHCommunicator, hasWinRMCommunicator bool
 	var tmpISOChecksumType, tmpISOChecksum, tmpISOUrl, tmpGuestOSType string
+	// check for communicator first
+	k, v, ok := communicatorSetting(workSlice)
+	if ok {
+		// set the communicator setting
+		settings[k] = v
+		comm, err := NewCommunicator(v)
+		if err != nil {
+			return nil, &SettingError{ID, k, v, err}
+		}
+		if comm == nil {
+			goto commDone
+		}
+		// get a map of the settings related to this communicator
+		commSettings, err := comm.processSettings(workSlice, r)
+		if err != nil {
+			return nil, &SettingError{ID, k, v, err}
+		}
+		// add the communicator related settings to the settings map.
+		for key, val := range commSettings {
+			settings[key] = val
+		}
+		switch comm.(type) {
+		case SSH:
+			hasSSHCommunicator = true
+			// check for required settings
+			_, ok := settings["ssh_username"]
+			if ok {
+				hasUsername = true
+			}
+			_, ok = settings["ssh_password"]
+			if ok {
+				hasPassword = true
+			}
+		case WinRM:
+			hasWinRMCommunicator = true
+			// check for required settings
+			_, ok := settings["winrm_username"]
+			if ok {
+				hasUsername = true
+			}
+			_, ok = settings["winrm_password"]
+			if ok {
+				hasPassword = true
+			}
+		}
+	}
+commDone:
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
 	for _, s := range workSlice {
@@ -1179,14 +1228,39 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 		case "boot_wait", "format", "guest_additions_mode", "guest_additions_path",
 			"guest_additions_sha256", "guest_additions_url", "hard_drive_interface",
 			"http_directory", "iso_interface", "output_directory", "shutdown_timeout",
-			"ssh_key_path", "ssh_password", "ssh_wait_timeout", "virtualbox_version_file",
-			"vm_name":
+			"virtualbox_version_file", "vm_name":
 			settings[k] = v
 		case "guest_os_type":
 			tmpGuestOSType = v
+		case "ssh_private_key_file", "ssh_timeout":
+			// skip if winrm communicator exists
+			if hasWinRMCommunicator {
+				continue
+			}
+			// To prevent duplicate settings, only add if there wasn't a ssh communicator.
+			if !hasSSHCommunicator {
+				settings[k] = v
+			}
+		case "ssh_password":
+			// skip if winrm communicator exists
+			if hasWinRMCommunicator {
+				continue
+			}
+			// To prevent duplicate settings, only add if there wasn't a ssh communicator.
+			if !hasSSHCommunicator {
+				settings[k] = v
+			}
+			hasPassword = true
 		case "ssh_username":
-			settings[k] = v
-			hasSSHUsername = true
+			// skip if winrm communicator exists
+			if hasWinRMCommunicator {
+				continue
+			}
+			// To prevent duplicate settings, only add if there wasn't a ssh communicator.
+			if !hasSSHCommunicator {
+				settings[k] = v
+			}
+			hasUsername = true
 		case "headless":
 			settings[k], _ = strconv.ParseBool(v)
 		case "iso_checksum_type":
@@ -1198,8 +1272,18 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 		case "iso_url":
 			settings[k] = v
 			tmpISOUrl = v
-		case "disk_size", "http_port_min", "http_port_max", "ssh_host_port_min",
-			"ssh_host_port_max", "ssh_port":
+		case "disk_size", "http_port_min", "http_port_max":
+			// only add if its an int
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			settings[k] = i
+		case "ssh_host_port_min", "ssh_host_port_max", "ssh_port":
+			// skip if winrm communicator exists
+			if hasWinRMCommunicator {
+				continue
+			}
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
@@ -1208,9 +1292,19 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 			settings[k] = i
 		}
 	}
-	// Only check to see if the required ssh_username field was set. The required iso info is checked after Array processing
-	if !hasSSHUsername {
-		return nil, &RequiredSettingError{ID, "ssh_username"}
+	// Check to see if the relevant username setting exists
+	if !hasUsername {
+		if hasWinRMCommunicator {
+			return nil, &RequiredSettingError{ID, "winrm_username"}
+		}
+		return nil, &RequiredSettingError{ID, "winrm_username"}
+	}
+	// Check to see if the relevant password setting exists
+	if !hasPassword {
+		if hasWinRMCommunicator {
+			return nil, &RequiredSettingError{ID, "winrm_password"}
+		}
+		return nil, &RequiredSettingError{ID, "winrm_password"}
 	}
 	// Process arrays, iso_urls is only valid if iso_url is not set so we first
 	// check to see if it has been set, and if not, if it's in this array prior
@@ -1339,7 +1433,7 @@ noISOURL:
 //   ssh_key_path             string
 //   ssh_password             string
 //   ssh_port                 int
-//   ssh_wait_timeout         string
+//   ssh_timeout         string
 //   vboxmanage               array of strings
 //   vboxmanage_post          array of strings
 //   virtualbox_version_file  string
@@ -1407,7 +1501,7 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 		case "boot_wait", "format", "guest_additions_mode", "guest_additions_path",
 			"guest_additions_sha256", "guest_additions_url", "http_directory",
 			"import_opts", "output_directory", "shutdown_timeout", "ssh_key_path",
-			"ssh_password", "ssh_wait_timeout", "virtualbox_version_file", "vm_name":
+			"ssh_password", "ssh_timeout", "virtualbox_version_file", "vm_name":
 			settings[k] = v
 		case "headless":
 			settings[k], _ = strconv.ParseBool(v)
@@ -1532,7 +1626,7 @@ func (r *rawTemplate) createVBoxManage(v interface{}) [][]string {
 //   ssh_password            string
 //   ssh_port                int
 //   ssh_skip_request_pty    bool
-//   ssh_wait_timeout        string
+//   ssh_timeout        string
 //   tools_upload_flavor     string
 //   tools_upload_path       string
 //   version                 string
@@ -1607,7 +1701,7 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 			"output_directory", "remote_cache_datastore", "remote_cache_directory",
 			"remote_datastore", "remote_host", "remote_password", "remote_type",
 			"remote_username", "shutdown_timeout", "ssh_host", "ssh_key_path",
-			"ssh_password", "ssh_wait_timeout", "tools_upload_flavor", "tools_upload_path",
+			"ssh_password", "ssh_timeout", "tools_upload_flavor", "tools_upload_path",
 			"vm_name", "vmdk_name", "vmx_template_path":
 			settings[k] = v
 		case "guest_os_type":
@@ -1738,7 +1832,7 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 //   ssh_password             string
 //   ssh_port                 int
 //   ssh_skip_request_pty     bool
-//   ssh_wait_timeout         string
+//   ssh_timeout         string
 //   vm_name                  string
 //   vmx_data                 object of key/value strings
 //   vmx_data_post            object of key/value strings
@@ -1821,7 +1915,7 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 			settings[k] = v
 			hasSSHUsername = true
 		case "boot_wait", "fusion_app_path", "http_directory", "output_directory", "shutdown_timeout",
-			"ssh_key_path", "ssh_password", "ssh_wait_timeout", "vm_name":
+			"ssh_key_path", "ssh_password", "ssh_timeout", "vm_name":
 			settings[k] = v
 		case "headless", "skip_compaction", "ssh_skip_request_pty":
 			settings[k], _ = strconv.ParseBool(v)
@@ -2009,4 +2103,16 @@ func DeepCopyMapStringBuilder(b map[string]builder) map[string]Componenter {
 		c[k] = tmpB
 	}
 	return c
+}
+
+// communicatorIndex returns the index of the communicator setting and true,
+// if the 'communicator' setting exists, otherwise false.
+func communicatorSetting(vals []string) (k, v string, ok bool) {
+	for _, val := range vals {
+		k, v = parseVar(val)
+		if k == "communicator" {
+			return k, v, true
+		}
+	}
+	return "", "", false
 }
