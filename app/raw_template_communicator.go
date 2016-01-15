@@ -161,6 +161,7 @@ func (s SSH) processSettings(vals []string, r *rawTemplate) (map[string]interfac
 			settings[k] = v
 		}
 	}
+	settings["communicator"] = "ssh"
 	return settings, nil
 }
 
@@ -218,5 +219,48 @@ func (w WinRM) processSettings(vals []string, r *rawTemplate) (map[string]interf
 			settings[k], _ = strconv.ParseBool(v)
 		}
 	}
+	// add the setting for this communicator
+	settings["communicator"] = "winrm"
 	return settings, nil
+}
+
+func (r *rawTemplate) processCommunicator(id string, vals []string) (settings map[string]interface{}, prefix string, err error) {
+	var hasComm bool
+	var k, v string
+	// Instead of nil, return an empty map,  Simplifies return processing
+	settings = map[string]interface{}{}
+	for _, val := range vals {
+		k, v = parseVar(val)
+		if k == "communicator" {
+			hasComm = true
+			break
+		}
+	}
+	// If the slice doesn't have a communicator, just return.  The orignal
+	// settings must be returned.
+	if !hasComm {
+		return settings, "", nil
+	}
+	c, err := NewCommunicator(v)
+	if err != nil {
+		return nil, "", &SettingError{id, k, v, err}
+	}
+	// nil means the comm type was "none".  Treat it as the same as !hasComm.
+	if c == nil {
+		// add the none communicator
+		settings["communicator"] = "none"
+		return settings, "", nil
+	}
+	switch c.(type) {
+	case SSH:
+		prefix = "ssh"
+	case WinRM:
+		prefix = "winrm"
+	}
+	// get a map of the settings related to this communicator
+	settings, err = c.processSettings(vals, r)
+	if err != nil {
+		return nil, "", &SettingError{id, k, v, err}
+	}
+	return settings, prefix, nil
 }

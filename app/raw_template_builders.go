@@ -1137,60 +1137,34 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 	} else {
 		workSlice = r.Builders[ID].Settings
 	}
-	var bootCmdProcessed, hasUsername, hasPassword, hasSSHCommunicator, hasWinRMCommunicator bool
+	var bootCmdProcessed, hasUsername, hasPassword, hasCommunicator bool
 	var tmpISOChecksumType, tmpISOChecksum, tmpISOUrl, tmpGuestOSType string
 	// check for communicator first
-	k, v, ok := communicatorSetting(workSlice)
-	if ok {
-		// set the communicator setting
-		settings[k] = v
-		comm, err := NewCommunicator(v)
-		if err != nil {
-			return nil, &SettingError{ID, k, v, err}
-		}
-		if comm == nil {
-			goto commDone
-		}
-		// get a map of the settings related to this communicator
-		commSettings, err := comm.processSettings(workSlice, r)
-		if err != nil {
-			return nil, &SettingError{ID, k, v, err}
-		}
-		// add the communicator related settings to the settings map.
-		for key, val := range commSettings {
-			settings[key] = val
-		}
-		switch comm.(type) {
-		case SSH:
-			hasSSHCommunicator = true
-			// check for required settings
-			_, ok := settings["ssh_username"]
-			if ok {
-				hasUsername = true
-			}
-			_, ok = settings["ssh_password"]
-			if ok {
-				hasPassword = true
-			}
-		case WinRM:
-			hasWinRMCommunicator = true
-			// check for required settings
-			_, ok := settings["winrm_username"]
-			if ok {
-				hasUsername = true
-			}
-			_, ok = settings["winrm_password"]
-			if ok {
-				hasPassword = true
-			}
-		}
+	commSettings, prefix, err := r.processCommunicator(ID, workSlice)
+	if err != nil {
+		return nil, err
 	}
-commDone:
+	// copy the communicator settings to the settings map, if there are any to copy.
+	for k, v := range commSettings {
+		settings[k] = v
+	}
+	// see if the required settings include username/password
+	if prefix != "" {
+		_, ok = settings[prefix+"_username"]
+		if ok {
+			hasUsername = true
+		}
+		_, ok = settings[prefix+"_password"]
+		if ok {
+			hasPassword = true
+		}
+		hasCommunicator = true
+	}
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
 	for _, s := range workSlice {
 		// var tmp interface{}
-		k, v = parseVar(s)
+		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
 		case "boot_command":
@@ -1233,33 +1207,24 @@ commDone:
 		case "guest_os_type":
 			tmpGuestOSType = v
 		case "ssh_private_key_file", "ssh_timeout":
-			// skip if winrm communicator exists
-			if hasWinRMCommunicator {
+			// Skip if communicator exists; this was already processed during communicator processing.
+			if hasCommunicator {
 				continue
 			}
-			// To prevent duplicate settings, only add if there wasn't a ssh communicator.
-			if !hasSSHCommunicator {
-				settings[k] = v
-			}
+			settings[k] = v
 		case "ssh_password":
-			// skip if winrm communicator exists
-			if hasWinRMCommunicator {
+			// Skip if communicator exists; this was already processed during communicator processing.
+			if hasCommunicator {
 				continue
 			}
-			// To prevent duplicate settings, only add if there wasn't a ssh communicator.
-			if !hasSSHCommunicator {
-				settings[k] = v
-			}
+			settings[k] = v
 			hasPassword = true
 		case "ssh_username":
-			// skip if winrm communicator exists
-			if hasWinRMCommunicator {
+			// Skip if communicator exists; this was already processed during communicator processing.
+			if hasCommunicator {
 				continue
 			}
-			// To prevent duplicate settings, only add if there wasn't a ssh communicator.
-			if !hasSSHCommunicator {
-				settings[k] = v
-			}
+			settings[k] = v
 			hasUsername = true
 		case "headless":
 			settings[k], _ = strconv.ParseBool(v)
@@ -1279,9 +1244,20 @@ commDone:
 				return nil, &SettingError{ID, k, v, err}
 			}
 			settings[k] = i
-		case "ssh_host_port_min", "ssh_host_port_max", "ssh_port":
-			// skip if winrm communicator exists
-			if hasWinRMCommunicator {
+		case "ssh_host_port_min", "ssh_host_port_max":
+			// Skip if prefix == winrm as SSH settings don't apply to WinRM
+			if prefix == "winrm" {
+				continue
+			}
+			// only add if its an int
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			settings[k] = i
+		case "ssh_port":
+			// skip if communicator exists (prefix will be empty)
+			if hasCommunicator {
 				continue
 			}
 			// only add if its an int
@@ -1294,17 +1270,11 @@ commDone:
 	}
 	// Check to see if the relevant username setting exists
 	if !hasUsername {
-		if hasWinRMCommunicator {
-			return nil, &RequiredSettingError{ID, "winrm_username"}
-		}
-		return nil, &RequiredSettingError{ID, "winrm_username"}
+		return nil, &RequiredSettingError{ID, prefix + "_username"}
 	}
 	// Check to see if the relevant password setting exists
 	if !hasPassword {
-		if hasWinRMCommunicator {
-			return nil, &RequiredSettingError{ID, "winrm_password"}
-		}
-		return nil, &RequiredSettingError{ID, "winrm_password"}
+		return nil, &RequiredSettingError{ID, prefix + "_password"}
 	}
 	// Process arrays, iso_urls is only valid if iso_url is not set so we first
 	// check to see if it has been set, and if not, if it's in this array prior
@@ -2103,16 +2073,4 @@ func DeepCopyMapStringBuilder(b map[string]builder) map[string]Componenter {
 		c[k] = tmpB
 	}
 	return c
-}
-
-// communicatorIndex returns the index of the communicator setting and true,
-// if the 'communicator' setting exists, otherwise false.
-func communicatorSetting(vals []string) (k, v string, ok bool) {
-	for _, val := range vals {
-		k, v = parseVar(val)
-		if k == "communicator" {
-			return k, v, true
-		}
-	}
-	return "", "", false
 }

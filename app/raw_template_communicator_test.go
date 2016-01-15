@@ -1,8 +1,31 @@
 package app
 
 import (
+	"fmt"
 	"testing"
 )
+
+func TestCommunicatorFromString(t *testing.T) {
+	tests := []struct {
+		val      string
+		expected Communicator
+	}{
+		{"", InvalidCommunicator},
+		{"nada", InvalidCommunicator},
+		{"none", NoCommunicator},
+		{"None", NoCommunicator},
+		{"ssh", SSHCommunicator},
+		{"SSH", SSHCommunicator},
+		{"winrm", WinRMCommunicator},
+		{"WinRM", WinRMCommunicator},
+	}
+	for i, test := range tests {
+		comm := CommunicatorFromString(test.val)
+		if comm != test.expected {
+			t.Errorf("%d:  %q, want %q", i, comm, test.expected)
+		}
+	}
+}
 
 func TestNewCommunicator(t *testing.T) {
 	tests := []struct {
@@ -85,6 +108,7 @@ var ssh = rawTemplate{
 }
 
 var sshExpected = map[string]interface{}{
+	"communicator":                 "ssh",
 	"ssh_host":                     "host_string",
 	"ssh_port":                     22,
 	"ssh_username":                 "vagrant",
@@ -159,6 +183,7 @@ var winRM = rawTemplate{
 }
 
 var winRMExpected = map[string]interface{}{
+	"communicator":   "winrm",
 	"winrm_host":     "host_string",
 	"winrm_port":     22,
 	"winrm_username": "vagrant",
@@ -177,5 +202,46 @@ func TestWinRMCommunicator(t *testing.T) {
 	}
 	if MarshalJSONToString.Get(res) != MarshalJSONToString.Get(winRMExpected) {
 		t.Errorf("got %s, want %s", MarshalJSONToString.Get(res), MarshalJSONToString.Get(winRMExpected))
+	}
+}
+
+func TestProcessCommunicator(t *testing.T) {
+	tests := []struct {
+		vals     []string
+		settings map[string]interface{}
+		prefix   string
+		err      string
+	}{
+		{[]string{}, map[string]interface{}{}, "", ""},
+		{[]string{"a=b"}, map[string]interface{}{}, "", ""},
+		{[]string{"communicator=nada"}, map[string]interface{}{}, "", "test 2: communicator: nada: invalid communicator"},
+		{[]string{"a=b", "communicator=none"}, map[string]interface{}{"communicator": "none"}, "", ""},
+		{[]string{"a=b", "communicator=None"}, map[string]interface{}{"communicator": "none"}, "", ""},
+		{[]string{"a=b", "communicator=NONE"}, map[string]interface{}{"communicator": "none"}, "", ""},
+		{[]string{"communicator=ssh", "ssh_username=vagrant", "ssh_password=vagrant"}, map[string]interface{}{"communicator": "ssh", "ssh_username": "vagrant", "ssh_password": "vagrant"}, "ssh", ""},
+		{[]string{"communicator=SSH", "ssh_username=vagrant", "ssh_password=vagrant"}, map[string]interface{}{"communicator": "ssh", "ssh_username": "vagrant", "ssh_password": "vagrant"}, "ssh", ""},
+		{[]string{"communicator=winrm", "winrm_username=vagrant"}, map[string]interface{}{"communicator": "winrm", "winrm_username": "vagrant"}, "winrm", ""},
+		{[]string{"communicator=winrm", "winrm_username=vagrant"}, map[string]interface{}{"communicator": "winrm", "winrm_username": "vagrant"}, "winrm", ""},
+	}
+	for i, test := range tests {
+		r := rawTemplate{}
+		settings, prefix, err := r.processCommunicator(fmt.Sprintf("test %d", i), test.vals)
+		if err != nil {
+			if err.Error() != test.err {
+				t.Errorf("%d: got %q, want %q", i, err, test.err)
+			}
+			continue
+		}
+		if test.err != "" {
+			t.Errorf("%d: got no error, want %q", i, test.err)
+			continue
+		}
+		if prefix != test.prefix {
+			t.Errorf("%d: got %q, want %q", i, prefix, test.prefix)
+			continue
+		}
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(test.settings) {
+			t.Errorf("%d: got %q, want %q", i, settings, test.settings)
+		}
 	}
 }
