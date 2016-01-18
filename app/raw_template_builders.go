@@ -1123,7 +1123,7 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 	if !ok {
 		return nil, NewErrConfigNotFound(ID)
 	}
-	settings = make(map[string]interface{})
+	settings = map[string]interface{}{}
 	// Each create function is responsible for setting its own type.
 	settings["type"] = VirtualBoxISO.String()
 	// Merge the settings between common and this builders.
@@ -1140,13 +1140,9 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 	var bootCmdProcessed, hasUsername, hasPassword, hasCommunicator bool
 	var tmpISOChecksumType, tmpISOChecksum, tmpISOUrl, tmpGuestOSType string
 	// check for communicator first
-	commSettings, prefix, err := r.processCommunicator(ID, workSlice)
+	prefix, err := r.processCommunicator(ID, workSlice, settings)
 	if err != nil {
 		return nil, err
-	}
-	// copy the communicator settings to the settings map, if there are any to copy.
-	for k, v := range commSettings {
-		settings[k] = v
 	}
 	// see if the required settings include username/password
 	if prefix != "" {
@@ -1376,6 +1372,9 @@ noISOURL:
 // processing of the builder is stopped. For more information, refer to
 // https://packer.io/docs/builders/virtualbox-ovf.html
 //
+// In addition to the following options, Packer communicators are supported.
+// Check the communicator docs for valid options.
+//
 // Required configuration options:
 //   source_path              string
 //   ssh_username             string
@@ -1400,10 +1399,7 @@ noISOURL:
 //   shutdown_timeout         string
 //   ssh_host_port_min        int
 //   ssh_host_port_max        int
-//   ssh_key_path             string
-//   ssh_password             string
-//   ssh_port                 int
-//   ssh_timeout         string
+//   ssh_skip_nat_mapping     bool
 //   vboxmanage               array of strings
 //   vboxmanage_post          array of strings
 //   virtualbox_version_file  string
@@ -1413,7 +1409,7 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 	if !ok {
 		return nil, NewErrConfigNotFound(ID)
 	}
-	settings = make(map[string]interface{})
+	settings = map[string]interface{}{}
 	// Each create function is responsible for setting its own type.
 	settings["type"] = VirtualBoxOVF.String()
 	// Merge the settings between common and this builders.
@@ -1429,7 +1425,31 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 	}
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
-	var hasSourcePath, hasSSHUsername, bootCmdProcessed bool
+	var hasSourcePath, hasUsername, bootCmdProcessed, hasCommunicator,  hasWinRMCommunicator bool
+	var userNameVal string
+	// check for communicator first
+	prefix, err := r.processCommunicator(ID, workSlice, settings)
+	if err != nil {
+		return nil, err
+	}
+	// see if the required settings include username/password
+	if prefix == "" {
+		// for communicator == none or no communicator setting assume ssh_username
+		// since the docs have that as required.
+		// TODO: revist after communicator doc clarification
+		userNameVal = "ssh_username"
+	} else {
+		userNameVal = prefix+"_username"
+		_, ok = settings[userNameVal]
+		if ok {
+			hasUsername = true
+		}
+		hasCommunicator = true
+		if prefix == "winrm" {
+			hasWinRMCommunicator = true
+		}
+	}
+
 	for _, s := range workSlice {
 		// var tmp interface{}
 		k, v := parseVar(s)
@@ -1466,18 +1486,39 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 			settings[k] = r.buildTemplateResourcePath(VirtualBoxOVF.String(), v)
 			hasSourcePath = true
 		case "ssh_username":
+			// skip if communicator exists (prefix will be empty)
+			if hasCommunicator {
+				continue
+			}
 			settings[k] = v
-			hasSSHUsername = true
+			hasUsername = true
 		case "boot_wait", "format", "guest_additions_mode", "guest_additions_path",
 			"guest_additions_sha256", "guest_additions_url", "http_directory",
-			"import_opts", "output_directory", "shutdown_timeout", "ssh_key_path",
-			"ssh_password", "ssh_timeout", "virtualbox_version_file", "vm_name":
+			"import_opts", "output_directory", "shutdown_timeout",
+			"virtualbox_version_file", "vm_name":
 			settings[k] = v
 		case "headless":
 			settings[k], _ = strconv.ParseBool(v)
+		case "ssh_skip_nat_mapping":
+			// SSH settings don't apply to winrm
+			if hasWinRMCommunicator {
+				continue
+			}
+			settings[k], _ = strconv.ParseBool(v)
 		// For the fields of int value, only set if it converts to a valid int.
 		// Otherwise, throw an error
-		case "http_port_min", "http_port_max", "ssh_host_port_min", "ssh_host_port_max", "ssh_port":
+		case "http_port_min", "http_port_max":
+			// only add if its an int
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				err = &SettingError{ID, k, v, err}
+				return nil, err
+			}
+			settings[k] = i
+		case "ssh_host_port_min", "ssh_host_port_max":
+			if hasWinRMCommunicator {
+				continue
+			}
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
@@ -1504,8 +1545,8 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 		}
 	}
 	// Check to see if the required info was processed.
-	if !hasSSHUsername {
-		return nil, &RequiredSettingError{ID, "ssh_username"}
+	if !hasUsername {
+		return nil, &RequiredSettingError{ID, userNameVal}
 	}
 	if !hasSourcePath {
 		return nil, &RequiredSettingError{ID, "source_path"}

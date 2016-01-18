@@ -644,10 +644,11 @@ var testAllBuilders = rawTemplate{
 						"iso_checksum=ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
 						"output_directory=out/dir",
 						"shutdown_timeout=5m",
+						"ssh_skip_nat_mapping=false",
 						"source_path=source.ova",
 						"ssh_host_port_min=22",
 						"ssh_host_port_max=40",
-						"ssh_key_path=key/path",
+						"ssh_private_key_file=key/path",
 						"virtualbox_version_file=.vbox_version",
 						"vm_name=test-vb-ovf",
 					},
@@ -878,6 +879,35 @@ var testAllBuildersSSH = rawTemplate{
 					Arrays: map[string]interface{}{},
 				},
 			},
+			"virtualbox-ovf": {
+				templateSection{
+					Type: "virtualbox-ovf",
+					Settings: []string{
+						"communicator=ssh",
+						"format = ovf",
+						"guest_additions_mode=upload",
+						"guest_additions_path=path/to/additions",
+						"guest_additions_sha256=89dac78769b26f8facf98ce85020a605b7601fec1946b0597e22ced5498b3597",
+						"guest_additions_url=file://guest-additions",
+						"headless=true",
+						"http_port_min=8000",
+						"http_port_max=9000",
+						"import_opts=keepallmacs",
+						"iso_checksum=ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
+						"output_directory=out/dir",
+						"shutdown_timeout=5m",
+						"ssh_private_key_file=key/path",
+						"ssh_skip_nat_mapping=false",
+						"source_path=source.ova",
+						"ssh_host_port_min=22",
+						"ssh_host_port_max=40",
+						"ssh_key_path=key/path",
+						"virtualbox_version_file=.vbox_version",
+						"vm_name=test-vb-ovf",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
 		},
 	},
 }
@@ -952,11 +982,39 @@ var testAllBuildersWinRM = rawTemplate{
 						"iso_url=http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
 						"output_directory=out/dir",
 						"shutdown_timeout=5m",
+						"ssh_skip_nat_mapping=false",
 						"ssh_host_port_min=22",
 						"ssh_host_port_max=40",
 						"ssh_private_key_file=key/path",
 						"virtualbox_version_file=.vbox_version",
 						"vm_name=test-vb-iso",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
+			"virtualbox-ovf": {
+				templateSection{
+					Type: "virtualbox-ovf",
+					Settings: []string{
+						"communicator=winrm",
+						"format = ovf",
+						"guest_additions_mode=upload",
+						"guest_additions_path=path/to/additions",
+						"guest_additions_sha256=89dac78769b26f8facf98ce85020a605b7601fec1946b0597e22ced5498b3597",
+						"guest_additions_url=file://guest-additions",
+						"headless=true",
+						"http_port_min=8000",
+						"http_port_max=9000",
+						"import_opts=keepallmacs",
+						"iso_checksum=ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
+						"output_directory=out/dir",
+						"shutdown_timeout=5m",
+						"source_path=source.ova",
+						"ssh_host_port_min=22",
+						"ssh_host_port_max=40",
+						"ssh_key_path=key/path",
+						"virtualbox_version_file=.vbox_version",
+						"vm_name=test-vb-ovf",
 					},
 					Arrays: map[string]interface{}{},
 				},
@@ -2027,7 +2085,7 @@ func TestCreateVirtualboxISO(t *testing.T) {
 	}
 }
 
-/*
+
 func TestCreateVirtualboxOVF(t *testing.T) {
 	expected := map[string]interface{}{
 		"boot_command": []string{
@@ -2059,11 +2117,8 @@ func TestCreateVirtualboxOVF(t *testing.T) {
 		"source_path":            "virtualbox-ovf/source.ova",
 		"ssh_host_port_max":      40,
 		"ssh_host_port_min":      22,
-		"ssh_key_path":           "key/path",
-		"ssh_password":           "vagrant",
-		"ssh_port":               22,
+		"ssh_skip_nat_mapping": false,
 		"ssh_username":           "vagrant",
-		"ssh_timeout":       "30m",
 		"type":                   "virtualbox-ovf",
 		"vboxmanage": [][]string{
 			[]string{
@@ -2091,12 +2146,86 @@ func TestCreateVirtualboxOVF(t *testing.T) {
 		"vm_name":                 "test-vb-ovf",
 	}
 	testAllBuilders.files = make(map[string]string)
-	settings, err := testAllBuilders.createVirtualBoxOVF()
+	settings, err := testAllBuilders.createVirtualBoxOVF("virtualbox-ovf")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
 		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		}
+	}
+	// ssh
+	expectedSSH := map[string]interface{}{
+		"boot_wait":              "5s",
+		"communicator":           "ssh",
+		"format":                 "ovf",
+		"guest_additions_mode":   "upload",
+		"guest_additions_path":   "path/to/additions",
+		"guest_additions_sha256": "89dac78769b26f8facf98ce85020a605b7601fec1946b0597e22ced5498b3597",
+		"guest_additions_url":    "file://guest-additions",
+		"headless":               true,
+		"http_directory":         "http",
+		"http_port_max":          9000,
+		"http_port_min":          8000,
+		"import_opts":            "keepallmacs",
+		"output_directory":       "out/dir",
+		"shutdown_command":       "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
+		"shutdown_timeout":       "5m",
+		"source_path": "source.ova",
+		"ssh_host_port_max":      40,
+		"ssh_host_port_min":      22,
+		"ssh_private_key_file":   "key/path",
+		"ssh_password":           "vagrant",
+		"ssh_port":               22,
+		"ssh_skip_nat_mapping": false,
+		"ssh_username":           "vagrant",
+		"ssh_timeout":            "30m",
+		"type":                   "virtualbox-ovf",
+		"virtualbox_version_file": ".vbox_version",
+		"vm_name":                 "test-vb-ovf",
+	}
+	testAllBuildersSSH.BaseURL = "http://releases.ubuntu.com/"
+	settings, err = testAllBuildersSSH.createVirtualBoxOVF("virtualbox-ovf")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expectedSSH) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedSSH), MarshalJSONToString.Get(settings))
+		}
+	}
+
+	// winrm communicator
+	expectedWinRM := map[string]interface{}{
+		"boot_wait":               "5s",
+		"communicator":            "winrm",
+		"format":                  "ovf",
+		"guest_additions_mode":    "upload",
+		"guest_additions_path":    "path/to/additions",
+		"guest_additions_sha256":  "89dac78769b26f8facf98ce85020a605b7601fec1946b0597e22ced5498b3597",
+		"guest_additions_url":     "file://guest-additions",
+		"headless":                true,
+		"http_directory":          "http",
+		"http_port_max":           9000,
+		"http_port_min":           8000,
+		"import_opts":            "keepallmacs",
+		"output_directory":        "out/dir",
+		"shutdown_command":        "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
+		"shutdown_timeout":        "5m",
+		"source_path": "source.ova",
+		"type":                    "virtualbox-ovf",
+		"winrm_password":          "vagrant",
+		"winrm_port":              22,
+		"winrm_username":          "vagrant",
+		"virtualbox_version_file": ".vbox_version",
+		"vm_name":                 "test-vb-ovf",
+	}
+	testAllBuildersWinRM.BaseURL = "http://releases.ubuntu.com/"
+	settings, err = testAllBuildersWinRM.createVirtualBoxOVF("virtualbox-ovf")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expectedWinRM) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(settings))
 		}
 	}
 }
