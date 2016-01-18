@@ -1425,7 +1425,7 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 	}
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
-	var hasSourcePath, hasUsername, bootCmdProcessed, hasCommunicator,  hasWinRMCommunicator bool
+	var hasSourcePath, hasUsername, bootCmdProcessed, hasCommunicator, hasWinRMCommunicator bool
 	var userNameVal string
 	// check for communicator first
 	prefix, err := r.processCommunicator(ID, workSlice, settings)
@@ -1439,7 +1439,7 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 		// TODO: revist after communicator doc clarification
 		userNameVal = "ssh_username"
 	} else {
-		userNameVal = prefix+"_username"
+		userNameVal = prefix + "_username"
 		_, ok = settings[userNameVal]
 		if ok {
 			hasUsername = true

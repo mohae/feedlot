@@ -2085,7 +2085,6 @@ func TestCreateVirtualboxISO(t *testing.T) {
 	}
 }
 
-
 func TestCreateVirtualboxOVF(t *testing.T) {
 	expected := map[string]interface{}{
 		"boot_command": []string{
@@ -2117,7 +2116,7 @@ func TestCreateVirtualboxOVF(t *testing.T) {
 		"source_path":            "virtualbox-ovf/source.ova",
 		"ssh_host_port_max":      40,
 		"ssh_host_port_min":      22,
-		"ssh_skip_nat_mapping": false,
+		"ssh_skip_nat_mapping":   false,
 		"ssh_username":           "vagrant",
 		"type":                   "virtualbox-ovf",
 		"vboxmanage": [][]string{
@@ -2171,13 +2170,13 @@ func TestCreateVirtualboxOVF(t *testing.T) {
 		"output_directory":       "out/dir",
 		"shutdown_command":       "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
 		"shutdown_timeout":       "5m",
-		"source_path": "source.ova",
+		"source_path":            "source.ova",
 		"ssh_host_port_max":      40,
 		"ssh_host_port_min":      22,
 		"ssh_private_key_file":   "key/path",
 		"ssh_password":           "vagrant",
 		"ssh_port":               22,
-		"ssh_skip_nat_mapping": false,
+		"ssh_skip_nat_mapping":   false,
 		"ssh_username":           "vagrant",
 		"ssh_timeout":            "30m",
 		"type":                   "virtualbox-ovf",
@@ -2207,11 +2206,11 @@ func TestCreateVirtualboxOVF(t *testing.T) {
 		"http_directory":          "http",
 		"http_port_max":           9000,
 		"http_port_min":           8000,
-		"import_opts":            "keepallmacs",
+		"import_opts":             "keepallmacs",
 		"output_directory":        "out/dir",
 		"shutdown_command":        "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
 		"shutdown_timeout":        "5m",
-		"source_path": "source.ova",
+		"source_path":             "source.ova",
 		"type":                    "virtualbox-ovf",
 		"winrm_password":          "vagrant",
 		"winrm_port":              22,
