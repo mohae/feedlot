@@ -108,7 +108,6 @@ var ssh = rawTemplate{
 }
 
 var sshExpected = map[string]interface{}{
-	"communicator":                 "ssh",
 	"ssh_host":                     "host_string",
 	"ssh_port":                     22,
 	"ssh_username":                 "vagrant",
@@ -127,13 +126,14 @@ var sshExpected = map[string]interface{}{
 
 func TestSSHCommunicator(t *testing.T) {
 	cm, _ := NewCommunicator("ssh")
-	res, err := cm.processSettings(ssh.Builders["virtualbox-iso"].Settings, &ssh)
+	settings := map[string]interface{}{}
+	err := cm.processSettings(ssh.Builders["virtualbox-iso"].Settings, &ssh, settings)
 	if err != nil {
 		t.Errorf("unexpected error: %q", err)
 		return
 	}
-	if MarshalJSONToString.Get(res) != MarshalJSONToString.Get(sshExpected) {
-		t.Errorf("got %s, want %s", MarshalJSONToString.Get(res), MarshalJSONToString.Get(sshExpected))
+	if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(sshExpected) {
+		t.Errorf("got %s, want %s", MarshalJSONToString.Get(settings), MarshalJSONToString.Get(sshExpected))
 	}
 }
 
@@ -183,7 +183,6 @@ var winRM = rawTemplate{
 }
 
 var winRMExpected = map[string]interface{}{
-	"communicator":   "winrm",
 	"winrm_host":     "host_string",
 	"winrm_port":     22,
 	"winrm_username": "vagrant",
@@ -195,13 +194,14 @@ var winRMExpected = map[string]interface{}{
 
 func TestWinRMCommunicator(t *testing.T) {
 	cm, _ := NewCommunicator("winrm")
-	res, err := cm.processSettings(winRM.Builders["virtualbox-iso"].Settings, &winRM)
+	settings := map[string]interface{}{}
+	err := cm.processSettings(winRM.Builders["virtualbox-iso"].Settings, &winRM, settings)
 	if err != nil {
 		t.Errorf("unexpected error: %q", err)
 		return
 	}
-	if MarshalJSONToString.Get(res) != MarshalJSONToString.Get(winRMExpected) {
-		t.Errorf("got %s, want %s", MarshalJSONToString.Get(res), MarshalJSONToString.Get(winRMExpected))
+	if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(winRMExpected) {
+		t.Errorf("got %s, want %s", MarshalJSONToString.Get(settings), MarshalJSONToString.Get(winRMExpected))
 	}
 }
 
@@ -221,11 +221,12 @@ func TestProcessCommunicator(t *testing.T) {
 		{[]string{"communicator=ssh", "ssh_username=vagrant", "ssh_password=vagrant"}, map[string]interface{}{"communicator": "ssh", "ssh_username": "vagrant", "ssh_password": "vagrant"}, "ssh", ""},
 		{[]string{"communicator=SSH", "ssh_username=vagrant", "ssh_password=vagrant"}, map[string]interface{}{"communicator": "ssh", "ssh_username": "vagrant", "ssh_password": "vagrant"}, "ssh", ""},
 		{[]string{"communicator=winrm", "winrm_username=vagrant"}, map[string]interface{}{"communicator": "winrm", "winrm_username": "vagrant"}, "winrm", ""},
-		{[]string{"communicator=winrm", "winrm_username=vagrant"}, map[string]interface{}{"communicator": "winrm", "winrm_username": "vagrant"}, "winrm", ""},
+		{[]string{"communicator=WinRM", "winrm_username=vagrant"}, map[string]interface{}{"communicator": "winrm", "winrm_username": "vagrant"}, "winrm", ""},
 	}
 	for i, test := range tests {
 		r := rawTemplate{}
-		settings, prefix, err := r.processCommunicator(fmt.Sprintf("test %d", i), test.vals)
+		settings := map[string]interface{}{}
+		prefix, err := r.processCommunicator(fmt.Sprintf("test %d", i), test.vals, settings)
 		if err != nil {
 			if err.Error() != test.err {
 				t.Errorf("%d: got %q, want %q", i, err, test.err)

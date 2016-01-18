@@ -51,7 +51,7 @@ func CommunicatorFromString(s string) Communicator {
 // comm is an interface for communicators.
 type comm interface {
 	isCommunicator() bool
-	processSettings([]string, *rawTemplate) (map[string]interface{}, error)
+	processSettings([]string, *rawTemplate, map[string]interface{}) error
 }
 
 // NewCommunicator returns the communicator for s.  If the communicator is
@@ -113,8 +113,7 @@ func (s SSH) isCommunicator() bool {
 
 // ProcessSettings extracts the key value pairs that are relevant to the
 // SSH communicator.
-func (s SSH) processSettings(vals []string, r *rawTemplate) (map[string]interface{}, error) {
-	settings := map[string]interface{}{}
+func (s SSH) processSettings(vals []string, r *rawTemplate, settings map[string]interface{}) error {
 	for _, val := range vals {
 		k, v := parseVar(val)
 		v = r.replaceVariables(v)
@@ -124,7 +123,7 @@ func (s SSH) processSettings(vals []string, r *rawTemplate) (map[string]interfac
 		case "ssh_port":
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			settings[k] = i
 		case "ssh_username":
@@ -140,7 +139,7 @@ func (s SSH) processSettings(vals []string, r *rawTemplate) (map[string]interfac
 		case "ssh_handshake_attempts":
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			settings[k] = i
 		case "ssh_disable_agent":
@@ -150,7 +149,7 @@ func (s SSH) processSettings(vals []string, r *rawTemplate) (map[string]interfac
 		case "ssh_bastion_port":
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			settings[k] = i
 		case "ssh_bastion_username":
@@ -161,8 +160,7 @@ func (s SSH) processSettings(vals []string, r *rawTemplate) (map[string]interfac
 			settings[k] = v
 		}
 	}
-	settings["communicator"] = "ssh"
-	return settings, nil
+	return nil
 }
 
 // WinRm communicator.  In the templates, the actual field names are prefixed
@@ -193,8 +191,7 @@ func (w WinRM) isCommunicator() bool {
 
 // ProcessSettings extracts the key value pairs that are relevant to the
 // SSH communicator.
-func (w WinRM) processSettings(vals []string, r *rawTemplate) (map[string]interface{}, error) {
-	settings := map[string]interface{}{}
+func (w WinRM) processSettings(vals []string, r *rawTemplate, settings map[string]interface{}) error {
 	for _, val := range vals {
 		k, v := parseVar(val)
 		v = r.replaceVariables(v)
@@ -204,7 +201,7 @@ func (w WinRM) processSettings(vals []string, r *rawTemplate) (map[string]interf
 		case "winrm_port":
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			settings[k] = i
 		case "winrm_username":
@@ -219,16 +216,12 @@ func (w WinRM) processSettings(vals []string, r *rawTemplate) (map[string]interf
 			settings[k], _ = strconv.ParseBool(v)
 		}
 	}
-	// add the setting for this communicator
-	settings["communicator"] = "winrm"
-	return settings, nil
+	return nil
 }
 
-func (r *rawTemplate) processCommunicator(id string, vals []string) (settings map[string]interface{}, prefix string, err error) {
+func (r *rawTemplate) processCommunicator(id string, vals []string, settings map[string]interface{}) (prefix string, err error) {
 	var hasComm bool
 	var k, v string
-	// Instead of nil, return an empty map,  Simplifies return processing
-	settings = map[string]interface{}{}
 	for _, val := range vals {
 		k, v = parseVar(val)
 		if k == "communicator" {
@@ -239,17 +232,17 @@ func (r *rawTemplate) processCommunicator(id string, vals []string) (settings ma
 	// If the slice doesn't have a communicator, just return.  The orignal
 	// settings must be returned.
 	if !hasComm {
-		return settings, "", nil
+		return "", nil
 	}
 	c, err := NewCommunicator(v)
 	if err != nil {
-		return nil, "", &SettingError{id, k, v, err}
+		return "", &SettingError{id, k, v, err}
 	}
+	// add the communicator
+	settings[k] = strings.ToLower(v)
 	// nil means the comm type was "none".  Treat it as the same as !hasComm.
 	if c == nil {
-		// add the none communicator
-		settings["communicator"] = "none"
-		return settings, "", nil
+		return "", nil
 	}
 	switch c.(type) {
 	case SSH:
@@ -258,9 +251,9 @@ func (r *rawTemplate) processCommunicator(id string, vals []string) (settings ma
 		prefix = "winrm"
 	}
 	// get a map of the settings related to this communicator
-	settings, err = c.processSettings(vals, r)
+	err = c.processSettings(vals, r, settings)
 	if err != nil {
-		return nil, "", &SettingError{id, k, v, err}
+		return "", &SettingError{id, k, v, err}
 	}
-	return settings, prefix, nil
+	return prefix, nil
 }
