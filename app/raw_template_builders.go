@@ -1085,6 +1085,7 @@ func (r *rawTemplate) createNull(ID string) (settings map[string]interface{}, er
 //   iso_checksum             string
 //   iso_checksum_type        string
 //   iso_url                  string
+//   ssh_password             string
 //   ssh_username             string
 // Optional configuration options:
 //   boot_command             array of strings
@@ -1104,16 +1105,14 @@ func (r *rawTemplate) createNull(ID string) (settings map[string]interface{}, er
 //   http_port_min            int
 //   http_port_max            int
 //   iso_interface            string
+//   iso_target_path          string
 //   iso_urls                 array_of_strings
 //   output_directory         string
 //   shutdown_command         string
 //   shutdown_timeout         string
 //   ssh_host_port_min        int
 //   ssh_host_port_max        int
-//   ssh_private_key_file     string
-//   ssh_password             string
-//   ssh_port                 int
-//   ssh_timeout              string
+//   ssh_skip_nat_mapping     bool
 //   vboxmanage               array of array of strings
 //   vboxmanage_post          array of array of strings
 //   virtualbox_version_file  string
@@ -1137,8 +1136,7 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 	} else {
 		workSlice = r.Builders[ID].Settings
 	}
-	var bootCmdProcessed, hasUsername, hasPassword, hasCommunicator bool
-	var tmpISOChecksumType, tmpISOChecksum, tmpISOUrl, tmpGuestOSType string
+	var bootCmdProcessed, hasChecksum, hasChecksumType, hasISOURL, hasUsername, hasPassword, hasCommunicator bool
 	// check for communicator first
 	prefix, err := r.processCommunicator(ID, workSlice, settings)
 	if err != nil {
@@ -1179,6 +1177,63 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 				settings[k] = commands
 				bootCmdProcessed = true
 			}
+		case "boot_wait":
+			settings[k] = v
+		case "disk_size":
+			// only add if its an int
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			settings[k] = i
+		case "format":
+			settings[k] = v
+		case "guest_additions_mode":
+			settings[k] = v
+		case "guest_additions_path":
+			settings[k] = v
+		case "guest_additions_sha256":
+			settings[k] = v
+		case "guest_additions_url":
+			settings[k] = v
+		case "guest_os_type":
+			settings[k] = v
+		case "hard_drive_interface":
+			settings[k] = v
+		case "headless":
+			settings[k], _ = strconv.ParseBool(v)
+		case "http_directory":
+			settings[k] = v
+		case "http_port_min":
+			// only add if its an int
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			settings[k] = i
+		case "http_port_max":
+			// only add if its an int
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			settings[k] = i
+		case "iso_checksum":
+			settings[k] = v
+			hasChecksum = true
+		case "iso_checksum_type":
+			settings[k] = v
+			hasChecksumType = true
+		case "iso_interface":
+			settings[k] = v
+		case "iso_target_path":
+			// TODO should this have path location?
+			settings[k] = v
+		case "iso_url":
+			settings[k] = v
+			hasISOURL = true
+		case "output_directory":
+			settings[k] = v
 		case "shutdown_command":
 			//If it ends in .command, replace it with the command from the filepath
 			if strings.HasSuffix(v, ".command") {
@@ -1195,19 +1250,30 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 			} else {
 				settings[k] = v // the value is the command
 			}
-		case "boot_wait", "format", "guest_additions_mode", "guest_additions_path",
-			"guest_additions_sha256", "guest_additions_url", "hard_drive_interface",
-			"http_directory", "iso_interface", "output_directory", "shutdown_timeout",
-			"virtualbox_version_file", "vm_name":
+		case "shutdown_timeout":
 			settings[k] = v
-		case "guest_os_type":
-			tmpGuestOSType = v
-		case "ssh_private_key_file", "ssh_timeout":
-			// Skip if communicator exists; this was already processed during communicator processing.
-			if hasCommunicator {
+		case "ssh_host_port_min":
+			// Skip if prefix == winrm as SSH settings don't apply to WinRM
+			if prefix == "winrm" {
 				continue
 			}
-			settings[k] = v
+			// only add if its an int
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			settings[k] = i
+		case "ssh_host_port_max":
+			// Skip if prefix == winrm as SSH settings don't apply to WinRM
+			if prefix == "winrm" {
+				continue
+			}
+			// only add if its an int
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			settings[k] = i
 		case "ssh_password":
 			// Skip if communicator exists; this was already processed during communicator processing.
 			if hasCommunicator {
@@ -1222,81 +1288,27 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 			}
 			settings[k] = v
 			hasUsername = true
-		case "headless":
-			settings[k], _ = strconv.ParseBool(v)
-		case "iso_checksum_type":
+		case "virtualbox_version_file":
+			// TODO: should this have path resolution?
 			settings[k] = v
-			tmpISOChecksumType = v
-		case "iso_checksum":
+		case "vm_name":
 			settings[k] = v
-			tmpISOChecksum = v
-		case "iso_url":
-			settings[k] = v
-			tmpISOUrl = v
-		case "disk_size", "http_port_min", "http_port_max":
-			// only add if its an int
-			i, err := strconv.Atoi(v)
-			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
-			}
-			settings[k] = i
-		case "ssh_host_port_min", "ssh_host_port_max":
-			// Skip if prefix == winrm as SSH settings don't apply to WinRM
-			if prefix == "winrm" {
-				continue
-			}
-			// only add if its an int
-			i, err := strconv.Atoi(v)
-			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
-			}
-			settings[k] = i
-		case "ssh_port":
-			// skip if communicator exists (prefix will be empty)
-			if hasCommunicator {
-				continue
-			}
-			// only add if its an int
-			i, err := strconv.Atoi(v)
-			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
-			}
-			settings[k] = i
 		}
 	}
-	// Check to see if the relevant username setting exists
+	// Username is required
 	if !hasUsername {
 		return nil, &RequiredSettingError{ID, prefix + "_username"}
 	}
-	// Check to see if the relevant password setting exists
+	// Password is required
 	if !hasPassword {
 		return nil, &RequiredSettingError{ID, prefix + "_password"}
 	}
-	// Process arrays, iso_urls is only valid if iso_url is not set so we first
-	// check to see if it has been set, and if not, if it's in this array prior
-	// to ranging through the rest of the elements. The range ignores iso_url
-	if tmpISOUrl != "" {
-		isoURL, ok := r.Builders[ID].Arrays["iso_url"].(string)
-		if !ok {
-			goto noISOURL
-		}
-		tmpISOUrl = isoURL
-		if tmpISOChecksum == "" {
-			return nil, &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum"}
-		}
-		if tmpISOChecksumType == "" {
-			return nil, &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum_type"}
-		}
-		settings["iso_url"] = isoURL
-	}
 	// make sure http_directory is set and add to dir list
+	// TODO reconcile with above
 	err = r.setHTTP(VirtualBoxISO.String(), settings)
 	if err != nil {
 		return nil, err
 	}
-
-noISOURL:
-
 	for name, val := range r.Builders[ID].Arrays {
 		switch name {
 		case "boot_command":
@@ -1304,24 +1316,25 @@ noISOURL:
 				continue // if the boot command was already set, don't use this array
 			}
 			settings[name] = val
-		case "export_opts", "floppy_files":
+		case "export_opts":
 			settings[name] = val
-		case "iso_url":
-			continue // skip as it was processed before the range
+		case "floppy_files":
+			settings[name] = val
 		case "iso_urls":
-			// these are only added if iso_url isn't set
-			if tmpISOUrl == "" {
-				if tmpISOChecksum == "" {
-					return nil, &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum"}
-				}
-				if tmpISOChecksumType == "" {
-					return nil, &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum_type"}
-				}
-				settings[name] = val
+			// iso_url takes precedence
+			if hasISOURL {
+				continue
 			}
-		case "vboxmanage", "vboxmanage_post":
+			settings[name] = val
+			hasISOURL = true
+		case "vboxmanage":
+			settings[name] = r.createVBoxManage(val)
+		case "vboxmanage_post":
 			settings[name] = r.createVBoxManage(val)
 		}
+	}
+	if !hasISOURL {
+		return nil, &RequiredSettingError{ID, "iso_url"}
 	}
 	if r.osType == "" { // if the os type hasn't been set, the ISO info hasn't been retrieved
 		err = r.ISOInfo(VirtualBoxISO, workSlice)
@@ -1329,13 +1342,16 @@ noISOURL:
 			return nil, err
 		}
 	}
+	// TODO: modify to select the proper virtualbox value based on distro and arch
+	/*
 	// set the guest_os_type
 	if tmpGuestOSType == "" {
 		tmpGuestOSType = r.osType
 	}
 	settings["guest_os_type"] = tmpGuestOSType
+	*/
 	// If the iso info wasn't set from the Settings, get it from the distro's release
-	if tmpISOUrl == "" {
+	if !hasISOURL {
 		//handle iso lookup vs set in file
 		switch r.Distro {
 		case CentOS.String():
@@ -1357,11 +1373,11 @@ noISOURL:
 		}
 		return settings, nil
 	}
-	if tmpISOChecksum == "" {
-		return nil, &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum"}
+	if !hasChecksum {
+		return nil, &RequiredSettingError{ID: ID, Key: "iso_checksum"}
 	}
-	if tmpISOChecksumType == "" {
-		return nil, &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum_type"}
+	if !hasChecksumType {
+		return nil, &RequiredSettingError{ID: ID, Key: "iso_checksum_type"}
 	}
 	return settings, nil
 }
@@ -1449,7 +1465,6 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 			hasWinRMCommunicator = true
 		}
 	}
-
 	for _, s := range workSlice {
 		// var tmp interface{}
 		k, v := parseVar(s)
@@ -1471,43 +1486,23 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 				settings[k] = commands
 				bootCmdProcessed = true
 			}
-		case "source_path":
-			src, err := r.findComponentSource(VirtualBoxOVF.String(), v, true)
-			if err != nil {
-				return nil, err
-			}
-			// if the source couldn't be found and an error wasn't generated, replace
-			// s with the original value; this occurs when it is an example.
-			// Nothing should be copied in this instancel it should not be added
-			// to the copy info
-			if src != "" {
-				r.files[r.buildOutPath(VirtualBoxOVF.String(), v)] = src
-			}
-			settings[k] = r.buildTemplateResourcePath(VirtualBoxOVF.String(), v)
-			hasSourcePath = true
-		case "ssh_username":
-			// skip if communicator exists (prefix will be empty)
-			if hasCommunicator {
-				continue
-			}
+		case "boot_wait":
 			settings[k] = v
-			hasUsername = true
-		case "boot_wait", "format", "guest_additions_mode", "guest_additions_path",
-			"guest_additions_sha256", "guest_additions_url", "http_directory",
-			"import_opts", "output_directory", "shutdown_timeout",
-			"virtualbox_version_file", "vm_name":
+		case "format":
+			settings[k] = v
+		case "guest_additions_mode":
+			settings[k] = v
+		case "guest_additions_path":
+			settings[k] = v
+		case "guest_additions_sha256":
+			settings[k] = v
+		case "guest_additions_url":
 			settings[k] = v
 		case "headless":
 			settings[k], _ = strconv.ParseBool(v)
-		case "ssh_skip_nat_mapping":
-			// SSH settings don't apply to winrm
-			if hasWinRMCommunicator {
-				continue
-			}
-			settings[k], _ = strconv.ParseBool(v)
-		// For the fields of int value, only set if it converts to a valid int.
-		// Otherwise, throw an error
-		case "http_port_min", "http_port_max":
+		case "http_directory":
+			settings[k] = v
+		case "http_port_min":
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
@@ -1515,10 +1510,7 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 				return nil, err
 			}
 			settings[k] = i
-		case "ssh_host_port_min", "ssh_host_port_max":
-			if hasWinRMCommunicator {
-				continue
-			}
+		case "http_port_max":
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
@@ -1526,6 +1518,10 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 				return nil, err
 			}
 			settings[k] = i
+		case "import_opts":
+			settings[k] = v
+		case "output_directory":
+			settings[k] = v
 		case "shutdown_command":
 			if strings.HasSuffix(v, ".command") {
 				//If it ends in .command, replace it with the command from the filepath
@@ -1542,6 +1538,61 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 			} else {
 				settings[k] = v
 			}
+		case "shutdown_timeout":
+			settings[k] = v
+		case "source_path":
+			src, err := r.findComponentSource(VirtualBoxOVF.String(), v, true)
+			if err != nil {
+				return nil, err
+			}
+			// if the source couldn't be found and an error wasn't generated, replace
+			// s with the original value; this occurs when it is an example.
+			// Nothing should be copied in this instancel it should not be added
+			// to the copy info
+			if src != "" {
+				r.files[r.buildOutPath(VirtualBoxOVF.String(), v)] = src
+			}
+			settings[k] = r.buildTemplateResourcePath(VirtualBoxOVF.String(), v)
+			hasSourcePath = true
+		case "ssh_host_port_min":
+			if hasWinRMCommunicator {
+				continue
+			}
+			// only add if its an int
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				err = &SettingError{ID, k, v, err}
+				return nil, err
+			}
+			settings[k] = i
+		case "ssh_host_port_max":
+			if hasWinRMCommunicator {
+				continue
+			}
+			// only add if its an int
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				err = &SettingError{ID, k, v, err}
+				return nil, err
+			}
+			settings[k] = i
+		case "ssh_skip_nat_mapping":
+			// SSH settings don't apply to winrm
+			if hasWinRMCommunicator {
+				continue
+			}
+			settings[k], _ = strconv.ParseBool(v)
+		case "ssh_username":
+			// skip if communicator exists (prefix will be empty)
+			if hasCommunicator {
+				continue
+			}
+			settings[k] = v
+			hasUsername = true
+		case "virtualbox_version_file":
+			settings[k] = v
+		case "vm_name":
+			settings[k] = v
 		}
 	}
 	// Check to see if the required info was processed.
@@ -1567,9 +1618,15 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 				continue // if the boot command was already set, don't use this array
 			}
 			settings[name] = val
-		case "export_opts", "floppy_files":
+		case "export_opts":
 			settings[name] = val
-		case "vboxmanage", "vboxmanage_post":
+		case "floppy_files":
+			settings[name] = val
+		case "import_flags":
+			settings[name] = val
+		case "vboxmanage":
+			settings[name] = r.createVBoxManage(val)
+		case "vboxmanage_post":
 			settings[name] = r.createVBoxManage(val)
 		}
 	}
