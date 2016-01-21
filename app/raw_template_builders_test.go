@@ -937,6 +937,44 @@ var testAllBuildersSSH = rawTemplate{
 					Arrays: map[string]interface{}{},
 				},
 			},
+			"vmware-iso": {
+				templateSection{
+					Type: "vmware-iso",
+					Settings: []string{
+						"communicator=ssh",
+						"disk_type_id=1",
+						"fusion_app_path=/Applications/VMware Fusion.app",
+						"headless=true",
+						"http_port_min=8000",
+						"http_port_max=9000",
+						"iso_checksum=ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
+						"iso_target_path=../isocache/",
+						"iso_url=http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+						"output_directory=out/dir",
+						"remote_cache_datastore=datastore1",
+						"remote_cache_directory=packer_cache",
+						"remote_datastore=datastore1",
+						"remote_host=remoteHost",
+						"remote_password=rpassword",
+						"remote_private_key_file=secret",
+						"remote_type=esx5",
+						"shutdown_timeout=5m",
+						"skip_compaction=true",
+						"ssh_skip_nat_mapping=false",
+						"ssh_host_port_min=22",
+						"ssh_host_port_max=40",
+						"tools_upload_flavor=linux",
+						"tools_upload_path={{.Flavor}}.iso",
+						"version=9",
+						"vm_name=packer-BUILDNAME",
+						"vmdk_name=packer",
+						"vmx_template_path=template/path",
+						"vnc_port_min=5900",
+						"vnc_port_max=6000",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
 		},
 	},
 }
@@ -1052,6 +1090,44 @@ var testAllBuildersWinRM = rawTemplate{
 						"ssh_skip_nat_mapping=true",
 						"virtualbox_version_file=.vbox_version",
 						"vm_name=test-vb-ovf",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
+			"vmware-iso": {
+				templateSection{
+					Type: "vmware-iso",
+					Settings: []string{
+						"communicator=winrm",
+						"disk_type_id=1",
+						"fusion_app_path=/Applications/VMware Fusion.app",
+						"headless=true",
+						"http_port_min=8000",
+						"http_port_max=9000",
+						"iso_checksum=ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
+						"iso_target_path=../isocache/",
+						"iso_url=http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+						"output_directory=out/dir",
+						"remote_cache_datastore=datastore1",
+						"remote_cache_directory=packer_cache",
+						"remote_datastore=datastore1",
+						"remote_host=remoteHost",
+						"remote_password=rpassword",
+						"remote_private_key_file=secret",
+						"remote_type=esx5",
+						"shutdown_timeout=5m",
+						"skip_compaction=true",
+						"ssh_skip_nat_mapping=false",
+						"ssh_host_port_min=22",
+						"ssh_host_port_max=40",
+						"tools_upload_flavor=linux",
+						"tools_upload_path={{.Flavor}}.iso",
+						"version=9",
+						"vm_name=packer-BUILDNAME",
+						"vmdk_name=packer",
+						"vmx_template_path=template/path",
+						"vnc_port_min=5900",
+						"vnc_port_max=6000",
 					},
 					Arrays: map[string]interface{}{},
 				},
@@ -2365,6 +2441,121 @@ func TestCreateVMWareISO(t *testing.T) {
 	} else {
 		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		}
+	}
+	// SSH
+	expectedSSH := map[string]interface{}{
+		"boot_wait":                    "5s",
+		"communicator":                 "ssh",
+		"disk_size":                    20000,
+		"disk_type_id":                 "1",
+		"fusion_app_path":              "/Applications/VMware Fusion.app",
+		"guest_os_type":                "Ubuntu_64",
+		"headless":                     true,
+		"http_directory":               "http",
+		"http_port_max":                9000,
+		"http_port_min":                8000,
+		"iso_checksum":                 "ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
+		"iso_checksum_type":            "sha256",
+		"iso_target_path":              "../isocache/",
+		"iso_url":                      "http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+		"output_directory":             "out/dir",
+		"remote_cache_datastore":       "datastore1",
+		"remote_cache_directory":       "packer_cache",
+		"remote_datastore":             "datastore1",
+		"remote_host":                  "remoteHost",
+		"remote_password":              "rpassword",
+		"remote_private_key_file":      "secret",
+		"remote_type":                  "esx5",
+		"shutdown_command":             "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
+		"shutdown_timeout":             "5m",
+		"skip_compaction":              true,
+		"tools_upload_flavor":          "linux",
+		"tools_upload_path":            "{{.Flavor}}.iso",
+		"type":                         "vmware-iso",
+		"ssh_bastion_host":             "bastion.host",
+		"ssh_bastion_port":             2222,
+		"ssh_bastion_username":         "packer",
+		"ssh_bastion_password":         "packer",
+		"ssh_bastion_private_key_file": "secret",
+		"ssh_disable_agent":            true,
+		"ssh_handshake_attempts":       10,
+		"ssh_host":                     "127.0.0.1",
+		"ssh_password":                 "vagrant",
+		"ssh_port":                     22,
+		"ssh_private_key_file":         "key/path",
+		"ssh_pty":                      true,
+		"ssh_username":                 "vagrant",
+		"ssh_timeout":                  "10m",
+		"version":                      "9",
+		"vm_name":                      "packer-BUILDNAME",
+		"vmdk_name":                    "packer",
+		"vmx_template_path":            "template/path",
+		"vnc_port_max":                 6000,
+		"vnc_port_min":                 5900,
+	}
+
+	testAllBuildersSSH.BaseURL = "http://releases.ubuntu.com/"
+	settings, err = testAllBuildersSSH.createVMWareISO("vmware-iso")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expectedSSH) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedSSH), MarshalJSONToString.Get(settings))
+		}
+	}
+	// winrm
+	expectedWinRM := map[string]interface{}{
+		"boot_wait":               "5s",
+		"communicator":            "winrm",
+		"disk_size":               20000,
+		"disk_type_id":            "1",
+		"fusion_app_path":         "/Applications/VMware Fusion.app",
+		"guest_os_type":           "Ubuntu_64",
+		"headless":                true,
+		"http_directory":          "http",
+		"http_port_max":           9000,
+		"http_port_min":           8000,
+		"iso_checksum":            "ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
+		"iso_checksum_type":       "sha256",
+		"iso_target_path":         "../isocache/",
+		"iso_url":                 "http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+		"output_directory":        "out/dir",
+		"remote_cache_datastore":  "datastore1",
+		"remote_cache_directory":  "packer_cache",
+		"remote_datastore":        "datastore1",
+		"remote_host":             "remoteHost",
+		"remote_password":         "rpassword",
+		"remote_private_key_file": "secret",
+		"remote_type":             "esx5",
+		"shutdown_command":        "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
+		"shutdown_timeout":        "5m",
+		"skip_compaction":         true,
+		"tools_upload_flavor":     "linux",
+		"tools_upload_path":       "{{.Flavor}}.iso",
+		"type":                    "vmware-iso",
+		"version":                 "9",
+		"vm_name":                 "packer-BUILDNAME",
+		"vmdk_name":               "packer",
+		"vmx_template_path":       "template/path",
+		"vnc_port_max":            6000,
+		"vnc_port_min":            5900,
+		"winrm_host":              "host",
+		"winrm_password":          "vagrant",
+		"winrm_port":              22,
+		"winrm_timeout":           "10m",
+		"winrm_username":          "vagrant",
+		"winrm_use_ssl":           true,
+		"winrm_insecure":          true,
+	}
+
+	testAllBuildersWinRM.BaseURL = "http://releases.ubuntu.com/"
+	settings, err = testAllBuildersWinRM.createVMWareISO("vmware-iso")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expectedWinRM) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(settings))
 		}
 	}
 }
