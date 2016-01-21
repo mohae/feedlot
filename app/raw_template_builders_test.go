@@ -688,24 +688,25 @@ var testAllBuilders = rawTemplate{
 				templateSection{
 					Type: "vmware-iso",
 					Settings: []string{
+						"communicator=none",
 						"disk_type_id=1",
 						"fusion_app_path=/Applications/VMware Fusion.app",
-						"hard_drive_interface=ide",
 						"headless=true",
 						"http_port_min=8000",
 						"http_port_max=9000",
 						"iso_checksum=ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
-						"iso_url=http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+						"iso_target_path=../isocache/",
 						"output_directory=out/dir",
 						"remote_cache_datastore=datastore1",
 						"remote_cache_directory=packer_cache",
 						"remote_datastore=datastore1",
 						"remote_host=remoteHost",
 						"remote_password=rpassword",
+						"remote_private_key_file=secret",
 						"remote_type=esx5",
 						"shutdown_timeout=5m",
+						"skip_compaction=true",
 						"ssh_host=127.0.0.1",
-						"ssh_key_path=key/path",
 						"tools_upload_flavor=linux",
 						"tools_upload_path={{.Flavor}}.iso",
 						"version=9",
@@ -727,6 +728,10 @@ var testAllBuilders = rawTemplate{
 						},
 						"floppy_files": []string{
 							"disk1",
+						},
+						"iso_urls": []string{
+							"http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+							"http://2.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
 						},
 						"vmx_data": []string{
 							"cpuid.coresPerSocket=1",
@@ -2252,9 +2257,6 @@ func TestCreateVirtualboxOVF(t *testing.T) {
 	}
 }
 
-/*
-// elided because as the funcs are currently written, it requires call out to the site
-// and will error when the version changes, e.g. would require maintenance
 func TestCreateVMWareISO(t *testing.T) {
 	expected := map[string]interface{}{
 		"boot_command": []string{
@@ -2264,6 +2266,10 @@ func TestCreateVMWareISO(t *testing.T) {
 			"<esc>",
 		},
 		"boot_wait":    "5s",
+		"communicator": "none",
+		"disk_additional_size": []int{
+			10000,
+		},
 		"disk_size":    20000,
 		"disk_type_id": "1",
 		"floppy_files": []string{
@@ -2272,30 +2278,32 @@ func TestCreateVMWareISO(t *testing.T) {
 		"fusion_app_path":        "/Applications/VMware Fusion.app",
 		"guest_os_type":          "Ubuntu_64",
 		"headless":               true,
-		"http_directory":         "vmware-iso/http",
+		"http_directory":         "http",
 		"http_port_max":          9000,
 		"http_port_min":          8000,
 		"iso_checksum":           "ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
 		"iso_checksum_type":      "sha256",
-		"iso_url":                "http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+		"iso_target_path":        "../isocache/",
+		"iso_urls":               []string{
+			 "http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+			 "http://2.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+		},
 		"output_directory":       "out/dir",
 		"remote_cache_datastore": "datastore1",
 		"remote_cache_directory": "packer_cache",
 		"remote_datastore":       "datastore1",
 		"remote_host":            "remoteHost",
 		"remote_password":        "rpassword",
+		"remote_private_key_file": "secret",
 		"remote_type":            "esx5",
 		"shutdown_command":       "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
 		"shutdown_timeout":       "5m",
-		"ssh_host":               "127.0.0.1",
-		"ssh_key_path":           "key/path",
-		"ssh_password":           "vagrant",
-		"ssh_port":               22,
+		"skip_compaction":        true,
 		"ssh_username":           "vagrant",
-		"ssh_timeout":       "30m",
 		"tools_upload_flavor":    "linux",
 		"tools_upload_path":      "{{.Flavor}}.iso",
 		"type":                   "vmware-iso",
+		"version":                "9",
 		"vmx_data": map[string]string{
 			"cpuid.coresPerSocket": "1",
 			"memsize":              "1024",
@@ -2312,7 +2320,7 @@ func TestCreateVMWareISO(t *testing.T) {
 	}
 
 	testAllBuilders.BaseURL = "http://releases.ubuntu.com/"
-	settings, err := testAllBuilders.createVMWareISO()
+	settings, err := testAllBuilders.createVMWareISO("vmware-iso")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -2321,7 +2329,6 @@ func TestCreateVMWareISO(t *testing.T) {
 		}
 	}
 }
-*/
 /*
 func TestCreateVMWareVMX(t *testing.T) {
 	expected := map[string]interface{}{

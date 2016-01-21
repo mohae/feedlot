@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	json "github.com/mohae/customjson"
 	"github.com/mohae/utilitybelt/deepcopy"
 	jww "github.com/spf13/jwalterweatherman"
 )
@@ -1660,6 +1661,9 @@ func (r *rawTemplate) createVBoxManage(v interface{}) [][]string {
 // builder is stopped. For more information, refer to
 // https://packer.io/docs/builders/vmware-iso.html
 //
+// In addition to the following options, Packer communicators are supported.
+// Check the communicator docs for valid options.
+//
 // Required configuration options:
 //   iso_checksum            string
 //   iso_checksum_type       string
@@ -1668,6 +1672,7 @@ func (r *rawTemplate) createVBoxManage(v interface{}) [][]string {
 // Optional configuration options
 //   boot_command            array of strings
 //   boot_wait               string
+//   disk_additional_size    array of ints
 //   disk_size               int
 //   disk_type_id            string
 //   floppy_files            array of strings
@@ -1677,6 +1682,7 @@ func (r *rawTemplate) createVBoxManage(v interface{}) [][]string {
 //   http_directory          string
 //   http_port_min           int
 //   http_port_max           int
+//   iso_target_path         string
 //   iso_urls                array of strings
 //   output_directory        string
 //   remote_cache_datastore  string
@@ -1684,17 +1690,12 @@ func (r *rawTemplate) createVBoxManage(v interface{}) [][]string {
 //   remote_datastore        string
 //   remote_host             string
 //   remote_password         string
+//   remote_private_key_file string
 //   remote_type             string
 //   remote_username         string
 //   shutdown_command        string
 //   shutdown_timeout        string
 //   skip_compaction         bool
-//   ssh_host                string
-//   ssh_key_path            string
-//   ssh_password            string
-//   ssh_port                int
-//   ssh_skip_request_pty    bool
-//   ssh_timeout        string
 //   tools_upload_flavor     string
 //   tools_upload_path       string
 //   version                 string
@@ -1724,11 +1725,24 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 	} else {
 		workSlice = r.Builders[ID].Settings
 	}
+	var bootCmdProcessed, hasChecksum, hasChecksumType, hasISOURL, hasUsername, hasCommunicator bool
+	var guestOSType string
+	// check for communicator first
+	prefix, err := r.processCommunicator(ID, workSlice, settings)
+	if err != nil {
+		return nil, err
+	}
+	// see if the required settings include username/password
+	if prefix != "" {
+		_, ok = settings[prefix+"_username"]
+		if ok {
+			hasUsername = true
+		}
+		hasCommunicator = true
+	}
 	// Go through each element in the slice, only take the ones that matter
-	// to this builder.
-	var bootCmdProcessed, hasSSHUsername bool
-	var tmpISOChecksum, tmpISOChecksumType, tmpISOUrl, tmpGuestOSType string
 	for _, s := range workSlice {
+	// to this builder.
 		// var tmp interface{}
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
@@ -1749,6 +1763,68 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 				settings[k] = commands
 				bootCmdProcessed = true
 			}
+		case "boot_wait":
+			settings[k] = v
+		case "disk_size":
+			// only add if its an int
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			settings[k] = i
+		case "disk_type_id":
+			settings[k] = v
+		case "fusion_app_path":
+			settings[k] = v
+		case "guest_os_type":
+			guestOSType = v
+		case "headless":
+			settings[k], _ = strconv.ParseBool(v)
+		case "http_directory":
+			settings[k] = v
+		case "http_port_max":
+			// only add if its an int
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			settings[k] = i
+		case "http_port_min":
+			// only add if its an int
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			settings[k] = i
+		case "iso_checksum":
+			settings[k] = v
+			hasChecksum = true
+		case "iso_checksum_type":
+			settings[k] = v
+			hasChecksumType = true
+		case "iso_target_path":
+			settings[k] = v
+		case "iso_url":
+			settings[k] = v
+			hasISOURL = true
+		case "output_directory":
+			settings[k] = v
+		case "remote_cache_datastore":
+			settings[k] = v
+		case "remote_cache_directory":
+			settings[k] = v
+		case "remote_datastore":
+			settings[k] = v
+		case "remote_host":
+			settings[k] = v
+		case "remote_password":
+			settings[k] = v
+		case "remote_private_key_file":
+			settings[k] = v
+		case "remote_type":
+			settings[k] = v
+		case "remote_username":
+			settings[k] = v
 		case "shutdown_command":
 			//If it ends in .command, replace it with the command from the filepath
 			if strings.HasSuffix(v, ".command") {
@@ -1762,34 +1838,40 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 				}
 				// Assume it's the first element.
 				settings[k] = commands[0]
-			} else {
-				settings[k] = v // the value is the command
+				continue
 			}
-		case "boot_wait", "disk_type_id", "fusion_app_path", "http_directory",
-			"output_directory", "remote_cache_datastore", "remote_cache_directory",
-			"remote_datastore", "remote_host", "remote_password", "remote_type",
-			"remote_username", "shutdown_timeout", "ssh_host", "ssh_key_path",
-			"ssh_password", "ssh_timeout", "tools_upload_flavor", "tools_upload_path",
-			"vm_name", "vmdk_name", "vmx_template_path":
+			settings[k] = v // the value is the command
+		case "shutdown_timeout":
 			settings[k] = v
-		case "guest_os_type":
-			tmpGuestOSType = v
-		case "ssh_username":
-			settings[k] = v
-			hasSSHUsername = true
-		case "headless":
+		case "skip_compaction":
 			settings[k], _ = strconv.ParseBool(v)
-		case "iso_checksum_type":
+		case "ssh_username":
+			// Skip if communicator exists; this was already processed during communicator processing.
+			if hasCommunicator {
+				continue
+			}
 			settings[k] = v
-			tmpISOChecksumType = v
-		case "iso_checksum":
+			hasUsername = true
+		case "tools_upload_flavor":
 			settings[k] = v
-			tmpISOChecksum = v
-		case "iso_url":
+		case "tools_upload_path":
 			settings[k] = v
-			tmpISOUrl = v
-		case "disk_size", "http_port_min", "http_port_max", "ssh_port", "vnc_port_min",
-			"vnc_port_max":
+		case "version":
+			settings[k] = v
+		case "vm_name":
+			settings[k] = v
+		case "vmdk_name":
+			settings[k] = v
+		case "vmx_template_path":
+			settings[k] = v
+		case "vnc_port_min":
+			// only add if its an int
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			settings[k] = i
+		case "vnc_port_max":
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
@@ -1799,8 +1881,8 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 		}
 	}
 	// Only check to see if the required ssh_username field was set. The required iso info is checked after Array processing
-	if !hasSSHUsername {
-		return nil, &RequiredSettingError{ID, "ssh_username"}
+	if !hasUsername {
+		return nil, &RequiredSettingError{ID, prefix + "_username"}
 	}
 	// make sure http_directory is set and add to dir list
 	err = r.setHTTP(VMWareISO.String(), settings)
@@ -1815,23 +1897,37 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 				continue // if the boot command was already set, don't use this array
 			}
 			settings[name] = val
+		case "disk_additional_size":
+			var tmp []int
+			// TODO it is assumed that it is a slice of strings.  Is this a good assumption?
+			vals, ok := val.([]string)
+			if !ok {
+				return nil, &SettingError{ID, name, json.MarshalToString(val), fmt.Errorf("expected a string array")}
+			}
+			for _, v := range vals {
+				i, err := strconv.Atoi(v)
+				if err != nil {
+					return nil, &SettingError{ID, name, json.MarshalToString(val), err}
+				}
+				tmp = append(tmp, i)
+			}
+			settings[name] = tmp
 		case "floppy_files":
 			settings[name] = val
 		case "iso_urls":
 			// these are only added if iso_url isn't set
-			if tmpISOUrl == "" {
-				if tmpISOChecksum == "" {
-					return nil, &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum"}
-				}
-				if tmpISOChecksumType == "" {
-					return nil, &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum_type"}
-				}
-				settings[name] = val
+			if hasISOURL {
+				continue
 			}
-		case "vmx_data", "vmx_data_post":
+			settings[name] = val
+			hasISOURL = true
+		case "vmx_data":
+			settings[name] = r.createVMXData(val)
+		case "vmx_data_post":
 			settings[name] = r.createVMXData(val)
 		}
 	}
+	// TODO how is this affected by checksum being set in the template?
 	if r.osType == "" { // if the os type hasn't been set, the ISO info hasn't been retrieved
 		err = r.ISOInfo(VirtualBoxISO, workSlice)
 		if err != nil {
@@ -1839,12 +1935,12 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 		}
 	}
 	// set the guest_os_type
-	if tmpGuestOSType == "" {
-		tmpGuestOSType = r.osType
+	if guestOSType == "" {
+		guestOSType = r.osType
 	}
-	settings["guest_os_type"] = tmpGuestOSType
+	settings["guest_os_type"] = guestOSType
 	// If the iso info wasn't set from the Settings, get it from the distro's release
-	if tmpISOUrl == "" {
+	if !hasISOURL {
 		//handle iso lookup vs set in file
 		switch r.Distro {
 		case CentOS.String():
@@ -1865,11 +1961,11 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 		}
 		return settings, nil
 	}
-	if tmpISOChecksum == "" {
-		return nil, &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum"}
+	if !hasChecksum {
+		return nil, &RequiredSettingError{ID: ID, Key: "iso_checksum"}
 	}
-	if tmpISOChecksumType == "" {
-		return nil, &RequiredSettingError{ID: ID, Key: "iso_url, iso_checksum_type"}
+	if !hasChecksumType {
+		return nil, &RequiredSettingError{ID: ID, Key: "iso_checksum_type"}
 	}
 	return settings, nil
 }
