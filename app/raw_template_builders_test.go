@@ -756,8 +756,6 @@ var testAllBuilders = rawTemplate{
 						"shutdown_timeout=5m",
 						"skip_compaction=false",
 						"source_path=source.vmx",
-						"ssh_key_path=key/path",
-						"ssh_skip_request_pty=false",
 						"vm_name=packer-BUILDNAME",
 						"vnc_port_min=5900",
 						"vnc_port_max=6000",
@@ -975,6 +973,26 @@ var testAllBuildersSSH = rawTemplate{
 					Arrays: map[string]interface{}{},
 				},
 			},
+			"vmware-vmx": {
+				templateSection{
+					Type: "vmware-vmx",
+					Settings: []string{
+						"communicator=ssh",
+						"fusion_app_path=/Applications/VMware Fusion.app",
+						"headless=true",
+						"http_port_min=8000",
+						"http_port_max=9000",
+						"output_directory=out/dir",
+						"shutdown_timeout=5m",
+						"skip_compaction=false",
+						"source_path=source.vmx",
+						"vm_name=packer-BUILDNAME",
+						"vnc_port_min=5900",
+						"vnc_port_max=6000",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
 		},
 	},
 }
@@ -1126,6 +1144,26 @@ var testAllBuildersWinRM = rawTemplate{
 						"vm_name=packer-BUILDNAME",
 						"vmdk_name=packer",
 						"vmx_template_path=template/path",
+						"vnc_port_min=5900",
+						"vnc_port_max=6000",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
+			"vmware-vmx": {
+				templateSection{
+					Type: "vmware-vmx",
+					Settings: []string{
+						"communicator=winrm",
+						"fusion_app_path=/Applications/VMware Fusion.app",
+						"headless=true",
+						"http_port_min=8000",
+						"http_port_max=9000",
+						"output_directory=out/dir",
+						"shutdown_timeout=5m",
+						"skip_compaction=false",
+						"source_path=source.vmx",
+						"vm_name=packer-BUILDNAME",
 						"vnc_port_min=5900",
 						"vnc_port_max=6000",
 					},
@@ -2560,7 +2598,6 @@ func TestCreateVMWareISO(t *testing.T) {
 	}
 }
 
-/*
 func TestCreateVMWareVMX(t *testing.T) {
 	expected := map[string]interface{}{
 		"boot_command": []string{
@@ -2573,23 +2610,18 @@ func TestCreateVMWareVMX(t *testing.T) {
 		"floppy_files": []string{
 			"disk1",
 		},
-		"fusion_app_path":      "/Applications/VMware Fusion.app",
-		"headless":             true,
-		"http_directory":       "http",
-		"http_port_max":        9000,
-		"http_port_min":        8000,
-		"output_directory":     "out/dir",
-		"shutdown_command":     "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
-		"shutdown_timeout":     "5m",
-		"skip_compaction":      false,
-		"source_path":          "vmware-vmx/source.vmx",
-		"ssh_key_path":         "key/path",
-		"ssh_password":         "vagrant",
-		"ssh_port":             22,
-		"ssh_skip_request_pty": false,
-		"ssh_username":         "vagrant",
-		"ssh_timeout":          "30m",
-		"type":                 "vmware-vmx",
+		"fusion_app_path":  "/Applications/VMware Fusion.app",
+		"headless":         true,
+		"http_directory":   "http",
+		"http_port_max":    9000,
+		"http_port_min":    8000,
+		"output_directory": "out/dir",
+		"shutdown_command": "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
+		"shutdown_timeout": "5m",
+		"skip_compaction":  false,
+		"source_path":      "vmware-vmx/source.vmx",
+		"ssh_username":     "vagrant",
+		"type":             "vmware-vmx",
 		"vmx_data": map[string]string{
 			"cpuid.coresPerSocket": "1",
 			"memsize":              "1024",
@@ -2611,6 +2643,83 @@ func TestCreateVMWareVMX(t *testing.T) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
 		}
 	}
+
+	expectedSSH := map[string]interface{}{
+		"boot_wait":                    "5s",
+		"communicator":                 "ssh",
+		"fusion_app_path":              "/Applications/VMware Fusion.app",
+		"headless":                     true,
+		"http_directory":               "http",
+		"http_port_max":                9000,
+		"http_port_min":                8000,
+		"output_directory":             "out/dir",
+		"shutdown_command":             "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
+		"shutdown_timeout":             "5m",
+		"skip_compaction":              false,
+		"source_path":                  "source.vmx",
+		"ssh_bastion_host":             "bastion.host",
+		"ssh_bastion_port":             2222,
+		"ssh_bastion_username":         "packer",
+		"ssh_bastion_password":         "packer",
+		"ssh_bastion_private_key_file": "secret",
+		"ssh_disable_agent":            true,
+		"ssh_handshake_attempts":       10,
+		"ssh_host":                     "127.0.0.1",
+		"ssh_password":                 "vagrant",
+		"ssh_port":                     22,
+		"ssh_private_key_file":         "key/path",
+		"ssh_pty":                      true,
+		"ssh_username":                 "vagrant",
+		"ssh_timeout":                  "10m",
+		"type":                         "vmware-vmx",
+		"vm_name":                      "packer-BUILDNAME",
+		"vnc_port_max":                 6000,
+		"vnc_port_min":                 5900,
+	}
+
+	settings, err = testAllBuildersSSH.createVMWareVMX("vmware-vmx")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expectedSSH) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedSSH), MarshalJSONToString.Get(settings))
+		}
+	}
+	// WinRM
+	expectedWinRM := map[string]interface{}{
+		"boot_wait":        "5s",
+		"communicator":     "winrm",
+		"fusion_app_path":  "/Applications/VMware Fusion.app",
+		"headless":         true,
+		"http_directory":   "http",
+		"http_port_max":    9000,
+		"http_port_min":    8000,
+		"output_directory": "out/dir",
+		"shutdown_command": "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
+		"shutdown_timeout": "5m",
+		"skip_compaction":  false,
+		"source_path":      "source.vmx",
+		"type":             "vmware-vmx",
+		"vm_name":          "packer-BUILDNAME",
+		"vnc_port_max":     6000,
+		"vnc_port_min":     5900,
+		"winrm_host":       "host",
+		"winrm_password":   "vagrant",
+		"winrm_port":       22,
+		"winrm_timeout":    "10m",
+		"winrm_username":   "vagrant",
+		"winrm_use_ssl":    true,
+		"winrm_insecure":   true,
+	}
+
+	settings, err = testAllBuildersWinRM.createVMWareVMX("vmware-vmx")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expectedWinRM) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(settings))
+		}
+	}
 }
 
 func TestDeepCopyMapStringBuilder(t *testing.T) {
@@ -2619,4 +2728,3 @@ func TestDeepCopyMapStringBuilder(t *testing.T) {
 		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testDistroDefaults.Templates[Ubuntu].Builders["common"]), MarshalJSONToString.Get(cpy["common"]))
 	}
 }
-*/

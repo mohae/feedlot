@@ -1976,6 +1976,9 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 // builder is stopped.  For more information, refer to
 // https://packer.io/docs/builders/vmware-vmx.html
 //
+// In addition to the following options, Packer communicators are supported.
+// Check the communicator docs for valid options.
+//
 // Required configuration options:
 //   source_name              string
 //   ssh_username             string
@@ -1992,11 +1995,6 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 //   shutdown_command         string
 //   shutdown_timeout         string
 //   skip_compaction          bool
-//   ssh_key_path             string
-//   ssh_password             string
-//   ssh_port                 int
-//   ssh_skip_request_pty     bool
-//   ssh_timeout         string
 //   vm_name                  string
 //   vmx_data                 object of key/value strings
 //   vmx_data_post            object of key/value strings
@@ -2021,7 +2019,20 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 	} else {
 		workSlice = r.Builders[ID].Settings
 	}
-	var hasSourcePath, hasSSHUsername, bootCmdProcessed bool
+	var hasSourcePath, hasUsername, bootCmdProcessed, hasCommunicator bool
+	// check for communicator first
+	prefix, err := r.processCommunicator(ID, workSlice, settings)
+	if err != nil {
+		return nil, err
+	}
+	// see if the required settings include username/password
+	if prefix != "" {
+		_, ok = settings[prefix+"_username"]
+		if ok {
+			hasUsername = true
+		}
+		hasCommunicator = true
+	}
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
 	for _, s := range workSlice {
@@ -2045,6 +2056,32 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 				settings[k] = commands
 				bootCmdProcessed = true
 			}
+		case "boot_wait":
+			settings[k] = v
+		case "fusion_app_path":
+			settings[k] = v
+		case "headless":
+			settings[k], _ = strconv.ParseBool(v)
+		case "http_directory":
+			settings[k] = v
+		case "http_port_max":
+			// only add if its an int
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			settings[k] = i
+		case "http_port_min":
+			// only add if its an int
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			settings[k] = i
+		case "output_directory":
+			settings[k] = v
+		case "shutdown_timeout":
+			settings[k] = v
 		case "shutdown_command":
 			//If it ends in .command, replace it with the command from the filepath
 			if strings.HasSuffix(v, ".command") {
@@ -2061,6 +2098,8 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 			} else {
 				settings[k] = v // the value is the command
 			}
+		case "skip_compaction":
+			settings[k], _ = strconv.ParseBool(v)
 		case "source_path":
 			src, err := r.findComponentSource(VMWareVMX.String(), v, true)
 			if err != nil {
@@ -2076,16 +2115,21 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 			settings[k] = r.buildTemplateResourcePath(VMWareVMX.String(), v)
 			hasSourcePath = true
 		case "ssh_username":
+			if hasCommunicator {
+				continue
+			}
 			settings[k] = v
-			hasSSHUsername = true
-		case "boot_wait", "fusion_app_path", "http_directory", "output_directory", "shutdown_timeout",
-			"ssh_key_path", "ssh_password", "ssh_timeout", "vm_name":
+			hasUsername = true
+		case "vm_name":
 			settings[k] = v
-		case "headless", "skip_compaction", "ssh_skip_request_pty":
-			settings[k], _ = strconv.ParseBool(v)
-		// For the fields of int value, only set if it converts to a valid int.
-		// Otherwise, throw an error
-		case "http_port_max", "http_port_min", "ssh_port", "vnc_port_max", "vnc_port_min":
+		case "vnc_port_max":
+			// only add if its an int
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			settings[k] = i
+		case "vnc_port_min":
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
@@ -2095,7 +2139,7 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 		}
 	}
 	// Check if required fields were processed
-	if !hasSSHUsername {
+	if !hasUsername {
 		return nil, &RequiredSettingError{ID, "ssh_username"}
 	}
 	if !hasSourcePath {
@@ -2116,7 +2160,9 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 			settings[name] = val
 		case "floppy_files":
 			settings[name] = val
-		case "vmx_data", "vmx_data_post":
+		case "vmx_data":
+			settings[name] = r.createVMXData(val)
+		case "vmx_data_post":
 			settings[name] = r.createVMXData(val)
 		}
 	}
