@@ -1345,11 +1345,11 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 	}
 	// TODO: modify to select the proper virtualbox value based on distro and arch
 	/*
-	// set the guest_os_type
-	if tmpGuestOSType == "" {
-		tmpGuestOSType = r.osType
-	}
-	settings["guest_os_type"] = tmpGuestOSType
+		// set the guest_os_type
+		if tmpGuestOSType == "" {
+			tmpGuestOSType = r.osType
+		}
+		settings["guest_os_type"] = tmpGuestOSType
 	*/
 	// If the iso info wasn't set from the Settings, get it from the distro's release
 	if !hasISOURL {
@@ -1742,7 +1742,7 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 	}
 	// Go through each element in the slice, only take the ones that matter
 	for _, s := range workSlice {
-	// to this builder.
+		// to this builder.
 		// var tmp interface{}
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
