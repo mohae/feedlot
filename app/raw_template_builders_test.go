@@ -573,13 +573,9 @@ var testAllBuilders = rawTemplate{
 			},
 			"null": {
 				templateSection{
-					Type: "null",
-					Settings: []string{
-						"host=nullhost.com",
-						"port=22",
-						"ssh_private_key_file=myKey",
-					},
-					Arrays: map[string]interface{}{},
+					Type:     "null",
+					Settings: []string{},
+					Arrays:   map[string]interface{}{},
 				},
 			},
 			"virtualbox-iso": {
@@ -877,6 +873,15 @@ var testAllBuildersSSH = rawTemplate{
 					Arrays: map[string]interface{}{},
 				},
 			},
+			"null": {
+				templateSection{
+					Type: "null",
+					Settings: []string{
+						"communicator=ssh",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
 			"virtualbox-iso": {
 				templateSection{
 					Type: "virtualbox-iso",
@@ -1050,6 +1055,15 @@ var testAllBuildersWinRM = rawTemplate{
 						"winrm_timeout=10m",
 						"winrm_use_ssl=true",
 						"winrm_insecure=true",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
+			"null": {
+				templateSection{
+					Type: "null",
+					Settings: []string{
+						"communicator=winrm",
 					},
 					Arrays: map[string]interface{}{},
 				},
@@ -2056,26 +2070,67 @@ func TestCreateGoogleCompute(t *testing.T) {
 		}
 	}
 }
-
+*/
 func TestBuilderNull(t *testing.T) {
-	expected := map[string]interface{}{
-		"host":                 "nullhost.com",
-		"port":                 22,
-		"ssh_password":         "vagrant",
-		"ssh_private_key_file": "myKey",
-		"ssh_username":         "vagrant",
-		"type":                 "null",
+	// a communicator of none or no communicator setting should result in an error
+	expected := "null: null builder requires a communicator other than \"none\""
+	_, err := testAllBuilders.createNull("null")
+	if err == nil {
+		t.Errorf("expected an error, got none")
+	} else {
+		if err.Error() != expected {
+			t.Errorf("got %q, want %q", err, expected)
+		}
 	}
-	bldr, err := testAllBuilders.createNull("null")
+	// ssh
+	expectedSSH := map[string]interface{}{
+		"communicator":                 "ssh",
+		"ssh_bastion_host":             "bastion.host",
+		"ssh_bastion_port":             2222,
+		"ssh_bastion_username":         "packer",
+		"ssh_bastion_password":         "packer",
+		"ssh_bastion_private_key_file": "secret",
+		"ssh_disable_agent":            true,
+		"ssh_handshake_attempts":       10,
+		"ssh_host":                     "127.0.0.1",
+		"ssh_password":                 "vagrant",
+		"ssh_port":                     22,
+		"ssh_private_key_file":         "key/path",
+		"ssh_pty":                      true,
+		"ssh_username":                 "vagrant",
+		"ssh_timeout":                  "10m",
+		"type":                         "null",
+	}
+	bldr, err := testAllBuildersSSH.createNull("null")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(bldr))
+		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedSSH) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedSSH), MarshalJSONToString.Get(bldr))
 		}
 	}
+	// winrm
+	expectedWinRM := map[string]interface{}{
+		"communicator":    "winrm",
+		"winrm_host":     "host",
+		"winrm_password": "vagrant",
+		"winrm_port":     22,
+		"winrm_timeout":  "10m",
+		"winrm_username": "vagrant",
+		"winrm_use_ssl":  true,
+		"winrm_insecure": true,
+		"type":           "null",
+	}
+	bldr, err = testAllBuildersWinRM.createNull("null")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedWinRM) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(bldr))
+		}
+	}
+
 }
-*/
 func TestCreateVirtualboxISO(t *testing.T) {
 	expected := map[string]interface{}{
 		"boot_command": []string{

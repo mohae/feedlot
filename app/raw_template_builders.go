@@ -1027,13 +1027,11 @@ func (r *rawTemplate) createGoogleCompute(ID string) (settings map[string]interf
 // is stopped.  For more information, refer to
 // https://packer.io/docs/builders/null.html
 //
-// Required configuration options:
-//   host string
-//   ssh_password         string
-//   ssh_privateKey_file  string
-//   ssh_username         string
-// Optional configuration options:
-//   port                 int
+// Configuration options:
+//   Only settings provided by communicators are supported.  See communicator
+//   documentation.
+//
+//   communicator == none is considered invalid.
 func (r *rawTemplate) createNull(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
@@ -1053,22 +1051,13 @@ func (r *rawTemplate) createNull(ID string) (settings map[string]interface{}, er
 	} else {
 		workSlice = r.Builders[Null.String()].Settings
 	}
-	// Go through each element in the slice, only take the ones that matter
-	// to this builder.
-	for _, s := range workSlice {
-		k, v := parseVar(s)
-		v = r.replaceVariables(v)
-		switch k {
-		case "host", "ssh_password", "ssh_private_key_file", "ssh_username":
-			settings[k] = v
-		case "port":
-			// only add if its an int
-			i, err := strconv.Atoi(v)
-			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
-			}
-			settings[k] = i
-		}
+	prefix, err := r.processCommunicator(ID, workSlice, settings)
+	if err != nil {
+		return nil, err
+	}
+	if prefix == "" {
+		// communicator == none; there must be a communicator
+		return nil, fmt.Errorf("%s: %s builder requires a communicator other than \"none\"", ID, Null.String())
 	}
 	return settings, nil
 }
