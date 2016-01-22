@@ -550,14 +550,18 @@ var testAllBuilders = rawTemplate{
 					Type: "googlecompute",
 					Settings: []string{
 						"account_file=account.json",
+						"address=ext-static",
+						"disk_size=20",
 						"image_name=packer-{{timestamp}}",
 						"image_description=test image",
 						"instance_name=packer-{{uuid}}",
 						"machine_type=nl-standard-1",
 						"network=default",
+						"preemtible=true",
 						"project_id=projectID",
 						"source_image=centos-6",
 						"state_timeout=5m",
+						"use_internal_ip=true",
 						"zone=us-central1-a",
 					},
 					Arrays: map[string]interface{}{
@@ -873,6 +877,29 @@ var testAllBuildersSSH = rawTemplate{
 					Arrays: map[string]interface{}{},
 				},
 			},
+			"googlecompute": {
+				templateSection{
+					Type: "googlecompute",
+					Settings: []string{
+						"account_file=account.json",
+						"address=ext-static",
+						"communicator=ssh",
+						"disk_size=20",
+						"image_name=packer-{{timestamp}}",
+						"image_description=test image",
+						"instance_name=packer-{{uuid}}",
+						"machine_type=nl-standard-1",
+						"network=default",
+						"preemtible=true",
+						"project_id=projectID",
+						"source_image=centos-6",
+						"state_timeout=5m",
+						"use_internal_ip=true",
+						"zone=us-central1-a",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
 			"null": {
 				templateSection{
 					Type: "null",
@@ -1055,6 +1082,29 @@ var testAllBuildersWinRM = rawTemplate{
 						"winrm_timeout=10m",
 						"winrm_use_ssl=true",
 						"winrm_insecure=true",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
+			"googlecompute": {
+				templateSection{
+					Type: "googlecompute",
+					Settings: []string{
+						"account_file=account.json",
+						"address=ext-static",
+						"communicator=winrm",
+						"disk_size=20",
+						"image_name=packer-{{timestamp}}",
+						"image_description=test image",
+						"instance_name=packer-{{uuid}}",
+						"machine_type=nl-standard-1",
+						"network=default",
+						"preemtible=true",
+						"project_id=projectID",
+						"source_image=centos-6",
+						"state_timeout=5m",
+						"use_internal_ip=true",
+						"zone=us-central1-a",
 					},
 					Arrays: map[string]interface{}{},
 				},
@@ -2034,11 +2084,12 @@ func TestCreateDocker(t *testing.T) {
 		}
 	}
 }
-
+*/
 func TestCreateGoogleCompute(t *testing.T) {
 	expected := map[string]interface{}{
 		"account_file":      "googlecompute/account.json",
-		"disk_size":         20000,
+		"address":           "ext-static",
+		"disk_size":         20,
 		"image_name":        "packer-{{timestamp}}",
 		"image_description": "test image",
 		"instance_name":     "packer-{{uuid}}",
@@ -2048,16 +2099,15 @@ func TestCreateGoogleCompute(t *testing.T) {
 			"key-2": "value-2",
 		},
 		"network":       "default",
+		"preemtible":  true,
 		"project_id":    "projectID",
 		"source_image":  "centos-6",
-		"ssh_port":      22,
-		"ssh_timeout":   "30m",
-		"ssh_username":  "vagrant",
 		"state_timeout": "5m",
 		"tags": []string{
 			"tag1",
 		},
 		"type": "googlecompute",
+		"use_internal_ip": true,
 		"zone": "us-central1-a",
 	}
 
@@ -2069,8 +2119,99 @@ func TestCreateGoogleCompute(t *testing.T) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(bldr))
 		}
 	}
+	// ssh
+	expectedSSH := map[string]interface{}{
+		"account_file":      "googlecompute/account.json",
+		"address":           "ext-static",
+		"communicator":    "ssh",
+		"disk_size":         20,
+		"image_name":        "packer-{{timestamp}}",
+		"image_description": "test image",
+		"instance_name":     "packer-{{uuid}}",
+		"machine_type":      "nl-standard-1",
+		"metadata": map[string]string{
+			"key-1": "value-1",
+			"key-2": "value-2",
+		},
+		"network":       "default",
+		"preemtible":  true,
+		"project_id":    "projectID",
+		"source_image":  "centos-6",
+		"ssh_bastion_host":             "bastion.host",
+		"ssh_bastion_port":             2222,
+		"ssh_bastion_username":         "packer",
+		"ssh_bastion_password":         "packer",
+		"ssh_bastion_private_key_file": "secret",
+		"ssh_disable_agent":            true,
+		"ssh_handshake_attempts":       10,
+		"ssh_host":                     "127.0.0.1",
+		"ssh_password":                 "vagrant",
+		"ssh_port":                     22,
+		"ssh_private_key_file":         "key/path",
+		"ssh_pty":                      true,
+		"ssh_username":                 "vagrant",
+		"ssh_timeout":                  "10m",
+		"state_timeout": "5m",
+		"tags": []string{
+			"tag1",
+		},
+		"type": "googlecompute",
+		"use_internal_ip": true,
+		"zone": "us-central1-a",
+	}
+
+	bldr, err = testAllBuildersSSH.createGoogleCompute("googlecompute")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedSSH) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedSSH), MarshalJSONToString.Get(bldr))
+		}
+	}
+
+	expectedWinRM := map[string]interface{}{
+		"account_file":      "googlecompute/account.json",
+		"address":           "ext-static",
+		"communicator":    "winrm",
+		"disk_size":         20,
+		"image_name":        "packer-{{timestamp}}",
+		"image_description": "test image",
+		"instance_name":     "packer-{{uuid}}",
+		"machine_type":      "nl-standard-1",
+		"metadata": map[string]string{
+			"key-1": "value-1",
+			"key-2": "value-2",
+		},
+		"network":       "default",
+		"preemtible":  true,
+		"project_id":    "projectID",
+		"source_image":  "centos-6",
+		"state_timeout": "5m",
+		"tags": []string{
+			"tag1",
+		},
+		"type": "googlecompute",
+		"use_internal_ip": true,
+		"winrm_host":     "host",
+		"winrm_password": "vagrant",
+		"winrm_port":     22,
+		"winrm_timeout":  "10m",
+		"winrm_username": "vagrant",
+		"winrm_use_ssl":  true,
+		"winrm_insecure": true,
+		"zone": "us-central1-a",
+	}
+
+	bldr, err = testAllBuilders.createGoogleCompute("googlecompute")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedWinRM) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(bldr))
+		}
+	}
 }
-*/
+
 func TestBuilderNull(t *testing.T) {
 	// a communicator of none or no communicator setting should result in an error
 	expected := "null: null builder requires a communicator other than \"none\""

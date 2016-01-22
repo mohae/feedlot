@@ -919,12 +919,16 @@ func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 // processing of the builder is stopped.  For more information, refer to
 // https://packer.io/docs/builders/googlecompute.html
 //
+// In addition to the following options, Packer communicators are supported.
+// Check the communicator docs for valid options.
+//
 // Required configuration options:
 //   project_id         string
 //   source_image       string
 //   zone               string
 // Optional configuration options:
 //   account_file       string
+//   address            string
 //   disk_size          int
 //   image_name         string
 //   image_description  string
@@ -932,11 +936,10 @@ func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 //   machine_type       string
 //   metadata           object of key/value strings
 //   network            string
-//   ssh_port           int
-//   ssh_timeout        string
-//   ssh_username       string
+//   preemtipble        bool
 //   state_timeout      string
 //   tags               array of strings
+//   use_internal_ip    bool
 func (r *rawTemplate) createGoogleCompute(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
@@ -956,25 +959,18 @@ func (r *rawTemplate) createGoogleCompute(ID string) (settings map[string]interf
 	} else {
 		workSlice = r.Builders[ID].Settings
 	}
+	var hasProjectID, hasSourceImage, hasZone bool
+	// process communicator stuff first
+	_, err = r.processCommunicator(ID, workSlice, settings)
+	if err != nil {
+		return nil, err
+	}
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
-	var hasProjectID, hasSourceImage, hasZone bool
 	for _, s := range workSlice {
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
-		case "project_id":
-			settings[k] = v
-			hasProjectID = true
-		case "source_image":
-			settings[k] = v
-			hasSourceImage = true
-		case "zone":
-			settings[k] = v
-			hasZone = true
-		case "image_name", "image_description", "instance_name",
-			"machine_type", "network", "ssh_timeout", "ssh_username", "state_timeout":
-			settings[k] = v
 		case "account_file":
 			src, err := r.findComponentSource(GoogleCompute.String(), v, false)
 			if err != nil {
@@ -988,12 +984,39 @@ func (r *rawTemplate) createGoogleCompute(ID string) (settings map[string]interf
 				r.files[r.buildOutPath(GoogleCompute.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(GoogleCompute.String(), v)
-		case "disk_size", "ssh_port":
+		case "address":
+			settings[k] = v
+		case "disk_size":
 			i, err := strconv.Atoi(v)
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
 			settings[k] = i
+		case "image_name":
+			settings[k] = v
+		case "image_description":
+			settings[k] = v
+		case "instance_name":
+			settings[k] = v
+		case "machine_type":
+			settings[k] = v
+		case "network":
+			settings[k] = v
+		case "preemtible":
+			settings[k], _ = strconv.ParseBool(v)
+		case "project_id":
+			settings[k] = v
+			hasProjectID = true
+		case "source_image":
+			settings[k] = v
+			hasSourceImage = true
+		case "state_timeout":
+			settings[k] = v
+		case "use_internal_ip":
+			settings[k], _ = strconv.ParseBool(v)
+		case "zone":
+			settings[k] = v
+			hasZone = true
 		}
 	}
 	if !hasProjectID {
