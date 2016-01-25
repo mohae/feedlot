@@ -1569,6 +1569,8 @@ var vbB = builder{
 func init() {
 	b := true
 	testAllBuilders.IncludeComponentString = &b
+	testAllBuildersSSH.IncludeComponentString = &b
+	testAllBuildersWinRM.IncludeComponentString = &b
 }
 
 /*
@@ -2099,16 +2101,16 @@ func TestCreateGoogleCompute(t *testing.T) {
 			"key-2": "value-2",
 		},
 		"network":       "default",
-		"preemtible":  true,
+		"preemtible":    true,
 		"project_id":    "projectID",
 		"source_image":  "centos-6",
 		"state_timeout": "5m",
 		"tags": []string{
 			"tag1",
 		},
-		"type": "googlecompute",
+		"type":            "googlecompute",
 		"use_internal_ip": true,
-		"zone": "us-central1-a",
+		"zone":            "us-central1-a",
 	}
 
 	bldr, err := testAllBuilders.createGoogleCompute("googlecompute")
@@ -2121,22 +2123,18 @@ func TestCreateGoogleCompute(t *testing.T) {
 	}
 	// ssh
 	expectedSSH := map[string]interface{}{
-		"account_file":      "googlecompute/account.json",
-		"address":           "ext-static",
-		"communicator":    "ssh",
-		"disk_size":         20,
-		"image_name":        "packer-{{timestamp}}",
-		"image_description": "test image",
-		"instance_name":     "packer-{{uuid}}",
-		"machine_type":      "nl-standard-1",
-		"metadata": map[string]string{
-			"key-1": "value-1",
-			"key-2": "value-2",
-		},
-		"network":       "default",
-		"preemtible":  true,
-		"project_id":    "projectID",
-		"source_image":  "centos-6",
+		"account_file":                 "googlecompute/account.json",
+		"address":                      "ext-static",
+		"communicator":                 "ssh",
+		"disk_size":                    20,
+		"image_name":                   "packer-{{timestamp}}",
+		"image_description":            "test image",
+		"instance_name":                "packer-{{uuid}}",
+		"machine_type":                 "nl-standard-1",
+		"network":                      "default",
+		"preemtible":                   true,
+		"project_id":                   "projectID",
+		"source_image":                 "centos-6",
 		"ssh_bastion_host":             "bastion.host",
 		"ssh_bastion_port":             2222,
 		"ssh_bastion_username":         "packer",
@@ -2151,13 +2149,10 @@ func TestCreateGoogleCompute(t *testing.T) {
 		"ssh_pty":                      true,
 		"ssh_username":                 "vagrant",
 		"ssh_timeout":                  "10m",
-		"state_timeout": "5m",
-		"tags": []string{
-			"tag1",
-		},
-		"type": "googlecompute",
-		"use_internal_ip": true,
-		"zone": "us-central1-a",
+		"state_timeout":                "5m",
+		"type":                         "googlecompute",
+		"use_internal_ip":              true,
+		"zone":                         "us-central1-a",
 	}
 
 	bldr, err = testAllBuildersSSH.createGoogleCompute("googlecompute")
@@ -2172,37 +2167,30 @@ func TestCreateGoogleCompute(t *testing.T) {
 	expectedWinRM := map[string]interface{}{
 		"account_file":      "googlecompute/account.json",
 		"address":           "ext-static",
-		"communicator":    "winrm",
+		"communicator":      "winrm",
 		"disk_size":         20,
 		"image_name":        "packer-{{timestamp}}",
 		"image_description": "test image",
 		"instance_name":     "packer-{{uuid}}",
 		"machine_type":      "nl-standard-1",
-		"metadata": map[string]string{
-			"key-1": "value-1",
-			"key-2": "value-2",
-		},
-		"network":       "default",
-		"preemtible":  true,
-		"project_id":    "projectID",
-		"source_image":  "centos-6",
-		"state_timeout": "5m",
-		"tags": []string{
-			"tag1",
-		},
-		"type": "googlecompute",
-		"use_internal_ip": true,
-		"winrm_host":     "host",
-		"winrm_password": "vagrant",
-		"winrm_port":     22,
-		"winrm_timeout":  "10m",
-		"winrm_username": "vagrant",
-		"winrm_use_ssl":  true,
-		"winrm_insecure": true,
-		"zone": "us-central1-a",
+		"network":           "default",
+		"preemtible":        true,
+		"project_id":        "projectID",
+		"source_image":      "centos-6",
+		"state_timeout":     "5m",
+		"type":              "googlecompute",
+		"use_internal_ip":   true,
+		"winrm_host":        "host",
+		"winrm_password":    "vagrant",
+		"winrm_port":        22,
+		"winrm_timeout":     "10m",
+		"winrm_username":    "vagrant",
+		"winrm_use_ssl":     true,
+		"winrm_insecure":    true,
+		"zone":              "us-central1-a",
 	}
 
-	bldr, err = testAllBuilders.createGoogleCompute("googlecompute")
+	bldr, err = testAllBuildersWinRM.createGoogleCompute("googlecompute")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
@@ -2252,7 +2240,7 @@ func TestBuilderNull(t *testing.T) {
 	}
 	// winrm
 	expectedWinRM := map[string]interface{}{
-		"communicator":    "winrm",
+		"communicator":   "winrm",
 		"winrm_host":     "host",
 		"winrm_password": "vagrant",
 		"winrm_port":     22,
@@ -2534,7 +2522,7 @@ func TestCreateVirtualboxOVF(t *testing.T) {
 		"output_directory":             "out/dir",
 		"shutdown_command":             "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
 		"shutdown_timeout":             "5m",
-		"source_path":                  "source.ova",
+		"source_path":                  "virtualbox-ovf/source.ova",
 		"ssh_bastion_host":             "bastion.host",
 		"ssh_bastion_port":             2222,
 		"ssh_bastion_username":         "packer",
@@ -2583,7 +2571,7 @@ func TestCreateVirtualboxOVF(t *testing.T) {
 		"output_directory":        "out/dir",
 		"shutdown_command":        "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
 		"shutdown_timeout":        "5m",
-		"source_path":             "source.ova",
+		"source_path":             "virtualbox-ovf/source.ova",
 		"type":                    "virtualbox-ovf",
 		"winrm_host":              "host",
 		"winrm_password":          "vagrant",
@@ -2852,7 +2840,7 @@ func TestCreateVMWareVMX(t *testing.T) {
 		"shutdown_command":             "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
 		"shutdown_timeout":             "5m",
 		"skip_compaction":              false,
-		"source_path":                  "source.vmx",
+		"source_path":                  "vmware-vmx/source.vmx",
 		"ssh_bastion_host":             "bastion.host",
 		"ssh_bastion_port":             2222,
 		"ssh_bastion_username":         "packer",
@@ -2894,7 +2882,7 @@ func TestCreateVMWareVMX(t *testing.T) {
 		"shutdown_command": "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
 		"shutdown_timeout": "5m",
 		"skip_compaction":  false,
-		"source_path":      "source.vmx",
+		"source_path":      "vmware-vmx/source.vmx",
 		"type":             "vmware-vmx",
 		"vm_name":          "packer-BUILDNAME",
 		"vnc_port_max":     6000,
