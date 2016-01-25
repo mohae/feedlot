@@ -521,6 +521,7 @@ var testAllBuilders = rawTemplate{
 					Type: "docker",
 					Settings: []string{
 						"commit=true",
+						"discard=false",
 						"export_path=export/path",
 						"image=baseImage",
 						"login=true",
@@ -894,6 +895,25 @@ var testAllBuildersSSH = rawTemplate{
 					},
 				},
 			},
+			"docker": {
+				templateSection{
+					Type: "docker",
+					Settings: []string{
+						"commit=true",
+						"communicator=ssh",
+						"discard=false",
+						"export_path=export/path",
+						"image=baseImage",
+						"login=true",
+						"login_email=test@test.com",
+						"login_username=username",
+						"login_password=password",
+						"login_server=127.0.0.1",
+						"pull=true",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
 			"googlecompute": {
 				templateSection{
 					Type: "googlecompute",
@@ -1120,6 +1140,25 @@ var testAllBuildersWinRM = rawTemplate{
 					},
 				},
 			},
+			"docker": {
+				templateSection{
+					Type: "docker",
+					Settings: []string{
+						"commit=true",
+						"communicator=winrm",
+						"discard=false",
+						"export_path=export/path",
+						"image=baseImage",
+						"login=true",
+						"login_email=test@test.com",
+						"login_username=username",
+						"login_password=password",
+						"login_server=127.0.0.1",
+						"pull=true",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
 			"googlecompute": {
 				templateSection{
 					Type: "googlecompute",
@@ -1302,6 +1341,7 @@ var testDockerRunComandFile = rawTemplate{
 				templateSection{
 					Settings: []string{
 						"commit=true",
+						"discard=false",
 						"export_path=export/path",
 						"image=baseImage",
 						"login=true",
@@ -1351,6 +1391,7 @@ var testDockerRunComand = rawTemplate{
 				templateSection{
 					Settings: []string{
 						"commit=true",
+						"discard=false",
 						"export_path=export/path",
 						"image=baseImage",
 						"login=true",
@@ -1967,10 +2008,10 @@ func TestCreateDigitalOcean(t *testing.T) {
 	}
 }
 
-/*
 func TestCreateDocker(t *testing.T) {
 	expected := map[string]interface{}{
 		"commit":         true,
+		"discard":        false,
 		"export_path":    "export/path",
 		"image":          "baseImage",
 		"login":          true,
@@ -1994,6 +2035,7 @@ func TestCreateDocker(t *testing.T) {
 	}
 	expectedCommand := map[string]interface{}{
 		"commit":         true,
+		"discard":        false,
 		"export_path":    "export/path",
 		"image":          "baseImage",
 		"login":          true,
@@ -2013,6 +2055,7 @@ func TestCreateDocker(t *testing.T) {
 	}
 	expectedCommandFile := map[string]interface{}{
 		"commit":         true,
+		"discard":        false,
 		"export_path":    "export/path",
 		"image":          "baseImage",
 		"login":          true,
@@ -2055,8 +2098,73 @@ func TestCreateDocker(t *testing.T) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedCommand), MarshalJSONToString.Get(bldr))
 		}
 	}
+	expectedSSH := map[string]interface{}{
+		"commit":                       true,
+		"communicator":                 "ssh",
+		"discard":                      false,
+		"export_path":                  "export/path",
+		"image":                        "baseImage",
+		"login":                        true,
+		"login_email":                  "test@test.com",
+		"login_username":               "username",
+		"login_password":               "password",
+		"login_server":                 "127.0.0.1",
+		"pull":                         true,
+		"ssh_bastion_host":             "bastion.host",
+		"ssh_bastion_port":             2222,
+		"ssh_bastion_username":         "packer",
+		"ssh_bastion_password":         "packer",
+		"ssh_bastion_private_key_file": "secret",
+		"ssh_disable_agent":            true,
+		"ssh_handshake_attempts":       10,
+		"ssh_host":                     "127.0.0.1",
+		"ssh_password":                 "vagrant",
+		"ssh_port":                     22,
+		"ssh_private_key_file":         "key/path",
+		"ssh_pty":                      true,
+		"ssh_username":                 "vagrant",
+		"ssh_timeout":                  "10m",
+		"type":                         "docker",
+	}
+	bldr, err = testAllBuildersSSH.createDocker("docker")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedSSH) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedSSH), MarshalJSONToString.Get(bldr))
+		}
+	}
+	expectedWinRM := map[string]interface{}{
+		"commit":         true,
+		"communicator":   "winrm",
+		"discard":        false,
+		"export_path":    "export/path",
+		"image":          "baseImage",
+		"login":          true,
+		"login_email":    "test@test.com",
+		"login_username": "username",
+		"login_password": "password",
+		"login_server":   "127.0.0.1",
+		"pull":           true,
+		"winrm_host":     "host",
+		"winrm_password": "vagrant",
+		"winrm_port":     22,
+		"winrm_timeout":  "10m",
+		"winrm_username": "vagrant",
+		"winrm_use_ssl":  true,
+		"winrm_insecure": true,
+		"type":           "docker",
+	}
+	bldr, err = testAllBuildersWinRM.createDocker("docker")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedWinRM) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(bldr))
+		}
+	}
 }
-*/
+
 func TestCreateGoogleCompute(t *testing.T) {
 	expected := map[string]interface{}{
 		"account_file":      "googlecompute/account.json",

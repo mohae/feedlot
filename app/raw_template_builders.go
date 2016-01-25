@@ -818,13 +818,17 @@ func (r *rawTemplate) createDigitalOcean(ID string) (settings map[string]interfa
 // builder is stopped. For more information, refer to
 // https://packer.io/docs/builders/docker.html
 //
+// In addition to the following options, Packer communicators are supported.
+// Check the communicator docs for valid options.
+//
 // Required configuration options:
-//   commit         bool
-//   export_path    string
-//   image          string
+//   commit          bool
+//   discard         bool
+//   export_path     string
+//   image           string
 // Optional configuration options:
-//   login          bool
-//   login_email    string
+//   login           bool
+//   login_email     string
 //   login_username  string
 //   login_password  string
 //   login_server    string
@@ -850,26 +854,42 @@ func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 	} else {
 		workSlice = r.Builders[ID].Settings
 	}
+	// Process the communicator settings first, if there are any.
+	_, err = r.processCommunicator(ID, workSlice, settings)
+	if err != nil {
+		return nil, err
+	}
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
-	var hasCommit, hasExportPath, hasImage, hasRunCommandArray bool
+	var hasCommit, hasDiscard, hasExportPath, hasImage, hasRunCommandArray bool
 	var runCommandFile string
 	for _, s := range workSlice {
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
+		case "commit":
+			settings[k], _ = strconv.ParseBool(v)
+			hasCommit = true
+		case "discard":
+			settings[k], _ = strconv.ParseBool(v)
+			hasDiscard = true
 		case "export_path":
 			settings[k] = v
 			hasExportPath = true
 		case "image":
 			settings[k] = v
 			hasImage = true
-		case "login_email", "login_username", "login_password", "login_server":
-			settings[k] = v
-		case "commit":
+		case "login":
 			settings[k], _ = strconv.ParseBool(v)
-			hasCommit = true
-		case "login", "pull":
+		case "login_email":
+			settings[k] = v
+		case "login_password":
+			settings[k] = v
+		case "login_username":
+			settings[k] = v
+		case "login_server":
+			settings[k] = v
+		case "pull":
 			settings[k], _ = strconv.ParseBool(v)
 		case "run_command":
 			// if it's here, cache the value, delay processing until arrays section
@@ -878,6 +898,9 @@ func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 	}
 	if !hasCommit {
 		return nil, &RequiredSettingError{ID, "commit"}
+	}
+	if !hasDiscard {
+		return nil, &RequiredSettingError{ID, "discard"}
 	}
 	if !hasExportPath {
 		return nil, &RequiredSettingError{ID, "export_path"}
