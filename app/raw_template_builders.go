@@ -728,29 +728,20 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 // processing of the builder is stopped.  For more information, refer to
 // https://packer.io/docs/builders/digitalocean.html
 //
-// NOTE: The deprecated image_id, region_id, and size_id options are not
-//       supported.
+// In addition to the following options, Packer communicators are supported.
+// Check the communicator docs for valid options.
 //
-// Required V1 api configuration options:
-//   api_key             string
-//   client_id           string
-// Required V2 api configuration options:
+// Required configuration options:
 //   api_token           string
-// Optional configuration options:
-//   api_url             string
-//   droplet_name        string
 //   image               string
-//   image_id            int
-//   private_networking  bool
 //   region              string
-//   region_id           int
 //   size                string
-//   size_id             int
+// Optional configuration options:
+//   droplet_name        string
+//   private_networking  bool
 //   snapshot_name       string
-//   ssh_port            int
-//   ssh_timeout         string
-//   ssh_username        string
 //   state_timeout       string
+//   user_date           string
 func (r *rawTemplate) createDigitalOcean(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
@@ -770,43 +761,55 @@ func (r *rawTemplate) createDigitalOcean(ID string) (settings map[string]interfa
 	} else {
 		workSlice = r.Builders[ID].Settings
 	}
+	_, err = r.processCommunicator(ID, workSlice, settings)
+	if err != nil {
+		return nil, err
+	}
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
-	// TODO look at snapshot name handling--it should be unique, e.g. timestamp
-	var hasAPIToken, hasAPIKey, hasClientID bool
+	var hasAPIToken, hasImage, hasRegion, hasSize bool
 	for _, s := range workSlice {
 		// var tmp interface{}
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
-		case "api_key":
-			settings[k] = v
-			hasAPIKey = true
 		case "api_token":
 			settings[k] = v
 			hasAPIToken = true
-		case "client_id":
+		case "droplet_name":
 			settings[k] = v
-			hasClientID = true
-		case "api_url", "droplet_name", "image", "region", "size", "snapshot_name", "ssh_timeout", "ssh_username", "state_timeout":
+		case "image":
 			settings[k] = v
+			hasImage = true
 		case "private_networking":
 			settings[k], _ = strconv.ParseBool(v)
-		case "ssh_port":
-			i, err := strconv.Atoi(v)
-			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
-			}
-			settings[k] = i
+		case "region":
+			settings[k] = v
+			hasRegion = true
+		case "size":
+			settings[k] = v
+			hasSize = true
+		case "snapshot_name":
+			settings[k] = v
+		case "state_timeout":
+			settings[k] = v
+		case "user_data":
+			settings[k] = v
 		}
 	}
-	if hasAPIToken {
-		return settings, nil
+	if !hasAPIToken {
+		return nil, &RequiredSettingError{ID, "api_token"}
 	}
-	if hasAPIKey && hasClientID {
-		return settings, nil
+	if !hasImage {
+		return nil, &RequiredSettingError{ID, "image"}
 	}
-	return nil, &RequiredSettingError{ID, "(either api_token or (api_key && client_id))"}
+	if !hasRegion {
+		return nil, &RequiredSettingError{ID, "region"}
+	}
+	if !hasSize {
+		return nil, &RequiredSettingError{ID, "size"}
+	}
+	return settings, nil
 }
 
 // createDocker creates a map of settings for Packer's docker builder. Any

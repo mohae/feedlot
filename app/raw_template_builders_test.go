@@ -505,7 +505,6 @@ var testAllBuilders = rawTemplate{
 					Type: "digitalocean",
 					Settings: []string{
 						"api_token=DIGITALOCEAN_API_TOKEN",
-						"api_url=https://api.digitalocean.com",
 						"droplet_name=ocean-drop",
 						"image=ubuntu-12-04-x64",
 						"private_networking=false",
@@ -513,6 +512,7 @@ var testAllBuilders = rawTemplate{
 						"size=512mb",
 						"snapshot_name=my-snapshot",
 						"state_timeout=6m",
+						"user_data=userdata",
 					},
 				},
 			},
@@ -877,6 +877,23 @@ var testAllBuildersSSH = rawTemplate{
 					Arrays: map[string]interface{}{},
 				},
 			},
+			"digitalocean": {
+				templateSection{
+					Type: "digitalocean",
+					Settings: []string{
+						"api_token=DIGITALOCEAN_API_TOKEN",
+						"communicator=ssh",
+						"droplet_name=ocean-drop",
+						"image=ubuntu-12-04-x64",
+						"private_networking=false",
+						"region=nyc3",
+						"size=512mb",
+						"snapshot_name=my-snapshot",
+						"state_timeout=6m",
+						"user_data=userdata",
+					},
+				},
+			},
 			"googlecompute": {
 				templateSection{
 					Type: "googlecompute",
@@ -1086,6 +1103,23 @@ var testAllBuildersWinRM = rawTemplate{
 					Arrays: map[string]interface{}{},
 				},
 			},
+			"digitalocean": {
+				templateSection{
+					Type: "digitalocean",
+					Settings: []string{
+						"api_token=DIGITALOCEAN_API_TOKEN",
+						"communicator=winrm",
+						"droplet_name=ocean-drop",
+						"image=ubuntu-12-04-x64",
+						"private_networking=false",
+						"region=nyc3",
+						"size=512mb",
+						"snapshot_name=my-snapshot",
+						"state_timeout=6m",
+						"user_data=userdata",
+					},
+				},
+			},
 			"googlecompute": {
 				templateSection{
 					Type: "googlecompute",
@@ -1238,103 +1272,6 @@ var testAllBuildersWinRM = rawTemplate{
 	},
 }
 
-var testDigtialOceanAPIV1 = rawTemplate{
-	IODirInf: IODirInf{
-		OutputDir: "../test_files/ubuntu/out/ubuntu",
-		SourceDir: "../test_files/src/ubuntu",
-	},
-	PackerInf: PackerInf{
-		MinPackerVersion: "",
-		Description:      "Test build template",
-	},
-	BuildInf: BuildInf{
-		Name:      ":type-:release-:image-:arch",
-		BuildName: "",
-		BaseURL:   "http://releases.ubuntu.com/",
-	},
-	Distro:  "ubuntu",
-	Arch:    "amd64",
-	Image:   "desktop",
-	Release: "12.04",
-	varVals: map[string]string{},
-	dirs:    map[string]string{},
-	files:   map[string]string{},
-	build: build{
-		BuilderIDs: []string{
-			"digitalocean",
-		},
-		Builders: map[string]builder{
-			"digitalocean": {
-				templateSection{
-					Type: "digitalocean",
-					Settings: []string{
-						"api_key=DIGITALOCEAN_API_KEY",
-						"client_id=DIGITALOCEAN_CLIENT_ID",
-						"api_url=https://api.digitalocean.com",
-						"image=ubuntu-12-04-x64",
-						"droplet_name=ocean-drop",
-						"private_networking=false",
-						"region=nyc3",
-						"size=512mb",
-						"snapshot_name=my-snapshot",
-						"ssh_port=22",
-						"ssh_timeout=30m",
-						"ssh_username=vagrant",
-						"state_timeout=6m",
-					},
-				},
-			},
-		},
-	},
-}
-
-var testDigtialOceanNoAPI = rawTemplate{
-	IODirInf: IODirInf{
-		OutputDir: "../test_files/ubuntu/out/ubuntu",
-		SourceDir: "../test_files/src/ubuntu",
-	},
-	PackerInf: PackerInf{
-		MinPackerVersion: "",
-		Description:      "Test build template",
-	},
-	BuildInf: BuildInf{
-		Name:      ":type-:release-:image-:arch",
-		BuildName: "",
-		BaseURL:   "http://releases.ubuntu.com/",
-	},
-	Distro:  "ubuntu",
-	Arch:    "amd64",
-	Image:   "desktop",
-	Release: "12.04",
-	varVals: map[string]string{},
-	dirs:    map[string]string{},
-	files:   map[string]string{},
-	build: build{
-		BuilderIDs: []string{
-			"digitalocean",
-		},
-		Builders: map[string]builder{
-			"digitalocean": {
-				templateSection{
-					Type: "digitalocean",
-					Settings: []string{
-						"api_url=https://api.digitalocean.com",
-						"droplet_name=ocean-drop",
-						"image=ubuntu-12-04-x64",
-						"private_networking=false",
-						"region=nyc3",
-						"size=512mb",
-						"snapshot_name=my-snapshot",
-						"ssh_port=22",
-						"ssh_timeout=30m",
-						"ssh_username=vagrant",
-						"state_timeout=6m",
-					},
-				},
-			},
-		},
-	},
-}
 var testDockerRunComandFile = rawTemplate{
 	IODirInf: IODirInf{
 		OutputDir: "../test_files/out",
@@ -1939,65 +1876,98 @@ func TestCreateAmazonInstance(t *testing.T) {
 		}
 	}
 }
+*/
 
 func TestCreateDigitalOcean(t *testing.T) {
-	expectedV1 := map[string]interface{}{
-		"api_key":            "DIGITALOCEAN_API_KEY",
-		"client_id":          "DIGITALOCEAN_CLIENT_ID",
-		"api_url":            "https://api.digitalocean.com",
-		"droplet_name":       "ocean-drop",
-		"image":              "ubuntu-12-04-x64",
-		"private_networking": false,
-		"region":             "nyc3",
-		"size":               "512mb",
-		"snapshot_name":      "my-snapshot",
-		"ssh_port":           22,
-		"ssh_timeout":        "30m",
-		"ssh_username":       "vagrant",
-		"state_timeout":      "6m",
-		"type":               "digitalocean",
-	}
-	expectedV2 := map[string]interface{}{
+	expected := map[string]interface{}{
 		"api_token":          "DIGITALOCEAN_API_TOKEN",
-		"api_url":            "https://api.digitalocean.com",
 		"droplet_name":       "ocean-drop",
 		"image":              "ubuntu-12-04-x64",
 		"private_networking": false,
 		"region":             "nyc3",
 		"size":               "512mb",
 		"snapshot_name":      "my-snapshot",
-		"ssh_port":           22,
-		"ssh_timeout":        "30m",
-		"ssh_username":       "vagrant",
 		"state_timeout":      "6m",
 		"type":               "digitalocean",
+		"user_data":          "userdata",
 	}
 	bldr, err := testAllBuilders.createDigitalOcean("digitalocean")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedV2) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedV2), MarshalJSONToString.Get(bldr))
+		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(bldr))
 		}
 	}
-	bldr, err = testDigtialOceanAPIV1.createDigitalOcean("digitalocean")
+	// SSH
+	expectedSSH := map[string]interface{}{
+		"api_token":          "DIGITALOCEAN_API_TOKEN",
+		"communicator":       "ssh",
+		"droplet_name":       "ocean-drop",
+		"image":              "ubuntu-12-04-x64",
+		"private_networking": false,
+		"region":             "nyc3",
+		"size":               "512mb",
+		"snapshot_name":      "my-snapshot",
+		"ssh_bastion_host":             "bastion.host",
+		"ssh_bastion_port":             2222,
+		"ssh_bastion_username":         "packer",
+		"ssh_bastion_password":         "packer",
+		"ssh_bastion_private_key_file": "secret",
+		"ssh_disable_agent":            true,
+		"ssh_handshake_attempts":       10,
+		"ssh_host":                     "127.0.0.1",
+		"ssh_password":                 "vagrant",
+		"ssh_port":                     22,
+		"ssh_private_key_file":         "key/path",
+		"ssh_pty":                      true,
+		"ssh_username":                 "vagrant",
+		"ssh_timeout":                  "10m",
+		"state_timeout":      "6m",
+		"type":               "digitalocean",
+		"user_data":          "userdata",
+	}
+	bldr, err = testAllBuildersSSH.createDigitalOcean("digitalocean")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedV1) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedV1), MarshalJSONToString.Get(bldr))
+		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedSSH) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedSSH), MarshalJSONToString.Get(bldr))
 		}
 	}
-	_, err = testDigtialOceanNoAPI.createDigitalOcean("digitalocean")
-	if err == nil {
-		t.Errorf("Expected an error, got nil")
+
+	// WinRM
+	expectedWinRM := map[string]interface{}{
+		"api_token":          "DIGITALOCEAN_API_TOKEN",
+		"communicator":       "winrm",
+		"droplet_name":       "ocean-drop",
+		"image":              "ubuntu-12-04-x64",
+		"private_networking": false,
+		"region":             "nyc3",
+		"size":               "512mb",
+		"snapshot_name":      "my-snapshot",
+		"state_timeout":      "6m",
+		"type":               "digitalocean",
+		"user_data":          "userdata",
+		"winrm_host":     "host",
+		"winrm_password": "vagrant",
+		"winrm_port":     22,
+		"winrm_timeout":  "10m",
+		"winrm_username": "vagrant",
+		"winrm_use_ssl":  true,
+		"winrm_insecure": true,
+	}
+	bldr, err = testAllBuildersWinRM.createDigitalOcean("digitalocean")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if err.Error() != "digitalocean.(either api_token or (api_key && client_id)): required setting" {
-			t.Errorf("Expected \"digitalocean.(either api_token or (api_key && client_id)): required setting\", got %q", err)
+		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedWinRM) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(bldr))
 		}
 	}
 }
 
+/*
 func TestCreateDocker(t *testing.T) {
 	expected := map[string]interface{}{
 		"commit":         true,
