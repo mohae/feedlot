@@ -1901,14 +1901,14 @@ func TestCreateDigitalOcean(t *testing.T) {
 	}
 	// SSH
 	expectedSSH := map[string]interface{}{
-		"api_token":          "DIGITALOCEAN_API_TOKEN",
-		"communicator":       "ssh",
-		"droplet_name":       "ocean-drop",
-		"image":              "ubuntu-12-04-x64",
-		"private_networking": false,
-		"region":             "nyc3",
-		"size":               "512mb",
-		"snapshot_name":      "my-snapshot",
+		"api_token":                    "DIGITALOCEAN_API_TOKEN",
+		"communicator":                 "ssh",
+		"droplet_name":                 "ocean-drop",
+		"image":                        "ubuntu-12-04-x64",
+		"private_networking":           false,
+		"region":                       "nyc3",
+		"size":                         "512mb",
+		"snapshot_name":                "my-snapshot",
 		"ssh_bastion_host":             "bastion.host",
 		"ssh_bastion_port":             2222,
 		"ssh_bastion_username":         "packer",
@@ -1923,9 +1923,9 @@ func TestCreateDigitalOcean(t *testing.T) {
 		"ssh_pty":                      true,
 		"ssh_username":                 "vagrant",
 		"ssh_timeout":                  "10m",
-		"state_timeout":      "6m",
-		"type":               "digitalocean",
-		"user_data":          "userdata",
+		"state_timeout":                "6m",
+		"type":                         "digitalocean",
+		"user_data":                    "userdata",
 	}
 	bldr, err = testAllBuildersSSH.createDigitalOcean("digitalocean")
 	if err != nil {
@@ -1949,13 +1949,13 @@ func TestCreateDigitalOcean(t *testing.T) {
 		"state_timeout":      "6m",
 		"type":               "digitalocean",
 		"user_data":          "userdata",
-		"winrm_host":     "host",
-		"winrm_password": "vagrant",
-		"winrm_port":     22,
-		"winrm_timeout":  "10m",
-		"winrm_username": "vagrant",
-		"winrm_use_ssl":  true,
-		"winrm_insecure": true,
+		"winrm_host":         "host",
+		"winrm_password":     "vagrant",
+		"winrm_port":         22,
+		"winrm_timeout":      "10m",
+		"winrm_username":     "vagrant",
+		"winrm_use_ssl":      true,
+		"winrm_insecure":     true,
 	}
 	bldr, err = testAllBuildersWinRM.createDigitalOcean("digitalocean")
 	if err != nil {
