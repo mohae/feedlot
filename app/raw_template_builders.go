@@ -7,7 +7,6 @@ import (
 
 	json "github.com/mohae/customjson"
 	"github.com/mohae/utilitybelt/deepcopy"
-	jww "github.com/spf13/jwalterweatherman"
 )
 
 // Builder constants
@@ -392,6 +391,9 @@ func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 //   vpc_id                        string
 //   windows_password_timeout      string
 func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{}, err error) {
+	return nil, nil
+}
+/*
 	_, ok := r.Builders[ID]
 	if !ok {
 		return nil, NewErrConfigNotFound(ID)
@@ -411,7 +413,7 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 		workSlice = r.Builders[ID].Settings
 	}
 	var k, v string
-	var hasAccessKey, hasAmiName, hasInstanceType, hasRegion, hasSecretKey, hasSourceAmi, hasSSHUsername bool
+	var hasAccessKey, hasAmiName, hasInstanceType, hasRegion, hasSecretKey, hasSourceAmi, hasUsername bool
 	prefix, err := r.processCommunicator(ID, workSlice, settings)
 	if err != nil {
 		return nil, err
@@ -534,12 +536,16 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 	}
 	return settings, nil
 }
+*/
 
 // createAmazonInstance creates a map of settings for Packer's amazon-instance
 // builder.  Any values that aren't supported by the amazon-ebs builder are
 // ignored.  Any required settings that don't exist result in an error and
 // processing of the builder is stopped.  For more information, refer to
 // https://packer.io/docs/builders/amazon-ebs.html
+//
+// In addition to the following options, Packer communicators are supported.
+// Check the communicator docs for valid options.
 //
 // Required configuration options:
 //   access_key                    string
@@ -555,6 +561,15 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 //   x509_key_path                 string
 // Optional configuration options:
 //   ami_block_device_mappings     array of block device mappings
+//     delete_on_termination       bool
+//     device_name                 string
+//     encrypted                   bool
+//     iops                        int
+//     no_device                   bool
+//     snapshot_id                 string
+//     virtual_name                string
+//     volume_size                 int
+//     volume_type                 string
 //   ami_description               string
 //   ami_groups                    array of strings
 //   ami_product_codes             array of strings
@@ -567,33 +582,24 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 //   bundle_prefix                 string
 //   bundle_upload_command         string
 //   bundle_vol_command            string
-//   delete_on_termination         bool
-//   device_name                   string
-//   encrypted                     bool
+//   ebs_optimized                 bool
 //   enhanced_networking           bool
 //   force_deregister              bool
 //   iam_instance_profile          string
-//   iops                          int
 //   launch_block_device_mappings  array of block device mappings
-//   no_device                     bool
 //   run_tags                      object of key/value strings
 //   security_group_id             string
 //   security_group_ids            array of strings
-//   snapshot_id                   string
 //   spot_price                    string
 //   spot_price_auto_product       string
 //   ssh_keypair_name              string
-//   shh_port                      int
-//   ssh_private_key_file          string
 //   ssh_private_ip                bool
+//   ssh_private_key_file          string
 //   subnet_id                     string
 //   tags                          object of key/value strings
 //   temporary_key_pair_name       string
 //   user_data                     string
 //   user_data_file                string
-//   virtual_name                  string
-//   volume_size                   int
-//   volume_type                   string
 //   vpc_id                        string
 //   x509_upload_path              string
 //   windows_password_timeout      string
@@ -618,7 +624,20 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 	}
 	var k, v string
 	var hasAccessKey, hasAccountID, hasAmiName, hasInstanceType, hasRegion, hasS3Bucket bool
-	var hasSecretKey, hasSourceAmi, hasSSHUsername, hasX509CertPath, hasX509KeyPath bool
+	var hasSecretKey, hasSourceAmi, hasUsername, hasX509CertPath, hasX509KeyPath, hasCommunicator bool
+	// check for communicator first
+	prefix, err := r.processCommunicator(ID, workSlice, settings)
+	if err != nil {
+		return nil, err
+	}
+	// see if the required settings include username/password
+	if prefix != "" {
+		_, ok = settings[prefix+"_username"]
+		if ok {
+			hasUsername = true
+		}
+		hasCommunicator = true
+	}
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
 	for _, s := range workSlice {
@@ -632,9 +651,49 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 		case "account_id":
 			settings[k] = v
 			hasAccountID = true
+		case "ami_description":
+			settings[k] = v
 		case "ami_name":
 			settings[k] = v
 			hasAmiName = true
+		case "ami_virtualization_type":
+			settings[k] = v
+		case "associate_public_ip_address":
+			settings[k], _ = strconv.ParseBool(v)
+		case "availability_zone":
+			settings[k] = v
+		case "bundle_destination":
+			settings[k] = v
+		case "bundle_prefix":
+			settings[k] = v
+		case "bundle_upload_command":
+			cmds, err := r.commandsFromFile(AmazonInstance.String(), v)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			if len(cmds) == 0 {
+				return nil, &SettingError{ID, k, v, ErrNoCommands}
+			}
+			// the setting is a string so don't use the full slice
+			settings[k] = cmds[0]
+		case "bundle_vol_command":
+			cmds, err := r.commandsFromFile(AmazonInstance.String(), v)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			if len(cmds) == 0 {
+				return nil, &SettingError{ID, k, v, ErrNoCommands}
+			}
+			// the setting is a string so don't use the full slice
+			settings[k] = cmds[0]
+		case "ebs_optimized":
+			settings[k], _ = strconv.ParseBool(v)
+		case "enhanced_networking":
+			settings[k], _ = strconv.ParseBool(v)
+		case "force_deregister":
+			settings[k], _ = strconv.ParseBool(v)
+		case "iam_instance_profile":
+			settings[k] = v
 		case "instance_type":
 			settings[k] = v
 			hasInstanceType = true
@@ -647,33 +706,37 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 		case "secret_key":
 			settings[k] = v
 			hasSecretKey = true
+		case "security_group_id":
+			settings[k] = v
+		case "spot_price":
+			settings[k] = v
+		case "spot_price_auto_product":
+			settings[k] = v
+		case "ssh_keypair_name":
+			settings[k] = v
+		case "ssh_private_ip":
+			settings[k], _ = strconv.ParseBool(v)
+		case "ssh_private_key_file":
+			// if a communicator was processed, skip this
+			if hasCommunicator {
+				continue
+			}
+			settings[k] = v
 		case "source_ami":
 			settings[k] = v
 			hasSourceAmi = true
 		case "ssh_username":
-			settings[k] = v
-			hasSSHUsername = true
-		case "x509_cert_path":
-			settings[k] = v
-			hasX509CertPath = true
-		case "x509_key_path":
-			settings[k] = v
-			hasX509KeyPath = true
-		case "ami_description", "ami_virtualization_type", "availability_zone",
-			"bundle_destination", "bundle_prefix", "device_name",
-			"iam_instance_profile", "security_group_id", "snapshot_id",
-			"spot_price", "spot_price_auto_product", "ssh_keypair_name",
-			"ssh_private_key_file", "subnet_id", "temporary_key_pair_name",
-			"user_data", "virtual_name", "vpc_id",
-			"x509_upload_path", "windows_password_timeout":
-			settings[k] = v
-		case "iops", "ssh_port", "volume_size":
-			// only add if its an int
-			i, err := strconv.Atoi(v)
-			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+			if hasCommunicator {
+				continue
 			}
-			settings[k] = i
+			settings[k] = v
+			hasUsername = true
+		case "subnet_id":
+			settings[k] = v
+		case "temporary_key_pair_name":
+			settings[k] = v
+		case "user_data":
+			settings[k] = v
 		case "user_data_file":
 			src, err := r.findComponentSource(AmazonInstance.String(), v, false)
 			if err != nil {
@@ -687,20 +750,19 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 				r.files[r.buildOutPath(AmazonEBS.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(AmazonInstance.String(), v)
-		case "associate_public_ip_address", "delete_on_termination", "encrypted",
-			"enhanced_networking", "force_deregister", "no_device",
-			"ssh_private_ip":
-			settings[k], _ = strconv.ParseBool(v)
-		case "bundle_upload_command", "bundle_vol_command":
-			cmds, err := r.commandsFromFile(AmazonInstance.String(), v)
-			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
-			}
-			if len(cmds) == 0 {
-				return nil, &SettingError{ID, k, v, ErrNoCommands}
-			}
-			// the setting is a string so don't use the full slice
-			settings[k] = cmds[0]
+
+		case "vpc_id":
+			settings[k] = v
+		case "windows_password_timeout":
+			settings[k] = v
+		case "x509_cert_path":
+			settings[k] = v
+			hasX509CertPath = true
+		case "x509_key_path":
+			settings[k] = v
+			hasX509KeyPath = true
+		case "x509_upload_path":
+			settings[k] = v
 		}
 	}
 	if !hasAccessKey {
@@ -727,8 +789,13 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 	if !hasSourceAmi {
 		return nil, &RequiredSettingError{ID, "source_ami"}
 	}
-	if !hasSSHUsername {
-		return nil, &RequiredSettingError{ID, "ssh_username"}
+	if !hasUsername {
+		// if prefix was empty, no communicator was used which means
+		// ssh_username is expected.
+		if prefix == "" {
+			prefix = "ssh"
+		}
+		return nil, &RequiredSettingError{ID, prefix + "_username"}
 	}
 	if !hasX509CertPath {
 		return nil, &RequiredSettingError{ID, "x509_cert_path"}
@@ -741,6 +808,12 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 		// if it's not a supported array group skip
 		switch name {
 		case "ami_block_device_mappings":
+			// do ami_block_device_mappings processing
+			settings[name], err = r.processAMIBlockDeviceMappings(val)
+			if err != nil {
+				return nil, &SettingError{ID, "ami_block_device_mappings", "", err}
+			}
+			continue
 		case "ami_groups":
 		case "ami_product_codes":
 		case "ami_regions":
@@ -758,6 +831,48 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 		}
 	}
 	return settings, nil
+}
+
+// processAMIBlockDeviceMappings handles the ami_block_device_mappings
+// array for Amazon builders.  Values that are not supported settings
+// for ami_block_device_mappings are ignored.  The returned interface{}
+// only includes the supported settings.  An error is only returned when
+// either volume_size or iops can't be converted to an int.
+func (r *rawTemplate) processAMIBlockDeviceMappings(v interface{}) (interface{}, error) {
+	settings := deepcopy.InterfaceToSliceOfStrings(v)
+	ret := map[string]interface{}{}
+	for _, setting := range settings {
+		k, v := parseVar(setting)
+		switch k {
+		case "delete_on_termination":
+			ret[k], _ = strconv.ParseBool(v)
+		case "device_name":
+			ret[k] = v
+		case "encrypted":
+			ret[k], _ = strconv.ParseBool(v)
+		case "iops":
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, fmt.Errorf("iops: %s", err)
+			}
+			ret[k] = i
+		case "no_device":
+			ret[k], _ = strconv.ParseBool(v)
+		case "snapshot_id":
+			ret[k] = v
+		case "virtual_name":
+			ret[k] = v
+		case "volume_size":
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, fmt.Errorf("iops: %s", err)
+			}
+			ret[k] = i
+		case "volume_type":
+			ret[k] = v
+		}
+	}
+	return ret, nil
 }
 
 // createDigitalOcean creates a map of settings for Packer's digitalocean

@@ -4,7 +4,7 @@ package app
 import (
 	"testing"
 
-	_ "github.com/mohae/contour"
+	"github.com/mohae/contour"
 )
 
 var testUbuntu = rawTemplate{
@@ -427,15 +427,18 @@ var testAllBuilders = rawTemplate{
 						"account_id=YOUR_ACCOUNT_ID",
 						"ami_description=AMI_DESCRIPTION",
 						"ami_name=AMI_NAME",
+						"ami_virtualization_type=paravirtual",
 						"associate_public_ip_address=false",
 						"availability_zone=us-east-1b",
 						"bundle_destination=/tmp",
 						"bundle_prefix=image--{{timestamp}}",
 						"bundle_upload_command=bundle_upload.command",
 						"bundle_vol_command=bundle_vol.command",
+						"ebs_optimized=true",
 						"enhanced_networking=false",
-						"instance_type=m3.medium",
+						"force_deregister=false",
 						"iam_instance_profile=INSTANCE_PROFILE",
+						"instance_type=m3.medium",
 						"region=us-east-1",
 						"s3_bucket=packer_bucket",
 						"secret_key=AWS_SECRET_ACCESS_KEY",
@@ -443,26 +446,31 @@ var testAllBuilders = rawTemplate{
 						"source_ami=SOURCE_AMI",
 						"spot_price=auto",
 						"spot_price_auto_product=Linux/Unix",
+						"ssh_keypair_name=myKeyPair",
+						"ssh_private_ip=true",
 						"ssh_private_key_file=myKey",
+						"ssh_username=vagrant",
 						"subnet_id=subnet-12345def",
 						"temporary_key_pair_name=TMP_KEYPAIR",
 						"user_data=SOME_USER_DATA",
 						"user_data_file=amazon.userdata",
 						"vpc_id=VPC_ID",
+						"windows_password_timeout=10m",
 						"x509_cert_path=/path/to/x509/cert",
 						"x509_key_path=/path/to/x509/key",
 						"x509_upload_path=/etc/x509",
 					},
 					Arrays: map[string]interface{}{
-						"ami_block_device_mappings": []map[string]string{
-							{
-								"device_name":  "/dev/sdb",
-								"virtual_name": "/ephemeral0",
-							},
-							{
-								"device_name":  "/dev/sdc",
-								"virtual_name": "/ephemeral1",
-							},
+						"ami_block_device_mappings": []string{
+							"delete_on_termination=true",
+							"device_name=/dev/sdb",
+							"encrypted=true",
+							"iops=1000",
+							"no_device=false",
+							"snapshot_id=SNAPSHOT",
+							"virtual_name=ephemeral0",
+							"volume_type=io1",
+							"volume_size=10",
 						},
 						"ami_groups": []string{
 							"AGroup",
@@ -486,12 +494,12 @@ var testAllBuilders = rawTemplate{
 								"virtual_name": "/ephemeral3",
 							},
 						},
-						"security_group_ids": []string{
-							"SECURITY_GROUP",
-						},
 						"run_tags": map[string]string{
 							"foo": "bar",
 							"fiz": "baz",
+						},
+						"security_group_ids": []string{
+							"SECURITY_GROUP",
 						},
 						"tags": map[string]string{
 							"OS_Version": "Ubuntu",
@@ -1786,17 +1794,17 @@ func TestCreateAmazonChroot(t *testing.T) {
 	}
 	// SSH
 	expectedSSH := map[string]interface{}{
-		"access_key":              "AWS_ACCESS_KEY",
-		"ami_description":         "AMI_DESCRIPTION",
-		"ami_name":                "AMI_NAME",
-		"ami_virtualization_type": "paravirtual",
-		"command_wrapper":         "{{.Command}}",
-		"communicator":            "ssh",
-		"device_path":             "/dev/xvdf",
-		"enhanced_networking":     false,
-		"mount_path":              "packer-amazon-chroot-volumes/{{.Device}}",
-		"secret_key":              "AWS_SECRET_ACCESS_KEY",
-		"source_ami":              "SOURCE_AMI",
+		"access_key":                   "AWS_ACCESS_KEY",
+		"ami_description":              "AMI_DESCRIPTION",
+		"ami_name":                     "AMI_NAME",
+		"ami_virtualization_type":      "paravirtual",
+		"command_wrapper":              "{{.Command}}",
+		"communicator":                 "ssh",
+		"device_path":                  "/dev/xvdf",
+		"enhanced_networking":          false,
+		"mount_path":                   "packer-amazon-chroot-volumes/{{.Device}}",
+		"secret_key":                   "AWS_SECRET_ACCESS_KEY",
+		"source_ami":                   "SOURCE_AMI",
 		"ssh_bastion_host":             "bastion.host",
 		"ssh_bastion_port":             2222,
 		"ssh_bastion_username":         "packer",
@@ -1811,7 +1819,7 @@ func TestCreateAmazonChroot(t *testing.T) {
 		"ssh_pty":                      true,
 		"ssh_username":                 "vagrant",
 		"ssh_timeout":                  "10m",
-		"type":                    "amazon-chroot",
+		"type":                         "amazon-chroot",
 	}
 	bldr, err = testAllBuildersSSH.createAmazonChroot("amazon-chroot")
 	if err != nil {
@@ -1835,13 +1843,13 @@ func TestCreateAmazonChroot(t *testing.T) {
 		"secret_key":              "AWS_SECRET_ACCESS_KEY",
 		"source_ami":              "SOURCE_AMI",
 		"type":                    "amazon-chroot",
-		"winrm_host":     "host",
-		"winrm_password": "vagrant",
-		"winrm_port":     22,
-		"winrm_timeout":  "10m",
-		"winrm_username": "vagrant",
-		"winrm_use_ssl":  true,
-		"winrm_insecure": true,
+		"winrm_host":              "host",
+		"winrm_password":          "vagrant",
+		"winrm_port":              22,
+		"winrm_timeout":           "10m",
+		"winrm_username":          "vagrant",
+		"winrm_use_ssl":           true,
+		"winrm_insecure":          true,
 	}
 	bldr, err = testAllBuildersWinRM.createAmazonChroot("amazon-chroot")
 	if err != nil {
@@ -1933,20 +1941,23 @@ func TestCreateAmazonEBS(t *testing.T) {
 		}
 	}
 }
-
+*/
 func TestCreateAmazonInstance(t *testing.T) {
 	expected := map[string]interface{}{
 		"access_key":      "AWS_ACCESS_KEY",
 		"account_id":      "YOUR_ACCOUNT_ID",
 		"ami_description": "AMI_DESCRIPTION",
-		"ami_block_device_mappings": []map[string]string{
+		"ami_block_device_mappings": []map[string]interface{}{
 			{
-				"device_name":  "/dev/sdb",
-				"virtual_name": "/ephemeral0",
-			},
-			{
-				"device_name":  "/dev/sdc",
-				"virtual_name": "/ephemeral1",
+				"delete_on_termination": true,
+				"device_name":           "/dev/sdb",
+				"encrypted":             true,
+				"iops":                  1000,
+				"no_device":              false,
+				"snapshot_id":           "SNAPSHOT",
+				"virtual_name":          "ephemeral0",
+				"volume_type":           "io1",
+				"volume_size":           10,
 			},
 		},
 		"ami_groups": []string{
@@ -1962,13 +1973,16 @@ func TestCreateAmazonInstance(t *testing.T) {
 		"ami_users": []string{
 			"ami-account",
 		},
+		"ami_virtualization_type":          "paravirtual",
 		"associate_public_ip_address": false,
 		"availability_zone":           "us-east-1b",
 		"bundle_destination":          "/tmp",
 		"bundle_prefix":               "image--{{timestamp}}",
-		"enhanced_networking":         false,
 		"bundle_upload_command":       "sudo -n ec2-bundle-vol -k {{.KeyPath}} -u {{.AccountId}} -c {{.CertPath}} -r {{.Architecture}} -e {{.PrivatePath}} -d {{.Destination}} -p {{.Prefix}} --batch --no-filter",
 		"bundle_vol_command":          "sudo -n ec2-upload-bundle -b {{.BucketName}} -m {{.ManifestPath}} -a {{.AccessKey}} -s {{.SecretKey}} -d {{.BundleDirectory}} --batch --region {{.Region}} --retry",
+		"ebs_optimized":            true,
+		"enhanced_networking":         false,
+		"force_deregister":            false,
 		"iam_instance_profile":        "INSTANCE_PROFILE",
 		"instance_type":               "m3.medium",
 		"launch_block_device_mappings": []map[string]string{
@@ -1995,9 +2009,10 @@ func TestCreateAmazonInstance(t *testing.T) {
 		"source_ami":              "SOURCE_AMI",
 		"spot_price":              "auto",
 		"spot_price_auto_product": "Linux/Unix",
-		"ssh_port":                22,
-		"ssh_username":            "vagrant",
+		"ssh_keypair_name":        "myKeyPair",
+		"ssh_private_ip": true,
 		"ssh_private_key_file":    "myKey",
+		"ssh_username":            "vagrant",
 		"subnet_id":               "subnet-12345def",
 		"temporary_key_pair_name": "TMP_KEYPAIR",
 		"tags": map[string]string{
@@ -2008,6 +2023,7 @@ func TestCreateAmazonInstance(t *testing.T) {
 		"user_data":        "SOME_USER_DATA",
 		"user_data_file":   "amazon-instance/amazon.userdata",
 		"vpc_id":           "VPC_ID",
+		"windows_password_timeout": "10m",
 		"x509_cert_path":   "/path/to/x509/cert",
 		"x509_key_path":    "/path/to/x509/key",
 		"x509_upload_path": "/etc/x509",
@@ -2022,7 +2038,6 @@ func TestCreateAmazonInstance(t *testing.T) {
 		}
 	}
 }
-*/
 
 func TestCreateDigitalOcean(t *testing.T) {
 	expected := map[string]interface{}{
