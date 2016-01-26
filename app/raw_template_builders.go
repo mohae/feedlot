@@ -339,6 +339,9 @@ func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 // builder is stopped.  For more information, refer to
 // https://packer.io/docs/builders/amazon-ebs.html
 //
+// In addition to the following options, Packer communicators are supported.
+// Check the communicator docs for valid options.
+//
 // Required configuration options:
 //   access_key                   string
 //   ami_name                     string
@@ -349,6 +352,15 @@ func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 //   ssh_username                 string
 // Optional configuration options:
 //   ami_block_device_mappings     array of block device mappings
+//     delete_on_termination       bool
+//     device_name                 string
+//     encrypted                   bool
+//     iops                        int
+//     no_device                   bool
+//     snapshot_id                 string
+//     virtual_name                string
+//     volume_type                 string
+//     volume_size                 int
 //   ami_description               string
 //   ami_groups                    array of strings
 //   ami_product_codes             array of strings
@@ -356,16 +368,13 @@ func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 //   ami_users                     array of strings
 //   associate_public_ip_address   bool
 //   availability_zone             string
+//   ebs_optimized                 bool
 //   enhanced_networking           bool
-//   delete_on_termination         bool
-//   device_name                   string
-//   encrypted                     bool
 //   force_deregister              bool
 //   iam_instance_profile          string
-//   iops                          bool
 //   launch_block_device_mappings  array of block device mappings
-//   no_device                     bool
 //   run_tags                      object of key/value strings
+//   volume_run_tags               object of key/value strings
 //   security_group_id             string
 //   security_group_ids            array of strings
 //   snapshot_id                   string
@@ -374,16 +383,12 @@ func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 //   ssh_keypair_name              string
 //   ssh_port                      int
 //   ssh_private_ip                bool
-//   ssh_private_key_file          string
 //   subnet_id                     string
 //   tags                          object of key/value strings
 //   temporary_key_pair_name       string
 //   token                         string
 //   user_data                     string
 //   user_data_file                string
-//   virtual_name                  string
-//   volume_size                   int
-//   volume_type                   int
 //   vpc_id                        string
 //   windows_password_timeout      string
 func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{}, err error) {
@@ -407,6 +412,22 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 	}
 	var k, v string
 	var hasAccessKey, hasAmiName, hasInstanceType, hasRegion, hasSecretKey, hasSourceAmi, hasSSHUsername bool
+	prefix, err := r.processCommunicator(ID, workSlice, settings)
+	if err != nil {
+		return nil, err
+	}
+	// see if the required settings include username/password
+	if prefix != "" {
+		_, ok = settings[prefix+"_username"]
+		if ok {
+			hasUsername = true
+		}
+		_, ok = settings[prefix+"_password"]
+		if ok {
+			hasPassword = true
+		}
+		hasCommunicator = true
+	}
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
 	for _, s := range workSlice {
