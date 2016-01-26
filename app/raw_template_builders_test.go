@@ -878,6 +878,25 @@ var testAllBuildersSSH = rawTemplate{
 					Arrays: map[string]interface{}{},
 				},
 			},
+			"amazon-chroot": {
+				templateSection{
+					Type: "amazon-chroot",
+					Settings: []string{
+						"access_key=AWS_ACCESS_KEY",
+						"ami_description=AMI_DESCRIPTION",
+						"ami_name=AMI_NAME",
+						"ami_virtualization_type=paravirtual",
+						"communicator=ssh",
+						"command_wrapper={{.Command}}",
+						"device_path=/dev/xvdf",
+						"enhanced_networking=false",
+						"mount_path=packer-amazon-chroot-volumes/{{.Device}}",
+						"secret_key=AWS_SECRET_ACCESS_KEY",
+						"source_ami=SOURCE_AMI",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
 			"digitalocean": {
 				templateSection{
 					Type: "digitalocean",
@@ -1119,6 +1138,25 @@ var testAllBuildersWinRM = rawTemplate{
 						"winrm_timeout=10m",
 						"winrm_use_ssl=true",
 						"winrm_insecure=true",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
+			"amazon-chroot": {
+				templateSection{
+					Type: "amazon-chroot",
+					Settings: []string{
+						"access_key=AWS_ACCESS_KEY",
+						"ami_description=AMI_DESCRIPTION",
+						"ami_name=AMI_NAME",
+						"ami_virtualization_type=paravirtual",
+						"communicator=winrm",
+						"command_wrapper={{.Command}}",
+						"device_path=/dev/xvdf",
+						"enhanced_networking=false",
+						"mount_path=packer-amazon-chroot-volumes/{{.Device}}",
+						"secret_key=AWS_SECRET_ACCESS_KEY",
+						"source_ami=SOURCE_AMI",
 					},
 					Arrays: map[string]interface{}{},
 				},
@@ -1551,7 +1589,6 @@ func init() {
 	testAllBuildersWinRM.IncludeComponentString = &b
 }
 
-/*
 func TestCreateBuilders(t *testing.T) {
 	_, err := testRawTemplateBuilderOnly.createBuilders()
 	if err == nil {
@@ -1747,8 +1784,76 @@ func TestCreateAmazonChroot(t *testing.T) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(bldr))
 		}
 	}
+	// SSH
+	expectedSSH := map[string]interface{}{
+		"access_key":              "AWS_ACCESS_KEY",
+		"ami_description":         "AMI_DESCRIPTION",
+		"ami_name":                "AMI_NAME",
+		"ami_virtualization_type": "paravirtual",
+		"command_wrapper":         "{{.Command}}",
+		"communicator":            "ssh",
+		"device_path":             "/dev/xvdf",
+		"enhanced_networking":     false,
+		"mount_path":              "packer-amazon-chroot-volumes/{{.Device}}",
+		"secret_key":              "AWS_SECRET_ACCESS_KEY",
+		"source_ami":              "SOURCE_AMI",
+		"ssh_bastion_host":             "bastion.host",
+		"ssh_bastion_port":             2222,
+		"ssh_bastion_username":         "packer",
+		"ssh_bastion_password":         "packer",
+		"ssh_bastion_private_key_file": "secret",
+		"ssh_disable_agent":            true,
+		"ssh_handshake_attempts":       10,
+		"ssh_host":                     "127.0.0.1",
+		"ssh_password":                 "vagrant",
+		"ssh_port":                     22,
+		"ssh_private_key_file":         "key/path",
+		"ssh_pty":                      true,
+		"ssh_username":                 "vagrant",
+		"ssh_timeout":                  "10m",
+		"type":                    "amazon-chroot",
+	}
+	bldr, err = testAllBuildersSSH.createAmazonChroot("amazon-chroot")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedSSH) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedSSH), MarshalJSONToString.Get(bldr))
+		}
+	}
+	// WinRM
+	expectedWinRM := map[string]interface{}{
+		"access_key":              "AWS_ACCESS_KEY",
+		"ami_description":         "AMI_DESCRIPTION",
+		"ami_name":                "AMI_NAME",
+		"ami_virtualization_type": "paravirtual",
+		"command_wrapper":         "{{.Command}}",
+		"communicator":            "winrm",
+		"device_path":             "/dev/xvdf",
+		"enhanced_networking":     false,
+		"mount_path":              "packer-amazon-chroot-volumes/{{.Device}}",
+		"secret_key":              "AWS_SECRET_ACCESS_KEY",
+		"source_ami":              "SOURCE_AMI",
+		"type":                    "amazon-chroot",
+		"winrm_host":     "host",
+		"winrm_password": "vagrant",
+		"winrm_port":     22,
+		"winrm_timeout":  "10m",
+		"winrm_username": "vagrant",
+		"winrm_use_ssl":  true,
+		"winrm_insecure": true,
+	}
+	bldr, err = testAllBuildersWinRM.createAmazonChroot("amazon-chroot")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedWinRM) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(bldr))
+		}
+	}
 }
 
+/*
 func TestCreateAmazonEBS(t *testing.T) {
 	expected := map[string]interface{}{
 		"access_key": "AWS_ACCESS_KEY",

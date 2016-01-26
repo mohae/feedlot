@@ -207,6 +207,9 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 // processing of the builder is stopped.  For more information, refer to
 // https://packer.io/docs/builders/amazon-instance.html
 //
+// In addition to the following options, Packer communicators are supported.
+// Check the communicator docs for valid options.
+//
 // Required configuration options:
 //   access_key               string
 //   ami_name                 string
@@ -251,6 +254,11 @@ func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 	}
 	var k, v string
 	var hasAccessKey, hasAmiName, hasSecretKey, hasSourceAmi bool
+	// check for communicator first
+	_, err = r.processCommunicator(ID, workSlice, settings)
+	if err != nil {
+		return nil, err
+	}
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
 	for _, s := range workSlice {
@@ -264,20 +272,29 @@ func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 		case "ami_name":
 			settings[k] = v
 			hasAmiName = true
+		case "ami_description":
+			settings[k] = v
+		case "ami_virtualization_type":
+			settings[k] = v
+		case "command_wrapper":
+			settings[k] = v
+		case "device_path":
+			settings[k] = v
+		case "enhanced_networking":
+			settings[k], _ = strconv.ParseBool(v)
+		case "force_deregister":
+			settings[k], _ = strconv.ParseBool(v)
+		case "mount_path":
+			settings[k] = v
+		case "root_volume_size":
+			settings[k], err = strconv.Atoi(v)
+			return nil, &SettingError{ID, k, v, err}
 		case "secret_key":
 			settings[k] = v
 			hasSecretKey = true
 		case "source_ami":
 			settings[k] = v
 			hasSourceAmi = true
-		case "ami_description", "ami_virtualization_type", "command_wrapper",
-			"device_path", "mount_path":
-			settings[k] = v
-		case "enhanced_networking", "force_deregister":
-			settings[k], _ = strconv.ParseBool(v)
-		case "root_volume_size":
-			settings[k], err = strconv.Atoi(v)
-			return nil, &SettingError{ID, k, v, err}
 		}
 	}
 	if !hasAccessKey {
