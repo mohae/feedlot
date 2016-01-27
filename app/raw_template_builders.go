@@ -1,7 +1,9 @@
 package app
 
 import (
+	"errors"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -393,6 +395,7 @@ func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{}, err error) {
 	return nil, nil
 }
+
 /*
 	_, ok := r.Builders[ID]
 	if !ok {
@@ -834,43 +837,65 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 }
 
 // processAMIBlockDeviceMappings handles the ami_block_device_mappings
-// array for Amazon builders.  Values that are not supported settings
-// for ami_block_device_mappings are ignored.  The returned interface{}
-// only includes the supported settings.  An error is only returned when
-// either volume_size or iops can't be converted to an int.
+// array for Amazon builders.  The mappings must be in the form of either
+// []map[string]interface{} or [][]string.  An error will occur is the
+// data is anything else.
+//
+// For []map[string]interface{}, the data is returned without additional
+// processing.  Processing of the []map to only use valid keys may be added
+// at some point in the future.
+//
+// For [][]string, processing will be done to convert the strings into
+// key value pairs and place them in a map[string]interface{}.  Values that
+// are not supported settings for ami_block_device_mappings are ignored.
+// The returned interface{} only includes the supported settings.  When
+// settings that are ints have invalid values specified, an error will be
+// returned.
 func (r *rawTemplate) processAMIBlockDeviceMappings(v interface{}) (interface{}, error) {
-	settings := deepcopy.InterfaceToSliceOfStrings(v)
-	ret := map[string]interface{}{}
-	for _, setting := range settings {
-		k, v := parseVar(setting)
-		switch k {
-		case "delete_on_termination":
-			ret[k], _ = strconv.ParseBool(v)
-		case "device_name":
-			ret[k] = v
-		case "encrypted":
-			ret[k], _ = strconv.ParseBool(v)
-		case "iops":
-			i, err := strconv.Atoi(v)
-			if err != nil {
-				return nil, fmt.Errorf("iops: %s", err)
+	if reflect.TypeOf(v) == reflect.TypeOf([]map[string]interface{}{}) {
+		return v, nil
+	}
+
+	// Process the [][]string into a []map[string]interface{}
+	slices, ok := v.([][]string)
+	if !ok {
+		return nil, errors.New("not in a supported format")
+	}
+	ret := make([]map[string]interface{}, len(slices))
+	for i, settings := range slices {
+		vals := map[string]interface{}{}
+		for _, setting := range settings {
+			k, v := parseVar(setting)
+			switch k {
+			case "delete_on_termination":
+				vals[k], _ = strconv.ParseBool(v)
+			case "device_name":
+				vals[k] = v
+			case "encrypted":
+				vals[k], _ = strconv.ParseBool(v)
+			case "iops":
+				i, err := strconv.Atoi(v)
+				if err != nil {
+					return nil, fmt.Errorf("iops: %s", err)
+				}
+				vals[k] = i
+			case "no_device":
+				vals[k], _ = strconv.ParseBool(v)
+			case "snapshot_id":
+				vals[k] = v
+			case "virtual_name":
+				vals[k] = v
+			case "volume_size":
+				i, err := strconv.Atoi(v)
+				if err != nil {
+					return nil, fmt.Errorf("iops: %s", err)
+				}
+				vals[k] = i
+			case "volume_type":
+				vals[k] = v
 			}
-			ret[k] = i
-		case "no_device":
-			ret[k], _ = strconv.ParseBool(v)
-		case "snapshot_id":
-			ret[k] = v
-		case "virtual_name":
-			ret[k] = v
-		case "volume_size":
-			i, err := strconv.Atoi(v)
-			if err != nil {
-				return nil, fmt.Errorf("iops: %s", err)
-			}
-			ret[k] = i
-		case "volume_type":
-			ret[k] = v
 		}
+		ret[i] = vals
 	}
 	return ret, nil
 }

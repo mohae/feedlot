@@ -461,16 +461,23 @@ var testAllBuilders = rawTemplate{
 						"x509_upload_path=/etc/x509",
 					},
 					Arrays: map[string]interface{}{
-						"ami_block_device_mappings": []string{
-							"delete_on_termination=true",
-							"device_name=/dev/sdb",
-							"encrypted=true",
-							"iops=1000",
-							"no_device=false",
-							"snapshot_id=SNAPSHOT",
-							"virtual_name=ephemeral0",
-							"volume_type=io1",
-							"volume_size=10",
+						"ami_block_device_mappings": [][]string{
+							[]string{
+								"delete_on_termination=true",
+								"device_name=/dev/sdb",
+								"encrypted=true",
+								"iops=1000",
+								"no_device=false",
+								"snapshot_id=SNAPSHOT",
+								"virtual_name=ephemeral0",
+								"volume_type=io1",
+								"volume_size=10",
+							},
+							[]string{
+								"device_name=/dev/sdc",
+								"volume_type=io1",
+								"volume_size=10",
+							},
 						},
 						"ami_groups": []string{
 							"AGroup",
@@ -1953,7 +1960,7 @@ func TestCreateAmazonInstance(t *testing.T) {
 				"device_name":           "/dev/sdb",
 				"encrypted":             true,
 				"iops":                  1000,
-				"no_device":              false,
+				"no_device":             false,
 				"snapshot_id":           "SNAPSHOT",
 				"virtual_name":          "ephemeral0",
 				"volume_type":           "io1",
@@ -1973,14 +1980,14 @@ func TestCreateAmazonInstance(t *testing.T) {
 		"ami_users": []string{
 			"ami-account",
 		},
-		"ami_virtualization_type":          "paravirtual",
+		"ami_virtualization_type":     "paravirtual",
 		"associate_public_ip_address": false,
 		"availability_zone":           "us-east-1b",
 		"bundle_destination":          "/tmp",
 		"bundle_prefix":               "image--{{timestamp}}",
 		"bundle_upload_command":       "sudo -n ec2-bundle-vol -k {{.KeyPath}} -u {{.AccountId}} -c {{.CertPath}} -r {{.Architecture}} -e {{.PrivatePath}} -d {{.Destination}} -p {{.Prefix}} --batch --no-filter",
 		"bundle_vol_command":          "sudo -n ec2-upload-bundle -b {{.BucketName}} -m {{.ManifestPath}} -a {{.AccessKey}} -s {{.SecretKey}} -d {{.BundleDirectory}} --batch --region {{.Region}} --retry",
-		"ebs_optimized":            true,
+		"ebs_optimized":               true,
 		"enhanced_networking":         false,
 		"force_deregister":            false,
 		"iam_instance_profile":        "INSTANCE_PROFILE",
@@ -2010,7 +2017,7 @@ func TestCreateAmazonInstance(t *testing.T) {
 		"spot_price":              "auto",
 		"spot_price_auto_product": "Linux/Unix",
 		"ssh_keypair_name":        "myKeyPair",
-		"ssh_private_ip": true,
+		"ssh_private_ip":          true,
 		"ssh_private_key_file":    "myKey",
 		"ssh_username":            "vagrant",
 		"subnet_id":               "subnet-12345def",
@@ -2019,14 +2026,14 @@ func TestCreateAmazonInstance(t *testing.T) {
 			"OS_Version": "Ubuntu",
 			"Release":    "Latest",
 		},
-		"type":             "amazon-instance",
-		"user_data":        "SOME_USER_DATA",
-		"user_data_file":   "amazon-instance/amazon.userdata",
-		"vpc_id":           "VPC_ID",
+		"type":                     "amazon-instance",
+		"user_data":                "SOME_USER_DATA",
+		"user_data_file":           "amazon-instance/amazon.userdata",
+		"vpc_id":                   "VPC_ID",
 		"windows_password_timeout": "10m",
-		"x509_cert_path":   "/path/to/x509/cert",
-		"x509_key_path":    "/path/to/x509/key",
-		"x509_upload_path": "/etc/x509",
+		"x509_cert_path":           "/path/to/x509/cert",
+		"x509_key_path":            "/path/to/x509/key",
+		"x509_upload_path":         "/etc/x509",
 	}
 	contour.UpdateString("source_dir", "../test_files/src")
 	bldr, err := testAllBuilders.createAmazonInstance("amazon-instance")
@@ -3108,5 +3115,98 @@ func TestDeepCopyMapStringBuilder(t *testing.T) {
 	cpy := DeepCopyMapStringBuilder(testDistroDefaults.Templates[Ubuntu].Builders)
 	if MarshalJSONToString.Get(cpy["common"]) != MarshalJSONToString.Get(testDistroDefaults.Templates[Ubuntu].Builders["common"]) {
 		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testDistroDefaults.Templates[Ubuntu].Builders["common"]), MarshalJSONToString.Get(cpy["common"]))
+	}
+}
+
+func TestProcessAMIBlockDeviceMappings(t *testing.T) {
+	r := newRawTemplate()
+	_, err := r.processAMIBlockDeviceMappings([]string{})
+	if err == nil {
+		t.Errorf("expected error, got none")
+	} else {
+		expected := "not in a supported format"
+		if err.Error() != expected {
+			t.Errorf("got %q; expected %q", err, expected)
+		}
+	}
+
+	expected := []map[string]interface{}{
+		{
+			"delete_on_termination": true,
+			"device_name":           "/dev/sdb",
+			"encrypted":             true,
+			"iops":                  1000,
+			"no_device":             false,
+			"snapshot_id":           "SNAPSHOT",
+			"virtual_name":          "/ephemeral0",
+			"volume_type":           "io1",
+			"volume_size":           20,
+		},
+		{
+			"device_name":  "/dev/sdc",
+			"iops":         500,
+			"virtual_name": "/ephemeral1",
+			"volume_type":  "io1",
+			"volume_size":  10,
+		},
+	}
+	// test using array of block mappings: []map[string]interface{}
+	mappings := []map[string]interface{}{
+		{
+			"delete_on_termination": true,
+			"device_name":           "/dev/sdb",
+			"encrypted":             true,
+			"iops":                  1000,
+			"no_device":             false,
+			"snapshot_id":           "SNAPSHOT",
+			"virtual_name":          "/ephemeral0",
+			"volume_type":           "io1",
+			"volume_size":           20,
+		},
+		{
+			"device_name":  "/dev/sdc",
+			"iops":         500,
+			"virtual_name": "/ephemeral1",
+			"volume_type":  "io1",
+			"volume_size":  10,
+		},
+	}
+	// expected is the same as mappings
+	ret, err := r.processAMIBlockDeviceMappings(mappings)
+	if err != nil {
+		t.Errorf("got %q, expected no error", err)
+	} else {
+		if MarshalJSONToString.Get(expected) != MarshalJSONToString.Get(ret) {
+			t.Errorf("Got %s; want %s", MarshalJSONToString.Get(ret), MarshalJSONToString.Get(expected))
+		}
+	}
+	// test using array of block mappings: [][]string
+	mappingsSlice := [][]string{
+		[]string{
+			"delete_on_termination=true",
+			"device_name=/dev/sdb",
+			"encrypted=true",
+			"iops=1000",
+			"no_device=false",
+			"snapshot_id=SNAPSHOT",
+			"virtual_name=/ephemeral0",
+			"volume_type=io1",
+			"volume_size=20",
+		},
+		[]string{
+			"device_name=/dev/sdc",
+			"iops=500",
+			"virtual_name=/ephemeral1",
+			"volume_type=io1",
+			"volume_size=10",
+		},
+	}
+	ret, err = r.processAMIBlockDeviceMappings(mappingsSlice)
+	if err != nil {
+		t.Errorf("got %q, expected no error", err)
+	} else {
+		if MarshalJSONToString.Get(expected) != MarshalJSONToString.Get(ret) {
+			t.Errorf("Got %s; want %s", MarshalJSONToString.Get(ret), MarshalJSONToString.Get(expected))
+		}
 	}
 }
