@@ -716,11 +716,19 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 		case "spot_price_auto_product":
 			settings[k] = v
 		case "ssh_keypair_name":
+			// Don't process if there's a communicator and it wasn't SSH.
+			if hasCommunicator && prefix != "ssh" {
+				continue
+			}
 			settings[k] = v
 		case "ssh_private_ip":
+			// Don't process if there's a communicator and it wasn't SSH.
+			if hasCommunicator && prefix != "ssh" {
+				continue
+			}
 			settings[k], _ = strconv.ParseBool(v)
 		case "ssh_private_key_file":
-			// if a communicator was processed, skip this
+			// Don't process if there was a communicator.
 			if hasCommunicator {
 				continue
 			}
@@ -729,6 +737,7 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 			settings[k] = v
 			hasSourceAmi = true
 		case "ssh_username":
+			// Don't process if there was a communicator.
 			if hasCommunicator {
 				continue
 			}
@@ -757,6 +766,10 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 		case "vpc_id":
 			settings[k] = v
 		case "windows_password_timeout":
+			// Don't process if there was a communicator and it wasn't WinRM.
+			if hasCommunicator && prefix != "winrm" {
+				continue
+			}
 			settings[k] = v
 		case "x509_cert_path":
 			settings[k] = v
