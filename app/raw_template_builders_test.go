@@ -915,6 +915,38 @@ var testAllBuildersSSH = rawTemplate{
 					Arrays: map[string]interface{}{},
 				},
 			},
+			"amazon-ebs": {
+				templateSection{
+					Type: "amazon-ebs",
+					Settings: []string{
+						"access_key=AWS_ACCESS_KEY",
+						"ami_description=AMI_DESCRIPTION",
+						"ami_name=AMI_NAME",
+						"associate_public_ip_address=false",
+						"availability_zone=us-east-1b",
+						"communicator=ssh",
+						"enhanced_networking=false",
+						"iam_instance_profile=INSTANCE_PROFILE",
+						"instance_type=m3.medium",
+						"region=us-east-1",
+						"secret_key=AWS_SECRET_ACCESS_KEY",
+						"security_group_id=GROUP_ID",
+						"source_ami=SOURCE_AMI",
+						"spot_price=auto",
+						"spot_price_auto_product=Linux/Unix",
+						"ssh_private_key_file=myKey",
+						"ssh_username=vagrant",
+						"subnet_id=subnet-12345def",
+						"temporary_key_pair_name=TMP_KEYPAIR",
+						"token=AWS_SECURITY_TOKEN",
+						"user_data=SOME_USER_DATA",
+						"user_data_file=amazon.userdata",
+						"vpc_id=VPC_ID",
+						"windows_password_timeout=10m",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
 			"amazon-instance": {
 				templateSection{
 					Type: "amazon-instance",
@@ -1220,6 +1252,38 @@ var testAllBuildersWinRM = rawTemplate{
 						"mount_path=packer-amazon-chroot-volumes/{{.Device}}",
 						"secret_key=AWS_SECRET_ACCESS_KEY",
 						"source_ami=SOURCE_AMI",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
+			"amazon-ebs": {
+				templateSection{
+					Type: "amazon-ebs",
+					Settings: []string{
+						"access_key=AWS_ACCESS_KEY",
+						"ami_description=AMI_DESCRIPTION",
+						"ami_name=AMI_NAME",
+						"associate_public_ip_address=false",
+						"availability_zone=us-east-1b",
+						"communicator=winrm",
+						"enhanced_networking=false",
+						"iam_instance_profile=INSTANCE_PROFILE",
+						"instance_type=m3.medium",
+						"region=us-east-1",
+						"secret_key=AWS_SECRET_ACCESS_KEY",
+						"security_group_id=GROUP_ID",
+						"source_ami=SOURCE_AMI",
+						"spot_price=auto",
+						"spot_price_auto_product=Linux/Unix",
+						"ssh_private_key_file=myKey",
+						"ssh_username=vagrant",
+						"subnet_id=subnet-12345def",
+						"temporary_key_pair_name=TMP_KEYPAIR",
+						"token=AWS_SECURITY_TOKEN",
+						"user_data=SOME_USER_DATA",
+						"user_data_file=amazon.userdata",
+						"vpc_id=VPC_ID",
+						"windows_password_timeout=10m",
 					},
 					Arrays: map[string]interface{}{},
 				},
@@ -2037,6 +2101,94 @@ func TestCreateAmazonEBS(t *testing.T) {
 	} else {
 		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expected) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(bldr))
+		}
+	}
+	// SSH
+	expectedSSH := map[string]interface{}{
+		"access_key":                   "AWS_ACCESS_KEY",
+		"ami_description":              "AMI_DESCRIPTION",
+		"ami_name":                     "AMI_NAME",
+		"associate_public_ip_address":  false,
+		"availability_zone":            "us-east-1b",
+		"communicator":                 "ssh",
+		"enhanced_networking":          false,
+		"iam_instance_profile":         "INSTANCE_PROFILE",
+		"instance_type":                "m3.medium",
+		"region":                       "us-east-1",
+		"secret_key":                   "AWS_SECRET_ACCESS_KEY",
+		"security_group_id":            "GROUP_ID",
+		"source_ami":                   "SOURCE_AMI",
+		"spot_price":                   "auto",
+		"spot_price_auto_product":      "Linux/Unix",
+		"ssh_bastion_host":             "bastion.host",
+		"ssh_bastion_port":             2222,
+		"ssh_bastion_username":         "packer",
+		"ssh_bastion_password":         "packer",
+		"ssh_bastion_private_key_file": "secret",
+		"ssh_disable_agent":            true,
+		"ssh_handshake_attempts":       10,
+		"ssh_host":                     "127.0.0.1",
+		"ssh_password":                 "vagrant",
+		"ssh_port":                     22,
+		"ssh_private_key_file":         "myKey",
+		"ssh_pty":                      true,
+		"ssh_timeout":                  "10m",
+		"ssh_username":                 "vagrant",
+		"subnet_id":                    "subnet-12345def",
+		"temporary_key_pair_name":      "TMP_KEYPAIR",
+		"token":                        "AWS_SECURITY_TOKEN",
+		"type":                         "amazon-ebs",
+		"user_data":                    "SOME_USER_DATA",
+		"user_data_file":               "amazon-ebs/amazon.userdata",
+		"vpc_id":                       "VPC_ID",
+	}
+	bldr, err = testAllBuildersSSH.createAmazonEBS("amazon-ebs")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedSSH) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedSSH), MarshalJSONToString.Get(bldr))
+		}
+	}
+	// WinRM
+	expectedWinRM := map[string]interface{}{
+		"access_key":                  "AWS_ACCESS_KEY",
+		"ami_description":             "AMI_DESCRIPTION",
+		"ami_name":                    "AMI_NAME",
+		"associate_public_ip_address": false,
+		"availability_zone":           "us-east-1b",
+		"communicator":                "winrm",
+		"enhanced_networking":         false,
+		"iam_instance_profile":        "INSTANCE_PROFILE",
+		"instance_type":               "m3.medium",
+		"region":                      "us-east-1",
+		"secret_key":                  "AWS_SECRET_ACCESS_KEY",
+		"security_group_id":           "GROUP_ID",
+		"source_ami":                  "SOURCE_AMI",
+		"spot_price":                  "auto",
+		"spot_price_auto_product":     "Linux/Unix",
+		"subnet_id":                   "subnet-12345def",
+		"temporary_key_pair_name":     "TMP_KEYPAIR",
+		"token":                       "AWS_SECURITY_TOKEN",
+		"type":                        "amazon-ebs",
+		"user_data":                   "SOME_USER_DATA",
+		"user_data_file":              "amazon-ebs/amazon.userdata",
+		"vpc_id":                      "VPC_ID",
+		"windows_password_timeout":    "10m",
+		"winrm_host":                  "host",
+		"winrm_password":              "vagrant",
+		"winrm_port":                  22,
+		"winrm_timeout":               "10m",
+		"winrm_username":              "vagrant",
+		"winrm_use_ssl":               true,
+		"winrm_insecure":              true,
+	}
+	bldr, err = testAllBuildersWinRM.createAmazonEBS("amazon-ebs")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedWinRM) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(bldr))
 		}
 	}
 }

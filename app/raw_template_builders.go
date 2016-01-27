@@ -469,8 +469,16 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 		case "spot_price_auto_product":
 			settings[k] = v
 		case "ssh_keypair_name":
+			// Only process if there's no communicator or if the communicator is SSH.
+			if hasCommunicator && prefix != "ssh" {
+				continue
+			}
 			settings[k] = v
 		case "ssh_private_key_file":
+			// Only process if there's no communicator or if the communicator is SSH.
+			if hasCommunicator && prefix != "ssh" {
+				continue
+			}
 			settings[k] = v
 		case "ssh_username":
 			// Only set if there wasn't a communicator to process.
