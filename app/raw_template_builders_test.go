@@ -357,8 +357,8 @@ var testAllBuilders = rawTemplate{
 						"associate_public_ip_address=false",
 						"availability_zone=us-east-1b",
 						"enhanced_networking=false",
-						"instance_type=m3.medium",
 						"iam_instance_profile=INSTANCE_PROFILE",
+						"instance_type=m3.medium",
 						"region=us-east-1",
 						"secret_key=AWS_SECRET_ACCESS_KEY",
 						"security_group_id=GROUP_ID",
@@ -366,14 +366,17 @@ var testAllBuilders = rawTemplate{
 						"spot_price=auto",
 						"spot_price_auto_product=Linux/Unix",
 						"ssh_private_key_file=myKey",
+						"ssh_username=vagrant",
+						"subnet_id=subnet-12345def",
 						"temporary_key_pair_name=TMP_KEYPAIR",
 						"token=AWS_SECURITY_TOKEN",
 						"user_data=SOME_USER_DATA",
 						"user_data_file=amazon.userdata",
 						"vpc_id=VPC_ID",
+						"windows_password_timeout=10m",
 					},
 					Arrays: map[string]interface{}{
-						"ami_block_device_mappings": []map[string]string{
+						"ami_block_device_mappings": []map[string]interface{}{
 							{
 								"device_name":  "/dev/sdb",
 								"virtual_name": "/ephemeral0",
@@ -1958,11 +1961,10 @@ func TestCreateAmazonChroot(t *testing.T) {
 	}
 }
 
-/*
 func TestCreateAmazonEBS(t *testing.T) {
 	expected := map[string]interface{}{
 		"access_key": "AWS_ACCESS_KEY",
-		"ami_block_device_mappings": []map[string]string{
+		"ami_block_device_mappings": []map[string]interface{}{
 			{
 				"device_name":  "/dev/sdb",
 				"virtual_name": "/ephemeral0",
@@ -1972,7 +1974,6 @@ func TestCreateAmazonEBS(t *testing.T) {
 				"virtual_name": "/ephemeral1",
 			},
 		},
-
 		"ami_description": "AMI_DESCRIPTION",
 		"ami_groups": []string{
 			"AGroup",
@@ -2015,19 +2016,20 @@ func TestCreateAmazonEBS(t *testing.T) {
 		"source_ami":              "SOURCE_AMI",
 		"spot_price":              "auto",
 		"spot_price_auto_product": "Linux/Unix",
-		"ssh_port":                22,
-		"ssh_username":            "vagrant",
 		"ssh_private_key_file":    "myKey",
+		"ssh_username":            "vagrant",
+		"subnet_id":               "subnet-12345def",
 		"tags": map[string]string{
 			"OS_Version": "Ubuntu",
 			"Release":    "Latest",
 		},
-		"temporary_key_pair_name": "TMP_KEYPAIR",
-		"token":                   "AWS_SECURITY_TOKEN",
-		"type":                    "amazon-ebs",
-		"user_data":               "SOME_USER_DATA",
-		"user_data_file":          "amazon-ebs/amazon.userdata",
-		"vpc_id":                  "VPC_ID",
+		"temporary_key_pair_name":  "TMP_KEYPAIR",
+		"token":                    "AWS_SECURITY_TOKEN",
+		"type":                     "amazon-ebs",
+		"user_data":                "SOME_USER_DATA",
+		"user_data_file":           "amazon-ebs/amazon.userdata",
+		"vpc_id":                   "VPC_ID",
+		"windows_password_timeout": "10m",
 	}
 	bldr, err := testAllBuilders.createAmazonEBS("amazon-ebs")
 	if err != nil {
@@ -2038,7 +2040,7 @@ func TestCreateAmazonEBS(t *testing.T) {
 		}
 	}
 }
-*/
+
 func TestCreateAmazonInstance(t *testing.T) {
 	expected := map[string]interface{}{
 		"access_key":      "AWS_ACCESS_KEY",

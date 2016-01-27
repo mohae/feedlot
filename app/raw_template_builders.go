@@ -375,28 +375,23 @@ func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 //   iam_instance_profile          string
 //   launch_block_device_mappings  array of block device mappings
 //   run_tags                      object of key/value strings
-//   volume_run_tags               object of key/value strings
 //   security_group_id             string
 //   security_group_ids            array of strings
-//   snapshot_id                   string
 //   spot_price                    string
 //   spot_price_auto_product       string
 //   ssh_keypair_name              string
-//   ssh_port                      int
 //   ssh_private_ip                bool
+//   ssh_private_key_file          string
 //   subnet_id                     string
 //   tags                          object of key/value strings
 //   temporary_key_pair_name       string
 //   token                         string
 //   user_data                     string
 //   user_data_file                string
+//   volume_run_tags               object of key/value strings
 //   vpc_id                        string
 //   windows_password_timeout      string
 func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{}, err error) {
-	return nil, nil
-}
-
-/*
 	_, ok := r.Builders[ID]
 	if !ok {
 		return nil, NewErrConfigNotFound(ID)
@@ -416,7 +411,8 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 		workSlice = r.Builders[ID].Settings
 	}
 	var k, v string
-	var hasAccessKey, hasAmiName, hasInstanceType, hasRegion, hasSecretKey, hasSourceAmi, hasUsername bool
+	var hasAccessKey, hasAmiName, hasInstanceType, hasRegion, hasSecretKey bool
+	var hasSourceAmi, hasUsername, hasCommunicator bool
 	prefix, err := r.processCommunicator(ID, workSlice, settings)
 	if err != nil {
 		return nil, err
@@ -426,10 +422,6 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 		_, ok = settings[prefix+"_username"]
 		if ok {
 			hasUsername = true
-		}
-		_, ok = settings[prefix+"_password"]
-		if ok {
-			hasPassword = true
 		}
 		hasCommunicator = true
 	}
@@ -443,9 +435,21 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 		case "access_key":
 			settings[k] = v
 			hasAccessKey = true
+		case "ami_description":
+			settings[k] = v
 		case "ami_name":
 			settings[k] = v
 			hasAmiName = true
+		case "associate_public_ip_address":
+			settings[k], _ = strconv.ParseBool(v)
+		case "availability_zone":
+			settings[k] = v
+		case "enhanced_networking":
+			settings[k], _ = strconv.ParseBool(v)
+		case "force_deregister":
+			settings[k], _ = strconv.ParseBool(v)
+		case "iam_instance_profile":
+			settings[k] = v
 		case "instance_type":
 			settings[k] = v
 			hasInstanceType = true
@@ -455,32 +459,39 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 		case "secret_key":
 			settings[k] = v
 			hasSecretKey = true
+		case "security_group_id":
+			settings[k] = v
 		case "source_ami":
 			settings[k] = v
 			hasSourceAmi = true
+		case "spot_price":
+			settings[k] = v
+		case "spot_price_auto_product":
+			settings[k] = v
+		case "ssh_keypair_name":
+			settings[k] = v
+		case "ssh_private_key_file":
+			settings[k] = v
 		case "ssh_username":
-			settings[k] = v
-			hasSSHUsername = true
-		case "ami_description", "availability_zone", "device_name",
-			"iam_instance_profile", "security_group_id", "snapshot_id",
-			"spot_price", "spot_price_auto_product", "ssh_keypair_name",
-			"ssh_private_key_file", "subnet_id", "temporary_key_pair_name",
-			"token", "user_data", "virtual_name",
-			"vpc_id", "windows_password_timeout":
-			settings[k] = v
-		case "ssh_port", "volume_size", "volume_type":
-			// only add if its an int
-			i, err := strconv.Atoi(v)
-			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+			// Only set if there wasn't a communicator to process.
+			if hasCommunicator {
+				continue
 			}
-			settings[k] = i
+			settings[k] = v
+			hasUsername = true
+		case "subnet_id":
+			settings[k] = v
+		case "temporary_key_pair_name":
+			settings[k] = v
+		case "token":
+			settings[k] = v
+		case "user_data":
+			settings[k] = v
 		case "user_data_file":
 			src, err := r.findComponentSource(AmazonEBS.String(), v, false)
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
-			jww.ERROR.Printf("EBS user_data_file: %v", src)
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
 			// Nothing should be copied in this instancel it should not be added
@@ -489,10 +500,14 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 				r.files[r.buildOutPath(AmazonEBS.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(AmazonEBS.String(), v)
-		case "associate_public_ip_address", "enhanced_networking", "delete_termination",
-			"encrypted", "force_deregister", "iops",
-			"no_device", "ssh_private_ip":
-			settings[k], _ = strconv.ParseBool(v)
+		case "vpc_id":
+			settings[k] = v
+		case "windows_password_timeout":
+			// Don't set if there's a non WinRM communicator.
+			if hasCommunicator && prefix != "winrm" {
+				continue
+			}
+			settings[k] = v
 		}
 	}
 	if !hasAccessKey {
@@ -513,14 +528,25 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 	if !hasSourceAmi {
 		return nil, &RequiredSettingError{ID, "source_ami"}
 	}
-	if !hasSSHUsername {
-		return nil, &RequiredSettingError{ID, "ssh_username"}
+	if !hasUsername {
+		// If there isn't a prefix, use ssh as that's the setting
+		// that's required according to the docs.
+		if prefix == "" {
+			prefix = "ssh"
+		}
+		return nil, &RequiredSettingError{ID, prefix + "_username"}
 	}
 	// Process the Arrays.
 	for name, val := range r.Builders[ID].Arrays {
 		// only process supported array stuff
 		switch name {
 		case "ami_block_device_mappings":
+			// do ami_block_device_mappings processing
+			settings[name], err = r.processAMIBlockDeviceMappings(val)
+			if err != nil {
+				return nil, &SettingError{ID, "ami_block_device_mappings", "", err}
+			}
+			continue
 		case "ami_groups":
 		case "ami_product_codes":
 		case "ami_regions":
@@ -539,7 +565,6 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 	}
 	return settings, nil
 }
-*/
 
 // createAmazonInstance creates a map of settings for Packer's amazon-instance
 // builder.  Any values that aren't supported by the amazon-ebs builder are
