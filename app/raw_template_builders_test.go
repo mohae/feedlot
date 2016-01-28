@@ -601,6 +601,58 @@ var testAllBuilders = rawTemplate{
 					Arrays:   map[string]interface{}{},
 				},
 			},
+			"qemu": {
+				templateSection{
+					Type: "qemu",
+					Settings: []string{
+						"accelerator=kvm",
+						"boot_wait=10s",
+						"disk_cache=writeback",
+						"disk_compression=true",
+						"disk_discard=ignore",
+						"disk_image=true",
+						"disk_interface=ide",
+						"disk_size=40000",
+						"format = ovf",
+						"headless=true",
+						"http_directory=http",
+						"http_port_min=8000",
+						"http_port_max=9000",
+						"iso_checksum=ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
+						"iso_target_path=isocache",
+						"net_device=i82551",
+						"output_directory=out/dir",
+						"qemu_binary=qemu-system-x86_64",
+						"skip_compaction=true",
+						"ssh_username=vagrant",
+					},
+					Arrays: map[string]interface{}{
+						"boot_command": []string{
+							"<bs>",
+							"<del>",
+							"<enter><return>",
+							"<esc>",
+						},
+						"floppy_files": []string{
+							"disk1",
+						},
+						"iso_urls": []string{
+							"http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+							"http://2.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+						},
+						"qemuargs": [][]string{
+							[]string{
+								"-m",
+								"1024m",
+							},
+							[]string{
+								"--no-acpi",
+								"",
+							},
+						},
+					},
+				},
+			},
 			"virtualbox-iso": {
 				templateSection{
 					Type: "virtualbox-iso",
@@ -1060,6 +1112,36 @@ var testAllBuildersSSH = rawTemplate{
 					Arrays: map[string]interface{}{},
 				},
 			},
+			"qemu": {
+				templateSection{
+					Type: "qemu",
+					Settings: []string{
+						"accelerator=kvm",
+						"boot_wait=10s",
+						"communicator=ssh",
+						"disk_cache=writeback",
+						"disk_compression=true",
+						"disk_discard=ignore",
+						"disk_image=true",
+						"disk_interface=ide",
+						"disk_size=40000",
+						"format = ovf",
+						"headless=true",
+						"http_directory=http",
+						"http_port_min=8000",
+						"http_port_max=9000",
+						"iso_checksum=ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
+						"iso_target_path=isocache",
+						"iso_url=http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+						"net_device=i82551",
+						"output_directory=out/dir",
+						"qemu_binary=qemu-system-x86_64",
+						"skip_compaction=true",
+						"ssh_username=vagrant",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
 			"virtualbox-iso": {
 				templateSection{
 					Type: "virtualbox-iso",
@@ -1397,6 +1479,36 @@ var testAllBuildersWinRM = rawTemplate{
 					Type: "null",
 					Settings: []string{
 						"communicator=winrm",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
+			"qemu": {
+				templateSection{
+					Type: "qemu",
+					Settings: []string{
+						"accelerator=kvm",
+						"boot_wait=10s",
+						"communicator=winrm",
+						"disk_cache=writeback",
+						"disk_compression=true",
+						"disk_discard=ignore",
+						"disk_image=true",
+						"disk_interface=ide",
+						"disk_size=40000",
+						"format = ovf",
+						"headless=true",
+						"http_directory=http",
+						"http_port_min=8000",
+						"http_port_max=9000",
+						"iso_checksum=ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
+						"iso_target_path=isocache",
+						"iso_url=http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+						"net_device=i82551",
+						"output_directory=out/dir",
+						"qemu_binary=qemu-system-x86_64",
+						"skip_compaction=true",
+						"ssh_username=vagrant",
 					},
 					Arrays: map[string]interface{}{},
 				},
@@ -2826,6 +2938,158 @@ func TestBuilderNull(t *testing.T) {
 	}
 
 }
+
+func TestCreateQEMU(t *testing.T) {
+	expected := map[string]interface{}{
+		"accelerator": "kvm",
+		"boot_command": []string{
+			"<bs>",
+			"<del>",
+			"<enter><return>",
+			"<esc>",
+		},
+		"boot_wait":        "10s",
+		"disk_cache":       "writeback",
+		"disk_compression": true,
+		"disk_discard":     "ignore",
+		"disk_image":       true,
+		"disk_interface":   "ide",
+		"disk_size":        40000,
+		"floppy_files": []string{
+			"disk1",
+		},
+		"format":            "ovf",
+		"headless":          true,
+		"http_directory":    "http",
+		"http_port_max":     9000,
+		"http_port_min":     8000,
+		"iso_checksum":      "ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
+		"iso_checksum_type": "sha256",
+		"iso_target_path":   "isocache",
+		"iso_urls": []string{
+			"http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+			"http://2.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+		},
+		"net_device":       "i82551",
+		"output_directory": "out/dir",
+		"qemu_binary":      "qemu-system-x86_64",
+		"qemuargs": [][]string{
+			[]string{
+				"-m",
+				"1024m",
+			},
+			[]string{
+				"--no-acpi",
+				"",
+			},
+		},
+		"skip_compaction": true,
+		"ssh_username": "vagrant",
+		"type":         "qemu",
+	}
+	testAllBuilders.BaseURL = "http://releases.ubuntu.com/"
+	settings, err := testAllBuilders.createQEMU("qemu")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		}
+	}
+
+	// SSH
+	expectedSSH := map[string]interface{}{
+		"accelerator": "kvm",
+		"boot_wait":        "10s",
+		"communicator": "ssh",
+		"disk_cache":       "writeback",
+		"disk_compression": true,
+		"disk_discard":     "ignore",
+		"disk_image":       true,
+		"disk_interface":   "ide",
+		"disk_size":        40000,
+		"format":            "ovf",
+		"headless":          true,
+		"http_directory":    "http",
+		"http_port_max":     9000,
+		"http_port_min":     8000,
+		"iso_checksum":      "ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
+		"iso_checksum_type": "sha256",
+		"iso_target_path":   "isocache",
+		"iso_url": "http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+		"net_device":       "i82551",
+		"output_directory": "out/dir",
+		"qemu_binary":      "qemu-system-x86_64",
+		"skip_compaction": true,
+		"ssh_bastion_host":             "bastion.host",
+		"ssh_bastion_port":             2222,
+		"ssh_bastion_username":         "packer",
+		"ssh_bastion_password":         "packer",
+		"ssh_bastion_private_key_file": "secret",
+		"ssh_disable_agent":            true,
+		"ssh_handshake_attempts":       10,
+		"ssh_host":                     "127.0.0.1",
+		"ssh_password":                 "vagrant",
+		"ssh_port":                     22,
+		"ssh_private_key_file":         "key/path",
+		"ssh_pty":                      true,
+		"ssh_timeout":                  "10m",
+		"ssh_username":                 "vagrant",
+		"type":         "qemu",
+	}
+	testAllBuilders.BaseURL = "http://releases.ubuntu.com/"
+	settings, err = testAllBuildersSSH.createQEMU("qemu")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expectedSSH) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedSSH), MarshalJSONToString.Get(settings))
+		}
+	}
+	// WinRM
+	expectedWinRM := map[string]interface{}{
+		"accelerator": "kvm",
+		"boot_wait":        "10s",
+		"communicator": "winrm",
+		"disk_cache":       "writeback",
+		"disk_compression": true,
+		"disk_discard":     "ignore",
+		"disk_image":       true,
+		"disk_interface":   "ide",
+		"disk_size":        40000,
+		"format":            "ovf",
+		"headless":          true,
+		"http_directory":    "http",
+		"http_port_max":     9000,
+		"http_port_min":     8000,
+		"iso_checksum":      "ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
+		"iso_checksum_type": "sha256",
+		"iso_target_path":   "isocache",
+		"iso_url": "http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+		"net_device":       "i82551",
+		"output_directory": "out/dir",
+		"qemu_binary":      "qemu-system-x86_64",
+		"skip_compaction": true,
+		"type":         "qemu",
+		"winrm_host":     "host",
+		"winrm_password": "vagrant",
+		"winrm_port":     22,
+		"winrm_timeout":  "10m",
+		"winrm_username": "vagrant",
+		"winrm_use_ssl":  true,
+		"winrm_insecure": true,
+	}
+	testAllBuilders.BaseURL = "http://releases.ubuntu.com/"
+	settings, err = testAllBuildersWinRM.createQEMU("qemu")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expectedWinRM) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(settings))
+		}
+	}
+}
+
 func TestCreateVirtualboxISO(t *testing.T) {
 	expected := map[string]interface{}{
 		"boot_command": []string{

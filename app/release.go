@@ -383,6 +383,9 @@ func (r *centos) getOSType(buildType string) (string, error) {
 		case "x386":
 			return "RedHat_32", nil
 		}
+	case "qemu":
+		// qemu doesn't need this info so return an empty string.
+		return "", nil
 	}
 	// Shouldn't get here unless the buildType passed is an unsupported one.
 	return "", &NotSupportedError{Distro: CentOS, slug: buildType}
@@ -524,6 +527,9 @@ func (r *debian) getOSType(buildType string) (string, error) {
 		case "i386":
 			return "Debian_32", nil
 		}
+	case "qemu":
+		// qemu doesn't need this info so return an empty string.
+		return "", nil
 	}
 	// Shouldn't get here unless the buildType passed is an unsupported one.
 	return "", &NotSupportedError{Distro: Debian, slug: buildType}
@@ -729,6 +735,9 @@ func (r *ubuntu) getOSType(buildType string) (string, error) {
 		case "i386":
 			return "Ubuntu_32", nil
 		}
+	case "qemu":
+		// qemu doesn't need this info so return an empty string.
+		return "", nil
 	}
 	return "", &NotSupportedError{Distro: Ubuntu, slug: buildType}
 }

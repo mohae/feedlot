@@ -158,7 +158,11 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 			}
 		//	case Openstack:
 		//	case ParallelsISO, ParallelsPVM:
-		//	case QEMU:
+		case QEMU:
+			tmpS, err = r.createQEMU(ID)
+			if err != nil {
+				return nil, &Error{QEMU.String(), err}
+			}
 		case VirtualBoxISO:
 			tmpS, err = r.createVirtualBoxISO(ID)
 			if err != nil {
@@ -1331,6 +1335,234 @@ func (r *rawTemplate) createNull(ID string) (settings map[string]interface{}, er
 	if prefix == "" {
 		// communicator == none; there must be a communicator
 		return nil, fmt.Errorf("%s: %s builder requires a communicator other than \"none\"", ID, Null.String())
+	}
+	return settings, nil
+}
+
+// createQEMU creates a map of settings for Packer's QEMU builder.  Any
+// values that aren't supported by the QEMU builder are ignored.  Any
+// required settings that doesn't exist result in an error and processing
+// of the builder is stopped. For more information, refer to
+// https://packer.io/docs/builders/qemu.html
+//
+// In addition to the following options, Packer communicators are supported.
+// Check the communicator docs for valid options.
+//
+// Required configuration options:
+//   iso_checksum             string
+//   iso_checksum_type        string
+//   iso_url                  string
+//   ssh_username             string
+// Optional configuration options:
+//   accelerator           string
+//   boot_command          array of strings
+//   boot_wait             string
+//   disk_cache            string
+//   disk_compression      bool
+//   disk_discard          string
+//   disk_image            bool
+//   disk_interface        string
+//   disk_size             int
+//   floppy_files          array_of_strings
+//   format                string
+//   headless              bool
+//   http_directory        string
+//   http_port_max         int
+//   http_port_min         int
+//   iso_target_path       string
+//   iso_urls              array of strings
+//   net_device            string
+//   output_directory      string
+//   qemuargs              array of array of strings
+//   qemu_binary           string
+//   skip_compaction       bool
+func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.Builders[ID]
+	if !ok {
+		return nil, NewErrConfigNotFound(ID)
+	}
+	settings = map[string]interface{}{}
+	// Each create function is responsible for setting its own type.
+	settings["type"] = QEMU.String()
+	// Merge the settings between common and this builders.
+	var workSlice []string
+	_, ok = r.Builders[Common.String()]
+	if ok {
+		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		workSlice = r.Builders[ID].Settings
+	}
+	var bootCmdProcessed, hasChecksum, hasChecksumType, hasISOURL, hasUsername, hasCommunicator bool
+	// check for communicator first
+	prefix, err := r.processCommunicator(ID, workSlice, settings)
+	if err != nil {
+		return nil, err
+	}
+	// see if the required settings include username/password
+	if prefix != "" {
+		_, ok = settings[prefix+"_username"]
+		if ok {
+			hasUsername = true
+		}
+		hasCommunicator = true
+	}
+	// Go through each element in the slice, only take the ones that matter
+	// to this builder.
+	for _, s := range workSlice {
+		// var tmp interface{}
+		k, v := parseVar(s)
+		v = r.replaceVariables(v)
+		switch k {
+		case "accelerator":
+			settings[k] = v
+		case "boot_command":
+			// if the boot_command exists in the Settings section, it should
+			// reference a file. This boot_command takes precedence over any
+			// boot_command in the array defined in the Arrays section.
+			if strings.HasSuffix(v, ".command") {
+				var commands []string
+				commands, err = r.commandsFromFile("", v)
+				if err != nil {
+					return nil, &SettingError{ID, k, v, err}
+				}
+				if len(commands) == 0 {
+					return nil, &SettingError{ID, k, v, ErrNoCommands}
+				}
+				settings[k] = commands
+				bootCmdProcessed = true
+			}
+		case "boot_wait":
+			settings[k] = v
+		case "disk_cache":
+			settings[k] = v
+		case "disk_compression":
+			settings[k], _ = strconv.ParseBool(v)
+		case "disk_discard":
+			settings[k] = v
+		case "disk_image":
+			settings[k], _ = strconv.ParseBool(v)
+		case "disk_interface":
+			settings[k] = v
+		case "disk_size":
+			// only add if its an int
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			settings[k] = i
+		case "format":
+			settings[k] = v
+		case "headless":
+			settings[k], _ = strconv.ParseBool(v)
+		case "http_directory":
+			settings[k] = v
+		case "http_port_min":
+			// only add if its an int
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			settings[k] = i
+		case "http_port_max":
+			// only add if its an int
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			settings[k] = i
+		case "iso_checksum":
+			settings[k] = v
+			hasChecksum = true
+		case "iso_checksum_type":
+			settings[k] = v
+			hasChecksumType = true
+		case "iso_target_path":
+			// TODO should this have path location?
+			settings[k] = v
+		case "iso_url":
+			settings[k] = v
+			hasISOURL = true
+		case "net_device":
+			settings[k] = v
+		case "output_directory":
+			settings[k] = v
+		case "qemu_binary":
+			settings[k] = v
+		case "skip_compaction":
+			settings[k], _ = strconv.ParseBool(v)
+		case "ssh_username":
+			// Skip if communicator exists; this was already processed during communicator processing.
+			if hasCommunicator {
+				continue
+			}
+			settings[k] = v
+			hasUsername = true
+		}
+	}
+	// Username is required
+	if !hasUsername {
+		return nil, &RequiredSettingError{ID, prefix + "_username"}
+	}
+	// make sure http_directory is set and add to dir list
+	// TODO reconcile with above
+	err = r.setHTTP(QEMU.String(), settings)
+	if err != nil {
+		return nil, err
+	}
+	for name, val := range r.Builders[ID].Arrays {
+		switch name {
+		case "boot_command":
+			if bootCmdProcessed {
+				continue // if the boot command was already set, don't use this array
+			}
+			settings[name] = val
+		case "floppy_files":
+			settings[name] = val
+		case "iso_urls":
+			// iso_url takes precedence
+			if hasISOURL {
+				continue
+			}
+			settings[name] = val
+			hasISOURL = true
+		case "qemuargs":
+			settings[name] = val
+		}
+	}
+	if !hasISOURL {
+		return nil, &RequiredSettingError{ID, "iso_url"}
+	}
+	// If the iso info wasn't set from the Settings, get it from the distro's release
+	if !hasISOURL {
+		//handle iso lookup vs set in file
+		switch r.Distro {
+		case CentOS.String():
+			settings["iso_url"] = r.releaseISO.(*centos).imageURL()
+			settings["iso_checksum"] = r.releaseISO.(*centos).Checksum
+			settings["iso_checksum_type"] = r.releaseISO.(*centos).ChecksumType
+		case Debian.String():
+			settings["iso_url"] = r.releaseISO.(*debian).imageURL()
+			settings["iso_checksum"] = r.releaseISO.(*debian).Checksum
+			settings["iso_checksum_type"] = r.releaseISO.(*debian).ChecksumType
+
+		case Ubuntu.String():
+			settings["iso_url"] = r.releaseISO.(*ubuntu).imageURL()
+			settings["iso_checksum"] = r.releaseISO.(*ubuntu).Checksum
+			settings["iso_checksum_type"] = r.releaseISO.(*ubuntu).ChecksumType
+		default:
+			err = fmt.Errorf("%q is not a supported Distro", r.Distro)
+			return nil, err
+		}
+		return settings, nil
+	}
+	if !hasChecksum {
+		return nil, &RequiredSettingError{ID: ID, Key: "iso_checksum"}
+	}
+	if !hasChecksumType {
+		return nil, &RequiredSettingError{ID: ID, Key: "iso_checksum_type"}
 	}
 	return settings, nil
 }
