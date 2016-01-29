@@ -1339,6 +1339,184 @@ func (r *rawTemplate) createNull(ID string) (settings map[string]interface{}, er
 	return settings, nil
 }
 
+// createOpenStack creates a map of settings for Packer's OpenStack builder.
+// Any values that aren't supported by the QEMU builder are ignored.  Any
+// required settings that doesn't exist result in an error and processing
+// of the builder is stopped. For more information, refer to
+// https://packer.io/docs/builders/openstack.html
+//
+// In addition to the following options, Packer communicators are supported.
+// Check the communicator docs for valid options.
+//
+// Required configuration options:
+//   flavor               string
+//   image_name           string
+//   source_image         string
+//   username             string
+//   password             string
+// Optional configuration options:
+//   api_key              string
+//   availability_zone    string
+//   config_drive         bool
+//   floating_ip          string
+//   floating_ip_pool     string
+//   insecure             bool
+//   metadata             bool
+//   networks             array of strings
+//   rackconnect_wait     bool
+//   region               string
+//   security_groups      array of strings
+//   ssh_interface        string
+//   tenant_id            string
+//   tenant_name          string
+//   use_floating_ip      bool
+func (r *rawTemplate) createOpenStack(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.Builders[ID]
+	if !ok {
+		return nil, NewErrConfigNotFound(ID)
+	}
+	settings = map[string]interface{}{}
+	// Each create function is responsible for setting its own type.
+	settings["type"] = Openstack.String()
+	// Merge the settings between common and this builders.
+	var workSlice []string
+	_, ok = r.Builders[Common.String()]
+	if ok {
+		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		workSlice = r.Builders[ID].Settings
+	}
+	var hasFlavor, hasImageName, hasSourceImage, hasUsername, hasPassword, hasCommunicator bool
+	// check for communicator first
+	prefix, err := r.processCommunicator(ID, workSlice, settings)
+	if err != nil {
+		return nil, err
+	}
+	// see if the required settings include username/password
+	if prefix != "" {
+		_, ok = settings[prefix+"_username"]
+		if ok {
+			hasUsername = true
+		}
+		_, ok = settings[prefix+"_password"]
+		if ok {
+			hasPassword = true
+		}
+		hasCommunicator = true
+	}
+	// Go through each element in the slice, only take the ones that matter
+	// to this builder.
+	for _, s := range workSlice {
+		// var tmp interface{}
+		k, v := parseVar(s)
+		v = r.replaceVariables(v)
+		switch k {
+		case "api_key":
+			settings[k] = v
+		case "availability_zone":
+			settings[k] = v
+		case "config_drive":
+			settings[k] = v
+			settings[k], _ = strconv.ParseBool(v)
+		case "flavor":
+			settings[k] = v
+			hasFlavor = true
+		case "floating_ip":
+			settings[k] = v
+		case "floating_ip_pool":
+			settings[k] = v
+		case "image_name":
+			settings[k] = v
+			hasImageName = true
+		case "insecure":
+			settings[k] = v
+			settings[k], _ = strconv.ParseBool(v)
+		case "metadata":
+			settings[k] = v
+			settings[k], _ = strconv.ParseBool(v)
+		case "password":
+			// skip if communicator was processed
+			if hasCommunicator {
+				continue
+			}
+			settings[k] = v
+			hasPassword = true
+		case "rackconnect_wait":
+			settings[k] = v
+			settings[k], _ = strconv.ParseBool(v)
+		case "region":
+			settings[k] = v
+		case "ssh_interface":
+			// If there's a communicator and it's not SSH skip.
+			if hasCommunicator && prefix != "ssh" {
+				continue
+			}
+			settings[k] = v
+		case "source_image":
+			settings[k] = v
+			hasSourceImage = true
+		case "tenant_id":
+			settings[k] = v
+		case "tenant_name":
+			settings[k] = v
+		case "use_floating_ip":
+			settings[k], _ = strconv.ParseBool(v)
+		case "username":
+			// skip if communicator was processed.
+			if hasCommunicator {
+				continue
+			}
+			settings[k] = v
+			hasUsername = true
+		}
+	}
+	// flavor is required
+	if !hasFlavor {
+		return nil, &RequiredSettingError{ID, "flavor"}
+	}
+	// image_name is required
+	if !hasImageName {
+		return nil, &RequiredSettingError{ID, "image_name"}
+	}
+	// source_image is required
+	if !hasSourceImage {
+		return nil, &RequiredSettingError{ID, "source_image"}
+	}
+	// Password is required
+	if !hasPassword {
+		if prefix == "" {
+			return nil, &RequiredSettingError{ID, "password"}
+		}
+		return nil, &RequiredSettingError{ID, prefix + "_password"}
+	}
+	// Username is required
+	if !hasUsername {
+		if prefix == "" {
+			return nil, &RequiredSettingError{ID, "username"}
+		}
+		return nil, &RequiredSettingError{ID, prefix + "_username"}
+	}
+
+	// Process arrays, iso_urls is only valid if iso_url is not set
+	for name, val := range r.Builders[ID].Arrays {
+		switch name {
+		case "metadata":
+		case "networks":
+		case "security_groups":
+		default:
+			continue
+		}
+		array := deepcopy.Iface(val)
+		if array != nil {
+			settings[name] = array
+		}
+	}
+	return settings, nil
+}
+
 // createQEMU creates a map of settings for Packer's QEMU builder.  Any
 // values that aren't supported by the QEMU builder are ignored.  Any
 // required settings that doesn't exist result in an error and processing

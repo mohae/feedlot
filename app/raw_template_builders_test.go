@@ -601,6 +601,76 @@ var testAllBuilders = rawTemplate{
 					Arrays:   map[string]interface{}{},
 				},
 			},
+			"openstack1": {
+				templateSection{
+					Type: "openstack",
+					Settings: []string{
+						"api_key=APIKEY",
+						"availability_zone=zone1",
+						"config_drive=true",
+						"flavor=2",
+						"floating_ip=192.168.1.1",
+						"floating_ip_pool=192.168.100.1/24",
+						"image_name=test image",
+						"insecure=true",
+						"password=packer",
+						"rackconnect_wait",
+						"region=DFW",
+						"source_image=23b564c9-c3e6-49f9-bc68-86c7a9ab5018",
+						"ssh_interface=private",
+						"tenant_id=123",
+						"use_floating_ip=true",
+						"username=packer",
+					},
+					Arrays: map[string]interface{}{
+						"networks": []string{
+							"de305d54-75b4-431b-adb2-eb6b9e546014",
+						},
+						"security_groups": []string{
+							"admins",
+						},
+						"metadata": map[string]interface{}{
+							"quota_metadata_items": 128,
+							"metadata_listen":      "0.0.0.0",
+						},
+					},
+				},
+			},
+			"openstack2": {
+				templateSection{
+					Type: "openstack",
+					Settings: []string{
+						"api_key=APIKEY",
+						"availability_zone=zone1",
+						"config_drive=true",
+						"flavor=2",
+						"floating_ip=192.168.1.1",
+						"floating_ip_pool=192.168.100.1/24",
+						"image_name=test image",
+						"insecure=true",
+						"password=packer",
+						"rackconnect_wait",
+						"region=DFW",
+						"source_image=23b564c9-c3e6-49f9-bc68-86c7a9ab5018",
+						"ssh_interface=private",
+						"tenant_name=acme",
+						"use_floating_ip=true",
+						"username=packer",
+					},
+					Arrays: map[string]interface{}{
+						"networks": []string{
+							"de305d54-75b4-431b-adb2-eb6b9e546014",
+						},
+						"security_groups": []string{
+							"admins",
+						},
+						"metadata": map[string]interface{}{
+							"quota_metadata_items": 128,
+							"metadata_listen":      "0.0.0.0",
+						},
+					},
+				},
+			},
 			"qemu": {
 				templateSection{
 					Type: "qemu",
@@ -1112,6 +1182,31 @@ var testAllBuildersSSH = rawTemplate{
 					Arrays: map[string]interface{}{},
 				},
 			},
+			"openstack": {
+				templateSection{
+					Type: "openstack",
+					Settings: []string{
+						"api_key=APIKEY",
+						"availability_zone=zone1",
+						"communicator=ssh",
+						"config_drive=true",
+						"flavor=2",
+						"floating_ip=192.168.1.1",
+						"floating_ip_pool=192.168.100.1/24",
+						"image_name=test image",
+						"insecure=true",
+						"password=packer",
+						"rackconnect_wait",
+						"region=DFW",
+						"source_image=23b564c9-c3e6-49f9-bc68-86c7a9ab5018",
+						"ssh_interface=private",
+						"tenant_name=acme",
+						"use_floating_ip=true",
+						"username=packer",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
 			"qemu": {
 				templateSection{
 					Type: "qemu",
@@ -1479,6 +1574,31 @@ var testAllBuildersWinRM = rawTemplate{
 					Type: "null",
 					Settings: []string{
 						"communicator=winrm",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
+			"openstack": {
+				templateSection{
+					Type: "openstack",
+					Settings: []string{
+						"api_key=APIKEY",
+						"availability_zone=zone1",
+						"communicator=winrm",
+						"config_drive=true",
+						"flavor=2",
+						"floating_ip=192.168.1.1",
+						"floating_ip_pool=192.168.100.1/24",
+						"image_name=test image",
+						"insecure=true",
+						"password=packer",
+						"rackconnect_wait",
+						"region=DFW",
+						"source_image=23b564c9-c3e6-49f9-bc68-86c7a9ab5018",
+						"ssh_interface=private",
+						"tenant_name=acme",
+						"use_floating_ip=true",
+						"username=packer",
 					},
 					Arrays: map[string]interface{}{},
 				},
@@ -2937,6 +3057,161 @@ func TestBuilderNull(t *testing.T) {
 		}
 	}
 
+}
+
+func TestCreateOpenstack(t *testing.T) {
+	// openstack1 uses tenant_id
+	expected1 := map[string]interface{}{
+		"api_key":           "APIKEY",
+		"availability_zone": "zone1",
+		"config_drive":      true,
+		"flavor":            "2",
+		"floating_ip":       "192.168.1.1",
+		"floating_ip_pool":  "192.168.100.1/24",
+		"image_name":        "test image",
+		"insecure":          true,
+		"networks": []string{
+			"de305d54-75b4-431b-adb2-eb6b9e546014",
+		},
+		"metadata": map[string]interface{}{
+			"metadata_listen":      "0.0.0.0",
+			"quota_metadata_items": 128,
+		},
+		"password":         "packer",
+		"rackconnect_wait": false,
+		"region":           "DFW",
+		"security_groups": []string{
+			"admins",
+		},
+		"source_image":    "23b564c9-c3e6-49f9-bc68-86c7a9ab5018",
+		"ssh_interface":   "private",
+		"tenant_id":       "123",
+		"type":            "openstack",
+		"use_floating_ip": true,
+		"username":        "packer",
+	}
+	ret, err := testAllBuilders.createOpenStack("openstack1")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(ret) != MarshalJSONToString.Get(expected1) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected1), MarshalJSONToString.Get(ret))
+		}
+	}
+
+	// openstack2 uses tenant_name
+	expected2 := map[string]interface{}{
+		"api_key":           "APIKEY",
+		"availability_zone": "zone1",
+		"config_drive":      true,
+		"flavor":            "2",
+		"floating_ip":       "192.168.1.1",
+		"floating_ip_pool":  "192.168.100.1/24",
+		"image_name":        "test image",
+		"insecure":          true,
+		"networks": []string{
+			"de305d54-75b4-431b-adb2-eb6b9e546014",
+		},
+		"metadata": map[string]interface{}{
+			"metadata_listen":      "0.0.0.0",
+			"quota_metadata_items": 128,
+		},
+		"password":         "packer",
+		"rackconnect_wait": false,
+		"region":           "DFW",
+		"security_groups": []string{
+			"admins",
+		},
+		"source_image":    "23b564c9-c3e6-49f9-bc68-86c7a9ab5018",
+		"ssh_interface":   "private",
+		"tenant_name":     "acme",
+		"type":            "openstack",
+		"use_floating_ip": true,
+		"username":        "packer",
+	}
+	ret, err = testAllBuilders.createOpenStack("openstack2")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(ret) != MarshalJSONToString.Get(expected2) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected2), MarshalJSONToString.Get(ret))
+		}
+	}
+
+	// ssh
+	expectedSSH := map[string]interface{}{
+		"api_key":                      "APIKEY",
+		"availability_zone":            "zone1",
+		"communicator":                 "ssh",
+		"config_drive":                 true,
+		"flavor":                       "2",
+		"floating_ip":                  "192.168.1.1",
+		"floating_ip_pool":             "192.168.100.1/24",
+		"image_name":                   "test image",
+		"insecure":                     true,
+		"rackconnect_wait":             false,
+		"region":                       "DFW",
+		"source_image":                 "23b564c9-c3e6-49f9-bc68-86c7a9ab5018",
+		"ssh_bastion_host":             "bastion.host",
+		"ssh_bastion_port":             2222,
+		"ssh_bastion_username":         "packer",
+		"ssh_bastion_password":         "packer",
+		"ssh_bastion_private_key_file": "secret",
+		"ssh_disable_agent":            true,
+		"ssh_handshake_attempts":       10,
+		"ssh_host":                     "127.0.0.1",
+		"ssh_interface":                "private",
+		"ssh_password":                 "vagrant",
+		"ssh_port":                     22,
+		"ssh_private_key_file":         "key/path",
+		"ssh_pty":                      true,
+		"ssh_username":                 "vagrant",
+		"ssh_timeout":                  "10m",
+		"tenant_name":                  "acme",
+		"type":                         "openstack",
+		"use_floating_ip":              true,
+	}
+	ret, err = testAllBuildersSSH.createOpenStack("openstack")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(ret) != MarshalJSONToString.Get(expectedSSH) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedSSH), MarshalJSONToString.Get(ret))
+		}
+	}
+	// winrm
+	expectedWinRM := map[string]interface{}{
+		"api_key":           "APIKEY",
+		"availability_zone": "zone1",
+		"communicator":      "winrm",
+		"config_drive":      true,
+		"flavor":            "2",
+		"floating_ip":       "192.168.1.1",
+		"floating_ip_pool":  "192.168.100.1/24",
+		"image_name":        "test image",
+		"insecure":          true,
+		"rackconnect_wait":  false,
+		"region":            "DFW",
+		"source_image":      "23b564c9-c3e6-49f9-bc68-86c7a9ab5018",
+		"tenant_name":       "acme",
+		"type":              "openstack",
+		"use_floating_ip":   true,
+		"winrm_host":        "host",
+		"winrm_password":    "vagrant",
+		"winrm_port":        22,
+		"winrm_timeout":     "10m",
+		"winrm_username":    "vagrant",
+		"winrm_use_ssl":     true,
+		"winrm_insecure":    true,
+	}
+	ret, err = testAllBuildersWinRM.createOpenStack("openstack")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(ret) != MarshalJSONToString.Get(expectedWinRM) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(ret))
+		}
+	}
 }
 
 func TestCreateQEMU(t *testing.T) {
