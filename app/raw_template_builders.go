@@ -711,25 +711,41 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 		case "bundle_prefix":
 			settings[k] = v
 		case "bundle_upload_command":
+			if !strings.HasSuffix(v, ".command") {
+				// The value is the command.
+				settings[k] = v
+				continue
+			}
+			// The value is a command file, load the contents of the
+			// file.
 			cmds, err := r.commandsFromFile(AmazonInstance.String(), v)
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
-			if len(cmds) == 0 {
+			//
+			cmd := commandFromSlice(cmds)
+			if cmd == "" {
 				return nil, &SettingError{ID, k, v, ErrNoCommands}
 			}
-			// the setting is a string so don't use the full slice
-			settings[k] = cmds[0]
+			settings[k] = cmd
 		case "bundle_vol_command":
+			if !strings.HasSuffix(v, ".command") {
+				// The value is the command.
+				settings[k] = v
+				continue
+			}
+			// The value is a command file, load the contents of the
+			// file.
 			cmds, err := r.commandsFromFile(AmazonInstance.String(), v)
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
-			if len(cmds) == 0 {
+			//
+			cmd := commandFromSlice(cmds)
+			if cmd == "" {
 				return nil, &SettingError{ID, k, v, ErrNoCommands}
 			}
-			// the setting is a string so don't use the full slice
-			settings[k] = cmds[0]
+			settings[k] = cmd
 		case "ebs_optimized":
 			settings[k], _ = strconv.ParseBool(v)
 		case "enhanced_networking":
