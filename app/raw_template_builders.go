@@ -1246,18 +1246,9 @@ func (r *rawTemplate) createGoogleCompute(ID string) (settings map[string]interf
 		v = r.replaceVariables(v)
 		switch k {
 		case "account_file":
-			src, err := r.findComponentSource(GoogleCompute.String(), v, false)
-			if err != nil {
-				return nil, err
-			}
-			// if the source couldn't be found and an error wasn't generated, replace
-			// s with the original value; this occurs when it is an example.
-			// Nothing should be copied in this instancel it should not be added
-			// to the copy info
-			if src != "" {
-				r.files[r.buildOutPath(GoogleCompute.String(), v)] = src
-			}
-			settings[k] = r.buildTemplateResourcePath(GoogleCompute.String(), v)
+			// Account file contains account credentials: the value
+			// is taken as is.
+			settings[k] = v
 		case "address":
 			settings[k] = v
 		case "disk_size":
@@ -1304,15 +1295,15 @@ func (r *rawTemplate) createGoogleCompute(ID string) (settings map[string]interf
 	}
 	// Process the Arrays.
 	for name, val := range r.Builders[ID].Arrays {
-		if name == "metadata" {
-			settings[name] = val
+		switch name {
+		case "metadata":
+		case "tags":
+		default
 			continue
 		}
-		if name == "tags" {
-			array := deepcopy.InterfaceToSliceOfStrings(val)
-			if array != nil {
-				settings[name] = array
-			}
+		array := deepcopy.Iface(val)
+		if array != nil {
+			settings[name] = array
 		}
 	}
 	return settings, nil
