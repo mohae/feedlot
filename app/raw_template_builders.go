@@ -23,7 +23,7 @@ const (
 	Docker
 	GoogleCompute
 	Null
-	Openstack
+	OpenStack
 	Parallels
 	QEMU
 	VirtualBoxISO
@@ -81,7 +81,7 @@ func BuilderFromString(s string) Builder {
 	case "null":
 		return Null
 	case "openstack":
-		return Openstack
+		return OpenStack
 	case "parallels":
 		return Parallels
 	case "qemu":
@@ -156,7 +156,11 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 			if err != nil {
 				return nil, &Error{Null.String(), err}
 			}
-		//	case Openstack:
+		case OpenStack:
+			tmpS, err = r.createOpenStack(ID)
+			if err != nil {
+				return nil, &Error{Null.String(), err}
+			}
 		//	case ParallelsISO, ParallelsPVM:
 		case QEMU:
 			tmpS, err = r.createQEMU(ID)
@@ -792,8 +796,8 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 				return nil, &SettingError{ID, k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
-			// s with the original value; this occurs when it is an example.
-			// Nothing should be copied in this instancel it should not be added
+			// src with the original value; this occurs when it is an example.
+			// Nothing should be copied in this instance and it should not be added
 			// to the copy info
 			if src != "" {
 				r.files[r.buildOutPath(AmazonEBS.String(), v)] = src
@@ -1139,7 +1143,7 @@ func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 	// Process the Arrays.
 	for name, val := range r.Builders[ID].Arrays {
 		if name == "run_command" {
-			array := deepcopy.InterfaceToSliceOfStrings(val)
+			array := deepcopy.Iface(val)
 			if array != nil {
 				settings[name] = array
 			}
@@ -1147,7 +1151,7 @@ func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 			continue
 		}
 		if name == "volumes" {
-			settings[name] = val
+			settings[name] = deepcopy.Iface(val)
 		}
 	}
 	// if there wasn't an array of run commands, check to see if they should be loaded
@@ -1377,7 +1381,7 @@ func (r *rawTemplate) createOpenStack(ID string) (settings map[string]interface{
 	}
 	settings = map[string]interface{}{}
 	// Each create function is responsible for setting its own type.
-	settings["type"] = Openstack.String()
+	settings["type"] = OpenStack.String()
 	// Merge the settings between common and this builders.
 	var workSlice []string
 	_, ok = r.Builders[Common.String()]
