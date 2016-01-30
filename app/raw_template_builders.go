@@ -2990,3 +2990,35 @@ func DeepCopyMapStringBuilder(b map[string]builder) map[string]Componenter {
 	}
 	return c
 }
+
+// commandFromSlice takes a []string and returns it as a string.  If there is
+// only 1 element, that is returned as the command without any additional
+// processing.  Otherwise each element of the slice is processed.
+//
+// Processing multi-line commands are done by trimming space characters
+// (space, tabs, newlines) and joining them to form a single command string.
+// The `\` character is used when a single line is split across multiple
+// lines.  As such, a line without one signals the end of the command being
+// processed and if there are any additional lines in the string slice being
+// processed, they will be ignored.
+//
+// Once a line without a `\` is encountered that line is added to the
+// command string and the resulting command string is returned.
+func commandFromSlice(lines []string) string {
+	if len(lines) == 0 {
+		return ""
+	}
+	if len(lines) == 1 {
+		return lines[0]
+	}
+	var cmd string
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if !strings.HasSuffix(line, `\`) {
+			cmd += line
+			return cmd
+		}
+		cmd += strings.TrimSuffix(line, `\`)
+	}
+	return cmd
+}

@@ -4110,3 +4110,33 @@ func TestProcessAMIBlockDeviceMappings(t *testing.T) {
 		}
 	}
 }
+
+func TestCommandFromSlice(t *testing.T) {
+	tests := []struct {
+		lines    []string
+		expected string
+	}{
+		{[]string{}, ""},
+		{[]string{"hello"}, "hello"},
+		{[]string{"hello \\ ", "world \\ ", "!"}, "hello world !"},
+		{[]string{"hello \\ ", "world  ", "!"}, "hello world"},
+		{[]string{"sudo -i -n ec2-bundle-vol \\ ",
+			"	-k {{.KeyPath}} \\ ",
+			"  -u {{.AccountId}} \\ ",
+			" -c {{.CertPath}} \\ ",
+			"   -r {{.Architecture}} \\",
+			"	-e {{.PrivatePath}}/* \\ ",
+			"-d {{.Destination}} \\ ",
+			"	-p {{.Prefix}} \\ ",
+			"	  --batch \\  ",
+			"	--no-filter	"},
+			"sudo -i -n ec2-bundle-vol -k {{.KeyPath}} -u {{.AccountId}} -c {{.CertPath}} -r {{.Architecture}} -e {{.PrivatePath}}/* -d {{.Destination}} -p {{.Prefix}} --batch --no-filter",
+		},
+	}
+	for i, test := range tests {
+		ret := commandFromSlice(test.lines)
+		if ret != test.expected {
+			t.Errorf("%d: got %s want %s", i, ret, test.expected)
+		}
+	}
+}
