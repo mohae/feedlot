@@ -335,7 +335,7 @@ func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 			continue
 		}
 		array := deepcopy.Iface(val)
-		if array != nil {
+		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
 		}
 	}
@@ -575,7 +575,7 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 			continue
 		}
 		array := deepcopy.Iface(val)
-		if array != nil {
+		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
 		}
 	}
@@ -899,7 +899,7 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 			continue
 		}
 		array := deepcopy.Iface(val)
-		if array != nil {
+		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
 		}
 	}
@@ -1306,7 +1306,7 @@ func (r *rawTemplate) createGoogleCompute(ID string) (settings map[string]interf
 			continue
 		}
 		array := deepcopy.Iface(val)
-		if array != nil {
+		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
 		}
 	}
@@ -1522,7 +1522,7 @@ func (r *rawTemplate) createOpenStack(ID string) (settings map[string]interface{
 			continue
 		}
 		array := deepcopy.Iface(val)
-		if array != nil {
+		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
 		}
 	}
@@ -1714,7 +1714,7 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 		}
 		// copy the array and set it
 		array := deepcopy.Iface(val)
-		if array != nil {
+		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
 		}
 	}
