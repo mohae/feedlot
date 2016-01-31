@@ -1434,7 +1434,6 @@ func (r *rawTemplate) createOpenStack(ID string) (settings map[string]interface{
 		case "availability_zone":
 			settings[k] = v
 		case "config_drive":
-			settings[k] = v
 			settings[k], _ = strconv.ParseBool(v)
 		case "flavor":
 			settings[k] = v
@@ -1447,10 +1446,8 @@ func (r *rawTemplate) createOpenStack(ID string) (settings map[string]interface{
 			settings[k] = v
 			hasImageName = true
 		case "insecure":
-			settings[k] = v
 			settings[k], _ = strconv.ParseBool(v)
 		case "metadata":
-			settings[k] = v
 			settings[k], _ = strconv.ParseBool(v)
 		case "password":
 			// skip if communicator was processed
@@ -1698,18 +1695,27 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 			if bootCmdProcessed {
 				continue // if the boot command was already set, don't use this array
 			}
-			settings[name] = val
 		case "floppy_files":
-			settings[name] = val
 		case "iso_urls":
 			// iso_url takes precedence
 			if hasISOURL {
 				continue
 			}
-			settings[name] = val
-			hasISOURL = true
+			// This is processed here because we need to know if it exists or not
+			array := deepcopy.Iface(val)
+			if array != nil {
+				settings[name] = array
+				hasISOURL = true
+			}
+			continue
 		case "qemuargs":
-			settings[name] = val
+		default:
+			continue
+		}
+		// copy the array and set it
+		array := deepcopy.Iface(val)
+		if array != nil {
+			settings[name] = array
 		}
 	}
 	if !hasISOURL {
