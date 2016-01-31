@@ -1141,7 +1141,9 @@ func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 			settings[k], _ = strconv.ParseBool(v)
 		case "run_command":
 			// if it's here, cache the value, delay processing until arrays section
-			runCommandFile = v
+			if v != "" {
+				runCommandFile = v
+			}
 		}
 	}
 	if !hasCommit {
@@ -1158,17 +1160,19 @@ func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 	}
 	// Process the Arrays.
 	for name, val := range r.Builders[ID].Arrays {
-		if name == "run_command" {
+		switch name {
+		case "run_command":
 			array := deepcopy.Iface(val)
 			if array != nil {
 				settings[name] = array
 			}
 			hasRunCommandArray = true
 			continue
+		case "volumes":
+		default:
+			continue
 		}
-		if name == "volumes" {
-			settings[name] = deepcopy.Iface(val)
-		}
+		settings[name] = deepcopy.Iface(val)
 	}
 	// if there wasn't an array of run commands, check to see if they should be loaded
 	// from a file
@@ -1298,7 +1302,7 @@ func (r *rawTemplate) createGoogleCompute(ID string) (settings map[string]interf
 		switch name {
 		case "metadata":
 		case "tags":
-		default
+		default:
 			continue
 		}
 		array := deepcopy.Iface(val)
@@ -1585,6 +1589,7 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 		workSlice = r.Builders[ID].Settings
 	}
 	var bootCmdProcessed, hasChecksum, hasChecksumType, hasISOURL, hasUsername, hasCommunicator bool
+	var bootCommandFile string
 	// check for communicator first
 	prefix, err := r.processCommunicator(ID, workSlice, settings)
 	if err != nil {
@@ -1608,21 +1613,7 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 		case "accelerator":
 			settings[k] = v
 		case "boot_command":
-			// if the boot_command exists in the Settings section, it should
-			// reference a file. This boot_command takes precedence over any
-			// boot_command in the array defined in the Arrays section.
-			if strings.HasSuffix(v, ".command") {
-				var commands []string
-				commands, err = r.commandsFromFile("", v)
-				if err != nil {
-					return nil, &SettingError{ID, k, v, err}
-				}
-				if len(commands) == 0 {
-					return nil, &SettingError{ID, k, v, ErrNoCommands}
-				}
-				settings[k] = commands
-				bootCmdProcessed = true
-			}
+			bootCommandFile = v
 		case "boot_wait":
 			settings[k] = v
 		case "disk_cache":
