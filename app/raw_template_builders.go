@@ -1694,7 +1694,7 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 		case "boot_command":
 			// This is processed here because we need to know if it exists or not
 			array := deepcopy.Iface(val)
-			if reflect.ValueOf(val).IsNil() {
+			if !reflect.ValueOf(val).IsNil() {
 				settings[name] = array
 				hasBootCommand = true
 			}
@@ -1707,7 +1707,7 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 			}
 			// This is processed here because we need to know if it exists or not
 			array := deepcopy.Iface(val)
-			if reflect.ValueOf(val).IsNil() {
+			if !reflect.ValueOf(val).IsNil() {
 				settings[name] = array
 				hasISOURL = true
 			}
@@ -1734,7 +1734,7 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 				return nil, &SettingError{ID, "boot_command", bootCommandFile, ErrNoCommands}
 			}
 			array := deepcopy.Iface(commands)
-			if reflect.ValueOf(array).IsNil() {
+			if !reflect.ValueOf(array).IsNil() {
 				settings["boot_command"] = array
 			}
 			settings["boot_command"] = array
