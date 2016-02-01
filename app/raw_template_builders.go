@@ -1585,7 +1585,7 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 	} else {
 		workSlice = r.Builders[ID].Settings
 	}
-	var bootCmdProcessed, hasChecksum, hasChecksumType, hasISOURL, hasUsername, hasCommunicator bool
+	var hasBootCommand, hasChecksum, hasChecksumType, hasISOURL, hasUsername, hasCommunicator bool
 	var bootCommandFile string
 	// check for communicator first
 	prefix, err := r.processCommunicator(ID, workSlice, settings)
@@ -1692,9 +1692,13 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 	for name, val := range r.Builders[ID].Arrays {
 		switch name {
 		case "boot_command":
-			if bootCmdProcessed {
-				continue // if the boot command was already set, don't use this array
+			// This is processed here because we need to know if it exists or not
+			array := deepcopy.Iface(val)
+			if reflect.ValueOf(val).IsNil() {
+				settings[name] = array
+				hasBootCommand = true
 			}
+			continue
 		case "floppy_files":
 		case "iso_urls":
 			// iso_url takes precedence
@@ -1703,7 +1707,7 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 			}
 			// This is processed here because we need to know if it exists or not
 			array := deepcopy.Iface(val)
-			if array != nil {
+			if reflect.ValueOf(val).IsNil() {
 				settings[name] = array
 				hasISOURL = true
 			}
@@ -1718,6 +1722,25 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 			settings[name] = array
 		}
 	}
+	// if there wasn't an array of boot commands, check to see if they should be loaded
+	// from a file
+	if !hasBootCommand {
+		if bootCommandFile != "" {
+			commands, err := r.commandsFromFile(Docker.String(), bootCommandFile)
+			if err != nil {
+				return nil, &SettingError{ID, "boot_command", bootCommandFile, err}
+			}
+			if len(commands) == 0 {
+				return nil, &SettingError{ID, "boot_command", bootCommandFile, ErrNoCommands}
+			}
+			array := deepcopy.Iface(commands)
+			if reflect.ValueOf(array).IsNil() {
+				settings["boot_command"] = array
+			}
+			settings["boot_command"] = array
+		}
+	}
+
 	if !hasISOURL {
 		return nil, &RequiredSettingError{ID, "iso_url"}
 	}
