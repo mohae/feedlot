@@ -2887,7 +2887,7 @@ func TestCreateDocker(t *testing.T) {
 
 func TestCreateGoogleCompute(t *testing.T) {
 	expected := map[string]interface{}{
-		"account_file":      "googlecompute/account.json",
+		"account_file":      "account.json",
 		"address":           "ext-static",
 		"disk_size":         20,
 		"image_name":        "packer-{{timestamp}}",
@@ -2921,7 +2921,7 @@ func TestCreateGoogleCompute(t *testing.T) {
 	}
 	// ssh
 	expectedSSH := map[string]interface{}{
-		"account_file":                 "googlecompute/account.json",
+		"account_file":                 "account.json",
 		"address":                      "ext-static",
 		"communicator":                 "ssh",
 		"disk_size":                    20,
@@ -2963,7 +2963,7 @@ func TestCreateGoogleCompute(t *testing.T) {
 	}
 
 	expectedWinRM := map[string]interface{}{
-		"account_file":      "googlecompute/account.json",
+		"account_file":      "account.json",
 		"address":           "ext-static",
 		"communicator":      "winrm",
 		"disk_size":         20,
