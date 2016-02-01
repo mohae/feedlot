@@ -4140,3 +4140,26 @@ func TestCommandFromSlice(t *testing.T) {
 		}
 	}
 }
+
+func TestStringIsCommandFilename(t *testing.T) {
+	tests := []struct {
+		val      string
+		expected bool
+	}{
+		{"", false},
+		{"command", false},
+		{".command", false},
+		{"test", false},
+		{"test.", false},
+		{"test.command", true},
+		{"a.test.command", true},
+		{"a\\b\\test.command", true},
+	}
+
+	for i, test := range tests {
+		b := stringIsCommandFilename(test.val)
+		if b != test.expected {
+			t.Errorf("%d: got %t, want %t", i, b, test.expected)
+		}
+	}
+}

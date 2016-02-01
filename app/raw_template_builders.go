@@ -711,7 +711,7 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 		case "bundle_prefix":
 			settings[k] = v
 		case "bundle_upload_command":
-			if !strings.HasSuffix(v, ".command") {
+			if !stringIsCommandFilename(v) {
 				// The value is the command.
 				settings[k] = v
 				continue
@@ -729,7 +729,7 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 			}
 			settings[k] = cmd
 		case "bundle_vol_command":
-			if !strings.HasSuffix(v, ".command") {
+			if !stringIsCommandFilename(v) {
 				// The value is the command.
 				settings[k] = v
 				continue
@@ -1140,8 +1140,9 @@ func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 		case "pull":
 			settings[k], _ = strconv.ParseBool(v)
 		case "run_command":
-			// if it's here, cache the value, delay processing until arrays section
-			if v != "" {
+			// If it's here and it refers to a .command file, cache the value
+			// and delay processing until arrays section.
+			if stringIsCommandFilename(v) {
 				runCommandFile = v
 			}
 		}
@@ -1610,7 +1611,9 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 		case "accelerator":
 			settings[k] = v
 		case "boot_command":
-			bootCommandFile = v
+			if stringIsCommandFilename(v) {
+				bootCommandFile = v
+			}
 		case "boot_wait":
 			settings[k] = v
 		case "disk_cache":
@@ -3048,4 +3051,23 @@ func commandFromSlice(lines []string) string {
 		cmd += strings.TrimSuffix(line, `\`)
 	}
 	return cmd
+}
+
+// stringIsCommandFilename is a helper function that returns whether or not
+// the string represents a command file, i.e. ends with ".command".
+func stringIsCommandFilename(s string) bool {
+	parts := strings.Split(s, ".")
+	// must be at least name.command, i.e. at least 2 parts
+	if len(parts) < 2 {
+		return false
+	}
+	// If the element before the last element is empty, it's not a valid
+	// command file reference: e.g. .commmand shouldn't point to a valid
+	// command file.
+	if parts[len(parts)-2] == "" {
+		return false
+	}
+	// If the last element isn't command, it's not a valid commant file
+	// reference.
+	return strings.HasSuffix(parts[len(parts)-1], "command")
 }
