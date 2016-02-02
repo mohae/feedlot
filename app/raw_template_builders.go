@@ -2467,8 +2467,8 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 	} else {
 		workSlice = r.Builders[ID].Settings
 	}
-	var bootCmdProcessed, hasChecksum, hasChecksumType, hasISOURL, hasUsername, hasCommunicator bool
-	var guestOSType string
+	var hasChecksum, hasChecksumType, hasISOURL, hasUsername, hasCommunicator bool
+	var bootCmdFile, guestOSType string
 	// check for communicator first
 	prefix, err := r.processCommunicator(ID, workSlice, settings)
 	if err != nil {
@@ -2490,20 +2490,8 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 		v = r.replaceVariables(v)
 		switch k {
 		case "boot_command":
-			// if the boot_command exists in the Settings section, it should
-			// reference a file. This boot_command takes precedence over any
-			// boot_command in the array defined in the Arrays section.
-			if strings.HasSuffix(v, ".command") {
-				var commands []string
-				commands, err = r.commandsFromFile("", v)
-				if err != nil {
-					return nil, &SettingError{ID, k, v, err}
-				}
-				if len(commands) == 0 {
-					return nil, &SettingError{ID, k, v, ErrNoCommands}
-				}
-				settings[k] = commands
-				bootCmdProcessed = true
+			if stringIsCommandFilename(v) {
+				bootCmdFile = v
 			}
 		case "boot_wait":
 			settings[k] = v
@@ -2568,21 +2556,23 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 		case "remote_username":
 			settings[k] = v
 		case "shutdown_command":
-			//If it ends in .command, replace it with the command from the filepath
-			if strings.HasSuffix(v, ".command") {
-				var commands []string
-				commands, err = r.commandsFromFile("", v)
-				if err != nil {
-					return nil, &SettingError{ID, k, v, err}
-				}
-				if len(commands) == 0 {
-					return nil, &SettingError{ID, k, v, ErrNoCommands}
-				}
-				// Assume it's the first element.
-				settings[k] = commands[0]
+			if !stringIsCommandFilename(v) {
+				// The value is the command.
+				settings[k] = v
 				continue
 			}
-			settings[k] = v // the value is the command
+			// The value is a command file, load the contents of the
+			// file.
+			cmds, err := r.commandsFromFile(VMWareISO.String(), v)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			//
+			cmd := commandFromSlice(cmds)
+			if cmd == "" {
+				return nil, &SettingError{ID, k, v, ErrNoCommands}
+			}
+			settings[k] = cmd
 		case "shutdown_timeout":
 			settings[k] = v
 		case "skip_compaction":
@@ -2631,14 +2621,17 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 	if err != nil {
 		return nil, err
 	}
+	var hasBootCmd bool
 	// Process arrays, iso_urls is only valid if iso_url is not set
 	for name, val := range r.Builders[ID].Arrays {
 		switch name {
 		case "boot_command":
-			if bootCmdProcessed {
-				continue // if the boot command was already set, don't use this array
+			array := deepcopy.Iface(val)
+			if !reflect.ValueOf(array).IsNil() {
+				settings[name] = array
+				hasBootCmd = true
 			}
-			settings[name] = val
+			continue
 		case "disk_additional_size":
 			var tmp []int
 			// TODO it is assumed that it is a slice of strings.  Is this a good assumption?
@@ -2654,8 +2647,8 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 				tmp = append(tmp, i)
 			}
 			settings[name] = tmp
+			continue
 		case "floppy_files":
-			settings[name] = val
 		case "iso_urls":
 			// these are only added if iso_url isn't set
 			if hasISOURL {
@@ -2663,10 +2656,37 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 			}
 			settings[name] = val
 			hasISOURL = true
+			continue
 		case "vmx_data":
 			settings[name] = r.createVMXData(val)
+			continue
 		case "vmx_data_post":
 			settings[name] = r.createVMXData(val)
+			continue
+		default:
+			continue
+		}
+		array := deepcopy.Iface(val)
+		if !reflect.ValueOf(array).IsNil() {
+			settings[name] = array
+		}
+	}
+	// if there weren't any boot commands in the array section, see if there's a file with the
+	// boot commands to use.
+	if !hasBootCmd {
+		if bootCmdFile != "" {
+			commands, err := r.commandsFromFile(VMWareISO.String(), bootCmdFile)
+			if err != nil {
+				return nil, &SettingError{ID, "boot_command", bootCmdFile, err}
+			}
+			if len(commands) == 0 {
+				return nil, &SettingError{ID, "boot_command", bootCmdFile, ErrNoCommands}
+			}
+			array := deepcopy.Iface(commands)
+			if !reflect.ValueOf(array).IsNil() {
+				settings["boot_command"] = array
+			}
+			settings["boot_command"] = array
 		}
 	}
 	// TODO how is this affected by checksum being set in the template?
@@ -2761,7 +2781,8 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 	} else {
 		workSlice = r.Builders[ID].Settings
 	}
-	var hasSourcePath, hasUsername, bootCmdProcessed, hasCommunicator bool
+	var hasSourcePath, hasUsername, hasCommunicator bool
+	var bootCmdFile string
 	// check for communicator first
 	prefix, err := r.processCommunicator(ID, workSlice, settings)
 	if err != nil {
@@ -2783,20 +2804,8 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 		v = r.replaceVariables(v)
 		switch k {
 		case "boot_command":
-			// if the boot_command exists in the Settings section, it should
-			// reference a file. This boot_command takes precedence over any
-			// boot_command in the array defined in the Arrays section.
-			if strings.HasSuffix(v, ".command") {
-				var commands []string
-				commands, err = r.commandsFromFile("", v)
-				if err != nil {
-					return nil, &SettingError{ID, k, v, err}
-				}
-				if len(commands) == 0 {
-					return nil, &SettingError{ID, k, v, ErrNoCommands}
-				}
-				settings[k] = commands
-				bootCmdProcessed = true
+			if stringIsCommandFilename(v) {
+				bootCmdFile = v
 			}
 		case "boot_wait":
 			settings[k] = v
@@ -2825,21 +2834,22 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 		case "shutdown_timeout":
 			settings[k] = v
 		case "shutdown_command":
-			//If it ends in .command, replace it with the command from the filepath
-			if strings.HasSuffix(v, ".command") {
-				var commands []string
-				commands, err = r.commandsFromFile("", v)
-				if err != nil {
-					return nil, &SettingError{ID, k, v, err}
-				}
-				if len(commands) == 0 {
-					return nil, &SettingError{ID, k, v, ErrNoCommands}
-				}
-				// Assume it's the first element.
-				settings[k] = commands[0]
-			} else {
-				settings[k] = v // the value is the command
+			if !stringIsCommandFilename(v) {
+				// The value is the command.
+				settings[k] = v
+				continue
 			}
+			// The value is a command file, load the contents of the file.
+			cmds, err := r.commandsFromFile(VMWareVMX.String(), v)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			//
+			cmd := commandFromSlice(cmds)
+			if cmd == "" {
+				return nil, &SettingError{ID, k, v, ErrNoCommands}
+			}
+			settings[k] = cmd
 		case "skip_compaction":
 			settings[k], _ = strconv.ParseBool(v)
 		case "source_path":
@@ -2892,20 +2902,47 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 	if err != nil {
 		return nil, err
 	}
+	var hasBootCmd bool
 	// Process arrays, iso_urls is only valid if iso_url is not set
 	for name, val := range r.Builders[ID].Arrays {
 		switch name {
 		case "boot_command":
-			if bootCmdProcessed {
-				continue // if the boot command was already set, don't use this array
+			array := deepcopy.Iface(val)
+			if !reflect.ValueOf(array).IsNil() {
+				settings[name] = array
+				hasBootCmd = true
 			}
-			settings[name] = val
 		case "floppy_files":
-			settings[name] = val
 		case "vmx_data":
 			settings[name] = r.createVMXData(val)
+			continue
 		case "vmx_data_post":
 			settings[name] = r.createVMXData(val)
+			continue
+		default:
+			continue
+		}
+		array := deepcopy.Iface(val)
+		if !reflect.ValueOf(array).IsNil() {
+			settings[name] = array
+		}
+	}
+	// if there weren't any boot commands in the array section, see if there's a file with the
+	// boot commands to use.
+	if !hasBootCmd {
+		if bootCmdFile != "" {
+			commands, err := r.commandsFromFile(VMWareISO.String(), bootCmdFile)
+			if err != nil {
+				return nil, &SettingError{ID, "boot_command", bootCmdFile, err}
+			}
+			if len(commands) == 0 {
+				return nil, &SettingError{ID, "boot_command", bootCmdFile, ErrNoCommands}
+			}
+			array := deepcopy.Iface(commands)
+			if !reflect.ValueOf(array).IsNil() {
+				settings["boot_command"] = array
+			}
+			settings["boot_command"] = array
 		}
 	}
 	return settings, nil
