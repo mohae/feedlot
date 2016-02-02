@@ -268,8 +268,7 @@ func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 	if err != nil {
 		return nil, err
 	}
-	// Go through each element in the slice, only take the ones that matter
-	// to this builder.
+	// Go through each element in the slice, only take the ones that matter to this builder.
 	for _, s := range workSlice {
 		// var tmp interface{}
 		k, v = parseVar(s)
@@ -433,8 +432,7 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 		}
 		hasCommunicator = true
 	}
-	// Go through each element in the slice, only take the ones that matter
-	// to this builder.
+	// Go through each element in the slice, only take the ones that matter to this builder.
 	for _, s := range workSlice {
 		// var tmp interface{}
 		k, v = parseVar(s)
@@ -682,10 +680,8 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 		}
 		hasCommunicator = true
 	}
-	// Go through each element in the slice, only take the ones that matter
-	// to this builder.
+	// Go through each element in the slice, only take the ones that matter/ to this builder.
 	for _, s := range workSlice {
-		// var tmp interface{}
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -716,13 +712,12 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 				settings[k] = v
 				continue
 			}
-			// The value is a command file, load the contents of the
-			// file.
+			// The value is a command file, load the contents of the file.
 			cmds, err := r.commandsFromFile(AmazonInstance.String(), v)
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
-			//
+			// Make the cmds slice a single string, if it was split into multiple lines.
 			cmd := commandFromSlice(cmds)
 			if cmd == "" {
 				return nil, &SettingError{ID, k, v, ErrNoCommands}
@@ -734,13 +729,12 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 				settings[k] = v
 				continue
 			}
-			// The value is a command file, load the contents of the
-			// file.
+			// The value is a command file, load the contents of the file.
 			cmds, err := r.commandsFromFile(AmazonInstance.String(), v)
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
-			//
+			// Make the cmds slice a single string, if it was split into multiple lines.
 			cmd := commandFromSlice(cmds)
 			if cmd == "" {
 				return nil, &SettingError{ID, k, v, ErrNoCommands}
@@ -819,7 +813,6 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 				r.files[r.buildOutPath(AmazonEBS.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(AmazonInstance.String(), v)
-
 		case "vpc_id":
 			settings[k] = v
 		case "windows_password_timeout":
@@ -863,8 +856,7 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 		return nil, &RequiredSettingError{ID, "source_ami"}
 	}
 	if !hasUsername {
-		// if prefix was empty, no communicator was used which means
-		// ssh_username is expected.
+		// if prefix was empty, no communicator was used which means ssh_username is expected.
 		if prefix == "" {
 			prefix = "ssh"
 		}
@@ -925,7 +917,6 @@ func (r *rawTemplate) processAMIBlockDeviceMappings(v interface{}) (interface{},
 	if reflect.TypeOf(v) == reflect.TypeOf([]map[string]interface{}{}) {
 		return v, nil
 	}
-
 	// Process the [][]string into a []map[string]interface{}
 	slices, ok := v.([][]string)
 	if !ok {
@@ -1013,8 +1004,7 @@ func (r *rawTemplate) createDigitalOcean(ID string) (settings map[string]interfa
 	if err != nil {
 		return nil, err
 	}
-	// Go through each element in the slice, only take the ones that matter
-	// to this builder.
+	// Go through each element in the slice, only take the ones that matter to this builder.
 	var hasAPIToken, hasImage, hasRegion, hasSize bool
 	for _, s := range workSlice {
 		// var tmp interface{}
@@ -1107,8 +1097,7 @@ func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 	if err != nil {
 		return nil, err
 	}
-	// Go through each element in the slice, only take the ones that matter
-	// to this builder.
+	// Go through each element in the slice, only take the ones that matter to this builder.
 	var hasCommit, hasDiscard, hasExportPath, hasImage, hasRunCommandArray bool
 	var runCommandFile string
 	for _, s := range workSlice {
@@ -1175,8 +1164,7 @@ func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 		}
 		settings[name] = deepcopy.Iface(val)
 	}
-	// if there wasn't an array of run commands, check to see if they should be loaded
-	// from a file
+	// if there wasn't an array of run commands, check to see if they should be loaded from a file
 	if !hasRunCommandArray {
 		if runCommandFile != "" {
 			commands, err := r.commandsFromFile(Docker.String(), runCommandFile)
@@ -1244,15 +1232,13 @@ func (r *rawTemplate) createGoogleCompute(ID string) (settings map[string]interf
 	if err != nil {
 		return nil, err
 	}
-	// Go through each element in the slice, only take the ones that matter
-	// to this builder.
+	// Go through each element in the slice, only take the ones that matter to this builder.
 	for _, s := range workSlice {
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
 		case "account_file":
-			// Account file contains account credentials: the value
-			// is taken as is.
+			// Account file contains account credentials: the value is taken as is.
 			settings[k] = v
 		case "address":
 			settings[k] = v
@@ -1423,10 +1409,8 @@ func (r *rawTemplate) createOpenStack(ID string) (settings map[string]interface{
 		}
 		hasCommunicator = true
 	}
-	// Go through each element in the slice, only take the ones that matter
-	// to this builder.
+	// Go through each element in the slice, only take the ones that matter to this builder.
 	for _, s := range workSlice {
-		// var tmp interface{}
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -1512,7 +1496,6 @@ func (r *rawTemplate) createOpenStack(ID string) (settings map[string]interface{
 		}
 		return nil, &RequiredSettingError{ID, prefix + "_username"}
 	}
-
 	// Process arrays, iso_urls is only valid if iso_url is not set
 	for name, val := range r.Builders[ID].Arrays {
 		switch name {
@@ -1586,8 +1569,8 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 	} else {
 		workSlice = r.Builders[ID].Settings
 	}
-	var hasBootCommand, hasChecksum, hasChecksumType, hasISOURL, hasUsername, hasCommunicator bool
-	var bootCommandFile string
+	var hasChecksum, hasChecksumType, hasISOURL, hasUsername, hasCommunicator bool
+	var bootCmdFile string
 	// check for communicator first
 	prefix, err := r.processCommunicator(ID, workSlice, settings)
 	if err != nil {
@@ -1601,10 +1584,8 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 		}
 		hasCommunicator = true
 	}
-	// Go through each element in the slice, only take the ones that matter
-	// to this builder.
+	// Go through each element in the slice, only take the ones that matter to this builder.
 	for _, s := range workSlice {
-		// var tmp interface{}
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -1612,7 +1593,7 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 			settings[k] = v
 		case "boot_command":
 			if stringIsCommandFilename(v) {
-				bootCommandFile = v
+				bootCmdFile = v
 			}
 		case "boot_wait":
 			settings[k] = v
@@ -1692,6 +1673,7 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 	if err != nil {
 		return nil, err
 	}
+	var hasBootCmd bool
 	for name, val := range r.Builders[ID].Arrays {
 		switch name {
 		case "boot_command":
@@ -1699,7 +1681,7 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 			array := deepcopy.Iface(val)
 			if !reflect.ValueOf(val).IsNil() {
 				settings[name] = array
-				hasBootCommand = true
+				hasBootCmd = true
 			}
 			continue
 		case "floppy_files":
@@ -1727,14 +1709,14 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 	}
 	// if there wasn't an array of boot commands, check to see if they should be loaded
 	// from a file
-	if !hasBootCommand {
-		if bootCommandFile != "" {
-			commands, err := r.commandsFromFile(QEMU.String(), bootCommandFile)
+	if !hasBootCmd {
+		if bootCmdFile != "" {
+			commands, err := r.commandsFromFile(QEMU.String(), bootCmdFile)
 			if err != nil {
-				return nil, &SettingError{ID, "boot_command", bootCommandFile, err}
+				return nil, &SettingError{ID, "boot_command", bootCmdFile, err}
 			}
 			if len(commands) == 0 {
-				return nil, &SettingError{ID, "boot_command", bootCommandFile, ErrNoCommands}
+				return nil, &SettingError{ID, "boot_command", bootCmdFile, ErrNoCommands}
 			}
 			array := deepcopy.Iface(commands)
 			if !reflect.ValueOf(array).IsNil() {
@@ -1743,7 +1725,6 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 			settings["boot_command"] = array
 		}
 	}
-
 	if !hasISOURL {
 		return nil, &RequiredSettingError{ID, "iso_url"}
 	}
@@ -1862,8 +1843,7 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 		}
 		hasCommunicator = true
 	}
-	// Go through each element in the slice, only take the ones that matter
-	// to this builder.
+	// Go through each element in the slice, only take the ones that matter to this builder.
 	for _, s := range workSlice {
 		// var tmp interface{}
 		k, v := parseVar(s)
@@ -1936,8 +1916,7 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 				settings[k] = v
 				continue
 			}
-			// The value is a command file, load the contents of the
-			// file.
+			// The value is a command file, load the contents of the file.
 			cmds, err := r.commandsFromFile(VirtualBoxISO.String(), v)
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
@@ -2051,7 +2030,6 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 			return nil, err
 		}
 	}
-
 	// if there weren't any boot commands in the array section, see if there's a file with the
 	// boot commands to use.
 	if !hasBootCmd {
@@ -2355,8 +2333,7 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 			hasBootCmd = true
 		}
 	}
-	// if there weren't any boot commands in the array section, see if there's a file with the
-	// boot commands to use.
+	// if there weren't any boot commands in the array section, see if there's a file with the boot commands to use.
 	if !hasBootCmd {
 		if bootCmdFile != "" {
 			commands, err := r.commandsFromFile(VirtualBoxOVF.String(), bootCmdFile)
@@ -2561,8 +2538,7 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 				settings[k] = v
 				continue
 			}
-			// The value is a command file, load the contents of the
-			// file.
+			// The value is a command file, load the contents of the file.
 			cmds, err := r.commandsFromFile(VMWareISO.String(), v)
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
@@ -2671,8 +2647,7 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 			settings[name] = array
 		}
 	}
-	// if there weren't any boot commands in the array section, see if there's a file with the
-	// boot commands to use.
+	// if there weren't any boot commands in the array section, see if there's a file with the boot commands to use.
 	if !hasBootCmd {
 		if bootCmdFile != "" {
 			commands, err := r.commandsFromFile(VMWareISO.String(), bootCmdFile)
@@ -2796,8 +2771,7 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 		}
 		hasCommunicator = true
 	}
-	// Go through each element in the slice, only take the ones that matter
-	// to this builder.
+	// Go through each element in the slice, only take the ones that matter to this builder.
 	for _, s := range workSlice {
 		// var tmp interface{}
 		k, v := parseVar(s)
@@ -2927,8 +2901,7 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 			settings[name] = array
 		}
 	}
-	// if there weren't any boot commands in the array section, see if there's a file with the
-	// boot commands to use.
+	// if there weren't any boot commands in the array section, see if there's a file with the boot commands to use.
 	if !hasBootCmd {
 		if bootCmdFile != "" {
 			commands, err := r.commandsFromFile(VMWareISO.String(), bootCmdFile)
@@ -3134,13 +3107,11 @@ func stringIsCommandFilename(s string) bool {
 	if len(parts) < 2 {
 		return false
 	}
-	// If the element before the last element is empty, it's not a valid
-	// command file reference: e.g. .commmand shouldn't point to a valid
-	// command file.
+	// If the element before the last element is empty, it's not a valid command file reference:
+	// e.g. .commmand shouldn't point to a valid command file.
 	if parts[len(parts)-2] == "" {
 		return false
 	}
-	// If the last element isn't command, it's not a valid commant file
-	// reference.
+	// If the last element isn't command, it's not a valid commant file reference.
 	return strings.HasSuffix(parts[len(parts)-1], "command")
 }
