@@ -1729,7 +1729,7 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 	// from a file
 	if !hasBootCommand {
 		if bootCommandFile != "" {
-			commands, err := r.commandsFromFile(Docker.String(), bootCommandFile)
+			commands, err := r.commandsFromFile(QEMU.String(), bootCommandFile)
 			if err != nil {
 				return nil, &SettingError{ID, "boot_command", bootCommandFile, err}
 			}
@@ -1843,7 +1843,8 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 	} else {
 		workSlice = r.Builders[ID].Settings
 	}
-	var bootCmdProcessed, hasChecksum, hasChecksumType, hasISOURL, hasUsername, hasPassword, hasCommunicator bool
+	var hasChecksum, hasChecksumType, hasISOURL, hasUsername, hasPassword, hasCommunicator bool
+	var bootCmdFile string
 	// check for communicator first
 	prefix, err := r.processCommunicator(ID, workSlice, settings)
 	if err != nil {
@@ -1869,20 +1870,8 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 		v = r.replaceVariables(v)
 		switch k {
 		case "boot_command":
-			// if the boot_command exists in the Settings section, it should
-			// reference a file. This boot_command takes precedence over any
-			// boot_command in the array defined in the Arrays section.
-			if strings.HasSuffix(v, ".command") {
-				var commands []string
-				commands, err = r.commandsFromFile("", v)
-				if err != nil {
-					return nil, &SettingError{ID, k, v, err}
-				}
-				if len(commands) == 0 {
-					return nil, &SettingError{ID, k, v, ErrNoCommands}
-				}
-				settings[k] = commands
-				bootCmdProcessed = true
+			if stringIsCommandFilename(v) {
+				bootCmdFile = v
 			}
 		case "boot_wait":
 			settings[k] = v
@@ -1942,21 +1931,23 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 		case "output_directory":
 			settings[k] = v
 		case "shutdown_command":
-			//If it ends in .command, replace it with the command from the filepath
-			if strings.HasSuffix(v, ".command") {
-				var commands []string
-				commands, err = r.commandsFromFile("", v)
-				if err != nil {
-					return nil, &SettingError{ID, k, v, err}
-				}
-				if len(commands) == 0 {
-					return nil, &SettingError{ID, k, v, ErrNoCommands}
-				}
-				// Assume it's the first element.
-				settings[k] = commands[0]
-			} else {
-				settings[k] = v // the value is the command
+			if !stringIsCommandFilename(v) {
+				// assume that the value is the command
+				settings[k] = v
+				continue
 			}
+			// The value is a command file, load the contents of the
+			// file.
+			cmds, err := r.commandsFromFile(VirtualBoxISO.String(), v)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			//
+			cmd := commandFromSlice(cmds)
+			if cmd == "" {
+				return nil, &SettingError{ID, k, v, ErrNoCommands}
+			}
+			settings[k] = cmd
 		case "shutdown_timeout":
 			settings[k] = v
 		case "ssh_host_port_min":
@@ -2016,28 +2007,39 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 	if err != nil {
 		return nil, err
 	}
+	var hasBootCmd bool
 	for name, val := range r.Builders[ID].Arrays {
 		switch name {
 		case "boot_command":
-			if bootCmdProcessed {
-				continue // if the boot command was already set, don't use this array
+			array := deepcopy.Iface(val)
+			if !reflect.ValueOf(array).IsNil() {
+				settings[name] = array
+				hasBootCmd = true
 			}
-			settings[name] = val
 		case "export_opts":
-			settings[name] = val
 		case "floppy_files":
-			settings[name] = val
 		case "iso_urls":
 			// iso_url takes precedence
 			if hasISOURL {
 				continue
 			}
-			settings[name] = val
-			hasISOURL = true
+			array := deepcopy.Iface(val)
+			if !reflect.ValueOf(array).IsNil() {
+				settings[name] = array
+				hasISOURL = true
+			}
 		case "vboxmanage":
 			settings[name] = r.createVBoxManage(val)
+			continue
 		case "vboxmanage_post":
 			settings[name] = r.createVBoxManage(val)
+			continue
+		default:
+			continue
+		}
+		array := deepcopy.Iface(val)
+		if !reflect.ValueOf(array).IsNil() {
+			settings[name] = array
 		}
 	}
 	if !hasISOURL {
@@ -2047,6 +2049,25 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 		err = r.ISOInfo(VirtualBoxISO, workSlice)
 		if err != nil {
 			return nil, err
+		}
+	}
+
+	// if there weren't any boot commands in the array section, see if there's a file with the
+	// boot commands to use.
+	if !hasBootCmd {
+		if bootCmdFile != "" {
+			commands, err := r.commandsFromFile(VirtualBoxISO.String(), bootCmdFile)
+			if err != nil {
+				return nil, &SettingError{ID, "boot_command", bootCmdFile, err}
+			}
+			if len(commands) == 0 {
+				return nil, &SettingError{ID, "boot_command", bootCmdFile, ErrNoCommands}
+			}
+			array := deepcopy.Iface(commands)
+			if !reflect.ValueOf(array).IsNil() {
+				settings["boot_command"] = array
+			}
+			settings["boot_command"] = array
 		}
 	}
 	// TODO: modify to select the proper virtualbox value based on distro and arch
@@ -2148,8 +2169,8 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 	}
 	// Go through each element in the slice, only take the ones that matter
 	// to this builder.
-	var hasSourcePath, hasUsername, bootCmdProcessed, hasCommunicator, hasWinRMCommunicator bool
-	var userNameVal string
+	var hasSourcePath, hasUsername, hasCommunicator, hasWinRMCommunicator bool
+	var userNameVal, bootCmdFile string
 	// check for communicator first
 	prefix, err := r.processCommunicator(ID, workSlice, settings)
 	if err != nil {
@@ -2178,20 +2199,8 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 		v = r.replaceVariables(v)
 		switch k {
 		case "boot_command":
-			// if the boot_command exists in the Settings section, it should
-			// reference a file. This boot_command takes precedence over any
-			// boot_command in the array defined in the Arrays section.
-			if strings.HasSuffix(v, ".command") {
-				var commands []string
-				commands, err = r.commandsFromFile("", v)
-				if err != nil {
-					return nil, &SettingError{ID, k, v, err}
-				}
-				if len(commands) == 0 {
-					return nil, &SettingError{ID, k, v, ErrNoCommands}
-				}
-				settings[k] = commands
-				bootCmdProcessed = true
+			if stringIsCommandFilename(v) {
+				bootCmdFile = v
 			}
 		case "boot_wait":
 			settings[k] = v
@@ -2230,21 +2239,21 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 		case "output_directory":
 			settings[k] = v
 		case "shutdown_command":
-			if strings.HasSuffix(v, ".command") {
-				//If it ends in .command, replace it with the command from the filepath
-				var commands []string
-				commands, err = r.commandsFromFile("", v)
-				if err != nil {
-					return nil, &SettingError{ID, k, v, err}
-				}
-				if len(commands) == 0 {
-					return nil, &SettingError{ID, k, v, ErrNoCommands}
-				}
-				// Assume it's the first element.
-				settings[k] = commands[0]
-			} else {
+			if !stringIsCommandFilename(v) {
 				settings[k] = v
+				continue
 			}
+			// The value is a command file, load the contents of the file.
+			cmds, err := r.commandsFromFile(VirtualBoxOVF.String(), v)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			//
+			cmd := commandFromSlice(cmds)
+			if cmd == "" {
+				return nil, &SettingError{ID, k, v, ErrNoCommands}
+			}
+			settings[k] = cmd
 		case "shutdown_timeout":
 			settings[k] = v
 		case "source_path":
@@ -2318,23 +2327,50 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 
 	// Generate Packer Variables
 	// Generate builder specific section
+	var hasBootCmd bool
 	for name, val := range r.Builders[ID].Arrays {
 		switch name {
 		case "boot_command":
-			if bootCmdProcessed {
-				continue // if the boot command was already set, don't use this array
+			array := deepcopy.Iface(val)
+			if !reflect.ValueOf(array).IsNil() {
+				settings[name] = array
+				hasBootCmd = true
 			}
-			settings[name] = val
+			continue
 		case "export_opts":
-			settings[name] = val
 		case "floppy_files":
-			settings[name] = val
 		case "import_flags":
-			settings[name] = val
 		case "vboxmanage":
 			settings[name] = r.createVBoxManage(val)
+			continue
 		case "vboxmanage_post":
 			settings[name] = r.createVBoxManage(val)
+			continue
+		default:
+			continue
+		}
+		array := deepcopy.Iface(val)
+		if !reflect.ValueOf(array).IsNil() {
+			settings[name] = array
+			hasBootCmd = true
+		}
+	}
+	// if there weren't any boot commands in the array section, see if there's a file with the
+	// boot commands to use.
+	if !hasBootCmd {
+		if bootCmdFile != "" {
+			commands, err := r.commandsFromFile(VirtualBoxOVF.String(), bootCmdFile)
+			if err != nil {
+				return nil, &SettingError{ID, "boot_command", bootCmdFile, err}
+			}
+			if len(commands) == 0 {
+				return nil, &SettingError{ID, "boot_command", bootCmdFile, ErrNoCommands}
+			}
+			array := deepcopy.Iface(commands)
+			if !reflect.ValueOf(array).IsNil() {
+				settings["boot_command"] = array
+			}
+			settings["boot_command"] = array
 		}
 	}
 	return settings, nil
