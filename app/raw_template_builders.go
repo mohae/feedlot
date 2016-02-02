@@ -2609,20 +2609,29 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 			}
 			continue
 		case "disk_additional_size":
-			var tmp []int
 			// TODO it is assumed that it is a slice of strings.  Is this a good assumption?
-			vals, ok := val.([]string)
-			if !ok {
-				return nil, &SettingError{ID, name, json.MarshalToString(val), fmt.Errorf("expected a string array")}
-			}
-			for _, v := range vals {
-				i, err := strconv.Atoi(v)
-				if err != nil {
-					return nil, &SettingError{ID, name, json.MarshalToString(val), err}
+
+			switch val.(type) {
+			case []int:
+				array := deepcopy.Iface(val)
+				if !reflect.ValueOf(array).IsNil() {
+					settings[name] = array
 				}
-				tmp = append(tmp, i)
+			case []string:
+				var tmp []int
+				for _, v := range val.([]string) {
+					i, err := strconv.Atoi(v)
+					if err != nil {
+						return nil, &SettingError{ID, name, json.MarshalToString(val), err}
+					}
+					tmp = append(tmp, i)
+				}
+				if len(tmp) > 0 {
+					settings[name] = tmp
+				}
+			default:
+				return nil, &SettingError{ID, name, json.MarshalToString(val), fmt.Errorf("must be either an int or string array")}
 			}
-			settings[name] = tmp
 			continue
 		case "floppy_files":
 		case "iso_urls":
@@ -3108,7 +3117,8 @@ func stringIsCommandFilename(s string) bool {
 		return false
 	}
 	// If the element before the last element is empty, it's not a valid command file reference:
-	// e.g. .commmand shouldn't point to a valid command file.
+	// e.g. .commmand shouldn't point to a valid
+	// command file.
 	if parts[len(parts)-2] == "" {
 		return false
 	}
