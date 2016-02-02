@@ -647,14 +647,14 @@ func mergeKeysFromComponentMaps(m ...map[string]Componenter) []string {
 func SetCfgFile() error {
 	// find the actual config filename, it may have a different extension as
 	// formats can have more than one accepted extension, this is mainly to
-	// handle CJSON vs JSON though.
-	fname, _, err := findConfigFile(contour.GetString(CfgFile))
-	if err != nil {
-		jww.ERROR.Print(err)
-		return err
+	// handle CJSON vs JSON though.  The error is ignored becuase it doesn't
+	// matter if the file doesn't exist.
+	fname, _, _ := findConfigFile(contour.GetString(CfgFile))
+	if fname == "" {
+		return nil
 	}
 	contour.UpdateCfgFile(CfgFile, fname)
-	err = contour.SetCfg()
+	err := contour.SetCfg()
 	if err != nil {
 		jww.ERROR.Print(err)
 	}
