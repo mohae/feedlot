@@ -854,6 +854,10 @@ func filterRecords(v string, n int, records [][]string) [][]string {
 	}
 	var filtered [][]string
 	for _, record := range records {
+		// skip: only mirrors up to 5
+		if record[3] == "http://www.sesp.northwestern.edu/" {
+			continue
+		}
 		if record[n] == v {
 			filtered = append(filtered, record)
 		}
