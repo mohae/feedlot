@@ -414,25 +414,30 @@ func (d *defaults) Load(p string) error {
 	}
 	name, format, err := findConfigFile(getConfigFile(p, fmt.Sprintf("%s.%s", "default", contour.GetString(Format))))
 	if err != nil {
+		jww.ERROR.Println(err)
 		return err
 	}
 	switch format {
 	case TOML:
 		_, err := toml.DecodeFile(name, &d)
 		if err != nil {
+			jww.ERROR.Println(err)
 			return err
 		}
 	case JSON:
 		var buff []byte
 		buff, err = ioutil.ReadFile(name)
 		if err != nil {
+			jww.ERROR.Println(err)
 			return err
 		}
 		err = cjsn.Unmarshal(buff, &d)
 		if err != nil {
+			jww.ERROR.Println(err)
 			return err
 		}
 	default:
+		jww.ERROR.Println(ErrUnsupportedFormat)
 		return ErrUnsupportedFormat
 	}
 	d.build.setTypes()
@@ -479,25 +484,30 @@ type supported struct {
 func (s *supported) Load(p string) error {
 	name, format, err := findConfigFile(getConfigFile(p, "supported"))
 	if err != nil {
+		jww.ERROR.Println(err)
 		return err
 	}
 	switch format {
 	case TOML:
 		_, err := toml.DecodeFile(name, &s.Distro)
 		if err != nil {
+			jww.ERROR.Println(err)
 			return err
 		}
 	case JSON:
 		var buff []byte
 		buff, err = ioutil.ReadFile(name)
 		if err != nil {
+			jww.ERROR.Println(err)
 			return err
 		}
 		err = cjsn.Unmarshal(buff, &s.Distro)
 		if err != nil {
+			jww.ERROR.Println(err)
 			return err
 		}
 	default:
+		jww.ERROR.Println(ErrUnsupportedFormat)
 		return ErrUnsupportedFormat
 	}
 	s.loaded = true
@@ -513,24 +523,30 @@ type builds struct {
 // Load the build information from the provided name.
 func (b *builds) Load(name string) error {
 	if name == "" {
-		return errors.New("build: name was empty")
+		err := errors.New("build: name was empty")
+		jww.ERROR.Println(err)
+		return err
 	}
 	switch CfgFormatFromString(contour.GetString(Format)) {
 	case TOML:
 		_, err := toml.DecodeFile(name, &b.Build)
 		if err != nil {
+			jww.ERROR.Println(err)
 			return err
 		}
 	case JSON:
 		buff, err := ioutil.ReadFile(name)
 		if err != nil {
+			jww.ERROR.Println(err)
 			return err
 		}
 		err = cjsn.Unmarshal(buff, &b.Build)
 		if err != nil {
+			jww.ERROR.Println(err)
 			return err
 		}
 	default:
+		jww.ERROR.Println(ErrUnsupportedFormat)
 		return ErrUnsupportedFormat
 	}
 	// get the dir of the filepath
@@ -578,25 +594,30 @@ func (b *buildLists) Load(p string) error {
 	// Load the build lists.
 	name, format, err := findConfigFile(getConfigFile(p, "build_list"))
 	if err != nil {
+		jww.ERROR.Println(err)
 		return err
 	}
 	switch format {
 	case TOML:
 		_, err := toml.DecodeFile(name, &b.List)
 		if err != nil {
+			jww.ERROR.Println(err)
 			return err
 		}
 	case JSON:
 		var buff []byte
 		buff, err = ioutil.ReadFile(name)
 		if err != nil {
+			jww.ERROR.Println(err)
 			return err
 		}
 		err = cjsn.Unmarshal(buff, &b.List)
 		if err != nil {
+			jww.ERROR.Println(err)
 			return err
 		}
 	default:
+		jww.ERROR.Println(ErrUnsupportedFormat)
 		return ErrUnsupportedFormat
 	}
 	return nil

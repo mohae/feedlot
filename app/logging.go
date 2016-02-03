@@ -21,7 +21,7 @@ func init() {
 	jww.WARN.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	jww.ERROR.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	jww.CRITICAL.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-	jww.FATAL.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)	
+	jww.FATAL.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 }
 
 // SetTempLogging creates a temp logfile in the /tmp and enables logging. This
