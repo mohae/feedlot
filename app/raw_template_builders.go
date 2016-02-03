@@ -2021,9 +2021,6 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 			settings[name] = array
 		}
 	}
-	if !hasISOURL {
-		return nil, &RequiredSettingError{ID, "iso_url"}
-	}
 	if r.osType == "" { // if the os type hasn't been set, the ISO info hasn't been retrieved
 		err = r.ISOInfo(VirtualBoxISO, workSlice)
 		if err != nil {
