@@ -12,13 +12,7 @@ import (
 // holds the tmpLogFilename, not used after SetLogging()
 var tmpLogFile string
 
-// SetTempLogging creates a temp logfile in the /tmp and enables logging. This
-// is to support logging of operations prior to processing the command-line
-// flags, at which point SetLogging will either move this to the actual log
-// location or remove the temp logfile.
-func SetTempLogging() {
-	// use temp logfile
-	jww.UseTempLogFile("rancher")
+func init() {
 	jww.SetLogThreshold(getJWWLevel(contour.GetString(LogLevelFile)))
 	jww.SetStdoutThreshold(getJWWLevel(contour.GetString(LogLevelStdOut)))
 	jww.TRACE.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -27,7 +21,16 @@ func SetTempLogging() {
 	jww.WARN.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	jww.ERROR.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	jww.CRITICAL.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-	jww.FATAL.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	jww.FATAL.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)	
+}
+
+// SetTempLogging creates a temp logfile in the /tmp and enables logging. This
+// is to support logging of operations prior to processing the command-line
+// flags, at which point SetLogging will either move this to the actual log
+// location or remove the temp logfile.
+func SetTempLogging() {
+	// use temp logfile
+	jww.UseTempLogFile("rancher")
 }
 
 // SetLogging sets application logging settings.
