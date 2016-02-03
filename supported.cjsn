@@ -39,7 +39,7 @@
 		# use these: e.g. Sofia University \"St. Kliment Ohridski\"
 		# would be Sofia University St. Kliment Ohridski
 		#
-		"sponsor": "OSUOSL"
+		"sponsor": "OSUOSL",
 		"description": "CentOS default",
 		"default_image": [
 			"release = 7",

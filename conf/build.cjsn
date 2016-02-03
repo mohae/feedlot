@@ -88,7 +88,7 @@
 	"jessie-64": {
 		"description": "example Debian Jessie amd64 virtualbox vagrant build",
 		"distro": "debian",
-		"release": "8"		
+		"release": "8",	
 		"image": "netinst",
 		"arch": "amd64",
 		"builder_ids": [

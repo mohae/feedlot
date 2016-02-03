@@ -18,7 +18,7 @@
 			"settings": [
 				"boot_command = boot.command",
 				"boot_wait = 5s",
-				"communicator=ssh"
+				"communicator=ssh",
 				"disk_size = 40000",
 				"guest_os_type=",
 				"headless = true",
