@@ -421,6 +421,7 @@ func (d *defaults) Load(p string) error {
 	case TOML:
 		_, err := toml.DecodeFile(name, &d)
 		if err != nil {
+			err = fmt.Errorf(fmt.Sprintf("%s: %s", name, err))
 			jww.ERROR.Println(err)
 			return err
 		}
@@ -428,11 +429,13 @@ func (d *defaults) Load(p string) error {
 		var buff []byte
 		buff, err = ioutil.ReadFile(name)
 		if err != nil {
+			err = fmt.Errorf(fmt.Sprintf("%s: %s", name, err))
 			jww.ERROR.Println(err)
 			return err
 		}
 		err = cjsn.Unmarshal(buff, &d)
 		if err != nil {
+			err = fmt.Errorf(fmt.Sprintf("%s: %s", name, err))
 			jww.ERROR.Println(err)
 			return err
 		}
@@ -491,6 +494,7 @@ func (s *supported) Load(p string) error {
 	case TOML:
 		_, err := toml.DecodeFile(name, &s.Distro)
 		if err != nil {
+			err = fmt.Errorf(fmt.Sprintf("%s: %s", name, err))
 			jww.ERROR.Println(err)
 			return err
 		}
@@ -498,11 +502,13 @@ func (s *supported) Load(p string) error {
 		var buff []byte
 		buff, err = ioutil.ReadFile(name)
 		if err != nil {
+			err = fmt.Errorf(fmt.Sprintf("%s: %s", name, err))
 			jww.ERROR.Println(err)
 			return err
 		}
 		err = cjsn.Unmarshal(buff, &s.Distro)
 		if err != nil {
+			err = fmt.Errorf(fmt.Sprintf("%s: %s", name, err))
 			jww.ERROR.Println(err)
 			return err
 		}
@@ -531,17 +537,20 @@ func (b *builds) Load(name string) error {
 	case TOML:
 		_, err := toml.DecodeFile(name, &b.Build)
 		if err != nil {
+			err = fmt.Errorf(fmt.Sprintf("%s: %s", name, err))
 			jww.ERROR.Println(err)
 			return err
 		}
 	case JSON:
 		buff, err := ioutil.ReadFile(name)
 		if err != nil {
+			err = fmt.Errorf(fmt.Sprintf("%s: %s", name, err))
 			jww.ERROR.Println(err)
 			return err
 		}
 		err = cjsn.Unmarshal(buff, &b.Build)
 		if err != nil {
+			err = fmt.Errorf(fmt.Sprintf("%s: %s", name, err))
 			jww.ERROR.Println(err)
 			return err
 		}
@@ -601,6 +610,7 @@ func (b *buildLists) Load(p string) error {
 	case TOML:
 		_, err := toml.DecodeFile(name, &b.List)
 		if err != nil {
+			err = fmt.Errorf(fmt.Sprintf("%s: %s", name, err))
 			jww.ERROR.Println(err)
 			return err
 		}
@@ -608,11 +618,13 @@ func (b *buildLists) Load(p string) error {
 		var buff []byte
 		buff, err = ioutil.ReadFile(name)
 		if err != nil {
+			err = fmt.Errorf(fmt.Sprintf("%s: %s", name, err))
 			jww.ERROR.Println(err)
 			return err
 		}
 		err = cjsn.Unmarshal(buff, &b.List)
 		if err != nil {
+			err = fmt.Errorf(fmt.Sprintf("%s: %s", name, err))
 			jww.ERROR.Println(err)
 			return err
 		}
