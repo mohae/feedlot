@@ -1825,7 +1825,7 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 		workSlice = r.Builders[ID].Settings
 	}
 	var hasChecksum, hasChecksumType, hasISOURL, hasUsername, hasPassword, hasCommunicator bool
-	var bootCmdFile string
+	var bootCmdFile, guestOSType string
 	// check for communicator first
 	prefix, err := r.processCommunicator(ID, workSlice, settings)
 	if err != nil {
@@ -1874,6 +1874,7 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 			settings[k] = v
 		case "guest_os_type":
 			settings[k] = v
+			guestOSType = v
 		case "hard_drive_interface":
 			settings[k] = v
 		case "headless":
@@ -2045,14 +2046,10 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 			settings["boot_command"] = array
 		}
 	}
-	// TODO: modify to select the proper virtualbox value based on distro and arch
-	/*
-		// set the guest_os_type
-		if tmpGuestOSType == "" {
-			tmpGuestOSType = r.osType
-		}
-		settings["guest_os_type"] = tmpGuestOSType
-	*/
+	// set the guest_os_type, if it wasn't already set
+	if guestOSType == "" {
+		settings["guest_os_type"] = r.osType
+	}
 	// If the iso info wasn't set from the Settings, get it from the distro's release
 	if !hasISOURL {
 		//handle iso lookup vs set in file
@@ -2299,7 +2296,10 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 	if err != nil {
 		return nil, err
 	}
-
+	// set the guest_os_type, if it wasn't already set
+	if guestOSType == "" {
+		settings["guest_os_type"] = r.osType
+	}
 	// Generate Packer Variables
 	// Generate builder specific section
 	var hasBootCmd bool
