@@ -2296,10 +2296,6 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 	if err != nil {
 		return nil, err
 	}
-	// set the guest_os_type, if it wasn't already set
-	if guestOSType == "" {
-		settings["guest_os_type"] = r.osType
-	}
 	// Generate Packer Variables
 	// Generate builder specific section
 	var hasBootCmd bool
