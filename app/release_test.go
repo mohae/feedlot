@@ -194,7 +194,7 @@ func TestCentOSSetISOName(t *testing.T) {
 	}
 }
 
-func TestCentOSsetISOURL(t *testing.T) {
+func TestCentOS6setISOURL(t *testing.T) {
 	c := newTestCentOS()
 	c.FullVersion = "6.6"
 	c.MajorVersion = "6"

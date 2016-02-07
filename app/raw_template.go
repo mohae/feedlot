@@ -319,8 +319,8 @@ func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
 	if bld.BuilderIDs != nil && len(bld.BuilderIDs) > 0 {
 		r.BuilderIDs = bld.BuilderIDs
 	}
-	// For post_processor_ids and provisioner_ids, the following logic is used:
 	//   if nil don't do anything (this means prior settings are used, e.g. default)
+	// For post_processor_ids and provisioner_ids, the following logic is used:
 	//   if len == 0 unset. A len of 0 means that the build template purposely unsets
 	//     any build
 	//   if len > 0 replace the existing types with the builder's.
