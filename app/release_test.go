@@ -77,55 +77,40 @@ func TestCentOSsetReleaseInfo(t *testing.T) {
 }
 
 func TestCentOSGetOSType(t *testing.T) {
-	c := centos{release{Arch: "x86_64"}, "", "", "", ""}
-	buildType := "vmware-iso"
-	res, err := c.getOSType(buildType)
-	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err)
-	} else {
-		if res != "centos-64" {
-			t.Errorf("Expected \"centos-64\", got %q", res)
-		}
+	tests := []struct {
+		buildType Builder
+		arch string
+		expected string
+		err string
+	}{
+		{VMWareISO, "x86_64", "centos-64", ""},
+		{VMWareISO, "x386", "centos-32", ""},
+		{VMWareVMX, "x86_64", "centos-64", ""},
+		{VMWareVMX, "x386", "centos-32", ""},
+		{VirtualBoxISO, "x86_64", "RedHat_64", ""},
+		{VirtualBoxISO, "x386", "RedHat_32", ""},
+		{VirtualBoxOVF, "x86_64", "RedHat_64", ""},
+		{VirtualBoxOVF, "x386", "RedHat_32", ""},
+		{QEMU, "x86_64", "", ""},
+		{QEMU, "x386", "", ""},
+		{UnsupportedBuilder, "x86_64", "", fmt.Sprintf("CentOS %s: not supported", UnsupportedBuilder)},
+		{UnsupportedBuilder, "x386", "", fmt.Sprintf("CentOS %s: not supported", UnsupportedBuilder)},
 	}
-
-	buildType = "virtualbox-iso"
-	res, err = c.getOSType(buildType)
-	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err)
-	} else {
-		if res != "RedHat_64" {
-			t.Errorf("Expected \"RedHat_64\", got %q", res)
+	for i, test := range tests {
+		c := centos{release{Arch: test.arch}, "", "", "", ""}
+		res, err := c.getOSType(test.buildType)
+		if err != nil {
+			if err.Error() != test.err {
+				t.Errorf("%d: got %q want %q", i, err, test.err)
+			}
+			continue
 		}
-	}
-
-	c = centos{release{Arch: "x386"}, "", "", "", ""}
-	buildType = "vmware-iso"
-	res, err = c.getOSType(buildType)
-	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err)
-	} else {
-		if res != "centos-32" {
-			t.Errorf("Expected \"centos-32\", got %q", res)
+		if test.err != "" {
+			t.Errorf("%d: got no error, want %q", i, test.err)
+			continue
 		}
-	}
-
-	buildType = "virtualbox-iso"
-	res, err = c.getOSType(buildType)
-	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err)
-	} else {
-		if res != "RedHat_32" {
-			t.Errorf("Expected \"RedHat_32\", got %q", res)
-		}
-	}
-
-	buildType = "voodoo"
-	res, err = c.getOSType(buildType)
-	if err == nil {
-		t.Error("Expected error to not be nil, it was")
-	} else {
-		if err.Error() != fmt.Sprintf("CentOS %s: not supported", buildType) {
-			t.Errorf("Expected \"CentOS %s: not supported\", got %q", buildType, err)
+		if res != test.expected {
+			t.Errorf("%d: got %s, want %s", i, res, test.expected)
 		}
 	}
 }
@@ -363,56 +348,42 @@ func TestDebianSetISO(t *testing.T) {
 
 }
 
+
 func TestDebianGetOSType(t *testing.T) {
-	d := debian{release{Arch: "amd64"}}
-	buildType := "vmware-iso"
-	res, err := d.getOSType(buildType)
-	if err != nil {
-		t.Errorf("Expected no error, got %q", err)
-	} else {
-		if res != "debian-64" {
-			t.Errorf("Expected \"debian-64\", got %q", res)
-		}
+	tests := []struct {
+		buildType Builder
+		arch string
+		expected string
+		err string
+	}{
+		{VMWareISO, "amd64", "debian-64", ""},
+		{VMWareISO, "i386", "debian-32", ""},
+		{VMWareVMX, "amd64", "debian-64", ""},
+		{VMWareVMX, "i386", "debian-32", ""},
+		{VirtualBoxISO, "amd64", "Debian_64", ""},
+		{VirtualBoxISO, "i386", "Debian_32", ""},
+		{VirtualBoxOVF, "amd64", "Debian_64", ""},
+		{VirtualBoxOVF, "i386", "Debian_32", ""},
+		{QEMU, "amd64", "", ""},
+		{QEMU, "i386", "", ""},
+		{UnsupportedBuilder, "amd64", "", fmt.Sprintf("Debian %s: not supported", UnsupportedBuilder)},
+		{UnsupportedBuilder, "i386", "", fmt.Sprintf("Debian %s: not supported", UnsupportedBuilder)},
 	}
-
-	buildType = "virtualbox-iso"
-	res, err = d.getOSType(buildType)
-	if err != nil {
-		t.Errorf("Expected no error, got %q", err)
-	} else {
-		if res != "Debian_64" {
-			t.Errorf("Expected \"Debian_64\", got %q", res)
+	for i, test := range tests {
+		d := debian{release{Arch: test.arch}}
+		res, err := d.getOSType(test.buildType)
+		if err != nil {
+			if err.Error() != test.err {
+				t.Errorf("%d: got %q want %q", i, err, test.err)
+			}
+			continue
 		}
-	}
-
-	d = debian{release{Arch: "i386"}}
-	buildType = "vmware-iso"
-	res, err = d.getOSType(buildType)
-	if err != nil {
-		t.Errorf("Expected no error, got %q", err)
-	} else {
-		if res != "debian-32" {
-			t.Errorf("Expected \"debian-32\", got %q", res)
+		if test.err != "" {
+			t.Errorf("%d: got no error, want %q", i, test.err)
+			continue
 		}
-	}
-
-	buildType = "virtualbox-iso"
-	res, err = d.getOSType(buildType)
-	if err != nil {
-		t.Errorf("Expected no error, got %q", err)
-	} else {
-		if res != "Debian_32" {
-			t.Errorf("Expected \"Debian_32\", got %q", res)
-		}
-	}
-
-	buildType = "voodoo"
-	res, err = d.getOSType(buildType)
-	if err == nil {
-		t.Error("Expected an error, received nil")
-	} else {
-		if err.Error() != "Debian voodoo: not supported" {
-			t.Errorf("Expected \"Debian voodoo: not supported\", got %q", err)
+		if res != test.expected {
+			t.Errorf("%d: got %s, want %s", i, res, test.expected)
 		}
 	}
 }
@@ -487,55 +458,40 @@ fbe7f159337551cc5ce9f0ff72acefef567f3dcd30750425287588c554978501 *ubuntu-12.04.4
 }
 
 func TestUbuntuGetOSType(t *testing.T) {
-	u := ubuntu{release{Arch: "amd64"}}
-	buildType := "vmware-iso"
-	res, err := u.getOSType(buildType)
-	if err != nil {
-		t.Errorf("Expected no error, got %q", err)
-	} else {
-		if res != "ubuntu-64" {
-			t.Errorf("Expected \"3aeb42816253355394897ae80d99a9ba56217c0e98e05294b51f0f5b13bceb54\", got %q", res)
-		}
+	tests := []struct {
+		buildType Builder
+		arch string
+		expected string
+		err string
+	}{
+		{VMWareISO, "amd64", "ubuntu-64", ""},
+		{VMWareISO, "i386", "ubuntu-32", ""},
+		{VMWareVMX, "amd64", "ubuntu-64", ""},
+		{VMWareVMX, "i386", "ubuntu-32", ""},
+		{VirtualBoxISO, "amd64", "Ubuntu_64", ""},
+		{VirtualBoxISO, "i386", "Ubuntu_32", ""},
+		{VirtualBoxOVF, "amd64", "Ubuntu_64", ""},
+		{VirtualBoxOVF, "i386", "Ubuntu_32", ""},
+		{QEMU, "amd64", "", ""},
+		{QEMU, "i386", "", ""},
+		{UnsupportedBuilder, "amd64", "", fmt.Sprintf("Ubuntu %s: not supported", UnsupportedBuilder)},
+		{UnsupportedBuilder, "i386", "", fmt.Sprintf("Ubuntu %s: not supported", UnsupportedBuilder)},
 	}
-
-	buildType = "virtualbox-iso"
-	res, err = u.getOSType(buildType)
-	if err != nil {
-		t.Errorf("Expected no error, got %q", err)
-	} else {
-		if res != "Ubuntu_64" {
-			t.Errorf("Expected \"Ubuntu_64\", got %q", res)
+	for i, test := range tests {
+		u := ubuntu{release{Arch: test.arch}}
+		res, err := u.getOSType(test.buildType)
+		if err != nil {
+			if err.Error() != test.err {
+				t.Errorf("%d: got %q want %q", i, err, test.err)
+			}
+			continue
 		}
-	}
-
-	u = ubuntu{release{Arch: "i386"}}
-	buildType = "vmware-iso"
-	res, err = u.getOSType(buildType)
-	if err != nil {
-		t.Errorf("Expected no error, got %q", err)
-	} else {
-		if res != "ubuntu-32" {
-			t.Errorf("Expected \"ubuntu-32\", got %q", res)
+		if test.err != "" {
+			t.Errorf("%d: got no error, want %q", i, test.err)
+			continue
 		}
-	}
-
-	buildType = "virtualbox-iso"
-	res, err = u.getOSType(buildType)
-	if err != nil {
-		t.Errorf("Expected no error, got %q", err)
-	} else {
-		if res != "Ubuntu_32" {
-			t.Errorf("Expected \"Ubuntu_32\", got %q", res)
-		}
-	}
-
-	buildType = "voodoo"
-	res, err = u.getOSType(buildType)
-	if err == nil {
-		t.Error("Expected an error, received nil")
-	} else {
-		if err.Error() != "Ubuntu voodoo: not supported" {
-			t.Errorf("Expected \"Ubuntu voodoo: not supported\", got %q", err)
+		if res != test.expected {
+			t.Errorf("%d: got %s, want %s", i, res, test.expected)
 		}
 	}
 }

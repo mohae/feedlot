@@ -367,28 +367,28 @@ func (r *centos) setReleaseURL() {
 
 // getOSType returns the OSType string for the provided builder. The OS Type
 // varies by distro, arch, and builder.
-func (r *centos) getOSType(buildType string) (string, error) {
+func (r *centos) getOSType(buildType Builder) (string, error) {
 	switch buildType {
-	case "vmware-iso", "vmware-vmx":
+	case VMWareISO, VMWareVMX:
 		switch r.Arch {
 		case "x86_64":
 			return "centos-64", nil
 		case "x386":
 			return "centos-32", nil
 		}
-	case "virtualbox-iso", "virtualbox-ovf":
+	case VirtualBoxISO, VirtualBoxOVF:
 		switch r.Arch {
 		case "x86_64":
 			return "RedHat_64", nil
 		case "x386":
 			return "RedHat_32", nil
 		}
-	case "qemu":
+	case QEMU:
 		// qemu doesn't need this info so return an empty string.
 		return "", nil
 	}
 	// Shouldn't get here unless the buildType passed is an unsupported one.
-	return "", &NotSupportedError{Distro: CentOS, slug: buildType}
+	return "", &NotSupportedError{Distro: CentOS, slug: buildType.String()}
 }
 
 // An Debian specific wrapper to release
@@ -511,28 +511,28 @@ func (r *debian) findISOChecksum(page string) error {
 
 // getOSType returns the OSType string for the provided builder. The OS Type
 // varies by distro, arch, and builder.
-func (r *debian) getOSType(buildType string) (string, error) {
+func (r *debian) getOSType(buildType Builder) (string, error) {
 	switch buildType {
-	case "vmware-iso", "vmware-vmx":
+	case VMWareISO, VMWareVMX:
 		switch r.Arch {
 		case "amd64":
 			return "debian-64", nil
 		case "i386":
 			return "debian-32", nil
 		}
-	case "virtualbox-iso", "vmware-ovf":
+	case VirtualBoxISO, VirtualBoxOVF:
 		switch r.Arch {
 		case "amd64":
 			return "Debian_64", nil
 		case "i386":
 			return "Debian_32", nil
 		}
-	case "qemu":
+	case QEMU:
 		// qemu doesn't need this info so return an empty string.
 		return "", nil
 	}
 	// Shouldn't get here unless the buildType passed is an unsupported one.
-	return "", &NotSupportedError{Distro: Debian, slug: buildType}
+	return "", &NotSupportedError{Distro: Debian, slug: buildType.String()}
 }
 
 // getReleaseVersion() get's the directory info so that the current version
@@ -719,27 +719,27 @@ func (r *ubuntu) checksumURL() string {
 
 // getOSType returns the OSType string for the provided builder. The OS Type
 // varies by distro, arch, and builder.
-func (r *ubuntu) getOSType(buildType string) (string, error) {
+func (r *ubuntu) getOSType(buildType Builder) (string, error) {
 	switch buildType {
-	case "vmware-iso", "vmware-vmx":
+	case VMWareISO, VMWareVMX:
 		switch r.Arch {
 		case "amd64":
 			return "ubuntu-64", nil
 		case "i386":
 			return "ubuntu-32", nil
 		}
-	case "virtualbox-iso", "vmware-ovf":
+	case VirtualBoxISO, VirtualBoxOVF:
 		switch r.Arch {
 		case "amd64":
 			return "Ubuntu_64", nil
 		case "i386":
 			return "Ubuntu_32", nil
 		}
-	case "qemu":
+	case QEMU:
 		// qemu doesn't need this info so return an empty string.
 		return "", nil
 	}
-	return "", &NotSupportedError{Distro: Ubuntu, slug: buildType}
+	return "", &NotSupportedError{Distro: Ubuntu, slug: buildType.String()}
 }
 
 // bodyStringFromURL returns the response body for the passed url as a string.

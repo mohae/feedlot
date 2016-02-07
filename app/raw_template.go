@@ -452,7 +452,7 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 			jww.ERROR.Println(err)
 			return err
 		}
-		r.osType, err = r.releaseISO.(*centos).getOSType(builderType.String())
+		r.osType, err = r.releaseISO.(*centos).getOSType(builderType)
 		if err != nil {
 			jww.ERROR.Println(err)
 			return err
@@ -480,7 +480,7 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 			jww.ERROR.Println(err)
 			return err
 		}
-		r.osType, err = r.releaseISO.(*debian).getOSType(builderType.String())
+		r.osType, err = r.releaseISO.(*debian).getOSType(builderType)
 		if err != nil {
 			jww.ERROR.Println(err)
 			return err
@@ -508,7 +508,7 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 			jww.ERROR.Println(err)
 			return err
 		}
-		r.osType, err = r.releaseISO.(*ubuntu).getOSType(builderType.String())
+		r.osType, err = r.releaseISO.(*ubuntu).getOSType(builderType)
 		if err != nil {
 			jww.ERROR.Println(err)
 			return err
