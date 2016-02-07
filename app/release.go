@@ -114,19 +114,17 @@ type release struct {
 // centos wrapper to release.
 type centos struct {
 	release
-	mirrorURL string
 	region    string
 	country   string
 	sponsor   string
 }
 
-// setMirrorURL gets a mirror url.  If region or country is set, the mirror
-// list is filtered before obtaining the mirror url.  IF there is more than
-// 1 url in the possible mirror list; the mirror url is psuedo-randomly
-// selected.
+// pickReleaseURL gets a mirror url as the release URL.  If region or country
+// is set, the mirror list is filtered before obtaining the release url.  If
+// there is more than 1 mirror in the filtered list, the release url is
+// psuedo-randomly selected.
 //
-// Mirrors only have  the latest release for a given version.
-func (r *centos) setMirrorURL() error {
+func (r *centos) pickReleaseURL() error {
 	// get the mirror list
 	resp, err := http.Get("https://www.centos.org/download/full-mirrorlist.csv")
 	if err != nil {
@@ -181,7 +179,7 @@ func (r *centos) setMirrorURL() error {
 PICK:
 	// get a random mirror url
 	tmpURL := filtered[rand.Intn(len(filtered))][4]
-	r.mirrorURL = fmt.Sprintf("%s%s/isos/%s/", appendSlash(tmpURL), r.Release, r.Arch)
+	r.ReleaseURL = fmt.Sprintf("%s%s/isos/%s/", appendSlash(tmpURL), r.Release, r.Arch)
 	return nil
 }
 
@@ -201,7 +199,7 @@ func (r *centos) setVersionInfo() error {
 	}
 	// If the BaseURL isn't set, find a mirror to use
 	if r.BaseURL == "" {
-		err := r.setMirrorURL()
+		err := r.pickReleaseURL()
 		if err != nil {
 			return err
 		}
@@ -220,30 +218,30 @@ func (r *centos) setVersionInfo() error {
 func (r *centos) setVersion6Info() error {
 	// ensure that the image is all lowercase
 	r.Image = strings.ToLower(r.Image)
-	tokens, err := tokensFromURL(r.mirrorURL)
+	tokens, err := tokensFromURL(r.ReleaseURL)
 	if err != nil {
-		return &VersionInfoError{info: r.mirrorURL, slug: "tokenize release page: " + err.Error()}
+		return &VersionInfoError{info: r.ReleaseURL, slug: "tokenize release page: " + err.Error()}
 	}
 	// get the tokens that are links
 	links := inlineElementsFromTokens("a", "href", tokens)
 	if len(links) == 0 || links == nil {
-		return &VersionInfoError{info: r.mirrorURL, slug: "extract of links from the release page failed"}
+		return &VersionInfoError{info: r.ReleaseURL, slug: "extract of links from the release page failed"}
 	}
 	// get the links that start with CentOS-, these have the full version number
 	// and split it into it's parts
 	links = extractLinksHasPrefix(links, []string{"CentOS-"})
 	if len(links) == 0 {
-		return &VersionInfoError{info: r.mirrorURL, slug: "no CentOS iso links found"}
+		return &VersionInfoError{info: r.ReleaseURL, slug: "no CentOS iso links found"}
 	}
 	parts := strings.Split(links[0], "-")
 	// parts should be 5 elements: e.g. CentOS-6.7-x86_64-minimal.iso
 	if len(parts) < 4 {
-		return &VersionInfoError{info: r.mirrorURL, slug: "parse of CentOS iso links failed"}
+		return &VersionInfoError{info: r.ReleaseURL, slug: "parse of CentOS iso links failed"}
 	}
 	r.FullVersion = parts[1]
 	parts = strings.Split(parts[1], ".")
 	if len(parts) < 2 {
-		return &VersionInfoError{info: r.mirrorURL, slug: "parse of version info from CentOS iso links failed"}
+		return &VersionInfoError{info: r.ReleaseURL, slug: "parse of version info from CentOS iso links failed"}
 	}
 	r.MajorVersion = parts[0]
 	r.MinorVersion = parts[1]
@@ -255,23 +253,23 @@ func (r *centos) setVersion7Info() error {
 	// this will need to be revisited
 	r.Image = fmt.Sprintf("%s%s", strings.ToUpper(r.Image[:1]), r.Image[1:])
 	// get the page from the url
-	tokens, err := tokensFromURL(r.mirrorURL)
+	tokens, err := tokensFromURL(r.ReleaseURL)
 	if err != nil {
-		return &VersionInfoError{info: r.mirrorURL, slug: "tokenize release page: " + err.Error()}
+		return &VersionInfoError{info: r.ReleaseURL, slug: "tokenize release page: " + err.Error()}
 	}
 	links := inlineElementsFromTokens("a", "href", tokens)
 	if len(links) == 0 || links == nil {
-		return &VersionInfoError{info: r.mirrorURL, slug: "extract of links from the release page failed"}
+		return &VersionInfoError{info: r.ReleaseURL, slug: "extract of links from the release page failed"}
 	}
 	links = extractLinksHasPrefix(links, []string{"CentOS-"})
 	if len(links) == 0 {
-		return &VersionInfoError{info: r.mirrorURL, slug: "no CentOS iso links found"}
+		return &VersionInfoError{info: r.ReleaseURL, slug: "no CentOS iso links found"}
 	}
 	// extract the monthstamp and fix number this may or may not include a fix number
 	parts := strings.Split(links[0], "-")
 	r.MajorVersion = parts[1]
 	if len(parts) < 5 {
-		return &VersionInfoError{info: r.mirrorURL, slug: "parse of CentOS iso links failed"}
+		return &VersionInfoError{info: r.ReleaseURL, slug: "parse of CentOS iso links failed"}
 	}
 	tmp := strings.Split(parts[4], ".")
 	r.MinorVersion = tmp[0]
@@ -358,11 +356,11 @@ func (r *centos) findISOChecksum(page string) error {
 }
 
 func (r *centos) checksumURL() string {
-	return fmt.Sprintf("%s%ssum.txt", r.mirrorURL, strings.ToLower(r.ChecksumType))
+	return fmt.Sprintf("%s%ssum.txt", r.ReleaseURL, strings.ToLower(r.ChecksumType))
 }
 
 func (r *centos) setReleaseURL() {
-	r.ReleaseURL = r.BaseURL
+	r.ReleaseURL = r.ReleaseURL
 }
 
 // getOSType returns the OSType string for the provided builder. The OS Type

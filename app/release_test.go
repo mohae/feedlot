@@ -15,7 +15,7 @@ import (
 )
 
 func newTestCentOS() centos {
-	c := centos{release: release{Release: "6", Image: "Minimal", Arch: "x86_64"}, mirrorURL: "", region: "", country: "CA"}
+	c := centos{release: release{Release: "6", Image: "Minimal", Arch: "x86_64"}, region: "", country: "CA"}
 	c.ChecksumType = "sha256"
 	return c
 }
@@ -97,7 +97,7 @@ func TestCentOSGetOSType(t *testing.T) {
 		{UnsupportedBuilder, "x386", "", fmt.Sprintf("CentOS %s: not supported", UnsupportedBuilder)},
 	}
 	for i, test := range tests {
-		c := centos{release{Arch: test.arch}, "", "", "", ""}
+		c := centos{release{Arch: test.arch}, "", "", ""}
 		res, err := c.getOSType(test.buildType)
 		if err != nil {
 			if err.Error() != test.err {
@@ -162,6 +162,7 @@ func TestCentOSSetChecksumURL(t *testing.T) {
 func TestCentOSSetISOName(t *testing.T) {
 	// 6
 	c := newTestCentOS()
+	c.Release = "6"
 	c.setVersionInfo()
 	c.setISOName()
 	expected := fmt.Sprintf("CentOS-%s-%s-%s.iso", c.FullVersion, c.Arch, strings.ToLower(c.Image))
