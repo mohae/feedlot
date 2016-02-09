@@ -2,8 +2,8 @@ package app
 
 import (
 	"fmt"
-	"log"
 	"os"
+	"strings"
 
 	"github.com/mohae/contour"
 	jww "github.com/spf13/jwalterweatherman"
@@ -15,13 +15,6 @@ var tmpLogFile string
 func init() {
 	jww.SetLogThreshold(getJWWLevel(contour.GetString(LogLevelFile)))
 	jww.SetStdoutThreshold(getJWWLevel(contour.GetString(LogLevelStdOut)))
-	jww.TRACE.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-	jww.DEBUG.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-	jww.INFO.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-	jww.WARN.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-	jww.ERROR.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-	jww.CRITICAL.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-	jww.FATAL.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 }
 
 // SetTempLogging creates a temp logfile in the /tmp and enables logging. This
@@ -63,6 +56,7 @@ func SetLogging() error {
 		jww.FEEDBACK.Println(err)
 		return err
 	}
+	jww.SetLogFile(logfile)
 	jww.FEEDBACK.Printf("The temp log file %s was moved to %s\n", tmpFile, logfile)
 	// Set LogLevels
 	jww.SetLogThreshold(getJWWLevel(contour.GetString(LogLevelFile)))
@@ -71,6 +65,7 @@ func SetLogging() error {
 }
 
 func getJWWLevel(level string) jww.Level {
+	level = strings.ToUpper(level)
 	switch level {
 	case "TRACE":
 		return jww.LevelTrace
@@ -88,5 +83,5 @@ func getJWWLevel(level string) jww.Level {
 		return jww.LevelFatal
 	}
 	// It should never get to this...but if it does return a valid level
-	return jww.LevelInfo
+	return jww.LevelError
 }
