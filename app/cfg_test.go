@@ -12,8 +12,9 @@ import (
 
 var testDefaults = &defaults{
 	IODirInf: IODirInf{
-		OutputDir: "out/:build_name",
-		SourceDir: "src",
+		TemplateOutputDir: "packer_templates/:build_name",
+		PackerOutputDir:   "packer_boxes/:build_name",
+		SourceDir:         "src",
 	},
 	PackerInf: PackerInf{
 		Description:      "Test Default Rancher template",
@@ -563,7 +564,7 @@ func init() {
 	var b bool
 	b = true
 	testDefaults.IncludeComponentString = &b
-	testDefaults.OutputDirIsRelative = &b
+	testDefaults.TemplateOutputDirIsRelative = &b
 	testDefaults.SourceDirIsRelative = &b
 }
 
@@ -815,34 +816,43 @@ func TestBuildListStuff(t *testing.T) {
 }
 
 func TestIODirInfUpdate(t *testing.T) {
-	oldIODirInf := IODirInf{OutputDir: "old OutDir", SourceDir: "old SrcDir"}
+	oldIODirInf := IODirInf{TemplateOutputDir: "old TemplateOutputDir", PackerOutputDir: "old PackerOutputDir", SourceDir: "old SrcDir"}
 	newIODirInf := IODirInf{}
 	oldIODirInf.update(newIODirInf)
-	if oldIODirInf.OutputDir != "old OutDir" {
-		t.Errorf("Expected \"old OutDir\", got %q", oldIODirInf.OutputDir)
+	if oldIODirInf.TemplateOutputDir != "old TemplateOutputDir/" {
+		t.Errorf("Expected \"old TemplateOutputDir/\", got %q", oldIODirInf.TemplateOutputDir)
 	}
-	if oldIODirInf.SourceDir != "old SrcDir" {
-		t.Errorf("Expected \"old SrcDir\", got %q", oldIODirInf.SourceDir)
+	if oldIODirInf.PackerOutputDir != "old PackerOutputDir/" {
+		t.Errorf("Expected \"old PackerOutputDir/\", got %q", oldIODirInf.PackerOutputDir)
+	}
+	if oldIODirInf.SourceDir != "old SrcDir/" {
+		t.Errorf("Expected \"old SrcDir/\", got %q", oldIODirInf.SourceDir)
 	}
 
-	oldIODirInf = IODirInf{OutputDir: "old OutDir", SourceDir: "old SrcDir"}
-	newIODirInf = IODirInf{OutputDir: "new OutDir", SourceDir: "new SrcDir"}
+	oldIODirInf = IODirInf{TemplateOutputDir: "old TemplateOutputDir", PackerOutputDir: "old PackerOutputDir", SourceDir: "old SrcDir"}
+	newIODirInf = IODirInf{TemplateOutputDir: "new TemplateOutputDir", PackerOutputDir: "new PackerOutputDir", SourceDir: "new SrcDir"}
 	oldIODirInf.update(newIODirInf)
-	if oldIODirInf.OutputDir != "new OutDir/" {
-		t.Errorf("Expected \"new OutDir/\", got %q", oldIODirInf.OutputDir)
+	if oldIODirInf.TemplateOutputDir != "new TemplateOutputDir/" {
+		t.Errorf("Expected \"new TemplateOutputDir/\", got %q", oldIODirInf.TemplateOutputDir)
+	}
+	if oldIODirInf.PackerOutputDir != "new PackerOutputDir/" {
+		t.Errorf("Expected \"new PackerOutputDir/\", got %q", oldIODirInf.PackerOutputDir)
 	}
 	if oldIODirInf.SourceDir != "new SrcDir/" {
 		t.Errorf("Expected \"new SrcDir/\", got %q", oldIODirInf.SourceDir)
 	}
 
-	oldIODirInf = IODirInf{OutputDir: "old OutDir", SourceDir: "old SrcDir"}
-	newIODirInf = IODirInf{OutputDir: "OutDir"}
+	oldIODirInf = IODirInf{TemplateOutputDir: "old TemplateOutputDir", PackerOutputDir: "old PackerOutputDir", SourceDir: "old SrcDir"}
+	newIODirInf = IODirInf{TemplateOutputDir: "TemplateOutputDir"}
 	oldIODirInf.update(newIODirInf)
-	if oldIODirInf.OutputDir != "OutDir/" {
-		t.Errorf("Expected \"OutDir/\", got %q", oldIODirInf.OutputDir)
+	if oldIODirInf.TemplateOutputDir != "TemplateOutputDir/" {
+		t.Errorf("Expected \"TemplateOutputDir/\", got %q", oldIODirInf.TemplateOutputDir)
 	}
-	if oldIODirInf.SourceDir != "old SrcDir" {
-		t.Errorf("Expected \"old SrcDir\", got %q", oldIODirInf.SourceDir)
+	if oldIODirInf.PackerOutputDir != "old PackerOutputDir/" {
+		t.Errorf("Expected \"old PackerOutputDir/\", got %q", oldIODirInf.PackerOutputDir)
+	}
+	if oldIODirInf.SourceDir != "old SrcDir/" {
+		t.Errorf("Expected \"old SrcDir/\", got %q", oldIODirInf.SourceDir)
 	}
 }
 

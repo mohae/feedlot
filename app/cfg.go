@@ -332,14 +332,16 @@ type IODirInf struct {
 	// determined, otherwise determining whether it was an explicit false or
 	// empty would not be possible.
 	IncludeComponentString *bool `toml:"include_component_string" json:"include_component_string"`
-	// The directory to use for example runs
-	OutputDir string `toml:"output_dir" json:"output_dir"`
-	// If the output dir path is relative to the conf_dir.  If true, the path is
+	// The output directory for the generated Packer templates
+	TemplateOutputDir string `toml:"template_output_dir" json:"template_output_dir"`
+	// If the template output dir path is relative to the conf_dir.  If true, the path is
 	// resolved relative to the conf_dir.  Otherwise, the path is used as is.
 	// This is a pointer so that whether or not this setting was actually set can
 	// be determined, otherwise determining whether it was an explicit false or
 	// empty would not be possible.
-	OutputDirIsRelative *bool `toml:"output_dir_is_relative" json:"output_dir_is_relative"`
+	TemplateOutputDirIsRelative *bool `toml:"template_output_dir_is_relative" json:"template_output_dir_is_relative"`
+	// PackerOutputDir is the output directory for the Packer artificats, when applicable.
+	PackerOutputDir string `toml:"packer_output_dir" json:"packer_output_dir"`
 	// The directory that contains the source files for this build.
 	SourceDir string `toml:"source_dir" json:"source_dir"`
 	// If the source dir path is relative to the conf_dir.  If true, the path is
@@ -352,15 +354,28 @@ type IODirInf struct {
 
 // Only update when a value exists; empty strings don't count as being set.
 func (i *IODirInf) update(v IODirInf) {
-	if v.OutputDir != "" {
-		i.OutputDir = appendSlash(v.OutputDir)
+	if v.TemplateOutputDir != "" {
+		i.TemplateOutputDir = v.TemplateOutputDir
 	}
-	if v.OutputDirIsRelative != nil {
-		i.OutputDirIsRelative = v.OutputDirIsRelative
+	// the path should end with "/"
+	i.TemplateOutputDir = appendSlash(i.TemplateOutputDir)
+
+	if v.TemplateOutputDirIsRelative != nil {
+		i.TemplateOutputDirIsRelative = v.TemplateOutputDirIsRelative
 	}
+
+	if v.PackerOutputDir != "" {
+		i.PackerOutputDir = v.PackerOutputDir
+	}
+	// the path should end with "/"
+	i.PackerOutputDir = appendSlash(i.PackerOutputDir)
+
 	if v.SourceDir != "" {
 		i.SourceDir = appendSlash(v.SourceDir)
 	}
+	// the path should end with "/"
+	i.SourceDir = appendSlash(i.SourceDir)
+
 	if v.SourceDirIsRelative != nil {
 		i.SourceDirIsRelative = v.SourceDirIsRelative
 	}
@@ -371,8 +386,11 @@ func (i *IODirInf) update(v IODirInf) {
 
 // check to see if the dirinf is set, if not, set them to their defaults
 func (i *IODirInf) check() {
-	if i.OutputDir == "" {
-		i.OutputDir = fmt.Sprintf("%sbuildname", contour.GetString(ParamDelimStart))
+	if i.TemplateOutputDir == "" {
+		i.TemplateOutputDir = fmt.Sprintf("%sbuildname", contour.GetString(ParamDelimStart))
+	}
+	if i.PackerOutputDir == "" {
+		i.PackerOutputDir = fmt.Sprintf("%sbuildname", contour.GetString(ParamDelimStart))
 	}
 	if i.SourceDir == "" {
 		i.SourceDir = "src"

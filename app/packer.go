@@ -27,13 +27,13 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, dirs, files map[string]s
 	// priorBuild handles both the archiving and deletion of the prior build, if it exists, i.e.
 	// if the build's output path exists.
 	a := NewArchive(b.BuildName)
-	err := a.priorBuild(appendSlash(i.OutputDir))
+	err := a.priorBuild(appendSlash(i.TemplateOutputDir))
 	if err != nil {
 		jww.ERROR.Println(err)
 		return Error{b.BuildName, err}
 	}
 	// create the destination directory if it doesn't already exist
-	err = os.MkdirAll(i.OutputDir, 0754)
+	err = os.MkdirAll(i.TemplateOutputDir, 0754)
 	if err != nil {
 		return Error{b.BuildName, err}
 	}
@@ -59,7 +59,7 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, dirs, files map[string]s
 		jww.ERROR.Print(err)
 		return Error{b.BuildName, err}
 	}
-	fname := filepath.Join(i.OutputDir, fmt.Sprintf("%s.json", b.Name))
+	fname := filepath.Join(i.TemplateOutputDir, fmt.Sprintf("%s.json", b.Name))
 	f, err := os.Create(fname)
 	if err != nil {
 		jww.ERROR.Print(err)

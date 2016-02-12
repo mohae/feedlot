@@ -3,8 +3,9 @@
 description = "Test Default Rancher template"
 name = ":build_name"
 #command_dir = "commands"
-output_dir = "out/:build_name"
-output_dir_is_relative = true
+template_output_dir = "packer_templates/:build_name"
+template_output_dir_is_relative = true
+packer_output_dir = "packer_boxes/:build_name"
 source_dir = "src"
 source_dir_is_relative = true
 min_packer_version = "0.4.0"

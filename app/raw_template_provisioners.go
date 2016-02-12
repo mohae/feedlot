@@ -173,7 +173,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
 			if src != "" {
-				r.files[filepath.Join(r.OutputDir, Ansible.String(), v)] = src
+				r.files[filepath.Join(r.TemplateOutputDir, Ansible.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(Ansible.String(), v)
 			hasPlaybook = true

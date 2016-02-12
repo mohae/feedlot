@@ -227,39 +227,38 @@ func (r *rawTemplate) setDefaults(d *distro) error {
 	return nil
 }
 
-// setOutputDir handles setting the outputDir for a template (less the
-// variable replacement part).  The output dir may come from the build
-// template or the distro default.  If it's not set, it will be an empty
-// string.
+// setTemplateOutputDir handles setting the TemplateOutputDir for a template
+// (less the variable replacement part).  The template output dir may come
+// from the build template or the defaults or the distro default.
 //
 // The distro default setting may come from either the default config or the
 // supported config.
 //
-// The setting may be further modified by the output_dir_is_relative setting.
-//  When true the path will be built relative to the directory of the build
-// config file from which this template came.
-func (r *rawTemplate) setOutputDir(dir string) {
-	if r.IODirInf.OutputDir == "" {
+// The setting may be further modified by the template_output_dir_is_relative
+// setting.  When true the path will be built relative to the directory of
+// the build config file from which this template came.
+func (r *rawTemplate) setTemplateOutputDir(dir string) {
+	if r.IODirInf.TemplateOutputDir == "" {
 		// ignore possible error because the distro should be validated
 		// at this point.
 		d, _ := DistroDefaults.Templates[DistroFromString(r.Distro)]
-		if d.IODirInf.OutputDir != "" {
-			r.IODirInf.OutputDir = d.IODirInf.OutputDir
+		if d.IODirInf.TemplateOutputDir != "" {
+			r.IODirInf.TemplateOutputDir = d.IODirInf.TemplateOutputDir
 		}
 	}
 	// check if it's relative: nothing to do if it isn't
 	var b bool
-	if r.IODirInf.OutputDirIsRelative == nil {
+	if r.IODirInf.TemplateOutputDirIsRelative == nil {
 		// check the distro default
 		d, _ := DistroDefaults.Templates[DistroFromString(r.Distro)]
-		if d.IODirInf.OutputDirIsRelative != nil {
-			b = *d.IODirInf.OutputDirIsRelative
+		if d.IODirInf.TemplateOutputDirIsRelative != nil {
+			b = *d.IODirInf.TemplateOutputDirIsRelative
 		}
 	} else {
-		b = *r.IODirInf.OutputDirIsRelative
+		b = *r.IODirInf.TemplateOutputDirIsRelative
 	}
 	if b {
-		r.IODirInf.OutputDir = filepath.Join(dir, r.IODirInf.OutputDir)
+		r.IODirInf.TemplateOutputDir = filepath.Join(dir, r.IODirInf.TemplateOutputDir)
 	}
 }
 
@@ -336,26 +335,23 @@ func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
 	r.updateProvisioners(bld.Provisioners)
 }
 
-// mergeVariables goes through the template variables and finalizes the values
-// of any :vars found within the strings.
+// mergeVariables goes through the template variables and finalizes the
+// values of any :vars found within the strings.
 //
 // Supported:
-//  distro                   the name of the distro
-//  release                  the release version being used
-//  arch                     the target architecture for the build
-//  image                    the image used, e.g. server
-//  date                     the current datetime, time.Now()
-//  build_name               the name of the build template
-//  output_dir                  the directory to write the build output to
-//  source_dir                  the directory of any source files used in the build*
+//  distro               the name of the distro
+//  release              the release version being used
+//  arch                 the target architecture for the build
+//  image                the image used, e.g. server
+//  date                 the current datetime, time.Now()
+//  build_name           the name of the build template
+//  template_output_dir  the directory to write the template build output to
+//  packer_output_dir    the directory to write the Packer build artifact to
+//  source_dir           the directory of any source files used in the build*
 //
-// Note: source_dir must be set. Rancher searches for referenced files and uses
-// source_dir/distro as the last search directory. This directory is also used as
-// the base directory for any specified src directories.
-//
-// TODO should there be a flag to not prefix src paths with source_dir to allow for
-// specification of files that are not in src? If the flag is set to not prepend
-// source_dir, source_dir could still be used by adding it to the specific variable.
+// Note: source_dir must be set. Rancher searches for referenced files and
+// uses source_dir/distro as the last search directory. This directory is
+// also used as the base directory for any specified src directories.
 func (r *rawTemplate) mergeVariables() {
 	// Get the delim and set the replacement map, resolve name information
 	r.setBaseVarVals()
@@ -363,9 +359,11 @@ func (r *rawTemplate) mergeVariables() {
 	r.Name = r.replaceVariables(r.Name)
 	r.varVals[r.delim+"name"] = r.Name
 	// then merge the sourc and out dirs and set them
-	r.replaceSourceDirVars()
-	r.replaceOutDirVars()
-	r.varVals[r.delim+"output_dir"] = r.OutputDir
+	r.SourceDir = r.replaceVariables(r.SourceDir)
+	r.TemplateOutputDir = r.replaceVariables(r.TemplateOutputDir)
+	r.PackerOutputDir = r.replaceVariables(r.PackerOutputDir)
+	r.varVals[r.delim+"template_output_dir"] = r.TemplateOutputDir
+	r.varVals[r.delim+"packer_output_dir"] = r.PackerOutputDir
 	r.varVals[r.delim+"source_dir"] = r.SourceDir
 }
 
@@ -389,26 +387,6 @@ func (r *rawTemplate) mergeString(s, d string) string {
 		return d
 	}
 	return r.replaceVariables(s)
-}
-
-// replaceSourceDirVars does variable replacement on the sourceDir if it contains
-// any variables.
-func (r *rawTemplate) replaceSourceDirVars() {
-	// variable replacement is only necessary if the SourceDir has the variable delims
-	if strings.Contains(r.SourceDir, r.delim) {
-		r.SourceDir = r.replaceVariables(r.SourceDir)
-	}
-}
-
-// replaceOutDirVars does variable replacement on the outDir if it contains any
-// variables.
-func (r *rawTemplate) replaceOutDirVars() {
-	// variable replacement is only necessary if the SourceDir has the variable delims
-	if strings.Contains(r.OutputDir, r.delim) {
-		// normalize to no ending /
-		r.OutputDir = r.replaceVariables(r.OutputDir)
-		return
-	}
 }
 
 // ISOInfo sets the ISO info for the template's supported distro type. This
@@ -637,13 +615,13 @@ func (r *rawTemplate) findComponentSource(component, p string, isDir bool) (stri
 
 }
 
-// findSource searches for the specified sub-path using Rancher's algorithm for
-// finding the correct location.  Passed names may include relative path
-// information and may be either a filename or a directory.  Releases may have
-// "."'s in them.  In addition to searching for the requested source within the
-// point release, the "." are stripped out and the resulting value is searched:
-// e.g. 14.04 becomes 1404,or numericRelease.  The base release number is also
-// checked: e.g. 14, the releaseBase, is searched for 14.04.
+// findSource searches for the specified sub-path using Rancher's algorithm
+// for finding the correct location.  Passed names may include relative path
+// information and may be either a filename or a directory.  Releases may
+// have "."'s in them.  In addition to searching for the requested source
+// within the point release, the "." are stripped out and the resulting value
+// is searched: e.g. 14.04 becomes 1404,or numericRelease.  The base release
+// number is also checked: e.g. 14, the releaseBase, is searched for 14.04.
 // Search order:
 //   source_dir/build_name/
 //   source_dir/distro/build_name/
@@ -810,9 +788,9 @@ func (r *rawTemplate) findSource(p string, isDir bool) (string, error) {
 func (r *rawTemplate) buildOutPath(component, p string) string {
 	if r.IncludeComponentString != nil && *r.IncludeComponentString && component != "" {
 		component = strings.ToLower(component)
-		return path.Join(r.OutputDir, component, p)
+		return path.Join(r.TemplateOutputDir, component, p)
 	}
-	return path.Join(r.OutputDir, p)
+	return path.Join(r.TemplateOutputDir, p)
 }
 
 // buildTemplateResourcePath builds the path that will be added to the Packer
@@ -835,9 +813,10 @@ func (r *rawTemplate) getSourcePath(p string, isDir bool) string {
 	return path.Join(r.SourceDir, p)
 }
 
-// setExampleDisr sets the SourceDir and OutDir for example template builds. If
-// either the Dir starts with 1 or more parent dirs, '../', they will elided
-// from the Dir before prepending the SourceDir path with the Example directory.n
+// setExampleDir sets the SourceDir and TemplateOutputDir for example template
+// builds. If either the Dir starts with 1 or more parent dirs, '../', they
+// will elided from the Dir before prepending the SourceDir path with the
+// Example directory.
 //
 // src = example/src
 // ../src = example/src
@@ -864,11 +843,11 @@ func (r *rawTemplate) setExampleDirs() {
 	}
 	r.SourceDir = path.Join(r.ExampleDir, r.SourceDir)
 outDir:
-	if r.OutputDir == "" {
-		r.OutputDir = r.ExampleDir
+	if r.TemplateOutputDir == "" {
+		r.TemplateOutputDir = r.ExampleDir
 		return
 	}
-	parts = strings.Split(r.OutputDir, string(filepath.Separator))
+	parts = strings.Split(r.TemplateOutputDir, string(filepath.Separator))
 	for i, part = range parts {
 		if part != ".." {
 			break
@@ -876,8 +855,8 @@ outDir:
 	}
 	if i > 0 {
 		if r.ExampleDir != "" {
-			r.OutputDir = path.Join(parts[i:]...)
+			r.TemplateOutputDir = path.Join(parts[i:]...)
 		}
 	}
-	r.OutputDir = path.Join(r.ExampleDir, r.OutputDir)
+	r.TemplateOutputDir = path.Join(r.ExampleDir, r.TemplateOutputDir)
 }

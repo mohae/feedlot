@@ -14,8 +14,9 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 	Image:   "server",
 	Release: "12.04",
 	IODirInf: IODirInf{
-		OutputDir: "../test_files/out/:build_name",
-		SourceDir: "../test_files/src",
+		TemplateOutputDir: "../test_files/out/:build_name",
+		PackerOutputDir:   "packer_boxes/:build_name",
+		SourceDir:         "../test_files/src",
 	},
 	varVals: map[string]string{},
 	dirs:    map[string]string{},

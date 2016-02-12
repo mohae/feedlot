@@ -11,8 +11,9 @@ var testRawTemplateProvisioner = &rawTemplate{
 		Description:      "Test template config and Rancher options for CentOS",
 	},
 	IODirInf: IODirInf{
-		OutputDir: "../test_files/out/:build_name",
-		SourceDir: "../test_files/src",
+		TemplateOutputDir: "../test_files/out/:build_name",
+		PackerOutputDir:   "packer_boxes/:build_name",
+		SourceDir:         "../test_files/src",
 	},
 	BuildInf: BuildInf{
 		Name:      ":build_name",
@@ -161,8 +162,9 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 		Description:      "Test template config and Rancher options for CentOS",
 	},
 	IODirInf: IODirInf{
-		OutputDir: "../test_files/out/:build_name",
-		SourceDir: "../test_files/src",
+		TemplateOutputDir: "../test_files/out/:build_name",
+		PackerOutputDir:   "packer_boxes/:build_name",
+		SourceDir:         "../test_files/src",
 	},
 	BuildInf: BuildInf{
 		Name:      ":build_name",

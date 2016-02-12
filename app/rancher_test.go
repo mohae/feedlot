@@ -53,8 +53,9 @@ func createTmpTestDirFiles(s string) (dir string, files []string, err error) {
 var testDistroDefaultUbuntu = rawTemplate{
 	PackerInf: PackerInf{MinPackerVersion: "0.4.0", Description: "Test supported distribution template"},
 	IODirInf: IODirInf{
-		OutputDir: "../test_files/out/:distro/:build_name",
-		SourceDir: "../test_files/src/:distro",
+		TemplateOutputDir: "../test_files/out/:distro/:build_name",
+		PackerOutputDir:   "packer_boxes/:distro/:build_name",
+		SourceDir:         "../test_files/src/:distro",
 	},
 	BuildInf: BuildInf{
 		Name:      ":build_name",
@@ -184,8 +185,9 @@ var testDistroDefaultCentOS = rawTemplate{
 		Description:      "Test template config and Rancher options for CentOS",
 	},
 	IODirInf: IODirInf{
-		OutputDir: "../test_files/out/:distro/:build_name",
-		SourceDir: "../test_files/src/:distro",
+		TemplateOutputDir: "../test_files/out/:distro/:build_name",
+		PackerOutputDir:   "boxes/:distro/:build_name",
+		SourceDir:         "../test_files/src/:distro",
 	},
 	BuildInf: BuildInf{
 		Name:      ":build_name",

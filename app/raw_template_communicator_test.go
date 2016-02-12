@@ -57,8 +57,9 @@ func TestNewCommunicator(t *testing.T) {
 
 var ssh = rawTemplate{
 	IODirInf: IODirInf{
-		OutputDir: "../test_files/ubuntu/out/ubuntu",
-		SourceDir: "../test_files/src/ubuntu",
+		TemplateOutputDir: "../test_files/ubuntu/out/ubuntu",
+		PackerOutputDir:   "boxes/:distro/:build_name",
+		SourceDir:         "../test_files/src/ubuntu",
 	},
 	PackerInf: PackerInf{
 		MinPackerVersion: "",
@@ -139,8 +140,9 @@ func TestSSHCommunicator(t *testing.T) {
 
 var winRM = rawTemplate{
 	IODirInf: IODirInf{
-		OutputDir: "../test_files/ubuntu/out/ubuntu",
-		SourceDir: "../test_files/src/ubuntu",
+		TemplateOutputDir: "../test_files/ubuntu/out/ubuntu",
+		PackerOutputDir:   "packer_boxes/ubuntu",
+		SourceDir:         "../test_files/src/ubuntu",
 	},
 	PackerInf: PackerInf{
 		MinPackerVersion: "",

@@ -9,8 +9,9 @@ import (
 
 var testUbuntu = rawTemplate{
 	IODirInf: IODirInf{
-		OutputDir: "../test_files/ubuntu/out/ubuntu",
-		SourceDir: "../test_files/src/ubuntu",
+		TemplateOutputDir: "../test_files/ubuntu/out/ubuntu",
+		PackerOutputDir:   "boxes/:distro/:build_name",
+		SourceDir:         "../test_files/src/ubuntu",
 	},
 	PackerInf: PackerInf{
 		MinPackerVersion: "",
@@ -112,8 +113,9 @@ var testUbuntu = rawTemplate{
 
 var testCentOS = rawTemplate{
 	IODirInf: IODirInf{
-		OutputDir: "../test_files/out/centos",
-		SourceDir: "../test_files/src/centos",
+		TemplateOutputDir: "../test_files/out/centos",
+		PackerOutputDir:   "boxes/:distro/:build_name",
+		SourceDir:         "../test_files/src/centos",
 	},
 	PackerInf: PackerInf{
 		MinPackerVersion: "",
@@ -248,8 +250,9 @@ var testCentOS = rawTemplate{
 // output.
 var testAllBuilders = rawTemplate{
 	IODirInf: IODirInf{
-		OutputDir: "../test_files/out",
-		SourceDir: "../test_files/src",
+		TemplateOutputDir: "../test_files/out",
+		PackerOutputDir:   "boxes/:distro/:build_name",
+		SourceDir:         "../test_files/src",
 	},
 	PackerInf: PackerInf{
 		MinPackerVersion: "",
@@ -958,8 +961,9 @@ var testAllBuilders = rawTemplate{
 // output.
 var testAllBuildersSSH = rawTemplate{
 	IODirInf: IODirInf{
-		OutputDir: "../test_files/out",
-		SourceDir: "../test_files/src",
+		TemplateOutputDir: "../test_files/out",
+		PackerOutputDir:   "boxes/:distro/:build_name",
+		SourceDir:         "../test_files/src",
 	},
 	PackerInf: PackerInf{
 		MinPackerVersion: "",
@@ -1361,8 +1365,9 @@ var testAllBuildersSSH = rawTemplate{
 // output.
 var testAllBuildersWinRM = rawTemplate{
 	IODirInf: IODirInf{
-		OutputDir: "../test_files/out",
-		SourceDir: "../test_files/src",
+		TemplateOutputDir: "../test_files/out",
+		PackerOutputDir:   "boxes/:distro/:build_name",
+		SourceDir:         "../test_files/src",
 	},
 	PackerInf: PackerInf{
 		MinPackerVersion: "",
@@ -1755,8 +1760,9 @@ var testAllBuildersWinRM = rawTemplate{
 
 var testDockerRunComandFile = rawTemplate{
 	IODirInf: IODirInf{
-		OutputDir: "../test_files/out",
-		SourceDir: "../test_files/src",
+		TemplateOutputDir: "../test_files/out",
+		PackerOutputDir:   "boxes/:distro/:build_name",
+		SourceDir:         "../test_files/src",
 	},
 	PackerInf: PackerInf{
 		MinPackerVersion: "",
@@ -1805,8 +1811,9 @@ var testDockerRunComandFile = rawTemplate{
 // file
 var testDockerRunComand = rawTemplate{
 	IODirInf: IODirInf{
-		OutputDir: "../test_files/out",
-		SourceDir: "../test_files/src",
+		TemplateOutputDir: "../test_files/out",
+		PackerOutputDir:   "boxes/:distro/:build_name",
+		SourceDir:         "../test_files/src",
 	},
 	PackerInf: PackerInf{
 		MinPackerVersion: "",

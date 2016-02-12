@@ -193,8 +193,9 @@ var expecteNewTemplateBuildInf = BuildInf{
 var testRawTemplateBuilderOnly = &rawTemplate{
 	PackerInf: PackerInf{MinPackerVersion: "0.4.0", Description: "Test supported distribution template"},
 	IODirInf: IODirInf{
-		OutputDir: "../test_files/out/:distro/:build_name",
-		SourceDir: "../test_files/src/:distro",
+		TemplateOutputDir: "../test_files/out/:distro/:build_name",
+		PackerOutputDir:   "packer_boxes/:distro/:build_name",
+		SourceDir:         "../test_files/src/:distro",
 	},
 	BuildInf: BuildInf{
 		Name:      ":build_name",
@@ -216,8 +217,9 @@ var testRawTemplateBuilderOnly = &rawTemplate{
 var testRawTemplateWOSection = &rawTemplate{
 	PackerInf: PackerInf{MinPackerVersion: "0.4.0", Description: "Test supported distribution template"},
 	IODirInf: IODirInf{
-		OutputDir: "../test_files/out/:distro/:build_name",
-		SourceDir: "../test_files/src/:distro",
+		TemplateOutputDir: "../test_files/out/:distro/:build_name",
+		PackerOutputDir:   "packer_boxes/:distro/:build_name",
+		SourceDir:         "../test_files/src/:distro",
 	},
 	BuildInf: BuildInf{
 		Name:      ":build_name",
@@ -374,8 +376,11 @@ func TestRawTemplateUpdateBuildSettings(t *testing.T) {
 func TestMergeVariables(t *testing.T) {
 	r := testDistroDefaults.Templates[Ubuntu]
 	r.mergeVariables()
-	if r.OutputDir != "../test_files/out/ubuntu/" {
-		t.Errorf("Expected \"../test_files/out/ubuntu/\", got %q", r.OutputDir)
+	if r.TemplateOutputDir != "../test_files/out/ubuntu/" {
+		t.Errorf("Expected \"../test_files/out/ubuntu/\", got %q", r.TemplateOutputDir)
+	}
+	if r.PackerOutputDir != "packer_boxes/ubuntu/" {
+		t.Errorf("Expected \"packer_boxes/ubuntu/\", got %q", r.PackerOutputDir)
 	}
 	if r.SourceDir != "../test_files/src/ubuntu" {
 		t.Errorf("Expected \"../test_files/src/ubuntu/\", got %q", r.SourceDir)
@@ -452,54 +457,6 @@ func TestBuildInf(t *testing.T) {
 	}
 	if oldBuildInf.BuildName != "new BuildName" {
 		t.Errorf("Expected \"new BuildName\", got %q", oldBuildInf.BuildName)
-	}
-}
-
-func TestRawTemplateMergeSrcDir(t *testing.T) {
-	tests := []struct {
-		SrcDir         string
-		ExpectedSrcDir string
-	}{
-		{"src/", "src/"},
-		{"src/custom/", "src/custom/"},
-		{"src/:distro/", "src/ubuntu/"},
-		{"src/:distro/", "src/ubuntu/"},
-		{"src/files/", "src/files/"},
-	}
-	rawTpl := newRawTemplate()
-	rawTpl.delim = ":"
-	rawTpl.Distro = "ubuntu"
-	rawTpl.setBaseVarVals()
-	for i, test := range tests {
-		rawTpl.SourceDir = test.SrcDir
-		rawTpl.replaceSourceDirVars()
-		if rawTpl.SourceDir != test.ExpectedSrcDir {
-			t.Errorf("MergeSrcDir test %d: expected SrcDir to be %s; got %s", i, test.ExpectedSrcDir, rawTpl.SourceDir)
-		}
-	}
-}
-
-func TestRawTemplateMergeOutDir(t *testing.T) {
-	tests := []struct {
-		OutDir         string
-		ExpectedOutDir string
-	}{
-		{"out", "out"},
-		{"out/custom/", "out/custom/"},
-		{"out/:distro/", "out/ubuntu/"},
-		{"out/:distro/", "out/ubuntu/"},
-		{"out/files/", "out/files/"},
-	}
-	rawTpl := newRawTemplate()
-	rawTpl.delim = ":"
-	rawTpl.Distro = "ubuntu"
-	rawTpl.setBaseVarVals()
-	for i, test := range tests {
-		rawTpl.OutputDir = test.OutDir
-		rawTpl.replaceOutDirVars()
-		if rawTpl.OutputDir != test.ExpectedOutDir {
-			t.Errorf("MergeOutDirtest %d: expected OutDir to be %s; got %s", i, test.ExpectedOutDir, rawTpl.OutputDir)
-		}
 	}
 }
 
@@ -801,7 +758,7 @@ func TestBuildOutPath(t *testing.T) {
 		{true, "shell", "path/to/file.txt", "out/shell/path/to/file.txt"},
 	}
 	r := newRawTemplate()
-	r.OutputDir = "out"
+	r.TemplateOutputDir = "out"
 	for i, test := range tests {
 		r.IncludeComponentString = &test.includeComponent
 		p := r.buildOutPath(test.component, test.path)
@@ -832,7 +789,7 @@ func TestBuildTemplateResourcePath(t *testing.T) {
 		{true, "shell", "path/to/file.txt", "shell/path/to/file.txt"},
 	}
 	r := newRawTemplate()
-	r.OutputDir = "out"
+	r.TemplateOutputDir = "out"
 	for i, test := range tests {
 		r.IncludeComponentString = &test.includeComponent
 		p := r.buildTemplateResourcePath(test.component, test.path)
