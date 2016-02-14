@@ -9,7 +9,7 @@
 	"template_output_dir_is_relative": true,
 	"packer_output_dir": "../packer_boxes/:build_name",
 	"source_dir": "packer_sources",
-	"source_dir_is_relative": false,
+	"source_dir_is_relative": true,
 	"builder_ids": [
 		"virtualbox-iso",
 		"vmware-iso"

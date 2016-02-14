@@ -318,6 +318,9 @@ var testDistroDefaultCentOS = rawTemplate{
 var testDistroDefaults distroDefaults
 
 func init() {
+	var b bool
+	testSupportedCentOS.IODirInf.SourceDirIsRelative = &b
+	testSupportedCentOS.IODirInf.TemplateOutputDirIsRelative = &b
 	testDistroDefaults = distroDefaults{Templates: map[Distro]rawTemplate{}, IsSet: true}
 	testDistroDefaults.Templates[Ubuntu] = testDistroDefaultUbuntu
 	testDistroDefaults.Templates[CentOS] = testDistroDefaultCentOS

@@ -79,9 +79,9 @@ func TestCentOSsetReleaseInfo(t *testing.T) {
 func TestCentOSGetOSType(t *testing.T) {
 	tests := []struct {
 		buildType Builder
-		arch string
-		expected string
-		err string
+		arch      string
+		expected  string
+		err       string
 	}{
 		{VMWareISO, "x86_64", "centos-64", ""},
 		{VMWareISO, "x386", "centos-32", ""},
@@ -349,13 +349,12 @@ func TestDebianSetISO(t *testing.T) {
 
 }
 
-
 func TestDebianGetOSType(t *testing.T) {
 	tests := []struct {
 		buildType Builder
-		arch string
-		expected string
-		err string
+		arch      string
+		expected  string
+		err       string
 	}{
 		{VMWareISO, "amd64", "debian-64", ""},
 		{VMWareISO, "i386", "debian-32", ""},
@@ -461,9 +460,9 @@ fbe7f159337551cc5ce9f0ff72acefef567f3dcd30750425287588c554978501 *ubuntu-12.04.4
 func TestUbuntuGetOSType(t *testing.T) {
 	tests := []struct {
 		buildType Builder
-		arch string
-		expected string
-		err string
+		arch      string
+		expected  string
+		err       string
 	}{
 		{VMWareISO, "amd64", "ubuntu-64", ""},
 		{VMWareISO, "i386", "ubuntu-32", ""},

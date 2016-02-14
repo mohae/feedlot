@@ -334,7 +334,11 @@ func TestSetDefaults(t *testing.T) {
 func TestRawTemplateUpdateBuildSettings(t *testing.T) {
 	r := newRawTemplate()
 	r.setDefaults(testSupportedCentOS)
-	r.updateBuildSettings(testBuildNewTPL)
+	err := r.updateBuildSettings(testBuildNewTPL)
+	if err != nil {
+		t.Errorf("got %q want nil", err)
+		return
+	}
 	if r.Arch != testBuildNewTPL.Arch {
 		t.Errorf("expected Arch to be %q, got %q", testBuildNewTPL.Arch, r.Arch)
 	}

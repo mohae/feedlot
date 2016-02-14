@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/mohae/contour"
+	"github.com/mohae/deepcopy"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -111,9 +112,9 @@ func newRawTemplate() *rawTemplate {
 // copy makes a copy of the template and returns the new copy.
 func (r *rawTemplate) copy() *rawTemplate {
 	Copy := newRawTemplate()
-	Copy.PackerInf = r.PackerInf
-	Copy.IODirInf = r.IODirInf
-	Copy.BuildInf = r.BuildInf
+	Copy.PackerInf = deepcopy.Iface(r.PackerInf).(PackerInf)
+	Copy.IODirInf = deepcopy.Iface(r.IODirInf).(IODirInf)
+	Copy.BuildInf = deepcopy.Iface(r.BuildInf).(BuildInf)
 	Copy.releaseISO = r.releaseISO
 	Copy.date = r.date
 	Copy.delim = r.delim
@@ -227,82 +228,17 @@ func (r *rawTemplate) setDefaults(d *distro) error {
 	return nil
 }
 
-// setTemplateOutputDir handles setting the TemplateOutputDir for a template
-// (less the variable replacement part).  The template output dir may come
-// from the build template or the defaults or the distro default.
-//
-// The distro default setting may come from either the default config or the
-// supported config.
-//
-// The setting may be further modified by the template_output_dir_is_relative
-// setting.  When true the path will be built relative to the directory of
-// the build config file from which this template came.
-func (r *rawTemplate) setTemplateOutputDir(dir string) {
-	if r.IODirInf.TemplateOutputDir == "" {
-		// ignore possible error because the distro should be validated
-		// at this point.
-		d, _ := DistroDefaults.Templates[DistroFromString(r.Distro)]
-		if d.IODirInf.TemplateOutputDir != "" {
-			r.IODirInf.TemplateOutputDir = d.IODirInf.TemplateOutputDir
-		}
-	}
-	// check if it's relative: nothing to do if it isn't
-	var b bool
-	if r.IODirInf.TemplateOutputDirIsRelative == nil {
-		// check the distro default
-		d, _ := DistroDefaults.Templates[DistroFromString(r.Distro)]
-		if d.IODirInf.TemplateOutputDirIsRelative != nil {
-			b = *d.IODirInf.TemplateOutputDirIsRelative
-		}
-	} else {
-		b = *r.IODirInf.TemplateOutputDirIsRelative
-	}
-	if b {
-		r.IODirInf.TemplateOutputDir = filepath.Join(dir, r.IODirInf.TemplateOutputDir)
-	}
-}
-
-// setSourceDir handles setting the sourceDir for a template (less the variable
-// replacement part).  The source dir may come from the build template or the
-// distro default.  If it's not set, it will be an empty string.
-//
-// The distro default setting may come from either the default config or the
-// supported distro config.
-//
-// The setting may be further modified by the source_dir_is_relative setting.
-// When true the path will be built relative to the directory of the build
-// config file from which this template came.
-func (r *rawTemplate) setSourceDir(dir string) {
-	if r.IODirInf.SourceDir == "" {
-		// ignore possible error because the distro should be validated
-		// at this point.
-		d, _ := DistroDefaults.Templates[DistroFromString(r.Distro)]
-		if d.IODirInf.SourceDir != "" {
-			r.IODirInf.SourceDir = d.IODirInf.SourceDir
-		}
-	}
-	// check if it's relative: nothing to do if it isn't
-	var b bool
-	if r.IODirInf.SourceDirIsRelative == nil {
-		// check the distro default
-		d, _ := DistroDefaults.Templates[DistroFromString(r.Distro)]
-		if d.IODirInf.SourceDirIsRelative != nil {
-			b = *d.IODirInf.SourceDirIsRelative
-		}
-	} else {
-		b = *r.IODirInf.SourceDirIsRelative
-	}
-	if b {
-		r.IODirInf.SourceDir = filepath.Join(dir, r.IODirInf.SourceDir)
-	}
-}
-
 // r.updateBuildSettings merges Settings between an old and new template.
 // Note:  Arch, Image, and Release are not updated here as how these fields are
 // updated depends on whether this is a build from a distribution's default
 // template or from a defined build template.
-func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
+func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) error {
 	r.IODirInf.update(bld.IODirInf)
+	r.updateSourceDirSetting()
+	err := r.updateTemplateOutputDirSetting()
+	if err != nil {
+		return err
+	}
 	r.PackerInf.update(bld.PackerInf)
 	r.BuildInf.update(bld.BuildInf)
 	if bld.Arch != "" {
@@ -333,6 +269,30 @@ func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) {
 	r.updateBuilders(bld.Builders)
 	r.updatePostProcessors(bld.PostProcessors)
 	r.updateProvisioners(bld.Provisioners)
+	return nil
+}
+
+// updateTemplateOutputDirSetting updates the template_output_dir setting
+// if the template_output_dir_setting_is_relative flag is true.  Any Rancher
+// variables in the source_dir setting are not resolved.
+func (r *rawTemplate) updateTemplateOutputDirSetting() error {
+	if *r.IODirInf.TemplateOutputDirIsRelative {
+		dir, err := os.Getwd()
+		if err != nil {
+			return Error{"template output dir error: could not get working directory", err}
+		}
+		r.IODirInf.TemplateOutputDir = filepath.Join(dir, r.IODirInf.TemplateOutputDir)
+	}
+	return nil
+}
+
+// updateSourceDirSetting updates the source_dir if the source_dir_is_relative
+// flag is true.  Any Rancher variables in the source_dir setting are not
+// resolved.
+func (r *rawTemplate) updateSourceDirSetting() {
+	if *r.IODirInf.SourceDirIsRelative {
+		r.IODirInf.SourceDir = filepath.Join(contour.GetString(ConfDir), r.IODirInf.SourceDir)
+	}
 }
 
 // mergeVariables goes through the template variables and finalizes the

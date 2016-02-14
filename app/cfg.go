@@ -332,24 +332,27 @@ type IODirInf struct {
 	// determined, otherwise determining whether it was an explicit false or
 	// empty would not be possible.
 	IncludeComponentString *bool `toml:"include_component_string" json:"include_component_string"`
-	// The output directory for the generated Packer templates
-	TemplateOutputDir string `toml:"template_output_dir" json:"template_output_dir"`
-	// If the template output dir path is relative to the conf_dir.  If true, the path is
-	// resolved relative to the conf_dir.  Otherwise, the path is used as is.
-	// This is a pointer so that whether or not this setting was actually set can
-	// be determined, otherwise determining whether it was an explicit false or
-	// empty would not be possible.
-	TemplateOutputDirIsRelative *bool `toml:"template_output_dir_is_relative" json:"template_output_dir_is_relative"`
-	// PackerOutputDir is the output directory for the Packer artificats, when applicable.
+	// PackerOutputDir is the output directory for the Packer artificts, when
+	// applicable.  This is usually referenced in a builder's output directory,
+	// e.g. "output_dir=:packer_output_dir"
 	PackerOutputDir string `toml:"packer_output_dir" json:"packer_output_dir"`
-	// The directory that contains the source files for this build.
+	// The directory that contains the source files for a build.
 	SourceDir string `toml:"source_dir" json:"source_dir"`
-	// If the source dir path is relative to the conf_dir.  If true, the path is
-	// resolved relative to the conf_dir.  Otherwise, the path is used as is.
-	// This is a pointer so that whether or not this setting was actually set can
-	// be determined, otherwise determining whether it was an explicit false or
-	// empty would not be possible.
+	// If the source dir path is relative to the conf_dir.  If true, the path
+	// is resolved relative to the conf_dir.  Otherwise, the path is used as
+	// is.  This is a pointer so that whether or not this setting was actually
+	// set can be determined, otherwise determining whether it was an explicit
+	// false or empty would not be possible.
 	SourceDirIsRelative *bool `toml:"source_dir_is_relative" json:"source_dir_is_relative"`
+	// The output directory for a generated Packer template and its resources.
+	TemplateOutputDir string `toml:"template_output_dir" json:"template_output_dir"`
+	// If the template output dir path is relative to the current working
+	// directory.  If true, the path is resolved relative to the working
+	// directory, otherwise, the path is used as is.  This is a pointer so that
+	// whether or not this setting was actually set can be determined,
+	// otherwise determining whether it was an explicit false or empty would
+	// not be possible.
+	TemplateOutputDirIsRelative *bool `toml:"template_output_dir_is_relative" json:"template_output_dir_is_relative"`
 }
 
 // Only update when a value exists; empty strings don't count as being set.
@@ -359,11 +362,14 @@ func (i *IODirInf) update(v IODirInf) {
 	}
 	// the path should end with "/"
 	i.TemplateOutputDir = appendSlash(i.TemplateOutputDir)
-
+	var b bool
+	// treat nils as false
 	if v.TemplateOutputDirIsRelative != nil {
 		i.TemplateOutputDirIsRelative = v.TemplateOutputDirIsRelative
 	}
-
+	if i.TemplateOutputDirIsRelative == nil {
+		i.TemplateOutputDirIsRelative = &b
+	}
 	if v.PackerOutputDir != "" {
 		i.PackerOutputDir = v.PackerOutputDir
 	}
@@ -375,9 +381,12 @@ func (i *IODirInf) update(v IODirInf) {
 	}
 	// the path should end with "/"
 	i.SourceDir = appendSlash(i.SourceDir)
-
+	// treat nils as false
 	if v.SourceDirIsRelative != nil {
 		i.SourceDirIsRelative = v.SourceDirIsRelative
+	}
+	if i.SourceDirIsRelative == nil {
+		i.SourceDirIsRelative = &b
 	}
 	if v.IncludeComponentString != nil {
 		i.IncludeComponentString = v.IncludeComponentString
@@ -576,13 +585,10 @@ func (b *builds) Load(name string) error {
 		jww.ERROR.Println(ErrUnsupportedFormat)
 		return ErrUnsupportedFormat
 	}
-	// get the dir of the filepath
-	dir := filepath.Dir(name)
-	// get the path info from the name
 	for _, v := range b.Build {
 		v.build.setTypes()
-		v.setSourceDir(dir)
 	}
+
 	b.loaded = true
 	return nil
 }

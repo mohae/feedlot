@@ -114,9 +114,9 @@ type release struct {
 // centos wrapper to release.
 type centos struct {
 	release
-	region    string
-	country   string
-	sponsor   string
+	region  string
+	country string
+	sponsor string
 }
 
 // pickReleaseURL gets a mirror url as the release URL.  If region or country
