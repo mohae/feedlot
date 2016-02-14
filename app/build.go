@@ -2,7 +2,6 @@ package app
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/mohae/contour"
 	jww "github.com/spf13/jwalterweatherman"
@@ -33,11 +32,6 @@ func BuildDistro() (string, error) {
 // Create Packer templates from specified build templates.
 // TODO: refactor to match updated handling
 func buildPackerTemplateFromDistro() (string, error) {
-	wd, errr := os.Getwd()
-	if errr != nil {
-		return "", errr
-	}
-	fmt.Println("Working Directory: ", wd)
 	var rTpl *rawTemplate
 	// Get the default for this distro, if one isn't found then it isn't
 	// Supported.

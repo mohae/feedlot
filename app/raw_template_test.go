@@ -186,8 +186,8 @@ var expecteNewTemplateBuildInf = BuildInf{
 	Name:      "",
 	BuildName: "",
 	BaseURL:   "",
-	Region:    "US",
-	Country:   "CA",
+	Region:    &region,
+	Country:   &country,
 }
 
 var testRawTemplateBuilderOnly = &rawTemplate{

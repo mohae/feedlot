@@ -280,16 +280,18 @@ type BuildInf struct {
 	// This corresponds to the 'Region' column in the
 	// https://centos.org/download/full-mirrorlist.csv file.
 	//
-	// If empty, no region filtering will be applied.
-	Region string `toml:"region" json:"region"`
+	// If empty, no region filtering will be applied.  A pointer is used for
+	// detection of set vs not set.
+	Region *string `toml:"region" json:"region"`
 	// Country to use when selecting the image mirror; for use with CentOS.
 	// This corresponds to the 'Country' column in the
 	// https://centos.org/download/full-mirrorlist.csv file.
 	//
 	// If empty, no country filtering will be applied.
 	//
-	//  For Region 'US', this is used as the state field.
-	Country string `toml:"country" json:"country"`
+	//  For Region 'US', this is used as the state field.  A pointer is used
+	// for detection of set vs not set.
+	Country *string `toml:"country" json:"country"`
 	// Sponsor to use when selecting the image mirror: for use with CentOS.
 	// This corresponds to the 'Sponsor' column in the
 	// https://centos.org/download/full-mirrorlist.csv file.
@@ -300,8 +302,9 @@ type BuildInf struct {
 	// For Oregon State University, aside from it's name, OSUOSL and osuosl
 	// are accepted values.
 	//
-	// If empty, no sponsor filtering will be applied.
-	Sponsor string `toml:"sponsor" json:"country"`
+	// If empty, no sponsor filtering will be applied.  A pointer is used for
+	// detection of set vs not set.
+	Sponsor *string `toml:"sponsor" json:"sponsor"`
 }
 
 func (b *BuildInf) update(v BuildInf) {
@@ -314,11 +317,14 @@ func (b *BuildInf) update(v BuildInf) {
 	if v.BaseURL != "" {
 		b.BaseURL = v.BaseURL
 	}
-	if v.Region != "" {
+	if v.Region != nil && *v.Region != "" {
 		b.Region = v.Region
 	}
-	if v.Country != "" {
+	if v.Country != nil && *v.Country != "" {
 		b.Country = v.Country
+	}
+	if v.Sponsor != nil && *v.Sponsor != "" {
+		b.Sponsor = v.Sponsor
 	}
 }
 

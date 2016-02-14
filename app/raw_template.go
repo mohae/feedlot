@@ -188,6 +188,17 @@ func (r *rawTemplate) setDefaults(d *distro) error {
 	r.IODirInf.update(d.IODirInf)
 	r.PackerInf.update(d.PackerInf)
 	r.BuildInf.update(d.BuildInf)
+	// check country, region, sponsor stuff: if nil set to empty string
+	var s string
+	if r.Country == nil {
+		r.Country = &s
+	}
+	if r.Region == nil {
+		r.Region = &s
+	}
+	if r.Sponsor == nil {
+		r.Sponsor = &s
+	}
 	// update def image stuff
 	for _, v := range d.DefImage {
 		k, vv := parseVar(v)
@@ -377,8 +388,9 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 				Image:   r.Image,
 				Release: r.Release,
 			},
-			region:  r.Region,
-			country: r.Country,
+			region:  *r.Region,
+			country: *r.Country,
+			sponsor: *r.Sponsor,
 		}
 		err = r.releaseISO.setVersionInfo()
 		if err != nil {

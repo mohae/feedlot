@@ -10,6 +10,10 @@ import (
 	"github.com/mohae/contour"
 )
 
+var region = "US"
+var country = "CA"
+var sponsor = "OSUOSL"
+
 var testDefaults = &defaults{
 	IODirInf: IODirInf{
 		TemplateOutputDir: "packer_templates/:build_name",
@@ -110,8 +114,8 @@ var testSupported = map[string]distro{
 	"centos": distro{
 		BuildInf: BuildInf{
 			BaseURL: "",
-			Region:  "US",
-			Country: "CA",
+			Region:  &region,
+			Country: &country,
 		},
 		IODirInf: IODirInf{},
 		PackerInf: PackerInf{
@@ -269,8 +273,8 @@ var testSupportedUbuntu = &distro{
 var testSupportedCentOS = &distro{
 	BuildInf: BuildInf{
 		BaseURL: "",
-		Region:  "US",
-		Country: "CA",
+		Region:  &region,
+		Country: &country,
 	},
 	IODirInf: IODirInf{},
 	PackerInf: PackerInf{
