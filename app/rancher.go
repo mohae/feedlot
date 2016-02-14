@@ -200,6 +200,9 @@ func (d *distroDefaults) Set() error {
 		tmp.build = dflts.build.copy()
 		tmp.Distro = strings.ToLower(k)
 		// Now update it with the distro settings.
+		tmp.Region = v.Region
+		tmp.Country = v.Country
+		tmp.Sponsor = v.Sponsor
 		tmp.BaseURL = appendSlash(v.BaseURL)
 		tmp.Arch, tmp.Image, tmp.Release = getDefaultISOInfo(v.DefImage)
 		err = tmp.setDefaults(v)
