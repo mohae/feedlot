@@ -9,6 +9,7 @@ import (
 
 	json "github.com/mohae/customjson"
 	"github.com/mohae/utilitybelt/deepcopy"
+	jww "github.com/spf13/jwalterweatherman"
 )
 
 // Builder constants
@@ -119,6 +120,7 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 		if !ok {
 			return nil, fmt.Errorf("builder configuration for %s not found", ID)
 		}
+		jww.DEBUG.Printf("processing builder id: %s\n", ID)
 		typ := BuilderFromString(bldr.Type)
 		switch typ {
 		case AmazonChroot:
@@ -192,6 +194,7 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 		}
 		bldrs[ndx] = tmpS
 		ndx++
+		jww.DEBUG.Printf("processed builder id %s\n", ID)
 	}
 	return bldrs, nil
 }

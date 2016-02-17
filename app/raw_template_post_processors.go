@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/mohae/utilitybelt/deepcopy"
+	jww "github.com/spf13/jwalterweatherman"
 )
 
 // PostProcessor constants
@@ -132,6 +133,7 @@ func (r *rawTemplate) createPostProcessors() (pp []interface{}, err error) {
 		if !ok {
 			return nil, NewErrConfigNotFound(ID)
 		}
+		jww.DEBUG.Printf("processing post-processor id: %s\n", ID)
 		typ := PostProcessorFromString(tmpPP.Type)
 		switch typ {
 		case Atlas:
@@ -185,6 +187,7 @@ func (r *rawTemplate) createPostProcessors() (pp []interface{}, err error) {
 		}
 		pp[ndx] = tmpS
 		ndx++
+		jww.DEBUG.Printf("processed post-processor id: %s\n", ID)
 	}
 	return pp, nil
 }

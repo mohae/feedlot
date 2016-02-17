@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/mohae/utilitybelt/deepcopy"
+	jww "github.com/spf13/jwalterweatherman"
 )
 
 // Provisioner constants
@@ -78,6 +79,7 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 		if !ok {
 			return nil, fmt.Errorf("provisioner configuration for %s not found", ID)
 		}
+		jww.DEBUG.Printf("processing provisioner id: %s\n", ID)
 		typ := ProvisionerFromString(tmpP.Type)
 		switch typ {
 		case Ansible:
@@ -125,6 +127,7 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 		}
 		p[ndx] = tmpS
 		ndx++
+		jww.DEBUG.Printf("processed provisioner id: %s\n", ID)
 	}
 	return p, nil
 }

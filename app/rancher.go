@@ -232,6 +232,7 @@ func (d *distroDefaults) Set() error {
 // if the template doesn't define its own.
 // TODO: add env support
 func loadBuilds() error {
+	jww.DEBUG.Println("loading builds")
 	// index all the files in the configuration directory, including subdir
 	// this should be sorted
 	cDir := contour.GetString(ConfDir)
@@ -261,6 +262,7 @@ func loadBuilds() error {
 			continue
 		}
 		fname = filepath.Join(cDir, fname)
+		jww.DEBUG.Printf("loading build file %s", fname)
 		b := builds{}
 		err := b.Load(fname)
 		if err != nil {
@@ -268,6 +270,7 @@ func loadBuilds() error {
 		}
 		Builds[fname] = b
 	}
+	jww.DEBUG.Println("builds loaded")
 	return nil
 }
 

@@ -612,8 +612,10 @@ func getBuildTemplate(name string) (*rawTemplate, error) {
 			}
 		}
 	}
+	jww.DEBUG.Printf("build %s not found\n", name)
 	return nil, fmt.Errorf("build not found: %s", name)
 found:
+	jww.DEBUG.Printf("build %s found\n", name)
 	return r, nil
 }
 

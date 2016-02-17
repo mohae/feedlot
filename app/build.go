@@ -33,6 +33,7 @@ func BuildDistro() (string, error) {
 // TODO: refactor to match updated handling
 func buildPackerTemplateFromDistro() (string, error) {
 	var rTpl *rawTemplate
+	jww.INFO.Println("creating template using distro defaults for " + contour.GetString("distro"))
 	// Get the default for this distro, if one isn't found then it isn't
 	// Supported.
 	rTpl, err := DistroDefaults.GetTemplate(contour.GetString("distro"))
@@ -69,7 +70,9 @@ func buildPackerTemplateFromDistro() (string, error) {
 		jww.ERROR.Println(err)
 		return "", err
 	}
-	return fmt.Sprintf("build for %q complete: Packer template name is %q", rTpl.Distro, rTpl.BuildName), nil
+	msg := fmt.Sprintf("build for %q complete: Packer template name is %q", rTpl.Distro, rTpl.BuildName)
+	jww.INFO.Println(msg)
+	return msg, nil
 }
 
 // BuildBuilds manages the process of creating Packer Build templates out of
@@ -84,6 +87,7 @@ func BuildBuilds(buildNames ...string) (string, error) {
 	}
 	// Only load supported if it hasn't been loaded.
 	if !DistroDefaults.IsSet {
+		jww.DEBUG.Println("loading distro defaults")
 		err := DistroDefaults.Set()
 		if err != nil {
 			err = fmt.Errorf("builds failed: %s", err)
@@ -92,6 +96,7 @@ func BuildBuilds(buildNames ...string) (string, error) {
 		}
 	}
 	// First load the build information
+	jww.DEBUG.Println("loading builds")
 	err := loadBuilds()
 	if err != nil {
 		err = fmt.Errorf("builds failed: %s", err)
@@ -115,16 +120,23 @@ func BuildBuilds(buildNames ...string) (string, error) {
 			jww.ERROR.Println(err)
 			errorCount++
 		} else {
+			jww.TRACE.Println("a template as successfully created")
 			builtCount++
 		}
 	}
+	var msg string
 	if nBuilds == 1 {
 		if builtCount > 0 {
-			return fmt.Sprintf("%s was successfully processed and its Packer template was created", buildNames[0]), nil
+			msg = fmt.Sprintf("%s was successfully processed and its Packer template was created", buildNames[0])
+			goto done
 		}
-		return fmt.Sprintf("Processing of the %s build failed with an error.", buildNames[0]), nil
+		msg = fmt.Sprintf("Processing of the %s build failed with an error.", buildNames[0])
+		goto done
 	}
-	return fmt.Sprintf("BuildBuilds: %v Builds were successfully processed and their Packer templates were created, %v Builds were unsucessfully process and resulted in errors..", builtCount, errorCount), nil
+	msg = fmt.Sprintf("BuildBuilds: %v Builds were successfully processed and their Packer templates were created, %v Builds were unsucessfully process and resulted in errors..", builtCount, errorCount)
+done:
+	jww.INFO.Println(msg)
+	return msg, nil
 }
 
 // buildPackerTemplateFromNamedBuild creates a Packer tmeplate and associated
@@ -135,6 +147,8 @@ func buildPackerTemplateFromNamedBuild(name string, doneCh chan error) {
 		doneCh <- err
 		return
 	}
+	jww.INFO.Printf("Start creation of Packer template %s\n", name)
+	defer jww.INFO.Printf("End creation of Packer template %s\n", name)
 	var ok bool
 	// Check the type and create the defaults for that type, if it doesn't already exist.
 	bTpl, err := getBuildTemplate(name)
