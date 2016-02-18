@@ -13,6 +13,7 @@ import (
 var region = "US"
 var country = "CA"
 var sponsor = "OSUOSL"
+var noSponsor = ""
 
 var testDefaults = &defaults{
 	IODirInf: IODirInf{
@@ -275,6 +276,7 @@ var testSupportedCentOS = &distro{
 		BaseURL: "",
 		Region:  &region,
 		Country: &country,
+		Sponsor: &noSponsor,
 	},
 	IODirInf: IODirInf{},
 	PackerInf: PackerInf{

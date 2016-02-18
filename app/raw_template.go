@@ -473,9 +473,9 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 
 // commandsFromFile returns the commands within the requested file, if it can
 // be found. No validation of the contents is done.
-func (r *rawTemplate) commandsFromFile(component, name string) (commands []string, err error) {
+func (r *rawTemplate) commandsFromFile(name, component string) (commands []string, err error) {
 	// find the file
-	src, err := r.findCommandFile(component, name)
+	src, err := r.findCommandFile(name, component)
 	if err != nil {
 		return nil, err
 	}
@@ -510,14 +510,14 @@ func (r *rawTemplate) commandsFromFile(component, name string) (commands []strin
 //    commands/{name}
 //    {name}
 //
-// findComponentSource is called to handle the actual location of the file. If
+// findSource is called to handle the actual location of the file. If
 // no match is found an os.ErrNotExist will be returned.
-func (r *rawTemplate) findCommandFile(component, name string) (string, error) {
+func (r *rawTemplate) findCommandFile(name, component string) (string, error) {
 	if name == "" {
 		return "", fmt.Errorf("the passed command filename was empty")
 	}
-	findPath := path.Join("commands", name)
-	src, err := r.findComponentSource(component, findPath, false)
+	findPath := filepath.Join("commands", name)
+	src, err := r.findSource(findPath, component, false)
 	// return the error for any error other than ErrNotExist
 	if err != nil && err != os.ErrNotExist {
 		return "", err
@@ -526,65 +526,7 @@ func (r *rawTemplate) findCommandFile(component, name string) (string, error) {
 	if err == nil {
 		return src, nil
 	}
-	return r.findComponentSource(component, name, false)
-}
-
-// findComponentSource attempts to locate the source file or directory referred
-// to in p for the requested component and return it's actual location within
-// the source_dir.  If the component is not empty, it is added to the path to see
-// if there are any component specific files that match.  If none are found,
-// just the path is used.  Any match is returned, otherwise an os.ErrNotFound
-// error is returned.  Any other error encountered will also be returned.
-//
-// The search path is built, in order of precedence:
-//    component/path
-//    component-base/path
-//    path
-//
-// Component is the name of the packer component that this path belongs to,
-// e.g. vagrant, chef-client, shell, etc.  The component-base is the base name
-// of the packer component that this path belongs to, if applicable, e.g.
-// chef-client's base would be chef as would chef-solo's.
-func (r *rawTemplate) findComponentSource(component, p string, isDir bool) (string, error) {
-	if p == "" {
-		return "", fmt.Errorf("cannot find source, no path received")
-	}
-	var tmpPath string
-	var err error
-	// if len(cParts) > 1, there was a - and component-base processing should be done
-	if component != "" {
-		component = strings.ToLower(component)
-		tmpPath, err = r.findSource(path.Join(component, p), isDir)
-		if err != nil && err != os.ErrNotExist {
-			return "", fmt.Errorf("%s: %s", p, err)
-		}
-		if err == nil {
-			return tmpPath, nil
-		}
-		cParts := strings.Split(component, "-")
-		if len(cParts) > 1 {
-			// first element is the base
-			tmpPath, err = r.findSource(path.Join(cParts[0], p), isDir)
-			if err != nil && err != os.ErrNotExist {
-				return "", fmt.Errorf("%s: %s", p, err)
-			}
-			if err == nil {
-				return tmpPath, nil
-			}
-		}
-	}
-	// look for the source as using just the passed path
-	tmpPath, err = r.findSource(p, isDir)
-	if err != nil {
-		// If the file didn't exist and this is an example, it's not an error
-		if err == os.ErrNotExist && r.IsExample {
-			return "", nil
-		}
-		// Otherwise return the error
-		return "", fmt.Errorf("%s file %q: %s", component, p, err)
-	}
-	return tmpPath, nil
-
+	return r.findSource(name, component, false)
 }
 
 // findSource searches for the specified sub-path using Rancher's algorithm
@@ -594,166 +536,246 @@ func (r *rawTemplate) findComponentSource(component, p string, isDir bool) (stri
 // within the point release, the "." are stripped out and the resulting value
 // is searched: e.g. 14.04 becomes 1404,or numericRelease.  The base release
 // number is also checked: e.g. 14, the releaseBase, is searched for 14.04.
+//
 // Search order:
-//   source_dir/build_name/
-//   source_dir/distro/build_name/
-//   source_dir/distro/release/build_name/
-//   source_dir/distro/numericRelease/build_name/
-//   source_dir/distro/releaseBase/build_name/
-//   source_dir/distro/release/arch/
-//   source_dir/distro/releaseBase/arch/
-//   source_dir/distro/release/
-//   source_dir/distro/releaseBase/
-//   source_dir/distro/arch
-//   source_dir/distro/
-//   source_dir/
+// distro+release+arch+build_name+component
+//  source_dir/distro/release/arch/build_name/component/
+//  source_dir/distro/release/arch/build_name/
+//  source_dir/distro/numericRelease/arch/build_name/component/
+//  source_dir/distro/numericRelease/arch/build_name/
+//  source_dir/distro/releaseBase/arch/build_name/component/
+//  source_dir/distro/releaseBase/arch/build_name/
+// distro+release
+//  source_dir/distro/release/build_name/component/
+//  source_dir/distro/release/build_name/
+//  source_dir/distro/numericRelease/build_name/component/
+//  source_dir/distro/numericRelease/build_name/
+//  source_dir/distro/releaseBase/build_name/component/
+//  source_dir/distro/releaseBase/build_name/
+// distro+arch
+//  source_dir/distro/arch/build_name/component/
+//  source_dir/distro/arch/build_name/
+// distro
+//  source_dir/distro/build_name/component/
+//  source_dir/distro/build_name/
+// root
+//  source_dir/build_name/component/
+//  source_dir/build_name/
+//
+// without build_name
+// distro+release+arch
+//  source_dir/distro/release/arch/component/
+//  source_dir/distro/release/arch/
+//  source_dir/distro/numericRelease/arch/component/
+//  source_dir/distro/numericRelease/arch/
+//  source_dir/distro/releaseBase/arch/component/
+//  source_dir/distro/releaseBase/arch/
+// distro+release
+//  source_dir/distro/release/component/
+//  source_dir/distro/release/
+//  source_dir/distro/numericRelease/component/
+//  source_dir/distro/numericRelease/
+//  source_dir/distro/releaseBase/component/
+//  source_dir/distro/releaseBase/
+// distro+arch
+//  source_dir/distro/arch/component/
+//  source_dir/distro/arch/
+// distro
+//  source_dir/distro/component/
+//  source_dir/distro/
+// root
+//  source_dir/component/
+//  source_dir/
+//
+// If the component has a - in it, e.g. salt-masterless, component checks
+// will be done on both the value and its base, i.e. salt.
 //
 // If the passed path is not found, an os.ErrNotExist will be returned
-func (r *rawTemplate) findSource(p string, isDir bool) (string, error) {
+//
+// p is the path slug to find, this is the value from a setting.
+// component is the name of the component from which p was a setting.
+//
+// TODO: is isDir necessary?  For now, it is a legacy setting from the
+// original code.
+func (r *rawTemplate) findSource(p, component string, isDir bool) (string, error) {
 	if p == "" {
-		return "", fmt.Errorf("cannot find source, no path received")
+		return "", errors.New("cannot find source: no path received")
 	}
-	releaseParts := strings.Split(r.Release, ".")
-	var numericRelease string
-	if len(releaseParts) > 1 {
-		for _, v := range releaseParts {
-			numericRelease += v
+	// build a slice of release values to append to search paths.  An empty
+	// string is the first element because the first path to search is
+	// source_dir/distro/build_name.
+	empty := []string{""}
+	rInf := []string{r.Release}
+	rParts := strings.Split(r.Release, ".")
+	var numRelease string
+	if len(rParts) > 1 {
+		for _, v := range rParts {
+			numRelease += v
 		}
+		// numeric release
+		rInf = append(rInf, numRelease)
+		// base
+		rInf = append(rInf, rParts[0])
 	}
-	// source_dir/:build_name/p
-	tmpPath := r.getSourcePath(path.Join(r.BuildName, p), isDir)
-	_, err := os.Stat(tmpPath)
-	if err == nil {
-		jww.TRACE.Printf("findSource:  %s found", tmpPath)
-		return filepath.ToSlash(tmpPath), nil
+	// check source_dir/distro/release/arch/build_name
+	paths := r.buildSearchPaths(r.Distro, filepath.Join(r.Arch, r.BuildName), rInf)
+	path, err := r.checkSourcePaths(p, component, paths)
+	if err != nil && err != os.ErrNotExist {
+		return "", err
 	}
-	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
-	// source_dir/:distro/:build_name/p
-	tmpPath = r.getSourcePath(path.Join(r.Distro, r.BuildName, p), isDir)
-	_, err = os.Stat(tmpPath)
-	if err == nil {
-		jww.TRACE.Printf("findSource:  %s found", tmpPath)
-		return filepath.ToSlash(tmpPath), nil
+	if path != "" {
+		return path, nil
 	}
-	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
-	// source_dir/:distro/:release/:build_name/p
-	tmpPath = r.getSourcePath(path.Join(r.Distro, r.Release, r.BuildName, p), isDir)
-	_, err = os.Stat(tmpPath)
-	if err == nil {
-		jww.TRACE.Printf("findSource:  %s found", tmpPath)
-		return filepath.ToSlash(tmpPath), nil
+	// check source_dir/distro/release/build_name
+	paths = r.buildSearchPaths(r.Distro, r.BuildName, rInf)
+	path, err = r.checkSourcePaths(p, component, paths)
+	if err != nil && err != os.ErrNotExist {
+		return "", err
 	}
-	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
-	// source_dir/:distro/numericRelease/:build_name/p
-	// only if the numericRelease is different than the release
-	if numericRelease != r.Release {
-		tmpPath = r.getSourcePath(path.Join(r.Distro, numericRelease, r.BuildName, p), isDir)
-		_, err = os.Stat(tmpPath)
-		if err == nil {
-			jww.TRACE.Printf("findSource:  %s found", tmpPath)
-			return filepath.ToSlash(tmpPath), nil
-		}
-		jww.TRACE.Printf("findSource:  %s not found", tmpPath)
+	if path != "" {
+		return path, nil
 	}
-	// source_dir/:distro/releaseBase/:build_name/p
-	// only if releaseBase is different than the release
-	if releaseParts[0] != r.Release {
-		tmpPath = r.getSourcePath(path.Join(r.Distro, releaseParts[0], r.BuildName, p), isDir)
-		_, err = os.Stat(tmpPath)
-		if err == nil {
-			jww.TRACE.Printf("findSource:  %s found", tmpPath)
-			return filepath.ToSlash(tmpPath), nil
-		}
-		jww.TRACE.Printf("findSource:  %s not found", tmpPath)
+	// check source_dir/distro/arch/build_name
+	paths = r.buildSearchPaths(r.Distro, filepath.Join(r.Arch, r.BuildName), empty)
+	path, err = r.checkSourcePaths(p, component, paths)
+	if err != nil && err != os.ErrNotExist {
+		return "", err
 	}
-	// source_dir/:distro/:release/:arch/p
-	tmpPath = r.getSourcePath(path.Join(r.Distro, r.Release, r.Arch, p), isDir)
-	_, err = os.Stat(tmpPath)
-	if err == nil {
-		jww.TRACE.Printf("findSource:  %s found", tmpPath)
-		return filepath.ToSlash(tmpPath), nil
+	if path != "" {
+		return path, nil
 	}
-	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
-	// source_dir/:distro/release/:arch/p
-	// only if the numericRelease is different than the release
-	if numericRelease != r.Release {
-		tmpPath = r.getSourcePath(path.Join(r.Distro, numericRelease, r.Arch, p), isDir)
-		_, err = os.Stat(tmpPath)
-		if err == nil {
-			jww.TRACE.Printf("findSource:  %s found", tmpPath)
-			return filepath.ToSlash(tmpPath), nil
-		}
-		jww.TRACE.Printf("findSource:  %s not found", tmpPath)
+	// check source_dir/distro/build_name
+	paths = r.buildSearchPaths(r.Distro, r.BuildName, empty)
+	path, err = r.checkSourcePaths(p, component, paths)
+	if err != nil && err != os.ErrNotExist {
+		return "", err
 	}
-	// source_dir/:distro/releaseBase/:arch/p
-	// only if releaseBase is different than the release
-	if releaseParts[0] != r.Release {
-		tmpPath = r.getSourcePath(path.Join(r.Distro, releaseParts[0], r.Arch, p), isDir)
-		_, err = os.Stat(tmpPath)
-		if err == nil {
-			jww.TRACE.Printf("findSource:  %s found", tmpPath)
-			return filepath.ToSlash(tmpPath), nil
-		}
+	if path != "" {
+		return path, nil
 	}
-	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
-	// source_dir/:distro/:release/p
-	tmpPath = r.getSourcePath(path.Join(r.Distro, r.Release, p), isDir)
-	_, err = os.Stat(tmpPath)
-	if err == nil {
-		jww.TRACE.Printf("findSource:  %s found", tmpPath)
-		return filepath.ToSlash(tmpPath), nil
+	// check source_dir/build_name
+	paths = r.buildSearchPaths("", r.BuildName, empty)
+	path, err = r.checkSourcePaths(p, component, paths)
+	if err != nil && err != os.ErrNotExist {
+		return "", err
 	}
-	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
-	// source_dir/:distro/release/p
-	// only if the numericRelease is different than the release
-	if numericRelease != r.Release {
-		tmpPath = r.getSourcePath(path.Join(r.Distro, numericRelease, p), isDir)
-		_, err = os.Stat(tmpPath)
-		if err == nil {
-			jww.TRACE.Printf("findSource:  %s found", tmpPath)
-			return filepath.ToSlash(tmpPath), nil
-		}
-		jww.TRACE.Printf("findSource:  %s not found", tmpPath)
+	if path != "" {
+		return path, nil
 	}
-	// source_dir/:distro/releaseBase/p
-	// only if releaseBase is different than the release
-	if releaseParts[0] != r.Release {
-		tmpPath = r.getSourcePath(path.Join(r.Distro, releaseParts[0], p), isDir)
-		_, err = os.Stat(tmpPath)
-		if err == nil {
-			jww.TRACE.Printf("findSource:  %s found", tmpPath)
-			return filepath.ToSlash(tmpPath), nil
-		}
-		jww.TRACE.Printf("findSource:  %s not found", tmpPath)
+
+	// try searches w/o build names
+	// check source_dir/distro/release/arch
+	paths = r.buildSearchPaths(r.Distro, r.Arch, rInf)
+	path, err = r.checkSourcePaths(p, component, paths)
+	if err != nil && err != os.ErrNotExist {
+		return "", err
 	}
-	// source_dir/:distro/:arch/p
-	tmpPath = r.getSourcePath(path.Join(r.Distro, r.Arch, p), isDir)
-	_, err = os.Stat(tmpPath)
-	if err == nil {
-		jww.TRACE.Printf("findSource:  %s found", tmpPath)
-		return filepath.ToSlash(tmpPath), nil
+	if path != "" {
+		return path, nil
 	}
-	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
-	// source_dir/:distro/p
-	tmpPath = r.getSourcePath(path.Join(r.Distro, p), isDir)
-	_, err = os.Stat(tmpPath)
-	if err == nil {
-		jww.TRACE.Printf("findSource:  %s found", tmpPath)
-		return filepath.ToSlash(tmpPath), nil
+	// check source_dir/distro/release/
+	paths = r.buildSearchPaths(r.Distro, "", rInf)
+	path, err = r.checkSourcePaths(p, component, paths)
+	if err != nil && err != os.ErrNotExist {
+		return "", err
 	}
-	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
-	// source_dir/p
-	tmpPath = r.getSourcePath(path.Join(p), isDir)
-	_, err = os.Stat(tmpPath)
-	if err == nil {
-		jww.TRACE.Printf("findSource:  %s found", tmpPath)
-		return filepath.ToSlash(tmpPath), nil
+	if path != "" {
+		return path, nil
 	}
-	jww.TRACE.Printf("findSource:  %s not found", tmpPath)
+	// check source_dir/distro/arch
+	paths = r.buildSearchPaths(r.Distro, r.Arch, empty)
+	path, err = r.checkSourcePaths(p, component, paths)
+	if err != nil && err != os.ErrNotExist {
+		return "", err
+	}
+	if path != "" {
+		return path, nil
+	}
+	// check source_dir/distro
+	paths = r.buildSearchPaths(r.Distro, "", empty)
+	path, err = r.checkSourcePaths(p, component, paths)
+	if err != nil && err != os.ErrNotExist {
+		return "", err
+	}
+	if path != "" {
+		return path, nil
+	}
+	// check source_dir
+	paths = r.buildSearchPaths("", "", empty)
+	path, err = r.checkSourcePaths(p, component, paths)
+	if err != nil && err != os.ErrNotExist {
+		return "", err
+	}
+	if path != "" {
+		return path, nil
+	}
+
+	jww.TRACE.Printf("findSource:  %s not found", p)
 	// not found, return an error
+	return "", &os.PathError{"find", filepath.ToSlash(p), os.ErrNotExist}
+}
+
+// buildSearchPaths builds a slice of paths to search based on what it
+// receives.
+// for each release element:  path = source_dir + root + release + base
+func (r *rawTemplate) buildSearchPaths(root, base string, release []string) []string {
+	var paths []string
+	for _, v := range release {
+		paths = append(paths, filepath.Join(r.SourceDir, root, v, base))
+	}
+	return paths
+}
+
+// checkSourcePaths checks to see if the requested source exists in the
+// received paths.
+//
+// First the path is checked with the component appended.  If a match isn't
+// found there the path is checked as is.  If the component is "", only the
+// path is checked.
+//
+// If a match is found, the path will be returned.  If a non os.ErrNotExist
+// error occurs, that error will be returned; otherwise os.ErrNotExist will
+// be returned
+func (r *rawTemplate) checkSourcePaths(p, component string, paths []string) (string, error) {
+	searchC := []string{component}
+	// if the component has a - in the name, check the base of the component
+	// e.g. chef-solo's base is chef
+	cParts := strings.Split(component, "-")
+	if len(cParts) > 1 {
+		searchC = append(searchC, cParts[0])
+	}
+
+	for _, path := range paths {
+		for _, c := range searchC {
+			tmp := filepath.Join(path, c, p)
+			_, err := os.Stat(tmp)
+			if err == nil {
+				jww.TRACE.Printf("findSource:  %s found", tmp)
+				return filepath.ToSlash(tmp), nil
+			}
+			if !os.IsNotExist(err) {
+				return "", err
+			}
+		}
+		// if the component was empty, no need to search w/o it as the
+		// filepath.Join with the empty string results in the same path as below.
+		if component == "" {
+			continue
+		}
+		tmp := filepath.Join(path, p)
+		_, err := os.Stat(tmp)
+		if err == nil {
+			jww.TRACE.Printf("findSource:  %s found", tmp)
+			return filepath.ToSlash(tmp), nil
+		}
+		if !os.IsNotExist(err) {
+			return "", err
+		}
+	}
 	return "", os.ErrNotExist
 }
 
+// checkPath checks to see
 // buildOutPath builds the full output path of the passed path, p, and returns
 // that value.  If the template is set to include the component string as the
 // parent directory, it is added to the path.
@@ -775,14 +797,6 @@ func (r *rawTemplate) buildTemplateResourcePath(component, p string) string {
 		return path.Join(strings.ToLower(component), p)
 	}
 	return p
-}
-
-// getSourcePath returns the requested path as a child of the SourceDir.
-func (r *rawTemplate) getSourcePath(p string, isDir bool) string {
-	if p == "" {
-		return ""
-	}
-	return path.Join(r.SourceDir, p)
 }
 
 // setExampleDir sets the SourceDir and TemplateOutputDir for example template

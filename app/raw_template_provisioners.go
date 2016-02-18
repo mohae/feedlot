@@ -167,7 +167,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 		switch k {
 		case "playbook_file":
 			// find the actual location and add it to the files map for copying
-			src, err := r.findComponentSource(Ansible.String(), v, false)
+			src, err := r.findSource(v, Ansible.String(), false)
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
@@ -182,7 +182,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 			hasPlaybook = true
 		case "inventory_file":
 			// find the actual location and add it to the files map for copying
-			src, err := r.findComponentSource(Ansible.String(), v, false)
+			src, err := r.findSource(v, Ansible.String(), false)
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
@@ -196,7 +196,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 			settings[k] = r.buildTemplateResourcePath(Ansible.String(), v)
 		case "playbook_dir", "host_vars", "group_vars":
 			// find the actual location and add it to the files map for copying
-			src, err := r.findComponentSource(Ansible.String(), v, true)
+			src, err := r.findSource(v, Ansible.String(), true)
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
@@ -222,7 +222,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 			array := deepcopy.InterfaceToSliceOfStrings(val)
 			for i, v := range array {
 				v = r.replaceVariables(v)
-				src, err := r.findComponentSource(Ansible.String(), v, true)
+				src, err := r.findSource(v, Ansible.String(), true)
 				if err != nil {
 					return nil, &SettingError{ID, k, v, err}
 				}
@@ -293,7 +293,7 @@ func (r *rawTemplate) createChefClient(ID string) (settings map[string]interface
 			settings[k], _ = strconv.ParseBool(v)
 		case "config_template":
 			// find the actual location of the source file and add it to the files map for copying
-			src, err := r.findComponentSource(ChefClient.String(), v, false)
+			src, err := r.findSource(v, ChefClient.String(), false)
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
@@ -309,7 +309,7 @@ func (r *rawTemplate) createChefClient(ID string) (settings map[string]interface
 			// if the value ends with .command, find the referenced command file and use its
 			// contents as the command, otherwise just use the value
 			if strings.HasSuffix(v, ".command") {
-				commands, err := r.commandsFromFile(ChefClient.String(), v)
+				commands, err := r.commandsFromFile(v, ChefClient.String())
 				if err != nil {
 					return nil, &SettingError{ID, k, v, err}
 				}
@@ -375,7 +375,7 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 			settings[k], _ = strconv.ParseBool(v)
 		case "config_template":
 			// find the actual location and add it to the files map for copying
-			src, err := r.findComponentSource(ChefSolo.String(), v, false)
+			src, err := r.findSource(v, ChefSolo.String(), false)
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
@@ -388,7 +388,7 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 			}
 			settings[k] = r.buildTemplateResourcePath(ChefSolo.String(), v)
 		case "data_bags_path", "environments_path", "roles_path":
-			src, err := r.findComponentSource(ChefSolo.String(), v, true)
+			src, err := r.findSource(v, ChefSolo.String(), true)
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
@@ -404,7 +404,7 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 			// if the value ends with .command, find the referenced command file and use its
 			// contents as the command, otherwise just use the value
 			if strings.HasSuffix(v, ".command") {
-				commands, err := r.commandsFromFile(ChefSolo.String(), v)
+				commands, err := r.commandsFromFile(v, ChefSolo.String())
 				if err != nil {
 					return nil, &SettingError{ID, k, v, err}
 				}
@@ -423,7 +423,7 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 			for i, v := range array {
 				v = r.replaceVariables(v)
 				// find the actual location and add it to the files map for copying
-				src, err := r.findComponentSource(ChefSolo.String(), v, true)
+				src, err := r.findSource(v, ChefSolo.String(), true)
 				if err != nil {
 					return nil, &SettingError{ID, name, v, err}
 				}
@@ -478,7 +478,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 		v = r.replaceVariables(v)
 		switch k {
 		case "manifest_file":
-			src, err := r.findComponentSource(PuppetMasterless.String(), v, false)
+			src, err := r.findSource(v, PuppetMasterless.String(), false)
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
@@ -497,7 +497,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 			settings[k], _ = strconv.ParseBool(v)
 		case "hiera_config_path":
 			// find the actual location of the source file and add it to the files map for copying
-			src, err := r.findComponentSource(PuppetMasterless.String(), v, false)
+			src, err := r.findSource(v, PuppetMasterless.String(), false)
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
@@ -511,7 +511,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 			settings[k] = r.buildTemplateResourcePath(PuppetMasterless.String(), v)
 		case "manifest_dir":
 			// find the actual location of the directory and add it to the dir map for copying contents
-			src, err := r.findComponentSource(PuppetMasterless.String(), v, true)
+			src, err := r.findSource(v, PuppetMasterless.String(), true)
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
@@ -527,7 +527,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 			// if the value ends with .command, find the referenced command file and use its
 			// contents as the command, otherwise just use the value
 			if strings.HasSuffix(v, ".command") {
-				commands, err := r.commandsFromFile(PuppetMasterless.String(), v)
+				commands, err := r.commandsFromFile(v, PuppetMasterless.String())
 				if err != nil {
 					return nil, &SettingError{ID, k, v, err}
 				}
@@ -623,7 +623,7 @@ func (r *rawTemplate) createFileUploads(ID string) (settings map[string]interfac
 		switch k {
 		case "source":
 			// find the actual location and add it to the files map for copying
-			src, err := r.findComponentSource(FileUploads.String(), v, true)
+			src, err := r.findSource(v, FileUploads.String(), true)
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
@@ -681,7 +681,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 		switch k {
 		case "local_state_tree":
 			// find the actual location and add it to the files map for copying
-			src, err := r.findComponentSource(Salt.String(), v, true)
+			src, err := r.findSource(v, Salt.String(), true)
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
@@ -696,7 +696,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 			hasLocalStateTree = true
 		case "local_pillar_roots":
 			// find the actual location and add it to the files map for copying
-			src, err := r.findComponentSource(Salt.String(), v, true)
+			src, err := r.findSource(v, Salt.String(), true)
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
@@ -710,7 +710,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 			settings[k] = r.buildTemplateResourcePath(Salt.String(), v)
 		case "minion_config":
 			// find the actual location and add it to the files map for copying
-			src, err := r.findComponentSource(Salt.String(), filepath.Join(v, "minion"), false)
+			src, err := r.findSource(filepath.Join(v, "minion"), Salt.String(), false)
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
@@ -771,7 +771,7 @@ func (r *rawTemplate) createShellScript(ID string) (settings map[string]interfac
 			// Otherwise assume that it contains the command
 			if strings.HasSuffix(v, ".command") {
 				var commands []string
-				commands, err = r.commandsFromFile(ShellScript.String(), v)
+				commands, err = r.commandsFromFile(v, ShellScript.String())
 				if err != nil {
 					return nil, &SettingError{ID, k, v, err}
 				}
@@ -797,7 +797,7 @@ func (r *rawTemplate) createShellScript(ID string) (settings map[string]interfac
 			for i, v := range scripts {
 				v = r.replaceVariables(v)
 				// find the source
-				src, err := r.findComponentSource(ShellScript.String(), v, false)
+				src, err := r.findSource(v, ShellScript.String(), false)
 				if err != nil {
 					return nil, &SettingError{ID, k, v, err}
 				}

@@ -505,7 +505,7 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 		case "user_data":
 			settings[k] = v
 		case "user_data_file":
-			src, err := r.findComponentSource(AmazonEBS.String(), v, false)
+			src, err := r.findSource(v, AmazonEBS.String(), false)
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
@@ -716,7 +716,7 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 				continue
 			}
 			// The value is a command file, load the contents of the file.
-			cmds, err := r.commandsFromFile(AmazonInstance.String(), v)
+			cmds, err := r.commandsFromFile(v, AmazonInstance.String())
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
@@ -733,7 +733,7 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 				continue
 			}
 			// The value is a command file, load the contents of the file.
-			cmds, err := r.commandsFromFile(AmazonInstance.String(), v)
+			cmds, err := r.commandsFromFile(v, AmazonInstance.String())
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
@@ -804,7 +804,7 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 		case "user_data":
 			settings[k] = v
 		case "user_data_file":
-			src, err := r.findComponentSource(AmazonInstance.String(), v, false)
+			src, err := r.findSource(v, AmazonInstance.String(), false)
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
@@ -1170,7 +1170,7 @@ func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 	// if there wasn't an array of run commands, check to see if they should be loaded from a file
 	if !hasRunCommandArray {
 		if runCommandFile != "" {
-			commands, err := r.commandsFromFile(Docker.String(), runCommandFile)
+			commands, err := r.commandsFromFile(runCommandFile, Docker.String())
 			if err != nil {
 				return nil, &SettingError{ID, "run_command", runCommandFile, err}
 			}
@@ -1714,7 +1714,7 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 	// from a file
 	if !hasBootCmd {
 		if bootCmdFile != "" {
-			commands, err := r.commandsFromFile(QEMU.String(), bootCmdFile)
+			commands, err := r.commandsFromFile(bootCmdFile, QEMU.String())
 			if err != nil {
 				return nil, &SettingError{ID, "boot_command", bootCmdFile, err}
 			}
@@ -1921,7 +1921,7 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 				continue
 			}
 			// The value is a command file, load the contents of the file.
-			cmds, err := r.commandsFromFile(VirtualBoxISO.String(), v)
+			cmds, err := r.commandsFromFile(v, VirtualBoxISO.String())
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
@@ -2035,7 +2035,7 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 	// boot commands to use.
 	if !hasBootCmd {
 		if bootCmdFile != "" {
-			commands, err := r.commandsFromFile(VirtualBoxISO.String(), bootCmdFile)
+			commands, err := r.commandsFromFile(bootCmdFile, VirtualBoxISO.String())
 			if err != nil {
 				return nil, &SettingError{ID, "boot_command", bootCmdFile, err}
 			}
@@ -2219,7 +2219,7 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 				continue
 			}
 			// The value is a command file, load the contents of the file.
-			cmds, err := r.commandsFromFile(VirtualBoxOVF.String(), v)
+			cmds, err := r.commandsFromFile(v, VirtualBoxOVF.String())
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
@@ -2232,7 +2232,7 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 		case "shutdown_timeout":
 			settings[k] = v
 		case "source_path":
-			src, err := r.findComponentSource(VirtualBoxOVF.String(), v, true)
+			src, err := r.findSource(v, VirtualBoxOVF.String(), true)
 			if err != nil {
 				return nil, err
 			}
@@ -2332,7 +2332,7 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 	// if there weren't any boot commands in the array section, see if there's a file with the boot commands to use.
 	if !hasBootCmd {
 		if bootCmdFile != "" {
-			commands, err := r.commandsFromFile(VirtualBoxOVF.String(), bootCmdFile)
+			commands, err := r.commandsFromFile(bootCmdFile, VirtualBoxOVF.String())
 			if err != nil {
 				return nil, &SettingError{ID, "boot_command", bootCmdFile, err}
 			}
@@ -2535,7 +2535,7 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 				continue
 			}
 			// The value is a command file, load the contents of the file.
-			cmds, err := r.commandsFromFile(VMWareISO.String(), v)
+			cmds, err := r.commandsFromFile(v, VMWareISO.String())
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
@@ -2655,7 +2655,7 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 	// if there weren't any boot commands in the array section, see if there's a file with the boot commands to use.
 	if !hasBootCmd {
 		if bootCmdFile != "" {
-			commands, err := r.commandsFromFile(VMWareISO.String(), bootCmdFile)
+			commands, err := r.commandsFromFile(bootCmdFile, VMWareISO.String())
 			if err != nil {
 				return nil, &SettingError{ID, "boot_command", bootCmdFile, err}
 			}
@@ -2819,7 +2819,7 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 				continue
 			}
 			// The value is a command file, load the contents of the file.
-			cmds, err := r.commandsFromFile(VMWareVMX.String(), v)
+			cmds, err := r.commandsFromFile(v, VMWareVMX.String())
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
@@ -2832,7 +2832,7 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 		case "skip_compaction":
 			settings[k], _ = strconv.ParseBool(v)
 		case "source_path":
-			src, err := r.findComponentSource(VMWareVMX.String(), v, true)
+			src, err := r.findSource(v, VMWareVMX.String(), true)
 			if err != nil {
 				return nil, err
 			}
@@ -2909,7 +2909,7 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 	// if there weren't any boot commands in the array section, see if there's a file with the boot commands to use.
 	if !hasBootCmd {
 		if bootCmdFile != "" {
-			commands, err := r.commandsFromFile(VMWareISO.String(), bootCmdFile)
+			commands, err := r.commandsFromFile(bootCmdFile, VMWareISO.String())
 			if err != nil {
 				return nil, &SettingError{ID, "boot_command", bootCmdFile, err}
 			}
@@ -3045,7 +3045,11 @@ func (r *rawTemplate) setHTTP(component string, m map[string]interface{}) error 
 	if !ok {
 		v = "http"
 	}
-	src, err := r.findComponentSource(component, v.(string), true)
+	val, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("http_directory: expected string was %s", reflect.TypeOf(v).Kind())
+	}
+	src, err := r.findSource(val, component, true)
 	if err != nil {
 		return fmt.Errorf("setHTTP error: %s", err)
 	}
@@ -3054,9 +3058,9 @@ func (r *rawTemplate) setHTTP(component string, m map[string]interface{}) error 
 	// Nothing should be copied in this instancel it should not be added
 	// to the copy info
 	if src != "" {
-		r.dirs[r.buildOutPath("", v.(string))] = src
+		r.dirs[r.buildOutPath("", val)] = src
 	}
-	m["http_directory"] = r.buildTemplateResourcePath("", v.(string))
+	m["http_directory"] = r.buildTemplateResourcePath("", val)
 	return nil
 }
 

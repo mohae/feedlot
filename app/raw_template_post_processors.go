@@ -568,7 +568,7 @@ func (r *rawTemplate) createVagrant(ID string) (settings map[string]interface{},
 			settings[k] = i
 		case "vagrantfile_template":
 			// locate the file
-			src, err := r.findComponentSource(Vagrant.String(), v, false)
+			src, err := r.findSource(v, Vagrant.String(), false)
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}

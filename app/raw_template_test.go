@@ -565,71 +565,36 @@ func TestRawTemplateMergeString(t *testing.T) {
 func TestFindSource(t *testing.T) {
 	tests := []struct {
 		p           string
-		isDir       bool
-		src         string
-		expectedErr string
-	}{
-		{"", false, "", "cannot find source, no path received"},
-		{"something", false, "", "file does not exist"},
-		{"http/preseed.cfg", false, "../test_files/src/ubuntu/http/preseed.cfg", ""},
-		{"chef-solo/cookbook1", true, "../test_files/src/chef-solo/cookbook1", ""},
-		{"14.04_ubuntu_build.txt", false, "../test_files/src/ubuntu/14.04/ubuntu_build/14.04_ubuntu_build.txt", ""},
-		{"1404_ubuntu_build.txt", false, "../test_files/src/ubuntu/1404/ubuntu_build/1404_ubuntu_build.txt", ""},
-		{"14_ubuntu_build.txt", false, "../test_files/src/ubuntu/14/ubuntu_build/14_ubuntu_build.txt", ""},
-		{"ubuntu_build_text.txt", false, "../test_files/src/ubuntu/ubuntu_build/ubuntu_build_text.txt", ""},
-		{"ubuntu_build.txt", false, "../test_files/src/ubuntu_build/ubuntu_build.txt", ""},
-		{"14.04_amd64_build_text.txt", false, "../test_files/src/ubuntu/14.04/amd64/14.04_amd64_build_text.txt", ""},
-		{"1404_amd64_build_text.txt", false, "../test_files/src/ubuntu/1404/amd64/1404_amd64_build_text.txt", ""},
-		{"14_amd64_build_text.txt", false, "../test_files/src/ubuntu/14/amd64/14_amd64_build_text.txt", ""},
-		{"14.04_text.txt", false, "../test_files/src/ubuntu/14.04/14.04_text.txt", ""},
-		{"1404_text.txt", false, "../test_files/src/ubuntu/1404/1404_text.txt", ""},
-		{"14_text.txt", false, "../test_files/src/ubuntu/14/14_text.txt", ""},
-		{"amd64_text.txt", false, "../test_files/src/ubuntu/amd64/amd64_text.txt", ""},
-		{"ubuntu_text.txt", false, "../test_files/src/ubuntu/ubuntu_text.txt", ""},
-	}
-	r := newRawTemplate()
-	r.Distro = "ubuntu"
-	r.Arch = "amd64"
-	r.Release = "14.04"
-	r.Image = "server"
-	r.SourceDir = "../test_files/src"
-	r.BuildName = "ubuntu_build"
-	for i, test := range tests {
-		src, err := r.findSource(test.p, test.isDir)
-		if err != nil {
-			if err.Error() != test.expectedErr {
-				t.Errorf("TestFindSource %d: expected %q got %q", i, test.expectedErr, err)
-			}
-			continue
-		}
-		if test.expectedErr != "" {
-			t.Errorf("TestFindSource %d: expected %q, got no error", i, test.expectedErr)
-			continue
-		}
-		if test.src != src {
-			t.Errorf("TestFindSource %d: expected %q, got %q", i, test.src, src)
-		}
-	}
-}
-
-func TestFindComponentSource(t *testing.T) {
-	tests := []struct {
 		component   string
-		p           string
 		isDir       bool
 		src         string
 		expectedErr string
 	}{
-		{"", "", false, "", "cannot find source, no path received"},
-		{"", "chef.cfg", false, "", " file \"chef.cfg\": file does not exist"},
-		{"salt", "minion", false, "", "salt file \"minion\": file does not exist"},
-		{"salt-masterless", "master", false, "", "salt-masterless file \"master\": file does not exist"},
-		{"chef-solo", "chef.cfg", false, "../test_files/src/chef-solo/chef.cfg", ""},
-		{"chef-client", "chef.cfg", false, "../test_files/src/chef-client/chef.cfg", ""},
-		{"chef", "chef.cfg", false, "../test_files/src/chef/chef.cfg", ""},
-		{"shell", "commands", true, "../test_files/src/shell/commands", ""},
-		{"", "ubuntu_build.txt", false, "../test_files/src/ubuntu_build/ubuntu_build.txt", ""},
-	}
+		{"", "", false, "", "cannot find source: no path received"},
+		{"something", "", false, "", "find something: file does not exist"},
+		{"http/preseed.cfg", "", false, "../test_files/src/ubuntu/http/preseed.cfg", ""},
+		{"cookbook1", "chef-solo", true, "../test_files/src/chef-solo/cookbook1", ""},
+		{"14.04_ubuntu_build.txt", "", false, "../test_files/src/ubuntu/14.04/ubuntu_build/14.04_ubuntu_build.txt", ""},
+		{"1404_ubuntu_build.txt", "", false, "../test_files/src/ubuntu/1404/ubuntu_build/1404_ubuntu_build.txt", ""},
+		{"14_ubuntu_build.txt", "", false, "../test_files/src/ubuntu/14/ubuntu_build/14_ubuntu_build.txt", ""},
+		{"ubuntu_build_text.txt", "", false, "../test_files/src/ubuntu/ubuntu_build/ubuntu_build_text.txt", ""},
+		{"ubuntu_build.txt", "", false, "../test_files/src/ubuntu_build/ubuntu_build.txt", ""},
+		{"14.04_amd64_build_text.txt", "", false, "../test_files/src/ubuntu/14.04/amd64/14.04_amd64_build_text.txt", ""},
+		{"1404_amd64_build_text.txt", "", false, "../test_files/src/ubuntu/1404/amd64/1404_amd64_build_text.txt", ""},
+		{"14_amd64_build_text.txt", "", false, "../test_files/src/ubuntu/14/amd64/14_amd64_build_text.txt", ""},
+		{"14.04_text.txt", "", false, "../test_files/src/ubuntu/14.04/14.04_text.txt", ""},
+		{"1404_text.txt", "", false, "../test_files/src/ubuntu/1404/1404_text.txt", ""},
+		{"14_text.txt", "", false, "../test_files/src/ubuntu/14/14_text.txt", ""},
+		{"amd64_text.txt", "", false, "../test_files/src/ubuntu/amd64/amd64_text.txt", ""},
+		{"ubuntu_text.txt", "", false, "../test_files/src/ubuntu/ubuntu_text.txt", ""},
+		{"chef.cfg", "", false, "", "find chef.cfg: file does not exist"},
+		{"minion", "salt", false, "", "find minion: file does not exist"},
+		{"master", "salt-masterless", false, "", "find master: file does not exist"},
+		{"chef.cfg", "chef-solo", false, "../test_files/src/chef-solo/chef.cfg", ""},
+		{"chef.cfg", "chef-client", false, "../test_files/src/chef-client/chef.cfg", ""},
+		{"chef.cfg", "chef", false, "../test_files/src/chef/chef.cfg", ""},
+		{"commands", "shell", true, "../test_files/src/ubuntu/14/commands", ""},
+		{"ubuntu_build.txt", "", false, "../test_files/src/ubuntu_build/ubuntu_build.txt", ""}}
 	r := newRawTemplate()
 	r.Distro = "ubuntu"
 	r.Arch = "amd64"
@@ -638,7 +603,7 @@ func TestFindComponentSource(t *testing.T) {
 	r.SourceDir = "../test_files/src"
 	r.BuildName = "ubuntu_build"
 	for i, test := range tests {
-		src, err := r.findComponentSource(test.component, test.p, test.isDir)
+		src, err := r.findSource(test.p, test.component, test.isDir)
 		if err != nil {
 			if err.Error() != test.expectedErr {
 				t.Errorf("TestFindSource %d: expected %q got %q", i, test.expectedErr, err)
@@ -663,7 +628,7 @@ func TestFindCommandFile(t *testing.T) {
 		expectedErr string
 	}{
 		{"", "", "", "the passed command filename was empty"},
-		{"", "test.command", "", " file \"commands/test.command\": file does not exist"},
+		{"", "test.command", "", "find commands/test.command: file does not exist"},
 		{"", "execute.command", "../test_files/src/commands/execute.command", ""},
 		{"shell", "execute_test.command", "../test_files/src/shell/commands/execute_test.command", ""},
 		{"chef-solo", "execute.command", "../test_files/src/chef-solo/commands/execute.command", ""},
@@ -679,7 +644,7 @@ func TestFindCommandFile(t *testing.T) {
 	r.SourceDir = "../test_files/src"
 	r.BuildName = "ubuntu_build"
 	for i, test := range tests {
-		src, err := r.findCommandFile(test.component, test.p)
+		src, err := r.findCommandFile(test.p, test.component)
 		if err != nil {
 			if err.Error() != test.expectedErr {
 				t.Errorf("TestFindCommandFile %d: expected %q got %q", i, test.expectedErr, err)
@@ -704,7 +669,7 @@ func TestCommandsFromFile(t *testing.T) {
 		expectedErr string
 	}{
 		{"", "", []string{}, "the passed command filename was empty"},
-		{"", "test.command", []string{}, " file \"commands/test.command\": file does not exist"},
+		{"", "test.command", []string{}, "find commands/test.command: file does not exist"},
 		{"shell", "execute.command", []string{"echo 'vagrant'|sudo -S sh '{{.Path}}'"}, ""},
 		{"shell", "boot.command", []string{"<esc><wait>", "<esc><wait>", "<enter><wait>"}, ""},
 	}
@@ -716,7 +681,7 @@ func TestCommandsFromFile(t *testing.T) {
 	r.SourceDir = "../test_files/src"
 	r.BuildName = "ubuntu_build"
 	for i, test := range tests {
-		commands, err := r.commandsFromFile(test.component, test.p)
+		commands, err := r.commandsFromFile(test.p, test.component)
 		if err != nil {
 			if err.Error() != test.expectedErr {
 				t.Errorf("TestCommandsFromFile %d: expected %q got %q", i, test.expectedErr, err)

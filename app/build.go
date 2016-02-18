@@ -96,7 +96,6 @@ func BuildBuilds(buildNames ...string) (string, error) {
 		}
 	}
 	// First load the build information
-	jww.DEBUG.Println("loading builds")
 	err := loadBuilds()
 	if err != nil {
 		err = fmt.Errorf("builds failed: %s", err)

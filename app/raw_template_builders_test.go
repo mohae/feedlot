@@ -1,4 +1,3 @@
-// raw_template_builders_test.go: tests for builders.
 package app
 
 import (

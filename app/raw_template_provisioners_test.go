@@ -1,9 +1,6 @@
-// raw_template_provisioners_test.go: tests for provisioners.
 package app
 
-import (
-	"testing"
-)
+import "testing"
 
 var testRawTemplateProvisioner = &rawTemplate{
 	PackerInf: PackerInf{
