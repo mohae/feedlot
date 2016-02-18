@@ -161,7 +161,7 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 		case OpenStack:
 			tmpS, err = r.createOpenStack(ID)
 			if err != nil {
-				return nil, &Error{Null.String(), err}
+				return nil, &Error{OpenStack.String(), err}
 			}
 		//	case ParallelsISO, ParallelsPVM:
 		case QEMU:
