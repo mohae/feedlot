@@ -277,6 +277,7 @@ var testAllBuilders = rawTemplate{
 			"docker",
 			"googlecompute",
 			"null",
+			"parallels-iso",
 			"virtualbox-iso",
 			"virtualbox-ovf",
 			"vmware-iso",
@@ -673,6 +674,53 @@ var testAllBuilders = rawTemplate{
 					},
 				},
 			},
+			"parallels-iso": {
+				templateSection{
+					Type: "parallels-iso",
+					Settings: []string{
+						"boot_wait=30s",
+						"disk_size=20000",
+						"guest_os_type=ubuntu",
+						"hard_drive_interface=ide",
+						"http_directory=http",
+						"http_port_min=8000",
+						"http_port_max=9000",
+						"iso_checksum=ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
+						"iso_target_path=packer_cache",
+						"output_directory=out/dir",
+						"parallels_tools_flavor=lin",
+						"parallels_tools_guest_path=ptools",
+						"prlctl_version_file=.prlctl_version",
+						"shutdown_command=shutdown.command",
+						"shutdown_timeout=5m",
+						"skip_compaction=true",
+						"vm_name=test-iso",
+					},
+					Arrays: map[string]interface{}{
+						"boot_command": []string{
+							"<bs>",
+							"<del>",
+							"<enter><return>",
+							"<esc>",
+						},
+						"floppy_files": []string{
+							"disk1",
+						},
+						"iso_urls": []string{
+							"http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+							"http://2.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+						},
+						"prlctl": [][]string{
+							[]string{"set", "{{.Name}}", "--shf-host-add", "log", "--path", "{{pwd}}/log", "--mode", "rw", "--enable"},
+							[]string{"set", "{{.Name}}", "--cpus", "1"},
+						},
+
+						"prlctl_post": [][]string{
+							[]string{"set", "{{.Name}}", "--shf-host-del", "log"},
+						},
+					},
+				},
+			},
 			"qemu": {
 				templateSection{
 					Type: "qemu",
@@ -988,6 +1036,7 @@ var testAllBuildersSSH = rawTemplate{
 			"docker",
 			"googlecompute",
 			"null",
+			"parallels-iso",
 			"virtualbox-iso",
 			"virtualbox-ovf",
 			"vmware-iso",
@@ -1210,6 +1259,33 @@ var testAllBuildersSSH = rawTemplate{
 					Arrays: map[string]interface{}{},
 				},
 			},
+			"parallels-iso": {
+				templateSection{
+					Type: "parallels-iso",
+					Settings: []string{
+						"boot_wait=30s",
+						"communicator=ssh",
+						"disk_size=20000",
+						"guest_os_type=ubuntu",
+						"hard_drive_interface=ide",
+						"http_directory=http",
+						"http_port_min=8000",
+						"http_port_max=9000",
+						"iso_checksum=ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
+						"iso_target_path=packer_cache",
+						"iso_url=http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+						"output_directory=out/dir",
+						"parallels_tools_flavor=lin",
+						"parallels_tools_guest_path=ptools",
+						"prlctl_version_file=.prlctl_version",
+						"shutdown_command=shutdown.command",
+						"shutdown_timeout=5m",
+						"skip_compaction=true",
+						"vm_name=test-iso",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
 			"qemu": {
 				templateSection{
 					Type: "qemu",
@@ -1392,6 +1468,7 @@ var testAllBuildersWinRM = rawTemplate{
 			"docker",
 			"googlecompute",
 			"null",
+			"parallels-iso",
 			"virtualbox-iso",
 			"virtualbox-ovf",
 			"vmware-iso",
@@ -1603,6 +1680,33 @@ var testAllBuildersWinRM = rawTemplate{
 						"tenant_name=acme",
 						"use_floating_ip=true",
 						"username=packer",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
+			"parallels-iso": {
+				templateSection{
+					Type: "parallels-iso",
+					Settings: []string{
+						"boot_wait=30s",
+						"communicator=winrm",
+						"disk_size=20000",
+						"guest_os_type=ubuntu",
+						"hard_drive_interface=ide",
+						"http_directory=http",
+						"http_port_min=8000",
+						"http_port_max=9000",
+						"iso_checksum=ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
+						"iso_target_path=packer_cache",
+						"iso_url=http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+						"output_directory=out/dir",
+						"parallels_tools_flavor=lin",
+						"parallels_tools_guest_path=ptools",
+						"prlctl_version_file=.prlctl_version",
+						"shutdown_command=shutdown.command",
+						"shutdown_timeout=5m",
+						"skip_compaction=true",
+						"vm_name=test-iso",
 					},
 					Arrays: map[string]interface{}{},
 				},
@@ -3216,6 +3320,166 @@ func TestCreateOpenstack(t *testing.T) {
 	} else {
 		if MarshalJSONToString.Get(ret) != MarshalJSONToString.Get(expectedWinRM) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(ret))
+		}
+	}
+}
+
+func TestCreateParallelsISO(t *testing.T) {
+	expected := map[string]interface{}{
+		"boot_command": []string{
+			"<bs>",
+			"<del>",
+			"<enter><return>",
+			"<esc>",
+		},
+		"boot_wait": "30s",
+		"disk_size": 20000,
+		"floppy_files": []string{
+			"disk1",
+		},
+		"guest_os_type":          "ubuntu",
+		"hard_drive_interface":   "ide",
+		"http_directory":         "http",
+		"http_port_max":          9000,
+		"http_port_min":          8000,
+		"iso_checksum":           "ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
+		"iso_checksum_type":      "sha256",
+		"iso_target_path":        "packer_cache",
+		"iso_urls": []string{
+			"http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+			"http://2.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+		},
+		"output_directory":  "out/dir",
+		"parallels_tools_flavor": "lin",
+		"parallels_tools_guest_path": "ptools",
+		"prlctl": [][]string{
+			[]string{
+				"set",
+ 				"{{.Name}}",
+ 				"--shf-host-add",
+ 				"log",
+ 				"--path",
+ 				"{{pwd}}/log",
+ 				"--mode",
+ 				"rw",
+ 				"--enable",
+			},
+			[]string{
+				"set",
+				"{{.Name}}",
+				"--cpus",
+				"1",
+			},
+		},
+		"prlctl_post": [][]string{
+			[]string{
+				"set",
+				"{{.Name}}",
+				"--shf-host-del",
+				"log",
+			},
+		},
+		"prlctl_version_file": ".prlctl_version",
+		"shutdown_command":  `shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"`,
+		"shutdown_timeout":  "5m",
+		"skip_compaction": true,
+		"ssh_username":      "vagrant",
+		"type":              "parallels-iso",
+		"vm_name": "test-iso",
+	}
+	testAllBuilders.BaseURL = "http://releases.ubuntu.com/"
+	settings, err := testAllBuilders.createParallelsISO("parallels-iso")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		}
+	}
+	// SSH
+	expectedSSH := map[string]interface{}{
+		"boot_wait": "30s",
+		"communicator": "ssh",
+		"disk_size": 20000,
+		"guest_os_type":          "ubuntu",
+		"hard_drive_interface":   "ide",
+		"http_directory":         "http",
+		"http_port_max":          9000,
+		"http_port_min":          8000,
+		"iso_checksum":           "ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
+		"iso_checksum_type":      "sha256",
+		"iso_target_path":        "packer_cache",
+		"iso_url": "http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+		"output_directory":  "out/dir",
+		"parallels_tools_flavor": "lin",
+		"parallels_tools_guest_path": "ptools",
+		"prlctl_version_file": ".prlctl_version",
+		"shutdown_command":  `shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"`,
+		"shutdown_timeout":  "5m",
+		"skip_compaction": true,
+		"ssh_bastion_host":             "bastion.host",
+		"ssh_bastion_port":             2222,
+		"ssh_bastion_username":         "packer",
+		"ssh_bastion_password":         "packer",
+		"ssh_bastion_private_key_file": "secret",
+		"ssh_disable_agent":            true,
+		"ssh_handshake_attempts":       10,
+		"ssh_host":                     "127.0.0.1",
+		"ssh_password":                 "vagrant",
+		"ssh_port":                     22,
+		"ssh_private_key_file":         "key/path",
+		"ssh_pty":                      true,
+		"ssh_username":                 "vagrant",
+		"ssh_timeout":                  "10m",		"type":              "parallels-iso",
+		"vm_name": "test-iso",
+	}
+	testAllBuildersSSH.BaseURL = "http://releases.ubuntu.com/"
+	settings, err = testAllBuildersSSH.createParallelsISO("parallels-iso")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expectedSSH) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedSSH), MarshalJSONToString.Get(settings))
+		}
+	}
+	// WinRM
+	expectedWinRM := map[string]interface{}{
+		"boot_wait": "30s",
+		"communicator": "winrm",
+		"disk_size": 20000,
+		"guest_os_type":          "ubuntu",
+		"hard_drive_interface":   "ide",
+		"http_directory":         "http",
+		"http_port_max":          9000,
+		"http_port_min":          8000,
+		"iso_checksum":           "ababb88a492e08759fddcf4f05e5ccc58ec9d47fa37550d63931d0a5fa4f7388",
+		"iso_checksum_type":      "sha256",
+		"iso_target_path":        "packer_cache",
+		"iso_url": "http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+		"output_directory":  "out/dir",
+		"parallels_tools_flavor": "lin",
+		"parallels_tools_guest_path": "ptools",
+		"prlctl_version_file": ".prlctl_version",
+		"shutdown_command":  `shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"`,
+		"shutdown_timeout":  "5m",
+		"skip_compaction": true,
+		"type":              "parallels-iso",
+		"vm_name": "test-iso",
+		"winrm_host":        "host",
+		"winrm_password":    "vagrant",
+		"winrm_port":        22,
+		"winrm_timeout":     "10m",
+		"winrm_username":    "vagrant",
+		"winrm_use_ssl":     true,
+		"winrm_insecure":    true,
+	}
+	testAllBuildersWinRM.BaseURL = "http://releases.ubuntu.com/"
+	settings, err = testAllBuildersWinRM.createParallelsISO("parallels-iso")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expectedWinRM) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(settings))
 		}
 	}
 }

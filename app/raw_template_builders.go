@@ -25,7 +25,7 @@ const (
 	GoogleCompute
 	Null
 	OpenStack
-	Parallels
+	ParallelsISO
 	QEMU
 	VirtualBoxISO
 	VirtualBoxOVF
@@ -48,7 +48,7 @@ var builders = [...]string{
 	"googlecompute",
 	"null",
 	"openstack",
-	"parallels",
+	"parallels-iso",
 	"qemu",
 	"virtualbox-iso",
 	"virtualbox-ovf",
@@ -83,8 +83,8 @@ func BuilderFromString(s string) Builder {
 		return Null
 	case "openstack":
 		return OpenStack
-	case "parallels":
-		return Parallels
+	case "parallels-iso":
+		return ParallelsISO
 	case "qemu":
 		return QEMU
 	case "virtualbox-iso":
@@ -163,7 +163,12 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 			if err != nil {
 				return nil, &Error{OpenStack.String(), err}
 			}
-		//	case ParallelsISO, ParallelsPVM:
+		case ParallelsISO:
+			tmpS, err = r.createParallelsISO(ID)
+			if err != nil {
+				return nil, &Error{ParallelsISO.String(), err}
+			}
+		//	case ParallelsPVM:
 		case QEMU:
 			tmpS, err = r.createQEMU(ID)
 			if err != nil {
@@ -1512,6 +1517,264 @@ func (r *rawTemplate) createOpenStack(ID string) (settings map[string]interface{
 		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
 		}
+	}
+	return settings, nil
+}
+
+// createParallelsISO creates a map of settings for Packer's ParallelsISO
+// builder.  Any values that aren't supported by the QEMU builder are ignored.
+// Any required settings that doesn't exist result in an error and processing
+// of the builder is stopped. For more information, refer to
+// https://packer.io/docs/builders/parallels-iso.html
+//
+// In addition to the following options, Packer communicators are supported.
+// Check the communicator docs for valid options.
+//
+// Required configuration options:
+//   iso_checksum                string
+//   iso_checksum_type           string
+//   iso_checksum_url            string
+//   iso_url                     string
+//   parallels_tools_flavor      string
+//   ssh_username                string
+// Optional configuration options:
+//   boot_command                array of strings
+//   boot_wait                   string
+//   disk_size                   int
+//   floppy_files                array of strings
+//   guest_os_type               string
+//   hard_drive_interface        string
+//   host_interfaces             array of strings
+//   http_directory              string
+//   http_port_min               int
+//   http_port_max               int
+//   iso_target_path             string
+//   iso_urls                    array of strings
+//   output_directory            string
+//   parallels_tools_guest_path  string
+//   prlctl                      array of strings
+//   prlctl_post                 array of strings
+//   prlctl_version_file         string
+//   shutdown_command            string
+//   shutdown_timeout            string
+//   skip_compaction             bool
+//   vm_name                     string
+func (r *rawTemplate) createParallelsISO(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.Builders[ID]
+	if !ok {
+		return nil, NewErrConfigNotFound(ID)
+	}
+	settings = map[string]interface{}{}
+	// Each create function is responsible for setting its own type.
+	settings["type"] = ParallelsISO.String()
+	// Merge the settings between common and this builders.
+	var workSlice []string
+	_, ok = r.Builders[Common.String()]
+	if ok {
+		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		workSlice = r.Builders[ID].Settings
+	}
+	var hasISOChecksum, hasISOChecksumType, hasISOChecksumURL, hasISOURL, hasISOURLs bool
+	var hasParallelsToolsFlavor, hasUsername, hasCommunicator, disableParallelsToolsMode bool
+	var isoURL, bootCmdFile string
+	// check for communicator first
+	prefix, err := r.processCommunicator(ID, workSlice, settings)
+	if err != nil {
+		return nil, err
+	}
+	// see if the required settings include username/password
+	if prefix != "" {
+		_, ok = settings[prefix+"_username"]
+		if ok {
+			hasUsername = true
+		}
+		hasCommunicator = true
+	}
+	// Go through each element in the slice, only take the ones that matter to this builder.
+	for _, s := range workSlice {
+		k, v := parseVar(s)
+		v = r.replaceVariables(v)
+		switch k {
+		case "boot_command":
+			if stringIsCommandFilename(v) {
+				bootCmdFile = v
+			}
+		case "boot_wait":
+			settings[k] = v
+		case "disk_size":
+			// only add if its an int
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			settings[k] = i
+		case "guest_os_type":
+			settings[k] = v
+		case "floating_ip":
+			settings[k] = v
+		case "hard_drive_interface":
+			settings[k] = v
+		case "http_directory":
+			settings[k] = v
+		case "http_port_max":
+			// only add if its an int
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			settings[k] = i
+		case "http_port_min":
+			// only add if its an int
+			i, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			settings[k] = i
+		case "iso_checksum":
+			settings[k] = v
+			hasISOChecksum = true
+		case "iso_checksum_type":
+			settings[k] = v
+			hasISOChecksumType = true
+		case "iso_checksum_url":
+			settings[k] = v
+			hasISOChecksumURL = true
+		case "iso_target_path":
+			settings[k] = v
+		case "iso_url":
+			isoURL = v
+			hasISOURL = true
+		case "output_directory":
+			settings[k] = v
+		case "parallels_tools_flavor":
+			settings[k] = v
+			hasParallelsToolsFlavor = true
+		case "parallels_tools_guest_path":
+			settings[k] = v
+		case "parallels_tools_guest_mode":
+			switch v {
+			case "disable":
+				disableParallelsToolsMode = true
+			case "upload":
+			case "detach":
+			default:
+				return nil, &SettingError{ID, k, v, errors.New("invalid option")}
+			}
+			settings[k] = v
+		case "prlctl_version_file":
+			settings[k] = v
+		case "shutdown_command":
+			if !stringIsCommandFilename(v) {
+				// assume that the value is the command
+				settings[k] = v
+				continue
+			}
+			// The value is a command file, load the contents of the file.
+			cmds, err := r.commandsFromFile(v, ParallelsISO.String())
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			//
+			cmd := commandFromSlice(cmds)
+			if cmd == "" {
+				return nil, &SettingError{ID, k, v, ErrNoCommands}
+			}
+			settings[k] = cmd
+		case "shutdown_timeout":
+			settings[k] = v
+		case "skip_compaction":
+			settings[k], _ = strconv.ParseBool(v)
+		case "ssh_username":
+			// If there's a communicator and it's SSH skip.
+			if hasCommunicator && prefix == "ssh" {
+				continue
+			}
+			settings[k] = v
+			hasUsername = true
+		case "vm_name":
+			settings[k] = v
+		}
+	}
+	// iso_checksum is required
+	if !hasISOChecksum && !hasISOChecksumURL {
+		return nil, &RequiredSettingError{ID, "iso_checksum or iso_checksum_url"}
+	}
+	// iso_checksum_type is required
+	if !hasISOChecksumType {
+		return nil, &RequiredSettingError{ID, "iso_checksum_type"}
+	}
+	// parallels_tools_flavor is required
+	if !hasParallelsToolsFlavor && !disableParallelsToolsMode{
+		return nil, &RequiredSettingError{ID, "parallels_tools_flavor"}
+	}
+	// Username is required
+	if !hasUsername {
+		if prefix == "" {
+			return nil, &RequiredSettingError{ID, "ssh_username"}
+		}
+		return nil, &RequiredSettingError{ID, prefix + "_username"}
+	}
+	// Process arrays, iso_urls is only valid if iso_url is not set
+	var hasBootCmd bool
+	for name, val := range r.Builders[ID].Arrays {
+		switch name {
+		case "boot_command":
+			// This is processed here because we need to know if it exists or not
+			array := deepcopy.Iface(val)
+			if !reflect.ValueOf(val).IsNil() {
+				settings[name] = array
+				hasBootCmd = true
+			}
+			continue
+		case "floppy_files":
+		case "host_interfaces":
+		case "iso_urls":
+			// this takes precedence over iso_url
+			// This is processed here because we need to know if it exists or not
+			array := deepcopy.Iface(val)
+			if !reflect.ValueOf(val).IsNil() {
+				settings[name] = array
+				hasISOURLs = true
+			}
+			continue
+		case "prlctl":
+		case "prlctl_post":
+		default:
+			continue
+		}
+		array := deepcopy.Iface(val)
+		if !reflect.ValueOf(array).IsNil() {
+			settings[name] = array
+		}
+	}
+	// if there wasn't an array of boot commands, check to see if they should be loaded
+	// from a file
+	if !hasBootCmd {
+		if bootCmdFile != "" {
+			commands, err := r.commandsFromFile(bootCmdFile, ParallelsISO.String())
+			if err != nil {
+				return nil, &SettingError{ID, "boot_command", bootCmdFile, err}
+			}
+			if len(commands) == 0 {
+				return nil, &SettingError{ID, "boot_command", bootCmdFile, ErrNoCommands}
+			}
+			array := deepcopy.Iface(commands)
+			if !reflect.ValueOf(array).IsNil() {
+				settings["boot_command"] = array
+			}
+			settings["boot_command"] = array
+		}
+	}
+	if !hasISOURLs && !hasISOURL {
+		return nil, &RequiredSettingError{ID, "iso_url"}
+	}
+	// If there weren't any iso_urls, use the cached iso_url
+	if !hasISOURLs {
+		settings["iso_url"] = isoURL
 	}
 	return settings, nil
 }
