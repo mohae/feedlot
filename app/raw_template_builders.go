@@ -26,6 +26,7 @@ const (
 	Null
 	OpenStack
 	ParallelsISO
+	ParallelsPVM
 	QEMU
 	VirtualBoxISO
 	VirtualBoxOVF
@@ -49,6 +50,7 @@ var builders = [...]string{
 	"null",
 	"openstack",
 	"parallels-iso",
+	"parallels-pvm",
 	"qemu",
 	"virtualbox-iso",
 	"virtualbox-ovf",
@@ -85,6 +87,8 @@ func BuilderFromString(s string) Builder {
 		return OpenStack
 	case "parallels-iso":
 		return ParallelsISO
+	case "parallels-pvm":
+		return ParallelsPVM
 	case "qemu":
 		return QEMU
 	case "virtualbox-iso":
@@ -168,7 +172,11 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 			if err != nil {
 				return nil, &Error{ParallelsISO.String(), err}
 			}
-		//	case ParallelsPVM:
+		case ParallelsPVM:
+			tmpS, err = r.createParallelsPVM(ID)
+			if err != nil {
+				return nil, &Error{ParallelsPVM.String(), err}
+			}
 		case QEMU:
 			tmpS, err = r.createQEMU(ID)
 			if err != nil {
@@ -1522,10 +1530,10 @@ func (r *rawTemplate) createOpenStack(ID string) (settings map[string]interface{
 }
 
 // createParallelsISO creates a map of settings for Packer's ParallelsISO
-// builder.  Any values that aren't supported by the QEMU builder are ignored.
-// Any required settings that doesn't exist result in an error and processing
-// of the builder is stopped. For more information, refer to
-// https://packer.io/docs/builders/parallels-iso.html
+// builder.  Any values that aren't supported by the ParallelsISO builder
+// are ignored.  Any required settings that doesn't exist result in an
+// error and processing of the builder is stopped. For more information,
+// refer to:  https://packer.io/docs/builders/parallels-iso.html
 //
 // In addition to the following options, Packer communicators are supported.
 // Check the communicator docs for valid options.
@@ -1775,6 +1783,209 @@ func (r *rawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 	// If there weren't any iso_urls, use the cached iso_url
 	if !hasISOURLs {
 		settings["iso_url"] = isoURL
+	}
+	return settings, nil
+}
+
+// createParallelsPVM creates a map of settings for Packer's ParallelsPVM
+// builder.  Any values that aren't supported by the ParallelsPVM builder
+// are ignored.  Any required settings that doesn't exist result in an error
+// and processing of the builder is stopped. For more information, refer to
+// https://packer.io/docs/builders/parallels-pvm.html
+//
+// In addition to the following options, Packer communicators are supported.
+// Check the communicator docs for valid options.
+//
+// Required configuration options:
+//   source_path                 string
+//   parallels_tools_flavor      string
+//   ssh_username                string
+// Optional configuration options:
+//   boot_command                array of strings
+//   boot_wait                   string
+//   floppy_files                array of strings
+//   output_directory            string
+//   parallels_tools_guest_path  string
+//   parallels_tools_mode        string
+//   parallels_tools_path        string
+//   prlctl                      array of strings
+//   prlctl_post                 array of strings
+//   prlctl_version_file         string
+//   reassign_mac                bool
+//   shutdown_command            string
+//   shutdown_timeout            string
+//   skip_compaction             bool
+//   vm_name                     string
+func (r *rawTemplate) createParallelsPVM(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.Builders[ID]
+	if !ok {
+		return nil, NewErrConfigNotFound(ID)
+	}
+	settings = map[string]interface{}{}
+	// Each create function is responsible for setting its own type.
+	settings["type"] = ParallelsPVM.String()
+	// Merge the settings between common and this builders.
+	var workSlice []string
+	_, ok = r.Builders[Common.String()]
+	if ok {
+		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		workSlice = r.Builders[ID].Settings
+	}
+	var hasParallelsToolsFlavor, hasSourcePath, hasUsername, hasCommunicator, disableParallelsToolsMode bool
+	var bootCmdFile string
+	// check for communicator first
+	prefix, err := r.processCommunicator(ID, workSlice, settings)
+	if err != nil {
+		return nil, err
+	}
+	// see if the required settings include username/password
+	if prefix != "" {
+		_, ok = settings[prefix+"_username"]
+		if ok {
+			hasUsername = true
+		}
+		hasCommunicator = true
+	}
+	// Go through each element in the slice, only take the ones that matter to this builder.
+	for _, s := range workSlice {
+		k, v := parseVar(s)
+		v = r.replaceVariables(v)
+		switch k {
+		case "boot_command":
+			if stringIsCommandFilename(v) {
+				bootCmdFile = v
+			}
+		case "boot_wait":
+			settings[k] = v
+		case "output_directory":
+			settings[k] = v
+		case "parallels_tools_flavor":
+			settings[k] = v
+			hasParallelsToolsFlavor = true
+		case "parallels_tools_guest_path":
+			settings[k] = v
+		case "parallels_tools_mode":
+			switch v {
+			case "disable":
+				disableParallelsToolsMode = true
+			case "upload":
+			case "detach":
+			default:
+				return nil, &SettingError{ID, k, v, errors.New("invalid option")}
+			}
+			settings[k] = v
+		case "parallels_tools_path":
+			settings[k] = v
+		case "prlctl_version_file":
+			settings[k] = v
+		case "reassign_mac":
+			settings[k], _ = strconv.ParseBool(v)
+		case "shutdown_command":
+			if !stringIsCommandFilename(v) {
+				// assume that the value is the command
+				settings[k] = v
+				continue
+			}
+			// The value is a command file, load the contents of the file.
+			cmds, err := r.commandsFromFile(v, ParallelsISO.String())
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			//
+			cmd := commandFromSlice(cmds)
+			if cmd == "" {
+				return nil, &SettingError{ID, k, v, ErrNoCommands}
+			}
+			settings[k] = cmd
+		case "shutdown_timeout":
+			settings[k] = v
+		case "skip_compaction":
+			settings[k], _ = strconv.ParseBool(v)
+		case "source_path":
+			src, err := r.findSource(v, ParallelsPVM.String(), false)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			// if the source couldn't be found and an error wasn't generated, replace
+			// s with the original value; this occurs when it is an example.
+			// Nothing should be copied in this instance it should not be added
+			// to the copy info
+			if src != "" {
+				r.files[r.buildOutPath(ParallelsPVM.String(), v)] = src
+			}
+			settings[k] = r.buildTemplateResourcePath(ParallelsPVM.String(), v)
+			hasSourcePath = true
+		case "ssh_username":
+			// If there's a communicator skip
+			if hasCommunicator {
+				continue
+			}
+			settings[k] = v
+			hasUsername = true
+		case "vm_name":
+			settings[k] = v
+		}
+	}
+	// source_path is required
+	if !hasSourcePath {
+		return nil, &RequiredSettingError{ID, "source_path"}
+	}
+	// parallels_tools_flavor is required
+	if !hasParallelsToolsFlavor && !disableParallelsToolsMode{
+		return nil, &RequiredSettingError{ID, "parallels_tools_flavor"}
+	}
+	// Username is required
+	if !hasUsername {
+		if prefix == "" {
+			return nil, &RequiredSettingError{ID, "ssh_username"}
+		}
+		return nil, &RequiredSettingError{ID, prefix + "_username"}
+	}
+	// Process arrays, iso_urls is only valid if iso_url is not set
+	var hasBootCmd bool
+	for name, val := range r.Builders[ID].Arrays {
+		switch name {
+		case "boot_command":
+			// This is processed here because we need to know if it exists or not
+			array := deepcopy.Iface(val)
+			if !reflect.ValueOf(val).IsNil() {
+				settings[name] = array
+				hasBootCmd = true
+			}
+			continue
+		case "floppy_files":
+		case "host_interfaces":
+		case "prlctl":
+		case "prlctl_post":
+		default:
+			continue
+		}
+		array := deepcopy.Iface(val)
+		if !reflect.ValueOf(array).IsNil() {
+			settings[name] = array
+		}
+	}
+	// if there wasn't an array of boot commands, check to see if they should be loaded
+	// from a file
+	if !hasBootCmd {
+		if bootCmdFile != "" {
+			commands, err := r.commandsFromFile(bootCmdFile, ParallelsISO.String())
+			if err != nil {
+				return nil, &SettingError{ID, "boot_command", bootCmdFile, err}
+			}
+			if len(commands) == 0 {
+				return nil, &SettingError{ID, "boot_command", bootCmdFile, ErrNoCommands}
+			}
+			array := deepcopy.Iface(commands)
+			if !reflect.ValueOf(array).IsNil() {
+				settings["boot_command"] = array
+			}
+			settings["boot_command"] = array
+		}
 	}
 	return settings, nil
 }

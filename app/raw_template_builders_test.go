@@ -280,6 +280,7 @@ var testAllBuilders = rawTemplate{
 			"openstack1",
 			"openstack2",
 			"parallels-iso",
+			"parallels-pvm",
 			"virtualbox-iso",
 			"virtualbox-ovf",
 			"vmware-iso",
@@ -723,6 +724,50 @@ var testAllBuilders = rawTemplate{
 					},
 				},
 			},
+			"parallels-pvm": {
+				templateSection{
+					Type: "parallels-pvm",
+					Settings: []string{
+						"boot_wait=30s",
+						"disk_size=20000",
+						"output_directory=out/dir",
+						"parallels_tools_flavor=lin",
+						"parallels_tools_guest_path=ptools",
+						"parallels_tools_mode=upload",
+						"parallels_tools_path=prl-tools.iso",
+						"prlctl_version_file=.prlctl_version",
+						"reassign_mac=true",
+						"shutdown_command=shutdown.command",
+						"shutdown_timeout=5m",
+						"skip_compaction=true",
+						"source_path=source.pvm",
+						"vm_name=test-iso",
+					},
+					Arrays: map[string]interface{}{
+						"boot_command": []string{
+							"<bs>",
+							"<del>",
+							"<enter><return>",
+							"<esc>",
+						},
+						"floppy_files": []string{
+							"disk1",
+						},
+						"iso_urls": []string{
+							"http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+							"http://2.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+						},
+						"prlctl": [][]string{
+							[]string{"set", "{{.Name}}", "--shf-host-add", "log", "--path", "{{pwd}}/log", "--mode", "rw", "--enable"},
+							[]string{"set", "{{.Name}}", "--cpus", "1"},
+						},
+
+						"prlctl_post": [][]string{
+							[]string{"set", "{{.Name}}", "--shf-host-del", "log"},
+						},
+					},
+				},
+			},
 			"qemu": {
 				templateSection{
 					Type: "qemu",
@@ -1040,6 +1085,7 @@ var testAllBuildersSSH = rawTemplate{
 			"null",
 			"openstack",
 			"parallels-iso",
+			"parallels-pvm",
 			"virtualbox-iso",
 			"virtualbox-ovf",
 			"vmware-iso",
@@ -1289,6 +1335,29 @@ var testAllBuildersSSH = rawTemplate{
 					Arrays: map[string]interface{}{},
 				},
 			},
+			"parallels-pvm": {
+				templateSection{
+					Type: "parallels-pvm",
+					Settings: []string{
+						"boot_wait=30s",
+						"communicator=ssh",
+						"disk_size=20000",
+						"output_directory=out/dir",
+						"parallels_tools_flavor=lin",
+						"parallels_tools_guest_path=ptools",
+						"parallels_tools_mode=upload",
+						"parallels_tools_path=prl-tools.iso",
+						"prlctl_version_file=.prlctl_version",
+						"reassign_mac=true",
+						"shutdown_command=shutdown.command",
+						"shutdown_timeout=5m",
+						"source_path=source.pvm",
+						"skip_compaction=true",
+						"vm_name=test-iso",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
 			"qemu": {
 				templateSection{
 					Type: "qemu",
@@ -1473,6 +1542,7 @@ var testAllBuildersWinRM = rawTemplate{
 			"null",
 			"openstack",
 			"parallels-iso",
+			"parallels-pvm",
 			"virtualbox-iso",
 			"virtualbox-ovf",
 			"vmware-iso",
@@ -1694,7 +1764,6 @@ var testAllBuildersWinRM = rawTemplate{
 					Settings: []string{
 						"boot_wait=30s",
 						"communicator=winrm",
-						"disk_size=20000",
 						"guest_os_type=ubuntu",
 						"hard_drive_interface=ide",
 						"http_directory=http",
@@ -1710,6 +1779,28 @@ var testAllBuildersWinRM = rawTemplate{
 						"shutdown_command=shutdown.command",
 						"shutdown_timeout=5m",
 						"skip_compaction=true",
+						"vm_name=test-iso",
+					},
+					Arrays: map[string]interface{}{},
+				},
+			},
+			"parallels-pvm": {
+				templateSection{
+					Type: "parallels-pvm",
+					Settings: []string{
+						"boot_wait=30s",
+						"communicator=winrm",
+						"output_directory=out/dir",
+						"parallels_tools_flavor=lin",
+						"parallels_tools_guest_path=ptools",
+						"parallels_tools_mode=upload",
+						"parallels_tools_path=prl-tools.iso",
+						"prlctl_version_file=.prlctl_version",
+						"reassign_mac=true",
+						"shutdown_command=shutdown.command",
+						"shutdown_timeout=5m",
+						"skip_compaction=true",
+						"source_path=source.pvm",
 						"vm_name=test-iso",
 					},
 					Arrays: map[string]interface{}{},
@@ -3479,6 +3570,146 @@ func TestCreateParallelsISO(t *testing.T) {
 	}
 	testAllBuildersWinRM.BaseURL = "http://releases.ubuntu.com/"
 	settings, err = testAllBuildersWinRM.createParallelsISO("parallels-iso")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expectedWinRM) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(settings))
+		}
+	}
+}
+
+func TestCreateParallelsPVM(t *testing.T) {
+	expected := map[string]interface{}{
+		"boot_command": []string{
+			"<bs>",
+			"<del>",
+			"<enter><return>",
+			"<esc>",
+		},
+		"boot_wait": "30s",
+		"floppy_files": []string{
+			"disk1",
+		},
+		"output_directory":  "out/dir",
+		"parallels_tools_flavor": "lin",
+		"parallels_tools_guest_path": "ptools",
+		"parallels_tools_mode": "upload",
+		"parallels_tools_path": "prl-tools.iso",
+		"prlctl": [][]string{
+			[]string{
+				"set",
+ 				"{{.Name}}",
+ 				"--shf-host-add",
+ 				"log",
+ 				"--path",
+ 				"{{pwd}}/log",
+ 				"--mode",
+ 				"rw",
+ 				"--enable",
+			},
+			[]string{
+				"set",
+				"{{.Name}}",
+				"--cpus",
+				"1",
+			},
+		},
+		"prlctl_post": [][]string{
+			[]string{
+				"set",
+				"{{.Name}}",
+				"--shf-host-del",
+				"log",
+			},
+		},
+		"prlctl_version_file": ".prlctl_version",
+		"reassign_mac": true,
+		"shutdown_command":  `shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"`,
+		"shutdown_timeout":  "5m",
+		"skip_compaction": true,
+		"source_path": "parallels-pvm/source.pvm",
+		"ssh_username":      "vagrant",
+		"type":              "parallels-pvm",
+		"vm_name": "test-iso",
+	}
+	testAllBuilders.BaseURL = "http://releases.ubuntu.com/"
+	settings, err := testAllBuilders.createParallelsPVM("parallels-pvm")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		}
+	}
+	// SSH
+	expectedSSH := map[string]interface{}{
+		"boot_wait": "30s",
+		"communicator": "ssh",
+		"output_directory":  "out/dir",
+		"parallels_tools_flavor": "lin",
+		"parallels_tools_guest_path": "ptools",
+		"parallels_tools_mode": "upload",
+		"parallels_tools_path": "prl-tools.iso",
+		"prlctl_version_file": ".prlctl_version",
+		"reassign_mac": true,
+		"shutdown_command":  `shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"`,
+		"shutdown_timeout":  "5m",
+		"skip_compaction": true,
+		"source_path": "parallels-pvm/source.pvm",
+		"ssh_bastion_host":             "bastion.host",
+		"ssh_bastion_port":             2222,
+		"ssh_bastion_username":         "packer",
+		"ssh_bastion_password":         "packer",
+		"ssh_bastion_private_key_file": "secret",
+		"ssh_disable_agent":            true,
+		"ssh_handshake_attempts":       10,
+		"ssh_host":                     "127.0.0.1",
+		"ssh_password":                 "vagrant",
+		"ssh_port":                     22,
+		"ssh_private_key_file":         "key/path",
+		"ssh_pty":                      true,
+		"ssh_timeout":                  "10m",
+		"ssh_username":                 "vagrant",
+		"type":              "parallels-pvm",
+		"vm_name": "test-iso",
+	}
+	testAllBuildersSSH.BaseURL = "http://releases.ubuntu.com/"
+	settings, err = testAllBuildersSSH.createParallelsPVM("parallels-pvm")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err.Error())
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expectedSSH) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedSSH), MarshalJSONToString.Get(settings))
+		}
+	}
+	// WinRM
+	expectedWinRM := map[string]interface{}{
+		"boot_wait": "30s",
+		"communicator": "winrm",
+		"output_directory":  "out/dir",
+		"parallels_tools_flavor": "lin",
+		"parallels_tools_guest_path": "ptools",
+		"parallels_tools_mode": "upload",
+		"parallels_tools_path": "prl-tools.iso",
+		"prlctl_version_file": ".prlctl_version",
+		"reassign_mac": true,
+		"shutdown_command":  `shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"`,
+		"shutdown_timeout":  "5m",
+		"skip_compaction": true,
+		"source_path": "parallels-pvm/source.pvm",
+		"type":              "parallels-pvm",
+		"vm_name": "test-iso",
+		"winrm_host":        "host",
+		"winrm_password":    "vagrant",
+		"winrm_port":        22,
+		"winrm_timeout":     "10m",
+		"winrm_username":    "vagrant",
+		"winrm_use_ssl":     true,
+		"winrm_insecure":    true,
+	}
+	testAllBuildersWinRM.BaseURL = "http://releases.ubuntu.com/"
+	settings, err = testAllBuildersWinRM.createParallelsPVM("parallels-pvm")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
