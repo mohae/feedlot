@@ -1716,7 +1716,7 @@ func (r *rawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 		return nil, &RequiredSettingError{ID, "iso_checksum_type"}
 	}
 	// parallels_tools_flavor is required
-	if !hasParallelsToolsFlavor && !disableParallelsToolsMode{
+	if !hasParallelsToolsFlavor && !disableParallelsToolsMode {
 		return nil, &RequiredSettingError{ID, "parallels_tools_flavor"}
 	}
 	// Username is required
@@ -1935,7 +1935,7 @@ func (r *rawTemplate) createParallelsPVM(ID string) (settings map[string]interfa
 		return nil, &RequiredSettingError{ID, "source_path"}
 	}
 	// parallels_tools_flavor is required
-	if !hasParallelsToolsFlavor && !disableParallelsToolsMode{
+	if !hasParallelsToolsFlavor && !disableParallelsToolsMode {
 		return nil, &RequiredSettingError{ID, "parallels_tools_flavor"}
 	}
 	// Username is required
