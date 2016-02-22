@@ -1,6 +1,5 @@
 rancher
 =======
-[![Build Status](https://travis-ci.org/mohae/rancher.png)](https://travis-ci.org/mohae/rancher)
 
 >I am rarely happier than when spending an entire day programming my computer to perform automatically a task that it would otherwise take me a good ten seconds to do by hand
 >
