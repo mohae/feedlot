@@ -96,7 +96,7 @@ type rawTemplate struct {
 	files map[string]string
 	// dirs maps destination directories to their source directories. Everything within
 	// the directory will be copied. The same resolution rules apply for dirs as for
-	// filies. The destination directory is the key, the source directory is the value
+	// files. The destination directory is the key, the source directory is the value
 	dirs map[string]string
 }
 

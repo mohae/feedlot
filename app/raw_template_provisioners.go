@@ -631,12 +631,19 @@ func (r *rawTemplate) createFileUpload(ID string) (settings map[string]interface
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
-			// Nothing should be copied in this instancel it should not be added
+			// Nothing should be copied in this instance it should not be added
 			// to the copy info
 			if src != "" {
-				r.files[r.buildOutPath(FileUpload.String(), v)] = src
+				// If the file element is empty, the src is a dir.
+				_, file := filepath.Split(src)  
+				if file == "" {
+					r.dirs[r.buildOutPath(FileUpload.String(), v)] = src
+				} else {
+					r.files[r.buildOutPath(FileUpload.String(), v)] = src
+				}
 			}
 			settings[k] = r.buildTemplateResourcePath(FileUpload.String(), v)
+			jww.DEBUG.Printf("%s:\t%s->%s", v, src, r.buildOutPath(FileUpload.String(), v))
 			hasSource = true
 		case "destination":
 			settings[k] = v
