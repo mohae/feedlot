@@ -16,7 +16,7 @@ const (
 	Ansible
 	ChefClient
 	ChefSolo
-	FileUploads
+	FileUpload
 	PuppetMasterless
 	PuppetServer
 	Salt
@@ -52,7 +52,7 @@ func ProvisionerFromString(s string) Provisioner {
 	case "chef-solo":
 		return ChefSolo
 	case "file":
-		return FileUploads
+		return FileUpload
 	case "puppet-masterless":
 		return PuppetMasterless
 	case "puppet-server":
@@ -87,10 +87,10 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 			if err != nil {
 				return nil, &Error{Ansible.String(), err}
 			}
-		case FileUploads:
-			tmpS, err = r.createFileUploads(ID)
+		case FileUpload:
+			tmpS, err = r.createFileUpload(ID)
 			if err != nil {
-				return nil, &Error{FileUploads.String(), err}
+				return nil, &Error{FileUpload.String(), err}
 			}
 		case Salt:
 			tmpS, err = r.createSalt(ID)
@@ -598,7 +598,7 @@ func (r *rawTemplate) createPuppetServer(ID string) (settings map[string]interfa
 	return settings, nil
 }
 
-// createFileUploads creates a map of settings for Packer's file uploads
+// createFileUpload creates a map of settings for Packer's file upload
 // provisioner. Any values that aren't supported by the file provisioner are
 // ignored. For more information, refer to
 // https://packer.io/docs/provisioners/file.html
@@ -606,13 +606,15 @@ func (r *rawTemplate) createPuppetServer(ID string) (settings map[string]interfa
 // Required configuration options:
 //   destination  string
 //   source       string
-func (r *rawTemplate) createFileUploads(ID string) (settings map[string]interface{}, err error) {
+// Optional configuraiton options:
+//   direction    string
+func (r *rawTemplate) createFileUpload(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
 		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
-	settings["type"] = FileUploads.String()
+	settings["type"] = FileUpload.String()
 	// For each value, extract its key value pair and then process. Only process the supported
 	// keys. Key validation isn't done here, leaving that for Packer.
 	var k, v string
@@ -623,7 +625,7 @@ func (r *rawTemplate) createFileUploads(ID string) (settings map[string]interfac
 		switch k {
 		case "source":
 			// find the actual location and add it to the files map for copying
-			src, err := r.findSource(v, FileUploads.String(), true)
+			src, err := r.findSource(v, FileUpload.String(), true)
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
@@ -632,9 +634,9 @@ func (r *rawTemplate) createFileUploads(ID string) (settings map[string]interfac
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
 			if src != "" {
-				r.files[r.buildOutPath(FileUploads.String(), v)] = src
+				r.files[r.buildOutPath(FileUpload.String(), v)] = src
 			}
-			settings[k] = r.buildTemplateResourcePath(FileUploads.String(), v)
+			settings[k] = r.buildTemplateResourcePath(FileUpload.String(), v)
 			hasSource = true
 		case "destination":
 			settings[k] = v
