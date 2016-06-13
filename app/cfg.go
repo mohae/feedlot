@@ -436,7 +436,7 @@ type defaults struct {
 	PackerInf
 	BuildInf
 	build
-	loaded bool
+	loaded bool `toml:"-"`
 }
 
 // Load loads the defualt settings. If the defaults have already been loaded

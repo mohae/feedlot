@@ -452,7 +452,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 				templateSection{
 					Type: "file",
 					Settings: []string{
-						"source = file/",
+						"source = source/",
 						"destination = /tmp/",
 					},
 				},
@@ -856,7 +856,7 @@ func TestFileUploadsProvisioner(t *testing.T) {
 	}
 	expected = map[string]interface{}{
 		"destination": "/tmp/",
-		"source":      "file/",
+		"source":      "file/source/",
 		"type":        "file",
 	}
 	settings, err = testRawTemplateProvisionersAll.createFileUpload("filedir")
