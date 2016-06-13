@@ -573,7 +573,7 @@ func TestFindSource(t *testing.T) {
 		{"", "", false, "", "cannot find source: no path received"},
 		{"something", "", false, "", "find something: file does not exist"},
 		{"http/preseed.cfg", "", false, "../test_files/src/ubuntu/http/preseed.cfg", ""},
-		{"cookbook1", "chef-solo", true, "../test_files/src/chef-solo/cookbook1", ""},
+		{"cookbook1", "chef-solo", true, "../test_files/src/chef-solo/cookbook1/", ""},
 		{"14.04_ubuntu_build.txt", "", false, "../test_files/src/ubuntu/14.04/ubuntu_build/14.04_ubuntu_build.txt", ""},
 		{"1404_ubuntu_build.txt", "", false, "../test_files/src/ubuntu/1404/ubuntu_build/1404_ubuntu_build.txt", ""},
 		{"14_ubuntu_build.txt", "", false, "../test_files/src/ubuntu/14/ubuntu_build/14_ubuntu_build.txt", ""},
@@ -593,7 +593,7 @@ func TestFindSource(t *testing.T) {
 		{"chef.cfg", "chef-solo", false, "../test_files/src/chef-solo/chef.cfg", ""},
 		{"chef.cfg", "chef-client", false, "../test_files/src/chef-client/chef.cfg", ""},
 		{"chef.cfg", "chef", false, "../test_files/src/chef/chef.cfg", ""},
-		{"commands", "shell", true, "../test_files/src/ubuntu/14/commands", ""},
+		{"commands", "shell", true, "../test_files/src/ubuntu/14/commands/", ""},
 		{"ubuntu_build.txt", "", false, "../test_files/src/ubuntu_build/ubuntu_build.txt", ""}}
 	r := newRawTemplate()
 	r.Distro = "ubuntu"

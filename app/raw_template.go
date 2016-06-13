@@ -748,8 +748,12 @@ func (r *rawTemplate) checkSourcePaths(p, component string, paths []string) (str
 	for _, path := range paths {
 		for _, c := range searchC {
 			tmp := filepath.Join(path, c, p)
-			_, err := os.Stat(tmp)
+			inf, err := os.Stat(tmp)
 			if err == nil {
+				// if it's a dir, append the slash
+				if inf.IsDir() {
+					tmp += string(os.PathSeparator)
+				}
 				jww.TRACE.Printf("findSource:  %s found", tmp)
 				return filepath.ToSlash(tmp), nil
 			}
@@ -763,8 +767,11 @@ func (r *rawTemplate) checkSourcePaths(p, component string, paths []string) (str
 			continue
 		}
 		tmp := filepath.Join(path, p)
-		_, err := os.Stat(tmp)
+		inf, err := os.Stat(tmp)
 		if err == nil {
+			if inf.IsDir() {
+				tmp += string(os.PathSeparator)
+			}
 			jww.TRACE.Printf("findSource:  %s found", tmp)
 			return filepath.ToSlash(tmp), nil
 		}
