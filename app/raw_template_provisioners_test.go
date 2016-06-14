@@ -448,6 +448,15 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 					},
 				},
 			},
+			"filedir": {
+				templateSection{
+					Type: "file",
+					Settings: []string{
+						"source = file/",
+						"destination = /tmp/",
+					},
+				},
+			},
 		},
 	},
 }
@@ -837,7 +846,20 @@ func TestFileUploadsProvisioner(t *testing.T) {
 		"source":      "file/app.tar.gz",
 		"type":        "file",
 	}
-	settings, err := testRawTemplateProvisionersAll.createFileUploads("file")
+	settings, err := testRawTemplateProvisionersAll.createFileUpload("file")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		}
+	}
+	expected = map[string]interface{}{
+		"destination": "/tmp/",
+		"source":      "file/",
+		"type":        "file",
+	}
+	settings, err = testRawTemplateProvisionersAll.createFileUpload("filedir")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
