@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -178,7 +179,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 			if src != "" {
 				r.files[filepath.Join(r.TemplateOutputDir, Ansible.String(), v)] = src
 			}
-			settings[k] = r.buildTemplateResourcePath(Ansible.String(), v)
+			settings[k] = r.buildTemplateResourcePath(Ansible.String(), v, false)
 			hasPlaybook = true
 		case "inventory_file":
 			// find the actual location and add it to the files map for copying
@@ -193,7 +194,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 			if src != "" {
 				r.files[r.buildOutPath(Ansible.String(), v)] = src
 			}
-			settings[k] = r.buildTemplateResourcePath(Ansible.String(), v)
+			settings[k] = r.buildTemplateResourcePath(Ansible.String(), v, false)
 		case "playbook_dir", "host_vars", "group_vars":
 			// find the actual location and add it to the files map for copying
 			src, err := r.findSource(v, Ansible.String(), true)
@@ -207,7 +208,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 			if src != "" {
 				r.dirs[r.buildOutPath(Ansible.String(), v)] = src
 			}
-			settings[k] = r.buildTemplateResourcePath(Ansible.String(), v)
+			settings[k] = r.buildTemplateResourcePath(Ansible.String(), v, false)
 		case "command", "staging_directory":
 			settings[k] = v
 		}
@@ -233,7 +234,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 				if src != "" {
 					r.files[r.buildOutPath(Ansible.String(), v)] = src
 				}
-				array[i] = r.buildTemplateResourcePath(Ansible.String(), v)
+				array[i] = r.buildTemplateResourcePath(Ansible.String(), v, false)
 			}
 			settings[name] = array
 			continue
@@ -304,7 +305,7 @@ func (r *rawTemplate) createChefClient(ID string) (settings map[string]interface
 			if src != "" {
 				r.files[r.buildOutPath(ChefClient.String(), v)] = src
 			}
-			settings[k] = r.buildTemplateResourcePath(ChefClient.String(), v)
+			settings[k] = r.buildTemplateResourcePath(ChefClient.String(), v, false)
 		case "execute_command", "install_command":
 			// if the value ends with .command, find the referenced command file and use its
 			// contents as the command, otherwise just use the value
@@ -386,7 +387,7 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 			if src != "" {
 				r.files[r.buildOutPath(ChefSolo.String(), v)] = src
 			}
-			settings[k] = r.buildTemplateResourcePath(ChefSolo.String(), v)
+			settings[k] = r.buildTemplateResourcePath(ChefSolo.String(), v, false)
 		case "data_bags_path", "environments_path", "roles_path":
 			src, err := r.findSource(v, ChefSolo.String(), true)
 			if err != nil {
@@ -399,7 +400,7 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 			if src != "" {
 				r.dirs[r.buildOutPath(ChefSolo.String(), v)] = src
 			}
-			settings[k] = r.buildTemplateResourcePath(ChefSolo.String(), v)
+			settings[k] = r.buildTemplateResourcePath(ChefSolo.String(), v, false)
 		case "execute_command", "install_command":
 			// if the value ends with .command, find the referenced command file and use its
 			// contents as the command, otherwise just use the value
@@ -434,7 +435,7 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 				if src != "" {
 					r.dirs[r.buildOutPath(ChefSolo.String(), v)] = src
 				}
-				array[i] = r.buildTemplateResourcePath(ChefSolo.String(), v)
+				array[i] = r.buildTemplateResourcePath(ChefSolo.String(), v, false)
 			}
 			settings[name] = array
 			continue
@@ -489,7 +490,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 			if src != "" {
 				r.files[r.buildOutPath(PuppetMasterless.String(), v)] = src
 			}
-			settings[k] = r.buildTemplateResourcePath(PuppetMasterless.String(), v)
+			settings[k] = r.buildTemplateResourcePath(PuppetMasterless.String(), v, false)
 			hasManifestFile = true
 		case "staging_directory":
 			settings[k] = v
@@ -508,7 +509,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 			if src != "" {
 				r.files[r.buildOutPath(PuppetMasterless.String(), v)] = src
 			}
-			settings[k] = r.buildTemplateResourcePath(PuppetMasterless.String(), v)
+			settings[k] = r.buildTemplateResourcePath(PuppetMasterless.String(), v, false)
 		case "manifest_dir":
 			// find the actual location of the directory and add it to the dir map for copying contents
 			src, err := r.findSource(v, PuppetMasterless.String(), true)
@@ -522,7 +523,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 			if src != "" {
 				r.dirs[r.buildOutPath(PuppetMasterless.String(), v)] = src
 			}
-			settings[k] = r.buildTemplateResourcePath(PuppetMasterless.String(), v)
+			settings[k] = r.buildTemplateResourcePath(PuppetMasterless.String(), v, false)
 		case "execute_command":
 			// if the value ends with .command, find the referenced command file and use its
 			// contents as the command, otherwise just use the value
@@ -633,17 +634,21 @@ func (r *rawTemplate) createFileUpload(ID string) (settings map[string]interface
 			// s with the original value; this occurs when it is an example.
 			// Nothing should be copied in this instance it should not be added
 			// to the copy info
+			var isDir bool // used to track if the path is a dir
 			if src != "" {
-				// If the file element is empty, the src is a dir.
-				_, file := filepath.Split(src)  
-				if file == "" {
+				// see if this is a dir
+				inf, err := os.Stat(src)
+				if err != nil {
+					return nil, &SettingError{ID, k, v, err}
+				}
+				if inf.IsDir() {
+					isDir = true
 					r.dirs[r.buildOutPath(FileUpload.String(), v)] = src
 				} else {
 					r.files[r.buildOutPath(FileUpload.String(), v)] = src
 				}
 			}
-			settings[k] = r.buildTemplateResourcePath(FileUpload.String(), v)
-			jww.DEBUG.Printf("%s:\t%s->%s", v, src, r.buildOutPath(FileUpload.String(), v))
+			settings[k] = r.buildTemplateResourcePath(FileUpload.String(), v, isDir)
 			hasSource = true
 		case "destination":
 			settings[k] = v
@@ -701,7 +706,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 			if src != "" {
 				r.dirs[r.buildOutPath(Salt.String(), v)] = src
 			}
-			settings[k] = r.buildTemplateResourcePath(Salt.String(), v)
+			settings[k] = r.buildTemplateResourcePath(Salt.String(), v, false)
 			hasLocalStateTree = true
 		case "local_pillar_roots":
 			// find the actual location and add it to the files map for copying
@@ -716,7 +721,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 			if src != "" {
 				r.dirs[r.buildOutPath(Salt.String(), v)] = src
 			}
-			settings[k] = r.buildTemplateResourcePath(Salt.String(), v)
+			settings[k] = r.buildTemplateResourcePath(Salt.String(), v, false)
 		case "minion_config":
 			// find the actual location and add it to the files map for copying
 			src, err := r.findSource(filepath.Join(v, "minion"), Salt.String(), false)
@@ -730,7 +735,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 			if src != "" {
 				r.files[r.buildOutPath(Salt.String(), filepath.Join(v, "minion"))] = src
 			}
-			settings[k] = r.buildTemplateResourcePath(Salt.String(), v)
+			settings[k] = r.buildTemplateResourcePath(Salt.String(), v, false)
 		case "bootstrap_args", "temp_config_dir":
 			settings[k] = v
 		case "skip_bootstrap":
@@ -817,7 +822,7 @@ func (r *rawTemplate) createShellScript(ID string) (settings map[string]interfac
 				if src != "" {
 					r.files[r.buildOutPath(ShellScript.String(), v)] = src
 				}
-				scripts[i] = r.buildTemplateResourcePath(ShellScript.String(), v)
+				scripts[i] = r.buildTemplateResourcePath(ShellScript.String(), v, false)
 			}
 			settings[name] = scripts
 			continue

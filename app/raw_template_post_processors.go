@@ -579,7 +579,7 @@ func (r *rawTemplate) createVagrant(ID string) (settings map[string]interface{},
 			if src != "" {
 				r.files[r.buildOutPath(Vagrant.String(), v)] = src
 			}
-			settings[k] = r.buildTemplateResourcePath(Vagrant.String(), v)
+			settings[k] = r.buildTemplateResourcePath(Vagrant.String(), v, false)
 		}
 	}
 	// Process the Arrays.

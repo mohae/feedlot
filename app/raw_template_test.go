@@ -740,28 +740,33 @@ func TestBuildOutPath(t *testing.T) {
 func TestBuildTemplateResourcePath(t *testing.T) {
 	tests := []struct {
 		includeComponent bool
+		isDir            bool
 		component        string
 		path             string
 		expected         string
 	}{
-		{false, "", "", ""},
-		{true, "", "", ""},
-		{false, "vagrant", "", ""},
-		{true, "vagrant", "", "vagrant"},
-		{false, "", "file.txt", "file.txt"},
-		{false, "", "path/to/file.txt", "path/to/file.txt"},
-		{false, "shell", "file.txt", "file.txt"},
-		{false, "shell", "path/to/file.txt", "path/to/file.txt"},
-		{true, "", "file.txt", "file.txt"},
-		{true, "", "path/to/file.txt", "path/to/file.txt"},
-		{true, "shell", "file.txt", "shell/file.txt"},
-		{true, "shell", "path/to/file.txt", "shell/path/to/file.txt"},
+		{false, false, "", "", ""},
+		{true, false, "", "", ""},
+		{false, false, "vagrant", "", ""},
+		{true, false, "vagrant", "", "vagrant"},
+		{false, false, "", "file.txt", "file.txt"},
+		{false, false, "", "path/to/file.txt", "path/to/file.txt"},
+		{false, false, "shell", "file.txt", "file.txt"},
+		{false, false, "shell", "path/to/file.txt", "path/to/file.txt"},
+		{true, false, "", "file.txt", "file.txt"},
+		{true, false, "", "path/to/file.txt", "path/to/file.txt"},
+		{true, false, "shell", "file.txt", "shell/file.txt"},
+		{true, false, "shell", "path/to/file.txt", "shell/path/to/file.txt"},
+		{false, true, "", "source/", "source/"},
+		{true, true, "", "source", "source/"},
+		{false, true, "file", "source/", "source/"},
+		{true, true, "file", "source/", "file/source/"},
 	}
 	r := newRawTemplate()
 	r.TemplateOutputDir = "out"
 	for i, test := range tests {
 		r.IncludeComponentString = &test.includeComponent
-		p := r.buildTemplateResourcePath(test.component, test.path)
+		p := r.buildTemplateResourcePath(test.component, test.path, test.isDir)
 		if p != test.expected {
 			t.Errorf("TestBuildTemplateResourcePath %d: expected %q, got %q", i, test.expected, p)
 		}

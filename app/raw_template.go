@@ -798,10 +798,17 @@ func (r *rawTemplate) buildOutPath(component, p string) string {
 // template for the passed path, p, and returns that value.  If the template is
 // set to include the component string as the parent directory, it is added to
 // the path.
-func (r *rawTemplate) buildTemplateResourcePath(component, p string) string {
+func (r *rawTemplate) buildTemplateResourcePath(component, p string, appendSlash bool) string {
 	if r.IncludeComponentString != nil && *r.IncludeComponentString && component != "" {
 		component = strings.ToLower(component)
-		return path.Join(strings.ToLower(component), p)
+		p = path.Join(strings.ToLower(component), p)
+	}
+	// If this is a dir, append with a slash
+	// TODO: is it safe to assume that the slash will be normalized to the current OS?
+	if appendSlash {
+		if !strings.HasSuffix(p, string(os.PathSeparator)) {
+			p += string(os.PathSeparator)
+		}
 	}
 	return p
 }

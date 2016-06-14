@@ -529,7 +529,7 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 			if src != "" {
 				r.files[r.buildOutPath(AmazonEBS.String(), v)] = src
 			}
-			settings[k] = r.buildTemplateResourcePath(AmazonEBS.String(), v)
+			settings[k] = r.buildTemplateResourcePath(AmazonEBS.String(), v, false)
 		case "vpc_id":
 			settings[k] = v
 		case "windows_password_timeout":
@@ -828,7 +828,7 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 			if src != "" {
 				r.files[r.buildOutPath(AmazonEBS.String(), v)] = src
 			}
-			settings[k] = r.buildTemplateResourcePath(AmazonInstance.String(), v)
+			settings[k] = r.buildTemplateResourcePath(AmazonInstance.String(), v, false)
 		case "vpc_id":
 			settings[k] = v
 		case "windows_password_timeout":
@@ -1917,7 +1917,7 @@ func (r *rawTemplate) createParallelsPVM(ID string) (settings map[string]interfa
 			if src != "" {
 				r.files[r.buildOutPath(ParallelsPVM.String(), v)] = src
 			}
-			settings[k] = r.buildTemplateResourcePath(ParallelsPVM.String(), v)
+			settings[k] = r.buildTemplateResourcePath(ParallelsPVM.String(), v, false)
 			hasSourcePath = true
 		case "ssh_username":
 			// If there's a communicator skip
@@ -2717,7 +2717,7 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 			if src != "" {
 				r.files[r.buildOutPath(VirtualBoxOVF.String(), v)] = src
 			}
-			settings[k] = r.buildTemplateResourcePath(VirtualBoxOVF.String(), v)
+			settings[k] = r.buildTemplateResourcePath(VirtualBoxOVF.String(), v, false)
 			hasSourcePath = true
 		case "ssh_host_port_min":
 			if hasWinRMCommunicator {
@@ -3317,7 +3317,7 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 			if src != "" {
 				r.files[r.buildOutPath(VMWareVMX.String(), v)] = src
 			}
-			settings[k] = r.buildTemplateResourcePath(VMWareVMX.String(), v)
+			settings[k] = r.buildTemplateResourcePath(VMWareVMX.String(), v, false)
 			hasSourcePath = true
 		case "ssh_username":
 			if hasCommunicator {
@@ -3534,7 +3534,7 @@ func (r *rawTemplate) setHTTP(component string, m map[string]interface{}) error 
 	if src != "" {
 		r.dirs[r.buildOutPath("", val)] = src
 	}
-	m["http_directory"] = r.buildTemplateResourcePath("", val)
+	m["http_directory"] = r.buildTemplateResourcePath("", val, false)
 	return nil
 }
 
