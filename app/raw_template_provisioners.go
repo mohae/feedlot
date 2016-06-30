@@ -14,7 +14,7 @@ import (
 // Provisioner constants
 const (
 	UnsupportedProvisioner Provisioner = iota
-	Ansible
+	AnsibleLocal
 	ChefClient
 	ChefSolo
 	FileUpload
@@ -26,6 +26,8 @@ const (
 
 // Provisioner is a packer supported provisioner
 type Provisioner int
+
+func (p Provisioner) String() string { return provisioners[p] }
 
 var provisioners = [...]string{
 	"unsupported provisioner",
@@ -39,15 +41,13 @@ var provisioners = [...]string{
 	"shell",
 }
 
-func (p Provisioner) String() string { return provisioners[p] }
-
 // ProvisionerFromString returns the Provisioner constant for the passed string
 // or unsupported. All incoming strings are normalized to lowercase
 func ProvisionerFromString(s string) Provisioner {
 	s = strings.ToLower(s)
 	switch s {
 	case "ansible-local":
-		return Ansible
+		return AnsibleLocal
 	case "chef-client":
 		return ChefClient
 	case "chef-solo":
@@ -83,10 +83,10 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 		jww.DEBUG.Printf("processing provisioner id: %s\n", ID)
 		typ := ProvisionerFromString(tmpP.Type)
 		switch typ {
-		case Ansible:
-			tmpS, err = r.createAnsible(ID)
+		case AnsibleLocal:
+			tmpS, err = r.createAnsibleLocal(ID)
 			if err != nil {
-				return nil, &Error{Ansible.String(), err}
+				return nil, &Error{AnsibleLocal.String(), err}
 			}
 		case FileUpload:
 			tmpS, err = r.createFileUpload(ID)
@@ -133,9 +133,9 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 	return p, nil
 }
 
-// createAnsible creates a map of settings for Packer's ansible-local
-// provisioner.  Any values that aren't supported by the file provisioner are
-// ignored. For more information, refer to
+// createAnsibleLocal creates a map of settings for Packer's ansible
+// provisioner.  Any values that aren't supported by the file provisioner
+// are ignored. For more information, refer to
 // https://packer.io/docs/provisioners/ansible-local.html
 //
 // Required configuration options:
@@ -143,20 +143,21 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 // Optional configuration options:
 //   command            string
 //   extra_arguments    array of strings
-//   inventory_file     string
 //   group_vars         string
 //   host_vars          string
+//   inventory_groups   string
+//   inventory_file     string
 //   playbook_dir	    string
 //   playbook_paths     array of strings
 //   role_paths         array of strings
 //   staging_directory  string
-func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{}, err error) {
+func (r *rawTemplate) createAnsibleLocal(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
 		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
-	settings["type"] = Ansible.String()
+	settings["type"] = AnsibleLocal.String()
 	// For each value, extract its key value pair and then process. Only
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
@@ -168,7 +169,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 		switch k {
 		case "playbook_file":
 			// find the actual location and add it to the files map for copying
-			src, err := r.findSource(v, Ansible.String(), false)
+			src, err := r.findSource(v, AnsibleLocal.String(), false)
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
@@ -177,13 +178,13 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
 			if src != "" {
-				r.files[filepath.Join(r.TemplateOutputDir, Ansible.String(), v)] = src
+				r.files[filepath.Join(r.TemplateOutputDir, AnsibleLocal.String(), v)] = src
 			}
-			settings[k] = r.buildTemplateResourcePath(Ansible.String(), v, false)
+			settings[k] = r.buildTemplateResourcePath(AnsibleLocal.String(), v, false)
 			hasPlaybook = true
 		case "inventory_file":
 			// find the actual location and add it to the files map for copying
-			src, err := r.findSource(v, Ansible.String(), false)
+			src, err := r.findSource(v, AnsibleLocal.String(), false)
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
@@ -192,12 +193,12 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
 			if src != "" {
-				r.files[r.buildOutPath(Ansible.String(), v)] = src
+				r.files[r.buildOutPath(AnsibleLocal.String(), v)] = src
 			}
-			settings[k] = r.buildTemplateResourcePath(Ansible.String(), v, false)
+			settings[k] = r.buildTemplateResourcePath(AnsibleLocal.String(), v, false)
 		case "playbook_dir", "host_vars", "group_vars":
 			// find the actual location and add it to the files map for copying
-			src, err := r.findSource(v, Ansible.String(), true)
+			src, err := r.findSource(v, AnsibleLocal.String(), true)
 			if err != nil {
 				return nil, &SettingError{ID, k, v, err}
 			}
@@ -206,10 +207,10 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
 			if src != "" {
-				r.dirs[r.buildOutPath(Ansible.String(), v)] = src
+				r.dirs[r.buildOutPath(AnsibleLocal.String(), v)] = src
 			}
-			settings[k] = r.buildTemplateResourcePath(Ansible.String(), v, false)
-		case "command", "staging_directory":
+			settings[k] = r.buildTemplateResourcePath(AnsibleLocal.String(), v, false)
+		case "command", "staging_directory", "inventory_groups":
 			settings[k] = v
 		}
 	}
@@ -223,7 +224,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 			array := deepcopy.InterfaceToSliceOfStrings(val)
 			for i, v := range array {
 				v = r.replaceVariables(v)
-				src, err := r.findSource(v, Ansible.String(), true)
+				src, err := r.findSource(v, AnsibleLocal.String(), true)
 				if err != nil {
 					return nil, &SettingError{ID, k, v, err}
 				}
@@ -232,9 +233,9 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 				// Nothing should be copied in this instancel it should not be added
 				// to the copy info
 				if src != "" {
-					r.files[r.buildOutPath(Ansible.String(), v)] = src
+					r.files[r.buildOutPath(AnsibleLocal.String(), v)] = src
 				}
-				array[i] = r.buildTemplateResourcePath(Ansible.String(), v, false)
+				array[i] = r.buildTemplateResourcePath(AnsibleLocal.String(), v, false)
 			}
 			settings[name] = array
 			continue

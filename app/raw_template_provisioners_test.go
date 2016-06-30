@@ -280,6 +280,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 						"playbook_file= playbook.yml",
 						"command =  ansible_test.command",
 						"inventory_file = inventory_file",
+						"inventory_groups = my_group_1,my_group_2",
 						"group_vars = groupvars",
 						"host_vars = hostvars",
 						"playbook_dir = playbooks",
@@ -638,18 +639,19 @@ func TestProvisionersSettingsToMap(t *testing.T) {
 	}
 }
 
-func TestAnsibleProvisioner(t *testing.T) {
+func TestAnsibleLocalProvisioner(t *testing.T) {
 	expected := map[string]interface{}{
 		"command": "ansible_test.command",
 		"extra_arguments": []string{
 			"arg1",
 			"arg2",
 		},
-		"group_vars":     "ansible-local/groupvars",
-		"host_vars":      "ansible-local/hostvars",
-		"inventory_file": "ansible-local/inventory_file",
-		"playbook_dir":   "ansible-local/playbooks",
-		"playbook_file":  "ansible-local/playbook.yml",
+		"group_vars":       "ansible-local/groupvars",
+		"host_vars":        "ansible-local/hostvars",
+		"inventory_file":   "ansible-local/inventory_file",
+		"inventory_groups": "my_group_1,my_group_2",
+		"playbook_dir":     "ansible-local/playbooks",
+		"playbook_file":    "ansible-local/playbook.yml",
 		"playbook_paths": []string{
 			"ansible-local/playbook1",
 			"ansible-local/playbook2",
@@ -661,7 +663,7 @@ func TestAnsibleProvisioner(t *testing.T) {
 		"staging_directory": "staging/directory",
 		"type":              "ansible-local",
 	}
-	settings, err := testRawTemplateProvisionersAll.createAnsible("ansible-local")
+	settings, err := testRawTemplateProvisionersAll.createAnsibleLocal("ansible-local")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
