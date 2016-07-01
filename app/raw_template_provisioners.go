@@ -22,7 +22,7 @@ const (
 	PuppetMasterless
 	PuppetServer
 	Salt
-	ShellScript
+	Shell
 )
 
 // Provisioner is a packer supported provisioner
@@ -65,7 +65,7 @@ func ProvisionerFromString(s string) Provisioner {
 	case "salt-masterless":
 		return Salt
 	case "shell":
-		return ShellScript
+		return Shell
 	}
 	return UnsupportedProvisioner
 }
@@ -107,10 +107,10 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 			if err != nil {
 				return nil, &Error{Salt.String(), err}
 			}
-		case ShellScript:
-			tmpS, err = r.createShellScript(ID)
+		case Shell:
+			tmpS, err = r.createShell(ID)
 			if err != nil {
-				return nil, &Error{ShellScript.String(), err}
+				return nil, &Error{Shell.String(), err}
 			}
 		case ChefClient:
 			tmpS, err = r.createChefClient(ID)
@@ -844,10 +844,9 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 	return settings, nil
 }
 
-// createShellScript creates a map of settings for Packer's shell script
-// provisioner. Any values that aren't supported by the shell provisioner are
-// ignored. For more information, refer to
-// https://packer.io/docs/provisioners/shell.html
+// createShell creates a map of settings for Packer's shell provisioner.  Any
+// values that aren't supported by the shell provisioner are ignored. For
+// more information, refer to https://packer.io/docs/provisioners/shell.html
 //
 // Of the "inline", "script", and "scripts" options, only "scripts" is
 // currently supported.
@@ -861,13 +860,13 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 //   inline_shebang       string
 //   remote_path          string
 //   start_retry_timeout  string
-func (r *rawTemplate) createShellScript(ID string) (settings map[string]interface{}, err error) {
+func (r *rawTemplate) createShell(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
 		return nil, NewErrConfigNotFound(ID)
 	}
 	settings = make(map[string]interface{})
-	settings["type"] = ShellScript.String()
+	settings["type"] = Shell.String()
 	// For each value, extract its key value pair and then process. Only process the supported
 	// keys. Key validation isn't done here, leaving that for Packer.
 	var k, v string
@@ -880,7 +879,7 @@ func (r *rawTemplate) createShellScript(ID string) (settings map[string]interfac
 			// Otherwise assume that it contains the command
 			if strings.HasSuffix(v, ".command") {
 				var commands []string
-				commands, err = r.commandsFromFile(v, ShellScript.String())
+				commands, err = r.commandsFromFile(v, Shell.String())
 				if err != nil {
 					return nil, &SettingError{ID, k, v, err}
 				}
@@ -906,7 +905,7 @@ func (r *rawTemplate) createShellScript(ID string) (settings map[string]interfac
 			for i, v := range scripts {
 				v = r.replaceVariables(v)
 				// find the source
-				src, err := r.findSource(v, ShellScript.String(), false)
+				src, err := r.findSource(v, Shell.String(), false)
 				if err != nil {
 					return nil, &SettingError{ID, k, v, err}
 				}
@@ -915,9 +914,9 @@ func (r *rawTemplate) createShellScript(ID string) (settings map[string]interfac
 				// Nothing should be copied in this instancel it should not be added
 				// to the copy info
 				if src != "" {
-					r.files[r.buildOutPath(ShellScript.String(), v)] = src
+					r.files[r.buildOutPath(Shell.String(), v)] = src
 				}
-				scripts[i] = r.buildTemplateResourcePath(ShellScript.String(), v, false)
+				scripts[i] = r.buildTemplateResourcePath(Shell.String(), v, false)
 			}
 			settings[name] = scripts
 			continue
