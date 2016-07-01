@@ -858,7 +858,10 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 //   environment_vars     array of strings
 //   execute_command      string
 //   inline_shebang       string
+//   remote_file          string
+//   remote_folder        string
 //   remote_path          string
+//   skip_clean           bool
 //   start_retry_timeout  string
 func (r *rawTemplate) createShell(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
@@ -890,9 +893,9 @@ func (r *rawTemplate) createShell(ID string) (settings map[string]interface{}, e
 				continue
 			}
 			settings[k] = v
-		case "inline_shebang", "remote_path", "start_retry_timeout":
+		case "inline_shebang", "remote_file", "remote_folder", "remote_path", "start_retry_timeout":
 			settings[k] = v
-		case "binary":
+		case "binary", "skip_clean":
 			settings[k], _ = strconv.ParseBool(v)
 		}
 	}

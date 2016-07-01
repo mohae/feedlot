@@ -452,7 +452,10 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 						"binary = false",
 						"execute_command = execute_test.command",
 						"inline_shebang = /bin/sh",
+						"remote_file = shell_test",
+						"remote_folder = /tmp",
 						"remote_path = /tmp/script.sh",
+						"skip_clean = true",
 						"start_retry_timeout = 5m",
 					},
 					Arrays: map[string]interface{}{
@@ -877,7 +880,7 @@ func TestSaltProvisioner(t *testing.T) {
 	}
 }
 
-func TestShellProvisioner(t *testing.T) {
+func TestShellProvisionerScripts(t *testing.T) {
 	expected := map[string]interface{}{
 		"binary": false,
 		"except": []string{
@@ -888,13 +891,16 @@ func TestShellProvisioner(t *testing.T) {
 		"only": []string{
 			"virtualbox-iso",
 		},
-		"remote_path": "/tmp/script.sh",
+		"remote_file":   "shell_test",
+		"remote_folder": "/tmp",
+		"remote_path":   "/tmp/script.sh",
 		"scripts": []string{
 			"shell/setup_test.sh",
 			"shell/vagrant_test.sh",
 			"shell/sudoers_test.sh",
 			"shell/cleanup_test.sh",
 		},
+		"skip_clean":          true,
 		"start_retry_timeout": "5m",
 		"type":                "shell",
 	}
