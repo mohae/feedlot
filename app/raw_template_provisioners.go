@@ -14,6 +14,7 @@ import (
 // Provisioner constants
 const (
 	UnsupportedProvisioner Provisioner = iota
+	Ansible
 	AnsibleLocal
 	ChefClient
 	ChefSolo
@@ -31,6 +32,7 @@ func (p Provisioner) String() string { return provisioners[p] }
 
 var provisioners = [...]string{
 	"unsupported provisioner",
+	"ansible",
 	"ansible-local",
 	"chef-client",
 	"chef-solo",
@@ -46,6 +48,8 @@ var provisioners = [...]string{
 func ProvisionerFromString(s string) Provisioner {
 	s = strings.ToLower(s)
 	switch s {
+	case "ansible":
+		return Ansible
 	case "ansible-local":
 		return AnsibleLocal
 	case "chef-client":
@@ -83,6 +87,11 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 		jww.DEBUG.Printf("processing provisioner id: %s\n", ID)
 		typ := ProvisionerFromString(tmpP.Type)
 		switch typ {
+		case Ansible:
+			tmpS, err = r.createAnsible(ID)
+			if err != nil {
+				return nil, &Error{Ansible.String(), err}
+			}
 		case AnsibleLocal:
 			tmpS, err = r.createAnsibleLocal(ID)
 			if err != nil {
@@ -131,6 +140,91 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 		jww.DEBUG.Printf("processed provisioner id: %s\n", ID)
 	}
 	return p, nil
+}
+
+// createAnsible creates a map of settings for Packer's ansible provisioner.
+//  Any values that aren't supported by the file provisioner are ignored. For
+// more information, refer to
+// https://packer.io/docs/provisioners/ansible-local.html
+//
+// Required configuration options:
+//   playbook_file            string
+// Optional configuration options:
+//   ansible_env_vars         array of strings
+//   empty_groups             array of strings
+//   extra_arguments          array of strings
+//   groups                   array of strings
+//   host_alias               string
+//   local_port               string
+//   sftp_command             string
+//   ssh_authorized_key_file  string
+//   ssh_host_key_file        string
+func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.Provisioners[ID]
+	if !ok {
+		return nil, NewErrConfigNotFound(ID)
+	}
+	settings = make(map[string]interface{})
+	settings["type"] = Ansible.String()
+	// For each value, extract its key value pair and then process. Only
+	// process the supported keys. Key validation isn't done here, leaving
+	// that for Packer.
+	var k, v string
+	var hasPlaybook bool
+	for _, s := range r.Provisioners[ID].Settings {
+		k, v = parseVar(s)
+		v = r.replaceVariables(v)
+		switch k {
+		case "playbook_file":
+			// find the actual location and add it to the files map for copying
+			src, err := r.findSource(v, Ansible.String(), false)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			// if the source couldn't be found and an error wasn't generated, replace
+			// s with the original value; this occurs when it is an example.
+			// Nothing should be copied in this instancel it should not be added
+			// to the copy info
+			if src != "" {
+				r.files[filepath.Join(r.TemplateOutputDir, Ansible.String(), v)] = src
+			}
+			settings[k] = r.buildTemplateResourcePath(Ansible.String(), v, false)
+			hasPlaybook = true
+		case "sftp_command":
+			if !stringIsCommandFilename(v) {
+				// The value is the command.
+				settings[k] = v
+				continue
+			}
+			// The value is a command file, load the contents of the file.
+			cmds, err := r.commandsFromFile(v, Ansible.String())
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			// Make the cmds slice a single string, if it was split into multiple lines.
+			cmd := commandFromSlice(cmds)
+			if cmd == "" {
+				return nil, &SettingError{ID, k, v, ErrNoCommands}
+			}
+			settings[k] = cmd
+		case "host_alias", "local_port", "ssh_authorized_key_file", "ssh_host_key_file":
+			settings[k] = v
+		}
+	}
+	if !hasPlaybook {
+		return nil, &RequiredSettingError{ID, "playbook_file"}
+	}
+	// Process the Arrays.
+	for name, val := range r.Provisioners[ID].Arrays {
+		if name == "ansible_env_vars" || name == "empty_groups" || name == "extra_arguments" || name == "groups" {
+			array := deepcopy.InterfaceToSliceOfStrings(val)
+			if array != nil {
+				settings[name] = array
+			}
+			continue
+		}
+	}
+	return settings, nil
 }
 
 // createAnsibleLocal creates a map of settings for Packer's ansible

@@ -264,6 +264,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 			},
 		},
 		ProvisionerIDs: []string{
+			"ansible",
 			"ansible-local",
 			"file",
 			"chef-client",
@@ -273,12 +274,42 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 			"shell",
 		},
 		Provisioners: map[string]provisioner{
+			"ansible": {
+				templateSection{
+					Type: "ansible",
+					Settings: []string{
+						"playbook_file= playbook.yml",
+						"sftp_command =  /usr/lib/sftp-server -e",
+						"host_alias = default",
+						"local_port = 22",
+						"ssh_authorized_key_file = .ssh/authorized_keys",
+						"ssh_host_key_file = .ssh/host_key",
+					},
+					Arrays: map[string]interface{}{
+						"extra_arguments": []string{
+							"arg1",
+							"arg2",
+						},
+						"ansible_env_vars": []string{
+							"ANSIBLE_HOST_KEY_CHECKING=False",
+							"ANSIBLE_NOCOLOR=True",
+						},
+						"empty_groups": []string{
+							"egroup1",
+						},
+						"groups": []string{
+							"agroup1",
+							"agroup2",
+						},
+					},
+				},
+			},
 			"ansible-local": {
 				templateSection{
 					Type: "ansible-local",
 					Settings: []string{
 						"playbook_file= playbook.yml",
-						"command =  ansible_test.command",
+						"command = ansible_test.command",
 						"inventory_file = inventory_file",
 						"inventory_groups = my_group_1,my_group_2",
 						"group_vars = groupvars",
@@ -635,6 +666,41 @@ func TestProvisionersSettingsToMap(t *testing.T) {
 		}
 		if val != v {
 			t.Errorf("Got %q, want %q", v, val)
+		}
+	}
+}
+
+func TestAnsibleProvisioner(t *testing.T) {
+	expected := map[string]interface{}{
+		"ansible_env_vars": []string{
+			"ANSIBLE_HOST_KEY_CHECKING=False",
+			"ANSIBLE_NOCOLOR=True",
+		},
+		"empty_groups": []string{
+			"egroup1",
+		},
+		"extra_arguments": []string{
+			"arg1",
+			"arg2",
+		},
+		"groups": []string{
+			"agroup1",
+			"agroup2",
+		},
+		"host_alias":              "default",
+		"sftp_command":            "/usr/lib/sftp-server -e",
+		"local_port":              "22",
+		"playbook_file":           "ansible/playbook.yml",
+		"ssh_authorized_key_file": ".ssh/authorized_keys",
+		"ssh_host_key_file":       ".ssh/host_key",
+		"type":                    "ansible",
+	}
+	settings, err := testRawTemplateProvisionersAll.createAnsible("ansible")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
 		}
 	}
 }
