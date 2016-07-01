@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	json "github.com/mohae/customjson"
+	json "github.com/mohae/unsafejson"
 )
 
 var MarshalJSONToString = json.NewMarshalString()

@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	json "github.com/mohae/customjson"
+	json "github.com/mohae/unsafejson"
 	"github.com/mohae/utilitybelt/deepcopy"
 	jww "github.com/spf13/jwalterweatherman"
 )

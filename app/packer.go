@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	json "github.com/mohae/customjson"
+	json "github.com/mohae/unsafejson"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
