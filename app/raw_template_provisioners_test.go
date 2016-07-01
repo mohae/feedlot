@@ -445,7 +445,58 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 					},
 				},
 			},
-			"shell": {
+			"shell-inline": {
+				templateSection{
+					Type: "shell",
+					Settings: []string{
+						"binary = false",
+						"execute_command = execute_test.command",
+						"inline_shebang = /bin/sh",
+						"remote_file = shell_test",
+						"remote_folder = /tmp",
+						"remote_path = /tmp/script.sh",
+						"skip_clean = true",
+						"start_retry_timeout = 5m",
+					},
+					Arrays: map[string]interface{}{
+						"except": []string{
+							"docker",
+						},
+						"only": []string{
+							"virtualbox-iso",
+						},
+						"inline": []string{
+							"apt-get update",
+							"apt-get upgrade",
+						},
+					},
+				},
+			},
+			"shell-script": {
+				templateSection{
+					Type: "shell",
+					Settings: []string{
+						"binary = false",
+						"execute_command = execute_test.command",
+						"inline_shebang = /bin/sh",
+						"remote_file = shell_test",
+						"remote_folder = /tmp",
+						"remote_path = /tmp/script.sh",
+						"script = vagrant_test.sh",
+						"skip_clean = true",
+						"start_retry_timeout = 5m",
+					},
+					Arrays: map[string]interface{}{
+						"except": []string{
+							"docker",
+						},
+						"only": []string{
+							"virtualbox-iso",
+						},
+					},
+				},
+			},
+			"shell-scripts": {
 				templateSection{
 					Type: "shell",
 					Settings: []string{
@@ -880,6 +931,67 @@ func TestSaltProvisioner(t *testing.T) {
 	}
 }
 
+func TestShellProvisionerInline(t *testing.T) {
+	expected := map[string]interface{}{
+		"binary": false,
+		"except": []string{
+			"docker",
+		},
+		"execute_command": "echo 'vagrant'|sudo -S sh '{{.Path}}'",
+		"inline": []string{
+			"apt-get update",
+			"apt-get upgrade",
+		},
+		"inline_shebang": "/bin/sh",
+		"only": []string{
+			"virtualbox-iso",
+		},
+		"remote_file":         "shell_test",
+		"remote_folder":       "/tmp",
+		"remote_path":         "/tmp/script.sh",
+		"skip_clean":          true,
+		"start_retry_timeout": "5m",
+		"type":                "shell",
+	}
+	settings, err := testRawTemplateProvisionersAll.createShell("shell-inline")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		}
+	}
+}
+
+func TestShellProvisionerScript(t *testing.T) {
+	expected := map[string]interface{}{
+		"binary": false,
+		"except": []string{
+			"docker",
+		},
+		"execute_command": "echo 'vagrant'|sudo -S sh '{{.Path}}'",
+		"inline_shebang":  "/bin/sh",
+		"only": []string{
+			"virtualbox-iso",
+		},
+		"remote_file":         "shell_test",
+		"remote_folder":       "/tmp",
+		"remote_path":         "/tmp/script.sh",
+		"script":              "shell/vagrant_test.sh",
+		"skip_clean":          true,
+		"start_retry_timeout": "5m",
+		"type":                "shell",
+	}
+	settings, err := testRawTemplateProvisionersAll.createShell("shell-script")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		}
+	}
+}
+
 func TestShellProvisionerScripts(t *testing.T) {
 	expected := map[string]interface{}{
 		"binary": false,
@@ -904,7 +1016,7 @@ func TestShellProvisionerScripts(t *testing.T) {
 		"start_retry_timeout": "5m",
 		"type":                "shell",
 	}
-	settings, err := testRawTemplateProvisionersAll.createShell("shell")
+	settings, err := testRawTemplateProvisionersAll.createShell("shell-scripts")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {

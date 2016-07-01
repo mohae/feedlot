@@ -848,10 +848,14 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 // values that aren't supported by the shell provisioner are ignored. For
 // more information, refer to https://packer.io/docs/provisioners/shell.html
 //
-// Of the "inline", "script", and "scripts" options, only "scripts" is
-// currently supported.
+// Of the "inline", "script", and "scripts" options, only one can be used:
+// they are mutually exclusive.  If multiple are specified, the one with the
+// highest precedence will be used.  They are listed in order of precedence,
+// from high to low:
 //
 // Required configuration options:
+//   inline               array of strings
+//   script               string
 //   scripts              array of strings
 // Optional confinguration parameters:
 //   binary               bool
@@ -870,6 +874,8 @@ func (r *rawTemplate) createShell(ID string) (settings map[string]interface{}, e
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = Shell.String()
+
+	var script string
 	// For each value, extract its key value pair and then process. Only process the supported
 	// keys. Key validation isn't done here, leaving that for Packer.
 	var k, v string
@@ -895,42 +901,86 @@ func (r *rawTemplate) createShell(ID string) (settings map[string]interface{}, e
 			settings[k] = v
 		case "inline_shebang", "remote_file", "remote_folder", "remote_path", "start_retry_timeout":
 			settings[k] = v
+		case "script":
+			// defer resolution of
+			script = v
 		case "binary", "skip_clean":
 			settings[k], _ = strconv.ParseBool(v)
 		}
 	}
-	// Process the Arrays.
-	var scripts []string
-	for name, val := range r.Provisioners[ID].Arrays {
-		// if this is a scripts array, special processing needs to be done.
-		if name == "scripts" {
-			scripts = deepcopy.InterfaceToSliceOfStrings(val)
-			for i, v := range scripts {
-				v = r.replaceVariables(v)
-				// find the source
-				src, err := r.findSource(v, Shell.String(), false)
-				if err != nil {
-					return nil, &SettingError{ID, k, v, err}
-				}
-				// if the source couldn't be found and an error wasn't generated, replace
-				// s with the original value; this occurs when it is an example.
-				// Nothing should be copied in this instancel it should not be added
-				// to the copy info
-				if src != "" {
-					r.files[r.buildOutPath(Shell.String(), v)] = src
-				}
-				scripts[i] = r.buildTemplateResourcePath(Shell.String(), v, false)
-			}
-			settings[name] = scripts
-			continue
-		}
-		array := deepcopy.Iface(val)
-		if array != nil {
-			settings[name] = array
+	// Check for inline and/or scripts in the Arrays.  This is so that the
+	// setting with the highest precedence is used in situations where
+	// inline, script, and/or scripts are not exclusive (at least two of them
+	// exist in the settings).
+	var (
+		vals interface{}
+		key  string
+	)
+	vals, ok = r.Provisioners[ID].Arrays["inline"]
+	if ok {
+		key = "inline"
+	} else {
+		vals, ok = r.Provisioners[ID].Arrays["scripts"]
+		if ok {
+			key = "scripts"
 		}
 	}
-	if len(scripts) == 0 {
-		return nil, &RequiredSettingError{ID, "scripts"}
+	if key == "inline" {
+		settings[key] = deepcopy.InterfaceToSliceOfStrings(vals)
+		goto arrays
+	}
+
+	if script != "" {
+		script = r.replaceVariables(script)
+		// find the source
+		src, err := r.findSource(script, Shell.String(), false)
+		if err != nil {
+			return nil, &SettingError{ID, "script", script, err}
+		}
+		// if the source couldn't be found and an error wasn't generated, replace
+		// s with the original value; this occurs when it is an example.
+		// Nothing should be copied in this instancel it should not be added
+		// to the copy info
+		if src != "" {
+			r.files[r.buildOutPath(Shell.String(), script)] = src
+		}
+		settings["script"] = r.buildTemplateResourcePath(Shell.String(), script, false)
+		goto arrays
+	}
+	if key == "scripts" {
+		scripts := deepcopy.InterfaceToSliceOfStrings(vals)
+		for i, v := range scripts {
+			v = r.replaceVariables(v)
+			// find the source
+			src, err := r.findSource(v, Shell.String(), false)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			// if the source couldn't be found and an error wasn't generated, replace
+			// s with the original value; this occurs when it is an example.
+			// Nothing should be copied in this instancel it should not be added
+			// to the copy info
+			if src != "" {
+				r.files[r.buildOutPath(Shell.String(), v)] = src
+			}
+			scripts[i] = r.buildTemplateResourcePath(Shell.String(), v, false)
+		}
+		settings[key] = scripts
+		goto arrays
+	}
+	// This means the a required setting was not found.
+	return nil, &RequiredSettingError{ID, "inline, script, scripts"}
+
+arrays:
+	// Process the Arrays.
+	for name, val := range r.Provisioners[ID].Arrays {
+		if name == "enviornment_vars" || name == "only" || name == "except" {
+			array := deepcopy.InterfaceToSliceOfStrings(val)
+			if array != nil {
+				settings[name] = array
+			}
+			continue
+		}
 	}
 	return settings, nil
 }
