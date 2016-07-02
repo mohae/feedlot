@@ -445,7 +445,15 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 					},
 				},
 			},
-
+			"shell-local": {
+				templateSection{
+					Type: "shell-local",
+					Settings: []string{
+						"command = echo foo",
+						"execute_command = execute_test.command",
+					},
+				},
+			},
 			"shell-required-missing": {
 				templateSection{
 					Type: "shell",
@@ -1053,6 +1061,22 @@ func TestShellProvisionerScripts(t *testing.T) {
 		"type":                "shell",
 	}
 	settings, err := testRawTemplateProvisionersAll.createShell("shell-scripts")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		}
+	}
+}
+
+func TestShellLocalProvisioner(t *testing.T) {
+	expected := map[string]interface{}{
+		"command":         "echo foo",
+		"execute_command": "echo 'vagrant'|sudo -S sh '{{.Path}}'",
+		"type":            "shell-local",
+	}
+	settings, err := testRawTemplateProvisionersAll.createShellLocal("shell-local")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {

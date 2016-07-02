@@ -42,6 +42,7 @@ var provisioners = [...]string{
 	"puppet-server",
 	"salt-masterless",
 	"shell",
+	"shell-local",
 }
 
 // ProvisionerFromString returns the Provisioner constant for the passed string
@@ -67,6 +68,8 @@ func ProvisionerFromString(s string) Provisioner {
 		return Salt
 	case "shell":
 		return Shell
+	case "shell-local":
+		return ShellLocal
 	}
 	return UnsupportedProvisioner
 }
@@ -132,6 +135,11 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 			tmpS, err = r.createShell(ID)
 			if err != nil {
 				return nil, &Error{Shell.String(), err}
+			}
+		case ShellLocal:
+			tmpS, err = r.createShellLocal(ID)
+			if err != nil {
+				return nil, &Error{ShellLocal.String(), err}
 			}
 		default:
 			return nil, &Error{UnsupportedProvisioner.String(), fmt.Errorf("%s is not supported", tmpP.Type)}
@@ -974,6 +982,72 @@ func (r *rawTemplate) createShell(ID string) (settings map[string]interface{}, e
 
 arrays:
 	// Process the Arrays.
+	for name, val := range r.Provisioners[ID].Arrays {
+		if name == "enviornment_vars" || name == "only" || name == "except" {
+			array := deepcopy.InterfaceToSliceOfStrings(val)
+			if array != nil {
+				settings[name] = array
+			}
+			continue
+		}
+	}
+	return settings, nil
+}
+
+// createShellLocal creates a map of settings for Packer's shell local
+// provisioner.  Any values that aren't supported by the shell local
+// provisioner are ignored. For/ more information, refer to
+// https://packer.io/docs/provisioners/shell.html
+//
+// Of the "inline", "script", and "scripts" options, only one can be used:
+// they are mutually exclusive.  If multiple are specified, the one with the
+// highest precedence will be used.  They are listed in order of precedence,
+// from high to low:
+//
+// Required configuration options:
+//   command              string
+// Optional confinguration parameters:
+//   execute_command      string
+func (r *rawTemplate) createShellLocal(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.Provisioners[ID]
+	if !ok {
+		return nil, NewErrConfigNotFound(ID)
+	}
+	settings = make(map[string]interface{})
+	settings["type"] = ShellLocal.String()
+
+	// For each value, extract its key value pair and then process. Only process the supported
+	// keys. Key validation isn't done here, leaving that for Packer.
+	var hasCommand bool
+	for _, s := range r.Provisioners[ID].Settings {
+		k, v := parseVar(s)
+		v = r.replaceVariables(v)
+		switch k {
+		case "command", "execute_command":
+			if k == "command" && v != "" {
+				hasCommand = true
+			}
+			// If the execute_command references a file, parse that for the command
+			// Otherwise assume that it contains the command
+			if strings.HasSuffix(v, ".command") {
+				var commands []string
+				commands, err = r.commandsFromFile(v, Shell.String())
+				if err != nil {
+					return nil, &SettingError{ID, k, v, err}
+				}
+				if len(commands) == 0 {
+					return nil, &SettingError{ID, k, v, ErrNoCommands}
+				}
+				settings[k] = commands[0] // for execute_command, only the first element is used
+				continue
+			}
+			settings[k] = v
+		}
+	}
+	if !hasCommand {
+		return nil, &RequiredSettingError{ID, "command"}
+	}
+
 	for name, val := range r.Provisioners[ID].Arrays {
 		if name == "enviornment_vars" || name == "only" || name == "except" {
 			array := deepcopy.InterfaceToSliceOfStrings(val)
