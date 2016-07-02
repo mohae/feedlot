@@ -23,6 +23,7 @@ const (
 	PuppetServer
 	Salt
 	Shell
+	ShellLocal
 )
 
 // Provisioner is a packer supported provisioner
@@ -97,21 +98,6 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 			if err != nil {
 				return nil, &Error{AnsibleLocal.String(), err}
 			}
-		case FileUpload:
-			tmpS, err = r.createFileUpload(ID)
-			if err != nil {
-				return nil, &Error{FileUpload.String(), err}
-			}
-		case Salt:
-			tmpS, err = r.createSalt(ID)
-			if err != nil {
-				return nil, &Error{Salt.String(), err}
-			}
-		case Shell:
-			tmpS, err = r.createShell(ID)
-			if err != nil {
-				return nil, &Error{Shell.String(), err}
-			}
 		case ChefClient:
 			tmpS, err = r.createChefClient(ID)
 			if err != nil {
@@ -122,6 +108,11 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 			if err != nil {
 				return nil, &Error{ChefSolo.String(), err}
 			}
+		case FileUpload:
+			tmpS, err = r.createFileUpload(ID)
+			if err != nil {
+				return nil, &Error{FileUpload.String(), err}
+			}
 		case PuppetMasterless:
 			tmpS, err = r.createPuppetMasterless(ID)
 			if err != nil {
@@ -131,6 +122,16 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 			tmpS, err = r.createPuppetServer(ID)
 			if err != nil {
 				return nil, &Error{PuppetServer.String(), err}
+			}
+		case Salt:
+			tmpS, err = r.createSalt(ID)
+			if err != nil {
+				return nil, &Error{Salt.String(), err}
+			}
+		case Shell:
+			tmpS, err = r.createShell(ID)
+			if err != nil {
+				return nil, &Error{Shell.String(), err}
 			}
 		default:
 			return nil, &Error{UnsupportedProvisioner.String(), fmt.Errorf("%s is not supported", tmpP.Type)}

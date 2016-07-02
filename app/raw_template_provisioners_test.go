@@ -445,6 +445,30 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 					},
 				},
 			},
+
+			"shell-required-missing": {
+				templateSection{
+					Type: "shell",
+					Settings: []string{
+						"binary = false",
+						"execute_command = execute_test.command",
+						"inline_shebang = /bin/sh",
+						"remote_file = shell_test",
+						"remote_folder = /tmp",
+						"remote_path = /tmp/script.sh",
+						"skip_clean = true",
+						"start_retry_timeout = 5m",
+					},
+					Arrays: map[string]interface{}{
+						"except": []string{
+							"docker",
+						},
+						"only": []string{
+							"virtualbox-iso",
+						},
+					},
+				},
+			},
 			"shell-inline": {
 				templateSection{
 					Type: "shell",
@@ -927,6 +951,18 @@ func TestSaltProvisioner(t *testing.T) {
 	} else {
 		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
 			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		}
+	}
+}
+
+func TestShellProvisionerRequiredMissing(t *testing.T) {
+	expected := "shell-required-missing.inline, script, scripts: required setting"
+	_, err := testRawTemplateProvisionersAll.createShell("shell-required-missing")
+	if err == nil {
+		t.Error("Expected error, got none")
+	} else {
+		if err.Error() != expected {
+			t.Errorf("Expected %q, got %q", expected, err)
 		}
 	}
 }
