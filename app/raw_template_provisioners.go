@@ -232,6 +232,12 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 			}
 			continue
 		}
+		if name == "only" || name == "except" {
+			array := deepcopy.InterfaceToSliceOfStrings(val)
+			if array != nil {
+				settings[name] = array
+			}
+		}
 	}
 	return settings, nil
 }
@@ -351,6 +357,12 @@ func (r *rawTemplate) createAnsibleLocal(ID string) (settings map[string]interfa
 			}
 			continue
 		}
+		if name == "only" || name == "except" {
+			array := deepcopy.InterfaceToSliceOfStrings(val)
+			if array != nil {
+				settings[name] = array
+			}
+		}
 	}
 	return settings, nil
 }
@@ -432,6 +444,12 @@ func (r *rawTemplate) createChefClient(ID string) (settings map[string]interface
 			array := deepcopy.InterfaceToSliceOfStrings(val)
 			settings[name] = array
 			continue
+		}
+		if name == "only" || name == "except" {
+			array := deepcopy.InterfaceToSliceOfStrings(val)
+			if array != nil {
+				settings[name] = array
+			}
 		}
 	}
 	return settings, nil
@@ -549,6 +567,12 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 			settings[name] = array
 			continue
 		}
+		if name == "only" || name == "except" {
+			array := deepcopy.InterfaceToSliceOfStrings(val)
+			if array != nil {
+				settings[name] = array
+			}
+		}
 	}
 	return settings, nil
 }
@@ -656,6 +680,12 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 		if name == "module_paths" {
 			settings[name] = val
 		}
+		if name == "only" || name == "except" {
+			array := deepcopy.InterfaceToSliceOfStrings(val)
+			if array != nil {
+				settings[name] = array
+			}
+		}
 	}
 	return settings, nil
 }
@@ -698,6 +728,13 @@ func (r *rawTemplate) createPuppetServer(ID string) (settings map[string]interfa
 	for name, val := range r.Provisioners[ID].Arrays {
 		if name == "facter" {
 			settings[name] = val
+			continue
+		}
+		if name == "only" || name == "except" {
+			array := deepcopy.InterfaceToSliceOfStrings(val)
+			if array != nil {
+				settings[name] = array
+			}
 		}
 	}
 	return settings, nil
@@ -764,6 +801,15 @@ func (r *rawTemplate) createFileUpload(ID string) (settings map[string]interface
 	}
 	if !hasDestination {
 		return nil, &RequiredSettingError{ID, "destination"}
+	}
+	// Process the Arrays.
+	for name, val := range r.Provisioners[ID].Arrays {
+		if name == "only" || name == "except" {
+			array := deepcopy.InterfaceToSliceOfStrings(val)
+			if array != nil {
+				settings[name] = array
+			}
+		}
 	}
 	return settings, nil
 }
@@ -849,7 +895,15 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 	if !hasLocalStateTree {
 		return nil, &RequiredSettingError{ID, "local_state_tree"}
 	}
-	// salt does not have any arrays to support
+	// Process the Arrays.
+	for name, val := range r.Provisioners[ID].Arrays {
+		if name == "only" || name == "except" {
+			array := deepcopy.InterfaceToSliceOfStrings(val)
+			if array != nil {
+				settings[name] = array
+			}
+		}
+	}
 	return settings, nil
 }
 
@@ -983,12 +1037,11 @@ func (r *rawTemplate) createShell(ID string) (settings map[string]interface{}, e
 arrays:
 	// Process the Arrays.
 	for name, val := range r.Provisioners[ID].Arrays {
-		if name == "enviornment_vars" || name == "only" || name == "except" {
+		if name == "environment_vars" || name == "only" || name == "except" {
 			array := deepcopy.InterfaceToSliceOfStrings(val)
 			if array != nil {
 				settings[name] = array
 			}
-			continue
 		}
 	}
 	return settings, nil
@@ -1049,12 +1102,11 @@ func (r *rawTemplate) createShellLocal(ID string) (settings map[string]interface
 	}
 
 	for name, val := range r.Provisioners[ID].Arrays {
-		if name == "enviornment_vars" || name == "only" || name == "except" {
+		if name == "environment_vars" || name == "only" || name == "except" {
 			array := deepcopy.InterfaceToSliceOfStrings(val)
 			if array != nil {
 				settings[name] = array
 			}
-			continue
 		}
 	}
 	return settings, nil
