@@ -397,6 +397,24 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 					},
 				},
 			},
+			"file": {
+				templateSection{
+					Type: "file",
+					Settings: []string{
+						"source = app.tar.gz",
+						"destination = /tmp/app.tar.gz",
+					},
+				},
+			},
+			"filedir": {
+				templateSection{
+					Type: "file",
+					Settings: []string{
+						"source = source/",
+						"destination = /tmp/",
+					},
+				},
+			},
 			"puppet-masterless": {
 				templateSection{
 					Type: "puppet-masterless",
@@ -561,24 +579,6 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 							"sudoers_test.sh",
 							"cleanup_test.sh",
 						},
-					},
-				},
-			},
-			"file": {
-				templateSection{
-					Type: "file",
-					Settings: []string{
-						"source = app.tar.gz",
-						"destination = /tmp/app.tar.gz",
-					},
-				},
-			},
-			"filedir": {
-				templateSection{
-					Type: "file",
-					Settings: []string{
-						"source = source/",
-						"destination = /tmp/",
 					},
 				},
 			},
@@ -906,6 +906,35 @@ func TestChefSoloProvisioner(t *testing.T) {
 	}
 }
 
+func TestFileProvisioner(t *testing.T) {
+	expected := map[string]interface{}{
+		"destination": "/tmp/app.tar.gz",
+		"source":      "file/app.tar.gz",
+		"type":        "file",
+	}
+	settings, err := testRawTemplateProvisionersAll.createFile("file")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		}
+	}
+	expected = map[string]interface{}{
+		"destination": "/tmp/",
+		"source":      "file/source/",
+		"type":        "file",
+	}
+	settings, err = testRawTemplateProvisionersAll.createFile("filedir")
+	if err != nil {
+		t.Errorf("Expected error to be nil, got %q", err)
+	} else {
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
+			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		}
+	}
+}
+
 func TestPuppetMasterlessProvisioner(t *testing.T) {
 	expected := map[string]interface{}{
 		"execute_command":   "echo 'vagrant'|sudo -S sh '{{.Path}}'",
@@ -1091,35 +1120,6 @@ func TestShellLocalProvisioner(t *testing.T) {
 		"type":            "shell-local",
 	}
 	settings, err := testRawTemplateProvisionersAll.createShellLocal("shell-local")
-	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err)
-	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
-		}
-	}
-}
-
-func TestFileUploadsProvisioner(t *testing.T) {
-	expected := map[string]interface{}{
-		"destination": "/tmp/app.tar.gz",
-		"source":      "file/app.tar.gz",
-		"type":        "file",
-	}
-	settings, err := testRawTemplateProvisionersAll.createFileUpload("file")
-	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err)
-	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
-		}
-	}
-	expected = map[string]interface{}{
-		"destination": "/tmp/",
-		"source":      "file/source/",
-		"type":        "file",
-	}
-	settings, err = testRawTemplateProvisionersAll.createFileUpload("filedir")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {

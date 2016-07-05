@@ -18,7 +18,7 @@ const (
 	AnsibleLocal
 	ChefClient
 	ChefSolo
-	FileUpload
+	File
 	PuppetMasterless
 	PuppetServer
 	Salt
@@ -59,7 +59,7 @@ func ProvisionerFromString(s string) Provisioner {
 	case "chef-solo":
 		return ChefSolo
 	case "file":
-		return FileUpload
+		return File
 	case "puppet-masterless":
 		return PuppetMasterless
 	case "puppet-server":
@@ -111,10 +111,10 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 			if err != nil {
 				return nil, &Error{ChefSolo.String(), err}
 			}
-		case FileUpload:
-			tmpS, err = r.createFileUpload(ID)
+		case File:
+			tmpS, err = r.createFile(ID)
 			if err != nil {
-				return nil, &Error{FileUpload.String(), err}
+				return nil, &Error{File.String(), err}
 			}
 		case PuppetMasterless:
 			tmpS, err = r.createPuppetMasterless(ID)
@@ -587,6 +587,79 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 	return settings, nil
 }
 
+// createFile creates a map of settings for Packer's file provisioner. Any
+// values that aren't supported by the file provisioner are ignored. For
+// more information, refer to https://packer.io/docs/provisioners/file.html
+//
+// Required configuration options:
+//   destination  string
+//   source       string
+// Optional configuraiton options:
+//   direction    string
+func (r *rawTemplate) createFile(ID string) (settings map[string]interface{}, err error) {
+	_, ok := r.Provisioners[ID]
+	if !ok {
+		return nil, NewErrConfigNotFound(ID)
+	}
+	settings = make(map[string]interface{})
+	settings["type"] = File.String()
+	// For each value, extract its key value pair and then process. Only process the supported
+	// keys. Key validation isn't done here, leaving that for Packer.
+	var k, v string
+	var hasSource, hasDestination bool
+	for _, s := range r.Provisioners[ID].Settings {
+		k, v = parseVar(s)
+		v = r.replaceVariables(v)
+		switch k {
+		case "source":
+			// find the actual location and add it to the files map for copying
+			src, err := r.findSource(v, File.String(), true)
+			if err != nil {
+				return nil, &SettingError{ID, k, v, err}
+			}
+			// if the source couldn't be found and an error wasn't generated, replace
+			// s with the original value; this occurs when it is an example.
+			// Nothing should be copied in this instance it should not be added
+			// to the copy info
+			var isDir bool // used to track if the path is a dir
+			if src != "" {
+				// see if this is a dir
+				inf, err := os.Stat(src)
+				if err != nil {
+					return nil, &SettingError{ID, k, v, err}
+				}
+				if inf.IsDir() {
+					isDir = true
+					r.dirs[r.buildOutPath(File.String(), v)] = src
+				} else {
+					r.files[r.buildOutPath(File.String(), v)] = src
+				}
+			}
+			settings[k] = r.buildTemplateResourcePath(File.String(), v, isDir)
+			hasSource = true
+		case "destination":
+			settings[k] = v
+			hasDestination = true
+		}
+	}
+	if !hasSource {
+		return nil, &RequiredSettingError{ID, "source"}
+	}
+	if !hasDestination {
+		return nil, &RequiredSettingError{ID, "destination"}
+	}
+	// Process the Arrays.
+	for name, val := range r.Provisioners[ID].Arrays {
+		if name == "only" || name == "except" {
+			array := deepcopy.InterfaceToSliceOfStrings(val)
+			if array != nil {
+				settings[name] = array
+			}
+		}
+	}
+	return settings, nil
+}
+
 // createPuppetMasterless creates a map of settings for Packer's puppet-client
 // provisioner.  Any values that aren't supported by the puppet-client
 // provisioner are ignored. For more information, refer to:
@@ -740,80 +813,6 @@ func (r *rawTemplate) createPuppetServer(ID string) (settings map[string]interfa
 			settings[name] = val
 			continue
 		}
-		if name == "only" || name == "except" {
-			array := deepcopy.InterfaceToSliceOfStrings(val)
-			if array != nil {
-				settings[name] = array
-			}
-		}
-	}
-	return settings, nil
-}
-
-// createFileUpload creates a map of settings for Packer's file upload
-// provisioner. Any values that aren't supported by the file provisioner are
-// ignored. For more information, refer to
-// https://packer.io/docs/provisioners/file.html
-//
-// Required configuration options:
-//   destination  string
-//   source       string
-// Optional configuraiton options:
-//   direction    string
-func (r *rawTemplate) createFileUpload(ID string) (settings map[string]interface{}, err error) {
-	_, ok := r.Provisioners[ID]
-	if !ok {
-		return nil, NewErrConfigNotFound(ID)
-	}
-	settings = make(map[string]interface{})
-	settings["type"] = FileUpload.String()
-	// For each value, extract its key value pair and then process. Only process the supported
-	// keys. Key validation isn't done here, leaving that for Packer.
-	var k, v string
-	var hasSource, hasDestination bool
-	for _, s := range r.Provisioners[ID].Settings {
-		k, v = parseVar(s)
-		v = r.replaceVariables(v)
-		switch k {
-		case "source":
-			// find the actual location and add it to the files map for copying
-			src, err := r.findSource(v, FileUpload.String(), true)
-			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
-			}
-			// if the source couldn't be found and an error wasn't generated, replace
-			// s with the original value; this occurs when it is an example.
-			// Nothing should be copied in this instance it should not be added
-			// to the copy info
-			var isDir bool // used to track if the path is a dir
-			if src != "" {
-				// see if this is a dir
-				inf, err := os.Stat(src)
-				if err != nil {
-					return nil, &SettingError{ID, k, v, err}
-				}
-				if inf.IsDir() {
-					isDir = true
-					r.dirs[r.buildOutPath(FileUpload.String(), v)] = src
-				} else {
-					r.files[r.buildOutPath(FileUpload.String(), v)] = src
-				}
-			}
-			settings[k] = r.buildTemplateResourcePath(FileUpload.String(), v, isDir)
-			hasSource = true
-		case "destination":
-			settings[k] = v
-			hasDestination = true
-		}
-	}
-	if !hasSource {
-		return nil, &RequiredSettingError{ID, "source"}
-	}
-	if !hasDestination {
-		return nil, &RequiredSettingError{ID, "destination"}
-	}
-	// Process the Arrays.
-	for name, val := range r.Provisioners[ID].Arrays {
 		if name == "only" || name == "except" {
 			array := deepcopy.InterfaceToSliceOfStrings(val)
 			if array != nil {
