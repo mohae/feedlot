@@ -284,6 +284,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 						"local_port = 22",
 						"ssh_authorized_key_file = .ssh/authorized_keys",
 						"ssh_host_key_file = .ssh/host_key",
+						"user = user",
 					},
 					Arrays: map[string]interface{}{
 						"extra_arguments": []string{
@@ -780,6 +781,7 @@ func TestAnsibleProvisioner(t *testing.T) {
 		"ssh_authorized_key_file": ".ssh/authorized_keys",
 		"ssh_host_key_file":       ".ssh/host_key",
 		"type":                    "ansible",
+		"user":                    "user",
 	}
 	settings, err := testRawTemplateProvisionersAll.createAnsible("ansible")
 	if err != nil {

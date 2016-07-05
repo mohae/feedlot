@@ -168,6 +168,7 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 //   sftp_command             string
 //   ssh_authorized_key_file  string
 //   ssh_host_key_file        string
+//   user                     string
 func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
@@ -216,7 +217,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 				return nil, &SettingError{ID, k, v, ErrNoCommands}
 			}
 			settings[k] = cmd
-		case "host_alias", "local_port", "ssh_authorized_key_file", "ssh_host_key_file":
+		case "host_alias", "local_port", "ssh_authorized_key_file", "ssh_host_key_file", "user":
 			settings[k] = v
 		}
 	}
