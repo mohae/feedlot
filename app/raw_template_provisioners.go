@@ -669,12 +669,15 @@ func (r *rawTemplate) createFile(ID string) (settings map[string]interface{}, er
 //   manifest_file
 // Optional configuraiton options:
 //   execute_command    string
+//   extra_arguments    array of strings
 //   facter             object, string key and values
 //   hiera_config_path  string
+//   ignore_exit_codes  bool
 //   manifest_dir       string
 //   module_paths       array of strings
 //   prevent_sudo       bool
 //   staging_directroy  string
+//   working_directory  string
 func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
@@ -703,9 +706,9 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 			}
 			settings[k] = r.buildTemplateResourcePath(PuppetMasterless.String(), v, false)
 			hasManifestFile = true
-		case "staging_directory":
+		case "staging_directory", "working_directory":
 			settings[k] = v
-		case "prevent_sudo":
+		case "ignore_exit_codes", "prevent_sudo":
 			settings[k], _ = strconv.ParseBool(v)
 		case "hiera_config_path":
 			// find the actual location of the source file and add it to the files map for copying
@@ -756,18 +759,14 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 		return nil, &RequiredSettingError{ID, "manifest_file"}
 	}
 	for name, val := range r.Provisioners[ID].Arrays {
-		if name == "facter" {
-			settings[name] = val
-			continue
-		}
-		if name == "module_paths" {
-			settings[name] = val
-		}
-		if name == "only" || name == "except" {
+		switch name {
+		case "extra_arguments", "module_paths", "only", "except":
 			array := deepcopy.InterfaceToSliceOfStrings(val)
 			if array != nil {
 				settings[name] = array
 			}
+		case "facter":
+			settings[name] = deepcopy.Iface(val)
 		}
 	}
 	return settings, nil
@@ -810,7 +809,7 @@ func (r *rawTemplate) createPuppetServer(ID string) (settings map[string]interfa
 	}
 	for name, val := range r.Provisioners[ID].Arrays {
 		if name == "facter" {
-			settings[name] = val
+			settings[name] = deepcopy.Iface(val)
 			continue
 		}
 		if name == "only" || name == "except" {

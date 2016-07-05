@@ -422,12 +422,17 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 						"manifest_filet=site.pp",
 						"execute_command=execute.command",
 						"hiera_config_path=hiera.yaml",
+						"ignore_exit_codes = true",
 						"manifest_dir=manifests",
 						"manifest_file=site.pp",
 						"prevent_sudo=false",
 						"staging_directory=/tmp/puppet-masterless",
+						"working_directory=work",
 					},
 					Arrays: map[string]interface{}{
+						"extra_arguments": []string{
+							"arg1",
+						},
 						"facter": map[string]string{
 							"server_role": "webserver",
 						},
@@ -937,13 +942,17 @@ func TestFileProvisioner(t *testing.T) {
 
 func TestPuppetMasterlessProvisioner(t *testing.T) {
 	expected := map[string]interface{}{
-		"execute_command":   "echo 'vagrant'|sudo -S sh '{{.Path}}'",
-		"hiera_config_path": "puppet-masterless/hiera.yaml",
+		"execute_command": "echo 'vagrant'|sudo -S sh '{{.Path}}'",
+		"extra_arguments": []string{
+			"arg1",
+		},
 		"facter": map[string]string{
 			"server_role": "webserver",
 		},
-		"manifest_dir":  "puppet-masterless/manifests",
-		"manifest_file": "puppet-masterless/site.pp",
+		"hiera_config_path": "puppet-masterless/hiera.yaml",
+		"ignore_exit_codes": true,
+		"manifest_dir":      "puppet-masterless/manifests",
+		"manifest_file":     "puppet-masterless/site.pp",
 		"module_paths": []string{
 			"/etc/puppetlabs/puppet/modules",
 			"/opt/puppet/share/puppet/modules",
@@ -951,6 +960,7 @@ func TestPuppetMasterlessProvisioner(t *testing.T) {
 		"prevent_sudo":      false,
 		"staging_directory": "/tmp/puppet-masterless",
 		"type":              "puppet-masterless",
+		"working_directory": "work",
 	}
 	settings, err := testRawTemplateProvisionersAll.createPuppetMasterless("puppet-masterless")
 	if err != nil {
