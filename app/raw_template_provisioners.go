@@ -470,12 +470,14 @@ func (r *rawTemplate) createChefClient(ID string) (settings map[string]interface
 // Required configuration options:
 //   none
 // Optional configuraiton options:
+//   chef_environment                string
 //   config_template                 string
 //   cookbook_paths                  array of strings
 //   data_bags_path                  string
 //   encrypted_data_bag_secret_path  string
 //   environments_path               string
 //   execute_command                 string
+//   guest_os_type                   string
 //   install_command                 string
 //   prevent_sudo                    bool
 //   remote_cookbook_paths           array of strings
@@ -499,7 +501,8 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
-		case "staging_directory", "encrypted_data_bag_secret_path":
+		case "chef_environment", "encrypted_data_bag_secret_path", "guest_os_type",
+			"staging_directory":
 			settings[k] = v
 		case "prevent_sudo", "skip_install":
 			settings[k], _ = strconv.ParseBool(v)

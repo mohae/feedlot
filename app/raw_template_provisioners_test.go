@@ -368,11 +368,13 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 				templateSection{
 					Type: "chef-solo",
 					Settings: []string{
+						"chef_environment = env",
 						"config_template=chef.cfg",
 						"data_bags_path=data_bag",
 						"encrypted_data_bag_secret_path=/home/user/chef/secret_data_bag",
 						"environments_path=environments",
 						"execute_command=execute.command",
+						"guest_os_type = unix",
 						"install_command=install.command",
 						"prevent_sudo=false",
 						"roles_path=roles",
@@ -868,7 +870,8 @@ func TestChefClientProvisioner(t *testing.T) {
 
 func TestChefSoloProvisioner(t *testing.T) {
 	expected := map[string]interface{}{
-		"config_template": "chef-solo/chef.cfg",
+		"chef_environment": "env",
+		"config_template":  "chef-solo/chef.cfg",
 		"cookbook_paths": []string{
 			"chef-solo/cookbook1",
 			"chef-solo/cookbook2",
@@ -877,6 +880,7 @@ func TestChefSoloProvisioner(t *testing.T) {
 		"encrypted_data_bag_secret_path": "/home/user/chef/secret_data_bag",
 		"environments_path":              "chef-solo/environments",
 		"execute_command":                "{{if .Sudo}}sudo {{end}}chef-client --no-color -c {{.ConfigPath}} -j {{.JsonPath}}",
+		"guest_os_type":                  "unix",
 		"install_command":                "curl -L https://www.opscode.com/chef/install.sh | {{if .Sudo}}sudo{{end}} bash",
 		"prevent_sudo":                   false,
 		"roles_path":                     "chef-solo/roles",
