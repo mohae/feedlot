@@ -449,6 +449,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 					Settings: []string{
 						"client_cert_path = /etc/puppet/client.pem",
 						"client_private_key_path=/home/puppet/.ssh/puppet_id_rsa",
+						"ignore_exit_codes = true",
 						"options=-v --detailed-exitcodes",
 						"prevent_sudo= false",
 						"puppet_node=vagrant-puppet-srv01",
@@ -979,6 +980,7 @@ func TestPuppetServerProvisioner(t *testing.T) {
 		"facter": map[string]string{
 			"server_role": "webserver",
 		},
+		"ignore_exit_codes": true,
 		"options":           "-v --detailed-exitcodes",
 		"prevent_sudo":      false,
 		"puppet_node":       "vagrant-puppet-srv01",

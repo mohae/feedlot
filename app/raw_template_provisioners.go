@@ -783,6 +783,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 //   client_cert_path         string
 //   client_private_key_path  string
 //   facter                   object, string key and values
+//   ignore_exit_codes        bool
 //   options                  string
 //   prevent_sudo             bool
 //   puppet_node              string
@@ -803,7 +804,7 @@ func (r *rawTemplate) createPuppetServer(ID string) (settings map[string]interfa
 		switch k {
 		case "client_cert_path", "client_private_key_path", "options", "puppet_node", "puppet_server", "staging_directory":
 			settings[k] = v
-		case "prevent_sudo":
+		case "ignore_exit_codes", "prevent_sudo":
 			settings[k], _ = strconv.ParseBool(v)
 		}
 	}
