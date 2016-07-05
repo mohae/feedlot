@@ -376,22 +376,26 @@ func (r *rawTemplate) createAnsibleLocal(ID string) (settings map[string]interfa
 // Required configuration options:
 //   none
 // Optional configuraiton options:
-//   chef_environment        string
-//   config_template         string
-//   execute_command         string
-//   install_command         string
-///  node_name               string
-//   prevent_sudo            bool
-//   run_list                array of strings
-//   server_url              string
-//   skip_clean_client       bool
-//   skip_clean_node         bool
-//   skip_install            bool
-//   staging_directory       string
-//   validation_client_name  string
-//   validation_key_path     string
+//   chef_environment               string
+//   client_key                     string
+//   config_template                string
+//   encrypted_data_bag_secret_path string
+//   execute_command                string
+//   guest_os_type                  string
+//   install_command                string
+//   node_name                      string
+//   prevent_sudo                   bool
+//   run_list                       array of strings
+//   server_url                     string
+//   skip_clean_client              bool
+//   skip_clean_node                bool
+//   skip_install                   bool
+//   ssl_verify_mode                string
+//   staging_directory              string
+//   validation_client_name         string
+//   validation_key_path            string
 // Unsopported configuration options:
-//   json                    object
+//   json                           object
 func (r *rawTemplate) createChefClient(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ChefClient.String()]
 	if !ok {
@@ -405,7 +409,9 @@ func (r *rawTemplate) createChefClient(ID string) (settings map[string]interface
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
-		case "chef_environment", "node_name", "server_url", "staging_directory", "validation_client_name", "validation_key_path":
+		case "chef_environment", "client_key", "encrypted_data_bag_secret_path", "guest_os_type",
+			"node_name", "server_url", "ssl_verify_mode", "staging_directory",
+			"validation_client_name", "validation_key_path":
 			settings[k] = v
 		case "prevent_sudo", "skip_clean_client", "skip_clean_node", "skip_install":
 			settings[k], _ = strconv.ParseBool(v)
