@@ -468,9 +468,59 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 					Type: "salt-masterless",
 					Settings: []string{
 						"bootstrap_args = args",
+						"disable_sudo = true",
 						"local_pillar_roots=pillar",
 						"local_state_tree=salt",
+						"no_exit_on_failure = true",
 						"minion_config=salt",
+						"skip_bootstrap=false",
+						"temp_config_dir=/tmp",
+					},
+				},
+			},
+			"salt-masterless-remote-settings": {
+				templateSection{
+					Type: "salt-masterless",
+					Settings: []string{
+						"bootstrap_args = args",
+						"disable_sudo = true",
+						"local_pillar_roots=pillar",
+						"local_state_tree=salt",
+						"no_exit_on_failure = true",
+						"remote_pillar_roots = /srv/pillar",
+						"remote_state_tree = /srv/salt",
+						"skip_bootstrap=false",
+						"temp_config_dir=/tmp",
+					},
+				},
+			},
+			"salt-masterless-remote-pillar-minion-err": {
+				templateSection{
+					Type: "salt-masterless",
+					Settings: []string{
+						"bootstrap_args = args",
+						"disable_sudo = true",
+						"local_pillar_roots=pillar",
+						"local_state_tree=salt",
+						"no_exit_on_failure = true",
+						"minion_config=salt",
+						"remote_pillar_roots = /srv/pillar",
+						"skip_bootstrap=false",
+						"temp_config_dir=/tmp",
+					},
+				},
+			},
+			"salt-masterless-remote-state-minion-err": {
+				templateSection{
+					Type: "salt-masterless",
+					Settings: []string{
+						"bootstrap_args = args",
+						"disable_sudo = true",
+						"local_pillar_roots=pillar",
+						"local_state_tree=salt",
+						"no_exit_on_failure = true",
+						"minion_config=salt",
+						"remote_state_tree = /srv/salt",
 						"skip_bootstrap=false",
 						"temp_config_dir=/tmp",
 					},
@@ -999,21 +1049,89 @@ func TestPuppetServerProvisioner(t *testing.T) {
 }
 
 func TestSaltProvisioner(t *testing.T) {
-	expected := map[string]interface{}{
-		"bootstrap_args":     "args",
-		"local_pillar_roots": "salt-masterless/pillar",
-		"local_state_tree":   "salt-masterless/salt",
-		"minion_config":      "salt-masterless/salt",
-		"skip_bootstrap":     false,
-		"temp_config_dir":    "/tmp",
-		"type":               "salt-masterless",
+	tests := []struct {
+		key         string
+		expected    map[string]interface{}
+		expectedErr string
+	}{
+		{
+			key: "salt-masterless",
+			expected: map[string]interface{}{
+				"bootstrap_args":     "args",
+				"disable_sudo":       true,
+				"local_pillar_roots": "salt-masterless/pillar",
+				"local_state_tree":   "salt-masterless/salt",
+				"minion_config":      "salt-masterless/salt",
+				"no_exit_on_failure": true,
+				"skip_bootstrap":     false,
+				"temp_config_dir":    "/tmp",
+				"type":               "salt-masterless",
+			},
+			expectedErr: "",
+		},
+		{
+			key: "salt-masterless-remote-settings",
+			expected: map[string]interface{}{
+				"bootstrap_args":      "args",
+				"disable_sudo":        true,
+				"local_pillar_roots":  "salt-masterless/pillar",
+				"local_state_tree":    "salt-masterless/salt",
+				"no_exit_on_failure":  true,
+				"remote_pillar_roots": "/srv/pillar",
+				"remote_state_tree":   "/srv/salt",
+				"skip_bootstrap":      false,
+				"temp_config_dir":     "/tmp",
+				"type":                "salt-masterless",
+			},
+			expectedErr: "",
+		},
+		{
+			key: "salt-masterless-remote-pillar-minion-err",
+			expected: map[string]interface{}{
+				"bootstrap_args":      "args",
+				"disable_sudo":        true,
+				"local_pillar_roots":  "salt-masterless/pillar",
+				"local_state_tree":    "salt-masterless/salt",
+				"minion_config":       "salt-masterless/salt",
+				"no_exit_on_failure":  true,
+				"remote_pillar_roots": "/srv/pillar",
+				"skip_bootstrap":      false,
+				"temp_config_dir":     "/tmp",
+				"type":                "salt-masterless",
+			},
+			expectedErr: "salt-masterless-remote-pillar-minion-err: remote_pillar_roots: /srv/pillar: cannot be used with the 'minon_config' setting",
+		},
+		{
+			key: "salt-masterless-remote-state-minion-err",
+			expected: map[string]interface{}{
+				"bootstrap_args":     "args",
+				"disable_sudo":       true,
+				"local_pillar_roots": "salt-masterless/pillar",
+				"local_state_tree":   "salt-masterless/salt",
+				"minion_config":      "salt-masterless/salt",
+				"no_exit_on_failure": true,
+				"remote_state_tree":  "/srv/salt",
+				"skip_bootstrap":     false,
+				"temp_config_dir":    "/tmp",
+				"type":               "salt-masterless",
+			},
+			expectedErr: "salt-masterless-remote-state-minion-err: remote_state_tree: /srv/salt: cannot be used with the 'minon_config' setting",
+		},
 	}
-	settings, err := testRawTemplateProvisionersAll.createSalt("salt-masterless")
-	if err != nil {
-		t.Errorf("Expected error to be nil, got %q", err)
-	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+	for i, test := range tests {
+		settings, err := testRawTemplateProvisionersAll.createSalt(test.key)
+		if err != nil {
+			if err.Error() != test.expectedErr {
+				t.Errorf("%d: got %q, want %q", i, err, test.expectedErr)
+			}
+			continue
+		}
+		if err == nil && test.expectedErr != "" {
+			t.Errorf("%d: wanted %q; got no error", i, test.expectedErr)
+			continue
+		}
+		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(test.expected) {
+			t.Errorf("%d: expected %q, got %q", i, MarshalJSONToString.Get(test.expected), MarshalJSONToString.Get(settings))
 		}
 	}
 }

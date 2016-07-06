@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -832,9 +833,14 @@ func (r *rawTemplate) createPuppetServer(ID string) (settings map[string]interfa
 //   local_state_tree     string
 // Optional configuration options
 //   bootstrap_args       string
+//   disable_sudo         bool
 //   local_pillar_roots   string
 //   local_state_tree     string
+//   log_level            string
 //   minion_config        string
+//   no_exit_on_failure   bool
+//   remote_pillar_roots  string
+//   remote_state_tree    string
 //   skip_bootstrap       bool
 //   temp_config_dir      string
 func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, err error) {
@@ -846,8 +852,10 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 	settings["type"] = Salt.String()
 	// For each value, extract its key value pair and then process. Only process the supported
 	// keys. Key validation isn't done here, leaving that for Packer.
-	var k, v string
-	var hasLocalStateTree bool
+	var (
+		k, v, remotePillarRoots, remoteStateTree string
+		hasLocalStateTree, hasMinion             bool
+	)
 	for _, s := range r.Provisioners[ID].Settings {
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
@@ -895,14 +903,30 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 				r.files[r.buildOutPath(Salt.String(), filepath.Join(v, "minion"))] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(Salt.String(), v, false)
-		case "bootstrap_args", "temp_config_dir":
+			hasMinion = true
+		case "bootstrap_args", "log_level", "temp_config_dir":
 			settings[k] = v
-		case "skip_bootstrap":
+		case "remote_pillar_roots":
+			settings[k] = v
+			remotePillarRoots = v
+		case "remote_state_tree":
+			settings[k] = v
+			remoteStateTree = v
+		case "disable_sudo", "no_exit_on_failure", "skip_bootstrap":
 			settings[k], _ = strconv.ParseBool(v)
 		}
 	}
 	if !hasLocalStateTree {
 		return nil, &RequiredSettingError{ID, "local_state_tree"}
+	}
+	// If minion is set, remote_pilar_roots and remote_state_tree cannot be used.
+	if hasMinion {
+		if remotePillarRoots != "" {
+			return nil, &SettingError{ID: ID, Key: "remote_pillar_roots", Value: remotePillarRoots, err: errors.New("cannot be used with the 'minon_config' setting")}
+		}
+		if remoteStateTree != "" {
+			return nil, &SettingError{ID: ID, Key: "remote_state_tree", Value: remoteStateTree, err: errors.New("cannot be used with the 'minon_config' setting")}
+		}
 	}
 	// Process the Arrays.
 	for name, val := range r.Provisioners[ID].Arrays {
