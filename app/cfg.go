@@ -17,7 +17,7 @@ import (
 	cjsn "github.com/mohae/cjson"
 	"github.com/mohae/contour"
 	"github.com/mohae/deepcopy"
-	"github.com/mohae/toml"
+	"github.com/BurntSushi/toml"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
