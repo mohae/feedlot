@@ -6,7 +6,7 @@ import (
 
 	"github.com/mohae/cli"
 	"github.com/mohae/contour"
-	"github.com/mohae/rancher/app"
+	"github.com/mohae/feedlot/app"
 
 	//jww "github.com/spf13/jwalterweatherman"
 )
@@ -20,20 +20,20 @@ type BuildCommand struct {
 // Help prints the help text for the build sub-command.
 func (c *BuildCommand) Help() string {
 	helpText := `
-Usage: rancher build [options] <buildName...>
+Usage: feedlot build [options] <buildName...>
 
 A Packer template will be created for each passed build name, if there are any.
 Each build name, if there are more than one, must be separated by a space. Each
 build must exist in the application's builds.toml file.
 
-	$ rancher build <buildName...>
-	$ rancher build 1204-amd64-server 1404-amd64-desktop
+	$ feedlot build <buildName...>
+	$ feedlot build 1204-amd64-server 1404-amd64-desktop
 
 Options can also be passed to generate a build for a targeted supported distro.
 This is done using the -distro flag:
 
-	$ rancher build -distro=<distro name>
-	$ rancher build -distro=ubuntu
+	$ feedlot build -distro=<distro name>
+	$ feedlot build -distro=ubuntu
 
 For builds using the -distro flag, the -arch, -image, and -release flags are
 optional. If any of them are missing, the distribution's default value for that
@@ -52,7 +52,7 @@ Options:
 
 -release=<releaseNum>	Override the distro's default release with this flag.
 			The actual values are determined by the distro.
--envs=<list of envs>    Include builds from the specified Rancher environments.
+-envs=<list of envs>    Include builds from the specified feedlot environments.
 -eg=bool                true/false: create builds from examples; generates
                         example Packer templates.
 `
@@ -100,5 +100,5 @@ func (c *BuildCommand) Run(args []string) int {
 
 // Synopsis provides a precis of the build sub-command.
 func (c *BuildCommand) Synopsis() string {
-	return "Create a Packer template from either supported distro defaults or pre-defined Rancher build configurations."
+	return "Create a Packer template from either supported distro defaults or pre-defined feedlot build configurations."
 }

@@ -54,7 +54,7 @@ func TestPriorBuild(t *testing.T) {
 		var files []string
 		var err error
 		if test.dir != "" && test.dir != "tst" {
-			dir, files, err = createTmpTestDirFiles(fmt.Sprintf("rancher-testpriorbuild-%d-", i))
+			dir, files, err = createTmpTestDirFiles(fmt.Sprintf("feedlot-testpriorbuild-%d-", i))
 			if err != nil {
 				t.Errorf("error creating tmp files for test %d; aborting this test: %s", i, err)
 				continue

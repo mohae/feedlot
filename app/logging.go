@@ -23,7 +23,7 @@ func init() {
 // location or remove the temp logfile.
 func SetTempLogging() {
 	// use temp logfile
-	jww.UseTempLogFile("rancher")
+	jww.UseTempLogFile("feedlot")
 }
 
 // SetLogging sets application logging settings.

@@ -198,7 +198,7 @@ var ppOrig = map[string]postProcessor{
 			Settings: []string{
 				"compression_level = 9",
 				"keep_input_artifact = false",
-				"output = out/rancher-packer.box",
+				"output = out/feedlot-packer.box",
 			},
 			Arrays: map[string]interface{}{
 				"include": []string{
@@ -257,7 +257,7 @@ var ppMerged = map[string]postProcessor{
 			Settings: []string{
 				"compression_level=8",
 				"keep_input_artifact=true",
-				"output = out/rancher-packer.box",
+				"output = out/feedlot-packer.box",
 			},
 			Arrays: map[string]interface{}{
 				"except": []string{

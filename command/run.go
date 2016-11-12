@@ -5,7 +5,7 @@ import (
 
 	"github.com/mohae/cli"
 	"github.com/mohae/contour"
-	"github.com/mohae/rancher/app"
+	"github.com/mohae/feedlot/app"
 )
 
 // RunCommand is a Command implementation that generates Packer templates
@@ -17,16 +17,16 @@ type RunCommand struct {
 // Help prints the help text for the run sub-command.
 func (c *RunCommand) Help() string {
 	helpText := `
-    Usage: rancher Run <BuildList names...>
+    Usage: feedlot run <BuildList names...>
 
         Generates Packer templates. At minimum, this command needs to be run
         with at least one BuildList name. Multiple BuildList names can be
 	specified by using a space separated list.
 
-            $ rancher run example1
-            $ rancher run example1 example2
+            $ feedlot run example1
+            $ feedlot run example1 example2
 
-        The above command generates Packer templates from all of the Rancher
+        The above command generates Packer templates from all of the feedlot
 	Builds that have been specified within the RunList 'example1'.
 
 	Options:
@@ -83,5 +83,5 @@ func (c *RunCommand) Run(args []string) int {
 
 // Synopsis provides a precis of the run sub-command.
 func (c *RunCommand) Synopsis() string {
-	return "Create Packer templates from the Rancher Build templates specified in the passed BuildList(s)."
+	return "Create Packer templates from the feedlot Build templates specified in the passed BuildList(s)."
 }

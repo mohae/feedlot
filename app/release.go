@@ -561,7 +561,7 @@ func (r *debian) getReleaseVersion() error {
 }
 
 // Since only the release is specified, the current version needs to be
-// determined. For Debian, rancher can only grab the latest release as that is
+// determined. For Debian, feedlot can only grab the latest release as that is
 // all the Debian makes available on their cdimage site.
 func (r *debian) setReleaseInfo(s string) error {
 	// look for the first line that starts with debian-(release)

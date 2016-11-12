@@ -216,11 +216,11 @@ func (d *distroDefaults) Set() error {
 
 // loadBuilds accepts a list of builds and loads the build information for
 // them. Since we don't know everything that is going to be used, we load all
-// build configuration files. A Rancher configuration directory can have 0 or
+// build configuration files. A Feedlot configuration directory can have 0 or
 // more build configuration files and any number of subdirectories.
 //
 // A build configuration file is any file that ends in ".fmt" and isn't name
-// build_list.fmt", "defualt.fmt", "rancher.fmt", or "supported.fmt".
+// build_list.fmt", "defualt.fmt", "feedlot.fmt", or "supported.fmt".
 //
 // Subdirectories are called environments, envs, and are a way to namespace
 // builds. An envs' name is the same as the subdirectories name. Env names can
@@ -256,7 +256,7 @@ func loadBuilds() error {
 			continue
 		case "default":
 			continue
-		case "rancher":
+		case "feedlot":
 			continue
 		case "supported":
 			continue

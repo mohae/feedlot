@@ -879,7 +879,7 @@ func TestFindConfigFile(t *testing.T) {
 		{"test.yaml", "test.yaml", "yaml", "", UnsupportedCfgFormat, ""},
 	}
 
-	tmpDir, err := ioutil.TempDir("", "rancherCfgTest")
+	tmpDir, err := ioutil.TempDir("", "feedlotCfgTest")
 	if err != nil {
 		t.Errorf("unable to create tmp dir; testing of FindconfigFile failed: %s", err)
 		return

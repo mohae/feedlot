@@ -27,7 +27,7 @@ type Componenter interface {
 	getType() string
 }
 
-// Contains most of the information for Packer templates within a Rancher
+// Contains most of the information for Packer templates within a Feedlot
 // Build.  The keys of the maps are the IDs
 type build struct {
 	// Targeted builders: either the ID of the builder section or the Packer
@@ -328,7 +328,7 @@ func (b *BuildInf) update(v BuildInf) {
 	}
 }
 
-// IODirInf is used to store information about where Rancher can find and put
+// IODirInf is used to store information about where Feedlot can find and put
 // things. Source files are always in a SourceDir.
 type IODirInf struct {
 	// Include the packer component name in the path. If true, the
@@ -430,7 +430,7 @@ func (p *PackerInf) update(v PackerInf) {
 	}
 }
 
-// defaults is used to store Rancher application level defaults for Packer templates.
+// defaults is used to store Feedlot application level defaults for Packer templates.
 type defaults struct {
 	IODirInf
 	PackerInf
@@ -484,7 +484,7 @@ func (d *defaults) Load(p string) error {
 // Struct to hold the details of supported distros. From this information a
 // user should be able to build a Packer template by only executing the
 // following, at minimum:
-//   $ rancher build -distro=ubuntu
+//   $ feedlot build -distro=ubuntu
 // All settings can be overridden. The information here represents the standard
 // box configuration for its respective distribution.
 type distro struct {
@@ -703,7 +703,7 @@ func mergeKeysFromComponentMaps(m ...map[string]Componenter) []string {
 // be in a different format. SetCfg first looks for it in the configured
 // location. If it is not found, the alternate format is checked.
 //
-// Since Rancher supports operations without a config file, not finding one
+// Since Feedlot supports operations without a config file, not finding one
 // is not an error state.
 //
 // Currently supported config file formats:
@@ -728,7 +728,7 @@ func SetCfgFile() error {
 
 // Take a config file name and checks to see if it exists.  If it doesn't
 // exist, it checks to see if the file can be found under an alternate
-// extension by checking what config format Rancher is set to use and
+// extension by checking what config format Feedlot is set to use and
 // iterating through the list of supported exts for that format.  If a file
 // exists under a particular file + ext combination, that is returned.  If
 // no match is found, the error on the original filename is returned so that

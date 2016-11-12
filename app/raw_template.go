@@ -41,7 +41,7 @@ func (e *RequiredSettingError) Error() string {
 
 var (
 	// ErrConfigNotFound occurs when the specified configuration resource
-	// cannot be found.  This may result in Rancher using its defaults.
+	// cannot be found.  This may result in Feedlot using its defaults.
 	ErrConfigNotFound = errors.New("configuration not found")
 	// ErrNoCommands occurs when a referenced command file doesn't have any
 	// contents.
@@ -52,7 +52,7 @@ func NewErrConfigNotFound(s string) error {
 	return Error{slug: s, err: ErrConfigNotFound}
 }
 
-// rawTemplate holds all the information for a Rancher template. This is used
+// rawTemplate holds all the information for a Feedlot template. This is used
 // to generate the Packer Build.
 type rawTemplate struct {
 	PackerInf
@@ -67,7 +67,7 @@ type rawTemplate struct {
 	osType string
 	// Current date in ISO 8601
 	date string
-	// The character(s) used to identify variables for Rancher. By default
+	// The character(s) used to identify variables for Feedlot. By default
 	// this is a colon, :. Currently only a starting delimeter is supported.
 	delim string
 	// The distro that this template targets. The type must be a supported
@@ -135,7 +135,7 @@ func (r *rawTemplate) copy() *rawTemplate {
 //		Copy resources to output
 func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 	var err error
-	// Resolve the Rancher variables to their final values.
+	// Resolve the Feedlot variables to their final values.
 	r.mergeVariables()
 	// General Packer Stuff
 	p := packerTemplate{}
@@ -178,7 +178,7 @@ func (r *rawTemplate) replaceVariables(s string) string {
 }
 
 // r.setDefaults takes the incoming distro settings and merges them with its
-// existing settings, which are set to rancher's defaults, to create the
+// existing settings, which are set to feedlot's defaults, to create the
 // default template.
 func (r *rawTemplate) setDefaults(d *distro) error {
 	// merges Settings between an old and new template.
@@ -284,7 +284,7 @@ func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) error {
 }
 
 // updateTemplateOutputDirSetting updates the template_output_dir setting
-// if the template_output_dir_setting_is_relative flag is true.  Any Rancher
+// if the template_output_dir_setting_is_relative flag is true.  Any Feedlot
 // variables in the source_dir setting are not resolved.
 func (r *rawTemplate) updateTemplateOutputDirSetting() error {
 	if *r.IODirInf.TemplateOutputDirIsRelative {
@@ -298,7 +298,7 @@ func (r *rawTemplate) updateTemplateOutputDirSetting() error {
 }
 
 // updateSourceDirSetting updates the source_dir if the source_dir_is_relative
-// flag is true.  Any Rancher variables in the source_dir setting are not
+// flag is true.  Any Feedlot variables in the source_dir setting are not
 // resolved.
 func (r *rawTemplate) updateSourceDirSetting() {
 	if *r.IODirInf.SourceDirIsRelative {
@@ -320,7 +320,7 @@ func (r *rawTemplate) updateSourceDirSetting() {
 //  packer_output_dir    the directory to write the Packer build artifact to
 //  source_dir           the directory of any source files used in the build*
 //
-// Note: source_dir must be set. Rancher searches for referenced files and
+// Note: source_dir must be set. Feedlot searches for referenced files and
 // uses source_dir/distro as the last search directory. This directory is
 // also used as the base directory for any specified src directories.
 func (r *rawTemplate) mergeVariables() {
@@ -529,7 +529,7 @@ func (r *rawTemplate) findCommandFile(name, component string) (string, error) {
 	return r.findSource(name, component, false)
 }
 
-// findSource searches for the specified sub-path using Rancher's algorithm
+// findSource searches for the specified sub-path using Feedlot's algorithm
 // for finding the correct location.  Passed names may include relative path
 // information and may be either a filename or a directory.  Releases may
 // have "."'s in them.  In addition to searching for the requested source

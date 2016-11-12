@@ -8,45 +8,45 @@ import (
 
 const (
 	// Name is the name of the application
-	Name = "rancher"
+	Name = "feedlot"
 	// DefaultFormat is the default configuration format.
 	DefaultFormat = JSON
 )
 
-// Rancher setting names: these values are used in the config files, for flags,
+// Feedlot setting names: these values are used in the config files, for flags,
 // and as the basis for environment variables.
 const (
 	// ArchivePriorBuild is a boolean for whether or not a compressed tarball
 	// of a prior build, for a given Packer template, should be created, if it
 	// exists.
 	ArchivePriorBuild = "archive_prior_build"
-	// ConfDir is the directory that contains the Rancher build information.
+	// ConfDir is the directory that contains the Feedlot build information.
 	ConfDir = "conf_dir"
-	// Example is a bool that let's Rancher know that the current run is an
-	// example run.  Rancher will look for the configurations and source in
+	// Example is a bool that let's Feedlot know that the current run is an
+	// example run.  Feedlot will look for the configurations and source in
 	// the configured ExampleDir.
 	Example = "example"
-	// ExampleDir is the directory that contains Rancher examples.  Examples
-	// are used to show how Rancher build templates may be configured and to
+	// ExampleDir is the directory that contains Feedlot examples.  Examples
+	// are used to show how Feedlot build templates may be configured and to
 	// provide an easy way to generated example Packer templates.
 	ExampleDir = "example_dir"
-	// Format is the format used for the Rancher configuration files: either
+	// Format is the format used for the Feedlot configuration files: either
 	// TOML or JSON.  TOML expects all configuration files to have either the
 	// '.toml' or '.tml' extension.  JSON expects all configuration files to have
 	// one of the following extensions: '.json', '.jsn', '.cjsn', or '.cjson'.
 	// JSON is the default format.
 	Format = "format"
-	// ParamDelimStart is the delimiter used to indicate the start of a Rancher
+	// ParamDelimStart is the delimiter used to indicate the start of a Feedlot
 	// parameter (variable).  The default start delimiter is ':'.  This is used
-	// so that Rancher parameters in templates do not conflict with Packer
+	// so that Feedlot parameters in templates do not conflict with Packer
 	// parameters, which use '{{ }}'.
 	ParamDelimStart = "param_delim_start"
-	// Log is a bool that indicates whether Rancher should use logging.  Log
+	// Log is a bool that indicates whether Feedlot should use logging.  Log
 	// messages are written to both a file and stdout.
 	Log = "log"
-	// LogFile is the log file to be used if logging is enabled.  Rancher
+	// LogFile is the log file to be used if logging is enabled.  Feedlot
 	// generates a new logfile for every run.  If a file already exists with
-	// the same name, Rancher will add the date and, when necessary, a sequence
+	// the same name, Feedlot will add the date and, when necessary, a sequence
 	// number to ensure the file is unique.
 	LogFile = "log_file"
 	// LogLevelFile is the minimum log level used for logging to file.  The
@@ -58,14 +58,14 @@ const (
 )
 
 // CfgFile is the suffix for the ENV variable name that holds the override
-// value for the Rancher cfg file, if there is one.
+// value for the Feedlot cfg file, if there is one.
 var CfgFile = "cfg_file"
 
-// CfgFilename is the default value for the optional Rancher cfg file.  This may
-// be overridden using the 'RANCHER_CFG_FILE' environment variable.
-var CfgFilename = "rancher.json"
+// CfgFilename is the default value for the optional Feedlot cfg file.  This may
+// be overridden using the 'FEEDLOT_CFG_FILE' environment variable.
+var CfgFilename = "feedlot.json"
 
-// AppCfg contains the values for the loaded Rancher configuration.
+// AppCfg contains the values for the loaded Feedlot configuration.
 // TODO is this still necessary?
 var AppCfg appCfg
 
@@ -97,11 +97,11 @@ func init() {
 	// shortcuts used: a, d, e, f, i, g, l, n, o, p, r, s, t, v, 	x
 	contour.RegisterBoolFlag(ArchivePriorBuild, "v", false, "false", "archive prior build before writing new packer template files")
 	contour.RegisterBoolFlag(Log, "l", false, "false", "enable/disable logging")
-	contour.RegisterStringFlag(ConfDir, "c", "conf/", "conf/", "location of the directory with the rancher build configuration files")
+	contour.RegisterStringFlag(ConfDir, "c", "conf/", "conf/", "location of the directory with the feedlot build configuration files")
 	contour.RegisterBoolFlag(Example, "e", false, "false", "whether or not to generate from examples")
-	contour.RegisterStringFlag(ExampleDir, "x", "examples/", "examples/", "location of the directory with the example rancher build configuration files")
-	contour.RegisterStringFlag(Format, "t", JSON.String(), JSON.String(), "the format of the Rancher conf files: toml or json")
-	contour.RegisterStringFlag(LogFile, "g", "rancher.log", "rancher.log", "log filename")
+	contour.RegisterStringFlag(ExampleDir, "x", "examples/", "examples/", "location of the directory with the example feedlot build configuration files")
+	contour.RegisterStringFlag(Format, "t", JSON.String(), JSON.String(), "the format of the feedlot conf files: toml or json")
+	contour.RegisterStringFlag(LogFile, "g", "feedlot.log", "feedlot.log", "log filename")
 	contour.RegisterStringFlag(LogLevelFile, "f", "WARN", "WARN", "log level for writing to the log file")
 	contour.RegisterStringFlag(LogLevelStdOut, "o", "ERROR", "ERROR", "log level for writing to stdout")
 	contour.RegisterStringFlag(ParamDelimStart, "p", ":", ":", "the start delimiter for template variabes")

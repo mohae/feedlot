@@ -130,7 +130,7 @@ var testDistroDefaultUbuntu = rawTemplate{
 					Settings: []string{
 						"compression_level = 9",
 						"keep_input_artifact = false",
-						"output = out/rancher-packer.box",
+						"output = out/feedlot-packer.box",
 					},
 					Arrays: map[string]interface{}{
 						"include": []string{
@@ -182,7 +182,7 @@ var testDistroDefaultUbuntu = rawTemplate{
 var testDistroDefaultCentOS = rawTemplate{
 	PackerInf: PackerInf{
 		MinPackerVersion: "0.4.0",
-		Description:      "Test template config and Rancher options for CentOS",
+		Description:      "Test template config and feedlot options for CentOS",
 	},
 	IODirInf: IODirInf{
 		TemplateOutputDir: "../test_files/out/:distro/:build_name",
@@ -261,7 +261,7 @@ var testDistroDefaultCentOS = rawTemplate{
 					Settings: []string{
 						"compression_level = 9",
 						"keep_input_artifact = false",
-						"output = out/rancher-packer.box",
+						"output = out/feedlot-packer.box",
 					},
 					Arrays: map[string]interface{}{
 						"include": []string{
@@ -813,7 +813,7 @@ func TestCopyFile(t *testing.T) {
 			t.Errorf("Expected \"copyfile error: destination name, \"test\", did not include a directory\", got %q", err)
 		}
 	}
-	dir, files, err := createTmpTestDirFiles("rancher-copyfile-")
+	dir, files, err := createTmpTestDirFiles("feedlot-copyfile-")
 	if err != nil {
 		t.Errorf("unexpected error while setting up a copy test: %s", err)
 	}
@@ -832,7 +832,7 @@ func TestCopyFile(t *testing.T) {
 }
 
 func TestCopyDirContent(t *testing.T) {
-	dir, files, err := createTmpTestDirFiles("rancher-copydircontent-")
+	dir, files, err := createTmpTestDirFiles("feedlot-copydircontent-")
 	if err != nil {
 		t.Errorf("expected error to be nil, got %q", err)
 		return
@@ -867,7 +867,7 @@ func TestCopyDirContent(t *testing.T) {
 }
 
 func TestDeleteDirContent(t *testing.T) {
-	dir, _, err := createTmpTestDirFiles("rancher-deletedircontent-")
+	dir, _, err := createTmpTestDirFiles("feedlot-deletedircontent-")
 	if err != nil {
 		t.Errorf("no error expected, got %q", err)
 		return
@@ -1058,7 +1058,7 @@ func TestGetUniqueFilename(t *testing.T) {
 }
 
 func TestIndexDir(t *testing.T) {
-	dir, files, err := createTmpTestDirFiles("rancher-indexDir")
+	dir, files, err := createTmpTestDirFiles("feedlot-indexDir")
 	if err != nil {
 		t.Errorf("An error occurred during test file creation, aborting IndexDir tests: %q", err)
 		return
