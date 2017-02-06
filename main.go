@@ -9,7 +9,7 @@ import (
 	"os"
 
 	"github.com/mohae/cli"
-	"github.com/mohae/rancher/app"
+	"github.com/mohae/feedlot/app"
 	jww "github.com/spf13/jwalterweatherman"
 )
 

@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/mohae/cli"
-	"github.com/mohae/rancher/command"
+	"github.com/mohae/feedlot/command"
 )
 
 // Commands is the mapping of all available Rancher commands.
