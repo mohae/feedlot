@@ -7,10 +7,9 @@ import (
 )
 
 const (
-	// Name is the name of the application
-	Name = "feedlot"
 	// DefaultFormat is the default configuration format.
 	DefaultFormat = JSON
+	stderr        = "stderr"
 )
 
 // Feedlot setting names: these values are used in the config files, for flags,
@@ -57,24 +56,29 @@ const (
 	LogLevelStdOut = "log_level_stdout"
 )
 
-// CfgFile is the suffix for the ENV variable name that holds the override
-// value for the Feedlot cfg file, if there is one.
-var CfgFile = "cfg_file"
+var (
 
-// CfgFilename is the default value for the optional Feedlot cfg file.  This may
-// be overridden using the 'FEEDLOT_CFG_FILE' environment variable.
-var CfgFilename = "feedlot.json"
+	// Name is the name of the application
+	Name string
 
-// AppCfg contains the values for the loaded Feedlot configuration.
-// TODO is this still necessary?
-var AppCfg appCfg
+	// CfgFile is the suffix for the ENV variable name that holds the override
+	// value for the Feedlot cfg file, if there is one.
+	CfgFile = "cfg_file"
+
+	// CfgFilename is the default value for the optional Feedlot cfg file.  This may
+	// be overridden using the 'FEEDLOT_CFG_FILE' environment variable.
+	CfgFilename = "feedlot.json"
+
+	// AppCfg contains the values for the loaded Feedlot configuration.
+	// TODO is this still necessary?
+	AppCfg appCfg
+)
 
 type appCfg struct {
 	ConfDir         string `toml:"conf_dir",json:"conf_dir"`
 	Example         bool
 	ExampleDir      string `toml:"example_dir",json:"example_dir"`
 	Format          string
-	Log             bool
 	LogFile         string `toml:"log_file",json:"log_file"`
 	LogLevelFile    string `toml:"log_level_file",json:"log_level_file"`
 	LogLevelStdout  string `toml:"log_level_stdout",json:"log_level_stdout"`
@@ -96,12 +100,11 @@ func init() {
 	contour.RegisterCfgFile(CfgFile, cfgFilename)
 	// shortcuts used: a, d, e, f, i, g, l, n, o, p, r, s, t, v, 	x
 	contour.RegisterBoolFlag(ArchivePriorBuild, "v", false, "false", "archive prior build before writing new packer template files")
-	contour.RegisterBoolFlag(Log, "l", false, "false", "enable/disable logging")
 	contour.RegisterStringFlag(ConfDir, "c", "conf/", "conf/", "location of the directory with the feedlot build configuration files")
 	contour.RegisterBoolFlag(Example, "e", false, "false", "whether or not to generate from examples")
 	contour.RegisterStringFlag(ExampleDir, "x", "examples/", "examples/", "location of the directory with the example feedlot build configuration files")
 	contour.RegisterStringFlag(Format, "t", JSON.String(), JSON.String(), "the format of the feedlot conf files: toml or json")
-	contour.RegisterStringFlag(LogFile, "g", "feedlot.log", "feedlot.log", "log filename")
+	contour.RegisterStringFlag(LogFile, "g", "feedlot.log", stderr, "log filename")
 	contour.RegisterStringFlag(LogLevelFile, "f", "WARN", "WARN", "log level for writing to the log file")
 	contour.RegisterStringFlag(LogLevelStdOut, "o", "ERROR", "ERROR", "log level for writing to stdout")
 	contour.RegisterStringFlag(ParamDelimStart, "p", ":", ":", "the start delimiter for template variabes")

@@ -7,34 +7,37 @@ package main
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/mohae/cli"
 	"github.com/mohae/feedlot/app"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
+func init() {
+	app.Name = filepath.Base(os.Args[0])
+}
+
 func main() {
 	os.Exit(realMain())
 }
 
 func realMain() int {
-	// Logging to temp first
-	app.SetTempLogging()
 	err := app.SetCfgFile()
 	if err != nil {
 		jww.ERROR.Printf("%s", err.Error())
 	}
 	args := os.Args[1:]
 	cli := &cli.CLI{
-		Name:     "rancher",
+		Name:     app.Name,
 		Version:  Version,
 		Args:     args,
 		Commands: Commands,
-		HelpFunc: cli.BasicHelpFunc("rancher"),
+		HelpFunc: cli.BasicHelpFunc(app.Name),
 	}
 	exitCode, err := cli.Run()
 	if err != nil {
-		jww.ERROR.Printf("Rancher encountered an error: %s", err.Error())
+		jww.ERROR.Printf("%s encountered an error: %s", app.Name, err.Error())
 
 	}
 	return exitCode

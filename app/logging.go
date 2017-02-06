@@ -17,54 +17,29 @@ func init() {
 	jww.SetStdoutThreshold(getJWWLevel(contour.GetString(LogLevelStdOut)))
 }
 
-// SetTempLogging creates a temp logfile in the /tmp and enables logging. This
-// is to support logging of operations prior to processing the command-line
-// flags, at which point SetLogging will either move this to the actual log
-// location or remove the temp logfile.
-func SetTempLogging() {
-	// use temp logfile
-	jww.UseTempLogFile("feedlot")
-}
-
 // SetLogging sets application logging settings.
 func SetLogging() error {
-	// Check to see if logging is enabled, if not, discard the temp logfile and remove.
-	tmpFile := jww.LogHandle.(*os.File).Name()
-	if !contour.GetBool(Log) {
-		jww.LogHandle.(*os.File).Close()
-		jww.DiscardLogging()
-		os.Remove(tmpFile)
-		return nil
-	}
-	logfile := contour.GetString(LogFile)
-	fname, err := getUniqueFilename(logfile, "2006-01-02")
-	if err != nil {
-		err = fmt.Errorf("cannot obtain unique log filename: %s", err)
-		jww.FEEDBACK.Println(err)
-		return err
-	}
-	// if the names aren't the same, the logfile already exists. Rename it to the fname
-	if fname != logfile {
-		logfile = fname
-	}
-	// close the temp logfile
-	jww.LogHandle.(*os.File).Close()
-	// make the tmpLogFile the actual logfile
-	err = os.Rename(tmpFile, logfile)
-	if err != nil {
-		err = fmt.Errorf("cannot rename the temp log, %q, to %q: %s", logfile, fname, err)
-		jww.FEEDBACK.Println(err)
-		return err
-	}
-	jww.SetLogFile(logfile)
-	jww.FEEDBACK.Printf("The temp log file %s was moved to %s\n", tmpFile, logfile)
 	// Set LogLevels
 	jww.SetLogThreshold(getJWWLevel(contour.GetString(LogLevelFile)))
 	jww.SetStdoutThreshold(getJWWLevel(contour.GetString(LogLevelStdOut)))
+
+	// set output
+	logfile := contour.GetString(LogFile)
+	jww.FEEDBACK.Printf("Log output will be written to %s\n", logfile)
+	if logfile == stderr {
+		jww.SetLogOutput(os.Stderr)
+		return nil
+	}
+	f, err := os.OpenFile(logfile, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0664)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s: error: open logfile: %s ", Name, err)
+		return err
+	}
+	jww.SetLogOutput(f)
 	return nil
 }
 
-func getJWWLevel(level string) jww.Level {
+func getJWWLevel(level string) jww.Threshold {
 	level = strings.ToUpper(level)
 	switch level {
 	case "TRACE":
