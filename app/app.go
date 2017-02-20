@@ -40,20 +40,13 @@ const (
 	// so that Feedlot parameters in templates do not conflict with Packer
 	// parameters, which use '{{ }}'.
 	ParamDelimStart = "param_delim_start"
-	// Log is a bool that indicates whether Feedlot should use logging.  Log
-	// messages are written to both a file and stdout.
-	Log = "log"
-	// LogFile is the log file to be used if logging is enabled.  Feedlot
-	// generates a new logfile for every run.  If a file already exists with
-	// the same name, Feedlot will add the date and, when necessary, a sequence
-	// number to ensure the file is unique.
+	// LogFile is the log file to be used if logging is enabled; this defaults to
+	// stderr.
 	LogFile = "log_file"
-	// LogLevelFile is the minimum log level used for logging to file.  The
-	// default log level for files is 'WARN'.
-	LogLevelFile = "log_level_file"
-	// LogLevelStdOut is the minimum log level used for printing log messages
-	// to stdout.  The default log level for stdout is 'ERROR'.
-	LogLevelStdOut = "log_level_stdout"
+	// LogLevel is the minimum log level used for logging.
+	LogLevel = "log_level"
+	// Verbose prints non-log information to stdout.
+	Verbose = "verbose"
 )
 
 var (
@@ -67,7 +60,7 @@ var (
 
 	// CfgFilename is the default value for the optional Feedlot cfg file.  This may
 	// be overridden using the 'FEEDLOT_CFG_FILE' environment variable.
-	CfgFilename = "feedlot.json"
+	CfgFilename = "feedlot.cjson"
 
 	// AppCfg contains the values for the loaded Feedlot configuration.
 	// TODO is this still necessary?
@@ -80,8 +73,8 @@ type appCfg struct {
 	ExampleDir      string `toml:"example_dir",json:"example_dir"`
 	Format          string
 	LogFile         string `toml:"log_file",json:"log_file"`
-	LogLevelFile    string `toml:"log_level_file",json:"log_level_file"`
-	LogLevelStdout  string `toml:"log_level_stdout",json:"log_level_stdout"`
+	LogLevel        string `toml:"log_level",json:"log_level"`
+	Verbose         string `toml:"verbose",json:"verbose"`
 	ParamDelimStart string `toml:"param_delim_start",json:"param_delim_start"`
 }
 
@@ -105,8 +98,8 @@ func init() {
 	contour.RegisterStringFlag(ExampleDir, "x", "examples/", "examples/", "location of the directory with the example feedlot build configuration files")
 	contour.RegisterStringFlag(Format, "t", JSON.String(), JSON.String(), "the format of the feedlot conf files: toml or json")
 	contour.RegisterStringFlag(LogFile, "g", "feedlot.log", stderr, "log filename")
-	contour.RegisterStringFlag(LogLevelFile, "f", "WARN", "WARN", "log level for writing to the log file")
-	contour.RegisterStringFlag(LogLevelStdOut, "o", "ERROR", "ERROR", "log level for writing to stdout")
+	contour.RegisterStringFlag(LogLevel, "l", "error", "error", "log level")
+	contour.RegisterBoolFlag(Verbose, "v", false, "false", "verbose output")
 	contour.RegisterStringFlag(ParamDelimStart, "p", ":", ":", "the start delimiter for template variabes")
 	contour.RegisterStringFlag("envs", "n", "", "", "additional environments from within which config additional config information should be loaded")
 	contour.RegisterStringFlag("distro", "d", "", "", "specifies the distro for which a Packer template using defaults should be created")
