@@ -60,6 +60,10 @@ func parseLevel(s string) (Level, error) {
 	}
 }
 
+func init() {
+	log.SetPrefix(app.Name)
+}
+
 // SetLogging sets application logging settings and verbose output.
 func SetLogging() error {
 	if contour.GetBool(app.Verbose) {
