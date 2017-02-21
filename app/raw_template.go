@@ -25,7 +25,23 @@ type SettingError struct {
 }
 
 func (e *SettingError) Error() string {
-	return e.ID + ": " + e.Key + ": " + e.Value + ": " + e.err.Error()
+	var s string
+	if e.ID == "" {
+		s = "\"\"."
+	} else {
+		s = e.ID + "."
+	}
+	if e.Key == "" {
+		s += "\"\": "
+	} else {
+		s += e.Key + ": "
+	}
+	if e.Value == "" {
+		s += "\"\": "
+	} else {
+		s += e.Value + ": "
+	}
+	return s + e.err.Error()
 }
 
 // RequiredSettingError occurs when a setting required by the Packer
@@ -36,7 +52,7 @@ type RequiredSettingError struct {
 }
 
 func (e *RequiredSettingError) Error() string {
-	return e.ID + "." + e.Key + ": required setting"
+	return e.ID + "." + e.Key + ": is required"
 }
 
 var (
