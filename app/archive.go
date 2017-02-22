@@ -11,13 +11,17 @@ import (
 	"github.com/mohae/contour"
 )
 
-// ArchiveError is generated during an archive process.
-type ArchiveError struct {
-	err error
+// ArchiveErr is generated during an archive process.
+type ArchiveErr struct {
+	slug string
+	err  error
 }
 
-func (e *ArchiveError) Error() string {
-	return "archive error: " + e.err.Error()
+func (e ArchiveErr) Error() string {
+	if e.slug == "" {
+		return "archive: " + e.err.Error()
+	}
+	return "archive: " + e.slug + ": " + e.err.Error()
 }
 
 // Archive holds information about an archive.
@@ -43,13 +47,13 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 	// TODO check ownership/permissions
 	file, err := os.Open(filename)
 	if err != nil {
-		return err
+		return ArchiveErr{slug: fmt.Sprintf("%s: open", filename), err: err}
 	}
 	defer file.Close()
 	var fileStat os.FileInfo
 	fileStat, err = file.Stat()
 	if err != nil {
-		return err
+		return ArchiveErr{slug: fmt.Sprintf("%s: stat", filename), err: err}
 	}
 	// Don't add directories--they result in tar header errors.
 	fileMode := fileStat.Mode()
@@ -65,12 +69,12 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 	// Write the file header to the tarball.
 	err = tW.WriteHeader(tH)
 	if err != nil {
-		return err
+		return ArchiveErr{slug: fmt.Sprintf("%s: write header", filename), err: err}
 	}
 	// Add the file to the tarball.
 	_, err = io.Copy(tW, file)
 	if err != nil {
-		return err
+		return ArchiveErr{slug: fmt.Sprintf("%s: copy to tar", filename), err: err}
 	}
 	return nil
 }
@@ -88,17 +92,17 @@ func (a *Archive) priorBuild(p string) error {
 		if os.IsNotExist(err) {
 			return nil
 		}
-		return &ArchiveError{err}
+		return ArchiveErr{slug: fmt.Sprintf("%s: stat", p), err: err}
 	}
 	// Archive the old artifacts.
 	err = a.create(p)
 	if err != nil {
-		return &ArchiveError{err}
+		return err
 	}
 	// Delete the old artifacts.
 	err = a.deletePriorBuild(p)
 	if err != nil {
-		return Error{"delete prior build error", err}
+		return err
 	}
 	return nil
 }
@@ -111,7 +115,7 @@ func (a *Archive) create(p string) error {
 	// Get a list of directory contents
 	err := a.DirWalk(p)
 	if err != nil {
-		return err
+		return ArchiveErr{slug: fmt.Sprintf("%s: list dir", p), err: err}
 	}
 	if len(a.Files) <= 1 {
 		// This isn't a real error, just log it and return a non-error state.
@@ -128,13 +132,13 @@ func (a *Archive) create(p string) error {
 	// Create the new archive file.
 	tBall, err := os.Create(tBName)
 	if err != nil {
-		return err
+		return ArchiveErr{slug: fmt.Sprintf("%s: create", tBName), err: err}
 	}
 	// Close the file with error handling
 	defer func() {
 		cerr := tBall.Close()
 		if cerr != nil && err == nil {
-			err = cerr
+			err = ArchiveErr{slug: fmt.Sprintf("%s: close file", tBName), err: cerr}
 		}
 	}()
 	// The tarball gets compressed with gzip
@@ -142,7 +146,7 @@ func (a *Archive) create(p string) error {
 	defer func() {
 		cerr := gw.Close()
 		if cerr != nil && err == nil {
-			err = cerr
+			err = ArchiveErr{slug: fmt.Sprintf("%s: close zip", tBName), err: cerr}
 		}
 	}()
 	// Create the tar writer.
@@ -150,7 +154,7 @@ func (a *Archive) create(p string) error {
 	defer func() {
 		cerr := tW.Close()
 		if cerr != nil && err == nil {
-			err = cerr
+			err = ArchiveErr{slug: fmt.Sprintf("%s: close tar", tBName), err: cerr}
 		}
 	}()
 	// Go through each file in the path and add it to the archive
@@ -198,14 +202,14 @@ func (d *directory) DirWalk(dirPath string) error {
 	// See if the path exists
 	exists, err := pathExists(dirPath)
 	if err != nil {
-		return &ArchiveError{err}
+		return ArchiveErr{slug: fmt.Sprintf("%s: check path", dirPath), err: err}
 	}
 	if !exists {
-		return &ArchiveError{fmt.Errorf("%s does not exist", dirPath)}
+		return ArchiveErr{slug: fmt.Sprintf("%s does not exist", dirPath)}
 	}
 	fullPath, err := filepath.Abs(dirPath)
 	if err != nil {
-		return &ArchiveError{err}
+		return ArchiveErr{slug: fmt.Sprintf("%s: get absolute path", dirPath), err: err}
 	}
 	// Set up the call back function.
 	callback := func(p string, fi os.FileInfo, err error) error {
@@ -222,15 +226,15 @@ func (d *directory) addFilename(root, p string, fi os.FileInfo, err error) error
 	var exists bool
 	exists, err = pathExists(p)
 	if err != nil {
-		return err
+		return ArchiveErr{slug: fmt.Sprintf("%s: check exists", p), err: err}
 	}
 	if !exists {
-		return fmt.Errorf("%s does not exist", p)
+		return ArchiveErr{slug: fmt.Sprintf("%s does not exist", p)}
 	}
 	// Get the relative information.
 	rel, err := filepath.Rel(root, p)
 	if err != nil {
-		return err
+		return ArchiveErr{slug: fmt.Sprintf("%s: get relative path", p), err: err}
 	}
 	if rel == "." {
 		return nil
@@ -248,7 +252,7 @@ func deleteDir(dir string) error {
 	// os.IsNotExist(err)
 	_, err := os.Stat(dir)
 	if err != nil {
-		return err
+		return ArchiveErr{slug: fmt.Sprintf("%s: stat", dir), err: err}
 	}
 	dirInf := directory{}
 	dirInf.DirWalk(dir)
@@ -260,7 +264,7 @@ func deleteDir(dir string) error {
 		}
 		err := os.Remove(dir + file.p)
 		if err != nil {
-			return err
+			return ArchiveErr{slug: fmt.Sprintf("%s: remove", filepath.Join(dir, file.p)), err: err}
 		}
 	}
 	// all the files should now be deleted so its safe to delete the directories
@@ -268,7 +272,7 @@ func deleteDir(dir string) error {
 	for i := len(dirs) - 1; i >= 0; i-- {
 		err = os.Remove(dirs[i])
 		if err != nil {
-			return err
+			return ArchiveErr{slug: fmt.Sprintf("%s: remove", dirs[i]), err: err}
 		}
 	}
 	return nil
