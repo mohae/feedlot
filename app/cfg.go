@@ -14,10 +14,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/BurntSushi/toml"
 	cjsn "github.com/mohae/cjson"
 	"github.com/mohae/contour"
 	"github.com/mohae/deepcopy"
-	"github.com/BurntSushi/toml"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -181,7 +181,7 @@ func (b *builder) mergeSettings(sl []string) error {
 	var err error
 	b.Settings, err = mergeSettingsSlices(b.Settings, sl)
 	if err != nil {
-		return fmt.Errorf("merge of builder settings failed: %s", err)
+		return fmt.Errorf("%s: merge settings failed: %s", b.Type, err)
 	}
 	return nil
 }
@@ -221,7 +221,7 @@ func (p *postProcessor) mergeSettings(sl []string) error {
 	var err error
 	p.Settings, err = mergeSettingsSlices(p.Settings, sl)
 	if err != nil {
-		return fmt.Errorf("merge of post-processor settings failed: %s", err)
+		return fmt.Errorf("%s: merge settings failed: %s", p.Type, err)
 	}
 	return nil
 }
@@ -260,7 +260,7 @@ func (p *provisioner) mergeSettings(sl []string) error {
 	var err error
 	p.Settings, err = mergeSettingsSlices(p.Settings, sl)
 	if err != nil {
-		return fmt.Errorf("merge of provisioner settings failed: %s", err)
+		return fmt.Errorf("%s: merge settings failed: %s", p.Type, err)
 	}
 	return nil
 }
@@ -758,7 +758,7 @@ func findConfigFile(fname string) (string, CfgFormat, error) {
 		}
 	}
 	// nothing found
-	return "", cf, err
+	return "", cf, fmt.Errorf("%s not found", fname)
 }
 
 // GetConfigFile returns the location of the provided conf file. This accounts
