@@ -14,39 +14,28 @@ import (
 	"golang.org/x/net/html"
 )
 
-// FilterError occur while filtering mirror results.
-type FilterError struct {
-	filter string
-	slug   string
-}
-
-func (e *FilterError) Error() string {
-	return "filter " + e.filter + ": " + e.slug
-}
-
-// NotSupportedError occur when something that isn't supported is specified;
-// e.g. an unsupported release for a distro, unsupported architecture, etc.
-type NotSupportedError struct {
+// DistroErr is an error that occurs when processing a distro's information.
+type DistroErr struct {
 	Distro
 	slug string
+	err  error
 }
 
-func (e *NotSupportedError) Error() string {
-	return e.Distro.CasedString() + " " + e.slug + ": not supported"
-}
+func (d DistroErr) Error() string {
+	s := d.Distro.String()
 
-// VersionInfoError occur when there is a problem when parsing version
-// information for a build.
-type VersionInfoError struct {
-	info string
-	slug string
-}
-
-func (e *VersionInfoError) Error() string {
-	return "version info error: " + e.info + ": " + e.slug
+	if d.slug != "" {
+		s += ": " + d.slug
+	}
+	if d.err != nil {
+		s += ": " + d.err.Error()
+	}
+	return s
 }
 
 var (
+	// ErrNoMatch: no match was found
+	ErrNoMatch = errors.New("no matches found")
 	// ErrPageEmpty: the contents of the retrieved url was empty.
 	ErrPageEmpty = errors.New("page empty")
 	// ErrChecksumNotFound: the checksum for the iso cannot be found.
@@ -128,12 +117,12 @@ func (r *centos) pickReleaseURL() error {
 	// get the mirror list
 	resp, err := http.Get("https://www.centos.org/download/full-mirrorlist.csv")
 	if err != nil {
-		return err
+		return DistroErr{Distro: CentOS, slug: "get mirror list", err: err}
 	}
 	defer resp.Body.Close()
 	text, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return DistroErr{Distro: CentOS, slug: "read mirror list", err: err}
 	}
 	var buf bytes.Buffer
 	lines := bytes.Split(text, []byte("\n"))
@@ -141,7 +130,7 @@ func (r *centos) pickReleaseURL() error {
 		if len(line) == 0 {
 			break
 		}
-		// replace \" with nothing as the csv Reader chokes on it intermitently
+		// replace \" with nothing as the csv Reader chokes on it intermittently
 		// we don't actually care about the quoting here
 		line = bytes.Replace(line, []byte(`\"`), []byte(""), -1)
 		buf.Write(line)
@@ -152,7 +141,7 @@ func (r *centos) pickReleaseURL() error {
 	rdr.TrimLeadingSpace = true
 	records, err := rdr.ReadAll()
 	if err != nil {
-		return err
+		return DistroErr{Distro: CentOS, slug: "read mirror list csv", err: err}
 	}
 	// remove any records that don't have a http mirror link
 	filtered := excludeRecords("", 4, records)
@@ -166,7 +155,7 @@ func (r *centos) pickReleaseURL() error {
 		}
 		filtered = filterRecords(r.sponsor, 2, filtered)
 		if len(filtered) == 0 {
-			return &FilterError{filter: fmt.Sprintf("region: %q, sponsor: %q", r.region, r.sponsor), slug: "no matches found"}
+			return DistroErr{Distro: CentOS, slug: fmt.Sprintf("filter on sponsor: region: %q, sponsor: %q", r.region, r.sponsor), err: ErrNoMatch}
 		}
 		goto PICK
 	}
@@ -174,7 +163,7 @@ func (r *centos) pickReleaseURL() error {
 	filtered = filterRecords(r.country, 1, filtered)
 	// it's an error state if everything is filtered out
 	if len(filtered) == 0 {
-		return &FilterError{filter: fmt.Sprintf("mirror: region: %q, country: %q", r.region, r.country), slug: "no matches found"}
+		return DistroErr{Distro: CentOS, slug: fmt.Sprintf("filter on country: country: %q, region: %q, sponsor: %q", r.country, r.region, r.sponsor), err: ErrNoMatch}
 	}
 PICK:
 	// get a random mirror url
@@ -192,10 +181,10 @@ PICK:
 // iso name string.
 func (r *centos) setVersionInfo() error {
 	if r.Release == "" {
-		return ErrNoRelease
+		return DistroErr{Distro: CentOS, err: ErrNoRelease}
 	}
 	if !strings.HasPrefix(r.Release, "6") && !strings.HasPrefix(r.Release, "7") {
-		return &NotSupportedError{Distro: CentOS, slug: r.Release}
+		return DistroErr{Distro: CentOS, slug: r.Release}
 	}
 	// If the BaseURL isn't set, find a mirror to use
 	if r.BaseURL == "" {
@@ -220,28 +209,28 @@ func (r *centos) setVersion6Info() error {
 	r.Image = strings.ToLower(r.Image)
 	tokens, err := tokensFromURL(r.ReleaseURL)
 	if err != nil {
-		return &VersionInfoError{info: r.ReleaseURL, slug: "tokenize release page: " + err.Error()}
+		return DistroErr{Distro: CentOS, err: err}
 	}
 	// get the tokens that are links
 	links := inlineElementsFromTokens("a", "href", tokens)
 	if len(links) == 0 || links == nil {
-		return &VersionInfoError{info: r.ReleaseURL, slug: "extract of links from the release page failed"}
+		return DistroErr{Distro: CentOS, slug: fmt.Sprintf("%s: extract of links from the release page failed", r.ReleaseURL)}
 	}
 	// get the links that start with CentOS-, these have the full version number
 	// and split it into it's parts
 	links = extractLinksHasPrefix(links, []string{"CentOS-"})
 	if len(links) == 0 {
-		return &VersionInfoError{info: r.ReleaseURL, slug: "no CentOS iso links found"}
+		return DistroErr{Distro: CentOS, slug: fmt.Sprintf("%s: links starting with \"CentOS-\": no matches found", r.ReleaseURL)}
 	}
 	parts := strings.Split(links[0], "-")
 	// parts should be 5 elements: e.g. CentOS-6.7-x86_64-minimal.iso
 	if len(parts) < 4 {
-		return &VersionInfoError{info: r.ReleaseURL, slug: "parse of CentOS iso links failed"}
+		return DistroErr{Distro: CentOS, slug: fmt.Sprintf("%s: %s: parse of iso link failed", r.ReleaseURL, links[0])}
 	}
 	r.FullVersion = parts[1]
 	parts = strings.Split(parts[1], ".")
 	if len(parts) < 2 {
-		return &VersionInfoError{info: r.ReleaseURL, slug: "parse of version info from CentOS iso links failed"}
+		return DistroErr{Distro: CentOS, slug: fmt.Sprintf("%s: parse of version info from %s failed", r.ReleaseURL, links[0])}
 	}
 	r.MajorVersion = parts[0]
 	r.MinorVersion = parts[1]
@@ -255,21 +244,21 @@ func (r *centos) setVersion7Info() error {
 	// get the page from the url
 	tokens, err := tokensFromURL(r.ReleaseURL)
 	if err != nil {
-		return &VersionInfoError{info: r.ReleaseURL, slug: "tokenize release page: " + err.Error()}
+		return DistroErr{Distro: CentOS, slug: "tokenize release page", err: err}
 	}
 	links := inlineElementsFromTokens("a", "href", tokens)
 	if len(links) == 0 || links == nil {
-		return &VersionInfoError{info: r.ReleaseURL, slug: "extract of links from the release page failed"}
+		return DistroErr{Distro: CentOS, slug: fmt.Sprintf("%s: failed to extract links", r.ReleaseURL)}
 	}
 	links = extractLinksHasPrefix(links, []string{"CentOS-"})
 	if len(links) == 0 {
-		return &VersionInfoError{info: r.ReleaseURL, slug: "no CentOS iso links found"}
+		return DistroErr{Distro: CentOS, slug: fmt.Sprintf("%s: no iso links found", r.ReleaseURL)}
 	}
 	// extract the monthstamp and fix number this may or may not include a fix number
 	parts := strings.Split(links[0], "-")
 	r.MajorVersion = parts[1]
 	if len(parts) < 5 {
-		return &VersionInfoError{info: r.ReleaseURL, slug: "parse of CentOS iso links failed"}
+		return DistroErr{Distro: CentOS, slug: fmt.Sprintf("%s: parse of iso links failed", r.ReleaseURL)}
 	}
 	tmp := strings.Split(parts[4], ".")
 	r.MinorVersion = tmp[0]
@@ -279,7 +268,7 @@ func (r *centos) setVersion7Info() error {
 // Sets the ISO information for a Packer template.
 func (r *centos) SetISOInfo() error {
 	if r.Arch == "" {
-		return ErrNoArch
+		return DistroErr{Distro: CentOS, err: ErrNoArch}
 	}
 	r.setISOName()
 	r.setReleaseURL()
@@ -325,12 +314,12 @@ func (r *centos) setISOName7() {
 // retrieves the page, and finds the checksum for the release ISO.
 func (r *centos) setISOChecksum() error {
 	if r.ChecksumType == "" {
-		return ErrChecksumTypeNotSet
+		return DistroErr{Distro: CentOS, err: ErrChecksumTypeNotSet}
 	}
 	url := r.checksumURL()
 	page, err := bodyStringFromURL(url)
 	if err != nil {
-		return err
+		return DistroErr{Distro: CentOS, err: err}
 	}
 	// Now that we have a page...we need to find the checksum and set it
 	err = r.findISOChecksum(page)
@@ -342,11 +331,11 @@ func (r *centos) setISOChecksum() error {
 
 func (r *centos) findISOChecksum(page string) error {
 	if page == "" {
-		return ErrPageEmpty
+		return DistroErr{Distro: CentOS, err: ErrPageEmpty}
 	}
 	pos := strings.Index(page, r.Name)
 	if pos < 0 {
-		return ErrChecksumNotFound
+		return DistroErr{Distro: CentOS, err: ErrChecksumNotFound}
 	}
 	tmpRel := page[:pos]
 	tmpSl := strings.Split(tmpRel, "\n")
@@ -386,7 +375,7 @@ func (r *centos) getOSType(buildType Builder) (string, error) {
 		return "", nil
 	}
 	// Shouldn't get here unless the buildType passed is an unsupported one.
-	return "", &NotSupportedError{Distro: CentOS, slug: buildType.String()}
+	return "", DistroErr{Distro: CentOS, slug: fmt.Sprintf("%s: arch not supported for %s", r.Arch, buildType)}
 }
 
 // An Debian specific wrapper to release
@@ -399,16 +388,16 @@ type debian struct {
 // same value as r.MajorVersion. Images use major.minor.fix numbering system.
 func (r *debian) setVersionInfo() error {
 	if r.Release == "" {
-		return ErrNoRelease
+		return DistroErr{Distro: Debian, err: ErrNoRelease}
 	}
 	// to find the current release number, get the index of debian-cd
 	tokens, err := tokensFromURL(r.BaseURL)
 	if err != nil {
-		return &VersionInfoError{info: r.BaseURL, slug: err.Error()}
+		return DistroErr{Distro: Debian, err: err}
 	}
 	hrefs := inlineElementsFromTokens("a", "href", tokens)
 	if len(hrefs) == 0 || hrefs == nil {
-		return &VersionInfoError{info: r.BaseURL, slug: "could not tokenize release page: " + err.Error()}
+		return DistroErr{Distro: Debian, slug: fmt.Sprintf("%s: could not tokenize release page", r.BaseURL)}
 	}
 	for _, href := range hrefs {
 		if strings.HasPrefix(href, r.Release) {
@@ -416,7 +405,7 @@ func (r *debian) setVersionInfo() error {
 			r.FullVersion = parts[0]
 			nums := strings.Split(parts[0], ".")
 			if len(nums) != 3 {
-				return &VersionInfoError{info: r.BaseURL + ": " + r.Release, slug: "unable to parse release number into its parts"}
+				return DistroErr{Distro: Debian, slug: fmt.Sprintf("%sL: unable to parse release number into its parts", r.Release)}
 			}
 			r.MajorVersion = nums[0]
 			r.MinorVersion = nums[1]
@@ -425,7 +414,7 @@ func (r *debian) setVersionInfo() error {
 		}
 	}
 	if r.FullVersion == "" {
-		return &VersionInfoError{info: r.BaseURL + ": " + r.Release, slug: "could not set the current release number"}
+		return DistroErr{Distro: Debian, slug: fmt.Sprintf("%s: could no set current release number", r.Release)}
 	}
 	r.setReleaseURL()
 	return nil
@@ -449,7 +438,7 @@ func (r *debian) checksumURL() string {
 // Sets the ISO information for a Packer template.
 func (r *debian) SetISOInfo() error {
 	if r.Arch == "" {
-		return ErrNoArch
+		return DistroErr{Distro: Debian, err: ErrNoArch}
 	}
 	r.setISOName()
 	r.setReleaseURL()
@@ -473,11 +462,11 @@ func (r *debian) setISOName() {
 // setISOChecksum: Set the checksum value for the iso.
 func (r *debian) setISOChecksum() error {
 	if r.ChecksumType == "" {
-		return ErrChecksumTypeNotSet
+		return DistroErr{Distro: Debian, err: ErrChecksumTypeNotSet}
 	}
 	page, err := bodyStringFromURL(r.checksumURL())
 	if err != nil {
-		return err
+		return DistroErr{Distro: Debian, err: err}
 	}
 	// Now that we have a page...we need to find the checksum and set it
 	return r.findISOChecksum(page)
@@ -494,11 +483,11 @@ func (r *debian) setISOChecksum() error {
 //   * since this is plain text processing we don't worry about runes
 func (r *debian) findISOChecksum(page string) error {
 	if page == "" {
-		return ErrPageEmpty
+		return DistroErr{Distro: Debian, err: ErrPageEmpty}
 	}
 	pos := strings.Index(page, r.Name)
 	if pos < 0 {
-		return ErrChecksumTypeNotSet
+		return DistroErr{Distro: Debian, err: ErrChecksumTypeNotSet}
 	}
 	tmpRel := page[:pos]
 	tmpSl := strings.Split(tmpRel, "\n")
@@ -530,7 +519,7 @@ func (r *debian) getOSType(buildType Builder) (string, error) {
 		return "", nil
 	}
 	// Shouldn't get here unless the buildType passed is an unsupported one.
-	return "", &NotSupportedError{Distro: Debian, slug: buildType.String()}
+	return "", DistroErr{Distro: Debian, slug: fmt.Sprintf("%s: arch not supported for %s", r.Arch, buildType)}
 }
 
 // getReleaseVersion() get's the directory info so that the current version
@@ -551,13 +540,13 @@ func (r *debian) getReleaseVersion() error {
 	}
 	p, err := bodyStringFromURL(r.BaseURL)
 	if err != nil {
-		return err
+		return DistroErr{Distro: Debian, err: err}
 	}
 	err = r.setReleaseInfo(p)
 	if err != nil {
 		return err
 	}
-	return err
+	return nil
 }
 
 // Since only the release is specified, the current version needs to be
@@ -567,7 +556,7 @@ func (r *debian) setReleaseInfo(s string) error {
 	// look for the first line that starts with debian-(release)
 	pos := strings.Index(s, fmt.Sprintf("a href=\"%s", r.Release))
 	if pos < 0 {
-		return fmt.Errorf("version search string 'a href =\"%s not found", r.Release)
+		return DistroErr{Distro: Debian, slug: fmt.Sprintf("version search string 'a href =\"%s not found", r.Release)}
 	}
 	// remove everything before that
 	s = s[pos+8:]
@@ -578,7 +567,7 @@ func (r *debian) setReleaseInfo(s string) error {
 	}
 	// take the next 5 chars as the release full, e.g. 7.8.0
 	if len(s) < 5 {
-		return fmt.Errorf("expected version string to be 5 chars: got %s", s)
+		return DistroErr{Distro: Debian, slug: fmt.Sprintf("expected version string to be 5 chars: got %s", s)}
 	}
 	r.FullVersion = s[:5]
 	return nil
@@ -595,12 +584,12 @@ type ubuntu struct {
 // version number in Ubuntu release URLs.
 func (r *ubuntu) setVersionInfo() error {
 	if r.Release == "" {
-		return ErrNoRelease
+		return DistroErr{Distro: Ubuntu, err: ErrNoRelease}
 	}
 	// get the major version from the release
 	parts := strings.Split(r.Release, ".")
 	if len(parts) != 2 {
-		return &VersionInfoError{info: Ubuntu.String(), slug: "cannot parse " + r.Release + " into version info"}
+		return DistroErr{Distro: Ubuntu, slug: fmt.Sprintf("cannot parse %s into version info", r.Release)}
 	}
 	r.MajorVersion = parts[0]
 	r.MinorVersion = parts[1]
@@ -610,11 +599,11 @@ func (r *ubuntu) setVersionInfo() error {
 	r.setReleaseURL()
 	tokens, err := tokensFromURL(r.ReleaseURL)
 	if err != nil {
-		return &VersionInfoError{info: Ubuntu.String(), slug: err.Error()}
+		return DistroErr{Distro: Ubuntu, err: err}
 	}
 	elements := elementsFromTokens("title", tokens)
 	if len(elements) == 0 {
-		return &VersionInfoError{info: Ubuntu.String() + ": " + r.ReleaseURL, slug: "cannot find any title elements"}
+		return DistroErr{Distro: Ubuntu, slug: fmt.Sprintf("%s: cannot find any title elements", r.ReleaseURL)}
 	}
 	// get the full version from the title:
 	parts = strings.Split(elements[0], " ")
@@ -631,7 +620,7 @@ func (r *ubuntu) setVersionInfo() error {
 // SetISOInfo set the ISO URL and ISO checksum information.
 func (r *ubuntu) SetISOInfo() error {
 	if r.Arch == "" {
-		return ErrNoArch
+		return DistroErr{Distro: Ubuntu, err: ErrNoArch}
 	}
 	// Set the ISO name.
 	r.setISOName()
@@ -667,11 +656,11 @@ func (r *ubuntu) setReleaseURL() {
 // is done in findISOChecksum for testability reasons.
 func (r *ubuntu) setISOChecksum() error {
 	if r.ChecksumType == "" {
-		return ErrChecksumTypeNotSet
+		return DistroErr{Distro: Ubuntu, err: ErrChecksumTypeNotSet}
 	}
 	page, err := bodyStringFromURL(r.checksumURL())
 	if err != nil {
-		return err
+		return DistroErr{Distro: Ubuntu, err: err}
 	}
 	return r.findISOChecksum(page)
 }
@@ -679,26 +668,26 @@ func (r *ubuntu) setISOChecksum() error {
 func (r *ubuntu) findISOChecksum(page string) error {
 	// Now that we have a page...we need to find the checksum and set it
 	if page == "" {
-		return ErrPageEmpty
+		return DistroErr{Distro: Ubuntu, err: ErrPageEmpty}
 	}
 	pos := strings.Index(page, r.Name)
 	if pos <= 0 {
-		return ErrChecksumNotFound
+		return DistroErr{Distro: Ubuntu, err: ErrChecksumNotFound}
 	}
 	tmpRel := page[:pos]
 	tmpSl := strings.Split(tmpRel, "-")
 	// the slice should contain 4 elements, unless Ubuntu has changed their naming
 	// pattern .
 	if len(tmpSl) < 4 {
-		return ErrChecksumNotFound
+		return DistroErr{Distro: Ubuntu, err: ErrChecksumNotFound}
 	}
 	pos = strings.Index(page, r.Name)
 	if pos < 0 {
-		return ErrChecksumNotFound
+		return DistroErr{Distro: Ubuntu, err: ErrChecksumNotFound}
 	}
 	// Safety check...should never occur, but sanity check it anyways.
 	if len(page) < pos-2 {
-		return ErrChecksumNotFound
+		return DistroErr{Distro: Ubuntu, err: ErrChecksumNotFound}
 	}
 	// Get the checksum string. If the substring request goes beyond the
 	// variable boundary, be safe and make the request equal to the length
@@ -737,7 +726,7 @@ func (r *ubuntu) getOSType(buildType Builder) (string, error) {
 		// qemu doesn't need this info so return an empty string.
 		return "", nil
 	}
-	return "", &NotSupportedError{Distro: Ubuntu, slug: buildType.String()}
+	return "", DistroErr{Distro: Ubuntu, slug: fmt.Sprintf("%s: arch not supported for %s", r.Arch, buildType)}
 }
 
 // bodyStringFromURL returns the response body for the passed url as a string.
@@ -745,14 +734,14 @@ func bodyStringFromURL(url string) (string, error) {
 	// Get the URL resource
 	res, err := http.Get(url)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("get %s: %s", url, err)
 	}
 	// Close the response body--its idiomatic to defer it right away
 	defer res.Body.Close()
 	// Read the response body into page
 	page, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("read %s: %s", url, err)
 	}
 	if len(page) == 0 {
 		return "", ErrPageEmpty
@@ -764,11 +753,11 @@ func bodyStringFromURL(url string) (string, error) {
 func tokensFromURL(url string) ([]html.Token, error) {
 	resp, err := http.Get(url)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get %s: %s", url, err)
 	}
 	defer resp.Body.Close()
 	// probably unnecessary, but we know that, unless there was a problem, the
-	// number of tokens will always be > than 64
+	// number of tokens will always be < than 64
 	tokens := make([]html.Token, 0, 64)
 	tizer := html.NewTokenizer(resp.Body)
 	for {
