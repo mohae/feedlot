@@ -184,7 +184,7 @@ func (r *centos) setVersionInfo() error {
 		return DistroErr{Distro: CentOS, err: ErrNoRelease}
 	}
 	if !strings.HasPrefix(r.Release, "6") && !strings.HasPrefix(r.Release, "7") {
-		return DistroErr{Distro: CentOS, slug: r.Release}
+		return DistroErr{Distro: CentOS, slug: r.Release + ": not supported"}
 	}
 	// If the BaseURL isn't set, find a mirror to use
 	if r.BaseURL == "" {

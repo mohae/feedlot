@@ -18,10 +18,14 @@ type ArchiveErr struct {
 }
 
 func (e ArchiveErr) Error() string {
-	if e.slug == "" {
-		return "archive: " + e.err.Error()
+	s := "archive"
+	if e.slug != "" {
+		s += ": " + e.slug
 	}
-	return "archive: " + e.slug + ": " + e.err.Error()
+	if e.err != nil {
+		s += ": " + e.err.Error()
+	}
+	return s
 }
 
 // Archive holds information about an archive.

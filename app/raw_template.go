@@ -52,7 +52,7 @@ type RequiredSettingError struct {
 }
 
 func (e *RequiredSettingError) Error() string {
-	return e.ID + "." + e.Key + ": is required"
+	return e.ID + ": " + e.Key + ": required setting"
 }
 
 var (
@@ -814,17 +814,16 @@ func (r *rawTemplate) buildOutPath(component, p string) string {
 // template for the passed path, p, and returns that value.  If the template is
 // set to include the component string as the parent directory, it is added to
 // the path.
-func (r *rawTemplate) buildTemplateResourcePath(component, p string, appendSlash bool) string {
+//
+// All paths in the template output use '/'.
+func (r *rawTemplate) buildTemplateResourcePath(component, p string, slashSuffix bool) string {
 	if r.IncludeComponentString != nil && *r.IncludeComponentString && component != "" {
 		component = strings.ToLower(component)
 		p = path.Join(strings.ToLower(component), p)
 	}
-	// If this is a dir, append with a slash
-	// TODO: is it safe to assume that the slash will be normalized to the current OS?
-	if appendSlash {
-		if !strings.HasSuffix(p, string(os.PathSeparator)) {
-			p += string(os.PathSeparator)
-		}
+	// If this is a dir, append with a slash.
+	if slashSuffix {
+		p = appendSlash(p)
 	}
 	return p
 }

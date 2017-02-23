@@ -1099,7 +1099,7 @@ func TestSaltProvisioner(t *testing.T) {
 				"temp_config_dir":     "/tmp",
 				"type":                "salt-masterless",
 			},
-			expectedErr: "salt-masterless-remote-pillar-minion-err: remote_pillar_roots: /srv/pillar: cannot be used with the 'minon_config' setting",
+			expectedErr: "salt-masterless-remote-pillar-minion-err.remote_pillar_roots: /srv/pillar: cannot be used with the 'minon_config' setting",
 		},
 		{
 			key: "salt-masterless-remote-state-minion-err",
@@ -1115,7 +1115,7 @@ func TestSaltProvisioner(t *testing.T) {
 				"temp_config_dir":    "/tmp",
 				"type":               "salt-masterless",
 			},
-			expectedErr: "salt-masterless-remote-state-minion-err: remote_state_tree: /srv/salt: cannot be used with the 'minon_config' setting",
+			expectedErr: "salt-masterless-remote-state-minion-err.remote_state_tree: /srv/salt: cannot be used with the 'minon_config' setting",
 		},
 	}
 	for i, test := range tests {
@@ -1137,7 +1137,7 @@ func TestSaltProvisioner(t *testing.T) {
 }
 
 func TestShellProvisionerRequiredMissing(t *testing.T) {
-	expected := "shell-required-missing.inline, script, scripts: required setting"
+	expected := "shell-required-missing: inline, script, scripts: required setting"
 	_, err := testRawTemplateProvisionersAll.createShell("shell-required-missing")
 	if err == nil {
 		t.Error("Expected error, got none")
