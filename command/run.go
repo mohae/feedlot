@@ -6,6 +6,7 @@ import (
 	"github.com/mohae/cli"
 	"github.com/mohae/contour"
 	"github.com/mohae/feedlot/app"
+	"github.com/mohae/feedlot/log"
 )
 
 // RunCommand is a Command implementation that generates Packer templates
@@ -51,7 +52,12 @@ func (c *RunCommand) Run(args []string) int {
 		c.UI.Error(err.Error())
 		return 1
 	}
-	app.SetLogging()
+	err = log.Set()
+	if err != nil {
+		c.UI.Error(err.Error())
+		return 1
+	}
+
 	if len(filteredArgs) == 0 {
 		c.UI.Error("Nothing to do: no build list names were received.")
 		return 1

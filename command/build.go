@@ -7,7 +7,7 @@ import (
 	"github.com/mohae/cli"
 	"github.com/mohae/contour"
 	"github.com/mohae/feedlot/app"
-
+	"github.com/mohae/feedlot/log"
 	//jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -74,7 +74,11 @@ func (c *BuildCommand) Run(args []string) int {
 		c.UI.Error(err.Error())
 		return 1
 	}
-	app.SetLogging()
+	err = log.Set()
+	if err != nil {
+		c.UI.Error(err.Error())
+		return 1
+	}
 	// If the distro option was passed, create the Packer template from distro defaults
 	if contour.GetString("distro") != "" {
 		message, err = app.BuildDistro()

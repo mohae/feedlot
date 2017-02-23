@@ -65,7 +65,7 @@ func init() {
 }
 
 // SetLogging sets application logging settings and verbose output.
-func SetLogging() error {
+func Set() error {
 	if contour.GetBool(app.Verbose) {
 		verbose = true
 	}
