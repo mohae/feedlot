@@ -866,31 +866,6 @@ func TestCopyDirContent(t *testing.T) {
 	os.RemoveAll(toDir)
 }
 
-func TestDeleteDirContent(t *testing.T) {
-	dir, _, err := createTmpTestDirFiles("feedlot-deletedircontent-")
-	if err != nil {
-		t.Errorf("no error expected, got %q", err)
-		return
-	}
-	err = deleteDir(path.Join(dir, "notthere"))
-	if err == nil {
-		t.Error("Expected an error, none occurred")
-	} else {
-		if !os.IsNotExist(err) {
-			t.Errorf("expected os.IsNotExist(), got %q", err)
-		}
-	}
-	err = deleteDir(dir)
-	if err != nil {
-		t.Errorf("Expected error to be nil; got %q", err)
-	}
-	_, err = os.Stat(dir)
-	if err != nil {
-		t.Errorf("expected error to be nil, got %q", err)
-	}
-	_ = os.RemoveAll(dir)
-}
-
 func TestSubString(t *testing.T) {
 	testString := "This is a test"
 	res := Substring(testString, -1, 0)

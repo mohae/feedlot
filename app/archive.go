@@ -104,7 +104,7 @@ func (a *Archive) priorBuild(p string) error {
 		return err
 	}
 	// Delete the old artifacts.
-	err = a.deletePriorBuild(p)
+	err = os.RemoveAll(p)
 	if err != nil {
 		return err
 	}
@@ -167,15 +167,6 @@ func (a *Archive) create(p string) error {
 		if err != nil {
 			return err
 		}
-	}
-	return nil
-}
-
-func (a *Archive) deletePriorBuild(p string) error {
-	//delete the contents of the passed directory
-	err := deleteDir(p)
-	if err != nil {
-		return err
 	}
 	return nil
 }
@@ -245,40 +236,6 @@ func (d *directory) addFilename(root, p string, fi os.FileInfo, err error) error
 	}
 	// Add the file information.
 	d.Files = append(d.Files, file{p: rel, info: fi})
-	return nil
-}
-
-// deleteDir deletes the contents of a directory.
-func deleteDir(dir string) error {
-	var dirs []string
-	// see if the directory exists first, actually any error results in the
-	// same handling so just return on any error instead of doing an
-	// os.IsNotExist(err)
-	_, err := os.Stat(dir)
-	if err != nil {
-		return ArchiveErr{slug: fmt.Sprintf("%s: stat", dir), err: err}
-	}
-	dirInf := directory{}
-	dirInf.DirWalk(dir)
-	dir = appendSlash(dir)
-	for _, file := range dirInf.Files {
-		if file.info.IsDir() {
-			dirs = append(dirs, dir+file.p)
-			continue
-		}
-		err := os.Remove(dir + file.p)
-		if err != nil {
-			return ArchiveErr{slug: fmt.Sprintf("%s: remove", filepath.Join(dir, file.p)), err: err}
-		}
-	}
-	// all the files should now be deleted so its safe to delete the directories
-	// do this in reverse order
-	for i := len(dirs) - 1; i >= 0; i-- {
-		err = os.Remove(dirs[i])
-		if err != nil {
-			return ArchiveErr{slug: fmt.Sprintf("%s: remove", dirs[i]), err: err}
-		}
-	}
 	return nil
 }
 
