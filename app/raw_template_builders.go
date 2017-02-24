@@ -322,16 +322,16 @@ func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 		}
 	}
 	if !hasAccessKey {
-		return nil, RequiredSettingError{ID, "access_key"}
+		return nil, RequiredSettingErr{"access_key"}
 	}
 	if !hasAmiName {
-		return nil, RequiredSettingError{ID, "ami_name"}
+		return nil, RequiredSettingErr{"ami_name"}
 	}
 	if !hasSecretKey {
-		return nil, RequiredSettingError{ID, "secret_key"}
+		return nil, RequiredSettingErr{"secret_key"}
 	}
 	if !hasSourceAmi {
-		return nil, RequiredSettingError{ID, "source_ami"}
+		return nil, RequiredSettingErr{"source_ami"}
 	}
 	// Process the Arrays.
 	for name, val := range r.Builders[ID].Arrays {
@@ -541,22 +541,22 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 		}
 	}
 	if !hasAccessKey {
-		return nil, &RequiredSettingError{ID, "access_key"}
+		return nil, RequiredSettingErr{"access_key"}
 	}
 	if !hasAmiName {
-		return nil, &RequiredSettingError{ID, "ami_name"}
+		return nil, RequiredSettingErr{"ami_name"}
 	}
 	if !hasInstanceType {
-		return nil, &RequiredSettingError{ID, "instance_type"}
+		return nil, RequiredSettingErr{"instance_type"}
 	}
 	if !hasRegion {
-		return nil, &RequiredSettingError{ID, "region"}
+		return nil, RequiredSettingErr{"region"}
 	}
 	if !hasSecretKey {
-		return nil, &RequiredSettingError{ID, "secret_key"}
+		return nil, RequiredSettingErr{"secret_key"}
 	}
 	if !hasSourceAmi {
-		return nil, &RequiredSettingError{ID, "source_ami"}
+		return nil, RequiredSettingErr{"source_ami"}
 	}
 	if !hasUsername {
 		// If there isn't a prefix, use ssh as that's the setting
@@ -564,7 +564,7 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 		if prefix == "" {
 			prefix = "ssh"
 		}
-		return nil, &RequiredSettingError{ID, prefix + "_username"}
+		return nil, RequiredSettingErr{prefix + "_username"}
 	}
 	// Process the Arrays.
 	for name, val := range r.Builders[ID].Arrays {
@@ -848,41 +848,41 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 		}
 	}
 	if !hasAccessKey {
-		return nil, &RequiredSettingError{ID, "access_key"}
+		return nil, RequiredSettingErr{"access_key"}
 	}
 	if !hasAccountID {
-		return nil, &RequiredSettingError{ID, "account_id"}
+		return nil, RequiredSettingErr{"account_id"}
 	}
 	if !hasAmiName {
-		return nil, &RequiredSettingError{ID, "ami_name"}
+		return nil, RequiredSettingErr{"ami_name"}
 	}
 	if !hasInstanceType {
-		return nil, &RequiredSettingError{ID, "instance_type"}
+		return nil, RequiredSettingErr{"instance_type"}
 	}
 	if !hasRegion {
-		return nil, &RequiredSettingError{ID, "region"}
+		return nil, RequiredSettingErr{"region"}
 	}
 	if !hasS3Bucket {
-		return nil, &RequiredSettingError{ID, "s3_bucket"}
+		return nil, RequiredSettingErr{"s3_bucket"}
 	}
 	if !hasSecretKey {
-		return nil, &RequiredSettingError{ID, "secret_key"}
+		return nil, RequiredSettingErr{"secret_key"}
 	}
 	if !hasSourceAmi {
-		return nil, &RequiredSettingError{ID, "source_ami"}
+		return nil, RequiredSettingErr{"source_ami"}
 	}
 	if !hasUsername {
 		// if prefix was empty, no communicator was used which means ssh_username is expected.
 		if prefix == "" {
 			prefix = "ssh"
 		}
-		return nil, &RequiredSettingError{ID, prefix + "_username"}
+		return nil, RequiredSettingErr{prefix + "_username"}
 	}
 	if !hasX509CertPath {
-		return nil, &RequiredSettingError{ID, "x509_cert_path"}
+		return nil, RequiredSettingErr{"x509_cert_path"}
 	}
 	if !hasX509KeyPath {
-		return nil, &RequiredSettingError{ID, "x509_key_path"}
+		return nil, RequiredSettingErr{"x509_key_path"}
 	}
 	// Process the Arrays.
 	for name, val := range r.Builders[ID].Arrays {
@@ -1052,16 +1052,16 @@ func (r *rawTemplate) createDigitalOcean(ID string) (settings map[string]interfa
 		}
 	}
 	if !hasAPIToken {
-		return nil, &RequiredSettingError{ID, "api_token"}
+		return nil, RequiredSettingErr{"api_token"}
 	}
 	if !hasImage {
-		return nil, &RequiredSettingError{ID, "image"}
+		return nil, RequiredSettingErr{"image"}
 	}
 	if !hasRegion {
-		return nil, &RequiredSettingError{ID, "region"}
+		return nil, RequiredSettingErr{"region"}
 	}
 	if !hasSize {
-		return nil, &RequiredSettingError{ID, "size"}
+		return nil, RequiredSettingErr{"size"}
 	}
 	return settings, nil
 }
@@ -1153,16 +1153,16 @@ func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 		}
 	}
 	if !hasCommit {
-		return nil, &RequiredSettingError{ID, "commit"}
+		return nil, RequiredSettingErr{"commit"}
 	}
 	if !hasDiscard {
-		return nil, &RequiredSettingError{ID, "discard"}
+		return nil, RequiredSettingErr{"discard"}
 	}
 	if !hasExportPath {
-		return nil, &RequiredSettingError{ID, "export_path"}
+		return nil, RequiredSettingErr{"export_path"}
 	}
 	if !hasImage {
-		return nil, &RequiredSettingError{ID, "image"}
+		return nil, RequiredSettingErr{"image"}
 	}
 	// Process the Arrays.
 	for name, val := range r.Builders[ID].Arrays {
@@ -1292,13 +1292,13 @@ func (r *rawTemplate) createGoogleCompute(ID string) (settings map[string]interf
 		}
 	}
 	if !hasProjectID {
-		return nil, &RequiredSettingError{ID, "project_id"}
+		return nil, RequiredSettingErr{"project_id"}
 	}
 	if !hasSourceImage {
-		return nil, &RequiredSettingError{ID, "source_image"}
+		return nil, RequiredSettingErr{"source_image"}
 	}
 	if !hasZone {
-		return nil, &RequiredSettingError{ID, "zone"}
+		return nil, RequiredSettingErr{"zone"}
 	}
 	// Process the Arrays.
 	for name, val := range r.Builders[ID].Arrays {
@@ -1488,29 +1488,29 @@ func (r *rawTemplate) createOpenStack(ID string) (settings map[string]interface{
 	}
 	// flavor is required
 	if !hasFlavor {
-		return nil, &RequiredSettingError{ID, "flavor"}
+		return nil, RequiredSettingErr{"flavor"}
 	}
 	// image_name is required
 	if !hasImageName {
-		return nil, &RequiredSettingError{ID, "image_name"}
+		return nil, RequiredSettingErr{"image_name"}
 	}
 	// source_image is required
 	if !hasSourceImage {
-		return nil, &RequiredSettingError{ID, "source_image"}
+		return nil, RequiredSettingErr{"source_image"}
 	}
 	// Password is required
 	if !hasPassword {
 		if prefix == "" {
-			return nil, &RequiredSettingError{ID, "password"}
+			return nil, RequiredSettingErr{"password"}
 		}
-		return nil, &RequiredSettingError{ID, prefix + "_password"}
+		return nil, RequiredSettingErr{prefix + "_password"}
 	}
 	// Username is required
 	if !hasUsername {
 		if prefix == "" {
-			return nil, &RequiredSettingError{ID, "username"}
+			return nil, RequiredSettingErr{"username"}
 		}
-		return nil, &RequiredSettingError{ID, prefix + "_username"}
+		return nil, RequiredSettingErr{prefix + "_username"}
 	}
 	// Process arrays, iso_urls is only valid if iso_url is not set
 	for name, val := range r.Builders[ID].Arrays {
@@ -1709,22 +1709,22 @@ func (r *rawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 	}
 	// iso_checksum is required
 	if !hasISOChecksum && !hasISOChecksumURL {
-		return nil, &RequiredSettingError{ID, "iso_checksum or iso_checksum_url"}
+		return nil, RequiredSettingErr{"iso_checksum or iso_checksum_url"}
 	}
 	// iso_checksum_type is required
 	if !hasISOChecksumType {
-		return nil, &RequiredSettingError{ID, "iso_checksum_type"}
+		return nil, RequiredSettingErr{"iso_checksum_type"}
 	}
 	// parallels_tools_flavor is required
 	if !hasParallelsToolsFlavor && !disableParallelsToolsMode {
-		return nil, &RequiredSettingError{ID, "parallels_tools_flavor"}
+		return nil, RequiredSettingErr{"parallels_tools_flavor"}
 	}
 	// Username is required
 	if !hasUsername {
 		if prefix == "" {
-			return nil, &RequiredSettingError{ID, "ssh_username"}
+			return nil, RequiredSettingErr{"ssh_username"}
 		}
-		return nil, &RequiredSettingError{ID, prefix + "_username"}
+		return nil, RequiredSettingErr{prefix + "_username"}
 	}
 	// Process arrays, iso_urls is only valid if iso_url is not set
 	var hasBootCmd bool
@@ -1778,7 +1778,7 @@ func (r *rawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 		}
 	}
 	if !hasISOURLs && !hasISOURL {
-		return nil, &RequiredSettingError{ID, "iso_url"}
+		return nil, RequiredSettingErr{"iso_url"}
 	}
 	// If there weren't any iso_urls, use the cached iso_url
 	if !hasISOURLs {
@@ -1932,18 +1932,18 @@ func (r *rawTemplate) createParallelsPVM(ID string) (settings map[string]interfa
 	}
 	// source_path is required
 	if !hasSourcePath {
-		return nil, &RequiredSettingError{ID, "source_path"}
+		return nil, RequiredSettingErr{"source_path"}
 	}
 	// parallels_tools_flavor is required
 	if !hasParallelsToolsFlavor && !disableParallelsToolsMode {
-		return nil, &RequiredSettingError{ID, "parallels_tools_flavor"}
+		return nil, RequiredSettingErr{"parallels_tools_flavor"}
 	}
 	// Username is required
 	if !hasUsername {
 		if prefix == "" {
-			return nil, &RequiredSettingError{ID, "ssh_username"}
+			return nil, RequiredSettingErr{"ssh_username"}
 		}
-		return nil, &RequiredSettingError{ID, prefix + "_username"}
+		return nil, RequiredSettingErr{prefix + "_username"}
 	}
 	// Process arrays, iso_urls is only valid if iso_url is not set
 	var hasBootCmd bool
@@ -2142,7 +2142,7 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 	}
 	// Username is required
 	if !hasUsername {
-		return nil, &RequiredSettingError{ID, prefix + "_username"}
+		return nil, RequiredSettingErr{prefix + "_username"}
 	}
 	// make sure http_directory is set and add to dir list
 	// TODO reconcile with above
@@ -2203,7 +2203,7 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 		}
 	}
 	if !hasISOURL {
-		return nil, &RequiredSettingError{ID, "iso_url"}
+		return nil, RequiredSettingErr{"iso_url"}
 	}
 	// If the iso info wasn't set from the Settings, get it from the distro's release
 	if !hasISOURL {
@@ -2229,10 +2229,10 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 		return settings, nil
 	}
 	if !hasChecksum {
-		return nil, &RequiredSettingError{ID: ID, Key: "iso_checksum"}
+		return nil, RequiredSettingErr{"iso_checksum"}
 	}
 	if !hasChecksumType {
-		return nil, &RequiredSettingError{ID: ID, Key: "iso_checksum_type"}
+		return nil, RequiredSettingErr{"iso_checksum_type"}
 	}
 	return settings, nil
 }
@@ -2452,11 +2452,11 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 	}
 	// Username is required
 	if !hasUsername {
-		return nil, &RequiredSettingError{ID, prefix + "_username"}
+		return nil, RequiredSettingErr{prefix + "_username"}
 	}
 	// Password is required
 	if !hasPassword {
-		return nil, &RequiredSettingError{ID, prefix + "_password"}
+		return nil, RequiredSettingErr{prefix + "_password"}
 	}
 	// make sure http_directory is set and add to dir list
 	// TODO reconcile with above
@@ -2551,10 +2551,10 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 		return settings, nil
 	}
 	if !hasChecksum {
-		return nil, &RequiredSettingError{ID: ID, Key: "iso_checksum"}
+		return nil, RequiredSettingErr{Key: "iso_checksum"}
 	}
 	if !hasChecksumType {
-		return nil, &RequiredSettingError{ID: ID, Key: "iso_checksum_type"}
+		return nil, RequiredSettingErr{Key: "iso_checksum_type"}
 	}
 	return settings, nil
 }
@@ -2762,10 +2762,10 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 	}
 	// Check to see if the required info was processed.
 	if !hasUsername {
-		return nil, &RequiredSettingError{ID, userNameVal}
+		return nil, RequiredSettingErr{userNameVal}
 	}
 	if !hasSourcePath {
-		return nil, &RequiredSettingError{ID, "source_path"}
+		return nil, RequiredSettingErr{"source_path"}
 	}
 
 	// make sure http_directory is set and add to dir list
@@ -3060,7 +3060,7 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 	}
 	// Only check to see if the required ssh_username field was set. The required iso info is checked after Array processing
 	if !hasUsername {
-		return nil, &RequiredSettingError{ID, prefix + "_username"}
+		return nil, RequiredSettingErr{prefix + "_username"}
 	}
 	// make sure http_directory is set and add to dir list
 	err = r.setHTTP(VMWareISO.String(), settings)
@@ -3178,10 +3178,10 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 		return settings, nil
 	}
 	if !hasChecksum {
-		return nil, &RequiredSettingError{ID: ID, Key: "iso_checksum"}
+		return nil, RequiredSettingErr{"iso_checksum"}
 	}
 	if !hasChecksumType {
-		return nil, &RequiredSettingError{ID: ID, Key: "iso_checksum_type"}
+		return nil, RequiredSettingErr{"iso_checksum_type"}
 	}
 	return settings, nil
 }
@@ -3345,10 +3345,10 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 	}
 	// Check if required fields were processed
 	if !hasUsername {
-		return nil, &RequiredSettingError{ID, "ssh_username"}
+		return nil, RequiredSettingErr{"ssh_username"}
 	}
 	if !hasSourcePath {
-		return nil, &RequiredSettingError{ID, "source_path"}
+		return nil, RequiredSettingErr{"source_path"}
 	}
 	// make sure http_directory is set and add to dir list
 	err = r.setHTTP(VMWareVMX.String(), settings)

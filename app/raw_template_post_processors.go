@@ -234,13 +234,13 @@ func (r *rawTemplate) createAtlas(ID string) (settings map[string]interface{}, e
 		}
 	}
 	if !hasArtifact {
-		return nil, &RequiredSettingError{ID, "artifact"}
+		return nil, RequiredSettingErr{"artifact"}
 	}
 	if !hasArtifactType {
-		return nil, &RequiredSettingError{ID, "artifact_type"}
+		return nil, RequiredSettingErr{"artifact_type"}
 	}
 	if !hasToken {
-		return nil, &RequiredSettingError{ID, "token"}
+		return nil, RequiredSettingErr{"token"}
 	}
 	// Process the Arrays.
 	for name, val := range r.PostProcessors[ID].Arrays {
@@ -350,10 +350,10 @@ func (r *rawTemplate) createDockerImport(ID string) (settings map[string]interfa
 		}
 	}
 	if !hasRepository {
-		return nil, &RequiredSettingError{ID, "repository"}
+		return nil, RequiredSettingErr{"repository"}
 	}
 	if !hasTag {
-		return nil, &RequiredSettingError{ID, "tag"}
+		return nil, RequiredSettingErr{"tag"}
 	}
 	// Process the Arrays.
 	for name, val := range r.PostProcessors[ID].Arrays {
@@ -452,7 +452,7 @@ func (r *rawTemplate) createDockerSave(ID string) (settings map[string]interface
 		}
 	}
 	if !hasPath {
-		return nil, &RequiredSettingError{ID, "path"}
+		return nil, RequiredSettingErr{"path"}
 	}
 	// Process the Arrays.
 	for name, val := range r.PostProcessors[ID].Arrays {
@@ -508,7 +508,7 @@ func (r *rawTemplate) createDockerTag(ID string) (settings map[string]interface{
 		}
 	}
 	if !hasRepository {
-		return nil, &RequiredSettingError{ID, "repository"}
+		return nil, RequiredSettingErr{"repository"}
 	}
 	// Process the Arrays.
 	for name, val := range r.PostProcessors[ID].Arrays {
@@ -640,13 +640,13 @@ func (r *rawTemplate) createVagrantCloud(ID string) (settings map[string]interfa
 		}
 	}
 	if !hasAccessToken {
-		return nil, &RequiredSettingError{ID, "access_token"}
+		return nil, RequiredSettingErr{"access_token"}
 	}
 	if !hasBoxTag {
-		return nil, &RequiredSettingError{ID, "box_tag"}
+		return nil, RequiredSettingErr{"box_tag"}
 	}
 	if !hasVersion {
-		return nil, &RequiredSettingError{ID, "version"}
+		return nil, RequiredSettingErr{"version"}
 	}
 	// Process the Arrays.
 	for name, val := range r.PostProcessors[ID].Arrays {
@@ -733,27 +733,27 @@ func (r *rawTemplate) createVSphere(ID string) (settings map[string]interface{},
 		}
 	}
 	if !hasCluster {
-		return nil, &RequiredSettingError{ID, "cluster"}
+		return nil, RequiredSettingErr{"cluster"}
 	}
 	if !hasDatacenter {
-		return nil, &RequiredSettingError{ID, "datacenter"}
+		return nil, RequiredSettingErr{"datacenter"}
 	}
 	if !hasDatastore {
 		if !hasResourcePool {
-			return nil, fmt.Errorf("%s: resource_pool is required when datastore is not set", RequiredSettingError{VSphere.String(), "datastore/resource_pool"})
+			return nil, fmt.Errorf("%s: resource_pool is required when datastore is not set", RequiredSettingErr{"datastore/resource_pool"})
 		}
 	}
 	if !hasHost {
-		return nil, &RequiredSettingError{ID, "host"}
+		return nil, RequiredSettingErr{"host"}
 	}
 	if !hasPassword {
-		return nil, &RequiredSettingError{ID, "password"}
+		return nil, RequiredSettingErr{"password"}
 	}
 	if !hasUsername {
-		return nil, &RequiredSettingError{ID, "username"}
+		return nil, RequiredSettingErr{"username"}
 	}
 	if !hasVMName {
-		return nil, &RequiredSettingError{ID, "vm_name"}
+		return nil, RequiredSettingErr{"vm_name"}
 	}
 	// Process the Arrays.
 	for name, val := range r.PostProcessors[ID].Arrays {

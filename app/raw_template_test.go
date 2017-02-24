@@ -245,10 +245,10 @@ var testRawTemplateWOSection = &rawTemplate{
 	},
 }
 
-func TestRequiredSettingError(t *testing.T) {
-	err := &RequiredSettingError{AnsibleLocal.String(), "test_setting"}
-	if err.Error() != "ansible-local: test_setting: required setting" {
-		t.Errorf("Expected \"ansible-local: test_setting: required setting\", got %q", err)
+func TestRequiredSettingErr(t *testing.T) {
+	err := RequiredSettingErr{"test_setting"}
+	if err.Error() != "test_setting: required setting not found" {
+		t.Errorf("Expected \"test_setting: required setting not found\", got %q", err)
 	}
 }
 

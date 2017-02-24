@@ -1137,7 +1137,7 @@ func TestSaltProvisioner(t *testing.T) {
 }
 
 func TestShellProvisionerRequiredMissing(t *testing.T) {
-	expected := "shell-required-missing: inline, script, scripts: required setting"
+	expected := "inline, script, scripts: required setting not found"
 	_, err := testRawTemplateProvisionersAll.createShell("shell-required-missing")
 	if err == nil {
 		t.Error("Expected error, got none")

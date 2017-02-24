@@ -223,7 +223,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 		}
 	}
 	if !hasPlaybook {
-		return nil, &RequiredSettingError{ID, "playbook_file"}
+		return nil, RequiredSettingErr{"playbook_file"}
 	}
 	// Process the Arrays.
 	for name, val := range r.Provisioners[ID].Arrays {
@@ -326,7 +326,7 @@ func (r *rawTemplate) createAnsibleLocal(ID string) (settings map[string]interfa
 		}
 	}
 	if !hasPlaybook {
-		return nil, &RequiredSettingError{ID, "playbook_file"}
+		return nil, RequiredSettingErr{"playbook_file"}
 	}
 	// Process the Arrays.
 	for name, val := range r.Provisioners[ID].Arrays {
@@ -644,10 +644,10 @@ func (r *rawTemplate) createFile(ID string) (settings map[string]interface{}, er
 		}
 	}
 	if !hasSource {
-		return nil, &RequiredSettingError{ID, "source"}
+		return nil, RequiredSettingErr{"source"}
 	}
 	if !hasDestination {
-		return nil, &RequiredSettingError{ID, "destination"}
+		return nil, RequiredSettingErr{"destination"}
 	}
 	// Process the Arrays.
 	for name, val := range r.Provisioners[ID].Arrays {
@@ -757,7 +757,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 		}
 	}
 	if !hasManifestFile {
-		return nil, &RequiredSettingError{ID, "manifest_file"}
+		return nil, RequiredSettingErr{"manifest_file"}
 	}
 	for name, val := range r.Provisioners[ID].Arrays {
 		switch name {
@@ -917,7 +917,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 		}
 	}
 	if !hasLocalStateTree {
-		return nil, &RequiredSettingError{ID, "local_state_tree"}
+		return nil, RequiredSettingErr{"local_state_tree"}
 	}
 	// If minion is set, remote_pilar_roots and remote_state_tree cannot be used.
 	if hasMinion {
@@ -1065,7 +1065,7 @@ func (r *rawTemplate) createShell(ID string) (settings map[string]interface{}, e
 		goto arrays
 	}
 	// This means the a required setting was not found.
-	return nil, &RequiredSettingError{ID, "inline, script, scripts"}
+	return nil, RequiredSettingErr{"inline, script, scripts"}
 
 arrays:
 	// Process the Arrays.
@@ -1131,7 +1131,7 @@ func (r *rawTemplate) createShellLocal(ID string) (settings map[string]interface
 		}
 	}
 	if !hasCommand {
-		return nil, &RequiredSettingError{ID, "command"}
+		return nil, RequiredSettingErr{"command"}
 	}
 
 	for name, val := range r.Provisioners[ID].Arrays {

@@ -44,15 +44,14 @@ func (e *SettingError) Error() string {
 	return s + e.err.Error()
 }
 
-// RequiredSettingError occurs when a setting required by the Packer
+// RequiredSettingErr occurs when a setting required by the Packer
 // component being processed isn't set.
-type RequiredSettingError struct {
-	ID  string
+type RequiredSettingErr struct {
 	Key string
 }
 
-func (e RequiredSettingError) Error() string {
-	return e.ID + ": " + e.Key + ": required setting"
+func (e RequiredSettingErr) Error() string {
+	return e.Key + ": required setting not found"
 }
 
 var (
