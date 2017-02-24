@@ -322,16 +322,16 @@ func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 		}
 	}
 	if !hasAccessKey {
-		return nil, &RequiredSettingError{ID, "access_key"}
+		return nil, RequiredSettingError{ID, "access_key"}
 	}
 	if !hasAmiName {
-		return nil, &RequiredSettingError{ID, "ami_name"}
+		return nil, RequiredSettingError{ID, "ami_name"}
 	}
 	if !hasSecretKey {
-		return nil, &RequiredSettingError{ID, "secret_key"}
+		return nil, RequiredSettingError{ID, "secret_key"}
 	}
 	if !hasSourceAmi {
-		return nil, &RequiredSettingError{ID, "source_ami"}
+		return nil, RequiredSettingError{ID, "source_ami"}
 	}
 	// Process the Arrays.
 	for name, val := range r.Builders[ID].Arrays {

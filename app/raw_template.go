@@ -51,7 +51,7 @@ type RequiredSettingError struct {
 	Key string
 }
 
-func (e *RequiredSettingError) Error() string {
+func (e RequiredSettingError) Error() string {
 	return e.ID + ": " + e.Key + ": required setting"
 }
 
