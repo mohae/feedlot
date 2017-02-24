@@ -344,7 +344,7 @@ func TestDistroFromString(t *testing.T) {
 		{"", UnsupportedDistro},
 	}
 	for i, test := range tests {
-		d := DistroFromString(test.value)
+		d := ParseDistro(test.value)
 		if d != test.expected {
 			t.Errorf("%d: expected %s got %s", i, test.expected, d)
 		}

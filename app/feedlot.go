@@ -106,11 +106,11 @@ var casedDistros = [...]string{
 // CasedString returns the distro's name with proper casing.
 func (d Distro) CasedString() string { return casedDistros[d] }
 
-// DistroFromString returns the Distro constant for the passed string or
+// ParseDistro returns the Distro constant for the passed string or
 // unsupported.
 //
 // All incoming strings are normalized to lowercase.
-func DistroFromString(s string) Distro {
+func ParseDistro(s string) Distro {
 	s = strings.ToLower(s)
 	switch s {
 	case "centos":
@@ -148,7 +148,7 @@ type distroDefaults struct {
 func (d *distroDefaults) GetTemplate(n string) (*rawTemplate, error) {
 	var t rawTemplate
 	var ok bool
-	t, ok = d.Templates[DistroFromString(n)]
+	t, ok = d.Templates[ParseDistro(n)]
 	if !ok {
 		err := fmt.Errorf("unsupported distro: %s", n)
 		jww.ERROR.Println(err)
@@ -168,7 +168,7 @@ func (d *distroDefaults) Set() error {
 	// get the source settings from the defaults; If the source_dir setting isn't set
 	// return an error
 	if len(dflts.IODirInf.SourceDir) == 0 {
-		err = errors.New("default template: required setting source_dir not set")
+		err = errors.New("required setting source_dir not set")
 		jww.ERROR.Println(err)
 		return err
 	}
@@ -186,7 +186,7 @@ func (d *distroDefaults) Set() error {
 		// It isn't required for debian because automatic resolution of iso
 		// information is not supported.
 		if v.BaseURL == "" && k != CentOS.String() {
-			err = fmt.Errorf("%s requires a BaseURL, none provided", k)
+			err = Error{slug: fmt.Sprintf("%s: requires a BaseURL, none provided", k)}
 			jww.ERROR.Println(err)
 			return err
 
@@ -208,7 +208,7 @@ func (d *distroDefaults) Set() error {
 			jww.ERROR.Print(err)
 			return err
 		}
-		d.Templates[DistroFromString(k)] = *tmp
+		d.Templates[ParseDistro(k)] = *tmp
 	}
 	DistroDefaults.IsSet = true
 	return nil
@@ -365,7 +365,7 @@ func mergeSettingsSlices(s1 []string, s2 []string) ([]string, error) {
 	// Create a map of variables from the first slice for comparison reasons.
 	ms1 = varMapFromSlice(s1)
 	if ms1 == nil {
-		return nil, fmt.Errorf("could not create the merge comparison maps")
+		return nil, fmt.Errorf("merge settings: could not create the merge comparison maps")
 	}
 	// For each element in the second slice, get the key. If it already
 	// exists, update the existing value, otherwise add it to the merged

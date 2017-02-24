@@ -157,7 +157,7 @@ func buildPackerTemplateFromNamedBuild(name string, doneCh chan error) {
 	}
 	// See if the distro default exists.
 	rTpl := rawTemplate{}
-	rTpl, ok = DistroDefaults.Templates[DistroFromString(bTpl.Distro)]
+	rTpl, ok = DistroDefaults.Templates[ParseDistro(bTpl.Distro)]
 	if !ok {
 		doneCh <- fmt.Errorf("creation of Packer template for %s failed: %s not supported", name, bTpl.Distro)
 		return
