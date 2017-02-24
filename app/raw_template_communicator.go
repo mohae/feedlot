@@ -236,7 +236,7 @@ func (r *rawTemplate) processCommunicator(id string, vals []string, settings map
 	}
 	c, err := NewCommunicator(v)
 	if err != nil {
-		return "", &SettingError{id, k, v, err}
+		return "", SettingErr{k, v, err}
 	}
 	// add the communicator
 	settings[k] = strings.ToLower(v)
@@ -253,7 +253,7 @@ func (r *rawTemplate) processCommunicator(id string, vals []string, settings map
 	// get a map of the settings related to this communicator
 	err = c.processSettings(vals, r, settings)
 	if err != nil {
-		return "", &SettingError{id, k, v, err}
+		return "", SettingErr{k, v, err}
 	}
 	return prefix, nil
 }

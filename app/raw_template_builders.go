@@ -312,7 +312,7 @@ func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 			settings[k] = v
 		case "root_volume_size":
 			settings[k], err = strconv.Atoi(v)
-			return nil, &SettingError{ID, k, v, err}
+			return nil, SettingErr{k, v, err}
 		case "secret_key":
 			settings[k] = v
 			hasSecretKey = true
@@ -520,7 +520,7 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 		case "user_data_file":
 			src, err := r.findSource(v, AmazonEBS.String(), false)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -574,7 +574,7 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 			// do ami_block_device_mappings processing
 			settings[name], err = r.processAMIBlockDeviceMappings(val)
 			if err != nil {
-				return nil, &SettingError{ID, "ami_block_device_mappings", "", err}
+				return nil, SettingErr{"ami_block_device_mappings", "", err}
 			}
 			continue
 		case "ami_groups":
@@ -731,12 +731,12 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 			// The value is a command file, load the contents of the file.
 			cmds, err := r.commandsFromFile(v, AmazonInstance.String())
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			// Make the cmds slice a single string, if it was split into multiple lines.
 			cmd := commandFromSlice(cmds)
 			if cmd == "" {
-				return nil, &SettingError{ID, k, v, ErrNoCommands}
+				return nil, SettingErr{k, v, ErrNoCommands}
 			}
 			settings[k] = cmd
 		case "bundle_vol_command":
@@ -748,12 +748,12 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 			// The value is a command file, load the contents of the file.
 			cmds, err := r.commandsFromFile(v, AmazonInstance.String())
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			// Make the cmds slice a single string, if it was split into multiple lines.
 			cmd := commandFromSlice(cmds)
 			if cmd == "" {
-				return nil, &SettingError{ID, k, v, ErrNoCommands}
+				return nil, SettingErr{k, v, ErrNoCommands}
 			}
 			settings[k] = cmd
 		case "ebs_optimized":
@@ -819,7 +819,7 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 		case "user_data_file":
 			src, err := r.findSource(v, AmazonInstance.String(), false)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// src with the original value; this occurs when it is an example.
@@ -892,7 +892,7 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 			// do ami_block_device_mappings processing
 			settings[name], err = r.processAMIBlockDeviceMappings(val)
 			if err != nil {
-				return nil, &SettingError{ID, "ami_block_device_mappings", "", err}
+				return nil, SettingErr{"ami_block_device_mappings", "", err}
 			}
 			continue
 		case "ami_groups":
@@ -1185,10 +1185,10 @@ func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 		if runCommandFile != "" {
 			commands, err := r.commandsFromFile(runCommandFile, Docker.String())
 			if err != nil {
-				return nil, &SettingError{ID, "run_command", runCommandFile, err}
+				return nil, SettingErr{"run_command", runCommandFile, err}
 			}
 			if len(commands) == 0 {
-				return nil, &SettingError{ID, "run_command", runCommandFile, ErrNoCommands}
+				return nil, SettingErr{"run_command", runCommandFile, ErrNoCommands}
 			}
 			settings["run_command"] = commands
 		}
@@ -1261,7 +1261,7 @@ func (r *rawTemplate) createGoogleCompute(ID string) (settings map[string]interf
 		case "disk_size":
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			settings[k] = i
 		case "image_name":
@@ -1617,7 +1617,7 @@ func (r *rawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			settings[k] = i
 		case "guest_os_type":
@@ -1632,14 +1632,14 @@ func (r *rawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			settings[k] = i
 		case "http_port_min":
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			settings[k] = i
 		case "iso_checksum":
@@ -1670,7 +1670,7 @@ func (r *rawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 			case "upload":
 			case "detach":
 			default:
-				return nil, &SettingError{ID, k, v, errors.New("invalid option")}
+				return nil, SettingErr{k, v, errors.New("invalid option")}
 			}
 			settings[k] = v
 		case "prlctl_version_file":
@@ -1684,12 +1684,12 @@ func (r *rawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 			// The value is a command file, load the contents of the file.
 			cmds, err := r.commandsFromFile(v, ParallelsISO.String())
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			//
 			cmd := commandFromSlice(cmds)
 			if cmd == "" {
-				return nil, &SettingError{ID, k, v, ErrNoCommands}
+				return nil, SettingErr{k, v, ErrNoCommands}
 			}
 			settings[k] = cmd
 		case "shutdown_timeout":
@@ -1765,10 +1765,10 @@ func (r *rawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 		if bootCmdFile != "" {
 			commands, err := r.commandsFromFile(bootCmdFile, ParallelsISO.String())
 			if err != nil {
-				return nil, &SettingError{ID, "boot_command", bootCmdFile, err}
+				return nil, SettingErr{"boot_command", bootCmdFile, err}
 			}
 			if len(commands) == 0 {
-				return nil, &SettingError{ID, "boot_command", bootCmdFile, ErrNoCommands}
+				return nil, SettingErr{"boot_command", bootCmdFile, ErrNoCommands}
 			}
 			array := deepcopy.Iface(commands)
 			if !reflect.ValueOf(array).IsNil() {
@@ -1875,7 +1875,7 @@ func (r *rawTemplate) createParallelsPVM(ID string) (settings map[string]interfa
 			case "upload":
 			case "detach":
 			default:
-				return nil, &SettingError{ID, k, v, errors.New("invalid option")}
+				return nil, SettingErr{k, v, errors.New("invalid option")}
 			}
 			settings[k] = v
 		case "parallels_tools_path":
@@ -1893,12 +1893,12 @@ func (r *rawTemplate) createParallelsPVM(ID string) (settings map[string]interfa
 			// The value is a command file, load the contents of the file.
 			cmds, err := r.commandsFromFile(v, ParallelsISO.String())
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			//
 			cmd := commandFromSlice(cmds)
 			if cmd == "" {
-				return nil, &SettingError{ID, k, v, ErrNoCommands}
+				return nil, SettingErr{k, v, ErrNoCommands}
 			}
 			settings[k] = cmd
 		case "shutdown_timeout":
@@ -1908,7 +1908,7 @@ func (r *rawTemplate) createParallelsPVM(ID string) (settings map[string]interfa
 		case "source_path":
 			src, err := r.findSource(v, ParallelsPVM.String(), false)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -1975,10 +1975,10 @@ func (r *rawTemplate) createParallelsPVM(ID string) (settings map[string]interfa
 		if bootCmdFile != "" {
 			commands, err := r.commandsFromFile(bootCmdFile, ParallelsISO.String())
 			if err != nil {
-				return nil, &SettingError{ID, "boot_command", bootCmdFile, err}
+				return nil, SettingErr{"boot_command", bootCmdFile, err}
 			}
 			if len(commands) == 0 {
-				return nil, &SettingError{ID, "boot_command", bootCmdFile, ErrNoCommands}
+				return nil, SettingErr{"boot_command", bootCmdFile, ErrNoCommands}
 			}
 			array := deepcopy.Iface(commands)
 			if !reflect.ValueOf(array).IsNil() {
@@ -2088,7 +2088,7 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			settings[k] = i
 		case "format":
@@ -2101,14 +2101,14 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			settings[k] = i
 		case "http_port_max":
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			settings[k] = i
 		case "iso_checksum":
@@ -2190,10 +2190,10 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 		if bootCmdFile != "" {
 			commands, err := r.commandsFromFile(bootCmdFile, QEMU.String())
 			if err != nil {
-				return nil, &SettingError{ID, "boot_command", bootCmdFile, err}
+				return nil, SettingErr{"boot_command", bootCmdFile, err}
 			}
 			if len(commands) == 0 {
-				return nil, &SettingError{ID, "boot_command", bootCmdFile, ErrNoCommands}
+				return nil, SettingErr{"boot_command", bootCmdFile, ErrNoCommands}
 			}
 			array := deepcopy.Iface(commands)
 			if !reflect.ValueOf(array).IsNil() {
@@ -2336,7 +2336,7 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			settings[k] = i
 		case "format":
@@ -2362,14 +2362,14 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			settings[k] = i
 		case "http_port_max":
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			settings[k] = i
 		case "iso_checksum":
@@ -2397,12 +2397,12 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 			// The value is a command file, load the contents of the file.
 			cmds, err := r.commandsFromFile(v, VirtualBoxISO.String())
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			//
 			cmd := commandFromSlice(cmds)
 			if cmd == "" {
-				return nil, &SettingError{ID, k, v, ErrNoCommands}
+				return nil, SettingErr{k, v, ErrNoCommands}
 			}
 			settings[k] = cmd
 		case "shutdown_timeout":
@@ -2415,7 +2415,7 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			settings[k] = i
 		case "ssh_host_port_max":
@@ -2426,7 +2426,7 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			settings[k] = i
 		case "ssh_password":
@@ -2511,10 +2511,10 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 		if bootCmdFile != "" {
 			commands, err := r.commandsFromFile(bootCmdFile, VirtualBoxISO.String())
 			if err != nil {
-				return nil, &SettingError{ID, "boot_command", bootCmdFile, err}
+				return nil, SettingErr{"boot_command", bootCmdFile, err}
 			}
 			if len(commands) == 0 {
-				return nil, &SettingError{ID, "boot_command", bootCmdFile, ErrNoCommands}
+				return nil, SettingErr{"boot_command", bootCmdFile, ErrNoCommands}
 			}
 			array := deepcopy.Iface(commands)
 			if !reflect.ValueOf(array).IsNil() {
@@ -2671,7 +2671,7 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				err = &SettingError{ID, k, v, err}
+				err = SettingErr{k, v, err}
 				return nil, err
 			}
 			settings[k] = i
@@ -2679,7 +2679,7 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				err = &SettingError{ID, k, v, err}
+				err = SettingErr{k, v, err}
 				return nil, err
 			}
 			settings[k] = i
@@ -2695,12 +2695,12 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 			// The value is a command file, load the contents of the file.
 			cmds, err := r.commandsFromFile(v, VirtualBoxOVF.String())
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			//
 			cmd := commandFromSlice(cmds)
 			if cmd == "" {
-				return nil, &SettingError{ID, k, v, ErrNoCommands}
+				return nil, SettingErr{k, v, ErrNoCommands}
 			}
 			settings[k] = cmd
 		case "shutdown_timeout":
@@ -2726,7 +2726,7 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				err = &SettingError{ID, k, v, err}
+				err = SettingErr{k, v, err}
 				return nil, err
 			}
 			settings[k] = i
@@ -2737,7 +2737,7 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				err = &SettingError{ID, k, v, err}
+				err = SettingErr{k, v, err}
 				return nil, err
 			}
 			settings[k] = i
@@ -2808,10 +2808,10 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 		if bootCmdFile != "" {
 			commands, err := r.commandsFromFile(bootCmdFile, VirtualBoxOVF.String())
 			if err != nil {
-				return nil, &SettingError{ID, "boot_command", bootCmdFile, err}
+				return nil, SettingErr{"boot_command", bootCmdFile, err}
 			}
 			if len(commands) == 0 {
-				return nil, &SettingError{ID, "boot_command", bootCmdFile, ErrNoCommands}
+				return nil, SettingErr{"boot_command", bootCmdFile, ErrNoCommands}
 			}
 			array := deepcopy.Iface(commands)
 			if !reflect.ValueOf(array).IsNil() {
@@ -2946,7 +2946,7 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			settings[k] = i
 		case "disk_type_id":
@@ -2963,14 +2963,14 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			settings[k] = i
 		case "http_port_min":
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			settings[k] = i
 		case "iso_checksum":
@@ -3011,12 +3011,12 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 			// The value is a command file, load the contents of the file.
 			cmds, err := r.commandsFromFile(v, VMWareISO.String())
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			//
 			cmd := commandFromSlice(cmds)
 			if cmd == "" {
-				return nil, &SettingError{ID, k, v, ErrNoCommands}
+				return nil, SettingErr{k, v, ErrNoCommands}
 			}
 			settings[k] = cmd
 		case "shutdown_timeout":
@@ -3046,14 +3046,14 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			settings[k] = i
 		case "vnc_port_max":
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			settings[k] = i
 		}
@@ -3092,7 +3092,7 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 				for _, v := range val.([]string) {
 					i, err := strconv.Atoi(v)
 					if err != nil {
-						return nil, &SettingError{ID, name, json.MarshalToString(val), err}
+						return nil, SettingErr{name, json.MarshalToString(val), err}
 					}
 					tmp = append(tmp, i)
 				}
@@ -3100,7 +3100,7 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 					settings[name] = tmp
 				}
 			default:
-				return nil, &SettingError{ID, name, json.MarshalToString(val), fmt.Errorf("must be either an int or string array")}
+				return nil, SettingErr{name, json.MarshalToString(val), fmt.Errorf("must be either an int or string array")}
 			}
 			continue
 		case "floppy_files":
@@ -3131,10 +3131,10 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 		if bootCmdFile != "" {
 			commands, err := r.commandsFromFile(bootCmdFile, VMWareISO.String())
 			if err != nil {
-				return nil, &SettingError{ID, "boot_command", bootCmdFile, err}
+				return nil, SettingErr{"boot_command", bootCmdFile, err}
 			}
 			if len(commands) == 0 {
-				return nil, &SettingError{ID, "boot_command", bootCmdFile, ErrNoCommands}
+				return nil, SettingErr{"boot_command", bootCmdFile, ErrNoCommands}
 			}
 			array := deepcopy.Iface(commands)
 			if !reflect.ValueOf(array).IsNil() {
@@ -3272,14 +3272,14 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			settings[k] = i
 		case "http_port_min":
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			settings[k] = i
 		case "output_directory":
@@ -3295,12 +3295,12 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 			// The value is a command file, load the contents of the file.
 			cmds, err := r.commandsFromFile(v, VMWareVMX.String())
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			//
 			cmd := commandFromSlice(cmds)
 			if cmd == "" {
-				return nil, &SettingError{ID, k, v, ErrNoCommands}
+				return nil, SettingErr{k, v, ErrNoCommands}
 			}
 			settings[k] = cmd
 		case "skip_compaction":
@@ -3331,14 +3331,14 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			settings[k] = i
 		case "vnc_port_min":
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			settings[k] = i
 		}
@@ -3385,10 +3385,10 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 		if bootCmdFile != "" {
 			commands, err := r.commandsFromFile(bootCmdFile, VMWareISO.String())
 			if err != nil {
-				return nil, &SettingError{ID, "boot_command", bootCmdFile, err}
+				return nil, SettingErr{"boot_command", bootCmdFile, err}
 			}
 			if len(commands) == 0 {
-				return nil, &SettingError{ID, "boot_command", bootCmdFile, ErrNoCommands}
+				return nil, SettingErr{"boot_command", bootCmdFile, ErrNoCommands}
 			}
 			array := deepcopy.Iface(commands)
 			if !reflect.ValueOf(array).IsNil() {

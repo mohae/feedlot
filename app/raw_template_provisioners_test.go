@@ -1099,7 +1099,7 @@ func TestSaltProvisioner(t *testing.T) {
 				"temp_config_dir":     "/tmp",
 				"type":                "salt-masterless",
 			},
-			expectedErr: "salt-masterless-remote-pillar-minion-err.remote_pillar_roots: /srv/pillar: cannot be used with the 'minon_config' setting",
+			expectedErr: "remote_pillar_roots: /srv/pillar: cannot be used with the 'minon_config' setting",
 		},
 		{
 			key: "salt-masterless-remote-state-minion-err",
@@ -1115,7 +1115,7 @@ func TestSaltProvisioner(t *testing.T) {
 				"temp_config_dir":    "/tmp",
 				"type":               "salt-masterless",
 			},
-			expectedErr: "salt-masterless-remote-state-minion-err.remote_state_tree: /srv/salt: cannot be used with the 'minon_config' setting",
+			expectedErr: "remote_state_tree: /srv/salt: cannot be used with the 'minon_config' setting",
 		},
 	}
 	for i, test := range tests {

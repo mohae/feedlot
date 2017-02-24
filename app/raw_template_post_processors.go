@@ -288,7 +288,7 @@ func (r *rawTemplate) createCompress(ID string) (settings map[string]interface{}
 		case "compression_level":
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			settings[k] = i
 		case "keep_input_artifact":
@@ -563,14 +563,14 @@ func (r *rawTemplate) createVagrant(ID string) (settings map[string]interface{},
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			settings[k] = i
 		case "vagrantfile_template":
 			// locate the file
 			src, err := r.findSource(v, Vagrant.String(), false)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.

@@ -190,7 +190,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 			// find the actual location and add it to the files map for copying
 			src, err := r.findSource(v, Ansible.String(), false)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -210,12 +210,12 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 			// The value is a command file, load the contents of the file.
 			cmds, err := r.commandsFromFile(v, Ansible.String())
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			// Make the cmds slice a single string, if it was split into multiple lines.
 			cmd := commandFromSlice(cmds)
 			if cmd == "" {
-				return nil, &SettingError{ID, k, v, ErrNoCommands}
+				return nil, SettingErr{k, v, ErrNoCommands}
 			}
 			settings[k] = cmd
 		case "host_alias", "local_port", "ssh_authorized_key_file", "ssh_host_key_file", "user":
@@ -282,7 +282,7 @@ func (r *rawTemplate) createAnsibleLocal(ID string) (settings map[string]interfa
 			// find the actual location and add it to the files map for copying
 			src, err := r.findSource(v, AnsibleLocal.String(), false)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -297,7 +297,7 @@ func (r *rawTemplate) createAnsibleLocal(ID string) (settings map[string]interfa
 			// find the actual location and add it to the files map for copying
 			src, err := r.findSource(v, AnsibleLocal.String(), false)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -311,7 +311,7 @@ func (r *rawTemplate) createAnsibleLocal(ID string) (settings map[string]interfa
 			// find the actual location and add it to the files map for copying
 			src, err := r.findSource(v, AnsibleLocal.String(), true)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -337,7 +337,7 @@ func (r *rawTemplate) createAnsibleLocal(ID string) (settings map[string]interfa
 				v = r.replaceVariables(v)
 				src, err := r.findSource(v, AnsibleLocal.String(), true)
 				if err != nil {
-					return nil, &SettingError{ID, k, v, err}
+					return nil, SettingErr{k, v, err}
 				}
 				// if the source couldn't be found and an error wasn't generated, replace
 				// s with the original value; this occurs when it is an example.
@@ -420,7 +420,7 @@ func (r *rawTemplate) createChefClient(ID string) (settings map[string]interface
 			// find the actual location of the source file and add it to the files map for copying
 			src, err := r.findSource(v, ChefClient.String(), false)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -436,10 +436,10 @@ func (r *rawTemplate) createChefClient(ID string) (settings map[string]interface
 			if strings.HasSuffix(v, ".command") {
 				commands, err := r.commandsFromFile(v, ChefClient.String())
 				if err != nil {
-					return nil, &SettingError{ID, k, v, err}
+					return nil, SettingErr{k, v, err}
 				}
 				if len(commands) == 0 {
-					return nil, &SettingError{ID, k, v, ErrNoCommands}
+					return nil, SettingErr{k, v, ErrNoCommands}
 				}
 				settings[k] = commands[0]
 				continue
@@ -511,7 +511,7 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 			// find the actual location and add it to the files map for copying
 			src, err := r.findSource(v, ChefSolo.String(), false)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -524,7 +524,7 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 		case "data_bags_path", "environments_path", "roles_path":
 			src, err := r.findSource(v, ChefSolo.String(), true)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -540,10 +540,10 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 			if strings.HasSuffix(v, ".command") {
 				commands, err := r.commandsFromFile(v, ChefSolo.String())
 				if err != nil {
-					return nil, &SettingError{ID, k, v, err}
+					return nil, SettingErr{k, v, err}
 				}
 				if len(commands) == 0 {
-					return nil, &SettingError{ID, k, v, ErrNoCommands}
+					return nil, SettingErr{k, v, ErrNoCommands}
 				}
 				settings[k] = commands[0]
 				continue
@@ -559,7 +559,7 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 				// find the actual location and add it to the files map for copying
 				src, err := r.findSource(v, ChefSolo.String(), true)
 				if err != nil {
-					return nil, &SettingError{ID, name, v, err}
+					return nil, SettingErr{name, v, err}
 				}
 				// if the source couldn't be found and an error wasn't generated, replace
 				// s with the original value; this occurs when it is an example.
@@ -616,7 +616,7 @@ func (r *rawTemplate) createFile(ID string) (settings map[string]interface{}, er
 			// find the actual location and add it to the files map for copying
 			src, err := r.findSource(v, File.String(), true)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -627,7 +627,7 @@ func (r *rawTemplate) createFile(ID string) (settings map[string]interface{}, er
 				// see if this is a dir
 				inf, err := os.Stat(src)
 				if err != nil {
-					return nil, &SettingError{ID, k, v, err}
+					return nil, SettingErr{k, v, err}
 				}
 				if inf.IsDir() {
 					isDir = true
@@ -696,7 +696,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 		case "manifest_file":
 			src, err := r.findSource(v, PuppetMasterless.String(), false)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -715,7 +715,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 			// find the actual location of the source file and add it to the files map for copying
 			src, err := r.findSource(v, PuppetMasterless.String(), false)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -729,7 +729,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 			// find the actual location of the directory and add it to the dir map for copying contents
 			src, err := r.findSource(v, PuppetMasterless.String(), true)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -745,10 +745,10 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 			if strings.HasSuffix(v, ".command") {
 				commands, err := r.commandsFromFile(v, PuppetMasterless.String())
 				if err != nil {
-					return nil, &SettingError{ID, k, v, err}
+					return nil, SettingErr{k, v, err}
 				}
 				if len(commands) == 0 {
-					return nil, &SettingError{ID, k, v, ErrNoCommands}
+					return nil, SettingErr{k, v, ErrNoCommands}
 				}
 				settings[k] = commands[0]
 				continue
@@ -864,7 +864,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 			// find the actual location and add it to the files map for copying
 			src, err := r.findSource(v, Salt.String(), true)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -879,7 +879,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 			// find the actual location and add it to the files map for copying
 			src, err := r.findSource(v, Salt.String(), true)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -893,7 +893,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 			// find the actual location and add it to the files map for copying
 			src, err := r.findSource(filepath.Join(v, "minion"), Salt.String(), false)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -922,10 +922,10 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 	// If minion is set, remote_pilar_roots and remote_state_tree cannot be used.
 	if hasMinion {
 		if remotePillarRoots != "" {
-			return nil, &SettingError{ID: ID, Key: "remote_pillar_roots", Value: remotePillarRoots, err: errors.New("cannot be used with the 'minon_config' setting")}
+			return nil, SettingErr{Key: "remote_pillar_roots", Value: remotePillarRoots, err: errors.New("cannot be used with the 'minon_config' setting")}
 		}
 		if remoteStateTree != "" {
-			return nil, &SettingError{ID: ID, Key: "remote_state_tree", Value: remoteStateTree, err: errors.New("cannot be used with the 'minon_config' setting")}
+			return nil, SettingErr{Key: "remote_state_tree", Value: remoteStateTree, err: errors.New("cannot be used with the 'minon_config' setting")}
 		}
 	}
 	// Process the Arrays.
@@ -986,10 +986,10 @@ func (r *rawTemplate) createShell(ID string) (settings map[string]interface{}, e
 				var commands []string
 				commands, err = r.commandsFromFile(v, Shell.String())
 				if err != nil {
-					return nil, &SettingError{ID, k, v, err}
+					return nil, SettingErr{k, v, err}
 				}
 				if len(commands) == 0 {
-					return nil, &SettingError{ID, k, v, ErrNoCommands}
+					return nil, SettingErr{k, v, ErrNoCommands}
 				}
 				settings[k] = commands[0] // for execute_command, only the first element is used
 				continue
@@ -1031,7 +1031,7 @@ func (r *rawTemplate) createShell(ID string) (settings map[string]interface{}, e
 		// find the source
 		src, err := r.findSource(script, Shell.String(), false)
 		if err != nil {
-			return nil, &SettingError{ID, "script", script, err}
+			return nil, SettingErr{"script", script, err}
 		}
 		// if the source couldn't be found and an error wasn't generated, replace
 		// s with the original value; this occurs when it is an example.
@@ -1050,7 +1050,7 @@ func (r *rawTemplate) createShell(ID string) (settings map[string]interface{}, e
 			// find the source
 			src, err := r.findSource(v, Shell.String(), false)
 			if err != nil {
-				return nil, &SettingError{ID, k, v, err}
+				return nil, SettingErr{k, v, err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -1119,10 +1119,10 @@ func (r *rawTemplate) createShellLocal(ID string) (settings map[string]interface
 				var commands []string
 				commands, err = r.commandsFromFile(v, Shell.String())
 				if err != nil {
-					return nil, &SettingError{ID, k, v, err}
+					return nil, SettingErr{k, v, err}
 				}
 				if len(commands) == 0 {
-					return nil, &SettingError{ID, k, v, ErrNoCommands}
+					return nil, SettingErr{k, v, ErrNoCommands}
 				}
 				settings[k] = commands[0] // for execute_command, only the first element is used
 				continue

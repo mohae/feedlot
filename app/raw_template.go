@@ -15,26 +15,20 @@ import (
 	jww "github.com/spf13/jwalterweatherman"
 )
 
-// SettingError occurs when there is a problem with a packer component
+// SettingErr occurs when there is a problem with a packer component
 // setting.
-type SettingError struct {
-	ID    string
+type SettingErr struct {
 	Key   string
 	Value string
 	err   error
 }
 
-func (e *SettingError) Error() string {
+func (e SettingErr) Error() string {
 	var s string
-	if e.ID == "" {
-		s = "\"\"."
-	} else {
-		s = e.ID + "."
-	}
 	if e.Key == "" {
-		s += "\"\": "
+		s = "\"\": "
 	} else {
-		s += e.Key + ": "
+		s = e.Key + ": "
 	}
 	if e.Value == "" {
 		s += "\"\": "
