@@ -46,9 +46,10 @@ var provisioners = [...]string{
 	"shell-local",
 }
 
-// ProvisionerFromString returns the Provisioner constant for the passed string
-// or unsupported. All incoming strings are normalized to lowercase
-func ProvisionerFromString(s string) Provisioner {
+// ParseProvisioner returns the Provisioner constant for s. If no match is
+// found, UnsupportedProvisioner is returned. All incoming strings are
+// normalized to lowercase
+func ParseProvisioner(s string) Provisioner {
 	s = strings.ToLower(s)
 	switch s {
 	case "ansible":
@@ -90,7 +91,7 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 			return nil, fmt.Errorf("provisioner configuration for %s not found", ID)
 		}
 		jww.DEBUG.Printf("processing provisioner id: %s\n", ID)
-		typ := ProvisionerFromString(tmpP.Type)
+		typ := ParseProvisioner(tmpP.Type)
 		switch typ {
 		case Ansible:
 			tmpS, err = r.createAnsible(ID)
