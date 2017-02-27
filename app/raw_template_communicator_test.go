@@ -20,7 +20,7 @@ func TestCommunicatorFromString(t *testing.T) {
 		{"WinRM", WinRMCommunicator},
 	}
 	for i, test := range tests {
-		comm := CommunicatorFromString(test.val)
+		comm := ParseCommunicator(test.val)
 		if comm != test.expected {
 			t.Errorf("%d:  %q, want %q", i, comm, test.expected)
 		}

@@ -36,10 +36,9 @@ var communicators = [...]string{
 
 func (c Communicator) String() string { return communicators[c] }
 
-// CommunicatorFromString returns the communicator constant for the passed
-// string or none.  Invalid values are treated as none.  All incoming
-// strings are normalized to lowercase.
-func CommunicatorFromString(s string) Communicator {
+// ParseCommunicator returns the communicator for the received s. If the value
+// does not match a known communicator, InvalidCommunicator is returned.
+func ParseCommunicator(s string) Communicator {
 	s = strings.ToLower(s)
 	switch s {
 	case "none":
@@ -63,7 +62,7 @@ type comm interface {
 // 'none', a nil is returned.  If the specified communicator does not match
 // a valid communicator, an invalidCommunicatorErr is returned.
 func NewCommunicator(s string) (comm, error) {
-	typ := CommunicatorFromString(s)
+	typ := ParseCommunicator(s)
 	switch typ {
 	case NoCommunicator:
 		return nil, nil
