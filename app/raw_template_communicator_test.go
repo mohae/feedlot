@@ -33,7 +33,8 @@ func TestNewCommunicator(t *testing.T) {
 		expected comm
 		err      string
 	}{
-		{"", nil, "invalid communicator"},
+		{"", nil, ": invalid communicator"},
+		{"windows", nil, "windows: invalid communicator"},
 		{"none", nil, ""},
 		{"NONE", nil, ""},
 		{"ssh", SSH{}, ""},
@@ -216,7 +217,7 @@ func TestProcessCommunicator(t *testing.T) {
 	}{
 		{[]string{}, map[string]interface{}{}, "", ""},
 		{[]string{"a=b"}, map[string]interface{}{}, "", ""},
-		{[]string{"communicator=nada"}, map[string]interface{}{}, "", "communicator: nada: invalid communicator"},
+		{[]string{"communicator=nada"}, map[string]interface{}{}, "", "nada: invalid communicator"},
 		{[]string{"a=b", "communicator=none"}, map[string]interface{}{"communicator": "none"}, "", ""},
 		{[]string{"a=b", "communicator=None"}, map[string]interface{}{"communicator": "none"}, "", ""},
 		{[]string{"a=b", "communicator=NONE"}, map[string]interface{}{"communicator": "none"}, "", ""},

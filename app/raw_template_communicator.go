@@ -1,7 +1,6 @@
 package app
 
 import (
-	"errors"
 	"strconv"
 	"strings"
 )
@@ -9,7 +8,13 @@ import (
 // This supports standard Packer communicators.  Builders with custom
 // communicators are associated with their builders.
 
-var invalidCommunicatorErr = errors.New("invalid communicator")
+type InvalidCommunicatorErr struct {
+	s string
+}
+
+func (e InvalidCommunicatorErr) Error() string {
+	return e.s + ": invalid communicator"
+}
 
 // Communicator constants
 const (
@@ -67,7 +72,7 @@ func NewCommunicator(s string) (comm, error) {
 	case WinRMCommunicator:
 		return WinRM{}, nil
 	default:
-		return nil, invalidCommunicatorErr
+		return nil, InvalidCommunicatorErr{s}
 	}
 }
 
@@ -236,7 +241,7 @@ func (r *rawTemplate) processCommunicator(id string, vals []string, settings map
 	}
 	c, err := NewCommunicator(v)
 	if err != nil {
-		return "", SettingErr{k, v, err}
+		return "", err
 	}
 	// add the communicator
 	settings[k] = strings.ToLower(v)
