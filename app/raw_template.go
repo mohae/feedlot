@@ -15,6 +15,15 @@ import (
 	jww "github.com/spf13/jwalterweatherman"
 )
 
+type InvalidComponentErr struct {
+	c string
+	s string
+}
+
+func (e InvalidComponentErr) Error() string {
+	return e.s + ": invalid " + e.c
+}
+
 // SettingErr occurs when there is a problem with a packer component
 // setting.
 type SettingErr struct {

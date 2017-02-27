@@ -8,14 +8,6 @@ import (
 // This supports standard Packer communicators.  Builders with custom
 // communicators are associated with their builders.
 
-type InvalidCommunicatorErr struct {
-	s string
-}
-
-func (e InvalidCommunicatorErr) Error() string {
-	return e.s + ": invalid communicator"
-}
-
 // Communicator constants
 const (
 	InvalidCommunicator Communicator = iota
@@ -71,7 +63,7 @@ func NewCommunicator(s string) (comm, error) {
 	case WinRMCommunicator:
 		return WinRM{}, nil
 	default:
-		return nil, InvalidCommunicatorErr{s}
+		return nil, InvalidComponentErr{c: "communicator", s: s}
 	}
 }
 
