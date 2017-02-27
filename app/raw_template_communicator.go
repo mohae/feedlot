@@ -127,7 +127,7 @@ func (s SSH) processSettings(vals []string, r *rawTemplate, settings map[string]
 		case "ssh_port":
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return err
+				return SettingErr{Key: k, Value: v, err: err}
 			}
 			settings[k] = i
 		case "ssh_username":
@@ -143,7 +143,7 @@ func (s SSH) processSettings(vals []string, r *rawTemplate, settings map[string]
 		case "ssh_handshake_attempts":
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return err
+				return SettingErr{Key: k, Value: v, err: err}
 			}
 			settings[k] = i
 		case "ssh_disable_agent":
@@ -153,7 +153,7 @@ func (s SSH) processSettings(vals []string, r *rawTemplate, settings map[string]
 		case "ssh_bastion_port":
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return err
+				return SettingErr{Key: k, Value: v, err: err}
 			}
 			settings[k] = i
 		case "ssh_bastion_username":
@@ -205,7 +205,7 @@ func (w WinRM) processSettings(vals []string, r *rawTemplate, settings map[strin
 		case "winrm_port":
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return err
+				return SettingErr{Key: k, Value: v, err: err}
 			}
 			settings[k] = i
 		case "winrm_username":
@@ -257,7 +257,7 @@ func (r *rawTemplate) processCommunicator(id string, vals []string, settings map
 	// get a map of the settings related to this communicator
 	err = c.processSettings(vals, r, settings)
 	if err != nil {
-		return "", SettingErr{k, v, err}
+		return "", Error{slug: communicators[int(ParseCommunicator(v))], err: err}
 	}
 	return prefix, nil
 }
