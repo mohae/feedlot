@@ -61,18 +61,18 @@ func (e RequiredSettingErr) Error() string {
 	return e.Key + ": required setting not found"
 }
 
-var (
-	// ErrConfigNotFound occurs when the specified configuration resource
-	// cannot be found.  This may result in Feedlot using its defaults.
-	ErrConfigNotFound = errors.New("configuration not found")
-	// ErrNoCommands occurs when a referenced command file doesn't have any
-	// contents.
-	ErrNoCommands = errors.New("no commands found")
-)
-
-func NewErrConfigNotFound(s string) error {
-	return Error{slug: s, err: ErrConfigNotFound}
+type ConfigNotFoundErr struct {
+	id  string
+	typ string
 }
+
+func (e ConfigNotFoundErr) Error() string {
+	return e.typ + " " + e.id + ": configuration not found"
+}
+
+// ErrNoCommands occurs when a referenced command file doesn't have any
+// contents.
+var ErrNoCommands = errors.New("no commands found")
 
 // rawTemplate holds all the information for a Feedlot template. This is used
 // to generate the Packer Build.

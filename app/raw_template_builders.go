@@ -258,7 +258,7 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 //   root_volume_size         int
 //   tags                     object of key/value strings
 func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interface{}, err error) {
-	_, ok := r.Builders[AmazonChroot.String()]
+	_, ok := r.Builders[ID]
 	if !ok {
 		return nil, NewErrConfigNotFound(ID)
 	}
