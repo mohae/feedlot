@@ -107,7 +107,7 @@ func BuilderFromString(s string) Builder {
 // Builder
 func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 	if r.BuilderIDs == nil || len(r.BuilderIDs) <= 0 {
-		return nil, fmt.Errorf("unable to create builders: none specified")
+		return nil, fmt.Errorf("builders: none specified")
 	}
 	var tmpS map[string]interface{}
 	var ndx int
@@ -122,7 +122,7 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 	for _, ID := range r.BuilderIDs {
 		bldr, ok := r.Builders[ID]
 		if !ok {
-			return nil, fmt.Errorf("builder configuration for %s not found", ID)
+			return nil, fmt.Errorf("%s: create: configuration not found", ID)
 		}
 		jww.DEBUG.Printf("processing builder id: %s\n", ID)
 		typ := BuilderFromString(bldr.Type)
@@ -130,80 +130,80 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 		case AmazonChroot:
 			tmpS, err = r.createAmazonChroot(ID)
 			if err != nil {
-				return nil, &Error{AmazonChroot.String(), err}
+				return nil, err
 			}
 		case AmazonEBS:
 			tmpS, err = r.createAmazonEBS(ID)
 			if err != nil {
-				return nil, &Error{AmazonEBS.String(), err}
+				return nil, err
 			}
 		case AmazonInstance:
 			tmpS, err = r.createAmazonInstance(ID)
 			if err != nil {
-				return nil, &Error{AmazonInstance.String(), err}
+				return nil, err
 			}
 		case DigitalOcean:
 			tmpS, err = r.createDigitalOcean(ID)
 			if err != nil {
-				return nil, &Error{DigitalOcean.String(), err}
+				return nil, err
 			}
 		case Docker:
 			tmpS, err = r.createDocker(ID)
 			if err != nil {
-				return nil, &Error{Docker.String(), err}
+				return nil, err
 			}
 		case GoogleCompute:
 			tmpS, err = r.createGoogleCompute(ID)
 			if err != nil {
-				return nil, &Error{GoogleCompute.String(), err}
+				return nil, err
 			}
 		case Null:
 			tmpS, err = r.createNull(ID)
 			if err != nil {
-				return nil, &Error{Null.String(), err}
+				return nil, err
 			}
 		case OpenStack:
 			tmpS, err = r.createOpenStack(ID)
 			if err != nil {
-				return nil, &Error{OpenStack.String(), err}
+				return nil, err
 			}
 		case ParallelsISO:
 			tmpS, err = r.createParallelsISO(ID)
 			if err != nil {
-				return nil, &Error{ParallelsISO.String(), err}
+				return nil, err
 			}
 		case ParallelsPVM:
 			tmpS, err = r.createParallelsPVM(ID)
 			if err != nil {
-				return nil, &Error{ParallelsPVM.String(), err}
+				return nil, err
 			}
 		case QEMU:
 			tmpS, err = r.createQEMU(ID)
 			if err != nil {
-				return nil, &Error{QEMU.String(), err}
+				return nil, err
 			}
 		case VirtualBoxISO:
 			tmpS, err = r.createVirtualBoxISO(ID)
 			if err != nil {
-				return nil, &Error{VirtualBoxISO.String(), err}
+				return nil, err
 			}
 		case VirtualBoxOVF:
 			tmpS, err = r.createVirtualBoxOVF(ID)
 			if err != nil {
-				return nil, &Error{VirtualBoxOVF.String(), err}
+				return nil, err
 			}
 		case VMWareISO:
 			tmpS, err = r.createVMWareISO(ID)
 			if err != nil {
-				return nil, &Error{VMWareISO.String(), err}
+				return nil, err
 			}
 		case VMWareVMX:
 			tmpS, err = r.createVMWareVMX(ID)
 			if err != nil {
-				return nil, &Error{VMWareVMX.String(), err}
+				return nil, err
 			}
 		default:
-			return nil, &Error{UnsupportedBuilder.String(), fmt.Errorf("%q is not supported", typ.String())}
+			return nil, InvalidComponentErr{cTyp: "builder", s: bldr.Type}
 		}
 		bldrs[ndx] = tmpS
 		ndx++

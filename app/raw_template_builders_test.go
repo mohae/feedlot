@@ -2201,10 +2201,10 @@ func init() {
 func TestCreateBuilders(t *testing.T) {
 	_, err := testRawTemplateBuilderOnly.createBuilders()
 	if err == nil {
-		t.Error("Expected error \"unable to create builders: none specified\", got nil")
+		t.Error("Expected error \"builders: none specified\", got nil")
 	} else {
-		if err.Error() != "unable to create builders: none specified" {
-			t.Errorf("Expected \"unable to create builders: none specified\", got %q", err)
+		if err.Error() != "builders: none specified" {
+			t.Errorf("Expected \"builders: none specified\", got %q", err)
 		}
 	}
 
