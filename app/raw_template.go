@@ -16,12 +16,16 @@ import (
 )
 
 type InvalidComponentErr struct {
-	c string
-	s string
+	id   string // component id
+	cTyp string // component type
+	s    string
 }
 
 func (e InvalidComponentErr) Error() string {
-	return e.s + ": invalid " + e.c
+	if e.id == "" {
+		return fmt.Sprintf("%s: %q: invalid type", e.cTyp, e.s)
+	}
+	return fmt.Sprintf("id: %s: %q: invalid type", e.id, e.cTyp, e.s)
 }
 
 // SettingErr occurs when there is a problem with a packer component

@@ -63,7 +63,7 @@ func NewCommunicator(s string) (comm, error) {
 	case WinRMCommunicator:
 		return WinRM{}, nil
 	default:
-		return nil, InvalidComponentErr{c: "communicator", s: s}
+		return nil, InvalidComponentErr{cTyp: "communicator", s: s}
 	}
 }
 
