@@ -23,9 +23,9 @@ type InvalidComponentErr struct {
 
 func (e InvalidComponentErr) Error() string {
 	if e.id == "" {
-		return fmt.Sprintf("%s: %q: invalid type", e.cTyp, e.s)
+		return fmt.Sprintf("%q: invalid %s", e.s, e.cTyp)
 	}
-	return fmt.Sprintf("id: %s: %q: invalid type", e.id, e.cTyp, e.s)
+	return fmt.Sprintf("id: %s: %q: invalid %s", e.s, e.id, e.cTyp)
 }
 
 // SettingErr occurs when there is a problem with a packer component

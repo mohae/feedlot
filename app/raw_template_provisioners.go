@@ -88,7 +88,7 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 	for _, ID := range r.ProvisionerIDs {
 		tmpP, ok := r.Provisioners[ID]
 		if !ok {
-			return nil, fmt.Errorf("provisioner configuration for %s not found", ID)
+			return nil, fmt.Errorf("%s: configuration not found", ID)
 		}
 		jww.DEBUG.Printf("processing provisioner id: %s\n", ID)
 		typ := ParseProvisioner(tmpP.Type)
@@ -96,55 +96,55 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 		case Ansible:
 			tmpS, err = r.createAnsible(ID)
 			if err != nil {
-				return nil, &Error{Ansible.String(), err}
+				return nil, err
 			}
 		case AnsibleLocal:
 			tmpS, err = r.createAnsibleLocal(ID)
 			if err != nil {
-				return nil, &Error{AnsibleLocal.String(), err}
+				return nil, err
 			}
 		case ChefClient:
 			tmpS, err = r.createChefClient(ID)
 			if err != nil {
-				return nil, &Error{ChefClient.String(), err}
+				return nil, err
 			}
 		case ChefSolo:
 			tmpS, err = r.createChefSolo(ID)
 			if err != nil {
-				return nil, &Error{ChefSolo.String(), err}
+				return nil, err
 			}
 		case File:
 			tmpS, err = r.createFile(ID)
 			if err != nil {
-				return nil, &Error{File.String(), err}
+				return nil, err
 			}
 		case PuppetMasterless:
 			tmpS, err = r.createPuppetMasterless(ID)
 			if err != nil {
-				return nil, &Error{PuppetMasterless.String(), err}
+				return nil, err
 			}
 		case PuppetServer:
 			tmpS, err = r.createPuppetServer(ID)
 			if err != nil {
-				return nil, &Error{PuppetServer.String(), err}
+				return nil, err
 			}
 		case Salt:
 			tmpS, err = r.createSalt(ID)
 			if err != nil {
-				return nil, &Error{Salt.String(), err}
+				return nil, err
 			}
 		case Shell:
 			tmpS, err = r.createShell(ID)
 			if err != nil {
-				return nil, &Error{Shell.String(), err}
+				return nil, err
 			}
 		case ShellLocal:
 			tmpS, err = r.createShellLocal(ID)
 			if err != nil {
-				return nil, &Error{ShellLocal.String(), err}
+				return nil, err
 			}
 		default:
-			return nil, &Error{UnsupportedProvisioner.String(), fmt.Errorf("%s is not supported", tmpP.Type)}
+			return nil, InvalidComponentErr{cTyp: "provisioner", s: tmpP.Type}
 		}
 		p[ndx] = tmpS
 		ndx++
