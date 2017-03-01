@@ -2208,7 +2208,7 @@ func TestCreateBuilders(t *testing.T) {
 		}
 	}
 
-	xerr := BuilderNotFoundErr{id: "amazon-ebs"}
+	xerr := BuilderErr{Builder: AmazonEBS, Err: ErrBuilderNotFound}
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
 		t.Errorf("Expected %s, got nil", xerr)
@@ -2218,7 +2218,7 @@ func TestCreateBuilders(t *testing.T) {
 		}
 	}
 
-	xerr.id = "digitalocean"
+	xerr.Builder = DigitalOcean
 	testRawTemplateWOSection.build.BuilderIDs[0] = "digitalocean"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
@@ -2229,7 +2229,7 @@ func TestCreateBuilders(t *testing.T) {
 		}
 	}
 
-	xerr.id = "docker"
+	xerr.Builder = Docker
 	testRawTemplateWOSection.build.BuilderIDs[0] = "docker"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
@@ -2240,7 +2240,7 @@ func TestCreateBuilders(t *testing.T) {
 		}
 	}
 
-	xerr.id = "googlecompute"
+	xerr.Builder = GoogleCompute
 	testRawTemplateWOSection.build.BuilderIDs[0] = "googlecompute"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
@@ -2251,7 +2251,7 @@ func TestCreateBuilders(t *testing.T) {
 		}
 	}
 
-	xerr.id = "virtualbox-iso"
+	xerr.Builder = VirtualBoxISO
 	testRawTemplateWOSection.build.BuilderIDs[0] = "virtualbox-iso"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
@@ -2262,7 +2262,7 @@ func TestCreateBuilders(t *testing.T) {
 		}
 	}
 
-	xerr.id = "virtualbox-ovf"
+	xerr.Builder = VirtualBoxOVF
 	testRawTemplateWOSection.build.BuilderIDs[0] = "virtualbox-ovf"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
@@ -2273,7 +2273,7 @@ func TestCreateBuilders(t *testing.T) {
 		}
 	}
 
-	xerr.id = "vmware-iso"
+	xerr.Builder = VMWareISO
 	testRawTemplateWOSection.build.BuilderIDs[0] = "vmware-iso"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
@@ -2284,7 +2284,7 @@ func TestCreateBuilders(t *testing.T) {
 		}
 	}
 
-	xerr.id = "vmware-vmx"
+	xerr.Builder = VMWareVMX
 	testRawTemplateWOSection.build.BuilderIDs[0] = "vmware-vmx"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
@@ -3213,7 +3213,7 @@ func TestCreateGoogleCompute(t *testing.T) {
 
 func TestBuilderNull(t *testing.T) {
 	// a communicator of none or no communicator setting should result in an error
-	expected := "null: null builder requires a communicator other than \"none\""
+	expected := "null: null: communicator: required setting not found"
 	_, err := testAllBuilders.createNull("null")
 	if err == nil {
 		t.Errorf("expected an error, got none")
@@ -4537,7 +4537,7 @@ func TestProcessAMIBlockDeviceMappings(t *testing.T) {
 	if err == nil {
 		t.Errorf("expected error, got none")
 	} else {
-		expected := "not in a supported format"
+		expected := "ami_block_device_mappings: \"\": not in a supported format"
 		if err.Error() != expected {
 			t.Errorf("got %q; expected %q", err, expected)
 		}

@@ -34,19 +34,33 @@ const (
 	VMWareVMX
 )
 
-// BuilderNotFoundErr occurs when a builder with a matching ID is not found
-// in the definition.
-type BuilderNotFoundErr struct {
+// BuilderErr is an error processing builders, its Err field may contain
+// additional type information.
+type BuilderErr struct {
 	id string
 	Builder
+	Err error
 }
 
-func (e BuilderNotFoundErr) Error() string {
-	if e.Builder == UnsupportedBuilder {
-		return e.id + ": builder not found"
+func (e BuilderErr) Error() string {
+	var s string
+	if e.Builder != UnsupportedBuilder {
+		s = e.Builder.String()
 	}
-	return fmt.Sprintf("%s: %s: builder not found", e.Builder, e.id)
+	if e.id != "" {
+		if s == "" {
+			s = e.id
+		} else {
+			s += ": " + e.id
+		}
+	}
+	if s == "" {
+		return e.Err.Error()
+	}
+	return s + ": " + e.Err.Error()
 }
+
+var ErrBuilderNotFound = errors.New("builder not found")
 
 // Builder is a Packer supported builder.
 type Builder int
@@ -121,7 +135,7 @@ func BuilderFromString(s string) Builder {
 // Builder
 func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 	if r.BuilderIDs == nil || len(r.BuilderIDs) <= 0 {
-		return nil, fmt.Errorf("no builders specified")
+		return nil, BuilderErr{Err: errors.New("no builders specified")}
 	}
 	var tmpS map[string]interface{}
 	var ndx int
@@ -136,7 +150,7 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 	for _, ID := range r.BuilderIDs {
 		bldr, ok := r.Builders[ID]
 		if !ok {
-			return nil, BuilderNotFoundErr{id: ID}
+			return nil, BuilderErr{id: ID, Err: ErrBuilderNotFound}
 		}
 		jww.DEBUG.Printf("processing builder id: %s\n", ID)
 		typ := BuilderFromString(bldr.Type)
@@ -274,7 +288,7 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, BuilderNotFoundErr{id: ID, Builder: AmazonChroot}
+		return nil, BuilderErr{id: ID, Builder: AmazonChroot, Err: ErrBuilderNotFound}
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -296,7 +310,7 @@ func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 	// check for communicator first
 	_, err = r.processCommunicator(ID, workSlice, settings)
 	if err != nil {
-		return nil, err
+		return nil, BuilderErr{id: ID, Builder: AmazonChroot, Err: err}
 	}
 	// Go through each element in the slice, only take the ones that matter to this builder.
 	for _, s := range workSlice {
@@ -336,16 +350,16 @@ func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 		}
 	}
 	if !hasAccessKey {
-		return nil, RequiredSettingErr{"access_key"}
+		return nil, BuilderErr{id: ID, Builder: AmazonChroot, Err: RequiredSettingErr{"access_key"}}
 	}
 	if !hasAmiName {
-		return nil, RequiredSettingErr{"ami_name"}
+		return nil, BuilderErr{id: ID, Builder: AmazonChroot, Err: RequiredSettingErr{"ami_name"}}
 	}
 	if !hasSecretKey {
-		return nil, RequiredSettingErr{"secret_key"}
+		return nil, BuilderErr{id: ID, Builder: AmazonChroot, Err: RequiredSettingErr{"secret_key"}}
 	}
 	if !hasSourceAmi {
-		return nil, RequiredSettingErr{"source_ami"}
+		return nil, BuilderErr{id: ID, Builder: AmazonChroot, Err: RequiredSettingErr{"source_ami"}}
 	}
 	// Process the Arrays.
 	for name, val := range r.Builders[ID].Arrays {
@@ -431,7 +445,7 @@ func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, BuilderNotFoundErr{id: ID, Builder: AmazonEBS}
+		return nil, BuilderErr{id: ID, Builder: AmazonEBS, Err: ErrBuilderNotFound}
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -442,7 +456,7 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
-			return nil, err
+			return nil, BuilderErr{id: ID, Builder: AmazonEBS, Err: err}
 		}
 	} else {
 		workSlice = r.Builders[ID].Settings
@@ -452,7 +466,7 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 	var hasSourceAmi, hasUsername, hasCommunicator bool
 	prefix, err := r.processCommunicator(ID, workSlice, settings)
 	if err != nil {
-		return nil, err
+		return nil, BuilderErr{id: ID, Builder: AmazonEBS, Err: err}
 	}
 	// see if the required settings include username/password
 	if prefix != "" {
@@ -534,7 +548,7 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 		case "user_data_file":
 			src, err := r.findSource(v, AmazonEBS.String(), false)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: AmazonEBS, Err: SettingErr{k, v, err}}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -555,22 +569,22 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 		}
 	}
 	if !hasAccessKey {
-		return nil, RequiredSettingErr{"access_key"}
+		return nil, BuilderErr{id: ID, Builder: AmazonEBS, Err: RequiredSettingErr{"access_key"}}
 	}
 	if !hasAmiName {
-		return nil, RequiredSettingErr{"ami_name"}
+		return nil, BuilderErr{id: ID, Builder: AmazonEBS, Err: RequiredSettingErr{"ami_name"}}
 	}
 	if !hasInstanceType {
-		return nil, RequiredSettingErr{"instance_type"}
+		return nil, BuilderErr{id: ID, Builder: AmazonEBS, Err: RequiredSettingErr{"instance_type"}}
 	}
 	if !hasRegion {
-		return nil, RequiredSettingErr{"region"}
+		return nil, BuilderErr{id: ID, Builder: AmazonEBS, Err: RequiredSettingErr{"region"}}
 	}
 	if !hasSecretKey {
-		return nil, RequiredSettingErr{"secret_key"}
+		return nil, BuilderErr{id: ID, Builder: AmazonEBS, Err: RequiredSettingErr{"secret_key"}}
 	}
 	if !hasSourceAmi {
-		return nil, RequiredSettingErr{"source_ami"}
+		return nil, BuilderErr{id: ID, Builder: AmazonEBS, Err: RequiredSettingErr{"source_ami"}}
 	}
 	if !hasUsername {
 		// If there isn't a prefix, use ssh as that's the setting
@@ -578,7 +592,7 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 		if prefix == "" {
 			prefix = "ssh"
 		}
-		return nil, RequiredSettingErr{prefix + "_username"}
+		return nil, BuilderErr{id: ID, Builder: AmazonEBS, Err: RequiredSettingErr{prefix + "_username"}}
 	}
 	// Process the Arrays.
 	for name, val := range r.Builders[ID].Arrays {
@@ -588,7 +602,7 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 			// do ami_block_device_mappings processing
 			settings[name], err = r.processAMIBlockDeviceMappings(val)
 			if err != nil {
-				return nil, SettingErr{"ami_block_device_mappings", "", err}
+				return nil, BuilderErr{id: ID, Builder: AmazonEBS, Err: err}
 			}
 			continue
 		case "ami_groups":
@@ -678,7 +692,7 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, BuilderNotFoundErr{id: ID, Builder: AmazonInstance}
+		return nil, BuilderErr{id: ID, Builder: AmazonInstance, Err: ErrBuilderNotFound}
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -689,7 +703,7 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
-			return nil, err
+			return nil, BuilderErr{id: ID, Builder: AmazonInstance, Err: err}
 		}
 	} else {
 		workSlice = r.Builders[ID].Settings
@@ -700,7 +714,7 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 	// check for communicator first
 	prefix, err := r.processCommunicator(ID, workSlice, settings)
 	if err != nil {
-		return nil, err
+		return nil, BuilderErr{id: ID, Builder: AmazonInstance, Err: err}
 	}
 	// see if the required settings include username/password
 	if prefix != "" {
@@ -745,12 +759,12 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 			// The value is a command file, load the contents of the file.
 			cmds, err := r.commandsFromFile(v, AmazonInstance.String())
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: AmazonInstance, Err: SettingErr{k, v, err}}
 			}
 			// Make the cmds slice a single string, if it was split into multiple lines.
 			cmd := commandFromSlice(cmds)
 			if cmd == "" {
-				return nil, SettingErr{k, v, ErrNoCommands}
+				return nil, BuilderErr{id: ID, Builder: AmazonInstance, Err: SettingErr{k, v, ErrNoCommands}}
 			}
 			settings[k] = cmd
 		case "bundle_vol_command":
@@ -762,12 +776,12 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 			// The value is a command file, load the contents of the file.
 			cmds, err := r.commandsFromFile(v, AmazonInstance.String())
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: AmazonInstance, Err: SettingErr{k, v, err}}
 			}
 			// Make the cmds slice a single string, if it was split into multiple lines.
 			cmd := commandFromSlice(cmds)
 			if cmd == "" {
-				return nil, SettingErr{k, v, ErrNoCommands}
+				return nil, BuilderErr{id: ID, Builder: AmazonInstance, Err: SettingErr{k, v, ErrNoCommands}}
 			}
 			settings[k] = cmd
 		case "ebs_optimized":
@@ -833,7 +847,7 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 		case "user_data_file":
 			src, err := r.findSource(v, AmazonInstance.String(), false)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: AmazonInstance, Err: SettingErr{k, v, err}}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// src with the original value; this occurs when it is an example.
@@ -862,41 +876,41 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 		}
 	}
 	if !hasAccessKey {
-		return nil, RequiredSettingErr{"access_key"}
+		return nil, BuilderErr{id: ID, Builder: AmazonInstance, Err: RequiredSettingErr{"access_key"}}
 	}
 	if !hasAccountID {
-		return nil, RequiredSettingErr{"account_id"}
+		return nil, BuilderErr{id: ID, Builder: AmazonInstance, Err: RequiredSettingErr{"account_id"}}
 	}
 	if !hasAmiName {
-		return nil, RequiredSettingErr{"ami_name"}
+		return nil, BuilderErr{id: ID, Builder: AmazonInstance, Err: RequiredSettingErr{"ami_name"}}
 	}
 	if !hasInstanceType {
-		return nil, RequiredSettingErr{"instance_type"}
+		return nil, BuilderErr{id: ID, Builder: AmazonInstance, Err: RequiredSettingErr{"instance_type"}}
 	}
 	if !hasRegion {
-		return nil, RequiredSettingErr{"region"}
+		return nil, BuilderErr{id: ID, Builder: AmazonInstance, Err: RequiredSettingErr{"region"}}
 	}
 	if !hasS3Bucket {
-		return nil, RequiredSettingErr{"s3_bucket"}
+		return nil, BuilderErr{id: ID, Builder: AmazonInstance, Err: RequiredSettingErr{"s3_bucket"}}
 	}
 	if !hasSecretKey {
-		return nil, RequiredSettingErr{"secret_key"}
+		return nil, BuilderErr{id: ID, Builder: AmazonInstance, Err: RequiredSettingErr{"secret_key"}}
 	}
 	if !hasSourceAmi {
-		return nil, RequiredSettingErr{"source_ami"}
+		return nil, BuilderErr{id: ID, Builder: AmazonInstance, Err: RequiredSettingErr{"source_ami"}}
 	}
 	if !hasUsername {
 		// if prefix was empty, no communicator was used which means ssh_username is expected.
 		if prefix == "" {
 			prefix = "ssh"
 		}
-		return nil, RequiredSettingErr{prefix + "_username"}
+		return nil, BuilderErr{id: ID, Builder: AmazonInstance, Err: RequiredSettingErr{prefix + "_username"}}
 	}
 	if !hasX509CertPath {
-		return nil, RequiredSettingErr{"x509_cert_path"}
+		return nil, BuilderErr{id: ID, Builder: AmazonInstance, Err: RequiredSettingErr{"x509_cert_path"}}
 	}
 	if !hasX509KeyPath {
-		return nil, RequiredSettingErr{"x509_key_path"}
+		return nil, BuilderErr{id: ID, Builder: AmazonInstance, Err: RequiredSettingErr{"x509_key_path"}}
 	}
 	// Process the Arrays.
 	for name, val := range r.Builders[ID].Arrays {
@@ -906,7 +920,7 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 			// do ami_block_device_mappings processing
 			settings[name], err = r.processAMIBlockDeviceMappings(val)
 			if err != nil {
-				return nil, SettingErr{"ami_block_device_mappings", "", err}
+				return nil, BuilderErr{id: ID, Builder: AmazonInstance, Err: err}
 			}
 			continue
 		case "ami_groups":
@@ -950,7 +964,7 @@ func (r *rawTemplate) processAMIBlockDeviceMappings(v interface{}) (interface{},
 	// Process the [][]string into a []map[string]interface{}
 	slices, ok := v.([][]string)
 	if !ok {
-		return nil, errors.New("not in a supported format")
+		return nil, SettingErr{Key: "ami_block_device_mappings", err: errors.New("not in a supported format")}
 	}
 	ret := make([]map[string]interface{}, len(slices))
 	for i, settings := range slices {
@@ -967,7 +981,7 @@ func (r *rawTemplate) processAMIBlockDeviceMappings(v interface{}) (interface{},
 			case "iops":
 				i, err := strconv.Atoi(v)
 				if err != nil {
-					return nil, fmt.Errorf("iops: %s", err)
+					return nil, SettingErr{Key: "ami_block_device_mappings." + k, Value: v, err: err}
 				}
 				vals[k] = i
 			case "no_device":
@@ -979,7 +993,7 @@ func (r *rawTemplate) processAMIBlockDeviceMappings(v interface{}) (interface{},
 			case "volume_size":
 				i, err := strconv.Atoi(v)
 				if err != nil {
-					return nil, fmt.Errorf("iops: %s", err)
+					return nil, SettingErr{Key: "ami_block_device_mappings." + k, Value: v, err: err}
 				}
 				vals[k] = i
 			case "volume_type":
@@ -1014,7 +1028,7 @@ func (r *rawTemplate) processAMIBlockDeviceMappings(v interface{}) (interface{},
 func (r *rawTemplate) createDigitalOcean(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, BuilderNotFoundErr{id: ID, Builder: DigitalOcean}
+		return nil, BuilderErr{id: ID, Builder: DigitalOcean, Err: ErrBuilderNotFound}
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -1025,14 +1039,14 @@ func (r *rawTemplate) createDigitalOcean(ID string) (settings map[string]interfa
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
-			return nil, err
+			return nil, BuilderErr{id: ID, Builder: DigitalOcean, Err: err}
 		}
 	} else {
 		workSlice = r.Builders[ID].Settings
 	}
 	_, err = r.processCommunicator(ID, workSlice, settings)
 	if err != nil {
-		return nil, err
+		return nil, BuilderErr{id: ID, Builder: DigitalOcean, Err: err}
 	}
 	// Go through each element in the slice, only take the ones that matter to this builder.
 	var hasAPIToken, hasImage, hasRegion, hasSize bool
@@ -1066,16 +1080,16 @@ func (r *rawTemplate) createDigitalOcean(ID string) (settings map[string]interfa
 		}
 	}
 	if !hasAPIToken {
-		return nil, RequiredSettingErr{"api_token"}
+		return nil, BuilderErr{id: ID, Builder: DigitalOcean, Err: RequiredSettingErr{"api_token"}}
 	}
 	if !hasImage {
-		return nil, RequiredSettingErr{"image"}
+		return nil, BuilderErr{id: ID, Builder: DigitalOcean, Err: RequiredSettingErr{"image"}}
 	}
 	if !hasRegion {
-		return nil, RequiredSettingErr{"region"}
+		return nil, BuilderErr{id: ID, Builder: DigitalOcean, Err: RequiredSettingErr{"region"}}
 	}
 	if !hasSize {
-		return nil, RequiredSettingErr{"size"}
+		return nil, BuilderErr{id: ID, Builder: DigitalOcean, Err: RequiredSettingErr{"size"}}
 	}
 	return settings, nil
 }
@@ -1106,7 +1120,7 @@ func (r *rawTemplate) createDigitalOcean(ID string) (settings map[string]interfa
 func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, BuilderNotFoundErr{id: ID, Builder: Docker}
+		return nil, BuilderErr{id: ID, Builder: Docker, Err: ErrBuilderNotFound}
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -1117,7 +1131,7 @@ func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
-			return nil, err
+			return nil, BuilderErr{id: ID, Builder: Docker, Err: err}
 		}
 	} else {
 		workSlice = r.Builders[ID].Settings
@@ -1125,7 +1139,7 @@ func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 	// Process the communicator settings first, if there are any.
 	_, err = r.processCommunicator(ID, workSlice, settings)
 	if err != nil {
-		return nil, err
+		return nil, BuilderErr{id: ID, Builder: Docker, Err: err}
 	}
 	// Go through each element in the slice, only take the ones that matter to this builder.
 	var hasCommit, hasDiscard, hasExportPath, hasImage, hasRunCommandArray bool
@@ -1199,10 +1213,10 @@ func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 		if runCommandFile != "" {
 			commands, err := r.commandsFromFile(runCommandFile, Docker.String())
 			if err != nil {
-				return nil, SettingErr{"run_command", runCommandFile, err}
+				return nil, BuilderErr{id: ID, Builder: Docker, Err: SettingErr{"run_command", runCommandFile, err}}
 			}
 			if len(commands) == 0 {
-				return nil, SettingErr{"run_command", runCommandFile, ErrNoCommands}
+				return nil, BuilderErr{id: ID, Builder: Docker, Err: SettingErr{"run_command", runCommandFile, ErrNoCommands}}
 			}
 			settings["run_command"] = commands
 		}
@@ -1240,7 +1254,7 @@ func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 func (r *rawTemplate) createGoogleCompute(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, BuilderNotFoundErr{id: ID, Builder: GoogleCompute}
+		return nil, BuilderErr{id: ID, Builder: GoogleCompute, Err: ErrBuilderNotFound}
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -1251,7 +1265,7 @@ func (r *rawTemplate) createGoogleCompute(ID string) (settings map[string]interf
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
-			return nil, err
+			return nil, BuilderErr{id: ID, Builder: GoogleCompute, Err: err}
 		}
 	} else {
 		workSlice = r.Builders[ID].Settings
@@ -1260,7 +1274,7 @@ func (r *rawTemplate) createGoogleCompute(ID string) (settings map[string]interf
 	// process communicator stuff first
 	_, err = r.processCommunicator(ID, workSlice, settings)
 	if err != nil {
-		return nil, err
+		return nil, BuilderErr{id: ID, Builder: GoogleCompute, Err: err}
 	}
 	// Go through each element in the slice, only take the ones that matter to this builder.
 	for _, s := range workSlice {
@@ -1275,7 +1289,7 @@ func (r *rawTemplate) createGoogleCompute(ID string) (settings map[string]interf
 		case "disk_size":
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: GoogleCompute, Err: SettingErr{k, v, err}}
 			}
 			settings[k] = i
 		case "image_name":
@@ -1306,13 +1320,13 @@ func (r *rawTemplate) createGoogleCompute(ID string) (settings map[string]interf
 		}
 	}
 	if !hasProjectID {
-		return nil, RequiredSettingErr{"project_id"}
+		return nil, BuilderErr{id: ID, Builder: GoogleCompute, Err: RequiredSettingErr{"project_id"}}
 	}
 	if !hasSourceImage {
-		return nil, RequiredSettingErr{"source_image"}
+		return nil, BuilderErr{id: ID, Builder: GoogleCompute, Err: RequiredSettingErr{"source_image"}}
 	}
 	if !hasZone {
-		return nil, RequiredSettingErr{"zone"}
+		return nil, BuilderErr{id: ID, Builder: GoogleCompute, Err: RequiredSettingErr{"zone"}}
 	}
 	// Process the Arrays.
 	for name, val := range r.Builders[ID].Arrays {
@@ -1344,7 +1358,7 @@ func (r *rawTemplate) createGoogleCompute(ID string) (settings map[string]interf
 func (r *rawTemplate) createNull(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, BuilderNotFoundErr{id: ID, Builder: Null}
+		return nil, BuilderErr{id: ID, Builder: Null, Err: ErrBuilderNotFound}
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -1355,18 +1369,18 @@ func (r *rawTemplate) createNull(ID string) (settings map[string]interface{}, er
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
-			return nil, err
+			return nil, BuilderErr{id: ID, Builder: Null, Err: err}
 		}
 	} else {
 		workSlice = r.Builders[Null.String()].Settings
 	}
 	prefix, err := r.processCommunicator(ID, workSlice, settings)
 	if err != nil {
-		return nil, err
+		return nil, BuilderErr{id: ID, Builder: Null, Err: err}
 	}
 	if prefix == "" {
 		// communicator == none; there must be a communicator
-		return nil, fmt.Errorf("%s: %s builder requires a communicator other than \"none\"", ID, Null.String())
+		return nil, BuilderErr{id: ID, Builder: Null, Err: RequiredSettingErr{"communicator"}}
 	}
 	return settings, nil
 }
@@ -1405,7 +1419,7 @@ func (r *rawTemplate) createNull(ID string) (settings map[string]interface{}, er
 func (r *rawTemplate) createOpenStack(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, BuilderNotFoundErr{id: ID, Builder: OpenStack}
+		return nil, BuilderErr{id: ID, Builder: OpenStack, Err: ErrBuilderNotFound}
 	}
 	settings = map[string]interface{}{}
 	// Each create function is responsible for setting its own type.
@@ -1416,7 +1430,7 @@ func (r *rawTemplate) createOpenStack(ID string) (settings map[string]interface{
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
-			return nil, err
+			return nil, BuilderErr{id: ID, Builder: OpenStack, Err: err}
 		}
 	} else {
 		workSlice = r.Builders[ID].Settings
@@ -1425,7 +1439,7 @@ func (r *rawTemplate) createOpenStack(ID string) (settings map[string]interface{
 	// check for communicator first
 	prefix, err := r.processCommunicator(ID, workSlice, settings)
 	if err != nil {
-		return nil, err
+		return nil, BuilderErr{id: ID, Builder: OpenStack, Err: err}
 	}
 	// see if the required settings include username/password
 	if prefix != "" {
@@ -1502,29 +1516,29 @@ func (r *rawTemplate) createOpenStack(ID string) (settings map[string]interface{
 	}
 	// flavor is required
 	if !hasFlavor {
-		return nil, RequiredSettingErr{"flavor"}
+		return nil, BuilderErr{id: ID, Builder: OpenStack, Err: RequiredSettingErr{"flavor"}}
 	}
 	// image_name is required
 	if !hasImageName {
-		return nil, RequiredSettingErr{"image_name"}
+		return nil, BuilderErr{id: ID, Builder: OpenStack, Err: RequiredSettingErr{"image_name"}}
 	}
 	// source_image is required
 	if !hasSourceImage {
-		return nil, RequiredSettingErr{"source_image"}
+		return nil, BuilderErr{id: ID, Builder: OpenStack, Err: RequiredSettingErr{"source_image"}}
 	}
 	// Password is required
 	if !hasPassword {
 		if prefix == "" {
-			return nil, RequiredSettingErr{"password"}
+			return nil, BuilderErr{id: ID, Builder: OpenStack, Err: RequiredSettingErr{"password"}}
 		}
-		return nil, RequiredSettingErr{prefix + "_password"}
+		return nil, BuilderErr{id: ID, Builder: OpenStack, Err: RequiredSettingErr{prefix + "_password"}}
 	}
 	// Username is required
 	if !hasUsername {
 		if prefix == "" {
-			return nil, RequiredSettingErr{"username"}
+			return nil, BuilderErr{id: ID, Builder: OpenStack, Err: RequiredSettingErr{"username"}}
 		}
-		return nil, RequiredSettingErr{prefix + "_username"}
+		return nil, BuilderErr{id: ID, Builder: OpenStack, Err: RequiredSettingErr{prefix + "_username"}}
 	}
 	// Process arrays, iso_urls is only valid if iso_url is not set
 	for name, val := range r.Builders[ID].Arrays {
@@ -1584,7 +1598,7 @@ func (r *rawTemplate) createOpenStack(ID string) (settings map[string]interface{
 func (r *rawTemplate) createParallelsISO(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, BuilderNotFoundErr{id: ID, Builder: ParallelsISO}
+		return nil, BuilderErr{id: ID, Builder: ParallelsISO, Err: ErrBuilderNotFound}
 	}
 	settings = map[string]interface{}{}
 	// Each create function is responsible for setting its own type.
@@ -1595,7 +1609,7 @@ func (r *rawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
-			return nil, err
+			return nil, BuilderErr{id: ID, Builder: ParallelsISO, Err: err}
 		}
 	} else {
 		workSlice = r.Builders[ID].Settings
@@ -1606,7 +1620,7 @@ func (r *rawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 	// check for communicator first
 	prefix, err := r.processCommunicator(ID, workSlice, settings)
 	if err != nil {
-		return nil, err
+		return nil, BuilderErr{id: ID, Builder: ParallelsISO, Err: err}
 	}
 	// see if the required settings include username/password
 	if prefix != "" {
@@ -1631,7 +1645,7 @@ func (r *rawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: ParallelsISO, Err: SettingErr{k, v, err}}
 			}
 			settings[k] = i
 		case "guest_os_type":
@@ -1646,14 +1660,14 @@ func (r *rawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: ParallelsISO, Err: SettingErr{k, v, err}}
 			}
 			settings[k] = i
 		case "http_port_min":
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: ParallelsISO, Err: SettingErr{k, v, err}}
 			}
 			settings[k] = i
 		case "iso_checksum":
@@ -1684,7 +1698,7 @@ func (r *rawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 			case "upload":
 			case "detach":
 			default:
-				return nil, SettingErr{k, v, errors.New("invalid option")}
+				return nil, BuilderErr{id: ID, Builder: ParallelsISO, Err: SettingErr{k, v, errors.New("invalid option")}}
 			}
 			settings[k] = v
 		case "prlctl_version_file":
@@ -1698,12 +1712,12 @@ func (r *rawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 			// The value is a command file, load the contents of the file.
 			cmds, err := r.commandsFromFile(v, ParallelsISO.String())
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: ParallelsISO, Err: SettingErr{k, v, err}}
 			}
 			//
 			cmd := commandFromSlice(cmds)
 			if cmd == "" {
-				return nil, SettingErr{k, v, ErrNoCommands}
+				return nil, BuilderErr{id: ID, Builder: ParallelsISO, Err: SettingErr{k, v, ErrNoCommands}}
 			}
 			settings[k] = cmd
 		case "shutdown_timeout":
@@ -1723,22 +1737,22 @@ func (r *rawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 	}
 	// iso_checksum is required
 	if !hasISOChecksum && !hasISOChecksumURL {
-		return nil, RequiredSettingErr{"iso_checksum or iso_checksum_url"}
+		return nil, BuilderErr{id: ID, Builder: ParallelsISO, Err: RequiredSettingErr{"iso_checksum or iso_checksum_url"}}
 	}
 	// iso_checksum_type is required
 	if !hasISOChecksumType {
-		return nil, RequiredSettingErr{"iso_checksum_type"}
+		return nil, BuilderErr{id: ID, Builder: ParallelsISO, Err: RequiredSettingErr{"iso_checksum_type"}}
 	}
 	// parallels_tools_flavor is required
 	if !hasParallelsToolsFlavor && !disableParallelsToolsMode {
-		return nil, RequiredSettingErr{"parallels_tools_flavor"}
+		return nil, BuilderErr{id: ID, Builder: ParallelsISO, Err: RequiredSettingErr{"parallels_tools_flavor"}}
 	}
 	// Username is required
 	if !hasUsername {
 		if prefix == "" {
-			return nil, RequiredSettingErr{"ssh_username"}
+			return nil, BuilderErr{id: ID, Builder: ParallelsISO, Err: RequiredSettingErr{"ssh_username"}}
 		}
-		return nil, RequiredSettingErr{prefix + "_username"}
+		return nil, BuilderErr{id: ID, Builder: ParallelsISO, Err: RequiredSettingErr{prefix + "_username"}}
 	}
 	// Process arrays, iso_urls is only valid if iso_url is not set
 	var hasBootCmd bool
@@ -1779,10 +1793,10 @@ func (r *rawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 		if bootCmdFile != "" {
 			commands, err := r.commandsFromFile(bootCmdFile, ParallelsISO.String())
 			if err != nil {
-				return nil, SettingErr{"boot_command", bootCmdFile, err}
+				return nil, BuilderErr{id: ID, Builder: ParallelsISO, Err: SettingErr{"boot_command", bootCmdFile, err}}
 			}
 			if len(commands) == 0 {
-				return nil, SettingErr{"boot_command", bootCmdFile, ErrNoCommands}
+				return nil, BuilderErr{id: ID, Builder: ParallelsISO, Err: SettingErr{"boot_command", bootCmdFile, ErrNoCommands}}
 			}
 			array := deepcopy.Iface(commands)
 			if !reflect.ValueOf(array).IsNil() {
@@ -1792,7 +1806,7 @@ func (r *rawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 		}
 	}
 	if !hasISOURLs && !hasISOURL {
-		return nil, RequiredSettingErr{"iso_url"}
+		return nil, BuilderErr{id: ID, Builder: ParallelsISO, Err: RequiredSettingErr{"iso_url"}}
 	}
 	// If there weren't any iso_urls, use the cached iso_url
 	if !hasISOURLs {
@@ -1833,7 +1847,7 @@ func (r *rawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 func (r *rawTemplate) createParallelsPVM(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, BuilderNotFoundErr{id: ID, Builder: ParallelsPVM}
+		return nil, BuilderErr{id: ID, Builder: ParallelsPVM, Err: ErrBuilderNotFound}
 	}
 	settings = map[string]interface{}{}
 	// Each create function is responsible for setting its own type.
@@ -1844,7 +1858,7 @@ func (r *rawTemplate) createParallelsPVM(ID string) (settings map[string]interfa
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
-			return nil, err
+			return nil, BuilderErr{id: ID, Builder: ParallelsPVM, Err: err}
 		}
 	} else {
 		workSlice = r.Builders[ID].Settings
@@ -1854,7 +1868,7 @@ func (r *rawTemplate) createParallelsPVM(ID string) (settings map[string]interfa
 	// check for communicator first
 	prefix, err := r.processCommunicator(ID, workSlice, settings)
 	if err != nil {
-		return nil, err
+		return nil, BuilderErr{id: ID, Builder: ParallelsPVM, Err: err}
 	}
 	// see if the required settings include username/password
 	if prefix != "" {
@@ -1889,7 +1903,7 @@ func (r *rawTemplate) createParallelsPVM(ID string) (settings map[string]interfa
 			case "upload":
 			case "detach":
 			default:
-				return nil, SettingErr{k, v, errors.New("invalid option")}
+				return nil, BuilderErr{id: ID, Builder: ParallelsPVM, Err: SettingErr{k, v, errors.New("invalid option")}}
 			}
 			settings[k] = v
 		case "parallels_tools_path":
@@ -1907,12 +1921,12 @@ func (r *rawTemplate) createParallelsPVM(ID string) (settings map[string]interfa
 			// The value is a command file, load the contents of the file.
 			cmds, err := r.commandsFromFile(v, ParallelsISO.String())
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: ParallelsPVM, Err: SettingErr{k, v, err}}
 			}
 			//
 			cmd := commandFromSlice(cmds)
 			if cmd == "" {
-				return nil, SettingErr{k, v, ErrNoCommands}
+				return nil, BuilderErr{id: ID, Builder: ParallelsPVM, Err: SettingErr{k, v, ErrNoCommands}}
 			}
 			settings[k] = cmd
 		case "shutdown_timeout":
@@ -1922,7 +1936,7 @@ func (r *rawTemplate) createParallelsPVM(ID string) (settings map[string]interfa
 		case "source_path":
 			src, err := r.findSource(v, ParallelsPVM.String(), false)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: ParallelsPVM, Err: SettingErr{k, v, err}}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -1946,18 +1960,18 @@ func (r *rawTemplate) createParallelsPVM(ID string) (settings map[string]interfa
 	}
 	// source_path is required
 	if !hasSourcePath {
-		return nil, RequiredSettingErr{"source_path"}
+		return nil, BuilderErr{id: ID, Builder: ParallelsPVM, Err: RequiredSettingErr{"source_path"}}
 	}
 	// parallels_tools_flavor is required
 	if !hasParallelsToolsFlavor && !disableParallelsToolsMode {
-		return nil, RequiredSettingErr{"parallels_tools_flavor"}
+		return nil, BuilderErr{id: ID, Builder: ParallelsPVM, Err: RequiredSettingErr{"parallels_tools_flavor"}}
 	}
 	// Username is required
 	if !hasUsername {
 		if prefix == "" {
-			return nil, RequiredSettingErr{"ssh_username"}
+			return nil, BuilderErr{id: ID, Builder: ParallelsPVM, Err: RequiredSettingErr{"ssh_username"}}
 		}
-		return nil, RequiredSettingErr{prefix + "_username"}
+		return nil, BuilderErr{id: ID, Builder: ParallelsPVM, Err: RequiredSettingErr{prefix + "_username"}}
 	}
 	// Process arrays, iso_urls is only valid if iso_url is not set
 	var hasBootCmd bool
@@ -1989,10 +2003,10 @@ func (r *rawTemplate) createParallelsPVM(ID string) (settings map[string]interfa
 		if bootCmdFile != "" {
 			commands, err := r.commandsFromFile(bootCmdFile, ParallelsISO.String())
 			if err != nil {
-				return nil, SettingErr{"boot_command", bootCmdFile, err}
+				return nil, BuilderErr{id: ID, Builder: ParallelsPVM, Err: SettingErr{"boot_command", bootCmdFile, err}}
 			}
 			if len(commands) == 0 {
-				return nil, SettingErr{"boot_command", bootCmdFile, ErrNoCommands}
+				return nil, BuilderErr{id: ID, Builder: ParallelsPVM, Err: SettingErr{"boot_command", bootCmdFile, ErrNoCommands}}
 			}
 			array := deepcopy.Iface(commands)
 			if !reflect.ValueOf(array).IsNil() {
@@ -2044,7 +2058,7 @@ func (r *rawTemplate) createParallelsPVM(ID string) (settings map[string]interfa
 func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, BuilderNotFoundErr{id: ID, Builder: QEMU}
+		return nil, BuilderErr{id: ID, Builder: QEMU, Err: ErrBuilderNotFound}
 	}
 	settings = map[string]interface{}{}
 	// Each create function is responsible for setting its own type.
@@ -2055,7 +2069,7 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
-			return nil, err
+			return nil, BuilderErr{id: ID, Builder: QEMU, Err: err}
 		}
 	} else {
 		workSlice = r.Builders[ID].Settings
@@ -2065,7 +2079,7 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 	// check for communicator first
 	prefix, err := r.processCommunicator(ID, workSlice, settings)
 	if err != nil {
-		return nil, err
+		return nil, BuilderErr{id: ID, Builder: QEMU, Err: err}
 	}
 	// see if the required settings include username/password
 	if prefix != "" {
@@ -2102,7 +2116,7 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: QEMU, Err: SettingErr{k, v, err}}
 			}
 			settings[k] = i
 		case "format":
@@ -2115,14 +2129,14 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: QEMU, Err: SettingErr{k, v, err}}
 			}
 			settings[k] = i
 		case "http_port_max":
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: QEMU, Err: SettingErr{k, v, err}}
 			}
 			settings[k] = i
 		case "iso_checksum":
@@ -2156,13 +2170,13 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 	}
 	// Username is required
 	if !hasUsername {
-		return nil, RequiredSettingErr{prefix + "_username"}
+		return nil, BuilderErr{id: ID, Builder: QEMU, Err: RequiredSettingErr{prefix + "_username"}}
 	}
 	// make sure http_directory is set and add to dir list
 	// TODO reconcile with above
 	err = r.setHTTP(QEMU.String(), settings)
 	if err != nil {
-		return nil, err
+		return nil, BuilderErr{id: ID, Builder: QEMU, Err: err}
 	}
 	var hasBootCmd bool
 	for name, val := range r.Builders[ID].Arrays {
@@ -2204,10 +2218,10 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 		if bootCmdFile != "" {
 			commands, err := r.commandsFromFile(bootCmdFile, QEMU.String())
 			if err != nil {
-				return nil, SettingErr{"boot_command", bootCmdFile, err}
+				return nil, BuilderErr{id: ID, Builder: QEMU, Err: SettingErr{"boot_command", bootCmdFile, err}}
 			}
 			if len(commands) == 0 {
-				return nil, SettingErr{"boot_command", bootCmdFile, ErrNoCommands}
+				return nil, BuilderErr{id: ID, Builder: QEMU, Err: SettingErr{"boot_command", bootCmdFile, ErrNoCommands}}
 			}
 			array := deepcopy.Iface(commands)
 			if !reflect.ValueOf(array).IsNil() {
@@ -2237,16 +2251,16 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 			settings["iso_checksum"] = r.releaseISO.(*ubuntu).Checksum
 			settings["iso_checksum_type"] = r.releaseISO.(*ubuntu).ChecksumType
 		default:
-			err = fmt.Errorf("%q is not a supported Distro", r.Distro)
+			err = BuilderErr{id: ID, Builder: QEMU, Err: UnsupportedDistroErr{r.Distro}}
 			return nil, err
 		}
 		return settings, nil
 	}
 	if !hasChecksum {
-		return nil, RequiredSettingErr{"iso_checksum"}
+		return nil, BuilderErr{id: ID, Builder: QEMU, Err: RequiredSettingErr{"iso_checksum"}}
 	}
 	if !hasChecksumType {
-		return nil, RequiredSettingErr{"iso_checksum_type"}
+		return nil, BuilderErr{id: ID, Builder: QEMU, Err: RequiredSettingErr{"iso_checksum_type"}}
 	}
 	return settings, nil
 }
@@ -2299,7 +2313,7 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, BuilderNotFoundErr{id: ID, Builder: VirtualBoxISO}
+		return nil, BuilderErr{id: ID, Builder: VirtualBoxISO, Err: ErrBuilderNotFound}
 	}
 	settings = map[string]interface{}{}
 	// Each create function is responsible for setting its own type.
@@ -2310,7 +2324,7 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
-			return nil, err
+			return nil, BuilderErr{id: ID, Builder: VirtualBoxISO, Err: err}
 		}
 	} else {
 		workSlice = r.Builders[ID].Settings
@@ -2320,7 +2334,7 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 	// check for communicator first
 	prefix, err := r.processCommunicator(ID, workSlice, settings)
 	if err != nil {
-		return nil, err
+		return nil, BuilderErr{id: ID, Builder: VirtualBoxISO, Err: err}
 	}
 	// see if the required settings include username/password
 	if prefix != "" {
@@ -2350,7 +2364,7 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: VirtualBoxISO, Err: SettingErr{k, v, err}}
 			}
 			settings[k] = i
 		case "format":
@@ -2376,14 +2390,14 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: VirtualBoxISO, Err: SettingErr{k, v, err}}
 			}
 			settings[k] = i
 		case "http_port_max":
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: VirtualBoxISO, Err: SettingErr{k, v, err}}
 			}
 			settings[k] = i
 		case "iso_checksum":
@@ -2411,12 +2425,12 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 			// The value is a command file, load the contents of the file.
 			cmds, err := r.commandsFromFile(v, VirtualBoxISO.String())
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: VirtualBoxISO, Err: SettingErr{k, v, err}}
 			}
 			//
 			cmd := commandFromSlice(cmds)
 			if cmd == "" {
-				return nil, SettingErr{k, v, ErrNoCommands}
+				return nil, BuilderErr{id: ID, Builder: VirtualBoxISO, Err: SettingErr{k, v, ErrNoCommands}}
 			}
 			settings[k] = cmd
 		case "shutdown_timeout":
@@ -2429,7 +2443,7 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: VirtualBoxISO, Err: SettingErr{k, v, err}}
 			}
 			settings[k] = i
 		case "ssh_host_port_max":
@@ -2440,7 +2454,7 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: VirtualBoxISO, Err: SettingErr{k, v, err}}
 			}
 			settings[k] = i
 		case "ssh_password":
@@ -2466,17 +2480,17 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 	}
 	// Username is required
 	if !hasUsername {
-		return nil, RequiredSettingErr{prefix + "_username"}
+		return nil, BuilderErr{id: ID, Builder: VirtualBoxISO, Err: RequiredSettingErr{prefix + "_username"}}
 	}
 	// Password is required
 	if !hasPassword {
-		return nil, RequiredSettingErr{prefix + "_password"}
+		return nil, BuilderErr{id: ID, Builder: VirtualBoxISO, Err: RequiredSettingErr{prefix + "_password"}}
 	}
 	// make sure http_directory is set and add to dir list
 	// TODO reconcile with above
 	err = r.setHTTP(VirtualBoxISO.String(), settings)
 	if err != nil {
-		return nil, err
+		return nil, BuilderErr{id: ID, Builder: VirtualBoxISO, Err: err}
 	}
 	var hasBootCmd bool
 	for name, val := range r.Builders[ID].Arrays {
@@ -2516,7 +2530,7 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 	if r.osType == "" { // if the os type hasn't been set, the ISO info hasn't been retrieved
 		err = r.ISOInfo(VirtualBoxISO, workSlice)
 		if err != nil {
-			return nil, err
+			return nil, BuilderErr{id: ID, Builder: VirtualBoxISO, Err: err}
 		}
 	}
 	// if there weren't any boot commands in the array section, see if there's a file with the
@@ -2525,10 +2539,10 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 		if bootCmdFile != "" {
 			commands, err := r.commandsFromFile(bootCmdFile, VirtualBoxISO.String())
 			if err != nil {
-				return nil, SettingErr{"boot_command", bootCmdFile, err}
+				return nil, BuilderErr{id: ID, Builder: VirtualBoxISO, Err: SettingErr{"boot_command", bootCmdFile, err}}
 			}
 			if len(commands) == 0 {
-				return nil, SettingErr{"boot_command", bootCmdFile, ErrNoCommands}
+				return nil, BuilderErr{id: ID, Builder: VirtualBoxISO, Err: SettingErr{"boot_command", bootCmdFile, ErrNoCommands}}
 			}
 			array := deepcopy.Iface(commands)
 			if !reflect.ValueOf(array).IsNil() {
@@ -2559,16 +2573,15 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 			settings["iso_checksum"] = r.releaseISO.(*ubuntu).Checksum
 			settings["iso_checksum_type"] = r.releaseISO.(*ubuntu).ChecksumType
 		default:
-			err = fmt.Errorf("%q is not a supported Distro", r.Distro)
-			return nil, err
+			return nil, BuilderErr{id: ID, Builder: VirtualBoxISO, Err: UnsupportedDistroErr{r.Distro}}
 		}
 		return settings, nil
 	}
 	if !hasChecksum {
-		return nil, RequiredSettingErr{Key: "iso_checksum"}
+		return nil, BuilderErr{id: ID, Builder: VirtualBoxISO, Err: RequiredSettingErr{Key: "iso_checksum"}}
 	}
 	if !hasChecksumType {
-		return nil, RequiredSettingErr{Key: "iso_checksum_type"}
+		return nil, BuilderErr{id: ID, Builder: VirtualBoxISO, Err: RequiredSettingErr{Key: "iso_checksum_type"}}
 	}
 	return settings, nil
 }
@@ -2614,7 +2627,7 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, BuilderNotFoundErr{id: ID, Builder: VirtualBoxOVF}
+		return nil, BuilderErr{id: ID, Builder: VirtualBoxOVF, Err: ErrBuilderNotFound}
 	}
 	settings = map[string]interface{}{}
 	// Each create function is responsible for setting its own type.
@@ -2625,7 +2638,7 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
-			return nil, err
+			return nil, BuilderErr{id: ID, Builder: VirtualBoxOVF, Err: err}
 		}
 	} else {
 		workSlice = r.Builders[ID].Settings
@@ -2637,7 +2650,7 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 	// check for communicator first
 	prefix, err := r.processCommunicator(ID, workSlice, settings)
 	if err != nil {
-		return nil, err
+		return nil, BuilderErr{id: ID, Builder: VirtualBoxOVF, Err: err}
 	}
 	// see if the required settings include username/password
 	if prefix == "" {
@@ -2685,16 +2698,14 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				err = SettingErr{k, v, err}
-				return nil, err
+				return nil, BuilderErr{id: ID, Builder: VirtualBoxOVF, Err: SettingErr{k, v, err}}
 			}
 			settings[k] = i
 		case "http_port_max":
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				err = SettingErr{k, v, err}
-				return nil, err
+				return nil, BuilderErr{id: ID, Builder: VirtualBoxOVF, Err: SettingErr{k, v, err}}
 			}
 			settings[k] = i
 		case "import_opts":
@@ -2709,12 +2720,12 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 			// The value is a command file, load the contents of the file.
 			cmds, err := r.commandsFromFile(v, VirtualBoxOVF.String())
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: VirtualBoxOVF, Err: SettingErr{k, v, err}}
 			}
 			//
 			cmd := commandFromSlice(cmds)
 			if cmd == "" {
-				return nil, SettingErr{k, v, ErrNoCommands}
+				return nil, BuilderErr{id: ID, Builder: VirtualBoxOVF, Err: SettingErr{k, v, ErrNoCommands}}
 			}
 			settings[k] = cmd
 		case "shutdown_timeout":
@@ -2722,7 +2733,7 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 		case "source_path":
 			src, err := r.findSource(v, VirtualBoxOVF.String(), true)
 			if err != nil {
-				return nil, err
+				return nil, BuilderErr{id: ID, Builder: VirtualBoxOVF, Err: err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -2740,8 +2751,7 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				err = SettingErr{k, v, err}
-				return nil, err
+				return nil, BuilderErr{id: ID, Builder: VirtualBoxOVF, Err: SettingErr{k, v, err}}
 			}
 			settings[k] = i
 		case "ssh_host_port_max":
@@ -2751,8 +2761,7 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				err = SettingErr{k, v, err}
-				return nil, err
+				return nil, BuilderErr{id: ID, Builder: VirtualBoxOVF, Err: SettingErr{k, v, err}}
 			}
 			settings[k] = i
 		case "ssh_skip_nat_mapping":
@@ -2776,16 +2785,16 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 	}
 	// Check to see if the required info was processed.
 	if !hasUsername {
-		return nil, RequiredSettingErr{userNameVal}
+		return nil, BuilderErr{id: ID, Builder: VirtualBoxOVF, Err: RequiredSettingErr{userNameVal}}
 	}
 	if !hasSourcePath {
-		return nil, RequiredSettingErr{"source_path"}
+		return nil, BuilderErr{id: ID, Builder: VirtualBoxOVF, Err: RequiredSettingErr{"source_path"}}
 	}
 
 	// make sure http_directory is set and add to dir list
 	err = r.setHTTP(VirtualBoxOVF.String(), settings)
 	if err != nil {
-		return nil, err
+		return nil, BuilderErr{id: ID, Builder: VirtualBoxOVF, Err: err}
 	}
 	// Generate Packer Variables
 	// Generate builder specific section
@@ -2822,10 +2831,10 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 		if bootCmdFile != "" {
 			commands, err := r.commandsFromFile(bootCmdFile, VirtualBoxOVF.String())
 			if err != nil {
-				return nil, SettingErr{"boot_command", bootCmdFile, err}
+				return nil, BuilderErr{id: ID, Builder: VirtualBoxOVF, Err: SettingErr{"boot_command", bootCmdFile, err}}
 			}
 			if len(commands) == 0 {
-				return nil, SettingErr{"boot_command", bootCmdFile, ErrNoCommands}
+				return nil, BuilderErr{id: ID, Builder: VirtualBoxOVF, Err: SettingErr{"boot_command", bootCmdFile, ErrNoCommands}}
 			}
 			array := deepcopy.Iface(commands)
 			if !reflect.ValueOf(array).IsNil() {
@@ -2912,7 +2921,7 @@ func (r *rawTemplate) createVBoxManage(v interface{}) [][]string {
 func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, BuilderNotFoundErr{id: ID, Builder: VMWareISO}
+		return nil, BuilderErr{id: ID, Builder: VMWareISO, Err: ErrBuilderNotFound}
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -2923,7 +2932,7 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
-			return nil, err
+			return nil, BuilderErr{id: ID, Builder: VMWareISO, Err: err}
 		}
 	} else {
 		workSlice = r.Builders[ID].Settings
@@ -2933,7 +2942,7 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 	// check for communicator first
 	prefix, err := r.processCommunicator(ID, workSlice, settings)
 	if err != nil {
-		return nil, err
+		return nil, BuilderErr{id: ID, Builder: VMWareISO, Err: err}
 	}
 	// see if the required settings include username/password
 	if prefix != "" {
@@ -2960,7 +2969,7 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: VMWareISO, Err: SettingErr{k, v, err}}
 			}
 			settings[k] = i
 		case "disk_type_id":
@@ -2977,14 +2986,14 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: VMWareISO, Err: SettingErr{k, v, err}}
 			}
 			settings[k] = i
 		case "http_port_min":
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: VMWareISO, Err: SettingErr{k, v, err}}
 			}
 			settings[k] = i
 		case "iso_checksum":
@@ -3025,12 +3034,12 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 			// The value is a command file, load the contents of the file.
 			cmds, err := r.commandsFromFile(v, VMWareISO.String())
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: VMWareISO, Err: SettingErr{k, v, err}}
 			}
 			//
 			cmd := commandFromSlice(cmds)
 			if cmd == "" {
-				return nil, SettingErr{k, v, ErrNoCommands}
+				return nil, BuilderErr{id: ID, Builder: VMWareISO, Err: SettingErr{k, v, ErrNoCommands}}
 			}
 			settings[k] = cmd
 		case "shutdown_timeout":
@@ -3060,21 +3069,21 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: VMWareISO, Err: SettingErr{k, v, err}}
 			}
 			settings[k] = i
 		case "vnc_port_max":
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: VMWareISO, Err: SettingErr{k, v, err}}
 			}
 			settings[k] = i
 		}
 	}
 	// Only check to see if the required ssh_username field was set. The required iso info is checked after Array processing
 	if !hasUsername {
-		return nil, RequiredSettingErr{prefix + "_username"}
+		return nil, BuilderErr{id: ID, Builder: VMWareISO, Err: RequiredSettingErr{prefix + "_username"}}
 	}
 	// make sure http_directory is set and add to dir list
 	err = r.setHTTP(VMWareISO.String(), settings)
@@ -3106,7 +3115,7 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 				for _, v := range val.([]string) {
 					i, err := strconv.Atoi(v)
 					if err != nil {
-						return nil, SettingErr{name, json.MarshalToString(val), err}
+						return nil, BuilderErr{id: ID, Builder: VMWareISO, Err: SettingErr{name, json.MarshalToString(val), err}}
 					}
 					tmp = append(tmp, i)
 				}
@@ -3114,7 +3123,7 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 					settings[name] = tmp
 				}
 			default:
-				return nil, SettingErr{name, json.MarshalToString(val), fmt.Errorf("must be either an int or string array")}
+				return nil, BuilderErr{id: ID, Builder: VMWareISO, Err: SettingErr{name, json.MarshalToString(val), errors.New("must be either an int or string array")}}
 			}
 			continue
 		case "floppy_files":
@@ -3145,10 +3154,10 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 		if bootCmdFile != "" {
 			commands, err := r.commandsFromFile(bootCmdFile, VMWareISO.String())
 			if err != nil {
-				return nil, SettingErr{"boot_command", bootCmdFile, err}
+				return nil, BuilderErr{id: ID, Builder: VMWareISO, Err: SettingErr{"boot_command", bootCmdFile, err}}
 			}
 			if len(commands) == 0 {
-				return nil, SettingErr{"boot_command", bootCmdFile, ErrNoCommands}
+				return nil, BuilderErr{id: ID, Builder: VMWareISO, Err: SettingErr{"boot_command", bootCmdFile, ErrNoCommands}}
 			}
 			array := deepcopy.Iface(commands)
 			if !reflect.ValueOf(array).IsNil() {
@@ -3161,7 +3170,7 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 	if r.osType == "" { // if the os type hasn't been set, the ISO info hasn't been retrieved
 		err = r.ISOInfo(VirtualBoxISO, workSlice)
 		if err != nil {
-			return nil, err
+			return nil, BuilderErr{id: ID, Builder: VMWareISO, Err: err}
 		}
 	}
 	// set the guest_os_type
@@ -3186,16 +3195,15 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 			settings["iso_checksum"] = r.releaseISO.(*ubuntu).Checksum
 			settings["iso_checksum_type"] = r.releaseISO.(*ubuntu).ChecksumType
 		default:
-			err = fmt.Errorf("%q is not a supported Distro", r.Distro)
-			return nil, err
+			return nil, BuilderErr{id: ID, Builder: VMWareISO, Err: UnsupportedDistroErr{r.Distro}}
 		}
 		return settings, nil
 	}
 	if !hasChecksum {
-		return nil, RequiredSettingErr{"iso_checksum"}
+		return nil, BuilderErr{id: ID, Builder: VMWareISO, Err: RequiredSettingErr{"iso_checksum"}}
 	}
 	if !hasChecksumType {
-		return nil, RequiredSettingErr{"iso_checksum_type"}
+		return nil, BuilderErr{id: ID, Builder: VMWareISO, Err: RequiredSettingErr{"iso_checksum_type"}}
 	}
 	return settings, nil
 }
@@ -3233,7 +3241,7 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, BuilderNotFoundErr{id: ID, Builder: VMWareVMX}
+		return nil, BuilderErr{id: ID, Builder: VMWareVMX, Err: ErrBuilderNotFound}
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -3244,7 +3252,7 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 	if ok {
 		workSlice, err = mergeSettingsSlices(r.Builders[Common.String()].Settings, r.Builders[ID].Settings)
 		if err != nil {
-			return nil, err
+			return nil, BuilderErr{id: ID, Builder: VMWareVMX, Err: err}
 		}
 	} else {
 		workSlice = r.Builders[ID].Settings
@@ -3254,7 +3262,7 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 	// check for communicator first
 	prefix, err := r.processCommunicator(ID, workSlice, settings)
 	if err != nil {
-		return nil, err
+		return nil, BuilderErr{id: ID, Builder: VMWareVMX, Err: err}
 	}
 	// see if the required settings include username/password
 	if prefix != "" {
@@ -3286,14 +3294,14 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: VMWareVMX, Err: SettingErr{k, v, err}}
 			}
 			settings[k] = i
 		case "http_port_min":
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: VMWareVMX, Err: SettingErr{k, v, err}}
 			}
 			settings[k] = i
 		case "output_directory":
@@ -3309,12 +3317,12 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 			// The value is a command file, load the contents of the file.
 			cmds, err := r.commandsFromFile(v, VMWareVMX.String())
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: VMWareVMX, Err: SettingErr{k, v, err}}
 			}
 			//
 			cmd := commandFromSlice(cmds)
 			if cmd == "" {
-				return nil, SettingErr{k, v, ErrNoCommands}
+				return nil, BuilderErr{id: ID, Builder: VMWareVMX, Err: SettingErr{k, v, ErrNoCommands}}
 			}
 			settings[k] = cmd
 		case "skip_compaction":
@@ -3322,7 +3330,7 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 		case "source_path":
 			src, err := r.findSource(v, VMWareVMX.String(), true)
 			if err != nil {
-				return nil, err
+				return nil, BuilderErr{id: ID, Builder: VMWareVMX, Err: err}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -3345,29 +3353,29 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: VMWareVMX, Err: SettingErr{k, v, err}}
 			}
 			settings[k] = i
 		case "vnc_port_min":
 			// only add if its an int
 			i, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, BuilderErr{id: ID, Builder: VMWareVMX, Err: SettingErr{k, v, err}}
 			}
 			settings[k] = i
 		}
 	}
 	// Check if required fields were processed
 	if !hasUsername {
-		return nil, RequiredSettingErr{"ssh_username"}
+		return nil, BuilderErr{id: ID, Builder: VMWareVMX, Err: RequiredSettingErr{"ssh_username"}}
 	}
 	if !hasSourcePath {
-		return nil, RequiredSettingErr{"source_path"}
+		return nil, BuilderErr{id: ID, Builder: VMWareVMX, Err: RequiredSettingErr{"source_path"}}
 	}
 	// make sure http_directory is set and add to dir list
 	err = r.setHTTP(VMWareVMX.String(), settings)
 	if err != nil {
-		return nil, err
+		return nil, BuilderErr{id: ID, Builder: VMWareVMX, Err: err}
 	}
 	var hasBootCmd bool
 	// Process arrays, iso_urls is only valid if iso_url is not set
@@ -3399,10 +3407,10 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 		if bootCmdFile != "" {
 			commands, err := r.commandsFromFile(bootCmdFile, VMWareISO.String())
 			if err != nil {
-				return nil, SettingErr{"boot_command", bootCmdFile, err}
+				return nil, BuilderErr{id: ID, Builder: VMWareVMX, Err: SettingErr{"boot_command", bootCmdFile, err}}
 			}
 			if len(commands) == 0 {
-				return nil, SettingErr{"boot_command", bootCmdFile, ErrNoCommands}
+				return nil, BuilderErr{id: ID, Builder: VMWareVMX, Err: SettingErr{"boot_command", bootCmdFile, ErrNoCommands}}
 			}
 			array := deepcopy.Iface(commands)
 			if !reflect.ValueOf(array).IsNil() {

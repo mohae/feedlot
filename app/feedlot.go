@@ -25,6 +25,13 @@ import (
 	jww "github.com/spf13/jwalterweatherman"
 )
 
+var (
+	// ErrUnsupportedFormat occurs when the specified format is not supported.
+	ErrUnsupportedFormat = errors.New("unsupported format")
+	// ErrEmptyParam occurs when the received parameter was empy.
+	ErrEmptyParam = errors.New("received an empty parameter, expected a value")
+)
+
 // Error is the generic error wrapper used by this package.
 type Error struct {
 	slug string
@@ -35,12 +42,13 @@ func (e Error) Error() string {
 	return fmt.Sprintf("%s: %s", e.slug, e.err)
 }
 
-var (
-	// ErrUnsupportedFormat occurs when the specified format is not supported.
-	ErrUnsupportedFormat = errors.New("unsupported format")
-	// ErrEmptyParam occurs when the received parameter was empy.
-	ErrEmptyParam = errors.New("received an empty parameter, expected a value")
-)
+type UnsupportedDistroErr struct {
+	s string
+}
+
+func (e UnsupportedDistroErr) Error() string {
+	return e.s + ": unsupported distro"
+}
 
 // supported config formats
 const (
