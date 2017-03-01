@@ -2,7 +2,6 @@ package app
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -11,6 +10,36 @@ import (
 	"github.com/mohae/utilitybelt/deepcopy"
 	jww "github.com/spf13/jwalterweatherman"
 )
+
+// ProvisionerErr is an error processing provisioner, its Err field may contain
+// additional type information.
+type ProvisionerErr struct {
+	id string
+	Provisioner
+	Err error
+}
+
+func (e ProvisionerErr) Error() string {
+	var s string
+	if e.Provisioner != UnsupportedProvisioner {
+		s = e.Provisioner.String()
+	}
+	if e.id != "" {
+		if s == "" {
+			s = e.id
+		} else {
+			s += ": " + e.id
+		}
+	}
+	if s == "" {
+		return e.Err.Error()
+	}
+	return s + ": " + e.Err.Error()
+}
+
+// ErrProvisionerNotFound occurs when a provisioner with a matching ID is not
+// found in the definition.
+var ErrProvisionerNotFound = errors.New("provisioner not found")
 
 // Provisioner constants
 const (
@@ -26,17 +55,6 @@ const (
 	Shell
 	ShellLocal
 )
-
-// ProvisionerNotFoundErr occurs when a provisioner with a matching ID is not
-// found in the definition.
-type ProvisionerNotFoundErr struct {
-	id string
-	Provisioner
-}
-
-func (e ProvisionerNotFoundErr) Error() string {
-	return fmt.Sprintf("%s: %s: provisioner not found", e.Provisioner, e.id)
-}
 
 // Provisioner is a packer supported provisioner
 type Provisioner int
@@ -99,7 +117,7 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 	for _, ID := range r.ProvisionerIDs {
 		tmpP, ok := r.Provisioners[ID]
 		if !ok {
-			return nil, ProvisionerNotFoundErr{id: ID}
+			return nil, ProvisionerErr{id: ID, Err: ErrProvisionerNotFound}
 		}
 		jww.DEBUG.Printf("processing provisioner id: %s\n", ID)
 		typ := ParseProvisioner(tmpP.Type)
@@ -185,7 +203,7 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
-		return nil, ProvisionerNotFoundErr{id: ID, Provisioner: Ansible}
+		return nil, ProvisionerErr{id: ID, Provisioner: Ansible, Err: ErrProvisionerNotFound}
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = Ansible.String()
@@ -202,7 +220,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 			// find the actual location and add it to the files map for copying
 			src, err := r.findSource(v, Ansible.String(), false)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, ProvisionerErr{id: ID, Provisioner: Ansible, Err: SettingErr{k, v, err}}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -222,12 +240,12 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 			// The value is a command file, load the contents of the file.
 			cmds, err := r.commandsFromFile(v, Ansible.String())
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, ProvisionerErr{id: ID, Provisioner: Ansible, Err: SettingErr{k, v, err}}
 			}
 			// Make the cmds slice a single string, if it was split into multiple lines.
 			cmd := commandFromSlice(cmds)
 			if cmd == "" {
-				return nil, SettingErr{k, v, ErrNoCommands}
+				return nil, ProvisionerErr{id: ID, Provisioner: Ansible, Err: SettingErr{k, v, ErrNoCommands}}
 			}
 			settings[k] = cmd
 		case "host_alias", "local_port", "ssh_authorized_key_file", "ssh_host_key_file", "user":
@@ -235,7 +253,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 		}
 	}
 	if !hasPlaybook {
-		return nil, RequiredSettingErr{"playbook_file"}
+		return nil, ProvisionerErr{id: ID, Provisioner: Ansible, Err: RequiredSettingErr{"playbook_file"}}
 	}
 	// Process the Arrays.
 	for name, val := range r.Provisioners[ID].Arrays {
@@ -277,7 +295,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 func (r *rawTemplate) createAnsibleLocal(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
-		return nil, ProvisionerNotFoundErr{id: ID, Provisioner: AnsibleLocal}
+		return nil, ProvisionerErr{id: ID, Provisioner: AnsibleLocal, Err: ErrProvisionerNotFound}
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = AnsibleLocal.String()
@@ -294,7 +312,7 @@ func (r *rawTemplate) createAnsibleLocal(ID string) (settings map[string]interfa
 			// find the actual location and add it to the files map for copying
 			src, err := r.findSource(v, AnsibleLocal.String(), false)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, ProvisionerErr{id: ID, Provisioner: AnsibleLocal, Err: SettingErr{k, v, err}}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -309,7 +327,7 @@ func (r *rawTemplate) createAnsibleLocal(ID string) (settings map[string]interfa
 			// find the actual location and add it to the files map for copying
 			src, err := r.findSource(v, AnsibleLocal.String(), false)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, ProvisionerErr{id: ID, Provisioner: AnsibleLocal, Err: SettingErr{k, v, err}}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -323,7 +341,7 @@ func (r *rawTemplate) createAnsibleLocal(ID string) (settings map[string]interfa
 			// find the actual location and add it to the files map for copying
 			src, err := r.findSource(v, AnsibleLocal.String(), true)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, ProvisionerErr{id: ID, Provisioner: AnsibleLocal, Err: SettingErr{k, v, err}}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -338,7 +356,7 @@ func (r *rawTemplate) createAnsibleLocal(ID string) (settings map[string]interfa
 		}
 	}
 	if !hasPlaybook {
-		return nil, RequiredSettingErr{"playbook_file"}
+		return nil, ProvisionerErr{id: ID, Provisioner: AnsibleLocal, Err: RequiredSettingErr{"playbook_file"}}
 	}
 	// Process the Arrays.
 	for name, val := range r.Provisioners[ID].Arrays {
@@ -349,7 +367,7 @@ func (r *rawTemplate) createAnsibleLocal(ID string) (settings map[string]interfa
 				v = r.replaceVariables(v)
 				src, err := r.findSource(v, AnsibleLocal.String(), true)
 				if err != nil {
-					return nil, SettingErr{k, v, err}
+					return nil, ProvisionerErr{id: ID, Provisioner: AnsibleLocal, Err: SettingErr{k, v, err}}
 				}
 				// if the source couldn't be found and an error wasn't generated, replace
 				// s with the original value; this occurs when it is an example.
@@ -412,7 +430,7 @@ func (r *rawTemplate) createAnsibleLocal(ID string) (settings map[string]interfa
 func (r *rawTemplate) createChefClient(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ChefClient.String()]
 	if !ok {
-		return nil, ProvisionerNotFoundErr{id: ID, Provisioner: ChefClient}
+		return nil, ProvisionerErr{id: ID, Provisioner: ChefClient, Err: ErrProvisionerNotFound}
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = ChefClient.String()
@@ -432,7 +450,7 @@ func (r *rawTemplate) createChefClient(ID string) (settings map[string]interface
 			// find the actual location of the source file and add it to the files map for copying
 			src, err := r.findSource(v, ChefClient.String(), false)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, ProvisionerErr{id: ID, Provisioner: ChefClient, Err: SettingErr{k, v, err}}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -448,10 +466,10 @@ func (r *rawTemplate) createChefClient(ID string) (settings map[string]interface
 			if strings.HasSuffix(v, ".command") {
 				commands, err := r.commandsFromFile(v, ChefClient.String())
 				if err != nil {
-					return nil, SettingErr{k, v, err}
+					return nil, ProvisionerErr{id: ID, Provisioner: ChefClient, Err: SettingErr{k, v, err}}
 				}
 				if len(commands) == 0 {
-					return nil, SettingErr{k, v, ErrNoCommands}
+					return nil, ProvisionerErr{id: ID, Provisioner: ChefClient, Err: SettingErr{k, v, ErrNoCommands}}
 				}
 				settings[k] = commands[0]
 				continue
@@ -503,7 +521,7 @@ func (r *rawTemplate) createChefClient(ID string) (settings map[string]interface
 func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
-		return nil, ProvisionerNotFoundErr{id: ID, Provisioner: ChefSolo}
+		return nil, ProvisionerErr{id: ID, Provisioner: ChefSolo, Err: ErrProvisionerNotFound}
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = ChefSolo.String()
@@ -523,7 +541,7 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 			// find the actual location and add it to the files map for copying
 			src, err := r.findSource(v, ChefSolo.String(), false)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, ProvisionerErr{id: ID, Provisioner: ChefSolo, Err: SettingErr{k, v, err}}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -536,7 +554,7 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 		case "data_bags_path", "environments_path", "roles_path":
 			src, err := r.findSource(v, ChefSolo.String(), true)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, ProvisionerErr{id: ID, Provisioner: ChefSolo, Err: SettingErr{k, v, err}}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -552,10 +570,10 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 			if strings.HasSuffix(v, ".command") {
 				commands, err := r.commandsFromFile(v, ChefSolo.String())
 				if err != nil {
-					return nil, SettingErr{k, v, err}
+					return nil, ProvisionerErr{id: ID, Provisioner: ChefSolo, Err: SettingErr{k, v, err}}
 				}
 				if len(commands) == 0 {
-					return nil, SettingErr{k, v, ErrNoCommands}
+					return nil, ProvisionerErr{id: ID, Provisioner: ChefSolo, Err: SettingErr{k, v, ErrNoCommands}}
 				}
 				settings[k] = commands[0]
 				continue
@@ -571,7 +589,7 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 				// find the actual location and add it to the files map for copying
 				src, err := r.findSource(v, ChefSolo.String(), true)
 				if err != nil {
-					return nil, SettingErr{name, v, err}
+					return nil, ProvisionerErr{id: ID, Provisioner: ChefSolo, Err: SettingErr{name, v, err}}
 				}
 				// if the source couldn't be found and an error wasn't generated, replace
 				// s with the original value; this occurs when it is an example.
@@ -612,7 +630,7 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 func (r *rawTemplate) createFile(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
-		return nil, ProvisionerNotFoundErr{id: ID, Provisioner: File}
+		return nil, ProvisionerErr{id: ID, Provisioner: File, Err: ErrProvisionerNotFound}
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = File.String()
@@ -628,7 +646,7 @@ func (r *rawTemplate) createFile(ID string) (settings map[string]interface{}, er
 			// find the actual location and add it to the files map for copying
 			src, err := r.findSource(v, File.String(), true)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, ProvisionerErr{id: ID, Provisioner: File, Err: SettingErr{k, v, err}}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -639,7 +657,7 @@ func (r *rawTemplate) createFile(ID string) (settings map[string]interface{}, er
 				// see if this is a dir
 				inf, err := os.Stat(src)
 				if err != nil {
-					return nil, SettingErr{k, v, err}
+					return nil, ProvisionerErr{id: ID, Provisioner: File, Err: SettingErr{k, v, err}}
 				}
 				if inf.IsDir() {
 					isDir = true
@@ -656,10 +674,10 @@ func (r *rawTemplate) createFile(ID string) (settings map[string]interface{}, er
 		}
 	}
 	if !hasSource {
-		return nil, RequiredSettingErr{"source"}
+		return nil, ProvisionerErr{id: ID, Provisioner: File, Err: RequiredSettingErr{"source"}}
 	}
 	if !hasDestination {
-		return nil, RequiredSettingErr{"destination"}
+		return nil, ProvisionerErr{id: ID, Provisioner: File, Err: RequiredSettingErr{"destination"}}
 	}
 	// Process the Arrays.
 	for name, val := range r.Provisioners[ID].Arrays {
@@ -694,7 +712,7 @@ func (r *rawTemplate) createFile(ID string) (settings map[string]interface{}, er
 func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
-		return nil, ProvisionerNotFoundErr{id: ID, Provisioner: PuppetMasterless}
+		return nil, ProvisionerErr{id: ID, Provisioner: PuppetMasterless, Err: ErrProvisionerNotFound}
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = PuppetMasterless.String()
@@ -708,7 +726,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 		case "manifest_file":
 			src, err := r.findSource(v, PuppetMasterless.String(), false)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, ProvisionerErr{id: ID, Provisioner: PuppetMasterless, Err: SettingErr{k, v, err}}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -727,7 +745,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 			// find the actual location of the source file and add it to the files map for copying
 			src, err := r.findSource(v, PuppetMasterless.String(), false)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, ProvisionerErr{id: ID, Provisioner: PuppetMasterless, Err: SettingErr{k, v, err}}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -741,7 +759,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 			// find the actual location of the directory and add it to the dir map for copying contents
 			src, err := r.findSource(v, PuppetMasterless.String(), true)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, ProvisionerErr{id: ID, Provisioner: PuppetMasterless, Err: SettingErr{k, v, err}}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -757,10 +775,10 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 			if strings.HasSuffix(v, ".command") {
 				commands, err := r.commandsFromFile(v, PuppetMasterless.String())
 				if err != nil {
-					return nil, SettingErr{k, v, err}
+					return nil, ProvisionerErr{id: ID, Provisioner: PuppetMasterless, Err: SettingErr{k, v, err}}
 				}
 				if len(commands) == 0 {
-					return nil, SettingErr{k, v, ErrNoCommands}
+					return nil, ProvisionerErr{id: ID, Provisioner: PuppetMasterless, Err: SettingErr{k, v, ErrNoCommands}}
 				}
 				settings[k] = commands[0]
 				continue
@@ -769,7 +787,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 		}
 	}
 	if !hasManifestFile {
-		return nil, RequiredSettingErr{"manifest_file"}
+		return nil, ProvisionerErr{id: ID, Provisioner: PuppetMasterless, Err: RequiredSettingErr{"manifest_file"}}
 	}
 	for name, val := range r.Provisioners[ID].Arrays {
 		switch name {
@@ -805,7 +823,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 func (r *rawTemplate) createPuppetServer(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
-		return nil, ProvisionerNotFoundErr{id: ID, Provisioner: PuppetServer}
+		return nil, ProvisionerErr{id: ID, Provisioner: PuppetServer, Err: ErrProvisionerNotFound}
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = PuppetServer.String()
@@ -858,7 +876,7 @@ func (r *rawTemplate) createPuppetServer(ID string) (settings map[string]interfa
 func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
-		return nil, ProvisionerNotFoundErr{id: ID, Provisioner: Salt}
+		return nil, ProvisionerErr{id: ID, Provisioner: Salt, Err: ErrProvisionerNotFound}
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = Salt.String()
@@ -876,7 +894,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 			// find the actual location and add it to the files map for copying
 			src, err := r.findSource(v, Salt.String(), true)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, ProvisionerErr{id: ID, Provisioner: Salt, Err: SettingErr{k, v, err}}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -891,7 +909,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 			// find the actual location and add it to the files map for copying
 			src, err := r.findSource(v, Salt.String(), true)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, ProvisionerErr{id: ID, Provisioner: Salt, Err: SettingErr{k, v, err}}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -905,7 +923,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 			// find the actual location and add it to the files map for copying
 			src, err := r.findSource(filepath.Join(v, "minion"), Salt.String(), false)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, ProvisionerErr{id: ID, Provisioner: Salt, Err: SettingErr{k, v, err}}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -929,15 +947,15 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 		}
 	}
 	if !hasLocalStateTree {
-		return nil, RequiredSettingErr{"local_state_tree"}
+		return nil, ProvisionerErr{id: ID, Provisioner: Salt, Err: RequiredSettingErr{"local_state_tree"}}
 	}
 	// If minion is set, remote_pilar_roots and remote_state_tree cannot be used.
 	if hasMinion {
 		if remotePillarRoots != "" {
-			return nil, SettingErr{Key: "remote_pillar_roots", Value: remotePillarRoots, err: errors.New("cannot be used with the 'minon_config' setting")}
+			return nil, ProvisionerErr{id: ID, Provisioner: Salt, Err: SettingErr{Key: "remote_pillar_roots", Value: remotePillarRoots, err: errors.New("cannot be used with the 'minion_config' setting")}}
 		}
 		if remoteStateTree != "" {
-			return nil, SettingErr{Key: "remote_state_tree", Value: remoteStateTree, err: errors.New("cannot be used with the 'minon_config' setting")}
+			return nil, ProvisionerErr{id: ID, Provisioner: Salt, Err: SettingErr{Key: "remote_state_tree", Value: remoteStateTree, err: errors.New("cannot be used with the 'minion_config' setting")}}
 		}
 	}
 	// Process the Arrays.
@@ -978,7 +996,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 func (r *rawTemplate) createShell(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
-		return nil, ProvisionerNotFoundErr{id: ID, Provisioner: Shell}
+		return nil, ProvisionerErr{id: ID, Provisioner: Shell, Err: ErrProvisionerNotFound}
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = Shell.String()
@@ -998,10 +1016,10 @@ func (r *rawTemplate) createShell(ID string) (settings map[string]interface{}, e
 				var commands []string
 				commands, err = r.commandsFromFile(v, Shell.String())
 				if err != nil {
-					return nil, SettingErr{k, v, err}
+					return nil, ProvisionerErr{id: ID, Provisioner: Shell, Err: SettingErr{k, v, err}}
 				}
 				if len(commands) == 0 {
-					return nil, SettingErr{k, v, ErrNoCommands}
+					return nil, ProvisionerErr{id: ID, Provisioner: Shell, Err: SettingErr{k, v, ErrNoCommands}}
 				}
 				settings[k] = commands[0] // for execute_command, only the first element is used
 				continue
@@ -1043,7 +1061,7 @@ func (r *rawTemplate) createShell(ID string) (settings map[string]interface{}, e
 		// find the source
 		src, err := r.findSource(script, Shell.String(), false)
 		if err != nil {
-			return nil, SettingErr{"script", script, err}
+			return nil, ProvisionerErr{id: ID, Provisioner: Shell, Err: SettingErr{"script", script, err}}
 		}
 		// if the source couldn't be found and an error wasn't generated, replace
 		// s with the original value; this occurs when it is an example.
@@ -1062,7 +1080,7 @@ func (r *rawTemplate) createShell(ID string) (settings map[string]interface{}, e
 			// find the source
 			src, err := r.findSource(v, Shell.String(), false)
 			if err != nil {
-				return nil, SettingErr{k, v, err}
+				return nil, ProvisionerErr{id: ID, Provisioner: Shell, Err: SettingErr{k, v, err}}
 			}
 			// if the source couldn't be found and an error wasn't generated, replace
 			// s with the original value; this occurs when it is an example.
@@ -1077,7 +1095,7 @@ func (r *rawTemplate) createShell(ID string) (settings map[string]interface{}, e
 		goto arrays
 	}
 	// This means the a required setting was not found.
-	return nil, RequiredSettingErr{"inline, script, scripts"}
+	return nil, ProvisionerErr{id: ID, Provisioner: Shell, Err: RequiredSettingErr{"inline, script, scripts"}}
 
 arrays:
 	// Process the Arrays.
@@ -1109,7 +1127,7 @@ arrays:
 func (r *rawTemplate) createShellLocal(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
-		return nil, ProvisionerNotFoundErr{id: ID, Provisioner: ShellLocal}
+		return nil, ProvisionerErr{id: ID, Provisioner: ShellLocal, Err: ErrProvisionerNotFound}
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = ShellLocal.String()
@@ -1131,10 +1149,10 @@ func (r *rawTemplate) createShellLocal(ID string) (settings map[string]interface
 				var commands []string
 				commands, err = r.commandsFromFile(v, Shell.String())
 				if err != nil {
-					return nil, SettingErr{k, v, err}
+					return nil, ProvisionerErr{id: ID, Provisioner: ShellLocal, Err: SettingErr{k, v, err}}
 				}
 				if len(commands) == 0 {
-					return nil, SettingErr{k, v, ErrNoCommands}
+					return nil, ProvisionerErr{id: ID, Provisioner: ShellLocal, Err: SettingErr{k, v, ErrNoCommands}}
 				}
 				settings[k] = commands[0] // for execute_command, only the first element is used
 				continue
@@ -1143,7 +1161,7 @@ func (r *rawTemplate) createShellLocal(ID string) (settings map[string]interface
 		}
 	}
 	if !hasCommand {
-		return nil, RequiredSettingErr{"command"}
+		return nil, ProvisionerErr{id: ID, Provisioner: ShellLocal, Err: RequiredSettingErr{"command"}}
 	}
 
 	for name, val := range r.Provisioners[ID].Arrays {
