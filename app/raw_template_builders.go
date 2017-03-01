@@ -34,6 +34,8 @@ const (
 	VMWareVMX
 )
 
+// BuilderNotFoundErr occurs when a builder with a matching ID is not found
+// in the definition.
 type BuilderNotFoundErr struct {
 	id string
 	Builder

@@ -27,6 +27,8 @@ const (
 	ShellLocal
 )
 
+// ProvisionerNotFoundErr occurs when a provisioner with a matching ID is not
+// found in the definition.
 type ProvisionerNotFoundErr struct {
 	id string
 	Provisioner

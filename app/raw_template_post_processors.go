@@ -23,6 +23,8 @@ const (
 	VSphere
 )
 
+// PostProcessorNotFoundErr occurs when a post-processor with a matching ID is
+// not found in the definition.
 type PostProcessorNotFoundErr struct {
 	id string
 	PostProcessor
