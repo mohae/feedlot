@@ -27,6 +27,15 @@ const (
 	ShellLocal
 )
 
+type ProvisionerNotFoundErr struct {
+	id string
+	Provisioner
+}
+
+func (e ProvisionerNotFoundErr) Error() string {
+	return fmt.Sprintf("%s: %s: provisioner not found", e.Provisioner, e.id)
+}
+
 // Provisioner is a packer supported provisioner
 type Provisioner int
 
@@ -88,7 +97,7 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 	for _, ID := range r.ProvisionerIDs {
 		tmpP, ok := r.Provisioners[ID]
 		if !ok {
-			return nil, fmt.Errorf("%s: configuration not found", ID)
+			return nil, ProvisionerNotFoundErr{id: ID}
 		}
 		jww.DEBUG.Printf("processing provisioner id: %s\n", ID)
 		typ := ParseProvisioner(tmpP.Type)
@@ -174,7 +183,7 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
-		return nil, NewErrConfigNotFound(ID)
+		return nil, ProvisionerNotFoundErr{id: ID, Provisioner: Ansible}
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = Ansible.String()
@@ -266,7 +275,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 func (r *rawTemplate) createAnsibleLocal(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
-		return nil, NewErrConfigNotFound(ID)
+		return nil, ProvisionerNotFoundErr{id: ID, Provisioner: AnsibleLocal}
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = AnsibleLocal.String()
@@ -401,7 +410,7 @@ func (r *rawTemplate) createAnsibleLocal(ID string) (settings map[string]interfa
 func (r *rawTemplate) createChefClient(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ChefClient.String()]
 	if !ok {
-		return nil, NewErrConfigNotFound(ID)
+		return nil, ProvisionerNotFoundErr{id: ID, Provisioner: ChefClient}
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = ChefClient.String()
@@ -492,7 +501,7 @@ func (r *rawTemplate) createChefClient(ID string) (settings map[string]interface
 func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
-		return nil, NewErrConfigNotFound(ID)
+		return nil, ProvisionerNotFoundErr{id: ID, Provisioner: ChefSolo}
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = ChefSolo.String()
@@ -601,7 +610,7 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 func (r *rawTemplate) createFile(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
-		return nil, NewErrConfigNotFound(ID)
+		return nil, ProvisionerNotFoundErr{id: ID, Provisioner: File}
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = File.String()
@@ -683,7 +692,7 @@ func (r *rawTemplate) createFile(ID string) (settings map[string]interface{}, er
 func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
-		return nil, NewErrConfigNotFound(ID)
+		return nil, ProvisionerNotFoundErr{id: ID, Provisioner: PuppetMasterless}
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = PuppetMasterless.String()
@@ -794,7 +803,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 func (r *rawTemplate) createPuppetServer(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
-		return nil, NewErrConfigNotFound(ID)
+		return nil, ProvisionerNotFoundErr{id: ID, Provisioner: PuppetServer}
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = PuppetServer.String()
@@ -847,7 +856,7 @@ func (r *rawTemplate) createPuppetServer(ID string) (settings map[string]interfa
 func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
-		return nil, NewErrConfigNotFound(ID)
+		return nil, ProvisionerNotFoundErr{id: ID, Provisioner: Salt}
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = Salt.String()
@@ -967,7 +976,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 func (r *rawTemplate) createShell(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
-		return nil, NewErrConfigNotFound(ID)
+		return nil, ProvisionerNotFoundErr{id: ID, Provisioner: Shell}
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = Shell.String()
@@ -1098,7 +1107,7 @@ arrays:
 func (r *rawTemplate) createShellLocal(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
-		return nil, NewErrConfigNotFound(ID)
+		return nil, ProvisionerNotFoundErr{id: ID, Provisioner: ShellLocal}
 	}
 	settings = make(map[string]interface{})
 	settings["type"] = ShellLocal.String()

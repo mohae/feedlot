@@ -61,15 +61,6 @@ func (e RequiredSettingErr) Error() string {
 	return e.Key + ": required setting not found"
 }
 
-type ConfigNotFoundErr struct {
-	id  string
-	typ string
-}
-
-func (e ConfigNotFoundErr) Error() string {
-	return e.typ + " " + e.id + ": configuration not found"
-}
-
 // ErrNoCommands occurs when a referenced command file doesn't have any
 // contents.
 var ErrNoCommands = errors.New("no commands found")

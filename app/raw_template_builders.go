@@ -34,6 +34,18 @@ const (
 	VMWareVMX
 )
 
+type BuilderNotFoundErr struct {
+	id string
+	Builder
+}
+
+func (e BuilderNotFoundErr) Error() string {
+	if e.Builder == UnsupportedBuilder {
+		return e.id + ": builder not found"
+	}
+	return fmt.Sprintf("%s: %s: builder not found", e.Builder, e.id)
+}
+
 // Builder is a Packer supported builder.
 type Builder int
 
@@ -107,7 +119,7 @@ func BuilderFromString(s string) Builder {
 // Builder
 func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 	if r.BuilderIDs == nil || len(r.BuilderIDs) <= 0 {
-		return nil, fmt.Errorf("builders: none specified")
+		return nil, fmt.Errorf("no builders specified")
 	}
 	var tmpS map[string]interface{}
 	var ndx int
@@ -122,7 +134,7 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 	for _, ID := range r.BuilderIDs {
 		bldr, ok := r.Builders[ID]
 		if !ok {
-			return nil, fmt.Errorf("%s: create: configuration not found", ID)
+			return nil, BuilderNotFoundErr{id: ID}
 		}
 		jww.DEBUG.Printf("processing builder id: %s\n", ID)
 		typ := BuilderFromString(bldr.Type)
@@ -260,7 +272,7 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, NewErrConfigNotFound(ID)
+		return nil, BuilderNotFoundErr{id: ID, Builder: AmazonChroot}
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -417,7 +429,7 @@ func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, NewErrConfigNotFound(ID)
+		return nil, BuilderNotFoundErr{id: ID, Builder: AmazonEBS}
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -664,7 +676,7 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, NewErrConfigNotFound(ID)
+		return nil, BuilderNotFoundErr{id: ID, Builder: AmazonInstance}
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -1000,7 +1012,7 @@ func (r *rawTemplate) processAMIBlockDeviceMappings(v interface{}) (interface{},
 func (r *rawTemplate) createDigitalOcean(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, NewErrConfigNotFound(ID)
+		return nil, BuilderNotFoundErr{id: ID, Builder: DigitalOcean}
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -1092,7 +1104,7 @@ func (r *rawTemplate) createDigitalOcean(ID string) (settings map[string]interfa
 func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, NewErrConfigNotFound(ID)
+		return nil, BuilderNotFoundErr{id: ID, Builder: Docker}
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -1226,7 +1238,7 @@ func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 func (r *rawTemplate) createGoogleCompute(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, NewErrConfigNotFound(ID)
+		return nil, BuilderNotFoundErr{id: ID, Builder: GoogleCompute}
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -1330,7 +1342,7 @@ func (r *rawTemplate) createGoogleCompute(ID string) (settings map[string]interf
 func (r *rawTemplate) createNull(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, NewErrConfigNotFound(ID)
+		return nil, BuilderNotFoundErr{id: ID, Builder: Null}
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -1391,7 +1403,7 @@ func (r *rawTemplate) createNull(ID string) (settings map[string]interface{}, er
 func (r *rawTemplate) createOpenStack(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, NewErrConfigNotFound(ID)
+		return nil, BuilderNotFoundErr{id: ID, Builder: OpenStack}
 	}
 	settings = map[string]interface{}{}
 	// Each create function is responsible for setting its own type.
@@ -1570,7 +1582,7 @@ func (r *rawTemplate) createOpenStack(ID string) (settings map[string]interface{
 func (r *rawTemplate) createParallelsISO(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, NewErrConfigNotFound(ID)
+		return nil, BuilderNotFoundErr{id: ID, Builder: ParallelsISO}
 	}
 	settings = map[string]interface{}{}
 	// Each create function is responsible for setting its own type.
@@ -1819,7 +1831,7 @@ func (r *rawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 func (r *rawTemplate) createParallelsPVM(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, NewErrConfigNotFound(ID)
+		return nil, BuilderNotFoundErr{id: ID, Builder: ParallelsPVM}
 	}
 	settings = map[string]interface{}{}
 	// Each create function is responsible for setting its own type.
@@ -2030,7 +2042,7 @@ func (r *rawTemplate) createParallelsPVM(ID string) (settings map[string]interfa
 func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, NewErrConfigNotFound(ID)
+		return nil, BuilderNotFoundErr{id: ID, Builder: QEMU}
 	}
 	settings = map[string]interface{}{}
 	// Each create function is responsible for setting its own type.
@@ -2285,7 +2297,7 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, NewErrConfigNotFound(ID)
+		return nil, BuilderNotFoundErr{id: ID, Builder: VirtualBoxISO}
 	}
 	settings = map[string]interface{}{}
 	// Each create function is responsible for setting its own type.
@@ -2600,7 +2612,7 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, NewErrConfigNotFound(ID)
+		return nil, BuilderNotFoundErr{id: ID, Builder: VirtualBoxOVF}
 	}
 	settings = map[string]interface{}{}
 	// Each create function is responsible for setting its own type.
@@ -2898,7 +2910,7 @@ func (r *rawTemplate) createVBoxManage(v interface{}) [][]string {
 func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, NewErrConfigNotFound(ID)
+		return nil, BuilderNotFoundErr{id: ID, Builder: VMWareISO}
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
@@ -3219,7 +3231,7 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
-		return nil, NewErrConfigNotFound(ID)
+		return nil, BuilderNotFoundErr{id: ID, Builder: VMWareVMX}
 	}
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.

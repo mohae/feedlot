@@ -2201,89 +2201,97 @@ func init() {
 func TestCreateBuilders(t *testing.T) {
 	_, err := testRawTemplateBuilderOnly.createBuilders()
 	if err == nil {
-		t.Error("Expected error \"builders: none specified\", got nil")
+		t.Error("Expected error \"no builders specified\", got nil")
 	} else {
-		if err.Error() != "builders: none specified" {
-			t.Errorf("Expected \"builders: none specified\", got %q", err)
+		if err.Error() != "no builders specified" {
+			t.Errorf("Expected \"no builders specified\", got %q", err)
 		}
 	}
 
+	xerr := BuilderNotFoundErr{id: "amazon-ebs"}
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
-		t.Error("Expected \"builder configuration for amazon-ebs not found\", got nil")
+		t.Errorf("Expected %s, got nil", xerr)
 	} else {
-		if err.Error() != "builder configuration for amazon-ebs not found" {
-			t.Errorf("Expected \"builder configuration for amazon-ebs not found\", got %q", err)
+		if err.Error() != xerr.Error() {
+			t.Errorf("got %q, want %q", err, xerr)
 		}
 	}
 
+	xerr.id = "digitalocean"
 	testRawTemplateWOSection.build.BuilderIDs[0] = "digitalocean"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
-		t.Error("Expected \"builder configuration for digitalocean not found\", got nil")
+		t.Errorf("Expected %s, got nil", xerr)
 	} else {
-		if err.Error() != "builder configuration for digitalocean not found" {
-			t.Errorf("Expected \"builder configuration for digitalocean not found\", got %q", err)
+		if err.Error() != xerr.Error() {
+			t.Errorf("got %q, want %q", err, xerr)
 		}
 	}
 
+	xerr.id = "docker"
 	testRawTemplateWOSection.build.BuilderIDs[0] = "docker"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
-		t.Error("Expected \"builder configuration for docker not found\", got nil")
+		t.Errorf("Expected %s, got nil", xerr)
 	} else {
-		if err.Error() != "builder configuration for docker not found" {
-			t.Errorf("Expected \"builder configuration for docker not found\", got %q", err)
+		if err.Error() != xerr.Error() {
+			t.Errorf("got %q, want %q", err, xerr)
 		}
 	}
 
+	xerr.id = "googlecompute"
 	testRawTemplateWOSection.build.BuilderIDs[0] = "googlecompute"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
-		t.Error("Expected \"builder configuration for googlecompute not found\", got nil")
+		t.Errorf("Expected %s, got nil", xerr)
 	} else {
-		if err.Error() != "builder configuration for googlecompute not found" {
-			t.Errorf("Expected \"builder configuration for googlecompute not found\", got %q", err)
+		if err.Error() != xerr.Error() {
+			t.Errorf("got %q, want %q", err, xerr)
 		}
 	}
 
+	xerr.id = "virtualbox-iso"
 	testRawTemplateWOSection.build.BuilderIDs[0] = "virtualbox-iso"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
-		t.Error("Expected \"builder configuration for virtualbox-iso not found\", got nil")
+		t.Errorf("Expected %s, got nil", xerr)
 	} else {
-		if err.Error() != "builder configuration for virtualbox-iso not found" {
-			t.Errorf("Expected \"builder configuration for virtualbox-iso not found\", got %q", err)
+		if err.Error() != xerr.Error() {
+			t.Errorf("got %q, want %q", err, xerr)
 		}
 	}
 
+	xerr.id = "virtualbox-ovf"
 	testRawTemplateWOSection.build.BuilderIDs[0] = "virtualbox-ovf"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
-		t.Error("Expected \"builder configuration for virtualbox-ovf not found\", got nil")
+		t.Errorf("Expected %s, got nil", xerr)
 	} else {
-		if err.Error() != "builder configuration for virtualbox-ovf not found" {
-			t.Errorf("Expected \"builder configuration for virtualbox-ovf not found\", got %q", err)
+		if err.Error() != xerr.Error() {
+			t.Errorf("got %q, want %q", err, xerr)
 		}
 	}
 
+	xerr.id = "vmware-iso"
 	testRawTemplateWOSection.build.BuilderIDs[0] = "vmware-iso"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
-		t.Error("Expected \"builder configuration for vmware-iso not found\", got nil")
+		t.Errorf("Expected %s, got nil", xerr)
 	} else {
-		if err.Error() != "builder configuration for vmware-iso not found" {
-			t.Errorf("Expected \"builder configuration for vmware-iso not found\", got %q", err)
+		if err.Error() != xerr.Error() {
+			t.Errorf("got %q, want %q", err, xerr)
 		}
 	}
 
+	xerr.id = "vmware-vmx"
 	testRawTemplateWOSection.build.BuilderIDs[0] = "vmware-vmx"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
-		t.Error("Expected \"builder configuration for vmware-vmx not found\", got nil")
+		t.Errorf("Expected %s, got nil", xerr)
 	} else {
-		if err.Error() != "builder configuration for vmware-vmx not found" {
-			t.Errorf("Expected \"builder configuration for vmware-vmx not found\", got %q", err)
+		if err.Error() != xerr.Error() {
+			t.Errorf("got %q, want %q", err, xerr)
 		}
 	}
 
@@ -2293,8 +2301,8 @@ func TestCreateBuilders(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, got nil")
 	} else {
-		if err.Error() != "unable to create builders: none specified" {
-			t.Errorf("Expected \"unable to create builders: none specified\"), got %q", err)
+		if err.Error() != "no builders specified" {
+			t.Errorf("Expected \"no builders specified\"), got %q", err)
 		}
 	}
 }
