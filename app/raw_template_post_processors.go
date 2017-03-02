@@ -2,7 +2,6 @@ package app
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -214,7 +213,7 @@ func (r *rawTemplate) createPostProcessors() (pp []interface{}, err error) {
 				return nil, err
 			}
 		default:
-			return nil, &Error{UnsupportedPostProcessor.String(), fmt.Errorf("%q is not supported", tmpPP.Type)}
+			return nil, InvalidComponentErr{cTyp: "post-processor", s: tmpPP.Type}
 		}
 		pp[ndx] = tmpS
 		ndx++
