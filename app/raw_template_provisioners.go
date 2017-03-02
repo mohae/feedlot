@@ -1253,9 +1253,7 @@ func (p *provisioner) settingsToMap(Type string, r *rawTemplate) map[string]inte
 func DeepCopyMapStringProvisioner(p map[string]provisioner) map[string]Componenter {
 	c := map[string]Componenter{}
 	for k, v := range p {
-		tmpP := provisioner{}
-		tmpP = v.DeepCopy()
-		c[k] = tmpP
+		c[k] = v.DeepCopy()
 	}
 	return c
 }
