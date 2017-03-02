@@ -3496,7 +3496,7 @@ func (r *rawTemplate) updateBuilders(newB map[string]builder) error {
 		}
 		err := b.mergeSettings(bb.Settings)
 		if err != nil {
-			return fmt.Errorf("merge of settings failed: %s", err)
+			return fmt.Errorf("builder: merge of settings failed: %s", err)
 		}
 		b.mergeArrays(bb.Arrays)
 		r.Builders[v] = b

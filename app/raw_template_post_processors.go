@@ -2,6 +2,7 @@ package app
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -130,7 +131,10 @@ func (r *rawTemplate) updatePostProcessors(newP map[string]postProcessor) error 
 		// If it doesn't exist in the old builder, add it.
 		p, ok := r.PostProcessors[v]
 		if !ok {
-			pp, _ := newP[v]
+			pp, ok := newP[v]
+			if !ok { // if the key exists in neither then something is wrong
+				return fmt.Errorf("post-processor merge failed: %s key not found in either template", v)
+			}
 			r.PostProcessors[v] = pp.DeepCopy()
 			continue
 		}

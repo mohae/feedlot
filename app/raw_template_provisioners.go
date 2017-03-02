@@ -1207,8 +1207,8 @@ func (r *rawTemplate) updateProvisioners(newP map[string]provisioner) error {
 		p, ok := r.Provisioners[v]
 		if !ok {
 			pp, ok := newP[v]
-			if !ok { // if the key exists in neither then somethins is wrong
-				return fmt.Errorf("merge failed: %s key not found in either template", v)
+			if !ok { // if the key exists in neither then something is wrong
+				return fmt.Errorf("provisioner merge failed: %s key not found in either template", v)
 			}
 			r.Provisioners[v] = pp.DeepCopy()
 			continue
