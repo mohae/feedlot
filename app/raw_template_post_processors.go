@@ -170,48 +170,48 @@ func (r *rawTemplate) createPostProcessors() (pp []interface{}, err error) {
 		case Atlas:
 			tmpS, err = r.createAtlas(ID)
 			if err != nil {
-				return nil, &Error{Atlas.String(), err}
+				return nil, err
 			}
 		case Compress:
 			tmpS, err = r.createCompress(ID)
 			if err != nil {
-				return nil, &Error{Compress.String(), err}
+				return nil, err
 			}
 		case DockerImport:
 			tmpS, err = r.createDockerImport(ID)
 			if err != nil {
-				return nil, &Error{DockerImport.String(), err}
+				return nil, err
 			}
 		case DockerPush:
 			tmpS, err = r.createDockerPush(ID)
 			if err != nil {
-				return nil, &Error{DockerPush.String(), err}
+				return nil, err
 			}
 		case DockerSave:
 			tmpS, err = r.createDockerSave(ID)
 			if err != nil {
-				return nil, &Error{DockerSave.String(), err}
+				return nil, err
 			}
 		case DockerTag:
 			tmpS, err = r.createDockerTag(ID)
 			if err != nil {
-				return nil, &Error{DockerTag.String(), err}
+				return nil, err
 			}
 		case Vagrant:
 			tmpS, err = r.createVagrant(ID)
 			if err != nil {
-				return nil, &Error{Vagrant.String(), err}
+				return nil, err
 			}
 		case VagrantCloud:
 			// Create the settings
 			tmpS, err = r.createVagrantCloud(ID)
 			if err != nil {
-				return nil, &Error{VagrantCloud.String(), err}
+				return nil, err
 			}
 		case VSphere:
 			tmpS, err = r.createVSphere(ID)
 			if err != nil {
-				return nil, &Error{VSphere.String(), err}
+				return nil, err
 			}
 		default:
 			return nil, &Error{UnsupportedPostProcessor.String(), fmt.Errorf("%q is not supported", tmpPP.Type)}
