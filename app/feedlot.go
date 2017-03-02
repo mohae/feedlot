@@ -176,7 +176,7 @@ func (d *distroDefaults) Set() error {
 	// get the source settings from the defaults; If the source_dir setting isn't set
 	// return an error
 	if len(dflts.IODirInf.SourceDir) == 0 {
-		err = errors.New("required setting source_dir not set")
+		err = errors.New("source_dir: required setting not set")
 		jww.ERROR.Println(err)
 		return err
 	}
@@ -194,7 +194,7 @@ func (d *distroDefaults) Set() error {
 		// It isn't required for debian because automatic resolution of iso
 		// information is not supported.
 		if v.BaseURL == "" && k != CentOS.String() {
-			err = Error{slug: fmt.Sprintf("%s: requires a BaseURL, none provided", k)}
+			err = Error{slug: k, err: RequiredSettingErr{"base_url"}}
 			jww.ERROR.Println(err)
 			return err
 
@@ -212,7 +212,7 @@ func (d *distroDefaults) Set() error {
 		tmp.Arch, tmp.Image, tmp.Release = getDefaultISOInfo(v.DefImage)
 		err = tmp.setDefaults(v)
 		if err != nil {
-			err = fmt.Errorf("setting of distro defaults failed: %s", err)
+			err = Error{slug: "setting of distro defaults failed", err: err}
 			jww.ERROR.Print(err)
 			return err
 		}
@@ -293,7 +293,7 @@ func getSliceLenFromIface(v interface{}) (int, error) {
 		sl := reflect.ValueOf(v)
 		return sl.Len(), nil
 	}
-	return 0, fmt.Errorf("getSliceLenFromIface expected a slice, got %q", reflect.TypeOf(v).Kind().String())
+	return 0, fmt.Errorf("cannot determine len: expected a slice, got %q", reflect.TypeOf(v).Kind().String())
 }
 
 // MergeSlices takes a variadic input of []string and returns a string slice
@@ -373,7 +373,7 @@ func mergeSettingsSlices(s1 []string, s2 []string) ([]string, error) {
 	// Create a map of variables from the first slice for comparison reasons.
 	ms1 = varMapFromSlice(s1)
 	if ms1 == nil {
-		return nil, fmt.Errorf("merge settings: could not create the merge comparison maps")
+		return nil, errors.New("unable to create merge comparison maps")
 	}
 	// For each element in the second slice, get the key. If it already
 	// exists, update the existing value, otherwise add it to the merged
@@ -503,43 +503,43 @@ func appendSlash(s string) string {
 // copyFile copies a file the source file to the destination
 func copyFile(src string, dst string) (written int64, err error) {
 	if src == "" {
-		return 0, fmt.Errorf("copyfile error: source name was empty")
+		return 0, errors.New("copy file: source name was empty")
 	}
 	if dst == "" {
-		return 0, fmt.Errorf("copyfile error: destination name was empty")
+		return 0, errors.New("copy file: destination name was empty")
 	}
 	// get the destination directory
 	dstDir := filepath.Dir(dst)
 	if dstDir == "." {
-		return 0, fmt.Errorf("copyfile error: destination name, %q, did not include a directory", dst)
+		return 0, fmt.Errorf("copy file: destination name, %q, did not include a directory", dst)
 	}
 	// Create the scripts dir and copy each script from sript_src to out_dir/scripts/
 	// while keeping track of success/failures.
 	err = os.MkdirAll(dstDir, os.FileMode(0766))
 	if err != nil {
-		return 0, err
+		return 0, Error{slug: "copy file", err: err}
 	}
 	var fs, fd *os.File
 	// Open the source file
 	fs, err = os.Open(src)
 	if err != nil {
-		return 0, err
+		return 0, Error{slug: "copy file", err: err}
 	}
 	defer func() {
 		cerr := fs.Close()
 		if cerr != nil && err == nil {
-			err = cerr
+			err = Error{slug: "copy file", err: cerr}
 		}
 	}()
 	// Open the destination, create or truncate as needed.
 	fd, err = os.Create(dst)
 	if err != nil {
-		return 0, err
+		return 0, Error{slug: "copy file", err: err}
 	}
 	defer func() {
 		cerr := fd.Close()
 		if cerr != nil && err == nil {
-			err = cerr
+			err = Error{slug: "copy file", err: cerr}
 		}
 	}()
 	return io.Copy(fd, fs)
@@ -549,19 +549,19 @@ func copyFile(src string, dst string) (written int64, err error) {
 func copyDir(srcDir string, dstDir string) error {
 	exists, err := pathExists(srcDir)
 	if err != nil {
-		return fmt.Errorf("copyDir error: %s", err)
+		return Error{slug: "copy dir", err: err}
 	}
 	if !exists {
-		return fmt.Errorf("copyDir error: %s does not exist", srcDir)
+		return fmt.Errorf("copy dir: %s does not exist", srcDir)
 	}
 	dir := Archive{}
 	err = dir.DirWalk(srcDir)
 	if err != nil {
-		return fmt.Errorf("copyDir dirWalk error: %s", err)
+		return Error{slug: "copy dir", err: err}
 	}
 	for _, file := range dir.Files {
 		if file.info == nil {
-			return fmt.Errorf("copyDir error: %s does not exist", file.p)
+			return fmt.Errorf("copy dir: %s does not exist", file.p)
 		}
 		// skip non-regular files
 		if !file.info.Mode().IsRegular() {
@@ -569,7 +569,7 @@ func copyDir(srcDir string, dstDir string) error {
 		}
 		_, err = copyFile(filepath.Join(srcDir, file.p), filepath.Join(dstDir, file.p))
 		if err != nil {
-			return fmt.Errorf("copyDir error: %s", err)
+			return Error{slug: "copy dir", err: err}
 
 		}
 	}
@@ -674,7 +674,7 @@ func getUniqueFilename(p, layout string) (string, error) {
 		if os.IsNotExist(err) {
 			return p, nil
 		}
-		return "", err
+		return "", Error{slug: "get unique filename", err: err}
 	}
 	var base, ext string
 	dir := filepath.Dir(p)
@@ -698,7 +698,7 @@ func getUniqueFilename(p, layout string) (string, error) {
 			if os.IsNotExist(err) {
 				return filepath.ToSlash(newPath), nil
 			}
-			return "", err
+			return "", Error{slug: "get unique filename", err: err}
 		}
 		i++
 	}
@@ -717,16 +717,16 @@ func indexDir(s string) (dirs, files []string, err error) {
 		return nil, nil, err
 	}
 	if !fi.IsDir() {
-		return nil, nil, fmt.Errorf("cannot index %s: not a directory", s)
+		return nil, nil, fmt.Errorf("index dir: %s is not a directory", s)
 	}
 	f, err := os.Open(s)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, Error{slug: "index dir", err: err}
 	}
 	defer f.Close()
 	fis, err := f.Readdir(-1)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, Error{slug: "index dir", err: err}
 	}
 	for _, fi := range fis {
 		if fi.IsDir() {

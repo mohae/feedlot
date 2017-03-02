@@ -408,8 +408,8 @@ func TestGetSliceLenFromIface(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, got nil")
 	} else {
-		if err.Error() != "getSliceLenFromIface expected a slice, got \"string\"" {
-			t.Errorf("Expected errror to be \"getSliceLenFromIface expected a slice, got \"string\"\", got %q", err)
+		if err.Error() != "cannot determine len: expected a slice, got \"string\"" {
+			t.Errorf("got %q; want \"cannot determine len: expected a slice, got \"string\"\"", err)
 		}
 	}
 
@@ -791,8 +791,8 @@ func TestCopyFile(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, no received")
 	} else {
-		if err.Error() != "copyfile error: source name was empty" {
-			t.Errorf("Expected \"copyfile error: source name was empty\", got %q", err)
+		if err.Error() != "copy file: source name was empty" {
+			t.Errorf("Expected \"copy file: source name was empty\", got %q", err)
 		}
 	}
 
@@ -800,8 +800,8 @@ func TestCopyFile(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, no received")
 	} else {
-		if err.Error() != "copyfile error: destination name was empty" {
-			t.Errorf("Expected \"copyfile error: destination name was empty\", got %q", err)
+		if err.Error() != "copy file: destination name was empty" {
+			t.Errorf("Expected \"copy file: destination name was empty\", got %q", err)
 		}
 	}
 
@@ -809,8 +809,8 @@ func TestCopyFile(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, no received")
 	} else {
-		if err.Error() != "copyfile error: destination name, \"test\", did not include a directory" {
-			t.Errorf("Expected \"copyfile error: destination name, \"test\", did not include a directory\", got %q", err)
+		if err.Error() != "copy file: destination name, \"test\", did not include a directory" {
+			t.Errorf("Expected \"copy file: destination name, \"test\", did not include a directory\", got %q", err)
 		}
 	}
 	dir, files, err := createTmpTestDirFiles("feedlot-copyfile-")
@@ -846,8 +846,8 @@ func TestCopyDirContent(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, none received")
 	} else {
-		if err.Error() != fmt.Sprintf("copyDir error: %s does not exist", notADir) {
-			t.Errorf("Expected \"copyDir error: %s, does not exist\", got %q", notADir, err)
+		if err.Error() != fmt.Sprintf("copy dir: %s does not exist", notADir) {
+			t.Errorf("Expected \"copy dir: %s, does not exist\", got %q", notADir, err)
 		}
 	}
 	err = copyDir(dir, toDir)
@@ -1058,8 +1058,8 @@ func TestIndexDir(t *testing.T) {
 	if err == nil {
 		t.Errorf("Expected an error, got none")
 	} else {
-		if err.Error() != fmt.Sprintf("cannot index %s: not a directory", files[1]) {
-			t.Errorf("Expected error to be \"cannot index %s: not a directory\": got %q", files[1], err)
+		if err.Error() != fmt.Sprintf("index dir: %s is not a directory", files[1]) {
+			t.Errorf("Expected error to be \"index dir: %s is not a directory\": got %q", files[1], err)
 		}
 	}
 	dirs, fnames, err := indexDir(dir)

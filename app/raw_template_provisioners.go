@@ -2,6 +2,7 @@ package app
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -1190,14 +1191,11 @@ func (r *rawTemplate) updateProvisioners(newP map[string]provisioner) error {
 		return nil
 	}
 	// Convert the existing provisioners to Componenter.
-	var oldC = make(map[string]Componenter, len(r.Provisioners))
-	oldC = DeepCopyMapStringProvisioner(r.Provisioners)
+	oldC := DeepCopyMapStringProvisioner(r.Provisioners)
 	// Convert the new provisioners to Componenter.
-	var newC = make(map[string]Componenter, len(newP))
-	newC = DeepCopyMapStringProvisioner(newP)
+	newC := DeepCopyMapStringProvisioner(newP)
 	// Get the all keys from both maps
-	var keys []string
-	keys = mergeKeysFromComponentMaps(oldC, newC)
+	keys := mergeKeysFromComponentMaps(oldC, newC)
 	if r.Provisioners == nil {
 		r.Provisioners = map[string]provisioner{}
 	}
@@ -1208,7 +1206,10 @@ func (r *rawTemplate) updateProvisioners(newP map[string]provisioner) error {
 		// If it doesn't exist in the old builder, add it.
 		p, ok := r.Provisioners[v]
 		if !ok {
-			pp, _ := newP[v]
+			pp, ok := newP[v]
+			if !ok { // if the key exists in neither then somethins is wrong
+				return fmt.Errorf("merge failed: %s key not found in either template", v)
+			}
 			r.Provisioners[v] = pp.DeepCopy()
 			continue
 		}

@@ -697,8 +697,8 @@ func TestDefaults(t *testing.T) {
 		format      string
 		expectedErr string
 	}{
-		{"", "unsupported config format: "},
-		{"yaml", "unsupported config format: yaml"},
+		{"", "load defaults: : unsupported config format"},
+		{"yaml", "load defaults: yaml: unsupported config format"},
 		{"toml", ""},
 		{"json", ""},
 	}
@@ -730,8 +730,8 @@ func TestSupported(t *testing.T) {
 		p           string
 		expectedErr string
 	}{
-		{"", "", "unsupported config format: "},
-		{"yaml", "", "unsupported config format: yaml"},
+		{"", "", "load supported: : unsupported config format"},
+		{"yaml", "", "load supported: yaml: unsupported config format"},
 		{"toml", "../test_files", ""},
 		{"json", "../test_files", ""},
 	}
@@ -761,11 +761,11 @@ func TestBuildStuff(t *testing.T) {
 		format      string
 		expectedErr string
 	}{
-		{"", "", "build: name was empty"},
-		{"", "yaml", "build: name was empty"},
-		{"", "toml", "build: name was empty"},
-		{"", "json", "build: name was empty"},
-		{"../test_files/conf/build2.yaml", "yaml", "unsupported format"},
+		{"", "", "load build: no build name specified"},
+		{"", "yaml", "load build: no build name specified"},
+		{"", "toml", "load build: no build name specified"},
+		{"", "json", "load build: no build name specified"},
+		{"../test_files/conf/build2.yaml", "yaml", "load build ../test_files/conf/build2.yaml: unsupported format"},
 		{"../test_files/conf/build2.toml", "toml", ""},
 		{"../test_files/conf/build2.json", "json", ""},
 	}
@@ -795,8 +795,8 @@ func TestBuildListStuff(t *testing.T) {
 		format      string
 		expectedErr string
 	}{
-		{"", "unsupported config format: "},
-		{"yaml", "unsupported config format: yaml"},
+		{"", "load build list: : : unsupported config format"},
+		{"yaml", "load build list: : yaml: unsupported config format"},
 		{"toml", ""},
 		{"json", ""},
 	}

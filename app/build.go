@@ -26,7 +26,6 @@ func BuildDistro() (string, error) {
 		jww.ERROR.Println(err)
 	}
 	return message, err
-
 }
 
 // Create Packer templates from specified build templates.
@@ -38,6 +37,7 @@ func buildPackerTemplateFromDistro() (string, error) {
 	// Supported.
 	rTpl, err := DistroDefaults.GetTemplate(contour.GetString("distro"))
 	if err != nil {
+		err = Error{slug: "get template", err: err}
 		jww.ERROR.Println(err)
 		return "", err
 	}
@@ -59,6 +59,7 @@ func buildPackerTemplateFromDistro() (string, error) {
 	// Now that the raw template has been made, create a Packer template out of it
 	pTpl, err := rTpl.createPackerTemplate()
 	if err != nil {
+		err = Error{slug: "get template", err: err}
 		jww.ERROR.Println(err)
 		return "", err
 	}

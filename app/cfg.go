@@ -181,7 +181,7 @@ func (b *builder) mergeSettings(sl []string) error {
 	var err error
 	b.Settings, err = mergeSettingsSlices(b.Settings, sl)
 	if err != nil {
-		return fmt.Errorf("%s: merge settings failed: %s", b.Type, err)
+		return Error{slug: "merge settings", err: err}
 	}
 	return nil
 }
@@ -221,7 +221,7 @@ func (p *postProcessor) mergeSettings(sl []string) error {
 	var err error
 	p.Settings, err = mergeSettingsSlices(p.Settings, sl)
 	if err != nil {
-		return fmt.Errorf("%s: merge settings failed: %s", p.Type, err)
+		return Error{slug: "merge settings", err: err}
 	}
 	return nil
 }
@@ -260,7 +260,7 @@ func (p *provisioner) mergeSettings(sl []string) error {
 	var err error
 	p.Settings, err = mergeSettingsSlices(p.Settings, sl)
 	if err != nil {
-		return fmt.Errorf("%s: merge settings failed: %s", p.Type, err)
+		return Error{slug: "merge settings", err: err}
 	}
 	return nil
 }
@@ -439,7 +439,7 @@ type defaults struct {
 	loaded bool `toml:"-"`
 }
 
-// Load loads the defualt settings. If the defaults have already been loaded
+// Load loads the default settings. If the defaults have already been loaded
 // nothing is done.
 func (d *defaults) Load(p string) error {
 	if d.loaded {
@@ -448,13 +448,13 @@ func (d *defaults) Load(p string) error {
 	name, format, err := findConfigFile(getConfigFile(p, fmt.Sprintf("%s.%s", "default", contour.GetString(Format))))
 	if err != nil {
 		jww.ERROR.Println(err)
-		return err
+		return fmt.Errorf("load defaults: %s", err)
 	}
 	switch format {
 	case TOML:
 		_, err := toml.DecodeFile(name, &d)
 		if err != nil {
-			err = fmt.Errorf(fmt.Sprintf("%s: %s", name, err))
+			err = fmt.Errorf("load defaults: %s: %s", name, err)
 			jww.ERROR.Println(err)
 			return err
 		}
@@ -462,19 +462,20 @@ func (d *defaults) Load(p string) error {
 		var buff []byte
 		buff, err = ioutil.ReadFile(name)
 		if err != nil {
-			err = fmt.Errorf(fmt.Sprintf("%s: %s", name, err))
+			err = fmt.Errorf("load defaults: %s: %s", name, err)
 			jww.ERROR.Println(err)
 			return err
 		}
 		err = cjsn.Unmarshal(buff, &d)
 		if err != nil {
-			err = fmt.Errorf(fmt.Sprintf("%s: %s", name, err))
+			err = fmt.Errorf("load defaults: %s: %s", name, err)
 			jww.ERROR.Println(err)
 			return err
 		}
 	default:
-		jww.ERROR.Println(ErrUnsupportedFormat)
-		return ErrUnsupportedFormat
+		err := fmt.Errorf("load defaults: %s: %s", contour.GetString(Format), ErrUnsupportedFormat)
+		jww.ERROR.Println(err)
+		return err
 	}
 	d.build.setTypes()
 	d.loaded = true
@@ -520,6 +521,7 @@ type supported struct {
 func (s *supported) Load(p string) error {
 	name, format, err := findConfigFile(getConfigFile(p, "supported"))
 	if err != nil {
+		err = fmt.Errorf("load supported: %s", err)
 		jww.ERROR.Println(err)
 		return err
 	}
@@ -527,7 +529,7 @@ func (s *supported) Load(p string) error {
 	case TOML:
 		_, err := toml.DecodeFile(name, &s.Distro)
 		if err != nil {
-			err = fmt.Errorf(fmt.Sprintf("%s: %s", name, err))
+			err = fmt.Errorf("load supported: %s: %s", name, err)
 			jww.ERROR.Println(err)
 			return err
 		}
@@ -535,19 +537,20 @@ func (s *supported) Load(p string) error {
 		var buff []byte
 		buff, err = ioutil.ReadFile(name)
 		if err != nil {
-			err = fmt.Errorf(fmt.Sprintf("%s: %s", name, err))
+			err = fmt.Errorf("load supported: %s: %s", name, err)
 			jww.ERROR.Println(err)
 			return err
 		}
 		err = cjsn.Unmarshal(buff, &s.Distro)
 		if err != nil {
-			err = fmt.Errorf(fmt.Sprintf("%s: %s", name, err))
+			err = fmt.Errorf("load supported: %s: %s", name, err)
 			jww.ERROR.Println(err)
 			return err
 		}
 	default:
-		jww.ERROR.Println(ErrUnsupportedFormat)
-		return ErrUnsupportedFormat
+		err := fmt.Errorf("load supported: %s: %s", name, ErrUnsupportedFormat)
+		jww.ERROR.Println(err)
+		return err
 	}
 	s.loaded = true
 	return nil
@@ -562,7 +565,7 @@ type builds struct {
 // Load the build information from the provided name.
 func (b *builds) Load(name string) error {
 	if name == "" {
-		err := errors.New("build: name was empty")
+		err := errors.New("load build: no build name specified")
 		jww.ERROR.Println(err)
 		return err
 	}
@@ -570,26 +573,27 @@ func (b *builds) Load(name string) error {
 	case TOML:
 		_, err := toml.DecodeFile(name, &b.Build)
 		if err != nil {
-			err = fmt.Errorf(fmt.Sprintf("%s: %s", name, err))
+			err = fmt.Errorf("load build %s: %s", name, err)
 			jww.ERROR.Println(err)
 			return err
 		}
 	case JSON:
 		buff, err := ioutil.ReadFile(name)
 		if err != nil {
-			err = fmt.Errorf(fmt.Sprintf("%s: %s", name, err))
+			err = fmt.Errorf("load build %s: %s", name, err)
 			jww.ERROR.Println(err)
 			return err
 		}
 		err = cjsn.Unmarshal(buff, &b.Build)
 		if err != nil {
-			err = fmt.Errorf(fmt.Sprintf("%s: %s", name, err))
+			err = fmt.Errorf("load build %s: %s", name, err)
 			jww.ERROR.Println(err)
 			return err
 		}
 	default:
-		jww.ERROR.Println(ErrUnsupportedFormat)
-		return ErrUnsupportedFormat
+		err := fmt.Errorf("load build %s: %s", name, ErrUnsupportedFormat)
+		jww.ERROR.Println(err)
+		return err
 	}
 	for _, v := range b.Build {
 		v.build.setTypes()
@@ -603,6 +607,7 @@ func (b *builds) Load(name string) error {
 // can't be found. Th
 func getBuildTemplate(name string) (*rawTemplate, error) {
 	var r *rawTemplate
+	var err error
 	for _, blds := range Builds {
 		for n, bTpl := range blds.Build {
 			if n == name {
@@ -612,8 +617,8 @@ func getBuildTemplate(name string) (*rawTemplate, error) {
 			}
 		}
 	}
-	jww.DEBUG.Printf("build %s not found\n", name)
-	return nil, fmt.Errorf("build not found: %s", name)
+	err = fmt.Errorf("build not found: %s", name)
+	return nil, err
 found:
 	jww.DEBUG.Printf("build %s found\n", name)
 	return r, nil
@@ -635,6 +640,7 @@ func (b *buildLists) Load(p string) error {
 	// Load the build lists.
 	name, format, err := findConfigFile(getConfigFile(p, "build_list"))
 	if err != nil {
+		err = fmt.Errorf("load build list: %s: %s", name, err)
 		jww.ERROR.Println(err)
 		return err
 	}
@@ -642,7 +648,7 @@ func (b *buildLists) Load(p string) error {
 	case TOML:
 		_, err := toml.DecodeFile(name, &b.List)
 		if err != nil {
-			err = fmt.Errorf(fmt.Sprintf("%s: %s", name, err))
+			err = fmt.Errorf("load build list: %s: %s", name, err)
 			jww.ERROR.Println(err)
 			return err
 		}
@@ -650,19 +656,20 @@ func (b *buildLists) Load(p string) error {
 		var buff []byte
 		buff, err = ioutil.ReadFile(name)
 		if err != nil {
-			err = fmt.Errorf(fmt.Sprintf("%s: %s", name, err))
+			err = fmt.Errorf("load build list: %s: %s", name, err)
 			jww.ERROR.Println(err)
 			return err
 		}
 		err = cjsn.Unmarshal(buff, &b.List)
 		if err != nil {
-			err = fmt.Errorf(fmt.Sprintf("%s: %s", name, err))
+			err = fmt.Errorf("load build list: %s: %s", name, err)
 			jww.ERROR.Println(err)
 			return err
 		}
 	default:
-		jww.ERROR.Println(ErrUnsupportedFormat)
-		return ErrUnsupportedFormat
+		err := fmt.Errorf("load build list: %s: %s", name, ErrUnsupportedFormat)
+		jww.ERROR.Println(err)
+		return err
 	}
 	return nil
 }
@@ -671,7 +678,7 @@ func (b *buildLists) Load(p string) error {
 func (b *buildLists) Get(s string) (list, error) {
 	l, ok := b.List[s]
 	if !ok {
-		return list{}, fmt.Errorf("%s is not a valid build_list name", s)
+		return list{}, fmt.Errorf("%s: unknown build list", s)
 	}
 	return l, nil
 }
@@ -721,9 +728,11 @@ func SetCfgFile() error {
 	contour.UpdateCfgFile(CfgFile, fname)
 	err := contour.SetCfg()
 	if err != nil {
+		err = fmt.Errorf("find configuration: %s: %s", contour.GetString(CfgFile), err)
 		jww.ERROR.Print(err)
+		return err
 	}
-	return err
+	return nil
 }
 
 // Take a config file name and checks to see if it exists.  If it doesn't
@@ -747,7 +756,7 @@ func findConfigFile(fname string) (string, CfgFormat, error) {
 	case TOML:
 		exts = []string{"toml", "tml", "TOML", "TML"}
 	default:
-		return "", UnsupportedCfgFormat, fmt.Errorf("unsupported config format: %s", contour.GetString(Format))
+		return "", UnsupportedCfgFormat, fmt.Errorf("%s: unsupported config format", contour.GetString(Format))
 	}
 	name := strings.TrimSuffix(fname, filepath.Ext(fname))
 	for _, ext := range exts {

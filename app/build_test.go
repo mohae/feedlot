@@ -11,14 +11,14 @@ func TestBuildPackerTemplateFromDistros(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, none occurred")
 	} else {
-		if err.Error() != "unsupported distro: " {
-			t.Errorf("Expected \"unsupported distro: \", got %q", err)
+		if err.Error() != "get template: unsupported distro: " {
+			t.Errorf("Expected \"get template: unsupported distro: \", got %q", err)
 		}
 	}
 	contour.UpdateString("distro", "slackware")
 	_, err = buildPackerTemplateFromDistro()
-	if err.Error() != "unsupported distro: slackware" {
-		t.Errorf("Expected \"unsupported distro: slackware\", got %q", err)
+	if err.Error() != "get template: unsupported distro: slackware" {
+		t.Errorf("Expected \"get template: unsupported distro: slackware\", got %q", err)
 	}
 }
 
