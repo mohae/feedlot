@@ -829,8 +829,7 @@ func (p *postProcessor) settingsToMap(Type string, r *rawTemplate) map[string]in
 func DeepCopyMapStringPostProcessor(p map[string]postProcessor) map[string]Componenter {
 	c := map[string]Componenter{}
 	for k, v := range p {
-		tmpP := postProcessor{}
-		tmpP = v.DeepCopy()
+		tmpP := v.DeepCopy()
 		c[k] = tmpP
 	}
 	return c
