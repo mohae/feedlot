@@ -15,14 +15,14 @@ func BuildDistro() (string, error) {
 	if !DistroDefaults.IsSet {
 		err := DistroDefaults.Set()
 		if err != nil {
-			err = fmt.Errorf("BuildDistro failed: %s", err)
+			err = fmt.Errorf("build packer template from distro failed: %s", err)
 			jww.ERROR.Println(err)
 			return "", err
 		}
 	}
 	message, err := buildPackerTemplateFromDistro()
 	if err != nil {
-		err = fmt.Errorf("BuildDistro failed: %s", err)
+		err = fmt.Errorf("build packer template from distro  failed: %s", err)
 		jww.ERROR.Println(err)
 	}
 	return message, err
@@ -143,7 +143,7 @@ done:
 // artifacts for the passed build.
 func buildPackerTemplateFromNamedBuild(name string, doneCh chan error) {
 	if name == "" {
-		err := fmt.Errorf("unable to build Packer template: no build name was received")
+		err := fmt.Errorf("build packer template failed: no build name was received")
 		doneCh <- err
 		return
 	}
