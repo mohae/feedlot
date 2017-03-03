@@ -791,8 +791,8 @@ func TestCopyFile(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, no received")
 	} else {
-		if err.Error() != "copy file: source name was empty" {
-			t.Errorf("Expected \"copy file: source name was empty\", got %q", err)
+		if err.Error() != "copy file: source was empty" {
+			t.Errorf("Expected \"copy file: source was empty\", got %q", err)
 		}
 	}
 
@@ -800,8 +800,8 @@ func TestCopyFile(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, no received")
 	} else {
-		if err.Error() != "copy file: destination name was empty" {
-			t.Errorf("Expected \"copy file: destination name was empty\", got %q", err)
+		if err.Error() != "copy file: destination was empty" {
+			t.Errorf("Expected \"copy file: destination was empty\", got %q", err)
 		}
 	}
 
@@ -809,8 +809,8 @@ func TestCopyFile(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, no received")
 	} else {
-		if err.Error() != "copy file: destination name, \"test\", did not include a directory" {
-			t.Errorf("Expected \"copy file: destination name, \"test\", did not include a directory\", got %q", err)
+		if err.Error() != "copy file: destination, \"test\", did not include a directory" {
+			t.Errorf("Expected \"copy file: destination, \"test\", did not include a directory\", got %q", err)
 		}
 	}
 	dir, files, err := createTmpTestDirFiles("feedlot-copyfile-")

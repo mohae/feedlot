@@ -170,13 +170,14 @@ func (d *distroDefaults) Set() error {
 	dflts := &defaults{}
 	err := dflts.Load("")
 	if err != nil {
+		err = Error{slug: "set distro defaults", err: err}
 		jww.ERROR.Println(err)
 		return err
 	}
 	// get the source settings from the defaults; If the source_dir setting isn't set
 	// return an error
 	if len(dflts.IODirInf.SourceDir) == 0 {
-		err = errors.New("source_dir: required setting not set")
+		err = Error{slug: "set distro defaults", err: RequiredSettingErr{"source_dir"}}
 		jww.ERROR.Println(err)
 		return err
 	}
@@ -184,6 +185,7 @@ func (d *distroDefaults) Set() error {
 	s := &supported{}
 	err = s.Load("")
 	if err != nil {
+		err = Error{slug: "set distro defaults", err: err}
 		jww.ERROR.Println(err)
 		return err
 	}
@@ -194,7 +196,7 @@ func (d *distroDefaults) Set() error {
 		// It isn't required for debian because automatic resolution of iso
 		// information is not supported.
 		if v.BaseURL == "" && k != CentOS.String() {
-			err = Error{slug: k, err: RequiredSettingErr{"base_url"}}
+			err = Error{slug: fmt.Sprintf("set distro defaults: %s", k), err: RequiredSettingErr{"base_url"}}
 			jww.ERROR.Println(err)
 			return err
 
@@ -212,7 +214,7 @@ func (d *distroDefaults) Set() error {
 		tmp.Arch, tmp.Image, tmp.Release = getDefaultISOInfo(v.DefImage)
 		err = tmp.setDefaults(v)
 		if err != nil {
-			err = Error{slug: "setting of distro defaults failed", err: err}
+			err = Error{slug: fmt.Sprintf("set distro defaults: %s", k), err: err}
 			jww.ERROR.Print(err)
 			return err
 		}
@@ -251,7 +253,7 @@ func loadBuilds() error {
 	// TODO: add handling of dir names and recursive for envs support
 	_, fnames, err := indexDir(cDir)
 	if err != nil {
-		return err
+		return Error{slug: "load builds", err: err}
 	}
 	// for each file
 	for _, fname := range fnames {
@@ -274,7 +276,7 @@ func loadBuilds() error {
 		b := builds{}
 		err := b.Load(fname)
 		if err != nil {
-			return err
+			return Error{slug: "load builds", err: err}
 		}
 		Builds[fname] = b
 	}
@@ -503,15 +505,15 @@ func appendSlash(s string) string {
 // copyFile copies a file the source file to the destination
 func copyFile(src string, dst string) (written int64, err error) {
 	if src == "" {
-		return 0, errors.New("copy file: source name was empty")
+		return 0, errors.New("copy file: source was empty")
 	}
 	if dst == "" {
-		return 0, errors.New("copy file: destination name was empty")
+		return 0, errors.New("copy file: destination was empty")
 	}
 	// get the destination directory
 	dstDir := filepath.Dir(dst)
 	if dstDir == "." {
-		return 0, fmt.Errorf("copy file: destination name, %q, did not include a directory", dst)
+		return 0, fmt.Errorf("copy file: destination, %q, did not include a directory", dst)
 	}
 	// Create the scripts dir and copy each script from sript_src to out_dir/scripts/
 	// while keeping track of success/failures.
