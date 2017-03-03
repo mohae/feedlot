@@ -570,8 +570,8 @@ func TestFindSource(t *testing.T) {
 		src         string
 		expectedErr string
 	}{
-		{"", "", false, "", "cannot find source: no path received"},
-		{"something", "", false, "", "find something: file does not exist"},
+		{"", "", false, "", "find source: empty path"},
+		{"something", "", false, "", "something: file does not exist"},
 		{"http/preseed.cfg", "", false, "../test_files/src/ubuntu/http/preseed.cfg", ""},
 		{"cookbook1", "chef-solo", true, "../test_files/src/chef-solo/cookbook1/", ""},
 		{"14.04_ubuntu_build.txt", "", false, "../test_files/src/ubuntu/14.04/ubuntu_build/14.04_ubuntu_build.txt", ""},
@@ -587,9 +587,9 @@ func TestFindSource(t *testing.T) {
 		{"14_text.txt", "", false, "../test_files/src/ubuntu/14/14_text.txt", ""},
 		{"amd64_text.txt", "", false, "../test_files/src/ubuntu/amd64/amd64_text.txt", ""},
 		{"ubuntu_text.txt", "", false, "../test_files/src/ubuntu/ubuntu_text.txt", ""},
-		{"chef.cfg", "", false, "", "find chef.cfg: file does not exist"},
-		{"minion", "salt", false, "", "find minion: file does not exist"},
-		{"master", "salt-masterless", false, "", "find master: file does not exist"},
+		{"chef.cfg", "", false, "", "chef.cfg: file does not exist"},
+		{"minion", "salt", false, "", "minion: file does not exist"},
+		{"master", "salt-masterless", false, "", "master: file does not exist"},
 		{"chef.cfg", "chef-solo", false, "../test_files/src/chef-solo/chef.cfg", ""},
 		{"chef.cfg", "chef-client", false, "../test_files/src/chef-client/chef.cfg", ""},
 		{"chef.cfg", "chef", false, "../test_files/src/chef/chef.cfg", ""},
@@ -627,8 +627,8 @@ func TestFindCommandFile(t *testing.T) {
 		src         string
 		expectedErr string
 	}{
-		{"", "", "", "the passed command filename was empty"},
-		{"", "test.command", "", "find commands/test.command: file does not exist"},
+		{"", "", "", "find command file: empty filename"},
+		{"", "test.command", "", "find command file: commands/test.command: file does not exist"},
 		{"", "execute.command", "../test_files/src/commands/execute.command", ""},
 		{"shell", "execute_test.command", "../test_files/src/shell/commands/execute_test.command", ""},
 		{"chef-solo", "execute.command", "../test_files/src/chef-solo/commands/execute.command", ""},
@@ -668,8 +668,8 @@ func TestCommandsFromFile(t *testing.T) {
 		expected    []string
 		expectedErr string
 	}{
-		{"", "", []string{}, "the passed command filename was empty"},
-		{"", "test.command", []string{}, "find commands/test.command: file does not exist"},
+		{"", "", []string{}, "find command file: empty filename"},
+		{"", "test.command", []string{}, "find command file: commands/test.command: file does not exist"},
 		{"shell", "execute.command", []string{"echo 'vagrant'|sudo -S sh '{{.Path}}'"}, ""},
 		{"shell", "boot.command", []string{"<esc><wait>", "<esc><wait>", "<enter><wait>"}, ""},
 	}

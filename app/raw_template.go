@@ -158,19 +158,19 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 	p.Builders, err = r.createBuilders()
 	if err != nil {
 		jww.ERROR.Println(err)
-		return p, err
+		return p, Error{slug: r.BuildInf.Name, err: err}
 	}
 	// Post-Processors
 	p.PostProcessors, err = r.createPostProcessors()
 	if err != nil {
 		jww.ERROR.Println(err)
-		return p, err
+		return p, Error{slug: r.BuildInf.Name, err: err}
 	}
 	// Provisioners
 	p.Provisioners, err = r.createProvisioners()
 	if err != nil {
 		jww.ERROR.Println(err)
-		return p, err
+		return p, Error{slug: r.BuildInf.Name, err: err}
 	}
 	// Return the generated Packer Template.
 	return p, nil
@@ -239,15 +239,15 @@ func (r *rawTemplate) setDefaults(d *distro) error {
 	// merge the build portions.
 	err := r.updateBuilders(d.Builders)
 	if err != nil {
-		return err
+		return Error{slug: "set builder defaults", err: err}
 	}
 	err = r.updatePostProcessors(d.PostProcessors)
 	if err != nil {
-		return err
+		return Error{slug: "set builder defaults", err: err}
 	}
 	err = r.updateProvisioners(d.Provisioners)
 	if err != nil {
-		return err
+		return Error{slug: "set builder defaults", err: err}
 	}
 	return nil
 }
@@ -303,7 +303,7 @@ func (r *rawTemplate) updateTemplateOutputDirSetting() error {
 	if *r.IODirInf.TemplateOutputDirIsRelative {
 		dir, err := os.Getwd()
 		if err != nil {
-			return Error{"template output dir error: could not get working directory", err}
+			return Error{"template output dir: get working directory", err}
 		}
 		r.IODirInf.TemplateOutputDir = filepath.Join(dir, r.IODirInf.TemplateOutputDir)
 	}
@@ -407,16 +407,19 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 		}
 		err = r.releaseISO.setVersionInfo()
 		if err != nil {
+			err = Error{slug: "iso info", err: err}
 			jww.ERROR.Println(err)
 			return err
 		}
 		err = r.releaseISO.SetISOInfo()
 		if err != nil {
+			err = Error{slug: "iso info", err: err}
 			jww.ERROR.Println(err)
 			return err
 		}
 		r.osType, err = r.releaseISO.(*centos).getOSType(builderType)
 		if err != nil {
+			err = Error{slug: "iso info", err: err}
 			jww.ERROR.Println(err)
 			return err
 		}
@@ -435,16 +438,19 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 		}
 		err = r.releaseISO.setVersionInfo()
 		if err != nil {
+			err = Error{slug: "iso info", err: err}
 			jww.ERROR.Println(err)
 			return err
 		}
 		err = r.releaseISO.SetISOInfo()
 		if err != nil {
+			err = Error{slug: "iso info", err: err}
 			jww.ERROR.Println(err)
 			return err
 		}
 		r.osType, err = r.releaseISO.(*debian).getOSType(builderType)
 		if err != nil {
+			err = Error{slug: "iso info", err: err}
 			jww.ERROR.Println(err)
 			return err
 		}
@@ -463,21 +469,24 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 		}
 		err = r.releaseISO.setVersionInfo()
 		if err != nil {
+			err = Error{slug: "iso info", err: err}
 			jww.ERROR.Println(err)
 			return err
 		}
 		err = r.releaseISO.SetISOInfo()
 		if err != nil {
+			err = Error{slug: "iso info", err: err}
 			jww.ERROR.Println(err)
 			return err
 		}
 		r.osType, err = r.releaseISO.(*ubuntu).getOSType(builderType)
 		if err != nil {
+			err = Error{slug: "iso info", err: err}
 			jww.ERROR.Println(err)
 			return err
 		}
 	default:
-		err := fmt.Errorf("unable to set ISO related information for the unsupported distro: %q", r.Distro)
+		err := fmt.Errorf("iso info: %s: unsupported distro", r.Distro)
 		jww.ERROR.Println(err)
 		return err
 	}
@@ -494,13 +503,13 @@ func (r *rawTemplate) commandsFromFile(name, component string) (commands []strin
 	}
 	f, err := os.Open(src)
 	if err != nil {
-		return nil, err
+		return nil, Error{slug: "get commands", err: err}
 	}
 	// always close what's been opened and check returned error
 	defer func() {
 		cerr := f.Close()
 		if cerr != nil && err == nil {
-			err = cerr
+			err = Error{slug: "get commands", err: cerr}
 		}
 	}()
 	//New Reader for the string
@@ -510,6 +519,7 @@ func (r *rawTemplate) commandsFromFile(name, component string) (commands []strin
 	}
 	err = scanner.Err()
 	if err != nil {
+		err = Error{slug: "get commands", err: err}
 		return nil, err
 	}
 	return commands, nil
@@ -527,13 +537,13 @@ func (r *rawTemplate) commandsFromFile(name, component string) (commands []strin
 // no match is found an os.ErrNotExist will be returned.
 func (r *rawTemplate) findCommandFile(name, component string) (string, error) {
 	if name == "" {
-		return "", fmt.Errorf("the passed command filename was empty")
+		return "", fmt.Errorf("find command file: empty filename")
 	}
 	findPath := filepath.Join("commands", name)
 	src, err := r.findSource(findPath, component, false)
 	// return the error for any error other than ErrNotExist
 	if err != nil && err != os.ErrNotExist {
-		return "", err
+		return "", Error{slug: "find command file", err: err}
 	}
 	// if err is nil, the source was found
 	if err == nil {
@@ -612,7 +622,7 @@ func (r *rawTemplate) findCommandFile(name, component string) (string, error) {
 // original code.
 func (r *rawTemplate) findSource(p, component string, isDir bool) (string, error) {
 	if p == "" {
-		return "", errors.New("cannot find source: no path received")
+		return "", errors.New("find source: empty path")
 	}
 	// build a slice of release values to append to search paths.  An empty
 	// string is the first element because the first path to search is
@@ -723,9 +733,9 @@ func (r *rawTemplate) findSource(p, component string, isDir bool) (string, error
 		return path, nil
 	}
 
-	jww.TRACE.Printf("findSource:  %s not found", p)
+	jww.TRACE.Printf("findSource: %s not found", p)
 	// not found, return an error
-	return "", &os.PathError{"find", filepath.ToSlash(p), os.ErrNotExist}
+	return "", Error{slug: filepath.ToSlash(p), err: os.ErrNotExist}
 }
 
 // buildSearchPaths builds a slice of paths to search based on what it
