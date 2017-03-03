@@ -9,7 +9,6 @@ import (
 const (
 	// DefaultFormat is the default configuration format.
 	DefaultFormat = JSON
-	stderr        = "stderr"
 )
 
 // Feedlot setting names: these values are used in the config files, for flags,
@@ -97,7 +96,7 @@ func init() {
 	contour.RegisterBoolFlag(Example, "x", false, "false", "whether or not to generate from examples")
 	contour.RegisterStringFlag(ExampleDir, "y", "examples/", "examples/", "location of the directory with the example feedlot build configuration files")
 	contour.RegisterStringFlag(Format, "f", JSON.String(), JSON.String(), "the format of the feedlot conf files: toml or json")
-	contour.RegisterStringFlag(LogFile, "g", stderr, stderr, "log filename")
+	contour.RegisterStringFlag(LogFile, "g", "stderr", "stderr", "log filename")
 	contour.RegisterStringFlag(LogLevel, "l", "error", "error", "log level")
 	contour.RegisterBoolFlag(Verbose, "v", false, "false", "verbose output")
 	contour.RegisterStringFlag(ParamDelimStart, "p", ":", ":", "the start delimiter for template variabes")
