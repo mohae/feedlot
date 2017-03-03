@@ -52,33 +52,8 @@ type build struct {
 
 // copy makes a deep copy of the build and returns it.
 func (b *build) copy() build {
-	newB := build{
-		Builders:       map[string]builder{},
-		PostProcessors: map[string]postProcessor{},
-		Provisioners:   map[string]provisioner{},
-	}
-	if b.BuilderIDs != nil {
-		newB.BuilderIDs = make([]string, len(b.BuilderIDs), len(b.BuilderIDs))
-		copy(newB.BuilderIDs, b.BuilderIDs)
-	}
-	if b.PostProcessorIDs != nil {
-		newB.PostProcessorIDs = make([]string, len(b.PostProcessorIDs), len(b.PostProcessorIDs))
-		copy(newB.PostProcessorIDs, b.PostProcessorIDs)
-	}
-	if b.ProvisionerIDs != nil {
-		newB.ProvisionerIDs = make([]string, len(b.ProvisionerIDs), len(b.ProvisionerIDs))
-		copy(newB.ProvisionerIDs, b.ProvisionerIDs)
-	}
-	for k, v := range b.Builders {
-		newB.Builders[k] = v.DeepCopy()
-	}
-	for k, v := range b.PostProcessors {
-		newB.PostProcessors[k] = v.DeepCopy()
-	}
-	for k, v := range b.Provisioners {
-		newB.Provisioners[k] = v.DeepCopy()
-	}
-	return newB
+	new := deepcopy.Copy(b).(*build)
+	return *new
 }
 
 // setTypes goes through each component map and check's if the
