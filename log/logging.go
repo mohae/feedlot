@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/mohae/contour"
@@ -61,7 +62,7 @@ func parseLevel(s string) (Level, error) {
 }
 
 func init() {
-	log.SetPrefix(app.Name)
+	log.SetPrefix(filepath.Base(os.Args[0]))
 }
 
 // SetLogging sets application logging settings and verbose output.
