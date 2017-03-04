@@ -2,6 +2,7 @@ package app
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/mohae/contour"
 )
@@ -49,9 +50,8 @@ const (
 )
 
 var (
-
 	// Name is the name of the application
-	Name string
+	Name = filepath.Base(os.Args[0])
 
 	// CfgFile is the suffix for the ENV variable name that holds the override
 	// value for the Feedlot cfg file, if there is one.

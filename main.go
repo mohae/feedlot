@@ -7,16 +7,11 @@ package main
 
 import (
 	"os"
-	"path/filepath"
 
 	"github.com/mohae/cli"
 	"github.com/mohae/feedlot/app"
 	jww "github.com/spf13/jwalterweatherman"
 )
-
-func init() {
-	app.Name = filepath.Base(os.Args[0])
-}
 
 func main() {
 	os.Exit(realMain())
