@@ -92,36 +92,36 @@ func Set() error {
 }
 
 // Error writes an error entry to the log. If the Level == LogNone, nothing
-// will be written.
-func Error(s string) {
+// will be written. Even though
+func Error(v interface{}) {
 	if level == LogNone {
 		return
 	}
-	log.Printf("error: %s", s)
+	log.Printf("error: %v", v)
 }
 
 // Info writes an info entry to the log. If the Level < LogInfo, nothing will
 // be written.
-func Info(s string) {
+func Info(v interface{}) {
 	if level < LogInfo {
 		return
 	}
-	log.Printf("info: %s", s)
+	log.Printf("info: %v", v)
 }
 
 // Debug writes a debug entry to the log. If the Level < LogDebug, nothing
 // will be written.
-func Debug(s string) {
+func Debug(v interface{}) {
 	if level < LogInfo {
 		return
 	}
-	log.Printf("info: %s", s)
+	log.Printf("info: %v", v)
 }
 
-// Verbose writes the string to stdout if verbose output is enabled.
-func Verbose(s string) {
+// Verbose writes the value to stdout as a line if verbose output is enabled.
+func Verbose(v interface{}) {
 	if !verbose {
 		return
 	}
-	fmt.Println(s)
+	fmt.Printf("%v\n", v)
 }
