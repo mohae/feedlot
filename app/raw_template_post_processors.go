@@ -135,7 +135,7 @@ func (r *rawTemplate) updatePostProcessors(newP map[string]postProcessor) error 
 			if !ok { // if the key exists in neither then something is wrong
 				return fmt.Errorf("post-processor merge failed: %s key not found in either template", v)
 			}
-			r.PostProcessors[v] = pp.DeepCopy()
+			r.PostProcessors[v] = pp.Copy()
 			continue
 		}
 		// If the element for this key doesn't exist, skip it.
@@ -833,7 +833,7 @@ func (p *postProcessor) settingsToMap(Type string, r *rawTemplate) map[string]in
 func DeepCopyMapStringPostProcessor(p map[string]postProcessor) map[string]Componenter {
 	c := map[string]Componenter{}
 	for k, v := range p {
-		c[k] = v.DeepCopy()
+		c[k] = v.Copy()
 	}
 	return c
 }

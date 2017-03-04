@@ -3486,7 +3486,7 @@ func (r *rawTemplate) updateBuilders(newB map[string]builder) error {
 		b, ok := r.Builders[v]
 		if !ok {
 			bb, _ := newB[v]
-			r.Builders[v] = bb.DeepCopy()
+			r.Builders[v] = bb.Copy()
 			continue
 		}
 		// If the element for this key doesn't exist, skip it.
@@ -3565,9 +3565,7 @@ func (r *rawTemplate) setHTTP(component string, m map[string]interface{}) error 
 func DeepCopyMapStringBuilder(b map[string]builder) map[string]Componenter {
 	c := map[string]Componenter{}
 	for k, v := range b {
-		tmpB := builder{}
-		tmpB = v.DeepCopy()
-		c[k] = tmpB
+		c[k] = v.Copy()
 	}
 	return c
 }

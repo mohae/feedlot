@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 
@@ -30,8 +31,8 @@ func TestBuildPackerTemplateFromNamedBuild(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, received none")
 	} else {
-		if err.Error() != "unable to build Packer template: no build name was received" {
-			t.Errorf("Expected \"unable to build Packer template: no build name was received\", got %q", err)
+		if err.Error() != "build packer template failed: no build name was received" {
+			t.Errorf("Expected \"build packer template failed: no build name was received\", got %q", err)
 		}
 	}
 	contour.RegisterString("build", "../test_files/conf/builds_test.toml")
@@ -40,8 +41,8 @@ func TestBuildPackerTemplateFromNamedBuild(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error, received none")
 	} else {
-		if err.Error() != "unable to build Packer template: no build name was received" {
-			t.Errorf("Expected \"unable to build Packer template: no build name was received\", got %q", err)
+		if err.Error() != "build packer template failed: no build name was received" {
+			t.Errorf("Expected \"build Packer template failed: no build name was received\", got %q", err)
 		}
 	}
 	close(doneCh)
@@ -121,7 +122,15 @@ func TestCopy(t *testing.T) {
 		},
 	}
 
-	bNew := b.copy()
+	bNew := b.Copy()
+	bJSON, _ := json.MarshalIndent(b, "", "\t")
+	bNewJSON, _ := json.MarshalIndent(bNew, "", "\t")
+	if string(bJSON) != string(bNewJSON) {
+		t.Errorf("expected the json copies to be equal, they were not")
+		t.Errorf("%s", string(bJSON))
+		t.Errorf("%s", string(bNewJSON))
+		return
+	}
 	if !reflect.DeepEqual(b, bNew) {
 		t.Errorf("expected the copies to be equal, they were not")
 		return

@@ -51,7 +51,7 @@ type build struct {
 }
 
 // copy makes a deep copy of the build and returns it.
-func (b *build) copy() build {
+func (b *build) Copy() build {
 	new := deepcopy.Copy(b).(*build)
 	return *new
 }
@@ -89,17 +89,6 @@ type templateSection struct {
 	Settings []string `toml:"settings" json:"settings"`
 	// Arrays are the string array settings.
 	Arrays map[string]interface{} `toml:"arrays" json:"arrays"`
-}
-
-// templateSection.DeepCopy updates its information with new via a deep copy.
-func (t *templateSection) DeepCopy(ts templateSection) {
-	// Copy Type
-	t.Type = ts.Type
-	//Deep Copy of settings
-	t.Settings = make([]string, len(ts.Settings))
-	copy(t.Settings, ts.Settings)
-	// make a deep copy of the Arrays(map[string]interface)
-	t.Arrays = deepcopy.Iface(ts.Arrays).(map[string]interface{})
 }
 
 // mergeArrays merges the received array with the current one.
@@ -141,10 +130,9 @@ func (b builder) getType() string {
 }
 
 // builder.DeepCopy copies the builder values instead of the pointers.
-func (b *builder) DeepCopy() builder {
-	c := builder{templateSection: templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
-	c.templateSection.DeepCopy(b.templateSection)
-	return c
+func (b *builder) Copy() builder {
+	new := deepcopy.Copy(b).(*builder)
+	return *new
 }
 
 // mergeSettings the settings section of a builder. New values supersede
@@ -175,10 +163,9 @@ func (p postProcessor) getType() string {
 
 // postProcessor.DeepCopy copies the postProcessor values instead of the
 // pointers.
-func (p *postProcessor) DeepCopy() postProcessor {
-	c := postProcessor{templateSection: templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
-	c.templateSection.DeepCopy(p.templateSection)
-	return c
+func (p *postProcessor) Copy() postProcessor {
+	new := deepcopy.Copy(p).(*postProcessor)
+	return *new
 }
 
 // postProcessor.mergeSettings  merges the settings section of a
@@ -215,10 +202,9 @@ func (p provisioner) getType() string {
 
 // provisioner.DeepCopy copies the postProcessor values instead of the
 // pointers.
-func (p *provisioner) DeepCopy() provisioner {
-	c := provisioner{templateSection: templateSection{Settings: []string{}, Arrays: map[string]interface{}{}}}
-	c.templateSection.DeepCopy(p.templateSection)
-	return c
+func (p *provisioner) Copy() provisioner {
+	new := deepcopy.Copy(p).(*provisioner)
+	return *new
 }
 
 // provisioner.mergeSettings  merges the settings section of a post-processor
@@ -586,7 +572,7 @@ func getBuildTemplate(name string) (*rawTemplate, error) {
 	for _, blds := range Builds {
 		for n, bTpl := range blds.Build {
 			if n == name {
-				r = bTpl.copy()
+				r = bTpl.Copy()
 				r.BuildName = name
 				goto found
 			}

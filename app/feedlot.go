@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"github.com/mohae/contour"
-	"github.com/mohae/utilitybelt/deepcopy"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -162,7 +161,7 @@ func (d *distroDefaults) GetTemplate(n string) (*rawTemplate, error) {
 		jww.ERROR.Println(err)
 		return nil, err
 	}
-	return t.copy(), nil
+	return t.Copy(), nil
 }
 
 // Set sets the default templates for each distro.
@@ -204,11 +203,14 @@ func (d *distroDefaults) Set() error {
 		// Create the struct for the default settings
 		tmp := newRawTemplate()
 		// First assign it all the default settings.
-		tmp.BuildInf = deepcopy.Iface(dflts.BuildInf).(BuildInf)
-		tmp.IODirInf = deepcopy.Iface(dflts.IODirInf).(IODirInf)
-		tmp.PackerInf = deepcopy.Iface(dflts.PackerInf).(PackerInf)
-		tmp.build = dflts.build.copy()
-		tmp.Distro = strings.ToLower(k)
+
+		/*
+			tmp.BuildInf = deepcopy.Iface(dflts.BuildInf).(BuildInf)
+			tmp.IODirInf = deepcopy.Iface(dflts.IODirInf).(IODirInf)
+			tmp.PackerInf = deepcopy.Iface(dflts.PackerInf).(PackerInf)
+			tmp.build = dflts.build.copy()
+			tmp.Distro = strings.ToLower(k)
+		*/
 		// Now update it with the distro settings.
 		tmp.BaseURL = appendSlash(v.BaseURL)
 		tmp.Arch, tmp.Image, tmp.Release = getDefaultISOInfo(v.DefImage)

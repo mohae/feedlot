@@ -402,7 +402,7 @@ var testBuildList = map[string]list{
 
 func TestBuildCopy(t *testing.T) {
 	tstTpl := testBuild["jessie"]
-	newBuild := tstTpl.build.copy()
+	newBuild := tstTpl.build.Copy()
 	if fmt.Sprintf("%p", newBuild.BuilderIDs) == fmt.Sprintf("%p", tstTpl.build.BuilderIDs) {
 		t.Errorf("The pointer for BuilderTypes is the same for both newBuild and testBuild: %x, expected them to be different.", fmt.Sprintf("%p", tstTpl.build.BuilderIDs))
 		goto builderTypesEnd

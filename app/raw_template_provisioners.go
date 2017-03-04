@@ -1210,7 +1210,7 @@ func (r *rawTemplate) updateProvisioners(newP map[string]provisioner) error {
 			if !ok { // if the key exists in neither then something is wrong
 				return fmt.Errorf("provisioner merge failed: %s key not found in either template", v)
 			}
-			r.Provisioners[v] = pp.DeepCopy()
+			r.Provisioners[v] = pp.Copy()
 			continue
 		}
 		// If the element for this key doesn't exist, skip it.
@@ -1254,7 +1254,7 @@ func (p *provisioner) settingsToMap(Type string, r *rawTemplate) map[string]inte
 func DeepCopyMapStringProvisioner(p map[string]provisioner) map[string]Componenter {
 	c := map[string]Componenter{}
 	for k, v := range p {
-		c[k] = v.DeepCopy()
+		c[k] = v.Copy()
 	}
 	return c
 }

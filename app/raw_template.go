@@ -123,23 +123,8 @@ func newRawTemplate() *rawTemplate {
 }
 
 // copy makes a copy of the template and returns the new copy.
-func (r *rawTemplate) copy() *rawTemplate {
-	Copy := newRawTemplate()
-	Copy.PackerInf = deepcopy.Iface(r.PackerInf).(PackerInf)
-	Copy.IODirInf = deepcopy.Iface(r.IODirInf).(IODirInf)
-	Copy.BuildInf = deepcopy.Iface(r.BuildInf).(BuildInf)
-	Copy.releaseISO = r.releaseISO
-	Copy.date = r.date
-	Copy.delim = r.delim
-	Copy.Distro = r.Distro
-	Copy.Arch = r.Arch
-	Copy.Image = r.Image
-	Copy.Release = r.Release
-	for k, v := range r.varVals {
-		Copy.varVals[k] = v
-	}
-	Copy.build = r.build.copy()
-	return Copy
+func (r *rawTemplate) Copy() *rawTemplate {
+	return deepcopy.Copy(r).(*rawTemplate)
 }
 
 // r.createPackerTemplate creates a Packer template from the rawTemplate.
