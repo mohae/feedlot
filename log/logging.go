@@ -97,7 +97,7 @@ func Error(s string) {
 	if level == LogNone {
 		return
 	}
-	log.Printf("%s: error: %s", app.Name, s)
+	log.Printf("error: %s", s)
 }
 
 // Info writes an info entry to the log. If the Level < LogInfo, nothing will
@@ -106,7 +106,7 @@ func Info(s string) {
 	if level < LogInfo {
 		return
 	}
-	log.Printf("%s: info: %s", app.Name, s)
+	log.Printf("info: %s", s)
 }
 
 // Debug writes a debug entry to the log. If the Level < LogDebug, nothing
@@ -115,7 +115,7 @@ func Debug(s string) {
 	if level < LogInfo {
 		return
 	}
-	log.Printf("%s: info: %s", app.Name, s)
+	log.Printf("info: %s", s)
 }
 
 // Verbose writes the string to stdout if verbose output is enabled.
