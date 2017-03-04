@@ -109,6 +109,15 @@ func Info(v interface{}) {
 	log.Printf("info: %v", v)
 }
 
+// Infof writes an info entry to the log using the provided format and data.
+// If the Level < LogInfo, nothing will be written.
+func Infof(format string, v ...interface{}) {
+	if level < LogInfo {
+		return
+	}
+	log.Printf(format, v...)
+}
+
 // Debug writes a debug entry to the log. If the Level < LogDebug, nothing
 // will be written.
 func Debug(v interface{}) {
@@ -118,10 +127,28 @@ func Debug(v interface{}) {
 	log.Printf("info: %v", v)
 }
 
+// Debugf writes a debug entry to the log using the provided format and data.
+// If the Level < LogDebug, nothing will be written.
+func Debugf(format string, v ...interface{}) {
+	if level < LogInfo {
+		return
+	}
+	log.Printf(format, v...)
+}
+
 // Verbose writes the value to stdout as a line if verbose output is enabled.
 func Verbose(v interface{}) {
 	if !verbose {
 		return
 	}
 	fmt.Printf("%v\n", v)
+}
+
+// Verbose writes the value to stdout using the provided format and data, if
+// verbose output is enabled.
+func Verbosef(format string, v ...interface{}) {
+	if !verbose {
+		return
+	}
+	fmt.Printf(format, v...)
 }
