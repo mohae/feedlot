@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/mohae/feedlot/log"
 	"github.com/mohae/utilitybelt/deepcopy"
-	jww "github.com/spf13/jwalterweatherman"
 )
 
 // ProvisionerErr is an error processing provisioner, its Err field may contain
@@ -120,7 +120,7 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 		if !ok {
 			return nil, ProvisionerErr{id: ID, Err: ErrProvisionerNotFound}
 		}
-		jww.DEBUG.Printf("processing provisioner id: %s\n", ID)
+		log.Debugf("processing provisioner id: %s\n", ID)
 		typ := ParseProvisioner(tmpP.Type)
 		switch typ {
 		case Ansible:
@@ -178,7 +178,7 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 		}
 		p[ndx] = tmpS
 		ndx++
-		jww.DEBUG.Printf("processed provisioner id: %s\n", ID)
+		log.Debugf("processed provisioner id: %s\n", ID)
 	}
 	return p, nil
 }

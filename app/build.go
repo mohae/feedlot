@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/mohae/contour"
-	jww "github.com/spf13/jwalterweatherman"
+	"github.com/mohae/feedlot/log"
 )
 
 // BuildDistro creates a build based on the target distro's defaults. The
@@ -16,14 +16,14 @@ func BuildDistro() (string, error) {
 		err := DistroDefaults.Set()
 		if err != nil {
 			err = fmt.Errorf("build packer template from distro failed: %s", err)
-			jww.ERROR.Println(err)
+			log.Error(err)
 			return "", err
 		}
 	}
 	message, err := buildPackerTemplateFromDistro()
 	if err != nil {
 		err = fmt.Errorf("build packer template from distro  failed: %s", err)
-		jww.ERROR.Println(err)
+		log.Error(err)
 	}
 	return message, err
 }
@@ -32,13 +32,13 @@ func BuildDistro() (string, error) {
 // TODO: refactor to match updated handling
 func buildPackerTemplateFromDistro() (string, error) {
 	var rTpl *rawTemplate
-	jww.INFO.Println("creating template using distro defaults for " + contour.GetString("distro"))
+	log.Info("creating template using distro defaults for " + contour.GetString("distro"))
 	// Get the default for this distro, if one isn't found then it isn't
 	// Supported.
 	rTpl, err := DistroDefaults.GetTemplate(contour.GetString("distro"))
 	if err != nil {
 		err = Error{slug: "get template", err: err}
-		jww.ERROR.Println(err)
+		log.Error(err)
 		return "", err
 	}
 	// If there were any overrides, set them.
@@ -60,7 +60,7 @@ func buildPackerTemplateFromDistro() (string, error) {
 	pTpl, err := rTpl.createPackerTemplate()
 	if err != nil {
 		err = Error{slug: "get template", err: err}
-		jww.ERROR.Println(err)
+		log.Error(err)
 		return "", err
 	}
 	// Create the JSON version of the Packer template. This also handles
@@ -68,11 +68,11 @@ func buildPackerTemplateFromDistro() (string, error) {
 	// template needs to the build directory.
 	err = pTpl.create(rTpl.IODirInf, rTpl.BuildInf, rTpl.dirs, rTpl.files)
 	if err != nil {
-		jww.ERROR.Println(err)
+		log.Error(err)
 		return "", err
 	}
 	msg := fmt.Sprintf("build for %q complete: Packer template name is %q", rTpl.Distro, rTpl.BuildName)
-	jww.INFO.Println(msg)
+	log.Info(msg)
 	return msg, nil
 }
 
@@ -83,7 +83,7 @@ func buildPackerTemplateFromDistro() (string, error) {
 func BuildBuilds(buildNames ...string) (string, error) {
 	if buildNames[0] == "" {
 		err := fmt.Errorf("builds failed: no build name was received")
-		jww.ERROR.Println(err)
+		log.Error(err)
 		return "", err
 	}
 	// Only load supported if it hasn't been loaded.
@@ -92,7 +92,7 @@ func BuildBuilds(buildNames ...string) (string, error) {
 		err := DistroDefaults.Set()
 		if err != nil {
 			err = fmt.Errorf("builds failed: %s", err)
-			jww.ERROR.Println(err)
+			log.Error(err)
 			return "", err
 		}
 	}
@@ -100,7 +100,7 @@ func BuildBuilds(buildNames ...string) (string, error) {
 	err := loadBuilds()
 	if err != nil {
 		err = fmt.Errorf("builds failed: %s", err)
-		jww.ERROR.Println(err)
+		log.Error(err)
 		return "", err
 	}
 	// Make as many channels as there are build requests.  A channel per build
@@ -117,10 +117,10 @@ func BuildBuilds(buildNames ...string) (string, error) {
 	for i := 0; i < nBuilds; i++ {
 		err := <-doneCh
 		if err != nil {
-			jww.ERROR.Println(err)
+			log.Error(err)
 			errorCount++
 		} else {
-			jww.TRACE.Println("a template as successfully created")
+			log.Debug("a template was successfully created")
 			builtCount++
 		}
 	}
@@ -135,7 +135,7 @@ func BuildBuilds(buildNames ...string) (string, error) {
 	}
 	msg = fmt.Sprintf("BuildBuilds: %v Builds were successfully processed and their Packer templates were created, %v Builds were unsucessfully process and resulted in errors..", builtCount, errorCount)
 done:
-	jww.INFO.Println(msg)
+	log.Info(msg)
 	return msg, nil
 }
 
@@ -147,8 +147,8 @@ func buildPackerTemplateFromNamedBuild(name string, doneCh chan error) {
 		doneCh <- err
 		return
 	}
-	jww.INFO.Printf("Start creation of Packer template %s\n", name)
-	defer jww.INFO.Printf("End creation of Packer template %s\n", name)
+	log.Infof("Start creation of Packer template %s\n", name)
+	defer log.Infof("End creation of Packer template %s\n", name)
 	var ok bool
 	// Check the type and create the defaults for that type, if it doesn't already exist.
 	bTpl, err := getBuildTemplate(name)

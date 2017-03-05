@@ -12,7 +12,7 @@ import (
 
 	"github.com/mohae/contour"
 	"github.com/mohae/deepcopy"
-	jww "github.com/spf13/jwalterweatherman"
+	"github.com/mohae/feedlot/log"
 )
 
 type InvalidComponentErr struct {
@@ -142,20 +142,23 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 	// Builders
 	p.Builders, err = r.createBuilders()
 	if err != nil {
-		jww.ERROR.Println(err)
-		return p, Error{slug: r.BuildInf.Name, err: err}
+		Error{slug: r.BuildInf.Name, err: err}
+		log.Error(err)
+		return p, err
 	}
 	// Post-Processors
 	p.PostProcessors, err = r.createPostProcessors()
 	if err != nil {
-		jww.ERROR.Println(err)
-		return p, Error{slug: r.BuildInf.Name, err: err}
+		Error{slug: r.BuildInf.Name, err: err}
+		log.Error(err)
+		return p, err
 	}
 	// Provisioners
 	p.Provisioners, err = r.createProvisioners()
 	if err != nil {
-		jww.ERROR.Println(err)
-		return p, Error{slug: r.BuildInf.Name, err: err}
+		Error{slug: r.BuildInf.Name, err: err}
+		log.Error(err)
+		return p, err
 	}
 	// Return the generated Packer Template.
 	return p, nil
@@ -393,19 +396,19 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 		err = r.releaseISO.setVersionInfo()
 		if err != nil {
 			err = Error{slug: "iso info", err: err}
-			jww.ERROR.Println(err)
+			log.Error(err)
 			return err
 		}
 		err = r.releaseISO.SetISOInfo()
 		if err != nil {
 			err = Error{slug: "iso info", err: err}
-			jww.ERROR.Println(err)
+			log.Error(err)
 			return err
 		}
 		r.osType, err = r.releaseISO.(*centos).getOSType(builderType)
 		if err != nil {
 			err = Error{slug: "iso info", err: err}
-			jww.ERROR.Println(err)
+			log.Error(err)
 			return err
 		}
 	case Debian.String():
@@ -424,19 +427,19 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 		err = r.releaseISO.setVersionInfo()
 		if err != nil {
 			err = Error{slug: "iso info", err: err}
-			jww.ERROR.Println(err)
+			log.Error(err)
 			return err
 		}
 		err = r.releaseISO.SetISOInfo()
 		if err != nil {
 			err = Error{slug: "iso info", err: err}
-			jww.ERROR.Println(err)
+			log.Error(err)
 			return err
 		}
 		r.osType, err = r.releaseISO.(*debian).getOSType(builderType)
 		if err != nil {
 			err = Error{slug: "iso info", err: err}
-			jww.ERROR.Println(err)
+			log.Error(err)
 			return err
 		}
 	case Ubuntu.String():
@@ -455,24 +458,24 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 		err = r.releaseISO.setVersionInfo()
 		if err != nil {
 			err = Error{slug: "iso info", err: err}
-			jww.ERROR.Println(err)
+			log.Error(err)
 			return err
 		}
 		err = r.releaseISO.SetISOInfo()
 		if err != nil {
 			err = Error{slug: "iso info", err: err}
-			jww.ERROR.Println(err)
+			log.Error(err)
 			return err
 		}
 		r.osType, err = r.releaseISO.(*ubuntu).getOSType(builderType)
 		if err != nil {
 			err = Error{slug: "iso info", err: err}
-			jww.ERROR.Println(err)
+			log.Error(err)
 			return err
 		}
 	default:
 		err := fmt.Errorf("iso info: %s: unsupported distro", r.Distro)
-		jww.ERROR.Println(err)
+		log.Error(err)
 		return err
 	}
 	return nil
@@ -718,7 +721,7 @@ func (r *rawTemplate) findSource(p, component string, isDir bool) (string, error
 		return path, nil
 	}
 
-	jww.TRACE.Printf("findSource: %s not found", p)
+	log.Debugf("findSource: %s not found", p)
 	// not found, return an error
 	return "", Error{slug: filepath.ToSlash(p), err: os.ErrNotExist}
 }
@@ -762,7 +765,7 @@ func (r *rawTemplate) checkSourcePaths(p, component string, paths []string) (str
 				if inf.IsDir() {
 					tmp += string(os.PathSeparator)
 				}
-				jww.TRACE.Printf("findSource:  %s found", tmp)
+				log.Debugf("findSource:  %s found", tmp)
 				return filepath.ToSlash(tmp), nil
 			}
 			if !os.IsNotExist(err) {
@@ -780,7 +783,7 @@ func (r *rawTemplate) checkSourcePaths(p, component string, paths []string) (str
 			if inf.IsDir() {
 				tmp += string(os.PathSeparator)
 			}
-			jww.TRACE.Printf("findSource:  %s found", tmp)
+			log.Debugf("findSource:  %s found", tmp)
 			return filepath.ToSlash(tmp), nil
 		}
 		if !os.IsNotExist(err) {

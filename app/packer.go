@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/mohae/feedlot/log"
 	json "github.com/mohae/unsafejson"
-	jww "github.com/spf13/jwalterweatherman"
 )
 
 type packerTemplate struct {
@@ -29,53 +29,62 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, dirs, files map[string]s
 	a := NewArchive(b.BuildName)
 	err := a.priorBuild(appendSlash(i.TemplateOutputDir))
 	if err != nil {
-		jww.ERROR.Println(err)
-		return Error{b.BuildName, err}
+		err = Error{b.BuildName, err}
+		log.Error(err)
+		return err
 	}
 	// create the destination directory if it doesn't already exist
 	err = os.MkdirAll(i.TemplateOutputDir, 0754)
 	if err != nil {
-		return Error{b.BuildName, err}
+		err = Error{b.BuildName, err}
+		log.Error(err)
+		return err
 	}
 	// copy any directories associated with the template
 	for dst, src := range dirs {
 		err = copyDir(src, dst)
 		if err != nil {
-			jww.ERROR.Println(err)
-			return Error{b.BuildName, err}
+			err = Error{b.BuildName, err}
+			log.Error(err)
+			return err
 		}
 	}
 	// copy the files associated with the template
 	for dst, src := range files {
 		_, err = copyFile(src, dst)
 		if err != nil {
-			jww.ERROR.Println(err)
-			return Error{b.BuildName, err}
+			err = Error{b.BuildName, err}
+			log.Error(err)
+			return err
 		}
 	}
 	// Write it out as JSON
 	tplJSON, err := json.MarshalIndent(p, "", "\t")
 	if err != nil {
-		jww.ERROR.Print(err)
-		return Error{b.BuildName, err}
+		err = Error{b.BuildName, err}
+		log.Error(err)
+		return err
 	}
 	fname := filepath.Join(i.TemplateOutputDir, fmt.Sprintf("%s.json", b.Name))
 	f, err := os.Create(fname)
 	if err != nil {
-		jww.ERROR.Print(err)
-		return Error{b.BuildName, err}
+		err = Error{b.BuildName, err}
+		log.Error(err)
+		return err
 	}
 	// Close the file with error handling
 	defer func() {
 		if cerr := f.Close(); cerr != nil && err == nil {
-			jww.ERROR.Print(err)
 			err = Error{b.BuildName, err}
+			log.Error(err)
+			return err
 		}
 	}()
 	_, err = io.WriteString(f, string(tplJSON[:]))
 	if err != nil {
-		jww.ERROR.Print(err)
-		return Error{b.BuildName, err}
+		err = Error{b.BuildName, err}
+		log.Error(err)
+		return err
 	}
 	return nil
 }

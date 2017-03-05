@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/mohae/contour"
-	jww "github.com/spf13/jwalterweatherman"
+	"github.com/mohae/feedlot/log"
 )
 
 var (
@@ -158,7 +158,7 @@ func (d *distroDefaults) GetTemplate(n string) (*rawTemplate, error) {
 	t, ok = d.Templates[ParseDistro(n)]
 	if !ok {
 		err := fmt.Errorf("unsupported distro: %s", n)
-		jww.ERROR.Println(err)
+		log.Error(err)
 		return nil, err
 	}
 	return t.Copy(), nil
@@ -170,14 +170,14 @@ func (d *distroDefaults) Set() error {
 	err := dflts.Load("")
 	if err != nil {
 		err = Error{slug: "set distro defaults", err: err}
-		jww.ERROR.Println(err)
+		log.Error(err)
 		return err
 	}
 	// get the source settings from the defaults; If the source_dir setting isn't set
 	// return an error
 	if len(dflts.IODirInf.SourceDir) == 0 {
 		err = Error{slug: "set distro defaults", err: RequiredSettingErr{"source_dir"}}
-		jww.ERROR.Println(err)
+		log.Error(err)
 		return err
 	}
 
@@ -185,7 +185,7 @@ func (d *distroDefaults) Set() error {
 	err = s.Load("")
 	if err != nil {
 		err = Error{slug: "set distro defaults", err: err}
-		jww.ERROR.Println(err)
+		log.Error(err)
 		return err
 	}
 	d.Templates = map[Distro]rawTemplate{}
@@ -196,7 +196,7 @@ func (d *distroDefaults) Set() error {
 		// information is not supported.
 		if v.BaseURL == "" && k != CentOS.String() {
 			err = Error{slug: fmt.Sprintf("set distro defaults: %s", k), err: RequiredSettingErr{"base_url"}}
-			jww.ERROR.Println(err)
+			log.Error(err)
 			return err
 
 		}
@@ -217,7 +217,7 @@ func (d *distroDefaults) Set() error {
 		err = tmp.setDefaults(v)
 		if err != nil {
 			err = Error{slug: fmt.Sprintf("set distro defaults: %s", k), err: err}
-			jww.ERROR.Print(err)
+			log.Error(err)
 			return err
 		}
 		d.Templates[ParseDistro(k)] = *tmp
@@ -282,7 +282,7 @@ func loadBuilds() error {
 		}
 		Builds[fname] = b
 	}
-	jww.DEBUG.Println("builds loaded")
+	log.Debug("builds loaded")
 	return nil
 }
 
@@ -414,7 +414,7 @@ func mergeSettingsSlices(s1 []string, s2 []string) ([]string, error) {
 // '=' tokends but the key may not contain any.
 func varMapFromSlice(vars []string) map[string]string {
 	if vars == nil {
-		jww.WARN.Println("unable to create a Packer Settings map because no variables were received")
+		log.Info("unable to create a Packer Settings map because no variables were received")
 		return nil
 	}
 	vmap := make(map[string]string)
@@ -485,7 +485,7 @@ func getDefaultISOInfo(d []string) (arch string, image string, release string) {
 		case "release":
 			release = v
 		default:
-			jww.WARN.Printf("unknown default key: %s", k)
+			log.Error("unknown default key: %s", k)
 		}
 	}
 	return arch, image, release

@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/mohae/feedlot/log"
 	"github.com/mohae/utilitybelt/deepcopy"
-	jww "github.com/spf13/jwalterweatherman"
 )
 
 // PostProcessorErr is an error processing post-processors, its Err field may
@@ -167,7 +167,7 @@ func (r *rawTemplate) createPostProcessors() (pp []interface{}, err error) {
 		if !ok {
 			return nil, PostProcessorErr{id: ID, Err: ErrPostProcessorNotFound}
 		}
-		jww.DEBUG.Printf("processing post-processor id: %s\n", ID)
+		log.Debugf("processing post-processor id: %s\n", ID)
 		typ := PostProcessorFromString(tmpPP.Type)
 		switch typ {
 		case Atlas:
@@ -221,7 +221,7 @@ func (r *rawTemplate) createPostProcessors() (pp []interface{}, err error) {
 		}
 		pp[ndx] = tmpS
 		ndx++
-		jww.DEBUG.Printf("processed post-processor id: %s\n", ID)
+		log.Debugf("processed post-processor id: %s\n", ID)
 	}
 	return pp, nil
 }

@@ -18,7 +18,7 @@ import (
 	cjsn "github.com/mohae/cjson"
 	"github.com/mohae/contour"
 	"github.com/mohae/deepcopy"
-	jww "github.com/spf13/jwalterweatherman"
+	"github.com/mohae/feedlot/log"
 )
 
 // Componenter is an interface for Packer components, i.e. builder,
@@ -408,15 +408,16 @@ func (d *defaults) Load(p string) error {
 	}
 	name, format, err := findConfigFile(getConfigFile(p, fmt.Sprintf("%s.%s", "default", contour.GetString(Format))))
 	if err != nil {
-		jww.ERROR.Println(err)
-		return fmt.Errorf("load defaults: %s", err)
+		fmt.Errorf("load defaults: %s", err)
+		log.Error(err)
+		return err
 	}
 	switch format {
 	case TOML:
 		_, err := toml.DecodeFile(name, &d)
 		if err != nil {
 			err = fmt.Errorf("load defaults: %s: %s", name, err)
-			jww.ERROR.Println(err)
+			log.Error(err)
 			return err
 		}
 	case JSON:
@@ -424,18 +425,18 @@ func (d *defaults) Load(p string) error {
 		buff, err = ioutil.ReadFile(name)
 		if err != nil {
 			err = fmt.Errorf("load defaults: %s: %s", name, err)
-			jww.ERROR.Println(err)
+			log.Error(err)
 			return err
 		}
 		err = cjsn.Unmarshal(buff, &d)
 		if err != nil {
 			err = fmt.Errorf("load defaults: %s: %s", name, err)
-			jww.ERROR.Println(err)
+			log.Error(err)
 			return err
 		}
 	default:
 		err := fmt.Errorf("load defaults: %s: %s", contour.GetString(Format), ErrUnsupportedFormat)
-		jww.ERROR.Println(err)
+		log.Error(err)
 		return err
 	}
 	d.build.setTypes()
@@ -483,7 +484,7 @@ func (s *supported) Load(p string) error {
 	name, format, err := findConfigFile(getConfigFile(p, "supported"))
 	if err != nil {
 		err = fmt.Errorf("load supported: %s", err)
-		jww.ERROR.Println(err)
+		log.Error(err)
 		return err
 	}
 	switch format {
@@ -491,7 +492,7 @@ func (s *supported) Load(p string) error {
 		_, err := toml.DecodeFile(name, &s.Distro)
 		if err != nil {
 			err = fmt.Errorf("load supported: %s: %s", name, err)
-			jww.ERROR.Println(err)
+			log.Error(err)
 			return err
 		}
 	case JSON:
@@ -499,18 +500,18 @@ func (s *supported) Load(p string) error {
 		buff, err = ioutil.ReadFile(name)
 		if err != nil {
 			err = fmt.Errorf("load supported: %s: %s", name, err)
-			jww.ERROR.Println(err)
+			log.Error(err)
 			return err
 		}
 		err = cjsn.Unmarshal(buff, &s.Distro)
 		if err != nil {
 			err = fmt.Errorf("load supported: %s: %s", name, err)
-			jww.ERROR.Println(err)
+			log.Error(err)
 			return err
 		}
 	default:
 		err := fmt.Errorf("load supported: %s: %s", name, ErrUnsupportedFormat)
-		jww.ERROR.Println(err)
+		log.Error(err)
 		return err
 	}
 	s.loaded = true
@@ -527,7 +528,7 @@ type builds struct {
 func (b *builds) Load(name string) error {
 	if name == "" {
 		err := errors.New("load build: no build name specified")
-		jww.ERROR.Println(err)
+		log.Error(err)
 		return err
 	}
 	switch CfgFormatFromString(contour.GetString(Format)) {
@@ -535,25 +536,25 @@ func (b *builds) Load(name string) error {
 		_, err := toml.DecodeFile(name, &b.Build)
 		if err != nil {
 			err = fmt.Errorf("load build %s: %s", name, err)
-			jww.ERROR.Println(err)
+			log.Error(err)
 			return err
 		}
 	case JSON:
 		buff, err := ioutil.ReadFile(name)
 		if err != nil {
 			err = fmt.Errorf("load build %s: %s", name, err)
-			jww.ERROR.Println(err)
+			log.Error(err)
 			return err
 		}
 		err = cjsn.Unmarshal(buff, &b.Build)
 		if err != nil {
 			err = fmt.Errorf("load build %s: %s", name, err)
-			jww.ERROR.Println(err)
+			log.Error(err)
 			return err
 		}
 	default:
 		err := fmt.Errorf("load build %s: %s", name, ErrUnsupportedFormat)
-		jww.ERROR.Println(err)
+		log.Error(err)
 		return err
 	}
 	for _, v := range b.Build {
@@ -581,7 +582,7 @@ func getBuildTemplate(name string) (*rawTemplate, error) {
 	err = fmt.Errorf("build not found: %s", name)
 	return nil, err
 found:
-	jww.DEBUG.Printf("build %s found\n", name)
+	log.Debugf("build %s found\n", name)
 	return r, nil
 }
 
@@ -602,7 +603,7 @@ func (b *buildLists) Load(p string) error {
 	name, format, err := findConfigFile(getConfigFile(p, "build_list"))
 	if err != nil {
 		err = fmt.Errorf("load build list: %s: %s", name, err)
-		jww.ERROR.Println(err)
+		log.Error(err)
 		return err
 	}
 	switch format {
@@ -610,7 +611,7 @@ func (b *buildLists) Load(p string) error {
 		_, err := toml.DecodeFile(name, &b.List)
 		if err != nil {
 			err = fmt.Errorf("load build list: %s: %s", name, err)
-			jww.ERROR.Println(err)
+			log.Error(err)
 			return err
 		}
 	case JSON:
@@ -618,18 +619,18 @@ func (b *buildLists) Load(p string) error {
 		buff, err = ioutil.ReadFile(name)
 		if err != nil {
 			err = fmt.Errorf("load build list: %s: %s", name, err)
-			jww.ERROR.Println(err)
+			log.Error(err)
 			return err
 		}
 		err = cjsn.Unmarshal(buff, &b.List)
 		if err != nil {
 			err = fmt.Errorf("load build list: %s: %s", name, err)
-			jww.ERROR.Println(err)
+			log.Error(err)
 			return err
 		}
 	default:
 		err := fmt.Errorf("load build list: %s: %s", name, ErrUnsupportedFormat)
-		jww.ERROR.Println(err)
+		log.Error(err)
 		return err
 	}
 	return nil
@@ -690,7 +691,7 @@ func SetCfgFile() error {
 	err := contour.SetCfg()
 	if err != nil {
 		err = fmt.Errorf("find configuration: %s: %s", contour.GetString(CfgFile), err)
-		jww.ERROR.Print(err)
+		log.Error(err)
 		return err
 	}
 	return nil
