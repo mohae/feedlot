@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/mohae/deepcopy"
 	"github.com/mohae/feedlot/log"
-	"github.com/mohae/utilitybelt/deepcopy"
 )
 
 // ProvisionerErr is an error processing provisioner, its Err field may contain

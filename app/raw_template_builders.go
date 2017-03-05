@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/mohae/deepcopy"
 	"github.com/mohae/feedlot/log"
 	json "github.com/mohae/unsafejson"
-	"github.com/mohae/utilitybelt/deepcopy"
 )
 
 // Builder constants

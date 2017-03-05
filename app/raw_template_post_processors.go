@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/mohae/deepcopy"
 	"github.com/mohae/feedlot/log"
-	"github.com/mohae/utilitybelt/deepcopy"
 )
 
 // PostProcessorErr is an error processing post-processors, its Err field may
