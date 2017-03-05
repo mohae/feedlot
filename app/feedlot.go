@@ -21,15 +21,12 @@ import (
 	"time"
 
 	"github.com/mohae/contour"
+	"github.com/mohae/feedlot/conf"
 	"github.com/mohae/feedlot/log"
 )
 
-var (
-	// ErrUnsupportedFormat occurs when the specified format is not supported.
-	ErrUnsupportedFormat = errors.New("unsupported format")
-	// ErrEmptyParam occurs when the received parameter was empy.
-	ErrEmptyParam = errors.New("received an empty parameter, expected a value")
-)
+// ErrEmptyParam occurs when the received parameter was empy.
+var ErrEmptyParam = errors.New("received an empty parameter, expected a value")
 
 // Error is the generic error wrapper used by this package.
 type Error struct {
@@ -47,40 +44,6 @@ type UnsupportedDistroErr struct {
 
 func (e UnsupportedDistroErr) Error() string {
 	return e.s + ": unsupported distro"
-}
-
-// supported config formats
-const (
-	UnsupportedCfgFormat CfgFormat = iota
-	JSON
-	TOML
-)
-
-// CfgFormat: the configuration file's format.
-type CfgFormat int
-
-var cfgFormats = [...]string{
-	"unsupported configuration format",
-	"JSON",
-	"TOML",
-}
-
-func (c CfgFormat) String() string { return cfgFormats[c] }
-
-// CfgFormatFromString enables the ability to support multiple valid versions
-// of the same config format and return the CfgFormat for that string, if it
-// is a valid, supported value.  The comparison is not case sensitive.
-func CfgFormatFromString(s string) CfgFormat {
-	// make upper for consistency
-	s = strings.ToUpper(s)
-	switch s {
-	case "JSON", "JSN", "CJSON", "CJSN":
-		return JSON
-	case "TOML", "TML":
-		return TOML
-	default:
-		return UnsupportedCfgFormat
-	}
 }
 
 // supported distros
@@ -244,12 +207,12 @@ func (d *distroDefaults) Set() error {
 // if the template doesn't define its own.
 // TODO: add env support
 func loadBuilds() error {
-	jww.DEBUG.Println("loading builds")
+	log.Debug("loading builds")
 	// index all the files in the configuration directory, including subdir
 	// this should be sorted
-	cDir := contour.GetString(ConfDir)
-	if contour.GetBool(Example) {
-		cDir = filepath.Join(contour.GetString(ExampleDir), cDir)
+	cDir := contour.GetString(conf.Dir)
+	if contour.GetBool(conf.Example) {
+		cDir = filepath.Join(contour.GetString(conf.ExampleDir), cDir)
 	}
 	// names come from os.FileInfo.Name() results
 	// TODO: add handling of dir names and recursive for envs support
@@ -274,7 +237,7 @@ func loadBuilds() error {
 			continue
 		}
 		fname = filepath.Join(cDir, fname)
-		jww.DEBUG.Printf("loading build file %s", fname)
+		log.Debugf("loading build file %s", fname)
 		b := builds{}
 		err := b.Load(fname)
 		if err != nil {
@@ -485,7 +448,7 @@ func getDefaultISOInfo(d []string) (arch string, image string, release string) {
 		case "release":
 			release = v
 		default:
-			log.Error("unknown default key: %s", k)
+			log.Errorf("unknown default key: %s", k)
 		}
 	}
 	return arch, image, release

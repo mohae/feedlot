@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/mohae/contour"
+	"github.com/mohae/feedlot/conf"
 	"github.com/mohae/feedlot/log"
 )
 
@@ -88,7 +89,7 @@ func BuildBuilds(buildNames ...string) (string, error) {
 	}
 	// Only load supported if it hasn't been loaded.
 	if !DistroDefaults.IsSet {
-		jww.DEBUG.Println("loading distro defaults")
+		log.Debug("loading distro defaults")
 		err := DistroDefaults.Set()
 		if err != nil {
 			err = fmt.Errorf("builds failed: %s", err)
@@ -169,9 +170,9 @@ func buildPackerTemplateFromNamedBuild(name string, doneCh chan error) {
 	if err != nil {
 		doneCh <- Error{name, err}
 	}
-	if contour.GetBool(Example) {
+	if contour.GetBool(conf.Example) {
 		rTpl.IsExample = true
-		rTpl.ExampleDir = contour.GetString(ExampleDir)
+		rTpl.ExampleDir = contour.GetString(conf.ExampleDir)
 		rTpl.setExampleDirs()
 	}
 	pTpl, err := rTpl.createPackerTemplate()

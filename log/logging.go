@@ -5,11 +5,10 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/mohae/contour"
-	"github.com/mohae/feedlot/app"
+	"github.com/mohae/feedlot/conf"
 )
 
 // Logging errors is always on and defaults output to os.Stderr. This can be
@@ -42,7 +41,7 @@ type LevelErr struct {
 }
 
 func (l LevelErr) Error() string {
-	return fmt.Sprintf("unknown loglevel: %s", l.s)
+	return fmt.Sprintf("unknown log level: %s", l.s)
 }
 
 func parseLevel(s string) (Level, error) {
@@ -61,18 +60,14 @@ func parseLevel(s string) (Level, error) {
 	}
 }
 
-func init() {
-	log.SetPrefix(filepath.Base(os.Args[0]))
-}
-
 // SetLogging sets application logging settings and verbose output.
 func Set() error {
-	if contour.GetBool(app.Verbose) {
+	if contour.GetBool(conf.Verbose) {
 		verbose = true
 	}
 
 	var err error
-	level, err = parseLevel(contour.GetString(app.LogLevel))
+	level, err = parseLevel(contour.GetString(conf.LogLevel))
 	if err != nil {
 		return err
 	}
@@ -80,8 +75,8 @@ func Set() error {
 		log.SetOutput(ioutil.Discard)
 		return nil
 	}
-	if contour.GetString(app.LogFile) != "stdout" {
-		f, err := os.OpenFile(contour.GetString(app.LogFile), os.O_CREATE|os.O_APPEND|os.O_RDONLY, 0664)
+	if contour.GetString(conf.LogFile) != "stdout" {
+		f, err := os.OpenFile(contour.GetString(conf.File), os.O_CREATE|os.O_APPEND|os.O_RDONLY, 0664)
 		if err != nil {
 			return fmt.Errorf("open logfile: %s", err)
 		}
@@ -98,6 +93,15 @@ func Error(v interface{}) {
 		return
 	}
 	log.Printf("error: %v", v)
+}
+
+// Errorf writes an error entry to the log using the provided format and data.
+// If the Level == LogNone, nothing will be written. Even though
+func Errorf(format string, v ...interface{}) {
+	if level == LogNone {
+		return
+	}
+	log.Printf("error: "+format, v...)
 }
 
 // Info writes an info entry to the log. If the Level < LogInfo, nothing will

@@ -10,14 +10,12 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/BurntSushi/toml"
 	cjsn "github.com/mohae/cjson"
 	"github.com/mohae/contour"
 	"github.com/mohae/deepcopy"
+	"github.com/mohae/feedlot/conf"
 	"github.com/mohae/feedlot/log"
 )
 
@@ -363,10 +361,10 @@ func (i *IODirInf) update(v IODirInf) {
 // check to see if the dirinf is set, if not, set them to their defaults
 func (i *IODirInf) check() {
 	if i.TemplateOutputDir == "" {
-		i.TemplateOutputDir = fmt.Sprintf("%sbuildname", contour.GetString(ParamDelimStart))
+		i.TemplateOutputDir = fmt.Sprintf("%sbuildname", contour.GetString(conf.ParamDelimStart))
 	}
 	if i.PackerOutputDir == "" {
-		i.PackerOutputDir = fmt.Sprintf("%sbuildname", contour.GetString(ParamDelimStart))
+		i.PackerOutputDir = fmt.Sprintf("%sbuildname", contour.GetString(conf.ParamDelimStart))
 	}
 	if i.SourceDir == "" {
 		i.SourceDir = "src"
@@ -406,21 +404,21 @@ func (d *defaults) Load(p string) error {
 	if d.loaded {
 		return nil
 	}
-	name, format, err := findConfigFile(getConfigFile(p, fmt.Sprintf("%s.%s", "default", contour.GetString(Format))))
+	name, format, err := conf.ConfFilename(conf.FindConfFile(p, fmt.Sprintf("%s.%s", "default", contour.GetString(conf.Format))))
 	if err != nil {
 		fmt.Errorf("load defaults: %s", err)
 		log.Error(err)
 		return err
 	}
 	switch format {
-	case TOML:
+	case conf.TOML:
 		_, err := toml.DecodeFile(name, &d)
 		if err != nil {
 			err = fmt.Errorf("load defaults: %s: %s", name, err)
 			log.Error(err)
 			return err
 		}
-	case JSON:
+	case conf.JSON:
 		var buff []byte
 		buff, err = ioutil.ReadFile(name)
 		if err != nil {
@@ -435,7 +433,7 @@ func (d *defaults) Load(p string) error {
 			return err
 		}
 	default:
-		err := fmt.Errorf("load defaults: %s: %s", contour.GetString(Format), ErrUnsupportedFormat)
+		err := fmt.Errorf("load defaults: %s: %s", contour.GetString(conf.Format), conf.ErrUnsupportedFormat)
 		log.Error(err)
 		return err
 	}
@@ -481,21 +479,21 @@ type supported struct {
 
 // Load the supported distro info.
 func (s *supported) Load(p string) error {
-	name, format, err := findConfigFile(getConfigFile(p, "supported"))
+	name, format, err := conf.ConfFilename(conf.FindConfFile(p, "supported"))
 	if err != nil {
 		err = fmt.Errorf("load supported: %s", err)
 		log.Error(err)
 		return err
 	}
 	switch format {
-	case TOML:
+	case conf.TOML:
 		_, err := toml.DecodeFile(name, &s.Distro)
 		if err != nil {
 			err = fmt.Errorf("load supported: %s: %s", name, err)
 			log.Error(err)
 			return err
 		}
-	case JSON:
+	case conf.JSON:
 		var buff []byte
 		buff, err = ioutil.ReadFile(name)
 		if err != nil {
@@ -510,7 +508,7 @@ func (s *supported) Load(p string) error {
 			return err
 		}
 	default:
-		err := fmt.Errorf("load supported: %s: %s", name, ErrUnsupportedFormat)
+		err := fmt.Errorf("load supported: %s: %s", name, conf.ErrUnsupportedFormat)
 		log.Error(err)
 		return err
 	}
@@ -531,15 +529,15 @@ func (b *builds) Load(name string) error {
 		log.Error(err)
 		return err
 	}
-	switch CfgFormatFromString(contour.GetString(Format)) {
-	case TOML:
+	switch conf.ParseConfFormat(contour.GetString(conf.Format)) {
+	case conf.TOML:
 		_, err := toml.DecodeFile(name, &b.Build)
 		if err != nil {
 			err = fmt.Errorf("load build %s: %s", name, err)
 			log.Error(err)
 			return err
 		}
-	case JSON:
+	case conf.JSON:
 		buff, err := ioutil.ReadFile(name)
 		if err != nil {
 			err = fmt.Errorf("load build %s: %s", name, err)
@@ -553,7 +551,7 @@ func (b *builds) Load(name string) error {
 			return err
 		}
 	default:
-		err := fmt.Errorf("load build %s: %s", name, ErrUnsupportedFormat)
+		err := fmt.Errorf("load build %s: %s", name, conf.ErrUnsupportedFormat)
 		log.Error(err)
 		return err
 	}
@@ -600,21 +598,21 @@ type list struct {
 // for testing ATM.
 func (b *buildLists) Load(p string) error {
 	// Load the build lists.
-	name, format, err := findConfigFile(getConfigFile(p, "build_list"))
+	name, format, err := conf.ConfFilename(conf.FindConfFile(p, "build_list"))
 	if err != nil {
 		err = fmt.Errorf("load build list: %s: %s", name, err)
 		log.Error(err)
 		return err
 	}
 	switch format {
-	case TOML:
+	case conf.TOML:
 		_, err := toml.DecodeFile(name, &b.List)
 		if err != nil {
 			err = fmt.Errorf("load build list: %s: %s", name, err)
 			log.Error(err)
 			return err
 		}
-	case JSON:
+	case conf.JSON:
 		var buff []byte
 		buff, err = ioutil.ReadFile(name)
 		if err != nil {
@@ -629,7 +627,7 @@ func (b *buildLists) Load(p string) error {
 			return err
 		}
 	default:
-		err := fmt.Errorf("load build list: %s: %s", name, ErrUnsupportedFormat)
+		err := fmt.Errorf("load build list: %s: %s", name, conf.ErrUnsupportedFormat)
 		log.Error(err)
 		return err
 	}
@@ -662,102 +660,4 @@ func mergeKeysFromComponentMaps(m ...map[string]Componenter) []string {
 	}
 	// Merge the slices, de-dupes keys.
 	return MergeSlices(keys...)
-}
-
-// SetCfgFile set's the appCFg from the app's cfg file and then applies any
-// env vars that have been set. After this, settings can only be updated
-// programmatically or via command-line flags.
-//
-// The default cfg file may not be the one found as the app config file may
-// be in a different format. SetCfg first looks for it in the configured
-// location. If it is not found, the alternate format is checked.
-//
-// Since Feedlot supports operations without a config file, not finding one
-// is not an error state.
-//
-// Currently supported config file formats:
-//    TOML
-//    JSON || CJSN
-func SetCfgFile() error {
-	// find the actual config filename, it may have a different extension as
-	// formats can have more than one accepted extension, this is mainly to
-	// handle CJSON vs JSON though.  The error is ignored becuase it doesn't
-	// matter if the file doesn't exist.
-	fname, _, _ := findConfigFile(contour.GetString(CfgFile))
-	if fname == "" {
-		return nil
-	}
-	contour.UpdateCfgFile(CfgFile, fname)
-	err := contour.SetCfg()
-	if err != nil {
-		err = fmt.Errorf("find configuration: %s: %s", contour.GetString(CfgFile), err)
-		log.Error(err)
-		return err
-	}
-	return nil
-}
-
-// Take a config file name and checks to see if it exists.  If it doesn't
-// exist, it checks to see if the file can be found under an alternate
-// extension by checking what config format Feedlot is set to use and
-// iterating through the list of supported exts for that format.  If a file
-// exists under a particular file + ext combination, that is returned.  If
-// no match is found, the error on the original filename is returned so that
-// the message information is consistent with what is expected.
-func findConfigFile(fname string) (string, CfgFormat, error) {
-	cf := CfgFormatFromString(contour.GetString(Format))
-	_, err := os.Stat(fname)
-	if err == nil {
-		return fname, cf, nil
-	}
-	// if the file isn't found, look for it according to format extensions
-	var exts []string
-	switch cf {
-	case JSON:
-		exts = []string{"json", "jsn", "cjson", "cjsn", "JSON", "JSN", "CJSON", "CJSN"}
-	case TOML:
-		exts = []string{"toml", "tml", "TOML", "TML"}
-	default:
-		return "", UnsupportedCfgFormat, fmt.Errorf("%s: unsupported config format", contour.GetString(Format))
-	}
-	name := strings.TrimSuffix(fname, filepath.Ext(fname))
-	for _, ext := range exts {
-		n := fmt.Sprintf("%s.%s", name, ext)
-		_, err := os.Stat(n)
-		if err == nil {
-			return n, cf, nil
-		}
-	}
-	// nothing found
-	return "", cf, fmt.Errorf("%s not found", fname)
-}
-
-// GetConfigFile returns the location of the provided conf file. This accounts
-// for examples. An empty
-//
-// If the p field has a value, it is used as the dir path, instead of the
-// confDir,
-func getConfigFile(p, name string) string {
-	if name == "" {
-		return name
-	}
-	var fname string
-	// save the filename and add an extension to it if it doesn't exist
-	if filepath.Ext(name) == "" {
-		fname = name
-		name = fmt.Sprintf("%s.%s", name, contour.GetString(Format))
-	} else {
-		fname = strings.TrimSuffix(name, filepath.Ext(name))
-	}
-	// if the path wasn't passed, use the confdir, unless this file is the supported
-	// file. A path is prefixed to supported file only if this func receives one;
-	// the ConfDir is not used for supported.
-	if fname != "supported" {
-		p = filepath.Join(p, contour.GetString(ConfDir))
-	}
-	if contour.GetBool(Example) {
-		// example files always end in '.example'
-		return filepath.Join(contour.GetString(ExampleDir), p, name)
-	}
-	return filepath.Join(p, name)
 }

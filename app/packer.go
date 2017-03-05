@@ -22,12 +22,12 @@ type packerTemplate struct {
 // create a Packer build template based on the current configuration. The
 // template is written to the output directory and any external resources that
 // the template requires is copied there.
-func (p *packerTemplate) create(i IODirInf, b BuildInf, dirs, files map[string]string) error {
+func (p *packerTemplate) create(i IODirInf, b BuildInf, dirs, files map[string]string) (err error) {
 	i.check()
 	// priorBuild handles both the archiving and deletion of the prior build, if it exists, i.e.
 	// if the build's output path exists.
 	a := NewArchive(b.BuildName)
-	err := a.priorBuild(appendSlash(i.TemplateOutputDir))
+	err = a.priorBuild(appendSlash(i.TemplateOutputDir))
 	if err != nil {
 		err = Error{b.BuildName, err}
 		log.Error(err)
@@ -75,11 +75,11 @@ func (p *packerTemplate) create(i IODirInf, b BuildInf, dirs, files map[string]s
 	// Close the file with error handling
 	defer func() {
 		if cerr := f.Close(); cerr != nil && err == nil {
-			err = Error{b.BuildName, err}
+			err = Error{b.BuildName, cerr}
 			log.Error(err)
-			return err
 		}
 	}()
+
 	_, err = io.WriteString(f, string(tplJSON[:]))
 	if err != nil {
 		err = Error{b.BuildName, err}

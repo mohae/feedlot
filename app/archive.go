@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/mohae/contour"
+	"github.com/mohae/feedlot/conf"
 )
 
 // ArchiveErr is generated during an archive process.
@@ -87,7 +88,7 @@ func (a *Archive) addFile(tW *tar.Writer, filename string) error {
 // deleting those artifacts. This prevents any stale elements from persisting
 // to the new build.
 func (a *Archive) priorBuild(p string) error {
-	if !contour.GetBool(ArchivePriorBuild) {
+	if !contour.GetBool(conf.ArchivePriorBuild) {
 		return nil
 	}
 	// See if src exists, if it doesn't then don't do anything
@@ -113,7 +114,7 @@ func (a *Archive) priorBuild(p string) error {
 
 func (a *Archive) create(p string) error {
 	// examples don't get archived
-	if contour.GetBool(Example) {
+	if contour.GetBool(conf.Example) {
 		return nil
 	}
 	// Get a list of directory contents

@@ -12,6 +12,7 @@ import (
 
 	"github.com/mohae/contour"
 	"github.com/mohae/deepcopy"
+	"github.com/mohae/feedlot/conf"
 	"github.com/mohae/feedlot/log"
 )
 
@@ -119,7 +120,7 @@ func newRawTemplate() *rawTemplate {
 	// Set the date, formatted to ISO 8601
 	date := time.Now()
 	splitDate := strings.Split(date.String(), " ")
-	return &rawTemplate{date: splitDate[0], delim: contour.GetString(ParamDelimStart), files: make(map[string]string), dirs: make(map[string]string)}
+	return &rawTemplate{date: splitDate[0], delim: contour.GetString(conf.ParamDelimStart), files: make(map[string]string), dirs: make(map[string]string)}
 }
 
 // copy makes a copy of the template and returns the new copy.
@@ -142,21 +143,21 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 	// Builders
 	p.Builders, err = r.createBuilders()
 	if err != nil {
-		Error{slug: r.BuildInf.Name, err: err}
+		err = Error{slug: r.BuildInf.Name, err: err}
 		log.Error(err)
 		return p, err
 	}
 	// Post-Processors
 	p.PostProcessors, err = r.createPostProcessors()
 	if err != nil {
-		Error{slug: r.BuildInf.Name, err: err}
+		err = Error{slug: r.BuildInf.Name, err: err}
 		log.Error(err)
 		return p, err
 	}
 	// Provisioners
 	p.Provisioners, err = r.createProvisioners()
 	if err != nil {
-		Error{slug: r.BuildInf.Name, err: err}
+		err = Error{slug: r.BuildInf.Name, err: err}
 		log.Error(err)
 		return p, err
 	}
@@ -303,7 +304,7 @@ func (r *rawTemplate) updateTemplateOutputDirSetting() error {
 // resolved.
 func (r *rawTemplate) updateSourceDirSetting() {
 	if *r.IODirInf.SourceDirIsRelative {
-		r.IODirInf.SourceDir = filepath.Join(contour.GetString(ConfDir), r.IODirInf.SourceDir)
+		r.IODirInf.SourceDir = filepath.Join(contour.GetString(conf.Dir), r.IODirInf.SourceDir)
 	}
 }
 
