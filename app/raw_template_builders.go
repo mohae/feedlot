@@ -2849,7 +2849,7 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 // createVBoxManage creates the vboxmanage and vboxmanage_post arrays from the
 // received interface.
 func (r *rawTemplate) createVBoxManage(v interface{}) [][]string {
-	vms := deepcopy.InterfaceToSliceOfStrings(v)
+	vms := deepcopy.Copy(v).([]string) // this will panic if it isn't a slice of strings
 	tmp := make([][]string, len(vms))
 	for i, v := range vms {
 		k, vv := parseVar(v)
@@ -3423,7 +3423,7 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 }
 
 func (r *rawTemplate) createVMXData(v interface{}) map[string]string {
-	vms := deepcopy.InterfaceToSliceOfStrings(v)
+	vms := deepcopy.Copy(v).([]string) // this will panic if it isn't a slice of strings
 	tmp := make(map[string]string, len(vms))
 	for _, v := range vms {
 		k, val := parseVar(v)

@@ -257,16 +257,16 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 		return nil, ProvisionerErr{id: ID, Provisioner: Ansible, Err: RequiredSettingErr{"playbook_file"}}
 	}
 	// Process the Arrays.
-	for name, val := range r.Provisioners[ID].Arrays {
+	for name, v := range r.Provisioners[ID].Arrays {
 		if name == "ansible_env_vars" || name == "empty_groups" || name == "extra_arguments" || name == "groups" {
-			array := deepcopy.InterfaceToSliceOfStrings(val)
+			array := deepcopy.Copy(v).([]string) // this will panic if it isn't a slice of strings
 			if array != nil {
 				settings[name] = array
 			}
 			continue
 		}
 		if name == "only" || name == "except" {
-			array := deepcopy.InterfaceToSliceOfStrings(val)
+			array := deepcopy.Copy(v).([]string) // this will panic if it isn't a slice of strings
 			if array != nil {
 				settings[name] = array
 			}
@@ -363,7 +363,7 @@ func (r *rawTemplate) createAnsibleLocal(ID string) (settings map[string]interfa
 	for name, val := range r.Provisioners[ID].Arrays {
 		// playbook_paths, role_paths
 		if name == "playbook_paths" || name == "role_paths" {
-			array := deepcopy.InterfaceToSliceOfStrings(val)
+			array := deepcopy.Copy(val).([]string) // this will panic if it isn't a slice of strings
 			for i, v := range array {
 				v = r.replaceVariables(v)
 				src, err := r.findSource(v, AnsibleLocal.String(), true)
@@ -384,14 +384,14 @@ func (r *rawTemplate) createAnsibleLocal(ID string) (settings map[string]interfa
 		}
 		// extra_arguments
 		if name == "extra_arguments" {
-			array := deepcopy.InterfaceToSliceOfStrings(val)
+			array := deepcopy.Copy(val).([]string) // this will panic if it isn't a slice of strings
 			if array != nil {
 				settings[name] = array
 			}
 			continue
 		}
 		if name == "only" || name == "except" {
-			array := deepcopy.InterfaceToSliceOfStrings(val)
+			array := deepcopy.Copy(val).([]string) // this will panic if it isn't a slice of strings
 			if array != nil {
 				settings[name] = array
 			}
@@ -480,12 +480,12 @@ func (r *rawTemplate) createChefClient(ID string) (settings map[string]interface
 	}
 	for name, val := range r.Provisioners[ID].Arrays {
 		if name == "run_list" {
-			array := deepcopy.InterfaceToSliceOfStrings(val)
+			array := deepcopy.Copy(val).([]string) // this will panic if it isn't a slice of strings
 			settings[name] = array
 			continue
 		}
 		if name == "only" || name == "except" {
-			array := deepcopy.InterfaceToSliceOfStrings(val)
+			array := deepcopy.Copy(val).([]string) // this will panic if it isn't a slice of strings
 			if array != nil {
 				settings[name] = array
 			}
@@ -584,7 +584,7 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 	}
 	for name, val := range r.Provisioners[ID].Arrays {
 		if name == "cookbook_paths" {
-			array := deepcopy.InterfaceToSliceOfStrings(val)
+			array := deepcopy.Copy(val).([]string) // this will panic if it isn't a slice of strings
 			for i, v := range array {
 				v = r.replaceVariables(v)
 				// find the actual location and add it to the files map for copying
@@ -605,12 +605,12 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 			continue
 		}
 		if name == "run_list" || name == "remote_cookbook_paths" {
-			array := deepcopy.InterfaceToSliceOfStrings(val)
+			array := deepcopy.Copy(val).([]string) // this will panic if it isn't a slice of strings
 			settings[name] = array
 			continue
 		}
 		if name == "only" || name == "except" {
-			array := deepcopy.InterfaceToSliceOfStrings(val)
+			array := deepcopy.Copy(val).([]string) // this will panic if it isn't a slice of strings
 			if array != nil {
 				settings[name] = array
 			}
@@ -683,7 +683,7 @@ func (r *rawTemplate) createFile(ID string) (settings map[string]interface{}, er
 	// Process the Arrays.
 	for name, val := range r.Provisioners[ID].Arrays {
 		if name == "only" || name == "except" {
-			array := deepcopy.InterfaceToSliceOfStrings(val)
+			array := deepcopy.Copy(val).([]string) // this will panic if it isn't a slice of strings
 			if array != nil {
 				settings[name] = array
 			}
@@ -793,7 +793,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 	for name, val := range r.Provisioners[ID].Arrays {
 		switch name {
 		case "extra_arguments", "module_paths", "only", "except":
-			array := deepcopy.InterfaceToSliceOfStrings(val)
+			array := deepcopy.Copy(val).([]string) // this will panic if it isn't a slice of strings
 			if array != nil {
 				settings[name] = array
 			}
@@ -846,7 +846,7 @@ func (r *rawTemplate) createPuppetServer(ID string) (settings map[string]interfa
 			continue
 		}
 		if name == "only" || name == "except" {
-			array := deepcopy.InterfaceToSliceOfStrings(val)
+			array := deepcopy.Copy(val).([]string) // this will panic if it isn't a slice of strings
 			if array != nil {
 				settings[name] = array
 			}
@@ -962,7 +962,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 	// Process the Arrays.
 	for name, val := range r.Provisioners[ID].Arrays {
 		if name == "only" || name == "except" {
-			array := deepcopy.InterfaceToSliceOfStrings(val)
+			array := deepcopy.Copy(val).([]string) // this will panic if it isn't a slice of strings
 			if array != nil {
 				settings[name] = array
 			}
@@ -1053,7 +1053,7 @@ func (r *rawTemplate) createShell(ID string) (settings map[string]interface{}, e
 		}
 	}
 	if key == "inline" {
-		settings[key] = deepcopy.InterfaceToSliceOfStrings(vals)
+		settings[key] = deepcopy.Copy(vals).([]string) // this will panic if it isn't a slice of strings
 		goto arrays
 	}
 
@@ -1075,7 +1075,7 @@ func (r *rawTemplate) createShell(ID string) (settings map[string]interface{}, e
 		goto arrays
 	}
 	if key == "scripts" {
-		scripts := deepcopy.InterfaceToSliceOfStrings(vals)
+		scripts := deepcopy.Copy(vals).([]string) // this will panic if it isn't a slice of strings
 		for i, v := range scripts {
 			v = r.replaceVariables(v)
 			// find the source
@@ -1102,7 +1102,7 @@ arrays:
 	// Process the Arrays.
 	for name, val := range r.Provisioners[ID].Arrays {
 		if name == "environment_vars" || name == "only" || name == "except" {
-			array := deepcopy.InterfaceToSliceOfStrings(val)
+			array := deepcopy.Copy(val).([]string) // this will panic if it isn't a slice of strings
 			if array != nil {
 				settings[name] = array
 			}
@@ -1167,7 +1167,7 @@ func (r *rawTemplate) createShellLocal(ID string) (settings map[string]interface
 
 	for name, val := range r.Provisioners[ID].Arrays {
 		if name == "environment_vars" || name == "only" || name == "except" {
-			array := deepcopy.InterfaceToSliceOfStrings(val)
+			array := deepcopy.Copy(val).([]string) // this will panic if it isn't a slice of strings
 			if array != nil {
 				settings[name] = array
 			}

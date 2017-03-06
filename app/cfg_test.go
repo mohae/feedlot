@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/mohae/contour"
+	"github.com/mohae/feedlot/conf"
 )
 
 var region = "US"
@@ -697,15 +698,15 @@ func TestDefaults(t *testing.T) {
 		format      string
 		expectedErr string
 	}{
-		{"", "load defaults: : unsupported config format"},
-		{"yaml", "load defaults: yaml: unsupported config format"},
+		{"", ": unsupported conf format"},
+		{"yaml", "yaml: unsupported conf format"},
 		{"toml", ""},
 		{"json", ""},
 	}
 
-	contour.UpdateString(ConfDir, "../test_files/conf")
+	contour.UpdateString(conf.Dir, "../test_files/conf")
 	for i, test := range tests {
-		contour.UpdateString(Format, test.format)
+		contour.UpdateString(conf.Format, test.format)
 		d := defaults{}
 		err := d.Load("")
 		if err != nil {
@@ -730,13 +731,13 @@ func TestSupported(t *testing.T) {
 		p           string
 		expectedErr string
 	}{
-		{"", "", "load supported: : unsupported config format"},
-		{"yaml", "", "load supported: yaml: unsupported config format"},
+		{"", "", "load supported: : unsupported conf format"},
+		{"yaml", "", "load supported: yaml: unsupported conf format"},
 		{"toml", "../test_files", ""},
 		{"json", "../test_files", ""},
 	}
 	for i, test := range tests {
-		contour.UpdateString(Format, test.format)
+		contour.UpdateString(conf.Format, test.format)
 		s := supported{}
 		err := s.Load(test.p)
 		if err != nil {
@@ -769,9 +770,9 @@ func TestBuildStuff(t *testing.T) {
 		{"../test_files/conf/build2.toml", "toml", ""},
 		{"../test_files/conf/build2.json", "json", ""},
 	}
-	contour.UpdateString(ConfDir, "../test_files/conf")
+	contour.UpdateString(conf.Dir, "../test_files/conf")
 	for i, test := range tests {
-		contour.UpdateString(Format, test.format)
+		contour.UpdateString(conf.Format, test.format)
 		b := builds{}
 		err := b.Load(test.filename)
 		if err != nil {
@@ -795,14 +796,14 @@ func TestBuildListStuff(t *testing.T) {
 		format      string
 		expectedErr string
 	}{
-		{"", "load build list: : : unsupported config format"},
-		{"yaml", "load build list: : yaml: unsupported config format"},
+		{"", "load build list: : : unsupported conf format"},
+		{"yaml", "load build list: : yaml: unsupported conf format"},
 		{"toml", ""},
 		{"json", ""},
 	}
-	contour.UpdateString(ConfDir, "conf")
+	contour.UpdateString(conf.Dir, "conf")
 	for i, test := range tests {
-		contour.UpdateString(Format, test.format)
+		contour.UpdateString(conf.Format, test.format)
 		b := &buildLists{List: map[string]list{}}
 		err := b.Load("../test_files")
 		if err != nil {
@@ -868,15 +869,15 @@ func TestFindConfigFile(t *testing.T) {
 		findName       string
 		cfgFormat      string
 		expectedName   string
-		expectedFormat CfgFormat
+		expectedFormat conf.ConfFormat
 		expectedErr    string
 	}{
-		{"test.json", "test.json", "json", "test.cjsn", JSON, ""},
-		{"test.json", "test.json", "json", "test.cjon", JSON, ""},
-		{"test.cjson", "test.cjson", "json", "test.json", JSON, ""},
-		{"test.tml", "test.tml", "toml", "test.toml", TOML, ""},
-		{"atest.toml", "test.toml", "toml", "", TOML, "stat test.toml: no such file or directory"},
-		{"test.yaml", "test.yaml", "yaml", "", UnsupportedCfgFormat, ""},
+		{"test.json", "test.json", "json", "test.cjsn", conf.JSON, ""},
+		{"test.json", "test.json", "json", "test.cjon", conf.JSON, ""},
+		{"test.cjson", "test.cjson", "json", "test.json", conf.JSON, ""},
+		{"test.tml", "test.tml", "toml", "test.toml", conf.TOML, ""},
+		{"atest.toml", "test.toml", "toml", "", conf.TOML, "stat test.toml: no such file or directory"},
+		{"test.yaml", "test.yaml", "yaml", "", conf.UnsupportedConfFormat, ""},
 	}
 
 	tmpDir, err := ioutil.TempDir("", "feedlotCfgTest")
@@ -885,7 +886,7 @@ func TestFindConfigFile(t *testing.T) {
 		return
 	}
 	b := []byte("this is a test")
-	contour.RegisterString(Format, "")
+	contour.RegisterString(conf.Format, "")
 	for i, test := range tests {
 		// create file
 		err := ioutil.WriteFile(filepath.Join(tmpDir, test.fName), b, 0777)
@@ -893,8 +894,8 @@ func TestFindConfigFile(t *testing.T) {
 			t.Errorf("an error occurred while creating temp file %s: %s", test.fName, err)
 			continue
 		}
-		contour.UpdateString(Format, test.cfgFormat)
-		name, format, err := findConfigFile(filepath.Join(tmpDir, test.findName))
+		contour.UpdateString(conf.Format, test.cfgFormat)
+		name, format, err := conf.ConfFilename(filepath.Join(tmpDir, test.findName))
 		if err != nil {
 			if err.Error() != test.expectedErr {
 				t.Errorf("%d: expected error to be %q got %q", i, test.expectedErr, err)

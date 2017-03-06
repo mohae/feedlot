@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/mohae/contour"
+	"github.com/mohae/feedlot/conf"
 )
 
 func TestNewArchive(t *testing.T) {
@@ -47,8 +48,8 @@ func TestPriorBuild(t *testing.T) {
 		{true, false, "test", []string{"test-0", "test-1", "test-2"}, nil}, // valid path
 		{true, true, "test", []string{}, nil},                              // valid path
 	}
-	egOrig := contour.GetBool(Example)
-	pbOrig := contour.GetBool(ArchivePriorBuild)
+	egOrig := contour.GetBool(conf.Example)
+	pbOrig := contour.GetBool(conf.ArchivePriorBuild)
 	for i, test := range tests {
 		var dir string
 		var files []string
@@ -61,8 +62,8 @@ func TestPriorBuild(t *testing.T) {
 			}
 		}
 		a := NewArchive(fmt.Sprintf("%s-%d", test.dir, i))
-		contour.UpdateBool(Example, test.example)
-		contour.UpdateBool(ArchivePriorBuild, test.archivePriorBuild)
+		contour.UpdateBool(conf.Example, test.example)
+		contour.UpdateBool(conf.ArchivePriorBuild, test.archivePriorBuild)
 		err = a.priorBuild(filepath.Join(dir, test.dir))
 		if err != nil {
 			if test.expectedErr == nil {
@@ -109,8 +110,8 @@ func TestPriorBuild(t *testing.T) {
 			}
 		}
 	}
-	contour.UpdateBool(Example, egOrig)
-	contour.UpdateBool(ArchivePriorBuild, pbOrig)
+	contour.UpdateBool(conf.Example, egOrig)
+	contour.UpdateBool(conf.ArchivePriorBuild, pbOrig)
 }
 
 func TestDirWalk(t *testing.T) {
