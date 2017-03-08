@@ -1,11 +1,12 @@
 package app
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
+	"unsafe"
 
 	"github.com/mohae/contour"
 	"github.com/mohae/feedlot/conf"
@@ -374,6 +375,15 @@ var testBuild = map[string]rawTemplate{
 			PostProcessorIDs: []string{
 				"vagrant",
 			},
+			PostProcessors: map[string]postProcessor{
+				"vagrant": {
+					templateSection{
+						Settings: []string{
+							"output = out/:build_name-packer.box",
+						},
+					},
+				},
+			},
 			ProvisionerIDs: []string{
 				"basic-shell",
 			},
@@ -404,26 +414,17 @@ var testBuildList = map[string]list{
 func TestBuildCopy(t *testing.T) {
 	tstTpl := testBuild["jessie"]
 	newBuild := tstTpl.build.Copy()
-	if fmt.Sprintf("%p", newBuild.BuilderIDs) == fmt.Sprintf("%p", tstTpl.build.BuilderIDs) {
-		t.Errorf("The pointer for BuilderTypes is the same for both newBuild and testBuild: %x, expected them to be different.", fmt.Sprintf("%p", tstTpl.build.BuilderIDs))
-		goto builderTypesEnd
+	msg, ok := EvalStringSlice(newBuild.BuilderIDs, tstTpl.BuilderIDs)
+	if !ok {
+		t.Errorf("BuilderIDs: %s", msg)
 	}
-	if len(newBuild.BuilderIDs) != len(tstTpl.BuilderIDs) {
-		t.Errorf("Expected newBuild.BuilderTypoes to have a length of %d; got %d", len(tstTpl.BuilderIDs), len(newBuild.BuilderIDs))
-		goto builderTypesEnd
-	}
-	for i, v := range tstTpl.BuilderIDs {
-		if v != newBuild.BuilderIDs[i] {
-			t.Errorf("Expected builder type at index %d to be %q; got %q", i, v, newBuild.BuilderIDs[i])
-		}
-	}
-builderTypesEnd:
-	if fmt.Sprintf("%p", newBuild.Builders) == fmt.Sprintf("%p", tstTpl.build.Builders) {
-		t.Errorf("The pointer for BuilderTypes is the same for both newBuild and testBuild: %x, expected them to be different.", fmt.Sprintf("%p", tstTpl.build.Builders))
+
+	if (*reflect.SliceHeader)(unsafe.Pointer(&newBuild.Builders)).Data == (*reflect.SliceHeader)(unsafe.Pointer(&tstTpl.build.Builders)).Data {
+		t.Errorf("The pointer for Builders is the same for both newBuild and testBuild: %x, expected them to be different.", (*reflect.SliceHeader)(unsafe.Pointer(&newBuild.Builders)).Data)
 		goto buildersEnd
 	}
 	if len(newBuild.Builders) != len(tstTpl.Builders) {
-		t.Errorf("Expected newBuild.BuilderTypoes to have a length of %d; got %d", len(tstTpl.Builders), len(newBuild.Builders))
+		t.Errorf("Expected newBuild.Builders to have a length of %d; got %d", len(tstTpl.Builders), len(newBuild.Builders))
 		goto buildersEnd
 	}
 	for k := range tstTpl.Builders {
@@ -432,19 +433,15 @@ builderTypesEnd:
 			t.Errorf("Expected %s to be a builder in the copy, but it wasn't", k)
 		}
 	}
+
 buildersEnd:
-	if len(newBuild.PostProcessorIDs) != len(tstTpl.PostProcessorIDs) {
-		t.Errorf("Expected newBuild.PostProcessorTypes to have a length of %d; got %d", len(tstTpl.PostProcessorIDs), len(newBuild.PostProcessorIDs))
-		goto postProcessorTypesEnd
+	msg, ok = EvalStringSlice(newBuild.PostProcessorIDs, tstTpl.PostProcessorIDs)
+	if !ok {
+		t.Errorf("PostProcessorIDs: %s", msg)
 	}
-	for i, v := range tstTpl.PostProcessorIDs {
-		if v != newBuild.PostProcessorIDs[i] {
-			t.Errorf("Expected PostProcessor type at index %d to be %q; got %q", i, v, newBuild.PostProcessorIDs[i])
-		}
-	}
-postProcessorTypesEnd:
-	if fmt.Sprintf("%p", newBuild.PostProcessors) == fmt.Sprintf("%p", tstTpl.build.PostProcessors) {
-		t.Errorf("The pointer for PostProcessors is the same for both newBuild and testBuild: %x, expected them to be different.", fmt.Sprintf("%p", tstTpl.build.PostProcessors))
+
+	if (*reflect.SliceHeader)(unsafe.Pointer(&newBuild.PostProcessors)).Data == (*reflect.SliceHeader)(unsafe.Pointer(&tstTpl.build.PostProcessors)).Data {
+		t.Errorf("The pointer for PostProcessors is the same for both newBuild and testBuild: %x, expected them to be different.", (*reflect.SliceHeader)(unsafe.Pointer(&newBuild.PostProcessors)).Data)
 		goto postProcessorsEnd
 	}
 	if len(newBuild.PostProcessors) != len(tstTpl.PostProcessors) {
@@ -454,26 +451,21 @@ postProcessorTypesEnd:
 	for k := range tstTpl.PostProcessors {
 		_, ok := newBuild.PostProcessors[k]
 		if !ok {
-			t.Errorf("Expected %s to be a PostProcessors in the copy, but it wasn't", k)
+			t.Errorf("Expected %s to be a PostProcessor in the copy, but it wasn't", k)
 		}
 	}
+
 postProcessorsEnd:
-	if len(newBuild.ProvisionerIDs) != len(tstTpl.ProvisionerIDs) {
-		t.Errorf("Expected newBuild.ProvisionerTypes to have a length of %d; got %d", len(tstTpl.ProvisionerIDs), len(newBuild.PostProcessorIDs))
-		goto provisionerTypesEnd
+	msg, ok = EvalStringSlice(newBuild.ProvisionerIDs, tstTpl.ProvisionerIDs)
+	if !ok {
+		t.Errorf("ProvisionerIDs: %s", msg)
 	}
-	for i, v := range tstTpl.ProvisionerIDs {
-		if v != newBuild.ProvisionerIDs[i] {
-			t.Errorf("Expected provisioner type at index %d to be %q; got %q", i, v, newBuild.ProvisionerIDs[i])
-		}
-	}
-provisionerTypesEnd:
-	if fmt.Sprintf("%p", newBuild.Provisioners) == fmt.Sprintf("%p", tstTpl.build.Provisioners) {
-		t.Errorf("The pointer for Provisioners is the same for both newBuild and testBuild: %x, expected them to be different.", fmt.Sprintf("%p", tstTpl.build.Provisioners))
-		goto provisionersEnd
+
+	if (*reflect.SliceHeader)(unsafe.Pointer(&newBuild.Provisioners)).Data == (*reflect.SliceHeader)(unsafe.Pointer(&tstTpl.build.Provisioners)).Data {
+		t.Errorf("The pointer for Provisioners is the same for both newBuild and testBuild: %x, expected them to be different.", (*reflect.SliceHeader)(unsafe.Pointer(&newBuild.Provisioners)))
 	}
 	if len(newBuild.Provisioners) != len(tstTpl.Provisioners) {
-		t.Errorf("Expected newBuild.Provisioners types to have a length of %d; got %d", len(tstTpl.Provisioners), len(newBuild.Provisioners))
+		t.Errorf("Expected newBuild.Provisioners to have a length of %d; got %d", len(tstTpl.Provisioners), len(newBuild.Provisioners))
 		goto provisionersEnd
 	}
 	for k := range tstTpl.Provisioners {
