@@ -56,7 +56,7 @@ func TestNewCommunicator(t *testing.T) {
 	}
 }
 
-var ssh = rawTemplate{
+var ssh = RawTemplate{
 	IODirInf: IODirInf{
 		TemplateOutputDir: "../test_files/ubuntu/out/ubuntu",
 		PackerOutputDir:   "boxes/:distro/:build_name",
@@ -75,16 +75,16 @@ var ssh = rawTemplate{
 	Arch:    "amd64",
 	Image:   "desktop",
 	Release: "12.04",
-	varVals: map[string]string{},
-	dirs:    map[string]string{},
-	files:   map[string]string{},
-	build: build{
+	VarVals: map[string]string{},
+	Dirs:    map[string]string{},
+	Files:   map[string]string{},
+	Build: Build{
 		BuilderIDs: []string{
 			"virtualbox-iso",
 		},
-		Builders: map[string]builder{
+		Builders: map[string]BuilderC{
 			"virtualbox-iso": {
-				templateSection{
+				TemplateSection{
 					Type: "virtualbox-iso",
 					Settings: []string{
 						"communicator=ssh",
@@ -139,7 +139,7 @@ func TestSSHCommunicator(t *testing.T) {
 	}
 }
 
-var winRM = rawTemplate{
+var winRM = RawTemplate{
 	IODirInf: IODirInf{
 		TemplateOutputDir: "../test_files/ubuntu/out/ubuntu",
 		PackerOutputDir:   "packer_boxes/ubuntu",
@@ -158,16 +158,16 @@ var winRM = rawTemplate{
 	Arch:    "amd64",
 	Image:   "desktop",
 	Release: "12.04",
-	varVals: map[string]string{},
-	dirs:    map[string]string{},
-	files:   map[string]string{},
-	build: build{
+	VarVals: map[string]string{},
+	Dirs:    map[string]string{},
+	Files:   map[string]string{},
+	Build: Build{
 		BuilderIDs: []string{
 			"virtualbox-iso",
 		},
-		Builders: map[string]builder{
+		Builders: map[string]BuilderC{
 			"virtualbox-iso": {
-				templateSection{
+				TemplateSection{
 					Type: "virtualbox-iso",
 					Settings: []string{
 						"communicator=winrm",
@@ -227,7 +227,7 @@ func TestProcessCommunicator(t *testing.T) {
 		{[]string{"communicator=WinRM", "winrm_username=vagrant"}, map[string]interface{}{"communicator": "winrm", "winrm_username": "vagrant"}, "winrm", ""},
 	}
 	for i, test := range tests {
-		r := rawTemplate{}
+		r := RawTemplate{}
 		settings := map[string]interface{}{}
 		prefix, err := r.processCommunicator(fmt.Sprintf("test %d", i), test.vals, settings)
 		if err != nil {

@@ -97,26 +97,26 @@ func ParseDistro(s string) Distro {
 var indent = "    "
 
 // Defined builds
-var Builds map[string]builds
+var BuildDefs map[string]Builds
 
 // Defaults for each supported distribution
 var DistroDefaults distroDefaults
 
 func init() {
-	Builds = map[string]builds{}
+	BuildDefs = map[string]Builds{}
 }
 
-// distroDefaults contains the defaults for all supported distros and a flag
+// DistroDefaults contains the defaults for all supported distros and a flag
 // whether its been set or not.
 type distroDefaults struct {
-	Templates map[Distro]rawTemplate
+	Templates map[Distro]RawTemplate
 	IsSet     bool
 }
 
 // GetTemplate returns a deep copy of the default template for the passed
 // distro name. If the distro does not exist, an error is returned.
-func (d *distroDefaults) GetTemplate(n string) (*rawTemplate, error) {
-	var t rawTemplate
+func (d *distroDefaults) GetTemplate(n string) (*RawTemplate, error) {
+	var t RawTemplate
 	var ok bool
 	t, ok = d.Templates[ParseDistro(n)]
 	if !ok {
@@ -129,7 +129,7 @@ func (d *distroDefaults) GetTemplate(n string) (*rawTemplate, error) {
 
 // Set sets the default templates for each distro.
 func (d *distroDefaults) Set() error {
-	dflts := &defaults{}
+	dflts := &Defaults{}
 	err := dflts.Load("")
 	if err != nil {
 		err = Error{slug: "set distro defaults", err: err}
@@ -144,16 +144,16 @@ func (d *distroDefaults) Set() error {
 		return err
 	}
 
-	s := &supported{}
+	s := &SupportedDistros{}
 	err = s.Load("")
 	if err != nil {
 		err = Error{slug: "set distro defaults", err: err}
 		log.Error(err)
 		return err
 	}
-	d.Templates = map[Distro]rawTemplate{}
+	d.Templates = map[Distro]RawTemplate{}
 	// Generate the default settings for each distro.
-	for k, v := range s.Distro {
+	for k, v := range s.Distros {
 		// See if the base url exists for non centos distros
 		// It isn't required for debian because automatic resolution of iso
 		// information is not supported.
@@ -238,12 +238,12 @@ func loadBuilds() error {
 		}
 		fname = filepath.Join(cDir, fname)
 		log.Debugf("loading build file %s", fname)
-		b := builds{}
+		b := Builds{}
 		err := b.Load(fname)
 		if err != nil {
 			return Error{slug: "load builds", err: err}
 		}
-		Builds[fname] = b
+		BuildDefs[fname] = b
 	}
 	log.Debug("builds loaded")
 	return nil

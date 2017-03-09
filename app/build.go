@@ -32,7 +32,7 @@ func BuildDistro() (string, error) {
 // Create Packer templates from specified build templates.
 // TODO: refactor to match updated handling
 func buildPackerTemplateFromDistro() (string, error) {
-	var rTpl *rawTemplate
+	var rTpl *RawTemplate
 	log.Info("creating template using distro defaults for " + contour.GetString("distro"))
 	// Get the default for this distro, if one isn't found then it isn't
 	// Supported.
@@ -67,7 +67,7 @@ func buildPackerTemplateFromDistro() (string, error) {
 	// Create the JSON version of the Packer template. This also handles
 	// creation of the build directory and copying all files that the Packer
 	// template needs to the build directory.
-	err = pTpl.create(rTpl.IODirInf, rTpl.BuildInf, rTpl.dirs, rTpl.files)
+	err = pTpl.create(rTpl.IODirInf, rTpl.BuildInf, rTpl.Dirs, rTpl.Files)
 	if err != nil {
 		log.Error(err)
 		return "", err
@@ -158,7 +158,7 @@ func buildPackerTemplateFromNamedBuild(name string, doneCh chan error) {
 		return
 	}
 	// See if the distro default exists.
-	rTpl := rawTemplate{}
+	rTpl := RawTemplate{}
 	rTpl, ok = DistroDefaults.Templates[ParseDistro(bTpl.Distro)]
 	if !ok {
 		doneCh <- fmt.Errorf("creation of Packer template for %s failed: %s not supported", name, bTpl.Distro)
@@ -180,7 +180,7 @@ func buildPackerTemplateFromNamedBuild(name string, doneCh chan error) {
 		doneCh <- err
 		return
 	}
-	err = pTpl.create(rTpl.IODirInf, rTpl.BuildInf, rTpl.dirs, rTpl.files)
+	err = pTpl.create(rTpl.IODirInf, rTpl.BuildInf, rTpl.Dirs, rTpl.Files)
 	if err != nil {
 		doneCh <- err
 		return

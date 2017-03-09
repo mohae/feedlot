@@ -44,10 +44,10 @@ func ParseCommunicator(s string) Communicator {
 	}
 }
 
-// comm is an interface for communicators.
+// Comm is an interface for communicators.
 type comm interface {
 	isCommunicator() bool
-	processSettings([]string, *rawTemplate, map[string]interface{}) error
+	processSettings([]string, *RawTemplate, map[string]interface{}) error
 }
 
 // NewCommunicator returns the communicator for s.  If the communicator is
@@ -109,7 +109,7 @@ func (s SSH) isCommunicator() bool {
 
 // ProcessSettings extracts the key value pairs that are relevant to the
 // SSH communicator.
-func (s SSH) processSettings(vals []string, r *rawTemplate, settings map[string]interface{}) error {
+func (s SSH) processSettings(vals []string, r *RawTemplate, settings map[string]interface{}) error {
 	for _, val := range vals {
 		k, v := parseVar(val)
 		v = r.replaceVariables(v)
@@ -187,7 +187,7 @@ func (w WinRM) isCommunicator() bool {
 
 // ProcessSettings extracts the key value pairs that are relevant to the
 // SSH communicator.
-func (w WinRM) processSettings(vals []string, r *rawTemplate, settings map[string]interface{}) error {
+func (w WinRM) processSettings(vals []string, r *RawTemplate, settings map[string]interface{}) error {
 	for _, val := range vals {
 		k, v := parseVar(val)
 		v = r.replaceVariables(v)
@@ -215,7 +215,7 @@ func (w WinRM) processSettings(vals []string, r *rawTemplate, settings map[strin
 	return nil
 }
 
-func (r *rawTemplate) processCommunicator(id string, vals []string, settings map[string]interface{}) (prefix string, err error) {
+func (r *RawTemplate) processCommunicator(id string, vals []string, settings map[string]interface{}) (prefix string, err error) {
 	var hasComm bool
 	var k, v string
 	for _, val := range vals {

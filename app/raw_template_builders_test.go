@@ -6,7 +6,7 @@ import (
 	"github.com/mohae/contour"
 )
 
-var testUbuntu = rawTemplate{
+var testUbuntu = RawTemplate{
 	IODirInf: IODirInf{
 		TemplateOutputDir: "../test_files/ubuntu/out/ubuntu",
 		PackerOutputDir:   "boxes/:distro/:build_name",
@@ -25,17 +25,17 @@ var testUbuntu = rawTemplate{
 	Arch:    "amd64",
 	Image:   "server",
 	Release: "14.04",
-	varVals: map[string]string{},
-	dirs:    map[string]string{},
-	files:   map[string]string{},
-	build: build{
+	VarVals: map[string]string{},
+	Dirs:    map[string]string{},
+	Files:   map[string]string{},
+	Build: Build{
 		BuilderIDs: []string{
 			"virtualbox-iso",
 			"vmware-iso",
 		},
-		Builders: map[string]builder{
+		Builders: map[string]BuilderC{
 			"common": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"boot_command = boot_test.command",
 						"boot_wait = 5s",
@@ -52,7 +52,7 @@ var testUbuntu = rawTemplate{
 				},
 			},
 			"virtualbox-iso": {
-				templateSection{
+				TemplateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
 							"cpus=1",
@@ -62,7 +62,7 @@ var testUbuntu = rawTemplate{
 				},
 			},
 			"vmware-iso": {
-				templateSection{
+				TemplateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
 							"cpuid.coresPerSocket=1",
@@ -76,9 +76,9 @@ var testUbuntu = rawTemplate{
 		PostProcessorIDs: []string{
 			"vagrant",
 		},
-		PostProcessors: map[string]postProcessor{
+		PostProcessors: map[string]PostProcessorC{
 			"vagrant": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"keep_input_artifact = false",
 						"output = out/someComposedBoxName.box",
@@ -89,9 +89,9 @@ var testUbuntu = rawTemplate{
 		ProvisionerIDs: []string{
 			"shell",
 		},
-		Provisioners: map[string]provisioner{
+		Provisioners: map[string]ProvisionerC{
 			"shell": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"execute_command = execute_test.command",
 					},
@@ -110,7 +110,7 @@ var testUbuntu = rawTemplate{
 	},
 }
 
-var testCentOS = rawTemplate{
+var testCentOS = RawTemplate{
 	IODirInf: IODirInf{
 		TemplateOutputDir: "../test_files/out/centos",
 		PackerOutputDir:   "boxes/:distro/:build_name",
@@ -129,19 +129,19 @@ var testCentOS = rawTemplate{
 	Arch:    "x86_64",
 	Image:   "minimal",
 	Release: "6",
-	varVals: map[string]string{},
-	dirs:    map[string]string{},
-	files:   map[string]string{},
-	build: build{
+	VarVals: map[string]string{},
+	Dirs:    map[string]string{},
+	Files:   map[string]string{},
+	Build: Build{
 		BuilderIDs: []string{
 			"virtualbox-iso",
 			"virtualbox-ovf",
 			"vmware-iso",
 			"vmware-vmx",
 		},
-		Builders: map[string]builder{
+		Builders: map[string]BuilderC{
 			"common": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"boot_command = boot_test.command",
 						"boot_wait = 5s",
@@ -157,7 +157,7 @@ var testCentOS = rawTemplate{
 				},
 			},
 			"virtualbox-iso": {
-				templateSection{
+				TemplateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
 							"--cpus=1",
@@ -167,7 +167,7 @@ var testCentOS = rawTemplate{
 				},
 			},
 			"virtualbox-ovf": {
-				templateSection{
+				TemplateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
 							"cpus=1",
@@ -177,7 +177,7 @@ var testCentOS = rawTemplate{
 				},
 			},
 			"vmware-iso": {
-				templateSection{
+				TemplateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
 							"cpuid.coresPerSocket=1",
@@ -188,7 +188,7 @@ var testCentOS = rawTemplate{
 				},
 			},
 			"vmware-vmx": {
-				templateSection{
+				TemplateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
 							"cpuid.coresPerSocket=1",
@@ -202,9 +202,9 @@ var testCentOS = rawTemplate{
 		PostProcessorIDs: []string{
 			"vagrant",
 		},
-		PostProcessors: map[string]postProcessor{
+		PostProcessors: map[string]PostProcessorC{
 			"vagrant": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"keep_input_artifact = false",
 						"output = out/someComposedBoxName.box",
@@ -216,9 +216,9 @@ var testCentOS = rawTemplate{
 			"shell",
 			"salt",
 		},
-		Provisioners: map[string]provisioner{
+		Provisioners: map[string]ProvisionerC{
 			"salt": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"local_state_tree = ~/saltstates/centos6/salt",
 						"skip_bootstrap = true",
@@ -226,7 +226,7 @@ var testCentOS = rawTemplate{
 				},
 			},
 			"shell": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"execute_command = execute_test.command",
 					},
@@ -247,7 +247,7 @@ var testCentOS = rawTemplate{
 
 // Not all the settings in are valid for winrm, the invalid ones should not be included in the
 // output.
-var testAllBuilders = rawTemplate{
+var testAllBuilders = RawTemplate{
 	IODirInf: IODirInf{
 		TemplateOutputDir: "../test_files/out",
 		PackerOutputDir:   "boxes/:distro/:build_name",
@@ -266,10 +266,10 @@ var testAllBuilders = rawTemplate{
 	Arch:    "amd64",
 	Image:   "server",
 	Release: "14.04",
-	varVals: map[string]string{},
-	dirs:    map[string]string{},
-	files:   map[string]string{},
-	build: build{
+	VarVals: map[string]string{},
+	Dirs:    map[string]string{},
+	Files:   map[string]string{},
+	Build: Build{
 		BuilderIDs: []string{
 			"amazon-ebs",
 			"amazon-instance",
@@ -286,9 +286,9 @@ var testAllBuilders = rawTemplate{
 			"vmware-iso",
 			"vmware-vmx",
 		},
-		Builders: map[string]builder{
+		Builders: map[string]BuilderC{
 			"common": {
-				templateSection{
+				TemplateSection{
 					Type: "common",
 					Settings: []string{
 						"boot_wait = 5s",
@@ -304,7 +304,7 @@ var testAllBuilders = rawTemplate{
 				},
 			},
 			"amazon-chroot": {
-				templateSection{
+				TemplateSection{
 					Type: "amazon-chroot",
 					Settings: []string{
 						"access_key=AWS_ACCESS_KEY",
@@ -354,7 +354,7 @@ var testAllBuilders = rawTemplate{
 				},
 			},
 			"amazon-ebs": {
-				templateSection{
+				TemplateSection{
 					Type: "amazon-ebs",
 					Settings: []string{
 						"access_key=AWS_ACCESS_KEY",
@@ -429,7 +429,7 @@ var testAllBuilders = rawTemplate{
 				},
 			},
 			"amazon-instance": {
-				templateSection{
+				TemplateSection{
 					Type: "amazon-instance",
 					Settings: []string{
 						"access_key=AWS_ACCESS_KEY",
@@ -525,7 +525,7 @@ var testAllBuilders = rawTemplate{
 				},
 			},
 			"digitalocean": {
-				templateSection{
+				TemplateSection{
 					Type: "digitalocean",
 					Settings: []string{
 						"api_token=DIGITALOCEAN_API_TOKEN",
@@ -541,7 +541,7 @@ var testAllBuilders = rawTemplate{
 				},
 			},
 			"docker": {
-				templateSection{
+				TemplateSection{
 					Type: "docker",
 					Settings: []string{
 						"commit=true",
@@ -571,7 +571,7 @@ var testAllBuilders = rawTemplate{
 				},
 			},
 			"googlecompute": {
-				templateSection{
+				TemplateSection{
 					Type: "googlecompute",
 					Settings: []string{
 						"account_file=account.json",
@@ -601,14 +601,14 @@ var testAllBuilders = rawTemplate{
 				},
 			},
 			"null": {
-				templateSection{
+				TemplateSection{
 					Type:     "null",
 					Settings: []string{},
 					Arrays:   map[string]interface{}{},
 				},
 			},
 			"openstack1": {
-				templateSection{
+				TemplateSection{
 					Type: "openstack",
 					Settings: []string{
 						"api_key=APIKEY",
@@ -643,7 +643,7 @@ var testAllBuilders = rawTemplate{
 				},
 			},
 			"openstack2": {
-				templateSection{
+				TemplateSection{
 					Type: "openstack",
 					Settings: []string{
 						"api_key=APIKEY",
@@ -678,7 +678,7 @@ var testAllBuilders = rawTemplate{
 				},
 			},
 			"parallels-iso": {
-				templateSection{
+				TemplateSection{
 					Type: "parallels-iso",
 					Settings: []string{
 						"boot_wait=30s",
@@ -725,7 +725,7 @@ var testAllBuilders = rawTemplate{
 				},
 			},
 			"parallels-pvm": {
-				templateSection{
+				TemplateSection{
 					Type: "parallels-pvm",
 					Settings: []string{
 						"boot_wait=30s",
@@ -769,7 +769,7 @@ var testAllBuilders = rawTemplate{
 				},
 			},
 			"qemu": {
-				templateSection{
+				TemplateSection{
 					Type: "qemu",
 					Settings: []string{
 						"accelerator=kvm",
@@ -821,7 +821,7 @@ var testAllBuilders = rawTemplate{
 				},
 			},
 			"virtualbox-iso": {
-				templateSection{
+				TemplateSection{
 					Type: "virtualbox-iso",
 					Settings: []string{
 						"format = ovf",
@@ -872,7 +872,7 @@ var testAllBuilders = rawTemplate{
 				},
 			},
 			"virtualbox-ovf": {
-				templateSection{
+				TemplateSection{
 					Type: "virtualbox-ovf",
 					Settings: []string{
 						"format = ovf",
@@ -923,7 +923,7 @@ var testAllBuilders = rawTemplate{
 				},
 			},
 			"vmware-iso": {
-				templateSection{
+				TemplateSection{
 					Type: "vmware-iso",
 					Settings: []string{
 						"communicator=none",
@@ -983,7 +983,7 @@ var testAllBuilders = rawTemplate{
 				},
 			},
 			"vmware-vmx": {
-				templateSection{
+				TemplateSection{
 					Type: "vmware-vmx",
 					Settings: []string{
 						"fusion_app_path=/Applications/VMware Fusion.app",
@@ -1023,9 +1023,9 @@ var testAllBuilders = rawTemplate{
 		PostProcessorIDs: []string{
 			"vagrant",
 		},
-		PostProcessors: map[string]postProcessor{
+		PostProcessors: map[string]PostProcessorC{
 			"vagrant": {
-				templateSection{
+				TemplateSection{
 					Type: "vagrant",
 					Settings: []string{
 						"keep_input_artifact = false",
@@ -1037,9 +1037,9 @@ var testAllBuilders = rawTemplate{
 		ProvisionerIDs: []string{
 			"salt",
 		},
-		Provisioners: map[string]provisioner{
+		Provisioners: map[string]ProvisionerC{
 			"salt": {
-				templateSection{
+				TemplateSection{
 					Type: "salt",
 					Settings: []string{
 						"local_state_tree = ~/saltstates/centos6/salt",
@@ -1053,7 +1053,7 @@ var testAllBuilders = rawTemplate{
 
 // Not all the settings in are valid for winrm, the invalid ones should not be included in the
 // output.
-var testAllBuildersSSH = rawTemplate{
+var testAllBuildersSSH = RawTemplate{
 	IODirInf: IODirInf{
 		TemplateOutputDir: "../test_files/out",
 		PackerOutputDir:   "boxes/:distro/:build_name",
@@ -1072,10 +1072,10 @@ var testAllBuildersSSH = rawTemplate{
 	Arch:    "amd64",
 	Image:   "server",
 	Release: "14.04",
-	varVals: map[string]string{},
-	dirs:    map[string]string{},
-	files:   map[string]string{},
-	build: build{
+	VarVals: map[string]string{},
+	Dirs:    map[string]string{},
+	Files:   map[string]string{},
+	Build: Build{
 		BuilderIDs: []string{
 			"amazon-ebs",
 			"amazon-instance",
@@ -1091,9 +1091,9 @@ var testAllBuildersSSH = rawTemplate{
 			"vmware-iso",
 			"vmware-vmx",
 		},
-		Builders: map[string]builder{
+		Builders: map[string]BuilderC{
 			"common": {
-				templateSection{
+				TemplateSection{
 					Type: "common",
 					Settings: []string{
 						"boot_wait = 5s",
@@ -1120,7 +1120,7 @@ var testAllBuildersSSH = rawTemplate{
 				},
 			},
 			"amazon-chroot": {
-				templateSection{
+				TemplateSection{
 					Type: "amazon-chroot",
 					Settings: []string{
 						"access_key=AWS_ACCESS_KEY",
@@ -1139,7 +1139,7 @@ var testAllBuildersSSH = rawTemplate{
 				},
 			},
 			"amazon-ebs": {
-				templateSection{
+				TemplateSection{
 					Type: "amazon-ebs",
 					Settings: []string{
 						"access_key=AWS_ACCESS_KEY",
@@ -1171,7 +1171,7 @@ var testAllBuildersSSH = rawTemplate{
 				},
 			},
 			"amazon-instance": {
-				templateSection{
+				TemplateSection{
 					Type: "amazon-instance",
 					Settings: []string{
 						"access_key=AWS_ACCESS_KEY",
@@ -1216,7 +1216,7 @@ var testAllBuildersSSH = rawTemplate{
 				},
 			},
 			"digitalocean": {
-				templateSection{
+				TemplateSection{
 					Type: "digitalocean",
 					Settings: []string{
 						"api_token=DIGITALOCEAN_API_TOKEN",
@@ -1233,7 +1233,7 @@ var testAllBuildersSSH = rawTemplate{
 				},
 			},
 			"docker": {
-				templateSection{
+				TemplateSection{
 					Type: "docker",
 					Settings: []string{
 						"commit=true",
@@ -1252,7 +1252,7 @@ var testAllBuildersSSH = rawTemplate{
 				},
 			},
 			"googlecompute": {
-				templateSection{
+				TemplateSection{
 					Type: "googlecompute",
 					Settings: []string{
 						"account_file=account.json",
@@ -1275,7 +1275,7 @@ var testAllBuildersSSH = rawTemplate{
 				},
 			},
 			"null": {
-				templateSection{
+				TemplateSection{
 					Type: "null",
 					Settings: []string{
 						"communicator=ssh",
@@ -1284,7 +1284,7 @@ var testAllBuildersSSH = rawTemplate{
 				},
 			},
 			"openstack": {
-				templateSection{
+				TemplateSection{
 					Type: "openstack",
 					Settings: []string{
 						"api_key=APIKEY",
@@ -1309,7 +1309,7 @@ var testAllBuildersSSH = rawTemplate{
 				},
 			},
 			"parallels-iso": {
-				templateSection{
+				TemplateSection{
 					Type: "parallels-iso",
 					Settings: []string{
 						"boot_wait=30s",
@@ -1336,7 +1336,7 @@ var testAllBuildersSSH = rawTemplate{
 				},
 			},
 			"parallels-pvm": {
-				templateSection{
+				TemplateSection{
 					Type: "parallels-pvm",
 					Settings: []string{
 						"boot_wait=30s",
@@ -1359,7 +1359,7 @@ var testAllBuildersSSH = rawTemplate{
 				},
 			},
 			"qemu": {
-				templateSection{
+				TemplateSection{
 					Type: "qemu",
 					Settings: []string{
 						"accelerator=kvm",
@@ -1389,7 +1389,7 @@ var testAllBuildersSSH = rawTemplate{
 				},
 			},
 			"virtualbox-iso": {
-				templateSection{
+				TemplateSection{
 					Type: "virtualbox-iso",
 					Settings: []string{
 						"communicator=ssh",
@@ -1418,7 +1418,7 @@ var testAllBuildersSSH = rawTemplate{
 				},
 			},
 			"virtualbox-ovf": {
-				templateSection{
+				TemplateSection{
 					Type: "virtualbox-ovf",
 					Settings: []string{
 						"communicator=ssh",
@@ -1447,7 +1447,7 @@ var testAllBuildersSSH = rawTemplate{
 				},
 			},
 			"vmware-iso": {
-				templateSection{
+				TemplateSection{
 					Type: "vmware-iso",
 					Settings: []string{
 						"communicator=ssh",
@@ -1485,7 +1485,7 @@ var testAllBuildersSSH = rawTemplate{
 				},
 			},
 			"vmware-vmx": {
-				templateSection{
+				TemplateSection{
 					Type: "vmware-vmx",
 					Settings: []string{
 						"communicator=ssh",
@@ -1510,7 +1510,7 @@ var testAllBuildersSSH = rawTemplate{
 
 // Not all the settings in are valid for winrm, the invalid ones should not be included in the
 // output.
-var testAllBuildersWinRM = rawTemplate{
+var testAllBuildersWinRM = RawTemplate{
 	IODirInf: IODirInf{
 		TemplateOutputDir: "../test_files/out",
 		PackerOutputDir:   "boxes/:distro/:build_name",
@@ -1529,10 +1529,10 @@ var testAllBuildersWinRM = rawTemplate{
 	Arch:    "amd64",
 	Image:   "server",
 	Release: "14.04",
-	varVals: map[string]string{},
-	dirs:    map[string]string{},
-	files:   map[string]string{},
-	build: build{
+	VarVals: map[string]string{},
+	Dirs:    map[string]string{},
+	Files:   map[string]string{},
+	Build: Build{
 		BuilderIDs: []string{
 			"amazon-ebs",
 			"amazon-instance",
@@ -1548,9 +1548,9 @@ var testAllBuildersWinRM = rawTemplate{
 			"vmware-iso",
 			"vmware-vmx",
 		},
-		Builders: map[string]builder{
+		Builders: map[string]BuilderC{
 			"common": {
-				templateSection{
+				TemplateSection{
 					Type: "common",
 					Settings: []string{
 						"boot_wait = 5s",
@@ -1570,7 +1570,7 @@ var testAllBuildersWinRM = rawTemplate{
 				},
 			},
 			"amazon-chroot": {
-				templateSection{
+				TemplateSection{
 					Type: "amazon-chroot",
 					Settings: []string{
 						"access_key=AWS_ACCESS_KEY",
@@ -1589,7 +1589,7 @@ var testAllBuildersWinRM = rawTemplate{
 				},
 			},
 			"amazon-ebs": {
-				templateSection{
+				TemplateSection{
 					Type: "amazon-ebs",
 					Settings: []string{
 						"access_key=AWS_ACCESS_KEY",
@@ -1621,7 +1621,7 @@ var testAllBuildersWinRM = rawTemplate{
 				},
 			},
 			"amazon-instance": {
-				templateSection{
+				TemplateSection{
 					Type: "amazon-instance",
 					Settings: []string{
 						"access_key=AWS_ACCESS_KEY",
@@ -1666,7 +1666,7 @@ var testAllBuildersWinRM = rawTemplate{
 				},
 			},
 			"digitalocean": {
-				templateSection{
+				TemplateSection{
 					Type: "digitalocean",
 					Settings: []string{
 						"api_token=DIGITALOCEAN_API_TOKEN",
@@ -1683,7 +1683,7 @@ var testAllBuildersWinRM = rawTemplate{
 				},
 			},
 			"docker": {
-				templateSection{
+				TemplateSection{
 					Type: "docker",
 					Settings: []string{
 						"commit=true",
@@ -1702,7 +1702,7 @@ var testAllBuildersWinRM = rawTemplate{
 				},
 			},
 			"googlecompute": {
-				templateSection{
+				TemplateSection{
 					Type: "googlecompute",
 					Settings: []string{
 						"account_file=account.json",
@@ -1725,7 +1725,7 @@ var testAllBuildersWinRM = rawTemplate{
 				},
 			},
 			"null": {
-				templateSection{
+				TemplateSection{
 					Type: "null",
 					Settings: []string{
 						"communicator=winrm",
@@ -1734,7 +1734,7 @@ var testAllBuildersWinRM = rawTemplate{
 				},
 			},
 			"openstack": {
-				templateSection{
+				TemplateSection{
 					Type: "openstack",
 					Settings: []string{
 						"api_key=APIKEY",
@@ -1759,7 +1759,7 @@ var testAllBuildersWinRM = rawTemplate{
 				},
 			},
 			"parallels-iso": {
-				templateSection{
+				TemplateSection{
 					Type: "parallels-iso",
 					Settings: []string{
 						"boot_wait=30s",
@@ -1785,7 +1785,7 @@ var testAllBuildersWinRM = rawTemplate{
 				},
 			},
 			"parallels-pvm": {
-				templateSection{
+				TemplateSection{
 					Type: "parallels-pvm",
 					Settings: []string{
 						"boot_wait=30s",
@@ -1807,7 +1807,7 @@ var testAllBuildersWinRM = rawTemplate{
 				},
 			},
 			"qemu": {
-				templateSection{
+				TemplateSection{
 					Type: "qemu",
 					Settings: []string{
 						"accelerator=kvm",
@@ -1837,7 +1837,7 @@ var testAllBuildersWinRM = rawTemplate{
 				},
 			},
 			"virtualbox-iso": {
-				templateSection{
+				TemplateSection{
 					Type: "virtualbox-iso",
 					Settings: []string{
 						"communicator=winrm",
@@ -1867,7 +1867,7 @@ var testAllBuildersWinRM = rawTemplate{
 				},
 			},
 			"virtualbox-ovf": {
-				templateSection{
+				TemplateSection{
 					Type: "virtualbox-ovf",
 					Settings: []string{
 						"communicator=winrm",
@@ -1895,7 +1895,7 @@ var testAllBuildersWinRM = rawTemplate{
 				},
 			},
 			"vmware-iso": {
-				templateSection{
+				TemplateSection{
 					Type: "vmware-iso",
 					Settings: []string{
 						"communicator=winrm",
@@ -1933,7 +1933,7 @@ var testAllBuildersWinRM = rawTemplate{
 				},
 			},
 			"vmware-vmx": {
-				templateSection{
+				TemplateSection{
 					Type: "vmware-vmx",
 					Settings: []string{
 						"communicator=winrm",
@@ -1956,7 +1956,7 @@ var testAllBuildersWinRM = rawTemplate{
 	},
 }
 
-var testDockerRunComandFile = rawTemplate{
+var testDockerRunComandFile = RawTemplate{
 	IODirInf: IODirInf{
 		TemplateOutputDir: "../test_files/out",
 		PackerOutputDir:   "boxes/:distro/:build_name",
@@ -1975,16 +1975,16 @@ var testDockerRunComandFile = rawTemplate{
 	Arch:    "amd64",
 	Image:   "minimal",
 	Release: "14.04",
-	varVals: map[string]string{},
-	dirs:    map[string]string{},
-	files:   map[string]string{},
-	build: build{
+	VarVals: map[string]string{},
+	Dirs:    map[string]string{},
+	Files:   map[string]string{},
+	Build: Build{
 		BuilderIDs: []string{
 			"docker",
 		},
-		Builders: map[string]builder{
+		Builders: map[string]BuilderC{
 			"docker": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"commit=true",
 						"discard=false",
@@ -2007,7 +2007,7 @@ var testDockerRunComandFile = rawTemplate{
 
 // This should still result in only 1 command array, using the array value and not the
 // file
-var testDockerRunComand = rawTemplate{
+var testDockerRunComand = RawTemplate{
 	IODirInf: IODirInf{
 		TemplateOutputDir: "../test_files/out",
 		PackerOutputDir:   "boxes/:distro/:build_name",
@@ -2026,16 +2026,16 @@ var testDockerRunComand = rawTemplate{
 	Arch:    "amd64",
 	Image:   "minimal",
 	Release: "14.04",
-	varVals: map[string]string{},
-	dirs:    map[string]string{},
-	files:   map[string]string{},
-	build: build{
+	VarVals: map[string]string{},
+	Dirs:    map[string]string{},
+	Files:   map[string]string{},
+	Build: Build{
 		BuilderIDs: []string{
 			"docker",
 		},
-		Builders: map[string]builder{
+		Builders: map[string]BuilderC{
 			"docker": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"commit=true",
 						"discard=false",
@@ -2063,9 +2063,9 @@ var testDockerRunComand = rawTemplate{
 		},
 	},
 }
-var builderOrig = map[string]builder{
+var builderOrig = map[string]BuilderC{
 	"common": {
-		templateSection{
+		TemplateSection{
 			Settings: []string{
 				"boot_command = boot_test.command",
 				"boot_wait = 5s",
@@ -2082,7 +2082,7 @@ var builderOrig = map[string]builder{
 		},
 	},
 	"virtualbox-iso": {
-		templateSection{
+		TemplateSection{
 			Arrays: map[string]interface{}{
 				"vm_settings": []string{
 					"cpus=1",
@@ -2092,7 +2092,7 @@ var builderOrig = map[string]builder{
 		},
 	},
 	"vmware-iso": {
-		templateSection{
+		TemplateSection{
 			Arrays: map[string]interface{}{
 				"vm_settings": []string{
 					"cpuid.coresPerSocket=1",
@@ -2104,9 +2104,9 @@ var builderOrig = map[string]builder{
 	},
 }
 
-var builderNew = map[string]builder{
+var builderNew = map[string]BuilderC{
 	"common": {
-		templateSection{
+		TemplateSection{
 			Settings: []string{
 				"boot_command = boot_test.command",
 				"boot_wait = 15s",
@@ -2122,7 +2122,7 @@ var builderNew = map[string]builder{
 		},
 	},
 	"virtualbox-iso": {
-		templateSection{
+		TemplateSection{
 			Arrays: map[string]interface{}{
 				"vm_settings": []string{
 					"cpus=1",
@@ -2133,9 +2133,9 @@ var builderNew = map[string]builder{
 	},
 }
 
-var builderMerged = map[string]builder{
+var builderMerged = map[string]BuilderC{
 	"common": {
-		templateSection{
+		TemplateSection{
 			Settings: []string{
 				"boot_command = boot_test.command",
 				"boot_wait = 15s",
@@ -2152,7 +2152,7 @@ var builderMerged = map[string]builder{
 		},
 	},
 	"virtualbox-iso": {
-		templateSection{
+		TemplateSection{
 			Arrays: map[string]interface{}{
 				"vm_settings": []string{
 					"cpus=1",
@@ -2162,7 +2162,7 @@ var builderMerged = map[string]builder{
 		},
 	},
 	"vmware-iso": {
-		templateSection{
+		TemplateSection{
 			Arrays: map[string]interface{}{
 				"vm_settings": []string{
 					"cpuid.coresPerSocket=1",
@@ -2174,8 +2174,8 @@ var builderMerged = map[string]builder{
 	},
 }
 
-var vbB = builder{
-	templateSection{
+var vbB = BuilderC{
+	TemplateSection{
 		Settings: []string{
 			"boot_wait=5s",
 			"disk_size = 20000",
@@ -2219,7 +2219,7 @@ func TestCreateBuilders(t *testing.T) {
 	}
 
 	xerr.Builder = DigitalOcean
-	testRawTemplateWOSection.build.BuilderIDs[0] = "digitalocean"
+	testRawTemplateWOSection.Build.BuilderIDs[0] = "digitalocean"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
 		t.Errorf("Expected %s, got nil", xerr)
@@ -2230,7 +2230,7 @@ func TestCreateBuilders(t *testing.T) {
 	}
 
 	xerr.Builder = Docker
-	testRawTemplateWOSection.build.BuilderIDs[0] = "docker"
+	testRawTemplateWOSection.Build.BuilderIDs[0] = "docker"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
 		t.Errorf("Expected %s, got nil", xerr)
@@ -2241,7 +2241,7 @@ func TestCreateBuilders(t *testing.T) {
 	}
 
 	xerr.Builder = GoogleCompute
-	testRawTemplateWOSection.build.BuilderIDs[0] = "googlecompute"
+	testRawTemplateWOSection.Build.BuilderIDs[0] = "googlecompute"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
 		t.Errorf("Expected %s, got nil", xerr)
@@ -2252,7 +2252,7 @@ func TestCreateBuilders(t *testing.T) {
 	}
 
 	xerr.Builder = VirtualBoxISO
-	testRawTemplateWOSection.build.BuilderIDs[0] = "virtualbox-iso"
+	testRawTemplateWOSection.Build.BuilderIDs[0] = "virtualbox-iso"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
 		t.Errorf("Expected %s, got nil", xerr)
@@ -2263,7 +2263,7 @@ func TestCreateBuilders(t *testing.T) {
 	}
 
 	xerr.Builder = VirtualBoxOVF
-	testRawTemplateWOSection.build.BuilderIDs[0] = "virtualbox-ovf"
+	testRawTemplateWOSection.Build.BuilderIDs[0] = "virtualbox-ovf"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
 		t.Errorf("Expected %s, got nil", xerr)
@@ -2274,7 +2274,7 @@ func TestCreateBuilders(t *testing.T) {
 	}
 
 	xerr.Builder = VMWareISO
-	testRawTemplateWOSection.build.BuilderIDs[0] = "vmware-iso"
+	testRawTemplateWOSection.Build.BuilderIDs[0] = "vmware-iso"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
 		t.Errorf("Expected %s, got nil", xerr)
@@ -2285,7 +2285,7 @@ func TestCreateBuilders(t *testing.T) {
 	}
 
 	xerr.Builder = VMWareVMX
-	testRawTemplateWOSection.build.BuilderIDs[0] = "vmware-vmx"
+	testRawTemplateWOSection.Build.BuilderIDs[0] = "vmware-vmx"
 	_, err = testRawTemplateWOSection.createBuilders()
 	if err == nil {
 		t.Errorf("Expected %s, got nil", xerr)
@@ -4114,7 +4114,7 @@ func TestCreateVirtualboxOVF(t *testing.T) {
 		"virtualbox_version_file": ".vbox_version",
 		"vm_name":                 "test-vb-ovf",
 	}
-	testAllBuilders.files = make(map[string]string)
+	testAllBuilders.Files = make(map[string]string)
 	settings, err := testAllBuilders.createVirtualBoxOVF("virtualbox-ovf")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
@@ -4525,7 +4525,7 @@ func TestCreateVMWareVMX(t *testing.T) {
 }
 
 func TestDeepCopyMapStringBuilder(t *testing.T) {
-	cpy := DeepCopyMapStringBuilder(testDistroDefaults.Templates[Ubuntu].Builders)
+	cpy := DeepCopyMapStringBuilderC(testDistroDefaults.Templates[Ubuntu].Builders)
 	if MarshalJSONToString.Get(cpy["common"]) != MarshalJSONToString.Get(testDistroDefaults.Templates[Ubuntu].Builders["common"]) {
 		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testDistroDefaults.Templates[Ubuntu].Builders["common"]), MarshalJSONToString.Get(cpy["common"]))
 	}

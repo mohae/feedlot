@@ -60,8 +60,8 @@ func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
 }
 
-// Iso image information
-type iso struct {
+// ISO image information
+type ISO struct {
 	// The baseURL for download url formation. Usage of this is distro
 	// specific.
 	BaseURL string
@@ -75,11 +75,11 @@ type iso struct {
 	Name string
 }
 
-func (i iso) imageURL() string {
+func (i ISO) imageURL() string {
 	return fmt.Sprintf("%s%s", i.ReleaseURL, i.Name)
 }
 
-type releaser interface {
+type Releaser interface {
 	SetISOInfo() error
 	setISOChecksum() error
 	setReleaseURL()
@@ -89,7 +89,7 @@ type releaser interface {
 // Release information. Usage of Release and ReleaseFull, along with what
 // constitutes valid values, are distro dependent.
 type release struct {
-	iso
+	ISO
 	Arch         string // iso architecture
 	Distro       string // iso distro
 	Image        string // iso image
@@ -573,7 +573,7 @@ func (r *debian) setReleaseInfo(s string) error {
 	return nil
 }
 
-// An Ubuntu specific wrapper to release
+// An Ubuntu specific wrapper to Release
 type ubuntu struct {
 	release
 }

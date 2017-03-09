@@ -6,7 +6,7 @@ import (
 
 // TODO rewrite with refactor
 func TestCreate(t *testing.T) {
-	p := packerTemplate{}
+	p := PackerTemplate{}
 	//	var scripts map[string]string
 	//	b := BuildInf{BuildName: "test build"}
 	//	i := IODirInf{}

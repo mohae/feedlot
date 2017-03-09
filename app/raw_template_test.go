@@ -8,9 +8,9 @@ import (
 
 var testRawTpl = newRawTemplate()
 
-var updatedBuilders = map[string]builder{
+var updatedBuilders = map[string]BuilderC{
 	"common": {
-		templateSection{
+		TemplateSection{
 			Type: "common",
 			Settings: []string{
 				"ssh_wait_timeout = 300m",
@@ -18,9 +18,8 @@ var updatedBuilders = map[string]builder{
 		},
 	},
 	"virtualbox-iso": {
-		templateSection{
-			Type:     "virtualbox-iso",
-			Settings: []string{},
+		TemplateSection{
+			Type: "virtualbox-iso",
 			Arrays: map[string]interface{}{
 				"vm_settings": []string{
 					"memory=4096",
@@ -30,9 +29,9 @@ var updatedBuilders = map[string]builder{
 	},
 }
 
-var comparePostProcessors = map[string]postProcessor{
+var comparePostProcessors = map[string]PostProcessorC{
 	"vagrant": {
-		templateSection{
+		TemplateSection{
 			Type: "vagrant",
 			Settings: []string{
 				"output = :out_dir/packer.box",
@@ -48,7 +47,7 @@ var comparePostProcessors = map[string]postProcessor{
 		},
 	},
 	"vagrant-cloud": {
-		templateSection{
+		TemplateSection{
 			Type: "vagrant-cloud",
 			Settings: []string{
 				"access_token = getAValidTokenFrom-VagrantCloud.com",
@@ -56,14 +55,13 @@ var comparePostProcessors = map[string]postProcessor{
 				"no_release = false",
 				"version = 1.0.2",
 			},
-			Arrays: map[string]interface{}{},
 		},
 	},
 }
 
-var compareProvisioners = map[string]provisioner{
+var compareProvisioners = map[string]ProvisionerC{
 	"shell": {
-		templateSection{
+		TemplateSection{
 			Type: "shell",
 			Settings: []string{
 				"execute_command = execute_test.command",
@@ -85,7 +83,7 @@ var compareProvisioners = map[string]provisioner{
 	},
 }
 
-var testBuildNewTPL = &rawTemplate{
+var testBuildNewTPL = &RawTemplate{
 	PackerInf: PackerInf{
 		Description: "Test build new template",
 	},
@@ -93,16 +91,16 @@ var testBuildNewTPL = &rawTemplate{
 	Arch:    "amd64",
 	Image:   "server",
 	Release: "12.04",
-	varVals: map[string]string{},
-	dirs:    map[string]string{},
-	files:   map[string]string{},
-	build: build{
+	VarVals: map[string]string{},
+	Dirs:    map[string]string{},
+	Files:   map[string]string{},
+	Build: Build{
 		BuilderIDs: []string{
 			"virtualbox-iso",
 		},
-		Builders: map[string]builder{
+		Builders: map[string]BuilderC{
 			"common": {
-				templateSection{
+				TemplateSection{
 					Type: "common",
 					Settings: []string{
 						"ssh_wait_timeout = 300m",
@@ -110,7 +108,7 @@ var testBuildNewTPL = &rawTemplate{
 				},
 			},
 			"virtualbox-iso": {
-				templateSection{
+				TemplateSection{
 					Type: "virtualbox-iso",
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
@@ -124,9 +122,9 @@ var testBuildNewTPL = &rawTemplate{
 			"vagrant",
 			"vagrant-cloud",
 		},
-		PostProcessors: map[string]postProcessor{
+		PostProcessors: map[string]PostProcessorC{
 			"vagrant": {
-				templateSection{
+				TemplateSection{
 					Type: "vagrant",
 					Settings: []string{
 						"output = :out_dir/packer.box",
@@ -142,7 +140,7 @@ var testBuildNewTPL = &rawTemplate{
 				},
 			},
 			"vagrant-cloud": {
-				templateSection{
+				TemplateSection{
 					Type: "vagrant-cloud",
 					Settings: []string{
 						"access_token = getAValidTokenFrom-VagrantCloud.com",
@@ -156,9 +154,9 @@ var testBuildNewTPL = &rawTemplate{
 		ProvisionerIDs: []string{
 			"shell",
 		},
-		Provisioners: map[string]provisioner{
+		Provisioners: map[string]ProvisionerC{
 			"shell": {
-				templateSection{
+				TemplateSection{
 					Type: "shell",
 					Settings: []string{
 						"execute_command = execute_test.command",
@@ -190,7 +188,7 @@ var expecteNewTemplateBuildInf = BuildInf{
 	Country:   &country,
 }
 
-var testRawTemplateBuilderOnly = &rawTemplate{
+var testRawTemplateBuilderOnly = &RawTemplate{
 	PackerInf: PackerInf{MinPackerVersion: "0.4.0", Description: "Test supported distribution template"},
 	IODirInf: IODirInf{
 		TemplateOutputDir: "../test_files/out/:distro/:build_name",
@@ -202,19 +200,19 @@ var testRawTemplateBuilderOnly = &rawTemplate{
 		BuildName: "",
 		BaseURL:   "http://releases.ubuntu.org/",
 	},
-	date:    today,
-	delim:   ":",
+	Date:    today,
+	Delim:   ":",
 	Distro:  "ubuntu",
 	Arch:    "amd64",
 	Image:   "server",
 	Release: "12.04",
-	varVals: map[string]string{},
-	dirs:    map[string]string{},
-	files:   map[string]string{},
-	build:   build{},
+	VarVals: map[string]string{},
+	Dirs:    map[string]string{},
+	Files:   map[string]string{},
+	Build:   Build{},
 }
 
-var testRawTemplateWOSection = &rawTemplate{
+var testRawTemplateWOSection = &RawTemplate{
 	PackerInf: PackerInf{MinPackerVersion: "0.4.0", Description: "Test supported distribution template"},
 	IODirInf: IODirInf{
 		TemplateOutputDir: "../test_files/out/:distro/:build_name",
@@ -226,22 +224,22 @@ var testRawTemplateWOSection = &rawTemplate{
 		BuildName: "",
 		BaseURL:   "http://releases.ubuntu.org/",
 	},
-	date:    today,
-	delim:   ":",
+	Date:    today,
+	Delim:   ":",
 	Distro:  "ubuntu",
 	Arch:    "amd64",
 	Image:   "server",
 	Release: "12.04",
-	varVals: map[string]string{},
-	dirs:    map[string]string{},
-	files:   map[string]string{},
-	build: build{
+	VarVals: map[string]string{},
+	Dirs:    map[string]string{},
+	Files:   map[string]string{},
+	Build: Build{
 		BuilderIDs:       []string{"amazon-ebs"},
-		Builders:         map[string]builder{},
+		Builders:         map[string]BuilderC{},
 		PostProcessorIDs: []string{"compress"},
-		PostProcessors:   map[string]postProcessor{},
+		PostProcessors:   map[string]PostProcessorC{},
 		ProvisionerIDs:   []string{"ansible-local"},
-		Provisioners:     map[string]provisioner{},
+		Provisioners:     map[string]ProvisionerC{},
 	},
 }
 
@@ -261,7 +259,7 @@ func TestNewRawTemplate(t *testing.T) {
 
 func TestReplaceVariables(t *testing.T) {
 	r := newRawTemplate()
-	r.varVals = map[string]string{
+	r.VarVals = map[string]string{
 		":arch":            "amd64",
 		":command_src_dir": "commands",
 		":image":           "server",
@@ -271,7 +269,7 @@ func TestReplaceVariables(t *testing.T) {
 		":src_dir":         "../test_files/src/:distro",
 		":distro":          "ubuntu",
 	}
-	r.delim = ":"
+	r.Delim = ":"
 	s := r.replaceVariables("../test_files/src/:distro")
 	if s != "../test_files/src/ubuntu" {
 		t.Errorf("Expected \"../test_files/src/ubuntu\", got %q", s)
@@ -479,7 +477,7 @@ func TestRawTemplateSetBaseVarVals(t *testing.T) {
 	}
 
 	r := newRawTemplate()
-	r.delim = ":"
+	r.Delim = ":"
 	for i, test := range tests {
 		r.Distro = test.Distro
 		r.Release = test.Release
@@ -487,9 +485,9 @@ func TestRawTemplateSetBaseVarVals(t *testing.T) {
 		r.Image = test.Image
 		r.BuildName = test.BuildName
 		// make the map empty
-		r.varVals = map[string]string{}
+		r.VarVals = map[string]string{}
 		r.setBaseVarVals()
-		tmp, ok := r.varVals[":distro"]
+		tmp, ok := r.VarVals[":distro"]
 		if !ok {
 			t.Errorf("%d: expected :distro to be in map, it wasn't", i)
 		} else {
@@ -497,7 +495,7 @@ func TestRawTemplateSetBaseVarVals(t *testing.T) {
 				t.Errorf("%d: expected :distro to be %q, got %q", i, test.Distro, tmp)
 			}
 		}
-		tmp, ok = r.varVals[":release"]
+		tmp, ok = r.VarVals[":release"]
 		if !ok {
 			t.Errorf("%d: expected :release to be in map, it wasn't", i)
 		} else {
@@ -505,7 +503,7 @@ func TestRawTemplateSetBaseVarVals(t *testing.T) {
 				t.Errorf("%d: expected :release to be %q, got %q", i, test.Release, tmp)
 			}
 		}
-		tmp, ok = r.varVals[":arch"]
+		tmp, ok = r.VarVals[":arch"]
 		if !ok {
 			t.Errorf("%d: expected :arch to be in map, it wasn't", i)
 		} else {
@@ -513,7 +511,7 @@ func TestRawTemplateSetBaseVarVals(t *testing.T) {
 				t.Errorf("%d: expected :arch to be %q, got %q", i, test.Arch, tmp)
 			}
 		}
-		tmp, ok = r.varVals[":image"]
+		tmp, ok = r.VarVals[":image"]
 		if !ok {
 			t.Errorf("%d: expected :image to be in map, it wasn't", i)
 		} else {
@@ -521,7 +519,7 @@ func TestRawTemplateSetBaseVarVals(t *testing.T) {
 				t.Errorf("%d: expected :image to be %q, got %q", i, test.Image, tmp)
 			}
 		}
-		tmp, ok = r.varVals[":date"]
+		tmp, ok = r.VarVals[":date"]
 		if !ok {
 			t.Errorf("%d: expected :date to be in map, it wasn't", i)
 		} else {
@@ -529,7 +527,7 @@ func TestRawTemplateSetBaseVarVals(t *testing.T) {
 				t.Errorf("%d: expected :date to be %q, got %q", i, splitDate[0], tmp)
 			}
 		}
-		tmp, ok = r.varVals[":build_name"]
+		tmp, ok = r.VarVals[":build_name"]
 		if !ok {
 			t.Errorf("%d: expected :build_name to be in map, it wasn't", i)
 		} else {

@@ -45,6 +45,11 @@
 			vboxmanage = [
 				"--memory=4096"
 			]
+	[jessie.post_processors]
+		[jessie.post_processors.vagrant]
+			settings = [
+				"output = out/:build_name-packer.box"
+			]
 	[jessie.provisioners]
 		[jessie.provisioners.basic-shell]
             type = "shell"

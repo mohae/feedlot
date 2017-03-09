@@ -66,9 +66,9 @@ func (e RequiredSettingErr) Error() string {
 // contents.
 var ErrNoCommands = errors.New("no commands found")
 
-// rawTemplate holds all the information for a Feedlot template. This is used
+// RawTemplate holds all the information for a Feedlot template. This is used
 // to generate the Packer Build.
-type rawTemplate struct {
+type RawTemplate struct {
 	PackerInf
 	IODirInf
 	BuildInf
@@ -76,14 +76,14 @@ type rawTemplate struct {
 	IsExample  bool
 	ExampleDir string
 	// holds release information
-	releaseISO releaser
+	ReleaseISO Releaser
 	// the builder specific string for the template's OS and Arch
-	osType string
+	OSType string
 	// Current date in ISO 8601
-	date string
+	Date string
 	// The character(s) used to identify variables for Feedlot. By default
 	// this is a colon, :. Currently only a starting delimeter is supported.
-	delim string
+	Delim string
 	// The distro that this template targets. The type must be a supported
 	// type, i.e. defined in supported.toml. The values for type are
 	// consistent with Packer values.
@@ -98,46 +98,46 @@ type rawTemplate struct {
 	// dependent, however only version currently supported images that are
 	// available on the distro's download site are supported.
 	Release string
-	// varVals is a variable replacement map used in finalizing the value of strings for
+	// VarVals is a variable replacement map used in finalizing the value of strings for
 	// which variable replacement is supported.
-	varVals map[string]string
+	VarVals map[string]string
 	// Contains all the build information needed to create the target Packer
 	// template and its associated artifacts.
-	build
-	// files maps destination files to their sources. These are the actual file locations
+	Build
+	// Files maps destination files to their sources. These are the actual file locations
 	// after they have been resolved. The destination file is the key, the source file
 	// is the value
-	files map[string]string
-	// dirs maps destination directories to their source directories. Everything within
+	Files map[string]string
+	// Dirs maps destination directories to their source directories. Everything within
 	// the directory will be copied. The same resolution rules apply for dirs as for
 	// files. The destination directory is the key, the source directory is the value
-	dirs map[string]string
+	Dirs map[string]string
 }
 
 // mewRawTemplate returns a rawTemplate with current date in ISO 8601 format.
 // This should be called when a rawTemplate with the current date is desired.
-func newRawTemplate() *rawTemplate {
+func newRawTemplate() *RawTemplate {
 	// Set the date, formatted to ISO 8601
 	date := time.Now()
 	splitDate := strings.Split(date.String(), " ")
-	return &rawTemplate{date: splitDate[0], delim: contour.GetString(conf.ParamDelimStart), files: make(map[string]string), dirs: make(map[string]string)}
+	return &RawTemplate{Date: splitDate[0], Delim: contour.GetString(conf.ParamDelimStart), Files: make(map[string]string), Dirs: make(map[string]string)}
 }
 
-// copy makes a copy of the template and returns the new copy.
-func (r *rawTemplate) Copy() *rawTemplate {
-	return deepcopy.Copy(r).(*rawTemplate)
+// Copy makes a deep copy of the template and returns the new copy.
+func (r *RawTemplate) Copy() *RawTemplate {
+	return deepcopy.Copy(r).(*RawTemplate)
 }
 
 // r.createPackerTemplate creates a Packer template from the rawTemplate.
 // TODO:
 //		Write to output
 //		Copy resources to output
-func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
+func (r *RawTemplate) createPackerTemplate() (PackerTemplate, error) {
 	var err error
 	// Resolve the Feedlot variables to their final values.
 	r.mergeVariables()
 	// General Packer Stuff
-	p := packerTemplate{}
+	p := PackerTemplate{}
 	p.MinPackerVersion = r.MinPackerVersion
 	p.Description = r.Description
 	// Builders
@@ -167,13 +167,13 @@ func (r *rawTemplate) createPackerTemplate() (packerTemplate, error) {
 
 // replaceVariables checks incoming string for variables and replaces them with
 // their values.
-func (r *rawTemplate) replaceVariables(s string) string {
+func (r *RawTemplate) replaceVariables(s string) string {
 	//see if the delim is in the string, if not, nothing to replace
-	if strings.Index(s, r.delim) < 0 {
+	if strings.Index(s, r.Delim) < 0 {
 		return s
 	}
 	// Go through each variable and replace as applicable.
-	for vName, vVal := range r.varVals {
+	for vName, vVal := range r.VarVals {
 		s = strings.Replace(s, vName, vVal, -1)
 	}
 	return s
@@ -182,7 +182,7 @@ func (r *rawTemplate) replaceVariables(s string) string {
 // r.setDefaults takes the incoming distro settings and merges them with its
 // existing settings, which are set to feedlot's defaults, to create the
 // default template.
-func (r *rawTemplate) setDefaults(d *distro) error {
+func (r *RawTemplate) setDefaults(d *SupportedDistro) error {
 	// merges Settings between an old and new template.
 	// Note: Arch, Image, and Release are not updated here as how these fields
 	// are updated depends on whether this is a build from a distribution's
@@ -245,7 +245,7 @@ func (r *rawTemplate) setDefaults(d *distro) error {
 // Note:  Arch, Image, and Release are not updated here as how these fields are
 // updated depends on whether this is a build from a distribution's default
 // template or from a defined build template.
-func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) error {
+func (r *RawTemplate) updateBuildSettings(bld *RawTemplate) error {
 	r.IODirInf.update(bld.IODirInf)
 	r.updateSourceDirSetting()
 	err := r.updateTemplateOutputDirSetting()
@@ -288,7 +288,7 @@ func (r *rawTemplate) updateBuildSettings(bld *rawTemplate) error {
 // updateTemplateOutputDirSetting updates the template_output_dir setting
 // if the template_output_dir_setting_is_relative flag is true.  Any Feedlot
 // variables in the source_dir setting are not resolved.
-func (r *rawTemplate) updateTemplateOutputDirSetting() error {
+func (r *RawTemplate) updateTemplateOutputDirSetting() error {
 	if *r.IODirInf.TemplateOutputDirIsRelative {
 		dir, err := os.Getwd()
 		if err != nil {
@@ -302,7 +302,7 @@ func (r *rawTemplate) updateTemplateOutputDirSetting() error {
 // updateSourceDirSetting updates the source_dir if the source_dir_is_relative
 // flag is true.  Any Feedlot variables in the source_dir setting are not
 // resolved.
-func (r *rawTemplate) updateSourceDirSetting() {
+func (r *RawTemplate) updateSourceDirSetting() {
 	if *r.IODirInf.SourceDirIsRelative {
 		r.IODirInf.SourceDir = filepath.Join(contour.GetString(conf.Dir), r.IODirInf.SourceDir)
 	}
@@ -325,37 +325,37 @@ func (r *rawTemplate) updateSourceDirSetting() {
 // Note: source_dir must be set. Feedlot searches for referenced files and
 // uses source_dir/distro as the last search directory. This directory is
 // also used as the base directory for any specified src directories.
-func (r *rawTemplate) mergeVariables() {
+func (r *RawTemplate) mergeVariables() {
 	// Get the delim and set the replacement map, resolve name information
 	r.setBaseVarVals()
 	// get final value for name first
 	r.Name = r.replaceVariables(r.Name)
-	r.varVals[r.delim+"name"] = r.Name
+	r.VarVals[r.Delim+"name"] = r.Name
 	// then merge the sourc and out dirs and set them
 	r.SourceDir = r.replaceVariables(r.SourceDir)
 	r.TemplateOutputDir = r.replaceVariables(r.TemplateOutputDir)
 	r.PackerOutputDir = r.replaceVariables(r.PackerOutputDir)
-	r.varVals[r.delim+"template_output_dir"] = r.TemplateOutputDir
-	r.varVals[r.delim+"packer_output_dir"] = r.PackerOutputDir
-	r.varVals[r.delim+"source_dir"] = r.SourceDir
+	r.VarVals[r.Delim+"template_output_dir"] = r.TemplateOutputDir
+	r.VarVals[r.Delim+"packer_output_dir"] = r.PackerOutputDir
+	r.VarVals[r.Delim+"source_dir"] = r.SourceDir
 }
 
 // setBaseVarVals sets the varVals for the base variables
-func (r *rawTemplate) setBaseVarVals() {
-	r.varVals = map[string]string{
-		r.delim + "distro":     r.Distro,
-		r.delim + "release":    r.Release,
-		r.delim + "arch":       r.Arch,
-		r.delim + "image":      r.Image,
-		r.delim + "date":       r.date,
-		r.delim + "build_name": r.BuildName,
+func (r *RawTemplate) setBaseVarVals() {
+	r.VarVals = map[string]string{
+		r.Delim + "distro":     r.Distro,
+		r.Delim + "release":    r.Release,
+		r.Delim + "arch":       r.Arch,
+		r.Delim + "image":      r.Image,
+		r.Delim + "date":       r.Date,
+		r.Delim + "build_name": r.BuildName,
 	}
 }
 
 // mergeString does a variable replacement on the passed string and returns
 // the finalized value. If the passed string is empty, the default value, d, is
 // returned
-func (r *rawTemplate) mergeString(s, d string) string {
+func (r *RawTemplate) mergeString(s, d string) string {
 	if s == "" {
 		return d
 	}
@@ -366,7 +366,7 @@ func (r *rawTemplate) mergeString(s, d string) string {
 // also sets the builder specific string, when applicable.
 // TODO: these should use new functions in release.go. instead of creating the
 // structs here
-func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
+func (r *RawTemplate) ISOInfo(builderType Builder, settings []string) error {
 	var k, v, checksumType string
 	var err error
 	// Only the iso_checksum_type is needed for this.
@@ -379,9 +379,9 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 	}
 	switch r.Distro {
 	case CentOS.String():
-		r.releaseISO = &centos{
+		r.ReleaseISO = &centos{
 			release: release{
-				iso: iso{
+				ISO: ISO{
 					BaseURL:      r.BaseURL,
 					ChecksumType: checksumType,
 				},
@@ -394,28 +394,28 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 			country: *r.Country,
 			sponsor: *r.Sponsor,
 		}
-		err = r.releaseISO.setVersionInfo()
+		err = r.ReleaseISO.setVersionInfo()
 		if err != nil {
 			err = Error{slug: "iso info", err: err}
 			log.Error(err)
 			return err
 		}
-		err = r.releaseISO.SetISOInfo()
+		err = r.ReleaseISO.SetISOInfo()
 		if err != nil {
 			err = Error{slug: "iso info", err: err}
 			log.Error(err)
 			return err
 		}
-		r.osType, err = r.releaseISO.(*centos).getOSType(builderType)
+		r.OSType, err = r.ReleaseISO.(*centos).getOSType(builderType)
 		if err != nil {
 			err = Error{slug: "iso info", err: err}
 			log.Error(err)
 			return err
 		}
 	case Debian.String():
-		r.releaseISO = &debian{
+		r.ReleaseISO = &debian{
 			release: release{
-				iso: iso{
+				ISO: ISO{
 					BaseURL:      r.BaseURL,
 					ChecksumType: checksumType,
 				},
@@ -425,28 +425,28 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 				Release: r.Release,
 			},
 		}
-		err = r.releaseISO.setVersionInfo()
+		err = r.ReleaseISO.setVersionInfo()
 		if err != nil {
 			err = Error{slug: "iso info", err: err}
 			log.Error(err)
 			return err
 		}
-		err = r.releaseISO.SetISOInfo()
+		err = r.ReleaseISO.SetISOInfo()
 		if err != nil {
 			err = Error{slug: "iso info", err: err}
 			log.Error(err)
 			return err
 		}
-		r.osType, err = r.releaseISO.(*debian).getOSType(builderType)
+		r.OSType, err = r.ReleaseISO.(*debian).getOSType(builderType)
 		if err != nil {
 			err = Error{slug: "iso info", err: err}
 			log.Error(err)
 			return err
 		}
 	case Ubuntu.String():
-		r.releaseISO = &ubuntu{
+		r.ReleaseISO = &ubuntu{
 			release: release{
-				iso: iso{
+				ISO: ISO{
 					BaseURL:      r.BaseURL,
 					ChecksumType: checksumType,
 				},
@@ -456,19 +456,19 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 				Release: r.Release,
 			},
 		}
-		err = r.releaseISO.setVersionInfo()
+		err = r.ReleaseISO.setVersionInfo()
 		if err != nil {
 			err = Error{slug: "iso info", err: err}
 			log.Error(err)
 			return err
 		}
-		err = r.releaseISO.SetISOInfo()
+		err = r.ReleaseISO.SetISOInfo()
 		if err != nil {
 			err = Error{slug: "iso info", err: err}
 			log.Error(err)
 			return err
 		}
-		r.osType, err = r.releaseISO.(*ubuntu).getOSType(builderType)
+		r.OSType, err = r.ReleaseISO.(*ubuntu).getOSType(builderType)
 		if err != nil {
 			err = Error{slug: "iso info", err: err}
 			log.Error(err)
@@ -484,7 +484,7 @@ func (r *rawTemplate) ISOInfo(builderType Builder, settings []string) error {
 
 // commandsFromFile returns the commands within the requested file, if it can
 // be found. No validation of the contents is done.
-func (r *rawTemplate) commandsFromFile(name, component string) (commands []string, err error) {
+func (r *RawTemplate) commandsFromFile(name, component string) (commands []string, err error) {
 	// find the file
 	src, err := r.findCommandFile(name, component)
 	if err != nil {
@@ -524,7 +524,7 @@ func (r *rawTemplate) commandsFromFile(name, component string) (commands []strin
 //
 // findSource is called to handle the actual location of the file. If
 // no match is found an os.ErrNotExist will be returned.
-func (r *rawTemplate) findCommandFile(name, component string) (string, error) {
+func (r *RawTemplate) findCommandFile(name, component string) (string, error) {
 	if name == "" {
 		return "", fmt.Errorf("find command file: empty filename")
 	}
@@ -609,7 +609,7 @@ func (r *rawTemplate) findCommandFile(name, component string) (string, error) {
 //
 // TODO: is isDir necessary?  For now, it is a legacy setting from the
 // original code.
-func (r *rawTemplate) findSource(p, component string, isDir bool) (string, error) {
+func (r *RawTemplate) findSource(p, component string, isDir bool) (string, error) {
 	if p == "" {
 		return "", errors.New("find source: empty path")
 	}
@@ -730,7 +730,7 @@ func (r *rawTemplate) findSource(p, component string, isDir bool) (string, error
 // buildSearchPaths builds a slice of paths to search based on what it
 // receives.
 // for each release element:  path = source_dir + root + release + base
-func (r *rawTemplate) buildSearchPaths(root, base string, release []string) []string {
+func (r *RawTemplate) buildSearchPaths(root, base string, release []string) []string {
 	var paths []string
 	for _, v := range release {
 		paths = append(paths, filepath.Join(r.SourceDir, root, v, base))
@@ -748,7 +748,7 @@ func (r *rawTemplate) buildSearchPaths(root, base string, release []string) []st
 // If a match is found, the path will be returned.  If a non os.ErrNotExist
 // error occurs, that error will be returned; otherwise os.ErrNotExist will
 // be returned
-func (r *rawTemplate) checkSourcePaths(p, component string, paths []string) (string, error) {
+func (r *RawTemplate) checkSourcePaths(p, component string, paths []string) (string, error) {
 	searchC := []string{component}
 	// if the component has a - in the name, check the base of the component
 	// e.g. chef-solo's base is chef
@@ -798,7 +798,7 @@ func (r *rawTemplate) checkSourcePaths(p, component string, paths []string) (str
 // buildOutPath builds the full output path of the passed path, p, and returns
 // that value.  If the template is set to include the component string as the
 // parent directory, it is added to the path.
-func (r *rawTemplate) buildOutPath(component, p string) string {
+func (r *RawTemplate) buildOutPath(component, p string) string {
 	if r.IncludeComponentString != nil && *r.IncludeComponentString && component != "" {
 		component = strings.ToLower(component)
 		return path.Join(r.TemplateOutputDir, component, p)
@@ -812,7 +812,7 @@ func (r *rawTemplate) buildOutPath(component, p string) string {
 // the path.
 //
 // All paths in the template output use '/'.
-func (r *rawTemplate) buildTemplateResourcePath(component, p string, slashSuffix bool) string {
+func (r *RawTemplate) buildTemplateResourcePath(component, p string, slashSuffix bool) string {
 	if r.IncludeComponentString != nil && *r.IncludeComponentString && component != "" {
 		component = strings.ToLower(component)
 		p = path.Join(strings.ToLower(component), p)
@@ -833,7 +833,7 @@ func (r *rawTemplate) buildTemplateResourcePath(component, p string, slashSuffix
 // ../src = example/src
 // ../../src = example/src
 // src/foo = example/src/foo
-func (r *rawTemplate) setExampleDirs() {
+func (r *RawTemplate) setExampleDirs() {
 	var i int
 	var part string
 	var parts []string

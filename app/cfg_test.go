@@ -17,7 +17,7 @@ var country = "CA"
 var sponsor = "OSUOSL"
 var noSponsor = ""
 
-var testDefaults = &defaults{
+var testDefaults = &Defaults{
 	IODirInf: IODirInf{
 		TemplateOutputDir: "packer_templates/:build_name",
 		PackerOutputDir:   "packer_boxes/:build_name",
@@ -32,13 +32,13 @@ var testDefaults = &defaults{
 		BuildName: "",
 		Name:      ":build_name",
 	},
-	build: build{
+	Build: Build{
 		BuilderIDs: []string{
 			"virtualbox-iso",
 		},
-		Builders: map[string]builder{
+		Builders: map[string]BuilderC{
 			"common": {
-				templateSection{
+				TemplateSection{
 					Type: "common",
 					Settings: []string{
 						"boot_command = boot_test.command",
@@ -58,7 +58,7 @@ var testDefaults = &defaults{
 				},
 			},
 			"virtualbox-iso": {
-				templateSection{
+				TemplateSection{
 					Type: "virtualbox-iso",
 					Settings: []string{
 						"guest_additions_path = VBoxGuestAdditions_{{ .Version }}.iso",
@@ -76,9 +76,9 @@ var testDefaults = &defaults{
 		PostProcessorIDs: []string{
 			"vagrant",
 		},
-		PostProcessors: map[string]postProcessor{
+		PostProcessors: map[string]PostProcessorC{
 			"vagrant": {
-				templateSection{
+				TemplateSection{
 					Type: "vagrant",
 					Settings: []string{
 						"compression_level = 9",
@@ -91,9 +91,9 @@ var testDefaults = &defaults{
 		ProvisionerIDs: []string{
 			"shell",
 		},
-		Provisioners: map[string]provisioner{
+		Provisioners: map[string]ProvisionerC{
 			"shell": {
-				templateSection{
+				TemplateSection{
 					Type: "shell",
 					Settings: []string{
 						"execute_command = execute_test.command",
@@ -113,8 +113,8 @@ var testDefaults = &defaults{
 	loaded: true,
 }
 
-var testSupported = map[string]distro{
-	"centos": distro{
+var testSupported = map[string]SupportedDistro{
+	"centos": SupportedDistro{
 		BuildInf: BuildInf{
 			BaseURL: "",
 			Region:  &region,
@@ -143,7 +143,7 @@ var testSupported = map[string]distro{
 			"arch = x86_64",
 		},
 	},
-	"debian": distro{
+	"debian": SupportedDistro{
 		BuildInf: BuildInf{
 			BaseURL: "http://cdimage.debian.org/debian-cd/",
 		},
@@ -171,7 +171,7 @@ var testSupported = map[string]distro{
 		},
 	},
 }
-var testSupportedUbuntu = &distro{
+var testSupportedUbuntu = &SupportedDistro{
 	BuildInf: BuildInf{
 		BaseURL: "http://releases.ubuntu.com/",
 	},
@@ -199,14 +199,14 @@ var testSupportedUbuntu = &distro{
 		"image = server",
 		"arch = amd64",
 	},
-	build: build{
+	Build: Build{
 		BuilderIDs: []string{
 			"virtualbox-iso",
 			"vmware-iso",
 		},
-		Builders: map[string]builder{
+		Builders: map[string]BuilderC{
 			"common": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"boot_command = boot_test.command",
 						"shutdown_command = shutdown_test.command",
@@ -214,14 +214,14 @@ var testSupportedUbuntu = &distro{
 				},
 			},
 			"virtualbox-iso": {
-				templateSection{
+				TemplateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{"memory=2048"},
 					},
 				},
 			},
 			"vmware-iso": {
-				templateSection{
+				TemplateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{"memsize=2048"},
 					},
@@ -231,9 +231,9 @@ var testSupportedUbuntu = &distro{
 		PostProcessorIDs: []string{
 			"vagrant",
 		},
-		PostProcessors: map[string]postProcessor{
+		PostProcessors: map[string]PostProcessorC{
 			"vagrant": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"output = out/:build_name-packer.box",
 					},
@@ -244,9 +244,9 @@ var testSupportedUbuntu = &distro{
 			"shell",
 			"file-uploads",
 		},
-		Provisioners: map[string]provisioner{
+		Provisioners: map[string]ProvisionerC{
 			"shell": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"execute_command = execute_test.command",
 					},
@@ -262,7 +262,7 @@ var testSupportedUbuntu = &distro{
 				},
 			},
 			"file-uploads": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"source = source/dir",
 						"destination = destination/dir",
@@ -273,7 +273,7 @@ var testSupportedUbuntu = &distro{
 	},
 }
 
-var testSupportedCentOS = &distro{
+var testSupportedCentOS = &SupportedDistro{
 	BuildInf: BuildInf{
 		BaseURL: "",
 		Region:  &region,
@@ -304,8 +304,8 @@ var testSupportedCentOS = &distro{
 	},
 }
 
-var testBuild = map[string]rawTemplate{
-	"1204-amd64": rawTemplate{
+var testBuild = map[string]RawTemplate{
+	"1204-amd64": RawTemplate{
 		Distro: "ubuntu",
 		PackerInf: PackerInf{
 			Description: "ubuntu LTS 1204 amd64 server build, minimal install",
@@ -313,13 +313,13 @@ var testBuild = map[string]rawTemplate{
 		Arch:    "amd64",
 		Image:   "server",
 		Release: "12.04",
-		build: build{
+		Build: Build{
 			BuilderIDs: []string{
 				"virtualbox-iso",
 			},
-			Builders: map[string]builder{
+			Builders: map[string]BuilderC{
 				"common": {
-					templateSection{
+					TemplateSection{
 						Type: "common",
 						Settings: []string{
 							"ssh_wait_timeout = 300m",
@@ -327,7 +327,7 @@ var testBuild = map[string]rawTemplate{
 					},
 				},
 				"virtualbox-iso": {
-					templateSection{
+					TemplateSection{
 						Type: "virtualbox-iso",
 						Arrays: map[string]interface{}{
 							"vboxmanage": []string{
@@ -339,30 +339,30 @@ var testBuild = map[string]rawTemplate{
 			},
 		},
 	},
-	"centos6": rawTemplate{
+	"centos6": RawTemplate{
 		Distro: "centos",
 		PackerInf: PackerInf{
 			Description: "Centos 6 w virtualbox-iso only",
 		},
-		build: build{
+		Build: Build{
 			BuilderIDs: []string{
 				"virtualbox-iso",
 			},
 		},
 	},
-	"jessie": rawTemplate{
+	"jessie": RawTemplate{
 		Distro: "debian",
 		PackerInf: PackerInf{
 			Description: "debian jessie",
 		},
 		Arch: "amd64",
-		build: build{
+		Build: Build{
 			BuilderIDs: []string{
 				"virtualbox-iso",
 			},
-			Builders: map[string]builder{
+			Builders: map[string]BuilderC{
 				"virtualbox-iso": {
-					templateSection{
+					TemplateSection{
 						Type: "virtualbox-iso",
 						Arrays: map[string]interface{}{
 							"vboxmanage": []string{
@@ -375,9 +375,10 @@ var testBuild = map[string]rawTemplate{
 			PostProcessorIDs: []string{
 				"vagrant",
 			},
-			PostProcessors: map[string]postProcessor{
+			PostProcessors: map[string]PostProcessorC{
 				"vagrant": {
-					templateSection{
+					TemplateSection{
+						Type: "vagrant",
 						Settings: []string{
 							"output = out/:build_name-packer.box",
 						},
@@ -387,9 +388,9 @@ var testBuild = map[string]rawTemplate{
 			ProvisionerIDs: []string{
 				"basic-shell",
 			},
-			Provisioners: map[string]provisioner{
+			Provisioners: map[string]ProvisionerC{
 				"basic-shell": {
-					templateSection{
+					TemplateSection{
 						Type: "shell",
 						Arrays: map[string]interface{}{
 							"scripts": []string{
@@ -407,19 +408,19 @@ var testBuild = map[string]rawTemplate{
 	},
 }
 
-var testBuildList = map[string]list{
-	"ubuntu-all": list{Builds: []string{"1204-amd64-server", "1310-amd64-desktop"}},
+var testBuildList = map[string]List{
+	"ubuntu-all": List{Builds: []string{"1204-amd64-server", "1310-amd64-desktop"}},
 }
 
 func TestBuildCopy(t *testing.T) {
 	tstTpl := testBuild["jessie"]
-	newBuild := tstTpl.build.Copy()
+	newBuild := tstTpl.Build.Copy()
 	msg, ok := EvalStringSlice(newBuild.BuilderIDs, tstTpl.BuilderIDs)
 	if !ok {
 		t.Errorf("BuilderIDs: %s", msg)
 	}
 
-	if (*reflect.SliceHeader)(unsafe.Pointer(&newBuild.Builders)).Data == (*reflect.SliceHeader)(unsafe.Pointer(&tstTpl.build.Builders)).Data {
+	if (*reflect.SliceHeader)(unsafe.Pointer(&newBuild.Builders)).Data == (*reflect.SliceHeader)(unsafe.Pointer(&tstTpl.Build.Builders)).Data {
 		t.Errorf("The pointer for Builders is the same for both newBuild and testBuild: %x, expected them to be different.", (*reflect.SliceHeader)(unsafe.Pointer(&newBuild.Builders)).Data)
 		goto buildersEnd
 	}
@@ -440,7 +441,7 @@ buildersEnd:
 		t.Errorf("PostProcessorIDs: %s", msg)
 	}
 
-	if (*reflect.SliceHeader)(unsafe.Pointer(&newBuild.PostProcessors)).Data == (*reflect.SliceHeader)(unsafe.Pointer(&tstTpl.build.PostProcessors)).Data {
+	if (*reflect.SliceHeader)(unsafe.Pointer(&newBuild.PostProcessors)).Data == (*reflect.SliceHeader)(unsafe.Pointer(&tstTpl.Build.PostProcessors)).Data {
 		t.Errorf("The pointer for PostProcessors is the same for both newBuild and testBuild: %x, expected them to be different.", (*reflect.SliceHeader)(unsafe.Pointer(&newBuild.PostProcessors)).Data)
 		goto postProcessorsEnd
 	}
@@ -461,7 +462,7 @@ postProcessorsEnd:
 		t.Errorf("ProvisionerIDs: %s", msg)
 	}
 
-	if (*reflect.SliceHeader)(unsafe.Pointer(&newBuild.Provisioners)).Data == (*reflect.SliceHeader)(unsafe.Pointer(&tstTpl.build.Provisioners)).Data {
+	if (*reflect.SliceHeader)(unsafe.Pointer(&newBuild.Provisioners)).Data == (*reflect.SliceHeader)(unsafe.Pointer(&tstTpl.Build.Provisioners)).Data {
 		t.Errorf("The pointer for Provisioners is the same for both newBuild and testBuild: %x, expected them to be different.", (*reflect.SliceHeader)(unsafe.Pointer(&newBuild.Provisioners)))
 	}
 	if len(newBuild.Provisioners) != len(tstTpl.Provisioners) {
@@ -478,7 +479,7 @@ provisionersEnd:
 }
 
 func TestTemplateSectionMergeArrays(t *testing.T) {
-	ts := &templateSection{}
+	ts := &TemplateSection{}
 	ts.mergeArrays(nil)
 	if ts.Arrays != nil {
 		t.Errorf("Expected the merged array to be nil, was not nil: %#v", ts.Arrays)
@@ -699,7 +700,7 @@ func TestDefaults(t *testing.T) {
 	contour.UpdateString(conf.Dir, "../test_files/conf")
 	for i, test := range tests {
 		contour.UpdateString(conf.Format, test.format)
-		d := defaults{}
+		d := Defaults{}
 		err := d.Load("")
 		if err != nil {
 			if err.Error() != test.expectedErr {
@@ -717,7 +718,7 @@ func TestDefaults(t *testing.T) {
 	}
 }
 
-func TestSupported(t *testing.T) {
+func TestSupportedDistros(t *testing.T) {
 	tests := []struct {
 		format      string
 		p           string
@@ -730,7 +731,7 @@ func TestSupported(t *testing.T) {
 	}
 	for i, test := range tests {
 		contour.UpdateString(conf.Format, test.format)
-		s := supported{}
+		s := SupportedDistros{}
 		err := s.Load(test.p)
 		if err != nil {
 			if err.Error() != test.expectedErr {
@@ -742,8 +743,8 @@ func TestSupported(t *testing.T) {
 			t.Errorf("%d: expected an error: %q, got none", i, test.expectedErr)
 			continue
 		}
-		if MarshalJSONToString.Get(s.Distro) != MarshalJSONToString.Get(testSupported) {
-			t.Errorf("%d: expected %q, got %q", i, MarshalJSONToString.Get(testSupported), MarshalJSONToString.Get(s.Distro))
+		if MarshalJSONToString.Get(s.Distros) != MarshalJSONToString.Get(testSupported) {
+			t.Errorf("%d: expected %q, got %q", i, MarshalJSONToString.Get(testSupported), MarshalJSONToString.Get(s.Distros))
 		}
 	}
 }
@@ -765,7 +766,7 @@ func TestBuildStuff(t *testing.T) {
 	contour.UpdateString(conf.Dir, "../test_files/conf")
 	for i, test := range tests {
 		contour.UpdateString(conf.Format, test.format)
-		b := builds{}
+		b := Builds{}
 		err := b.Load(test.filename)
 		if err != nil {
 			if err.Error() != test.expectedErr {
@@ -777,8 +778,8 @@ func TestBuildStuff(t *testing.T) {
 			t.Errorf("%d: expepcted an error: %q, got none", i, test.expectedErr)
 			continue
 		}
-		if MarshalJSONToString.Get(b.Build) != MarshalJSONToString.Get(testBuild) {
-			t.Errorf("%d: expected %q, got %q", i, MarshalJSONToString.Get(testBuild), MarshalJSONToString.Get(b.Build))
+		if MarshalJSONToString.Get(b.Templates) != MarshalJSONToString.Get(testBuild) {
+			t.Errorf("%d: expected %q, got %q", i, MarshalJSONToString.Get(testBuild), MarshalJSONToString.Get(b.Templates))
 		}
 	}
 }
@@ -796,7 +797,7 @@ func TestBuildListStuff(t *testing.T) {
 	contour.UpdateString(conf.Dir, "conf")
 	for i, test := range tests {
 		contour.UpdateString(conf.Format, test.format)
-		b := &buildLists{List: map[string]list{}}
+		b := &BuildLists{Lists: map[string]List{}}
 		err := b.Load("../test_files")
 		if err != nil {
 			if err.Error() != test.expectedErr {
@@ -808,8 +809,8 @@ func TestBuildListStuff(t *testing.T) {
 			t.Errorf("%d: expected an error: %q, got none", i, test.expectedErr)
 			continue
 		}
-		if MarshalJSONToString.Get(b.List) != MarshalJSONToString.Get(testBuildList) {
-			t.Errorf("%d: expected %q, got %q", i, MarshalJSONToString.Get(testBuildList), MarshalJSONToString.Get(b.List))
+		if MarshalJSONToString.Get(b.Lists) != MarshalJSONToString.Get(testBuildList) {
+			t.Errorf("%d: expected %q, got %q", i, MarshalJSONToString.Get(testBuildList), MarshalJSONToString.Get(b.Lists))
 		}
 	}
 }

@@ -50,13 +50,13 @@ func TestBuildPackerTemplateFromNamedBuild(t *testing.T) {
 }
 
 func TestCopy(t *testing.T) {
-	b := build{
+	b := Build{
 		BuilderIDs: []string{
 			"virtualbox-iso",
 		},
-		Builders: map[string]builder{
+		Builders: map[string]BuilderC{
 			"common": {
-				templateSection{
+				TemplateSection{
 					Type: "common",
 					Settings: []string{
 						"ssh_wait_timeout = 300m",
@@ -64,7 +64,7 @@ func TestCopy(t *testing.T) {
 				},
 			},
 			"virtualbox-iso": {
-				templateSection{
+				TemplateSection{
 					Type: "virtualbox-iso",
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
@@ -77,9 +77,9 @@ func TestCopy(t *testing.T) {
 		PostProcessorIDs: []string{
 			"vagrant",
 		},
-		PostProcessors: map[string]postProcessor{
+		PostProcessors: map[string]PostProcessorC{
 			"vagrant": {
-				templateSection{
+				TemplateSection{
 					Type: "vagrant",
 					Settings: []string{
 						"output = :out_dir/packer.box",
@@ -98,9 +98,9 @@ func TestCopy(t *testing.T) {
 		ProvisionerIDs: []string{
 			"shell",
 		},
-		Provisioners: map[string]provisioner{
+		Provisioners: map[string]ProvisionerC{
 			"shell": {
-				templateSection{
+				TemplateSection{
 					Type: "shell",
 					Settings: []string{
 						"execute_command = execute_test.command",
@@ -156,7 +156,7 @@ func TestCopy(t *testing.T) {
 
 }
 
-func EvalBuilders(new, old map[string]builder) (msg string, ok bool) {
+func EvalBuilders(new, old map[string]BuilderC) (msg string, ok bool) {
 	if len(new) != len(old) {
 		return fmt.Sprintf("copy length was %d; want %d", len(new), len(old)), false
 	}
@@ -165,7 +165,7 @@ func EvalBuilders(new, old map[string]builder) (msg string, ok bool) {
 		if !ok {
 			return fmt.Sprintf("expected copy to have entry for %q; none found", k), false
 		}
-		msg, ok := EvalTemplateSection(&vv.templateSection, &v.templateSection)
+		msg, ok := EvalTemplateSection(&vv.TemplateSection, &v.TemplateSection)
 		if !ok {
 			return fmt.Sprintf("%q: %s", k, msg), false
 		}
@@ -173,7 +173,7 @@ func EvalBuilders(new, old map[string]builder) (msg string, ok bool) {
 	return "", true
 }
 
-func EvalPostProcessors(new, old map[string]postProcessor) (msg string, ok bool) {
+func EvalPostProcessors(new, old map[string]PostProcessorC) (msg string, ok bool) {
 	if len(new) != len(old) {
 		return fmt.Sprintf("copy length was %d; want %d", len(new), len(old)), false
 	}
@@ -182,7 +182,7 @@ func EvalPostProcessors(new, old map[string]postProcessor) (msg string, ok bool)
 		if !ok {
 			return fmt.Sprintf("expected copy to have entry for %q; none found", k), false
 		}
-		msg, ok := EvalTemplateSection(&vv.templateSection, &v.templateSection)
+		msg, ok := EvalTemplateSection(&vv.TemplateSection, &v.TemplateSection)
 		if !ok {
 			return fmt.Sprintf("%q: %s", k, msg), false
 		}
@@ -190,7 +190,7 @@ func EvalPostProcessors(new, old map[string]postProcessor) (msg string, ok bool)
 	return "", true
 }
 
-func EvalProvisioners(new, old map[string]provisioner) (msg string, ok bool) {
+func EvalProvisioners(new, old map[string]ProvisionerC) (msg string, ok bool) {
 	if len(new) != len(old) {
 		return fmt.Sprintf("copy length was %d; want %d", len(new), len(old)), false
 	}
@@ -199,7 +199,7 @@ func EvalProvisioners(new, old map[string]provisioner) (msg string, ok bool) {
 		if !ok {
 			return fmt.Sprintf("expected copy to have entry for %q; none found", k), false
 		}
-		msg, ok := EvalTemplateSection(&vv.templateSection, &v.templateSection)
+		msg, ok := EvalTemplateSection(&vv.TemplateSection, &v.TemplateSection)
 		if !ok {
 			return fmt.Sprintf("%q: %s", k, msg), false
 		}
@@ -209,7 +209,7 @@ func EvalProvisioners(new, old map[string]provisioner) (msg string, ok bool) {
 
 // This only checks Settings and Arrays. For arrays, only []string and
 // [][]string, and map[string]string are supported.
-func EvalTemplateSection(new, old *templateSection) (msg string, ok bool) {
+func EvalTemplateSection(new, old *TemplateSection) (msg string, ok bool) {
 	msg, ok = EvalStringSlice(new.Settings, old.Settings)
 	if !ok {
 		return msg, ok
@@ -255,6 +255,9 @@ func EvalTemplateSection(new, old *templateSection) (msg string, ok bool) {
 }
 
 func EvalStringSlice(new, old []string) (msg string, ok bool) {
+	if new == nil && old == nil {
+		return "", true
+	}
 	if (*reflect.SliceHeader)(unsafe.Pointer(&new)).Data == (*reflect.SliceHeader)(unsafe.Pointer(&old)).Data {
 		return "expected slice data pointers to point to different locations; they didn't", false
 	}

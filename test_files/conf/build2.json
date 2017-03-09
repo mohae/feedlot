@@ -52,6 +52,13 @@
         }
       }
     },
+    "post_processors": {
+      "vagrant": {
+        "settings": [
+          "output = out/:build_name-packer.box"
+        ]
+      }
+    },
     "provisioners": {
       "basic-shell": {
         "type": "shell",

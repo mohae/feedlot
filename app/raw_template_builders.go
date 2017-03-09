@@ -133,7 +133,7 @@ func BuilderFromString(s string) Builder {
 
 // r.createBuilders takes a raw builder and create the appropriate Packer
 // Builder
-func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
+func (r *RawTemplate) createBuilders() (bldrs []interface{}, err error) {
 	if r.BuilderIDs == nil || len(r.BuilderIDs) <= 0 {
 		return nil, BuilderErr{Err: errors.New("no builders specified")}
 	}
@@ -243,7 +243,7 @@ func (r *rawTemplate) createBuilders() (bldrs []interface{}, err error) {
 // Go through all of the Settings and convert them to a map.  Each setting is
 // parsed into its constituent parts.  The value then goes through variable
 // replacement to ensure that the settings are properly resolved.
-func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
+func (b *BuilderC) settingsToMap(r *RawTemplate) map[string]interface{} {
 	var k, v string
 	m := make(map[string]interface{})
 	for _, s := range b.Settings {
@@ -285,7 +285,7 @@ func (b *builder) settingsToMap(r *rawTemplate) map[string]interface{} {
 //   mount_path               string
 //   root_volume_size         int
 //   tags                     object of key/value strings
-func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createAmazonChroot(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: AmazonChroot, Err: ErrBuilderNotFound}
@@ -442,7 +442,7 @@ func (r *rawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 //   volume_run_tags               object of key/value strings
 //   vpc_id                        string
 //   windows_password_timeout      string
-func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createAmazonEBS(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: AmazonEBS, Err: ErrBuilderNotFound}
@@ -555,7 +555,7 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
 			if src != "" {
-				r.files[r.buildOutPath(AmazonEBS.String(), v)] = src
+				r.Files[r.buildOutPath(AmazonEBS.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(AmazonEBS.String(), v, false)
 		case "vpc_id":
@@ -689,7 +689,7 @@ func (r *rawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 //   vpc_id                        string
 //   x509_upload_path              string
 //   windows_password_timeout      string
-func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createAmazonInstance(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: AmazonInstance, Err: ErrBuilderNotFound}
@@ -854,7 +854,7 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 			// Nothing should be copied in this instance and it should not be added
 			// to the copy info
 			if src != "" {
-				r.files[r.buildOutPath(AmazonEBS.String(), v)] = src
+				r.Files[r.buildOutPath(AmazonEBS.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(AmazonInstance.String(), v, false)
 		case "vpc_id":
@@ -957,7 +957,7 @@ func (r *rawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 // The returned interface{} only includes the supported settings.  When
 // settings that are ints have invalid values specified, an error will be
 // returned.
-func (r *rawTemplate) processAMIBlockDeviceMappings(v interface{}) (interface{}, error) {
+func (r *RawTemplate) processAMIBlockDeviceMappings(v interface{}) (interface{}, error) {
 	if reflect.TypeOf(v) == reflect.TypeOf([]map[string]interface{}{}) {
 		return v, nil
 	}
@@ -1025,7 +1025,7 @@ func (r *rawTemplate) processAMIBlockDeviceMappings(v interface{}) (interface{},
 //   snapshot_name       string
 //   state_timeout       string
 //   user_date           string
-func (r *rawTemplate) createDigitalOcean(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createDigitalOcean(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: DigitalOcean, Err: ErrBuilderNotFound}
@@ -1117,7 +1117,7 @@ func (r *rawTemplate) createDigitalOcean(ID string) (settings map[string]interfa
 //   pull            bool
 //   run_command     array of strings
 //   volumes         map of strings to strings
-func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createDocker(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: Docker, Err: ErrBuilderNotFound}
@@ -1251,7 +1251,7 @@ func (r *rawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 //   state_timeout      string
 //   tags               array of strings
 //   use_internal_ip    bool
-func (r *rawTemplate) createGoogleCompute(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createGoogleCompute(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: GoogleCompute, Err: ErrBuilderNotFound}
@@ -1355,7 +1355,7 @@ func (r *rawTemplate) createGoogleCompute(ID string) (settings map[string]interf
 //   documentation.
 //
 //   communicator == none is considered invalid.
-func (r *rawTemplate) createNull(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createNull(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: Null, Err: ErrBuilderNotFound}
@@ -1416,7 +1416,7 @@ func (r *rawTemplate) createNull(ID string) (settings map[string]interface{}, er
 //   tenant_id            string
 //   tenant_name          string
 //   use_floating_ip      bool
-func (r *rawTemplate) createOpenStack(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createOpenStack(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: OpenStack, Err: ErrBuilderNotFound}
@@ -1595,7 +1595,7 @@ func (r *rawTemplate) createOpenStack(ID string) (settings map[string]interface{
 //   shutdown_timeout            string
 //   skip_compaction             bool
 //   vm_name                     string
-func (r *rawTemplate) createParallelsISO(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createParallelsISO(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: ParallelsISO, Err: ErrBuilderNotFound}
@@ -1844,7 +1844,7 @@ func (r *rawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 //   shutdown_timeout            string
 //   skip_compaction             bool
 //   vm_name                     string
-func (r *rawTemplate) createParallelsPVM(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createParallelsPVM(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: ParallelsPVM, Err: ErrBuilderNotFound}
@@ -1943,7 +1943,7 @@ func (r *rawTemplate) createParallelsPVM(ID string) (settings map[string]interfa
 			// Nothing should be copied in this instance it should not be added
 			// to the copy info
 			if src != "" {
-				r.files[r.buildOutPath(ParallelsPVM.String(), v)] = src
+				r.Files[r.buildOutPath(ParallelsPVM.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(ParallelsPVM.String(), v, false)
 			hasSourcePath = true
@@ -2055,7 +2055,7 @@ func (r *rawTemplate) createParallelsPVM(ID string) (settings map[string]interfa
 //   qemuargs              array of array of strings
 //   qemu_binary           string
 //   skip_compaction       bool
-func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createQEMU(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: QEMU, Err: ErrBuilderNotFound}
@@ -2238,18 +2238,18 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 		//handle iso lookup vs set in file
 		switch r.Distro {
 		case CentOS.String():
-			settings["iso_url"] = r.releaseISO.(*centos).imageURL()
-			settings["iso_checksum"] = r.releaseISO.(*centos).Checksum
-			settings["iso_checksum_type"] = r.releaseISO.(*centos).ChecksumType
+			settings["iso_url"] = r.ReleaseISO.(*centos).imageURL()
+			settings["iso_checksum"] = r.ReleaseISO.(*centos).Checksum
+			settings["iso_checksum_type"] = r.ReleaseISO.(*centos).ChecksumType
 		case Debian.String():
-			settings["iso_url"] = r.releaseISO.(*debian).imageURL()
-			settings["iso_checksum"] = r.releaseISO.(*debian).Checksum
-			settings["iso_checksum_type"] = r.releaseISO.(*debian).ChecksumType
+			settings["iso_url"] = r.ReleaseISO.(*debian).imageURL()
+			settings["iso_checksum"] = r.ReleaseISO.(*debian).Checksum
+			settings["iso_checksum_type"] = r.ReleaseISO.(*debian).ChecksumType
 
 		case Ubuntu.String():
-			settings["iso_url"] = r.releaseISO.(*ubuntu).imageURL()
-			settings["iso_checksum"] = r.releaseISO.(*ubuntu).Checksum
-			settings["iso_checksum_type"] = r.releaseISO.(*ubuntu).ChecksumType
+			settings["iso_url"] = r.ReleaseISO.(*ubuntu).imageURL()
+			settings["iso_checksum"] = r.ReleaseISO.(*ubuntu).Checksum
+			settings["iso_checksum_type"] = r.ReleaseISO.(*ubuntu).ChecksumType
 		default:
 			err = BuilderErr{id: ID, Builder: QEMU, Err: UnsupportedDistroErr{r.Distro}}
 			return nil, err
@@ -2310,7 +2310,7 @@ func (r *rawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 //   vboxmanage_post          array of array of strings
 //   virtualbox_version_file  string
 //   vm_name                  string
-func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createVirtualBoxISO(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: VirtualBoxISO, Err: ErrBuilderNotFound}
@@ -2527,7 +2527,7 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 			settings[name] = array
 		}
 	}
-	if r.osType == "" { // if the os type hasn't been set, the ISO info hasn't been retrieved
+	if r.OSType == "" { // if the os type hasn't been set, the ISO info hasn't been retrieved
 		err = r.ISOInfo(VirtualBoxISO, workSlice)
 		if err != nil {
 			return nil, BuilderErr{id: ID, Builder: VirtualBoxISO, Err: err}
@@ -2553,25 +2553,25 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 	}
 	// set the guest_os_type, if it wasn't already set
 	if guestOSType == "" {
-		settings["guest_os_type"] = r.osType
+		settings["guest_os_type"] = r.OSType
 	}
 	// If the iso info wasn't set from the Settings, get it from the distro's release
 	if !hasISOURL {
 		//handle iso lookup vs set in file
 		switch r.Distro {
 		case CentOS.String():
-			settings["iso_url"] = r.releaseISO.(*centos).imageURL()
-			settings["iso_checksum"] = r.releaseISO.(*centos).Checksum
-			settings["iso_checksum_type"] = r.releaseISO.(*centos).ChecksumType
+			settings["iso_url"] = r.ReleaseISO.(*centos).imageURL()
+			settings["iso_checksum"] = r.ReleaseISO.(*centos).Checksum
+			settings["iso_checksum_type"] = r.ReleaseISO.(*centos).ChecksumType
 		case Debian.String():
-			settings["iso_url"] = r.releaseISO.(*debian).imageURL()
-			settings["iso_checksum"] = r.releaseISO.(*debian).Checksum
-			settings["iso_checksum_type"] = r.releaseISO.(*debian).ChecksumType
+			settings["iso_url"] = r.ReleaseISO.(*debian).imageURL()
+			settings["iso_checksum"] = r.ReleaseISO.(*debian).Checksum
+			settings["iso_checksum_type"] = r.ReleaseISO.(*debian).ChecksumType
 
 		case Ubuntu.String():
-			settings["iso_url"] = r.releaseISO.(*ubuntu).imageURL()
-			settings["iso_checksum"] = r.releaseISO.(*ubuntu).Checksum
-			settings["iso_checksum_type"] = r.releaseISO.(*ubuntu).ChecksumType
+			settings["iso_url"] = r.ReleaseISO.(*ubuntu).imageURL()
+			settings["iso_checksum"] = r.ReleaseISO.(*ubuntu).Checksum
+			settings["iso_checksum_type"] = r.ReleaseISO.(*ubuntu).ChecksumType
 		default:
 			return nil, BuilderErr{id: ID, Builder: VirtualBoxISO, Err: UnsupportedDistroErr{r.Distro}}
 		}
@@ -2624,7 +2624,7 @@ func (r *rawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 //   vboxmanage_post          array of strings
 //   virtualbox_version_file  string
 //   vm_name                  string
-func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: VirtualBoxOVF, Err: ErrBuilderNotFound}
@@ -2740,7 +2740,7 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
 			if src != "" {
-				r.files[r.buildOutPath(VirtualBoxOVF.String(), v)] = src
+				r.Files[r.buildOutPath(VirtualBoxOVF.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(VirtualBoxOVF.String(), v, false)
 			hasSourcePath = true
@@ -2848,7 +2848,7 @@ func (r *rawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 
 // createVBoxManage creates the vboxmanage and vboxmanage_post arrays from the
 // received interface.
-func (r *rawTemplate) createVBoxManage(v interface{}) [][]string {
+func (r *RawTemplate) createVBoxManage(v interface{}) [][]string {
 	vms := deepcopy.Copy(v).([]string) // this will panic if it isn't a slice of strings
 	tmp := make([][]string, len(vms))
 	for i, v := range vms {
@@ -2918,7 +2918,7 @@ func (r *rawTemplate) createVBoxManage(v interface{}) [][]string {
 //   vmx_template_path       string
 //   vnc_port_min            int
 //   vnc_port_max            int
-func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createVMWareISO(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: VMWareISO, Err: ErrBuilderNotFound}
@@ -3167,7 +3167,7 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 		}
 	}
 	// TODO how is this affected by checksum being set in the template?
-	if r.osType == "" { // if the os type hasn't been set, the ISO info hasn't been retrieved
+	if r.OSType == "" { // if the os type hasn't been set, the ISO info hasn't been retrieved
 		err = r.ISOInfo(VirtualBoxISO, workSlice)
 		if err != nil {
 			return nil, BuilderErr{id: ID, Builder: VMWareISO, Err: err}
@@ -3175,7 +3175,7 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 	}
 	// set the guest_os_type
 	if guestOSType == "" {
-		guestOSType = r.osType
+		guestOSType = r.OSType
 	}
 	settings["guest_os_type"] = guestOSType
 	// If the iso info wasn't set from the Settings, get it from the distro's release
@@ -3183,17 +3183,17 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 		//handle iso lookup vs set in file
 		switch r.Distro {
 		case CentOS.String():
-			settings["iso_url"] = r.releaseISO.(*centos).imageURL()
-			settings["iso_checksum"] = r.releaseISO.(*centos).Checksum
-			settings["iso_checksum_type"] = r.releaseISO.(*centos).ChecksumType
+			settings["iso_url"] = r.ReleaseISO.(*centos).imageURL()
+			settings["iso_checksum"] = r.ReleaseISO.(*centos).Checksum
+			settings["iso_checksum_type"] = r.ReleaseISO.(*centos).ChecksumType
 		case Debian.String():
-			settings["iso_url"] = r.releaseISO.(*debian).imageURL()
-			settings["iso_checksum"] = r.releaseISO.(*debian).Checksum
-			settings["iso_checksum_type"] = r.releaseISO.(*debian).ChecksumType
+			settings["iso_url"] = r.ReleaseISO.(*debian).imageURL()
+			settings["iso_checksum"] = r.ReleaseISO.(*debian).Checksum
+			settings["iso_checksum_type"] = r.ReleaseISO.(*debian).ChecksumType
 		case Ubuntu.String():
-			settings["iso_url"] = r.releaseISO.(*ubuntu).imageURL()
-			settings["iso_checksum"] = r.releaseISO.(*ubuntu).Checksum
-			settings["iso_checksum_type"] = r.releaseISO.(*ubuntu).ChecksumType
+			settings["iso_url"] = r.ReleaseISO.(*ubuntu).imageURL()
+			settings["iso_checksum"] = r.ReleaseISO.(*ubuntu).Checksum
+			settings["iso_checksum_type"] = r.ReleaseISO.(*ubuntu).ChecksumType
 		default:
 			return nil, BuilderErr{id: ID, Builder: VMWareISO, Err: UnsupportedDistroErr{r.Distro}}
 		}
@@ -3238,7 +3238,7 @@ func (r *rawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 //   vmx_data_post            object of key/value strings
 //   vnc_port_min             int
 //   vnc_port_max             int
-func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createVMWareVMX(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Builders[ID]
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: VMWareVMX, Err: ErrBuilderNotFound}
@@ -3337,7 +3337,7 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
 			if src != "" {
-				r.files[r.buildOutPath(VMWareVMX.String(), v)] = src
+				r.Files[r.buildOutPath(VMWareVMX.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(VMWareVMX.String(), v, false)
 			hasSourcePath = true
@@ -3422,7 +3422,7 @@ func (r *rawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 	return settings, nil
 }
 
-func (r *rawTemplate) createVMXData(v interface{}) map[string]string {
+func (r *RawTemplate) createVMXData(v interface{}) map[string]string {
 	vms := deepcopy.Copy(v).([]string) // this will panic if it isn't a slice of strings
 	tmp := make(map[string]string, len(vms))
 	for _, v := range vms {
@@ -3457,17 +3457,17 @@ func (r *rawTemplate) createVMXData(v interface{}) map[string]string {
 //     of that key. There is an exception:
 //   * `guest_os_type`: This is generally set at Packer Template generation
 //     time by Feedlot.
-func (r *rawTemplate) updateBuilders(newB map[string]builder) error {
+func (r *RawTemplate) updateBuilders(newB map[string]BuilderC) error {
 	// If there is nothing new, old equals merged.
 	if len(newB) == 0 || newB == nil {
 		return nil
 	}
 	// Convert the existing Builders to Componenter.
 	var oldC = make(map[string]Componenter, len(r.Builders))
-	oldC = DeepCopyMapStringBuilder(r.Builders)
+	oldC = DeepCopyMapStringBuilderC(r.Builders)
 	// Convert the new Builders to Componenter.
 	var newC = make(map[string]Componenter, len(newB))
-	newC = DeepCopyMapStringBuilder(newB)
+	newC = DeepCopyMapStringBuilderC(newB)
 	// Make the slice as long as the slices in both builders, odds are its shorter, but this is the worst case.
 	var keys []string
 	// Convert the keys to a map
@@ -3513,14 +3513,14 @@ func (r *rawTemplate) updateBuilders(newB map[string]builder) error {
 //     inserted into r's CommonBuilder setting list.
 //   * When r has a setting that does not exist in b, nothing is done.  This
 //     method does not delete any settings that already exist in r.
-func (r *rawTemplate) updateCommon(newB builder) error {
+func (r *RawTemplate) updateCommon(newB BuilderC) error {
 	if r.Builders == nil {
-		r.Builders = map[string]builder{}
+		r.Builders = map[string]BuilderC{}
 	}
 	// If the existing builder doesn't have a CommonBuilder section, just add it
 	b, ok := r.Builders[Common.String()]
 	if !ok {
-		r.Builders[Common.String()] = builder{templateSection: templateSection{Type: newB.Type, Settings: newB.Settings, Arrays: newB.Arrays}}
+		r.Builders[Common.String()] = BuilderC{TemplateSection: TemplateSection{Type: newB.Type, Settings: newB.Settings, Arrays: newB.Arrays}}
 		return nil
 	}
 	// Otherwise merge the two
@@ -3536,7 +3536,7 @@ func (r *rawTemplate) updateCommon(newB builder) error {
 // contents can be copied. If it is not set, http is assumed.
 //
 // The http_directory doesn't include component
-func (r *rawTemplate) setHTTP(component string, m map[string]interface{}) error {
+func (r *RawTemplate) setHTTP(component string, m map[string]interface{}) error {
 	v, ok := m["http_directory"]
 	if !ok {
 		v = "http"
@@ -3554,15 +3554,15 @@ func (r *rawTemplate) setHTTP(component string, m map[string]interface{}) error 
 	// Nothing should be copied in this instancel it should not be added
 	// to the copy info
 	if src != "" {
-		r.dirs[r.buildOutPath("", val)] = src
+		r.Dirs[r.buildOutPath("", val)] = src
 	}
 	m["http_directory"] = r.buildTemplateResourcePath("", val, false)
 	return nil
 }
 
-// DeepCopyMapStringBuilder makes a deep copy of each builder passed and
+// DeepCopyMapStringBuilderC makes a deep copy of each builder passed and
 // returns the copy map[string]builder as a map[string]Componenter{}
-func DeepCopyMapStringBuilder(b map[string]builder) map[string]Componenter {
+func DeepCopyMapStringBuilderC(b map[string]BuilderC) map[string]Componenter {
 	c := map[string]Componenter{}
 	for k, v := range b {
 		c[k] = v.Copy()

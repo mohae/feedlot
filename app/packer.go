@@ -10,7 +10,7 @@ import (
 	json "github.com/mohae/unsafejson"
 )
 
-type packerTemplate struct {
+type PackerTemplate struct {
 	Description      string                 `json:"description"`
 	MinPackerVersion string                 `json:"min_packer_version"`
 	Builders         []interface{}          `json:"builders,omitempty"`
@@ -22,7 +22,7 @@ type packerTemplate struct {
 // create a Packer build template based on the current configuration. The
 // template is written to the output directory and any external resources that
 // the template requires is copied there.
-func (p *packerTemplate) create(i IODirInf, b BuildInf, dirs, files map[string]string) (err error) {
+func (p *PackerTemplate) create(i IODirInf, b BuildInf, dirs, files map[string]string) (err error) {
 	i.check()
 	// priorBuild handles both the archiving and deletion of the prior build, if it exists, i.e.
 	// if the build's output path exists.

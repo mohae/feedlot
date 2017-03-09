@@ -4,14 +4,14 @@ package app
 // templates associated with them.
 func Run(listNames ...string) ([]string, []error) {
 	// load the build lists
-	bl := buildLists{}
+	bl := BuildLists{}
 	err := bl.Load("")
 	if err != nil {
 		return nil, []error{err}
 	}
 	// make sure the lists all exist
 	var errs []error
-	var lists []list
+	var lists []List
 	for _, name := range listNames {
 		l, err := bl.Get(name)
 		if err != nil {

@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-var testPostProcessorsAllTemplate = &rawTemplate{
+var testPostProcessorsAllTemplate = &RawTemplate{
 	PackerInf: PackerInf{
 		Description: "Test build template #1",
 	},
@@ -18,23 +18,23 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 		PackerOutputDir:   "packer_boxes/:build_name",
 		SourceDir:         "../test_files/src",
 	},
-	varVals: map[string]string{},
-	dirs:    map[string]string{},
-	files:   map[string]string{},
-	build: build{
+	VarVals: map[string]string{},
+	Dirs:    map[string]string{},
+	Files:   map[string]string{},
+	Build: Build{
 		BuilderIDs: []string{
 			"virtualbox-iso",
 		},
-		Builders: map[string]builder{
+		Builders: map[string]BuilderC{
 			"common": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"ssh_wait_timeout = 300m",
 					},
 				},
 			},
 			"virtualbox-iso": {
-				templateSection{
+				TemplateSection{
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
 							"memory=4096",
@@ -47,9 +47,9 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 			"compress",
 			"vagrant",
 		},
-		PostProcessors: map[string]postProcessor{
+		PostProcessors: map[string]PostProcessorC{
 			"atlas": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"artifact=hashicorp/foobar",
 						"artifact_type=aws.ami",
@@ -63,14 +63,14 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 				},
 			},
 			"compress": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"output = foo.tar.gz",
 					},
 				},
 			},
 			"docker-import": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"repository = mitchellh/packer",
 						"tag = 0.7",
@@ -78,7 +78,7 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 				},
 			},
 			"docker-push": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"login = false",
 						"login_email = email@test.com",
@@ -89,14 +89,14 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 				},
 			},
 			"docker-save": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"path = save/path",
 					},
 				},
 			},
 			"docker-tag": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"repository = mitchellh/packer",
 						"tag = 0.7",
@@ -104,7 +104,7 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 				},
 			},
 			"vagrant": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"compression_level = 6",
 						"keep_input_artifact = false",
@@ -123,7 +123,7 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 				},
 			},
 			"vagrant-cloud": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"access_token = vagrant-cloud-token",
 						"box_download_url=download.example.com/box",
@@ -136,7 +136,7 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 				},
 			},
 			"vsphere": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"cluster=target-cluster",
 						"datacenter=target-datacenter",
@@ -157,9 +157,9 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 		ProvisionerIDs: []string{
 			"shell",
 		},
-		Provisioners: map[string]provisioner{
+		Provisioners: map[string]ProvisionerC{
 			"shell": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"execute_command = execute_test.command",
 					},
@@ -176,8 +176,8 @@ var testPostProcessorsAllTemplate = &rawTemplate{
 	},
 }
 
-var pp = &postProcessor{
-	templateSection{
+var pp = &PostProcessorC{
+	TemplateSection{
 		Settings: []string{
 			"compression_level=8",
 			"keep_input_artifact=true",
@@ -192,9 +192,9 @@ var pp = &postProcessor{
 	},
 }
 
-var ppOrig = map[string]postProcessor{
+var ppOrig = map[string]PostProcessorC{
 	"vagrant": {
-		templateSection{
+		TemplateSection{
 			Settings: []string{
 				"compression_level = 9",
 				"keep_input_artifact = false",
@@ -212,7 +212,7 @@ var ppOrig = map[string]postProcessor{
 		},
 	},
 	"vagrant-cloud": {
-		templateSection{
+		TemplateSection{
 			Settings: []string{
 				"access_token = getAValidTokenFrom-VagrantCloud.com",
 				"box_tag = foo/bar",
@@ -224,9 +224,9 @@ var ppOrig = map[string]postProcessor{
 	},
 }
 
-var ppNew = map[string]postProcessor{
+var ppNew = map[string]PostProcessorC{
 	"vagrant": {
-		templateSection{
+		TemplateSection{
 			Settings: []string{
 				"compression_level=8",
 				"keep_input_artifact=true",
@@ -251,9 +251,9 @@ var ppNew = map[string]postProcessor{
 	},
 }
 
-var ppMerged = map[string]postProcessor{
+var ppMerged = map[string]PostProcessorC{
 	"vagrant": {
-		templateSection{
+		TemplateSection{
 			Settings: []string{
 				"compression_level=8",
 				"keep_input_artifact=true",
@@ -282,7 +282,7 @@ var ppMerged = map[string]postProcessor{
 		},
 	},
 	"vagrant-cloud": {
-		templateSection{
+		TemplateSection{
 			Settings: []string{
 				"access_token = getAValidTokenFrom-VagrantCloud.com",
 				"box_tag = foo/bar",
@@ -495,7 +495,7 @@ func TestVagrantVSphereProcessor(t *testing.T) {
 }
 
 func TestDeepCopyMapStringPostProcessor(t *testing.T) {
-	cpy := DeepCopyMapStringPostProcessor(ppOrig)
+	cpy := DeepCopyMapStringPostProcessorC(ppOrig)
 	if MarshalJSONToString.Get(cpy) != MarshalJSONToString.Get(ppOrig) {
 		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(ppOrig), MarshalJSONToString.Get(cpy))
 	}

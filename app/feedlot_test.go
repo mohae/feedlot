@@ -50,7 +50,7 @@ func createTmpTestDirFiles(s string) (dir string, files []string, err error) {
 	return dir, files, nil
 }
 
-var testDistroDefaultUbuntu = rawTemplate{
+var testDistroDefaultUbuntu = RawTemplate{
 	PackerInf: PackerInf{MinPackerVersion: "0.4.0", Description: "Test supported distribution template"},
 	IODirInf: IODirInf{
 		TemplateOutputDir: "../test_files/out/:distro/:build_name",
@@ -62,20 +62,20 @@ var testDistroDefaultUbuntu = rawTemplate{
 		BuildName: "",
 		BaseURL:   "http://releases.ubuntu.org/",
 	},
-	date:    today,
-	delim:   ":",
+	Date:    today,
+	Delim:   ":",
 	Distro:  "ubuntu",
 	Arch:    "amd64",
 	Image:   "server",
 	Release: "12.04",
-	varVals: map[string]string{},
-	dirs:    map[string]string{},
-	files:   map[string]string{},
-	build: build{
+	VarVals: map[string]string{},
+	Dirs:    map[string]string{},
+	Files:   map[string]string{},
+	Build: Build{
 		BuilderIDs: []string{"virtualbox-iso", "vmware-iso"},
-		Builders: map[string]builder{
+		Builders: map[string]BuilderC{
 			"common": {
-				templateSection{
+				TemplateSection{
 					//ID: "common",
 					Settings: []string{
 						"boot_wait = 5s",
@@ -94,7 +94,7 @@ var testDistroDefaultUbuntu = rawTemplate{
 				},
 			},
 			"virtualbox-iso": {
-				templateSection{
+				TemplateSection{
 					//ID: "virtualbox-iso",
 					Settings: []string{
 						"virtualbox_version_file = .vbox_version",
@@ -108,7 +108,7 @@ var testDistroDefaultUbuntu = rawTemplate{
 				},
 			},
 			"vmware-iso": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{},
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
@@ -124,9 +124,9 @@ var testDistroDefaultUbuntu = rawTemplate{
 			"vagrant",
 			"vagrant-cloud",
 		},
-		PostProcessors: map[string]postProcessor{
+		PostProcessors: map[string]PostProcessorC{
 			"vagrant": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"compression_level = 9",
 						"keep_input_artifact = false",
@@ -141,7 +141,7 @@ var testDistroDefaultUbuntu = rawTemplate{
 				},
 			},
 			"vagrant-cloud": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"access_token = getAValidTokenFrom-VagrantCloud.com",
 						"box_tag = foo/bar",
@@ -153,9 +153,9 @@ var testDistroDefaultUbuntu = rawTemplate{
 			},
 		},
 		ProvisionerIDs: []string{"shell"},
-		Provisioners: map[string]provisioner{
+		Provisioners: map[string]ProvisionerC{
 			"shell": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"execute_command = execute_test.command",
 					},
@@ -179,7 +179,7 @@ var testDistroDefaultUbuntu = rawTemplate{
 	},
 }
 
-var testDistroDefaultCentOS = rawTemplate{
+var testDistroDefaultCentOS = RawTemplate{
 	PackerInf: PackerInf{
 		MinPackerVersion: "0.4.0",
 		Description:      "Test template config and feedlot options for CentOS",
@@ -194,20 +194,20 @@ var testDistroDefaultCentOS = rawTemplate{
 		BuildName: "",
 		BaseURL:   "",
 	},
-	date:    today,
-	delim:   ":",
+	Date:    today,
+	Delim:   ":",
 	Distro:  "centos",
 	Arch:    "x86_64",
 	Image:   "minimal",
 	Release: "6",
-	varVals: map[string]string{},
-	dirs:    map[string]string{},
-	files:   map[string]string{},
-	build: build{
+	VarVals: map[string]string{},
+	Dirs:    map[string]string{},
+	Files:   map[string]string{},
+	Build: Build{
 		BuilderIDs: []string{"virtualbox-iso", "vmware-iso"},
-		Builders: map[string]builder{
+		Builders: map[string]BuilderC{
 			"common": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"boot_command = boot_test.command",
 						"boot_wait = 5s",
@@ -226,7 +226,7 @@ var testDistroDefaultCentOS = rawTemplate{
 				},
 			},
 			"virtualbox-iso": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"virtualbox_version_file = .vbox_version",
 					},
@@ -239,7 +239,7 @@ var testDistroDefaultCentOS = rawTemplate{
 				},
 			},
 			"vmware-iso": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{},
 					Arrays: map[string]interface{}{
 						"vm_settings": []string{
@@ -255,9 +255,9 @@ var testDistroDefaultCentOS = rawTemplate{
 			"vagrant",
 			"vagrant-cloud",
 		},
-		PostProcessors: map[string]postProcessor{
+		PostProcessors: map[string]PostProcessorC{
 			"vagrant": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"compression_level = 9",
 						"keep_input_artifact = false",
@@ -275,7 +275,7 @@ var testDistroDefaultCentOS = rawTemplate{
 				},
 			},
 			"vagrant-cloud": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"access_token = getAValidTokenFrom-VagrantCloud.com",
 						"box_tag = foo/bar",
@@ -289,9 +289,9 @@ var testDistroDefaultCentOS = rawTemplate{
 		ProvisionerIDs: []string{
 			"shell",
 		},
-		Provisioners: map[string]provisioner{
+		Provisioners: map[string]ProvisionerC{
 			"shell": {
-				templateSection{
+				TemplateSection{
 					Settings: []string{
 						"execute_command = execute_test.command",
 					},
@@ -321,7 +321,7 @@ func init() {
 	var b bool
 	testSupportedCentOS.IODirInf.SourceDirIsRelative = &b
 	testSupportedCentOS.IODirInf.TemplateOutputDirIsRelative = &b
-	testDistroDefaults = distroDefaults{Templates: map[Distro]rawTemplate{}, IsSet: true}
+	testDistroDefaults = distroDefaults{Templates: map[Distro]RawTemplate{}, IsSet: true}
 	testDistroDefaults.Templates[Ubuntu] = testDistroDefaultUbuntu
 	testDistroDefaults.Templates[CentOS] = testDistroDefaultCentOS
 }
@@ -904,9 +904,9 @@ func TestSubString(t *testing.T) {
 
 func TestMergedKeysFromComponentMaps(t *testing.T) {
 	map1 := map[string]Componenter{
-		"key1": provisioner{},
-		"key2": provisioner{},
-		"key3": builder{},
+		"key1": ProvisionerC{},
+		"key2": ProvisionerC{},
+		"key3": BuilderC{},
 	}
 
 	keys := mergeKeysFromComponentMaps(map1)
@@ -927,8 +927,8 @@ func TestMergedKeysFromComponentMaps(t *testing.T) {
 		}
 	}
 	map2 := map[string]Componenter{
-		"key1": provisioner{},
-		"key4": builder{},
+		"key1": ProvisionerC{},
+		"key4": BuilderC{},
 	}
 
 	keys = mergeKeysFromComponentMaps(map1, map2)

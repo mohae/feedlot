@@ -2,7 +2,7 @@ package app
 
 import "testing"
 
-var testRawTemplateProvisioner = &rawTemplate{
+var testRawTemplateProvisioner = &RawTemplate{
 	PackerInf: PackerInf{
 		MinPackerVersion: "0.4.0",
 		Description:      "Test template config and Feedlot options for CentOS",
@@ -17,20 +17,20 @@ var testRawTemplateProvisioner = &rawTemplate{
 		BuildName: "",
 		BaseURL:   "",
 	},
-	date:    today,
-	delim:   ":",
+	Date:    today,
+	Delim:   ":",
 	Distro:  "centos",
 	Arch:    "x86_64",
 	Image:   "minimal",
 	Release: "6",
-	varVals: map[string]string{},
-	dirs:    map[string]string{},
-	files:   map[string]string{},
-	build: build{
+	VarVals: map[string]string{},
+	Dirs:    map[string]string{},
+	Files:   map[string]string{},
+	Build: Build{
 		BuilderIDs: []string{"virtualbox-iso", "vmware-iso"},
-		Builders: map[string]builder{
+		Builders: map[string]BuilderC{
 			"common": {
-				templateSection{
+				TemplateSection{
 					Type: "common",
 					Settings: []string{
 						"boot_command = boot_test.command",
@@ -49,7 +49,7 @@ var testRawTemplateProvisioner = &rawTemplate{
 				},
 			},
 			"virtualbox-iso": {
-				templateSection{
+				TemplateSection{
 					Type: "virtualbox-iso",
 					Settings: []string{
 						"virtualbox_version_file = .vbox_version",
@@ -63,7 +63,7 @@ var testRawTemplateProvisioner = &rawTemplate{
 				},
 			},
 			"vmware-iso": {
-				templateSection{
+				TemplateSection{
 					Type:     "vmware-iso",
 					Settings: []string{},
 					Arrays: map[string]interface{}{
@@ -80,9 +80,9 @@ var testRawTemplateProvisioner = &rawTemplate{
 			"vagrant",
 			"vagrant-cloud",
 		},
-		PostProcessors: map[string]postProcessor{
+		PostProcessors: map[string]PostProcessorC{
 			"vagrant": {
-				templateSection{
+				TemplateSection{
 					Type: "vagrant",
 					Settings: []string{
 						"compression_level = 9",
@@ -101,7 +101,7 @@ var testRawTemplateProvisioner = &rawTemplate{
 				},
 			},
 			"vagrant-cloud": {
-				templateSection{
+				TemplateSection{
 					Type: "vagrant-cloud",
 					Settings: []string{
 						"access_token = getAValidTokenFrom-VagrantCloud.com",
@@ -116,9 +116,9 @@ var testRawTemplateProvisioner = &rawTemplate{
 			"shell-test",
 			"file",
 		},
-		Provisioners: map[string]provisioner{
+		Provisioners: map[string]ProvisionerC{
 			"shell-test": {
-				templateSection{
+				TemplateSection{
 					Type: "shell",
 					Settings: []string{
 						"execute_command = execute_test.command",
@@ -140,7 +140,7 @@ var testRawTemplateProvisioner = &rawTemplate{
 				},
 			},
 			"file": {
-				templateSection{
+				TemplateSection{
 					Type: "file",
 					Settings: []string{
 						"source = app.tar.gz",
@@ -153,7 +153,7 @@ var testRawTemplateProvisioner = &rawTemplate{
 	},
 }
 
-var testRawTemplateProvisionersAll = &rawTemplate{
+var testRawTemplateProvisionersAll = &RawTemplate{
 	PackerInf: PackerInf{
 		MinPackerVersion: "0.4.0",
 		Description:      "Test template config and Feedlot options for CentOS",
@@ -168,20 +168,20 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 		BuildName: "",
 		BaseURL:   "",
 	},
-	date:    today,
-	delim:   ":",
+	Date:    today,
+	Delim:   ":",
 	Distro:  "centos",
 	Arch:    "x86_64",
 	Image:   "minimal",
 	Release: "6",
-	varVals: map[string]string{},
-	dirs:    map[string]string{},
-	files:   map[string]string{},
-	build: build{
+	VarVals: map[string]string{},
+	Dirs:    map[string]string{},
+	Files:   map[string]string{},
+	Build: Build{
 		BuilderIDs: []string{"virtualbox-iso", "vmware-iso"},
-		Builders: map[string]builder{
+		Builders: map[string]BuilderC{
 			"common": {
-				templateSection{
+				TemplateSection{
 					Type: "common",
 					Settings: []string{
 						"boot_command = boot_test.command",
@@ -200,7 +200,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 				},
 			},
 			"virtualbox-iso": {
-				templateSection{
+				TemplateSection{
 					Type: "virtualbox-iso",
 					Settings: []string{
 						"virtualbox_version_file = .vbox_version",
@@ -214,7 +214,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 				},
 			},
 			"vmware-iso": {
-				templateSection{
+				TemplateSection{
 					Type:     "vmware-iso",
 					Settings: []string{},
 					Arrays: map[string]interface{}{
@@ -231,9 +231,9 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 			"vagrant",
 			"vagrant-cloud",
 		},
-		PostProcessors: map[string]postProcessor{
+		PostProcessors: map[string]PostProcessorC{
 			"vagrant": {
-				templateSection{
+				TemplateSection{
 					Type: "vagrant",
 					Settings: []string{
 						"compression_level = 9",
@@ -252,7 +252,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 				},
 			},
 			"vagrant-cloud": {
-				templateSection{
+				TemplateSection{
 					Type: "vagrant-cloud",
 					Settings: []string{
 						"access_token = getAValidTokenFrom-VagrantCloud.com",
@@ -273,9 +273,9 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 			"salt-masterless",
 			"shell",
 		},
-		Provisioners: map[string]provisioner{
+		Provisioners: map[string]ProvisionerC{
 			"ansible": {
-				templateSection{
+				TemplateSection{
 					Type: "ansible",
 					Settings: []string{
 						"playbook_file= playbook.yml",
@@ -306,7 +306,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 				},
 			},
 			"ansible-local": {
-				templateSection{
+				TemplateSection{
 					Type: "ansible-local",
 					Settings: []string{
 						"playbook_file= playbook.yml",
@@ -335,7 +335,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 				},
 			},
 			"chef-client": {
-				templateSection{
+				TemplateSection{
 					Type: "chef-client",
 					Settings: []string{
 						"chef_environment=web",
@@ -365,7 +365,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 				},
 			},
 			"chef-solo": {
-				templateSection{
+				TemplateSection{
 					Type: "chef-solo",
 					Settings: []string{
 						"chef_environment = env",
@@ -398,7 +398,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 				},
 			},
 			"file": {
-				templateSection{
+				TemplateSection{
 					Type: "file",
 					Settings: []string{
 						"source = app.tar.gz",
@@ -407,7 +407,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 				},
 			},
 			"filedir": {
-				templateSection{
+				TemplateSection{
 					Type: "file",
 					Settings: []string{
 						"source = source/",
@@ -416,7 +416,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 				},
 			},
 			"puppet-masterless": {
-				templateSection{
+				TemplateSection{
 					Type: "puppet-masterless",
 					Settings: []string{
 						"manifest_filet=site.pp",
@@ -444,7 +444,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 				},
 			},
 			"puppet-server": {
-				templateSection{
+				TemplateSection{
 					Type: "puppet-server",
 					Settings: []string{
 						"client_cert_path = /etc/puppet/client.pem",
@@ -464,7 +464,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 				},
 			},
 			"salt-masterless": {
-				templateSection{
+				TemplateSection{
 					Type: "salt-masterless",
 					Settings: []string{
 						"bootstrap_args = args",
@@ -479,7 +479,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 				},
 			},
 			"salt-masterless-remote-settings": {
-				templateSection{
+				TemplateSection{
 					Type: "salt-masterless",
 					Settings: []string{
 						"bootstrap_args = args",
@@ -495,7 +495,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 				},
 			},
 			"salt-masterless-remote-pillar-minion-err": {
-				templateSection{
+				TemplateSection{
 					Type: "salt-masterless",
 					Settings: []string{
 						"bootstrap_args = args",
@@ -511,7 +511,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 				},
 			},
 			"salt-masterless-remote-state-minion-err": {
-				templateSection{
+				TemplateSection{
 					Type: "salt-masterless",
 					Settings: []string{
 						"bootstrap_args = args",
@@ -527,7 +527,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 				},
 			},
 			"shell-local": {
-				templateSection{
+				TemplateSection{
 					Type: "shell-local",
 					Settings: []string{
 						"command = echo foo",
@@ -536,7 +536,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 				},
 			},
 			"shell-required-missing": {
-				templateSection{
+				TemplateSection{
 					Type: "shell",
 					Settings: []string{
 						"binary = false",
@@ -559,7 +559,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 				},
 			},
 			"shell-inline": {
-				templateSection{
+				TemplateSection{
 					Type: "shell",
 					Settings: []string{
 						"binary = false",
@@ -586,7 +586,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 				},
 			},
 			"shell-script": {
-				templateSection{
+				TemplateSection{
 					Type: "shell",
 					Settings: []string{
 						"binary = false",
@@ -610,7 +610,7 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 				},
 			},
 			"shell-scripts": {
-				templateSection{
+				TemplateSection{
 					Type: "shell",
 					Settings: []string{
 						"binary = false",
@@ -642,8 +642,8 @@ var testRawTemplateProvisionersAll = &rawTemplate{
 	},
 }
 
-var pr = &provisioner{
-	templateSection{
+var pr = &ProvisionerC{
+	TemplateSection{
 		Settings: []string{
 			"execute_command= echo 'vagrant' | sudo -S sh '{{.Path}}'",
 			"type = shell",
@@ -668,9 +668,9 @@ var pr = &provisioner{
 	},
 }
 
-var prOrig = map[string]provisioner{
-	"shell-test": provisioner{
-		templateSection{
+var prOrig = map[string]ProvisionerC{
+	"shell-test": ProvisionerC{
+		TemplateSection{
 			Type: "shell",
 			Settings: []string{
 				"execute_command = execute_test.command",
@@ -692,7 +692,7 @@ var prOrig = map[string]provisioner{
 		},
 	},
 	"file": {
-		templateSection{
+		TemplateSection{
 			Type: "file",
 			Settings: []string{
 				"source = app.tar.gz",
@@ -703,9 +703,9 @@ var prOrig = map[string]provisioner{
 	},
 }
 
-var prNew = map[string]provisioner{
-	"shell-test": provisioner{
-		templateSection{
+var prNew = map[string]ProvisionerC{
+	"shell-test": ProvisionerC{
+		TemplateSection{
 			Type:     "shell",
 			Settings: []string{},
 			Arrays: map[string]interface{}{
@@ -736,9 +736,9 @@ var prNew = map[string]provisioner{
 	},
 }
 
-var prMerged = map[string]provisioner{
-	"shell-test": provisioner{
-		templateSection{
+var prMerged = map[string]ProvisionerC{
+	"shell-test": ProvisionerC{
+		TemplateSection{
 			Type: "shell",
 			Settings: []string{
 				"execute_command = execute_test.command",
@@ -770,7 +770,7 @@ var prMerged = map[string]provisioner{
 		},
 	},
 	"file": {
-		templateSection{
+		TemplateSection{
 			Type: "file",
 			Settings: []string{
 				"source = app.tar.gz",

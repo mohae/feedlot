@@ -107,7 +107,7 @@ func ParseProvisioner(s string) Provisioner {
 }
 
 // createProvisioner creates the provisioners for a build.
-func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
+func (r *RawTemplate) createProvisioners() (p []interface{}, err error) {
 	if r.ProvisionerIDs == nil || len(r.ProvisionerIDs) <= 0 {
 		return nil, nil
 	}
@@ -201,7 +201,7 @@ func (r *rawTemplate) createProvisioners() (p []interface{}, err error) {
 //   ssh_authorized_key_file  string
 //   ssh_host_key_file        string
 //   user                     string
-func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createAnsible(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
 		return nil, ProvisionerErr{id: ID, Provisioner: Ansible, Err: ErrProvisionerNotFound}
@@ -228,7 +228,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
 			if src != "" {
-				r.files[filepath.Join(r.TemplateOutputDir, Ansible.String(), v)] = src
+				r.Files[filepath.Join(r.TemplateOutputDir, Ansible.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(Ansible.String(), v, false)
 			hasPlaybook = true
@@ -293,7 +293,7 @@ func (r *rawTemplate) createAnsible(ID string) (settings map[string]interface{},
 //   playbook_paths     array of strings
 //   role_paths         array of strings
 //   staging_directory  string
-func (r *rawTemplate) createAnsibleLocal(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createAnsibleLocal(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
 		return nil, ProvisionerErr{id: ID, Provisioner: AnsibleLocal, Err: ErrProvisionerNotFound}
@@ -320,7 +320,7 @@ func (r *rawTemplate) createAnsibleLocal(ID string) (settings map[string]interfa
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
 			if src != "" {
-				r.files[filepath.Join(r.TemplateOutputDir, AnsibleLocal.String(), v)] = src
+				r.Files[filepath.Join(r.TemplateOutputDir, AnsibleLocal.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(AnsibleLocal.String(), v, false)
 			hasPlaybook = true
@@ -335,7 +335,7 @@ func (r *rawTemplate) createAnsibleLocal(ID string) (settings map[string]interfa
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
 			if src != "" {
-				r.files[r.buildOutPath(AnsibleLocal.String(), v)] = src
+				r.Files[r.buildOutPath(AnsibleLocal.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(AnsibleLocal.String(), v, false)
 		case "playbook_dir", "host_vars", "group_vars":
@@ -349,7 +349,7 @@ func (r *rawTemplate) createAnsibleLocal(ID string) (settings map[string]interfa
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
 			if src != "" {
-				r.dirs[r.buildOutPath(AnsibleLocal.String(), v)] = src
+				r.Dirs[r.buildOutPath(AnsibleLocal.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(AnsibleLocal.String(), v, false)
 		case "command", "staging_directory", "inventory_groups":
@@ -375,7 +375,7 @@ func (r *rawTemplate) createAnsibleLocal(ID string) (settings map[string]interfa
 				// Nothing should be copied in this instancel it should not be added
 				// to the copy info
 				if src != "" {
-					r.files[r.buildOutPath(AnsibleLocal.String(), v)] = src
+					r.Files[r.buildOutPath(AnsibleLocal.String(), v)] = src
 				}
 				array[i] = r.buildTemplateResourcePath(AnsibleLocal.String(), v, false)
 			}
@@ -428,7 +428,7 @@ func (r *rawTemplate) createAnsibleLocal(ID string) (settings map[string]interfa
 //   validation_key_path            string
 // Unsopported configuration options:
 //   json                           object
-func (r *rawTemplate) createChefClient(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createChefClient(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ChefClient.String()]
 	if !ok {
 		return nil, ProvisionerErr{id: ID, Provisioner: ChefClient, Err: ErrProvisionerNotFound}
@@ -458,7 +458,7 @@ func (r *rawTemplate) createChefClient(ID string) (settings map[string]interface
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
 			if src != "" {
-				r.files[r.buildOutPath(ChefClient.String(), v)] = src
+				r.Files[r.buildOutPath(ChefClient.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(ChefClient.String(), v, false)
 		case "execute_command", "install_command":
@@ -519,7 +519,7 @@ func (r *rawTemplate) createChefClient(ID string) (settings map[string]interface
 //   staging_directory               string
 // Unsopported configuration options:
 //   json                            object
-func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createChefSolo(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
 		return nil, ProvisionerErr{id: ID, Provisioner: ChefSolo, Err: ErrProvisionerNotFound}
@@ -549,7 +549,7 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
 			if src != "" {
-				r.files[r.buildOutPath(ChefSolo.String(), v)] = src
+				r.Files[r.buildOutPath(ChefSolo.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(ChefSolo.String(), v, false)
 		case "data_bags_path", "environments_path", "roles_path":
@@ -562,7 +562,7 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
 			if src != "" {
-				r.dirs[r.buildOutPath(ChefSolo.String(), v)] = src
+				r.Dirs[r.buildOutPath(ChefSolo.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(ChefSolo.String(), v, false)
 		case "execute_command", "install_command":
@@ -597,7 +597,7 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 				// Nothing should be copied in this instancel it should not be added
 				// to the copy info
 				if src != "" {
-					r.dirs[r.buildOutPath(ChefSolo.String(), v)] = src
+					r.Dirs[r.buildOutPath(ChefSolo.String(), v)] = src
 				}
 				array[i] = r.buildTemplateResourcePath(ChefSolo.String(), v, false)
 			}
@@ -628,7 +628,7 @@ func (r *rawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 //   source       string
 // Optional configuraiton options:
 //   direction    string
-func (r *rawTemplate) createFile(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createFile(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
 		return nil, ProvisionerErr{id: ID, Provisioner: File, Err: ErrProvisionerNotFound}
@@ -662,9 +662,9 @@ func (r *rawTemplate) createFile(ID string) (settings map[string]interface{}, er
 				}
 				if inf.IsDir() {
 					isDir = true
-					r.dirs[r.buildOutPath(File.String(), v)] = src
+					r.Dirs[r.buildOutPath(File.String(), v)] = src
 				} else {
-					r.files[r.buildOutPath(File.String(), v)] = src
+					r.Files[r.buildOutPath(File.String(), v)] = src
 				}
 			}
 			settings[k] = r.buildTemplateResourcePath(File.String(), v, isDir)
@@ -710,7 +710,7 @@ func (r *rawTemplate) createFile(ID string) (settings map[string]interface{}, er
 //   prevent_sudo       bool
 //   staging_directroy  string
 //   working_directory  string
-func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createPuppetMasterless(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
 		return nil, ProvisionerErr{id: ID, Provisioner: PuppetMasterless, Err: ErrProvisionerNotFound}
@@ -734,7 +734,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
 			if src != "" {
-				r.files[r.buildOutPath(PuppetMasterless.String(), v)] = src
+				r.Files[r.buildOutPath(PuppetMasterless.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(PuppetMasterless.String(), v, false)
 			hasManifestFile = true
@@ -753,7 +753,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
 			if src != "" {
-				r.files[r.buildOutPath(PuppetMasterless.String(), v)] = src
+				r.Files[r.buildOutPath(PuppetMasterless.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(PuppetMasterless.String(), v, false)
 		case "manifest_dir":
@@ -767,7 +767,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
 			if src != "" {
-				r.dirs[r.buildOutPath(PuppetMasterless.String(), v)] = src
+				r.Dirs[r.buildOutPath(PuppetMasterless.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(PuppetMasterless.String(), v, false)
 		case "execute_command":
@@ -821,7 +821,7 @@ func (r *rawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 //   puppet_node              string
 //   puppet_server            string
 //   staging_directroy        string
-func (r *rawTemplate) createPuppetServer(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createPuppetServer(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
 		return nil, ProvisionerErr{id: ID, Provisioner: PuppetServer, Err: ErrProvisionerNotFound}
@@ -874,7 +874,7 @@ func (r *rawTemplate) createPuppetServer(ID string) (settings map[string]interfa
 //   remote_state_tree    string
 //   skip_bootstrap       bool
 //   temp_config_dir      string
-func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createSalt(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
 		return nil, ProvisionerErr{id: ID, Provisioner: Salt, Err: ErrProvisionerNotFound}
@@ -902,7 +902,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info)
 			if src != "" {
-				r.dirs[r.buildOutPath(Salt.String(), v)] = src
+				r.Dirs[r.buildOutPath(Salt.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(Salt.String(), v, false)
 			hasLocalStateTree = true
@@ -917,7 +917,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
 			if src != "" {
-				r.dirs[r.buildOutPath(Salt.String(), v)] = src
+				r.Dirs[r.buildOutPath(Salt.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(Salt.String(), v, false)
 		case "minion_config":
@@ -931,7 +931,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
 			if src != "" {
-				r.files[r.buildOutPath(Salt.String(), filepath.Join(v, "minion"))] = src
+				r.Files[r.buildOutPath(Salt.String(), filepath.Join(v, "minion"))] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(Salt.String(), v, false)
 			hasMinion = true
@@ -994,7 +994,7 @@ func (r *rawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 //   remote_path          string
 //   skip_clean           bool
 //   start_retry_timeout  string
-func (r *rawTemplate) createShell(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createShell(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
 		return nil, ProvisionerErr{id: ID, Provisioner: Shell, Err: ErrProvisionerNotFound}
@@ -1069,7 +1069,7 @@ func (r *rawTemplate) createShell(ID string) (settings map[string]interface{}, e
 		// Nothing should be copied in this instancel it should not be added
 		// to the copy info
 		if src != "" {
-			r.files[r.buildOutPath(Shell.String(), script)] = src
+			r.Files[r.buildOutPath(Shell.String(), script)] = src
 		}
 		settings["script"] = r.buildTemplateResourcePath(Shell.String(), script, false)
 		goto arrays
@@ -1088,7 +1088,7 @@ func (r *rawTemplate) createShell(ID string) (settings map[string]interface{}, e
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
 			if src != "" {
-				r.files[r.buildOutPath(Shell.String(), v)] = src
+				r.Files[r.buildOutPath(Shell.String(), v)] = src
 			}
 			scripts[i] = r.buildTemplateResourcePath(Shell.String(), v, false)
 		}
@@ -1125,7 +1125,7 @@ arrays:
 //   command              string
 // Optional confinguration parameters:
 //   execute_command      string
-func (r *rawTemplate) createShellLocal(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createShellLocal(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.Provisioners[ID]
 	if !ok {
 		return nil, ProvisionerErr{id: ID, Provisioner: ShellLocal, Err: ErrProvisionerNotFound}
@@ -1185,19 +1185,19 @@ func (r *rawTemplate) createShellLocal(ID string) (settings map[string]interface
 //   orphaned.
 //  * If there isn't a new config, return the existing as there are no
 //    overrides.
-func (r *rawTemplate) updateProvisioners(newP map[string]provisioner) error {
+func (r *RawTemplate) updateProvisioners(newP map[string]ProvisionerC) error {
 	// If there is nothing new, old equals merged.
 	if len(newP) <= 0 || newP == nil {
 		return nil
 	}
 	// Convert the existing provisioners to Componenter.
-	oldC := DeepCopyMapStringProvisioner(r.Provisioners)
+	oldC := DeepCopyMapStringProvisionerC(r.Provisioners)
 	// Convert the new provisioners to Componenter.
-	newC := DeepCopyMapStringProvisioner(newP)
+	newC := DeepCopyMapStringProvisionerC(newP)
 	// Get the all keys from both maps
 	keys := mergeKeysFromComponentMaps(oldC, newC)
 	if r.Provisioners == nil {
-		r.Provisioners = map[string]provisioner{}
+		r.Provisioners = map[string]ProvisionerC{}
 	}
 	// Copy: if the key exists in the new provisioners only.
 	// Ignore: if the key does not exist in the new provisioners.
@@ -1231,7 +1231,7 @@ func (r *rawTemplate) updateProvisioners(newP map[string]provisioner) error {
 // Go through all of the Settings and convert them to a map. Each setting is
 // parsed into its constituent parts. The value then goes through variable
 // replacement to ensure that the settings are properly resolved.
-func (p *provisioner) settingsToMap(Type string, r *rawTemplate) map[string]interface{} {
+func (p *ProvisionerC) settingsToMap(Type string, r *RawTemplate) map[string]interface{} {
 	var k string
 	var v interface{}
 	m := make(map[string]interface{}, len(p.Settings))
@@ -1251,7 +1251,7 @@ func (p *provisioner) settingsToMap(Type string, r *rawTemplate) map[string]inte
 
 // DeepCopyMapStringProvisioner makes a deep copy of each builder passed and
 // returns the copied map[string]provisioner as a map[string]interface{}
-func DeepCopyMapStringProvisioner(p map[string]provisioner) map[string]Componenter {
+func DeepCopyMapStringProvisionerC(p map[string]ProvisionerC) map[string]Componenter {
 	c := map[string]Componenter{}
 	for k, v := range p {
 		c[k] = v.Copy()

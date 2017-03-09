@@ -27,37 +27,36 @@ type Componenter interface {
 
 // Contains most of the information for Packer templates within a Feedlot
 // Build.  The keys of the maps are the IDs
-type build struct {
+type Build struct {
 	// Targeted builders: either the ID of the builder section or the Packer
 	// component type value can be used, e.g. ID: "vbox" or "virtualbox-iso".
 	BuilderIDs []string `toml:"builder_ids" json:"builder_ids"`
-	// A map of builder configurations.  When using a VMWare or VirtualBox
+	// A map of Builder configurations.  When using a VMWare or VirtualBox
 	// builder, there is usually a 'common' builder, which has settings common
 	// to both VMWare and VirtualBox.
-	Builders map[string]builder `toml:"builders" json:"builders"`
+	Builders map[string]BuilderC `toml:"builders" json:"builders"`
 	// Targeted post-processors: either the ID of the post-processor or the
 	// Packer component type value can be used, e.g. ID: "docker" or
 	// "docker-push".
 	PostProcessorIDs []string `toml:"post_processor_ids" json:"post_processor_ids"`
-	// A map of post-processor configurations.
-	PostProcessors map[string]postProcessor `toml:"post_processors" json:"post_processors"`
+	// A map of Post-Processor configurations.
+	PostProcessors map[string]PostProcessorC `toml:"post_processors" json:"post_processors"`
 	// Targeted provisioners: either the ID of the provisioners or the Packer
 	// component type value can be used, e.g. ID: "preprocess" or "shell".
 	ProvisionerIDs []string `toml:"provisioner_ids" json:"provisioner_ids"`
-	// A map of provisioner configurations.
-	Provisioners map[string]provisioner `toml:"provisioners" json:"provisioners"`
+	// A map of {rovisioner configurations.
+	Provisioners map[string]ProvisionerC `toml:"provisioners" json:"provisioners"`
 }
 
-// copy makes a deep copy of the build and returns it.
-func (b *build) Copy() build {
-	new := deepcopy.Copy(b).(*build)
-	return *new
+// Copy makes a deep copy of the Build and returns it.
+func (b *Build) Copy() *Build {
+	return deepcopy.Copy(b).(*Build)
 }
 
 // setTypes goes through each component map and check's if the
 // templateSection Type is set.  If it isn't, the ID (key) is used to
 // set it.
-func (b *build) setTypes() {
+func (b *Build) setTypes() {
 	for k, v := range b.Builders {
 		if len(v.Type) == 0 {
 			v.Type = k
@@ -78,8 +77,8 @@ func (b *build) setTypes() {
 	}
 }
 
-// templateSection is used as an embedded type.
-type templateSection struct {
+// TemplateSection is used as an embedded type.
+type TemplateSection struct {
 	// Type is the actual Packer component type, this may or may not be the
 	// same as the map key (ID).
 	Type string `toml:"type" json:"type"`
@@ -90,7 +89,7 @@ type templateSection struct {
 }
 
 // mergeArrays merges the received array with the current one.
-func (t *templateSection) mergeArrays(n map[string]interface{}) {
+func (t *TemplateSection) mergeArrays(n map[string]interface{}) {
 	if n == nil {
 		return
 	}
@@ -115,27 +114,27 @@ func (t *templateSection) mergeArrays(n map[string]interface{}) {
 	t.Arrays = merged
 }
 
-// builder represents a builder Packer template section.
-type builder struct {
-	templateSection
+// BuilderC represents a builder component of a Packer template.
+type BuilderC struct {
+	TemplateSection
 }
 
 // getType returns the type for this component.  This is on builder instead of
 // templateSection because the component needs to fulfill the interface,
 // not the templateSection.
-func (b builder) getType() string {
+func (b BuilderC) getType() string {
 	return b.Type
 }
 
-// builder.DeepCopy copies the builder values instead of the pointers.
-func (b *builder) Copy() builder {
-	new := deepcopy.Copy(b).(*builder)
+// Copy makes a deepcopy of the Builder component.
+func (b *BuilderC) Copy() BuilderC {
+	new := deepcopy.Copy(b).(*BuilderC)
 	return *new
 }
 
-// mergeSettings the settings section of a builder. New values supersede
+// mergeSettings the settings section of a Builder. New values supersede
 // existing ones.
-func (b *builder) mergeSettings(sl []string) error {
+func (b *BuilderC) mergeSettings(sl []string) error {
 	if sl == nil {
 		return nil
 	}
@@ -147,29 +146,27 @@ func (b *builder) mergeSettings(sl []string) error {
 	return nil
 }
 
-// Type for handling the post-processor section of the configs.
-type postProcessor struct {
-	templateSection
+// PostProcessorC represents a Packer post-processor component.
+type PostProcessorC struct {
+	TemplateSection
 }
 
-// getType returns the type for this component.  This is on postProcessor
+// getType returns the type for this component. This is on postProcessor
 // instead of templateSection because the component needs to fulfill the
 // interface, not the templateSection.
-func (p postProcessor) getType() string {
+func (p PostProcessorC) getType() string {
 	return p.Type
 }
 
-// postProcessor.DeepCopy copies the postProcessor values instead of the
-// pointers.
-func (p *postProcessor) Copy() postProcessor {
-	new := deepcopy.Copy(p).(*postProcessor)
+// Copy makes a deep copy of the PostProcessor component.
+func (p *PostProcessorC) Copy() PostProcessorC {
+	new := deepcopy.Copy(p).(*PostProcessorC)
 	return *new
 }
 
-// postProcessor.mergeSettings  merges the settings section of a
-// post-processor with the passed slice of settings. New values supercede
-// existing ones.
-func (p *postProcessor) mergeSettings(sl []string) error {
+// mergeSettings merges the settings section of a post-processor with the
+// passed slice of settings. New values supercede existing ones.
+func (p *PostProcessorC) mergeSettings(sl []string) error {
 	if sl == nil {
 		return nil
 	}
@@ -186,28 +183,27 @@ func (p *postProcessor) mergeSettings(sl []string) error {
 	return nil
 }
 
-// provisioner: type for common elements for provisioners.
-type provisioner struct {
-	templateSection
+// ProvisionerC representa Packer provisioner component.
+type ProvisionerC struct {
+	TemplateSection
 }
 
 // getType returns the type for this component.  This is on provisioner
 // instead of templateSection because the component needs to fulfill the
 // interface, not the templateSection.
-func (p provisioner) getType() string {
+func (p ProvisionerC) getType() string {
 	return p.Type
 }
 
-// provisioner.DeepCopy copies the postProcessor values instead of the
-// pointers.
-func (p *provisioner) Copy() provisioner {
-	new := deepcopy.Copy(p).(*provisioner)
+// Copy makes a deep copy of the Provisioner component.
+func (p *ProvisionerC) Copy() ProvisionerC {
+	new := deepcopy.Copy(p).(*ProvisionerC)
 	return *new
 }
 
-// provisioner.mergeSettings  merges the settings section of a post-processor
-// with the passed slice of settings. New values supercede existing ones.
-func (p *provisioner) mergeSettings(sl []string) error {
+// mergeSettings merges the settings section of a post-processor with the
+// passed slice of settings. New values supercede existing ones.
+func (p *ProvisionerC) mergeSettings(sl []string) error {
 	if sl == nil {
 		return nil
 	}
@@ -298,7 +294,7 @@ type IODirInf struct {
 	// empty would not be possible.
 	IncludeComponentString *bool `toml:"include_component_string" json:"include_component_string"`
 	// PackerOutputDir is the output directory for the Packer artificts, when
-	// applicable.  This is usually referenced in a builder's output directory,
+	// applicable.  This is usually referenced in a Builder's output directory,
 	// e.g. "output_dir=:packer_output_dir"
 	PackerOutputDir string `toml:"packer_output_dir" json:"packer_output_dir"`
 	// The directory that contains the source files for a build.
@@ -389,18 +385,18 @@ func (p *PackerInf) update(v PackerInf) {
 	}
 }
 
-// defaults is used to store Feedlot application level defaults for Packer templates.
-type defaults struct {
+// Defaults is used to store Feedlot application level defaults for Packer templates.
+type Defaults struct {
 	IODirInf
 	PackerInf
 	BuildInf
-	build
+	Build
 	loaded bool `toml:"-"`
 }
 
 // Load loads the default settings. If the defaults have already been loaded
 // nothing is done.
-func (d *defaults) Load(p string) error {
+func (d *Defaults) Load(p string) error {
 	if d.loaded {
 		return nil
 	}
@@ -437,7 +433,7 @@ func (d *defaults) Load(p string) error {
 		log.Error(err)
 		return err
 	}
-	d.build.setTypes()
+	d.Build.setTypes()
 	d.loaded = true
 	return nil
 }
@@ -448,7 +444,7 @@ func (d *defaults) Load(p string) error {
 //   $ feedlot build -distro=ubuntu
 // All settings can be overridden. The information here represents the standard
 // box configuration for its respective distribution.
-type distro struct {
+type SupportedDistro struct {
 	IODirInf
 	PackerInf
 	BuildInf
@@ -466,19 +462,19 @@ type distro struct {
 	DefImage []string `toml:"default_image" json:"default_image"`
 	// The configurations needed to generate the default settings for a build for this
 	// distribution.
-	build
+	Build
 }
 
 // To add support for a distribution, the information about it must be added to
 // the supported. file, in addition to adding the code to support it to the
 // application.
-type supported struct {
-	Distro map[string]*distro
-	loaded bool
+type SupportedDistros struct {
+	Distros map[string]*SupportedDistro
+	loaded  bool
 }
 
 // Load the supported distro info.
-func (s *supported) Load(p string) error {
+func (s *SupportedDistros) Load(p string) error {
 	name, format, err := conf.ConfFilename(conf.FindConfFile(p, "supported"))
 	if err != nil {
 		err = fmt.Errorf("load supported: %s", err)
@@ -487,7 +483,7 @@ func (s *supported) Load(p string) error {
 	}
 	switch format {
 	case conf.TOML:
-		_, err := toml.DecodeFile(name, &s.Distro)
+		_, err := toml.DecodeFile(name, &s.Distros)
 		if err != nil {
 			err = fmt.Errorf("load supported: %s: %s", name, err)
 			log.Error(err)
@@ -501,7 +497,7 @@ func (s *supported) Load(p string) error {
 			log.Error(err)
 			return err
 		}
-		err = cjsn.Unmarshal(buff, &s.Distro)
+		err = cjsn.Unmarshal(buff, &s.Distros)
 		if err != nil {
 			err = fmt.Errorf("load supported: %s: %s", name, err)
 			log.Error(err)
@@ -517,13 +513,13 @@ func (s *supported) Load(p string) error {
 }
 
 // Struct to hold the builds.
-type builds struct {
-	Build  map[string]*rawTemplate
-	loaded bool
+type Builds struct {
+	Templates map[string]*RawTemplate
+	loaded    bool
 }
 
 // Load the build information from the provided name.
-func (b *builds) Load(name string) error {
+func (b *Builds) Load(name string) error {
 	if name == "" {
 		err := errors.New("load build: no build name specified")
 		log.Error(err)
@@ -531,7 +527,7 @@ func (b *builds) Load(name string) error {
 	}
 	switch conf.ParseConfFormat(contour.GetString(conf.Format)) {
 	case conf.TOML:
-		_, err := toml.DecodeFile(name, &b.Build)
+		_, err := toml.DecodeFile(name, &b.Templates)
 		if err != nil {
 			err = fmt.Errorf("load build %s: %s", name, err)
 			log.Error(err)
@@ -544,7 +540,7 @@ func (b *builds) Load(name string) error {
 			log.Error(err)
 			return err
 		}
-		err = cjsn.Unmarshal(buff, &b.Build)
+		err = cjsn.Unmarshal(buff, &b.Templates)
 		if err != nil {
 			err = fmt.Errorf("load build %s: %s", name, err)
 			log.Error(err)
@@ -555,8 +551,8 @@ func (b *builds) Load(name string) error {
 		log.Error(err)
 		return err
 	}
-	for _, v := range b.Build {
-		v.build.setTypes()
+	for _, v := range b.Templates {
+		v.Build.setTypes()
 	}
 
 	b.loaded = true
@@ -565,11 +561,11 @@ func (b *builds) Load(name string) error {
 
 // getBuildTemplate returns the requested build template, or an error if it
 // can't be found. Th
-func getBuildTemplate(name string) (*rawTemplate, error) {
-	var r *rawTemplate
+func getBuildTemplate(name string) (*RawTemplate, error) {
+	var r *RawTemplate
 	var err error
-	for _, blds := range Builds {
-		for n, bTpl := range blds.Build {
+	for _, blds := range BuildDefs {
+		for n, bTpl := range blds.Templates {
 			if n == name {
 				r = bTpl.Copy()
 				r.BuildName = name
@@ -585,18 +581,18 @@ found:
 }
 
 // Contains lists of builds.
-type buildLists struct {
-	List map[string]list
+type BuildLists struct {
+	Lists map[string]List
 }
 
-// A list contains 1 or more builds.
-type list struct {
+// A List contains 1 or more builds.
+type List struct {
 	Builds []string
 }
 
 // Load loads the build lists. It accepts a path prefix; which is mainly used
 // for testing ATM.
-func (b *buildLists) Load(p string) error {
+func (b *BuildLists) Load(p string) error {
 	// Load the build lists.
 	name, format, err := conf.ConfFilename(conf.FindConfFile(p, "build_list"))
 	if err != nil {
@@ -606,7 +602,7 @@ func (b *buildLists) Load(p string) error {
 	}
 	switch format {
 	case conf.TOML:
-		_, err := toml.DecodeFile(name, &b.List)
+		_, err := toml.DecodeFile(name, &b.Lists)
 		if err != nil {
 			err = fmt.Errorf("load build list: %s: %s", name, err)
 			log.Error(err)
@@ -620,7 +616,7 @@ func (b *buildLists) Load(p string) error {
 			log.Error(err)
 			return err
 		}
-		err = cjsn.Unmarshal(buff, &b.List)
+		err = cjsn.Unmarshal(buff, &b.Lists)
 		if err != nil {
 			err = fmt.Errorf("load build list: %s: %s", name, err)
 			log.Error(err)
@@ -635,10 +631,10 @@ func (b *buildLists) Load(p string) error {
 }
 
 // Get returns the requested build list, or an error
-func (b *buildLists) Get(s string) (list, error) {
-	l, ok := b.List[s]
+func (b *BuildLists) Get(s string) (List, error) {
+	l, ok := b.Lists[s]
 	if !ok {
-		return list{}, fmt.Errorf("%s: unknown build list", s)
+		return List{}, fmt.Errorf("%s: unknown build list", s)
 	}
 	return l, nil
 }

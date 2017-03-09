@@ -107,22 +107,22 @@ func PostProcessorFromString(s string) PostProcessor {
 //     in the `old` map but it does not exist in the `new` map, that
 //     postProcessor will be orphaned.
 //   * If there isn't a new config, the existing one is used
-func (r *rawTemplate) updatePostProcessors(newP map[string]postProcessor) error {
+func (r *RawTemplate) updatePostProcessors(newP map[string]PostProcessorC) error {
 	// If there is nothing new, old equals merged.
 	if len(newP) == 0 || newP == nil {
 		return nil
 	}
 	// Convert the existing postProcessors to Componenter.
 	var oldC = make(map[string]Componenter, len(r.PostProcessors))
-	oldC = DeepCopyMapStringPostProcessor(r.PostProcessors)
+	oldC = DeepCopyMapStringPostProcessorC(r.PostProcessors)
 	// Convert the new postProcessors to Componenter
 	var newC = make(map[string]Componenter, len(newP))
-	newC = DeepCopyMapStringPostProcessor(newP)
+	newC = DeepCopyMapStringPostProcessorC(newP)
 	// Get the all keys from both maps
 	var keys []string
 	keys = mergeKeysFromComponentMaps(oldC, newC)
 	if r.PostProcessors == nil {
-		r.PostProcessors = map[string]postProcessor{}
+		r.PostProcessors = map[string]PostProcessorC{}
 	}
 	// Copy: if the key exists in the new postProcessors only.
 	// Ignore: if the key does not exist in the new postProcessors.
@@ -154,7 +154,7 @@ func (r *rawTemplate) updatePostProcessors(newP map[string]postProcessor) error 
 }
 
 // r.createPostProcessors creates the PostProcessors for a build.
-func (r *rawTemplate) createPostProcessors() (pp []interface{}, err error) {
+func (r *RawTemplate) createPostProcessors() (pp []interface{}, err error) {
 	if r.PostProcessorIDs == nil || len(r.PostProcessorIDs) <= 0 {
 		return nil, nil
 	}
@@ -238,7 +238,7 @@ func (r *rawTemplate) createPostProcessors() (pp []interface{}, err error) {
 // Optional configuration options:
 //   atlas_url     string
 //   metadata      object of key/value strings
-func (r *rawTemplate) createAtlas(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createAtlas(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[ID]
 	if !ok {
 		return nil, PostProcessorErr{id: ID, PostProcessor: Atlas, Err: ErrPostProcessorNotFound}
@@ -305,7 +305,7 @@ func (r *rawTemplate) createAtlas(ID string) (settings map[string]interface{}, e
 //   compression_level    int
 //   keep_input_artifact  bool
 //   output               string
-func (r *rawTemplate) createCompress(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createCompress(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[ID]
 	if !ok {
 		return nil, PostProcessorErr{id: ID, PostProcessor: Compress, Err: ErrPostProcessorNotFound}
@@ -360,7 +360,7 @@ func (r *rawTemplate) createCompress(ID string) (settings map[string]interface{}
 //   tag         string
 // Optional configuration options:
 //   none
-func (r *rawTemplate) createDockerImport(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createDockerImport(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[ID]
 	if !ok {
 		return nil, PostProcessorErr{id: ID, PostProcessor: DockerImport, Err: ErrPostProcessorNotFound}
@@ -419,7 +419,7 @@ func (r *rawTemplate) createDockerImport(ID string) (settings map[string]interfa
 //   login_username  string
 //   login_password  string
 //   login_server    string
-func (r *rawTemplate) createDockerPush(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createDockerPush(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[ID]
 	if !ok {
 		return nil, PostProcessorErr{id: ID, PostProcessor: DockerPush, Err: ErrPostProcessorNotFound}
@@ -465,7 +465,7 @@ func (r *rawTemplate) createDockerPush(ID string) (settings map[string]interface
 //   path  // string
 // Optional configuration options:
 //   none
-func (r *rawTemplate) createDockerSave(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createDockerSave(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[ID]
 	if !ok {
 		return nil, PostProcessorErr{id: ID, PostProcessor: DockerSave, Err: ErrPostProcessorNotFound}
@@ -515,7 +515,7 @@ func (r *rawTemplate) createDockerSave(ID string) (settings map[string]interface
 // Optional configuration options:
 //   force       bool
 //   tag         string
-func (r *rawTemplate) createDockerTag(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createDockerTag(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[ID]
 	if !ok {
 		return nil, PostProcessorErr{id: ID, PostProcessor: DockerTag, Err: ErrPostProcessorNotFound}
@@ -576,7 +576,7 @@ func (r *rawTemplate) createDockerTag(ID string) (settings map[string]interface{
 //   vagrantfile_template  string
 // Provider-Specific Overrides:
 //   override	           array of strings
-func (r *rawTemplate) createVagrant(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createVagrant(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[ID]
 	if !ok {
 		return nil, PostProcessorErr{id: ID, PostProcessor: Vagrant, Err: ErrPostProcessorNotFound}
@@ -612,7 +612,7 @@ func (r *rawTemplate) createVagrant(ID string) (settings map[string]interface{},
 			// Nothing should be copied in this instancel it should not be added
 			// to the copy info
 			if src != "" {
-				r.files[r.buildOutPath(Vagrant.String(), v)] = src
+				r.Files[r.buildOutPath(Vagrant.String(), v)] = src
 			}
 			settings[k] = r.buildTemplateResourcePath(Vagrant.String(), v, false)
 		}
@@ -649,7 +649,7 @@ func (r *rawTemplate) createVagrant(ID string) (settings map[string]interface{},
 //   vagrant_cloud_url    string
 //   version_description  string
 //   box_download_url     string
-func (r *rawTemplate) createVagrantCloud(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createVagrantCloud(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[ID]
 	if !ok {
 		return nil, PostProcessorErr{id: ID, PostProcessor: VagrantCloud, Err: ErrPostProcessorNotFound}
@@ -721,7 +721,7 @@ func (r *rawTemplate) createVagrantCloud(ID string) (settings map[string]interfa
 //
 // Notes:
 //   * datastore is not required if resource_pool is specified
-func (r *rawTemplate) createVSphere(ID string) (settings map[string]interface{}, err error) {
+func (r *RawTemplate) createVSphere(ID string) (settings map[string]interface{}, err error) {
 	_, ok := r.PostProcessors[ID]
 	if !ok {
 		return nil, PostProcessorErr{id: ID, PostProcessor: VSphere, Err: ErrPostProcessorNotFound}
@@ -809,7 +809,7 @@ func (r *rawTemplate) createVSphere(ID string) (settings map[string]interface{},
 // Go through all of the Settings and convert them to a map. Each setting is
 // parsed into its constituent parts. The value then goes through variable
 // replacement to ensure that the settings are properly resolved.
-func (p *postProcessor) settingsToMap(Type string, r *rawTemplate) map[string]interface{} {
+func (p *PostProcessorC) settingsToMap(Type string, r *RawTemplate) map[string]interface{} {
 	var k string
 	var v interface{}
 	m := make(map[string]interface{}, len(p.Settings))
@@ -830,7 +830,7 @@ func (p *postProcessor) settingsToMap(Type string, r *rawTemplate) map[string]in
 // DeepCopyMapStringPostProcessor makes a deep copy of each builder passed and
 // returns the copie map[string]postProcessor as a map[string]interface{}
 // Note: This currently only supports string slices.
-func DeepCopyMapStringPostProcessor(p map[string]postProcessor) map[string]Componenter {
+func DeepCopyMapStringPostProcessorC(p map[string]PostProcessorC) map[string]Componenter {
 	c := map[string]Componenter{}
 	for k, v := range p {
 		c[k] = v.Copy()
