@@ -2,6 +2,7 @@
 package app
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -305,8 +306,8 @@ func TestRawTemplateUpdatePostProcessors(t *testing.T) {
 		t.Errorf("expected error to be nil, got %q", err)
 		return
 	}
-	if MarshalJSONToString.Get(testDistroDefaults.Templates[CentOS].PostProcessors) != MarshalJSONToString.Get(ppOrig) {
-		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(ppOrig), MarshalJSONToString.Get(testDistroDefaults.Templates[CentOS].PostProcessors))
+	if !reflect.DeepEqual(testDistroDefaults.Templates[CentOS].PostProcessors, ppOrig) {
+		t.Errorf("Expected %#v, got %#v", ppOrig, testDistroDefaults.Templates[CentOS].PostProcessors)
 	}
 
 	tpl, ok = testDistroDefaults.Templates[CentOS]
@@ -318,15 +319,16 @@ func TestRawTemplateUpdatePostProcessors(t *testing.T) {
 	if err != nil {
 		t.Errorf("expected error to be nil, got %q", err)
 	}
-	if MarshalJSONToString.Get(testDistroDefaults.Templates[CentOS].PostProcessors) != MarshalJSONToString.Get(ppMerged) {
-		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(ppMerged), MarshalJSONToString.Get(testDistroDefaults.Templates[CentOS].PostProcessors))
+	if !reflect.DeepEqual(testDistroDefaults.Templates[CentOS].PostProcessors, ppMerged) {
+		t.Errorf("Expected %#v, got %#v", ppMerged, testDistroDefaults.Templates[CentOS].PostProcessors)
 	}
 }
 
 func TestPostProcessorsSettingsToMap(t *testing.T) {
+	expected := map[string]interface{}{"type": "vagrant", "compression_level": "8", "keep_input_artifact": true}
 	res := pp.settingsToMap("vagrant", testRawTpl)
-	if MarshalJSONToString.Get(res) != MarshalJSONToString.Get(map[string]interface{}{"type": "vagrant", "compression_level": "8", "keep_input_artifact": true}) {
-		t.Errorf("expected %q, got %q", MarshalJSONToString.Get(map[string]interface{}{"type": "vagrant", "compression_level": "8", "keep_input_artifact": true}), MarshalJSONToString.Get(res))
+	if !reflect.DeepEqual(res, expected) {
+		t.Errorf("expected %#v, got %#v", expected, res)
 	}
 }
 
@@ -344,8 +346,8 @@ func TestAtlasPostProcessor(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(expected) != MarshalJSONToString.Get(pp) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(pp))
+		if !reflect.DeepEqual(expected, pp) {
+			t.Errorf("Expected %#v, got %#v", expected, pp)
 		}
 	}
 }
@@ -360,8 +362,8 @@ func TestCompressPostProcessor(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(expected) != MarshalJSONToString.Get(pp) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(pp))
+		if !reflect.DeepEqual(expected, pp) {
+			t.Errorf("Expected %#v, got %#v", expected, pp)
 		}
 	}
 }
@@ -380,8 +382,8 @@ func TestDockerPushPostProcessor(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(expected) != MarshalJSONToString.Get(pp) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(pp))
+		if !reflect.DeepEqual(expected, pp) {
+			t.Errorf("Expected %#v, got %#v", expected, pp)
 		}
 	}
 }
@@ -396,8 +398,8 @@ func TestDockerSavePostProcessor(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(expected) != MarshalJSONToString.Get(pp) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(pp))
+		if !reflect.DeepEqual(expected, pp) {
+			t.Errorf("Expected %#v, got %#v", expected, pp)
 		}
 	}
 }
@@ -413,8 +415,8 @@ func TestDockerTagPostProcessor(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(expected) != MarshalJSONToString.Get(pp) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(pp))
+		if !reflect.DeepEqual(expected, pp) {
+			t.Errorf("Expected %#v, got %#v", expected, pp)
 		}
 	}
 }
@@ -439,8 +441,8 @@ func TestVagrantPostProcessor(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(expected) != MarshalJSONToString.Get(pp) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(pp))
+		if !reflect.DeepEqual(expected, pp) {
+			t.Errorf("Expected %#v, got %#v", expected, pp)
 		}
 	}
 }
@@ -461,8 +463,8 @@ func TestVagrantCloudPostProcessor(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(expected) != MarshalJSONToString.Get(pp) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(pp))
+		if !reflect.DeepEqual(expected, pp) {
+			t.Errorf("Expected %#v, got %#v", expected, pp)
 		}
 	}
 }
@@ -488,15 +490,20 @@ func TestVagrantVSphereProcessor(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(expected) != MarshalJSONToString.Get(pp) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(pp))
+		if !reflect.DeepEqual(expected, pp) {
+			t.Errorf("Expected %#v, got %#v", expected, pp)
 		}
 	}
 }
 
 func TestDeepCopyMapStringPostProcessor(t *testing.T) {
 	cpy := DeepCopyMapStringPostProcessorC(ppOrig)
-	if MarshalJSONToString.Get(cpy) != MarshalJSONToString.Get(ppOrig) {
-		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(ppOrig), MarshalJSONToString.Get(cpy))
+	pp := map[string]PostProcessorC{}
+	for k, v := range cpy {
+		pp[k] = v.(PostProcessorC)
+	}
+	msg, ok := EvalPostProcessors(pp, ppOrig)
+	if !ok {
+		t.Error(msg)
 	}
 }

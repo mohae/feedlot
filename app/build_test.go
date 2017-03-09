@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"reflect"
+	"sort"
 	"testing"
 	"unsafe"
 
@@ -261,12 +262,18 @@ func EvalStringSlice(new, old []string) (msg string, ok bool) {
 	if (*reflect.SliceHeader)(unsafe.Pointer(&new)).Data == (*reflect.SliceHeader)(unsafe.Pointer(&old)).Data {
 		return "expected slice data pointers to point to different locations; they didn't", false
 	}
+	return CompareStringSliceElements(new, old)
+}
+
+func CompareStringSliceElements(new, old []string) (msg string, ok bool) {
 	if len(new) != len(old) {
-		return fmt.Sprintf("expected slices to have the same length, got %d and %d", len(new), len(old)), false
+		return fmt.Sprintf("expected slices to have the same length, got %d want %d", len(new), len(old)), false
 	}
-	for i, v := range new {
-		if v != old[i] {
-			return fmt.Sprintf("%d: got %v; want %v", i, v, old[i]), false
+	sort.Strings(new)
+	sort.Strings(old)
+	for i := 0; i < len(new); i++ {
+		if new[i] != old[i] {
+			return fmt.Sprintf("got %v; want %v", new, old), false
 		}
 	}
 	return "", true

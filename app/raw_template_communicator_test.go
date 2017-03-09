@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 )
 
@@ -134,8 +135,8 @@ func TestSSHCommunicator(t *testing.T) {
 		t.Errorf("unexpected error: %q", err)
 		return
 	}
-	if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(sshExpected) {
-		t.Errorf("got %s, want %s", MarshalJSONToString.Get(settings), MarshalJSONToString.Get(sshExpected))
+	if !reflect.DeepEqual(settings, sshExpected) {
+		t.Errorf("got %#v, want %#v", settings, sshExpected)
 	}
 }
 
@@ -203,8 +204,8 @@ func TestWinRMCommunicator(t *testing.T) {
 		t.Errorf("unexpected error: %q", err)
 		return
 	}
-	if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(winRMExpected) {
-		t.Errorf("got %s, want %s", MarshalJSONToString.Get(settings), MarshalJSONToString.Get(winRMExpected))
+	if !reflect.DeepEqual(settings, winRMExpected) {
+		t.Errorf("got %#v, want %#v", settings, winRMExpected)
 	}
 }
 
@@ -244,8 +245,8 @@ func TestProcessCommunicator(t *testing.T) {
 			t.Errorf("%d: got %q, want %q", i, prefix, test.prefix)
 			continue
 		}
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(test.settings) {
-			t.Errorf("%d: got %q, want %q", i, settings, test.settings)
+		if !reflect.DeepEqual(settings, test.settings) {
+			t.Errorf("%d: got %#v, want %#v", i, settings, test.settings)
 		}
 	}
 }

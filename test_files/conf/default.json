@@ -12,12 +12,13 @@
     "virtualbox-iso"
   ],
   "builders": {
-	"common": {
+  "common": {
+      "type": "common",
       "settings": [
         "boot_command = boot_test.command",
         "boot_wait = 5s",
         "disk_size = 20000",
-		"guest_os_type = ",
+        "guest_os_type = ",
         "headless = true",
         "http_directory = http",
         "iso_checksum_type = sha256",

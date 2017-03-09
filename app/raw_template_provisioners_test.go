@@ -1,6 +1,9 @@
 package app
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 var testRawTemplateProvisioner = &RawTemplate{
 	PackerInf: PackerInf{
@@ -791,16 +794,16 @@ func TestRawTemplateUpdateProvisioners(t *testing.T) {
 	if err != nil {
 		t.Errorf("expected error to be nil, got %q", err)
 	}
-	if MarshalJSONToString.Get(testRawTemplateProvisioner.Provisioners) != MarshalJSONToString.Get(prOrig) {
-		t.Errorf("Got %q, want %q", MarshalJSONToString.Get(testRawTemplateProvisioner.Provisioners), MarshalJSONToString.Get(prOrig))
+	if !reflect.DeepEqual(testRawTemplateProvisioner.Provisioners, prOrig) {
+		t.Errorf("Got %#v, want %#v", testRawTemplateProvisioner.Provisioners, prOrig)
 	}
 
 	err = testRawTemplateProvisioner.updateProvisioners(prNew)
 	if err != nil {
 		t.Errorf("expected error to be nil, got %q", err)
 	}
-	if MarshalJSONToString.GetIndented(testRawTemplateProvisioner.Provisioners) != MarshalJSONToString.GetIndented(prMerged) {
-		t.Errorf("Got %q, want %q", MarshalJSONToString.Get(testRawTemplateProvisioner.Provisioners), MarshalJSONToString.Get(prMerged))
+	if !reflect.DeepEqual(testRawTemplateProvisioner.Provisioners, prMerged) {
+		t.Errorf("Got %#v, want %#v", testRawTemplateProvisioner.Provisioners, prMerged)
 	}
 }
 
@@ -849,8 +852,8 @@ func TestAnsibleProvisioner(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expected) {
+			t.Errorf("Expected %#v, got %#v", expected, settings)
 		}
 	}
 }
@@ -883,8 +886,8 @@ func TestAnsibleLocalProvisioner(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expected) {
+			t.Errorf("Expected %#v, got %#v", expected, settings)
 		}
 	}
 }
@@ -918,8 +921,8 @@ func TestChefClientProvisioner(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expected) {
+			t.Errorf("Expected %#v, got %#v", expected, settings)
 		}
 	}
 }
@@ -956,8 +959,8 @@ func TestChefSoloProvisioner(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expected) {
+			t.Errorf("Expected %#v, got %#v", expected, settings)
 		}
 	}
 }
@@ -972,8 +975,8 @@ func TestFileProvisioner(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expected) {
+			t.Errorf("Expected %#v, got %#v", expected, settings)
 		}
 	}
 	expected = map[string]interface{}{
@@ -985,8 +988,8 @@ func TestFileProvisioner(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expected) {
+			t.Errorf("Expected %#v, got %#v", expected, settings)
 		}
 	}
 }
@@ -1017,8 +1020,8 @@ func TestPuppetMasterlessProvisioner(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expected) {
+			t.Errorf("Expected %#v, got %#v", expected, settings)
 		}
 	}
 }
@@ -1042,8 +1045,8 @@ func TestPuppetServerProvisioner(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expected) {
+			t.Errorf("Expected %#v, got %#v", expected, settings)
 		}
 	}
 }
@@ -1130,8 +1133,8 @@ func TestSaltProvisioner(t *testing.T) {
 			t.Errorf("%d: wanted %q; got no error", i, test.expectedErr)
 			continue
 		}
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(test.expected) {
-			t.Errorf("%d: expected %q, got %q", i, MarshalJSONToString.Get(test.expected), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, test.expected) {
+			t.Errorf("%d: expected %#v, got %#v", i, test.expected, settings)
 		}
 	}
 }
@@ -1174,8 +1177,8 @@ func TestShellProvisionerInline(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expected) {
+			t.Errorf("Expected %#v, got %#v", expected, settings)
 		}
 	}
 }
@@ -1203,8 +1206,8 @@ func TestShellProvisionerScript(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expected) {
+			t.Errorf("Expected %#v, got %#v", expected, settings)
 		}
 	}
 }
@@ -1237,8 +1240,8 @@ func TestShellProvisionerScripts(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expected) {
+			t.Errorf("Expected %#v, got %#v", expected, settings)
 		}
 	}
 }
@@ -1253,8 +1256,8 @@ func TestShellLocalProvisioner(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expected) {
+			t.Errorf("Expected %#v, got %#v", expected, settings)
 		}
 	}
 }

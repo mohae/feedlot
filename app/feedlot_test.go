@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -9,11 +10,8 @@ import (
 	"strings"
 	"testing"
 	"time"
-
-	json "github.com/mohae/unsafejson"
 )
 
-var MarshalJSONToString = json.NewMarshalString()
 var today = time.Now().Local().Format("2006-01-02")
 
 // Simple funcs to help handle testing returned stuff
@@ -361,7 +359,7 @@ func TestDistroDefaultsGetTemplate(t *testing.T) {
 			t.Errorf("unsupported distro: invalid, got %q", err)
 		}
 		if r != nil {
-			t.Errorf("Expected nil, got %q", MarshalJSONToString.Get(r))
+			t.Errorf("Expected nil, got %#v", r)
 		}
 	}
 
@@ -369,8 +367,10 @@ func TestDistroDefaultsGetTemplate(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected no error, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(r) != MarshalJSONToString.Get(testDistroDefaults.Templates[Ubuntu]) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testDistroDefaults.Templates[Ubuntu]), MarshalJSONToString.Get(r))
+		got, _ := json.MarshalIndent(r, "", "\t")
+		want, _ := json.MarshalIndent(testDistroDefaults.Templates[Ubuntu], "", "\t")
+		if string(got) != string(want) {
+			t.Errorf("Expected %s, got %s", string(want), string(got))
 		}
 	}
 }

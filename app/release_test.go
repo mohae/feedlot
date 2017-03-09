@@ -10,6 +10,7 @@ package app
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -555,7 +556,7 @@ func TestFilterRecords(t *testing.T) {
 	for i, test := range tests {
 		filtered := filterRecords(test.value, test.index, records)
 		if i < 2 {
-			if MarshalJSONToString.Get(filtered) != MarshalJSONToString.Get(records) {
+			if !reflect.DeepEqual(filtered, records) {
 				t.Errorf("got %v; expected %v", filtered, records)
 			}
 			continue

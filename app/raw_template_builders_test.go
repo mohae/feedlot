@@ -1,6 +1,7 @@
 package app
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/mohae/contour"
@@ -2312,23 +2313,29 @@ func TestRawTemplateUpdatebuilders(t *testing.T) {
 	if err != nil {
 		t.Errorf("expected error to be nil, got %q", err)
 	}
-	if MarshalJSONToString.Get(testUbuntu.Builders) != MarshalJSONToString.Get(builderOrig) {
-		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(builderOrig), MarshalJSONToString.Get(testUbuntu.Builders))
+	msg, ok := EvalBuilders(testUbuntu.Builders, builderOrig)
+	if !ok {
+		t.Error(msg)
 	}
 
 	err = testUbuntu.updateBuilders(builderNew)
 	if err != nil {
 		t.Errorf("expected error to be nil, got %q", err)
 	}
-	if MarshalJSONToString.Get(testUbuntu.Builders) != MarshalJSONToString.Get(builderMerged) {
-		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(builderMerged), MarshalJSONToString.Get(testUbuntu.Builders))
+
+	msg, ok = EvalBuilders(testUbuntu.Builders, builderMerged)
+	if !ok {
+		t.Error(msg)
 	}
 }
 
 func TestRawTemplateUpdateBuilderCommon(t *testing.T) {
 	testUbuntu.updateCommon(builderNew["common"])
-	if MarshalJSONToString.Get(testUbuntu.Builders["common"]) != MarshalJSONToString.Get(builderMerged["common"]) {
-		t.Errorf("expected %q, got %q", MarshalJSONToString.Get(builderMerged["common"]), MarshalJSONToString.Get(testUbuntu.Builders["common"]))
+	new := testUbuntu.Builders["common"]
+	old := builderMerged["common"]
+	msg, ok := EvalTemplateSection(&new.TemplateSection, &old.TemplateSection)
+	if !ok {
+		t.Error(msg)
 	}
 }
 
@@ -2397,8 +2404,8 @@ func TestCreateAmazonChroot(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(bldr))
+		if !reflect.DeepEqual(bldr, expected) {
+			t.Errorf("Expected %#v, got %#v", expected, bldr)
 		}
 	}
 	// SSH
@@ -2434,8 +2441,8 @@ func TestCreateAmazonChroot(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedSSH) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedSSH), MarshalJSONToString.Get(bldr))
+		if !reflect.DeepEqual(bldr, expectedSSH) {
+			t.Errorf("Expected %#v, got %#v", expectedSSH, bldr)
 		}
 	}
 	// WinRM
@@ -2464,8 +2471,8 @@ func TestCreateAmazonChroot(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedWinRM) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(bldr))
+		if !reflect.DeepEqual(bldr, expectedWinRM) {
+			t.Errorf("Expected %#v, got %#v", expectedWinRM, bldr)
 		}
 	}
 }
@@ -2544,8 +2551,8 @@ func TestCreateAmazonEBS(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(bldr))
+		if !reflect.DeepEqual(bldr, expected) {
+			t.Errorf("Expected %#v, got %#v", expected, bldr)
 		}
 	}
 	// SSH
@@ -2591,8 +2598,8 @@ func TestCreateAmazonEBS(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedSSH) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedSSH), MarshalJSONToString.Get(bldr))
+		if !reflect.DeepEqual(bldr, expectedSSH) {
+			t.Errorf("Expected %#v, got %#v", expectedSSH, bldr)
 		}
 	}
 	// WinRM
@@ -2632,8 +2639,8 @@ func TestCreateAmazonEBS(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedWinRM) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(bldr))
+		if !reflect.DeepEqual(bldr, expectedWinRM) {
+			t.Errorf("Expected %#v, got %#v", expectedWinRM, bldr)
 		}
 	}
 }
@@ -2734,8 +2741,8 @@ func TestCreateAmazonInstance(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(bldr))
+		if !reflect.DeepEqual(bldr, expected) {
+			t.Errorf("Expected %#v, got %#v", expected, bldr)
 		}
 	}
 	// SSH
@@ -2794,8 +2801,8 @@ func TestCreateAmazonInstance(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedSSH) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedSSH), MarshalJSONToString.Get(bldr))
+		if !reflect.DeepEqual(bldr, expectedSSH) {
+			t.Errorf("Expected %#v, got %#v", expectedSSH, bldr)
 		}
 	}
 	// WinRM
@@ -2846,8 +2853,8 @@ func TestCreateAmazonInstance(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedWinRM) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(bldr))
+		if !reflect.DeepEqual(bldr, expectedWinRM) {
+			t.Errorf("Expected %#v, got %#v", expectedWinRM, bldr)
 		}
 	}
 }
@@ -2869,8 +2876,8 @@ func TestCreateDigitalOcean(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(bldr))
+		if !reflect.DeepEqual(bldr, expected) {
+			t.Errorf("Expected %#v, got %#v", expected, bldr)
 		}
 	}
 	// SSH
@@ -2905,8 +2912,8 @@ func TestCreateDigitalOcean(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedSSH) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedSSH), MarshalJSONToString.Get(bldr))
+		if !reflect.DeepEqual(bldr, expectedSSH) {
+			t.Errorf("Expected %#v, got %#v", expectedSSH, bldr)
 		}
 	}
 
@@ -2935,8 +2942,8 @@ func TestCreateDigitalOcean(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedWinRM) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(bldr))
+		if !reflect.DeepEqual(bldr, expectedWinRM) {
+			t.Errorf("Expected %#v, got %#v", expectedWinRM, bldr)
 		}
 	}
 }
@@ -3011,24 +3018,24 @@ func TestCreateDocker(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(bldr))
+		if !reflect.DeepEqual(bldr, expected) {
+			t.Errorf("Expected %#v, got %#v", expected, bldr)
 		}
 	}
 	bldr, err = testDockerRunComandFile.createDocker("docker")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedCommandFile) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedCommandFile), MarshalJSONToString.Get(bldr))
+		if !reflect.DeepEqual(bldr, expectedCommandFile) {
+			t.Errorf("Expected %#v, got %#v", expectedCommandFile, bldr)
 		}
 	}
 	bldr, err = testDockerRunComand.createDocker("docker")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedCommand) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedCommand), MarshalJSONToString.Get(bldr))
+		if !reflect.DeepEqual(bldr, expectedCommand) {
+			t.Errorf("Expected %#v, got %#v", expectedCommand, bldr)
 		}
 	}
 	expectedSSH := map[string]interface{}{
@@ -3063,8 +3070,8 @@ func TestCreateDocker(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedSSH) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedSSH), MarshalJSONToString.Get(bldr))
+		if !reflect.DeepEqual(bldr, expectedSSH) {
+			t.Errorf("Expected %#v, got %#v", expectedSSH, bldr)
 		}
 	}
 	expectedWinRM := map[string]interface{}{
@@ -3092,8 +3099,8 @@ func TestCreateDocker(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedWinRM) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(bldr))
+		if !reflect.DeepEqual(bldr, expectedWinRM) {
+			t.Errorf("Expected %#v, got %#v", expectedWinRM, bldr)
 		}
 	}
 }
@@ -3128,8 +3135,8 @@ func TestCreateGoogleCompute(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(bldr))
+		if !reflect.DeepEqual(bldr, expected) {
+			t.Errorf("Expected %#v, got %#v", expected, bldr)
 		}
 	}
 	// ssh
@@ -3170,8 +3177,8 @@ func TestCreateGoogleCompute(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedSSH) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedSSH), MarshalJSONToString.Get(bldr))
+		if !reflect.DeepEqual(bldr, expectedSSH) {
+			t.Errorf("Expected %#v, got %#v", expectedSSH, bldr)
 		}
 	}
 
@@ -3205,8 +3212,8 @@ func TestCreateGoogleCompute(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedWinRM) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(bldr))
+		if !reflect.DeepEqual(bldr, expectedWinRM) {
+			t.Errorf("Expected %#v, got %#v", expectedWinRM, bldr)
 		}
 	}
 }
@@ -3245,8 +3252,8 @@ func TestBuilderNull(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedSSH) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedSSH), MarshalJSONToString.Get(bldr))
+		if !reflect.DeepEqual(bldr, expectedSSH) {
+			t.Errorf("Expected %#v, got %#v", expectedSSH, bldr)
 		}
 	}
 	// winrm
@@ -3265,8 +3272,8 @@ func TestBuilderNull(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(bldr) != MarshalJSONToString.Get(expectedWinRM) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(bldr))
+		if !reflect.DeepEqual(bldr, expectedWinRM) {
+			t.Errorf("Expected %#v, got %#v", expectedWinRM, bldr)
 		}
 	}
 
@@ -3307,8 +3314,8 @@ func TestCreateOpenstack(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(ret) != MarshalJSONToString.Get(expected1) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected1), MarshalJSONToString.Get(ret))
+		if !reflect.DeepEqual(ret, expected1) {
+			t.Errorf("Expected %#v, got %#v", expected1, ret)
 		}
 	}
 
@@ -3346,8 +3353,8 @@ func TestCreateOpenstack(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(ret) != MarshalJSONToString.Get(expected2) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected2), MarshalJSONToString.Get(ret))
+		if !reflect.DeepEqual(ret, expected2) {
+			t.Errorf("Expected %#v, got %#v", expected2, ret)
 		}
 	}
 
@@ -3388,8 +3395,8 @@ func TestCreateOpenstack(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(ret) != MarshalJSONToString.Get(expectedSSH) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedSSH), MarshalJSONToString.Get(ret))
+		if !reflect.DeepEqual(ret, expectedSSH) {
+			t.Errorf("Expected %#v, got %#v", expectedSSH, ret)
 		}
 	}
 	// winrm
@@ -3421,8 +3428,8 @@ func TestCreateOpenstack(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(ret) != MarshalJSONToString.Get(expectedWinRM) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(ret))
+		if !reflect.DeepEqual(ret, expectedWinRM) {
+			t.Errorf("Expected %#v, got %#v", expectedWinRM, ret)
 		}
 	}
 }
@@ -3495,8 +3502,8 @@ func TestCreateParallelsISO(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expected) {
+			t.Errorf("Expected %#v, got %#v", expected, settings)
 		}
 	}
 	// SSH
@@ -3541,8 +3548,8 @@ func TestCreateParallelsISO(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expectedSSH) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedSSH), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expectedSSH) {
+			t.Errorf("Expected %#v, got %#v", expectedSSH, settings)
 		}
 	}
 	// WinRM
@@ -3581,8 +3588,8 @@ func TestCreateParallelsISO(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expectedWinRM) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expectedWinRM) {
+			t.Errorf("Expected %#v, got %#v", expectedWinRM, settings)
 		}
 	}
 }
@@ -3646,8 +3653,8 @@ func TestCreateParallelsPVM(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expected) {
+			t.Errorf("Expected %#v, got %#v", expected, settings)
 		}
 	}
 	// SSH
@@ -3687,8 +3694,8 @@ func TestCreateParallelsPVM(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expectedSSH) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedSSH), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expectedSSH) {
+			t.Errorf("Expected %#v, got %#v", expectedSSH, settings)
 		}
 	}
 	// WinRM
@@ -3721,8 +3728,8 @@ func TestCreateParallelsPVM(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expectedWinRM) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expectedWinRM) {
+			t.Errorf("Expected %#v, got %#v", expectedWinRM, settings)
 		}
 	}
 }
@@ -3780,8 +3787,8 @@ func TestCreateQEMU(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expected) {
+			t.Errorf("Expected %#v, got %#v", expected, settings)
 		}
 	}
 
@@ -3830,8 +3837,8 @@ func TestCreateQEMU(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expectedSSH) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedSSH), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expectedSSH) {
+			t.Errorf("Expected %#v, got %#v", expectedSSH, settings)
 		}
 	}
 	// WinRM
@@ -3872,8 +3879,8 @@ func TestCreateQEMU(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expectedWinRM) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expectedWinRM) {
+			t.Errorf("Expected %#v, got %#v", expectedWinRM, settings)
 		}
 	}
 }
@@ -3950,8 +3957,8 @@ func TestCreateVirtualboxISO(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expected) {
+			t.Errorf("Expected %#v, got %#v", expected, settings)
 		}
 	}
 	// ssh
@@ -4002,8 +4009,8 @@ func TestCreateVirtualboxISO(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expectedSSH) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedSSH), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expectedSSH) {
+			t.Errorf("Expected %#v, got %#v", expectedSSH, settings)
 		}
 	}
 
@@ -4046,8 +4053,8 @@ func TestCreateVirtualboxISO(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expectedWinRM) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expectedWinRM) {
+			t.Errorf("Expected %#v, got %#v", expectedWinRM, settings)
 		}
 	}
 }
@@ -4119,8 +4126,8 @@ func TestCreateVirtualboxOVF(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expected) {
+			t.Errorf("Expected %#v, got %#v", expected, settings)
 		}
 	}
 	// ssh
@@ -4167,8 +4174,8 @@ func TestCreateVirtualboxOVF(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expectedSSH) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedSSH), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expectedSSH) {
+			t.Errorf("Expected %#v, got %#v", expectedSSH, settings)
 		}
 	}
 
@@ -4206,8 +4213,8 @@ func TestCreateVirtualboxOVF(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err.Error())
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expectedWinRM) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expectedWinRM) {
+			t.Errorf("Expected %#v, got %#v", expectedWinRM, settings)
 		}
 	}
 }
@@ -4279,8 +4286,8 @@ func TestCreateVMWareISO(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expected) {
+			t.Errorf("Expected %#v, got %#v", expected, settings)
 		}
 	}
 	// SSH
@@ -4340,8 +4347,8 @@ func TestCreateVMWareISO(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expectedSSH) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedSSH), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expectedSSH) {
+			t.Errorf("Expected %#v, got %#v", expectedSSH, settings)
 		}
 	}
 	// winrm
@@ -4394,8 +4401,8 @@ func TestCreateVMWareISO(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expectedWinRM) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expectedWinRM) {
+			t.Errorf("Expected %#v, got %#v", expectedWinRM, settings)
 		}
 	}
 }
@@ -4441,8 +4448,8 @@ func TestCreateVMWareVMX(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expected) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expected), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expected) {
+			t.Errorf("Expected %#v, got %#v", expected, settings)
 		}
 	}
 
@@ -4483,8 +4490,8 @@ func TestCreateVMWareVMX(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expectedSSH) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedSSH), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expectedSSH) {
+			t.Errorf("Expected %#v, got %#v", expectedSSH, settings)
 		}
 	}
 	// WinRM
@@ -4518,16 +4525,16 @@ func TestCreateVMWareVMX(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
 	} else {
-		if MarshalJSONToString.Get(settings) != MarshalJSONToString.Get(expectedWinRM) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(expectedWinRM), MarshalJSONToString.Get(settings))
+		if !reflect.DeepEqual(settings, expectedWinRM) {
+			t.Errorf("Expected %#v, got %#v", expectedWinRM, settings)
 		}
 	}
 }
 
 func TestDeepCopyMapStringBuilder(t *testing.T) {
 	cpy := DeepCopyMapStringBuilderC(testDistroDefaults.Templates[Ubuntu].Builders)
-	if MarshalJSONToString.Get(cpy["common"]) != MarshalJSONToString.Get(testDistroDefaults.Templates[Ubuntu].Builders["common"]) {
-		t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(testDistroDefaults.Templates[Ubuntu].Builders["common"]), MarshalJSONToString.Get(cpy["common"]))
+	if !reflect.DeepEqual(cpy["common"], testDistroDefaults.Templates[Ubuntu].Builders["common"]) {
+		t.Errorf("Expected %#v, got %#v", testDistroDefaults.Templates[Ubuntu].Builders["common"], cpy["common"])
 	}
 }
 
@@ -4589,8 +4596,8 @@ func TestProcessAMIBlockDeviceMappings(t *testing.T) {
 	if err != nil {
 		t.Errorf("got %q, expected no error", err)
 	} else {
-		if MarshalJSONToString.Get(expected) != MarshalJSONToString.Get(ret) {
-			t.Errorf("Got %s; want %s", MarshalJSONToString.Get(ret), MarshalJSONToString.Get(expected))
+		if !reflect.DeepEqual(expected, ret) {
+			t.Errorf("Got %#v; want %#v", ret, expected)
 		}
 	}
 	// test using array of block mappings: [][]string
@@ -4618,8 +4625,8 @@ func TestProcessAMIBlockDeviceMappings(t *testing.T) {
 	if err != nil {
 		t.Errorf("got %q, expected no error", err)
 	} else {
-		if MarshalJSONToString.Get(expected) != MarshalJSONToString.Get(ret) {
-			t.Errorf("Got %s; want %s", MarshalJSONToString.Get(ret), MarshalJSONToString.Get(expected))
+		if !reflect.DeepEqual(expected, ret) {
+			t.Errorf("Got %#v; want %#v", ret, expected)
 		}
 	}
 }

@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -65,7 +66,7 @@ var testDefaults = &Defaults{
 						"virtualbox_version_file = .vbox_version",
 					},
 					Arrays: map[string]interface{}{
-						"vboxmanage": []string{
+						"vboxmanage": []interface{}{
 							"cpus=1",
 							"memory=1024",
 						},
@@ -99,7 +100,7 @@ var testDefaults = &Defaults{
 						"execute_command = execute_test.command",
 					},
 					Arrays: map[string]interface{}{
-						"scripts": []string{
+						"scripts": []interface{}{
 							"setup_test.sh",
 							"vagrant_test.sh",
 							"sudoers_test.sh",
@@ -534,8 +535,8 @@ func TestTemplateSectionMergeArrays(t *testing.T) {
 	if ts.Arrays == nil {
 		t.Errorf("Expected merged to be not nil, was nil")
 	} else {
-		if MarshalJSONToString.Get(ts.Arrays) != MarshalJSONToString.Get(old) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(old), MarshalJSONToString.Get(ts.Arrays))
+		if !reflect.DeepEqual(ts.Arrays, old) {
+			t.Errorf("Expected %#v, got %#v", old, ts.Arrays)
 		}
 	}
 
@@ -544,8 +545,8 @@ func TestTemplateSectionMergeArrays(t *testing.T) {
 	if ts.Arrays == nil {
 		t.Errorf("Expected merged to be not nil, was nil")
 	} else {
-		if MarshalJSONToString.Get(ts.Arrays) != MarshalJSONToString.Get(nw) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(nw), MarshalJSONToString.Get(ts.Arrays))
+		if !reflect.DeepEqual(ts.Arrays, nw) {
+			t.Errorf("Expected %#v, got %#v", nw, ts.Arrays)
 		}
 	}
 
@@ -554,8 +555,8 @@ func TestTemplateSectionMergeArrays(t *testing.T) {
 	if ts.Arrays == nil {
 		t.Errorf("Expected merged to be not nil, was nil")
 	} else {
-		if MarshalJSONToString.Get(ts.Arrays) != MarshalJSONToString.Get(merged) {
-			t.Errorf("Expected %q, got %q", MarshalJSONToString.Get(merged), MarshalJSONToString.Get(ts.Arrays))
+		if !reflect.DeepEqual(ts.Arrays, merged) {
+			t.Errorf("Expected %#v, got %#v", merged, ts.Arrays)
 		}
 	}
 }
@@ -712,8 +713,10 @@ func TestDefaults(t *testing.T) {
 			t.Errorf("%d: expepcted an error: %q, got none", i, test.expectedErr)
 			continue
 		}
-		if MarshalJSONToString.Get(d) != MarshalJSONToString.Get(testDefaults) {
-			t.Errorf("%d: expected %q, got %q", i, MarshalJSONToString.Get(testDefaults), MarshalJSONToString.Get(d))
+		got, _ := json.MarshalIndent(d, "", "\t")
+		want, _ := json.MarshalIndent(testDefaults, "", "\t")
+		if string(got) != string(want) {
+			t.Errorf("%d: expected %#v, got %#v", i, string(want), string(got))
 		}
 	}
 }
@@ -743,8 +746,10 @@ func TestSupportedDistros(t *testing.T) {
 			t.Errorf("%d: expected an error: %q, got none", i, test.expectedErr)
 			continue
 		}
-		if MarshalJSONToString.Get(s.Distros) != MarshalJSONToString.Get(testSupported) {
-			t.Errorf("%d: expected %q, got %q", i, MarshalJSONToString.Get(testSupported), MarshalJSONToString.Get(s.Distros))
+		got, _ := json.MarshalIndent(s.Distros, "", "\t")
+		want, _ := json.MarshalIndent(testSupported, "", "\t")
+		if string(got) != string(want) {
+			t.Errorf("%d: expected %s, got %s", i, string(want), string(got))
 		}
 	}
 }
@@ -778,8 +783,10 @@ func TestBuildStuff(t *testing.T) {
 			t.Errorf("%d: expepcted an error: %q, got none", i, test.expectedErr)
 			continue
 		}
-		if MarshalJSONToString.Get(b.Templates) != MarshalJSONToString.Get(testBuild) {
-			t.Errorf("%d: expected %q, got %q", i, MarshalJSONToString.Get(testBuild), MarshalJSONToString.Get(b.Templates))
+		got, _ := json.MarshalIndent(b.Templates, "", "\t")
+		want, _ := json.MarshalIndent(testBuild, "", "\t")
+		if string(got) != string(want) {
+			t.Errorf("%d: expected %s, got %s", i, string(want), string(got))
 		}
 	}
 }
@@ -809,8 +816,8 @@ func TestBuildListStuff(t *testing.T) {
 			t.Errorf("%d: expected an error: %q, got none", i, test.expectedErr)
 			continue
 		}
-		if MarshalJSONToString.Get(b.Lists) != MarshalJSONToString.Get(testBuildList) {
-			t.Errorf("%d: expected %q, got %q", i, MarshalJSONToString.Get(testBuildList), MarshalJSONToString.Get(b.Lists))
+		if !reflect.DeepEqual(b.Lists, testBuildList) {
+			t.Errorf("%d: expected %#v, got %#v", i, testBuildList, b.Lists)
 		}
 	}
 }
