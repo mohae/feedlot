@@ -377,7 +377,7 @@ func (r *RawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 			// not supported; skip
 			continue
 		}
-		array := deepcopy.Iface(val)
+		array := deepcopy.Copy(val)
 		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
 		}
@@ -616,7 +616,7 @@ func (r *RawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 		default:
 			continue
 		}
-		array := deepcopy.Iface(val)
+		array := deepcopy.Copy(val)
 		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
 		}
@@ -934,7 +934,7 @@ func (r *RawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 		default:
 			continue
 		}
-		array := deepcopy.Iface(val)
+		array := deepcopy.Copy(val)
 		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
 		}
@@ -1196,7 +1196,7 @@ func (r *RawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 	for name, val := range r.Builders[ID].Arrays {
 		switch name {
 		case "run_command":
-			array := deepcopy.Iface(val)
+			array := deepcopy.Copy(val)
 			if array != nil {
 				settings[name] = array
 			}
@@ -1206,7 +1206,7 @@ func (r *RawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 		default:
 			continue
 		}
-		settings[name] = deepcopy.Iface(val)
+		settings[name] = deepcopy.Copy(val)
 	}
 	// if there wasn't an array of run commands, check to see if they should be loaded from a file
 	if !hasRunCommandArray {
@@ -1336,7 +1336,7 @@ func (r *RawTemplate) createGoogleCompute(ID string) (settings map[string]interf
 		default:
 			continue
 		}
-		array := deepcopy.Iface(val)
+		array := deepcopy.Copy(val)
 		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
 		}
@@ -1549,7 +1549,7 @@ func (r *RawTemplate) createOpenStack(ID string) (settings map[string]interface{
 		default:
 			continue
 		}
-		array := deepcopy.Iface(val)
+		array := deepcopy.Copy(val)
 		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
 		}
@@ -1760,7 +1760,7 @@ func (r *RawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 		switch name {
 		case "boot_command":
 			// This is processed here because we need to know if it exists or not
-			array := deepcopy.Iface(val)
+			array := deepcopy.Copy(val)
 			if !reflect.ValueOf(val).IsNil() {
 				settings[name] = array
 				hasBootCmd = true
@@ -1771,7 +1771,7 @@ func (r *RawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 		case "iso_urls":
 			// this takes precedence over iso_url
 			// This is processed here because we need to know if it exists or not
-			array := deepcopy.Iface(val)
+			array := deepcopy.Copy(val)
 			if !reflect.ValueOf(val).IsNil() {
 				settings[name] = array
 				hasISOURLs = true
@@ -1782,7 +1782,7 @@ func (r *RawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 		default:
 			continue
 		}
-		array := deepcopy.Iface(val)
+		array := deepcopy.Copy(val)
 		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
 		}
@@ -1798,7 +1798,7 @@ func (r *RawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 			if len(commands) == 0 {
 				return nil, BuilderErr{id: ID, Builder: ParallelsISO, Err: SettingErr{"boot_command", bootCmdFile, ErrNoCommands}}
 			}
-			array := deepcopy.Iface(commands)
+			array := deepcopy.Copy(commands)
 			if !reflect.ValueOf(array).IsNil() {
 				settings["boot_command"] = array
 			}
@@ -1979,7 +1979,7 @@ func (r *RawTemplate) createParallelsPVM(ID string) (settings map[string]interfa
 		switch name {
 		case "boot_command":
 			// This is processed here because we need to know if it exists or not
-			array := deepcopy.Iface(val)
+			array := deepcopy.Copy(val)
 			if !reflect.ValueOf(val).IsNil() {
 				settings[name] = array
 				hasBootCmd = true
@@ -1992,7 +1992,7 @@ func (r *RawTemplate) createParallelsPVM(ID string) (settings map[string]interfa
 		default:
 			continue
 		}
-		array := deepcopy.Iface(val)
+		array := deepcopy.Copy(val)
 		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
 		}
@@ -2008,7 +2008,7 @@ func (r *RawTemplate) createParallelsPVM(ID string) (settings map[string]interfa
 			if len(commands) == 0 {
 				return nil, BuilderErr{id: ID, Builder: ParallelsPVM, Err: SettingErr{"boot_command", bootCmdFile, ErrNoCommands}}
 			}
-			array := deepcopy.Iface(commands)
+			array := deepcopy.Copy(commands)
 			if !reflect.ValueOf(array).IsNil() {
 				settings["boot_command"] = array
 			}
@@ -2183,7 +2183,7 @@ func (r *RawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 		switch name {
 		case "boot_command":
 			// This is processed here because we need to know if it exists or not
-			array := deepcopy.Iface(val)
+			array := deepcopy.Copy(val)
 			if !reflect.ValueOf(val).IsNil() {
 				settings[name] = array
 				hasBootCmd = true
@@ -2196,7 +2196,7 @@ func (r *RawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 				continue
 			}
 			// This is processed here because we need to know if it exists or not
-			array := deepcopy.Iface(val)
+			array := deepcopy.Copy(val)
 			if !reflect.ValueOf(val).IsNil() {
 				settings[name] = array
 				hasISOURL = true
@@ -2207,7 +2207,7 @@ func (r *RawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 			continue
 		}
 		// copy the array and set it
-		array := deepcopy.Iface(val)
+		array := deepcopy.Copy(val)
 		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
 		}
@@ -2223,7 +2223,7 @@ func (r *RawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 			if len(commands) == 0 {
 				return nil, BuilderErr{id: ID, Builder: QEMU, Err: SettingErr{"boot_command", bootCmdFile, ErrNoCommands}}
 			}
-			array := deepcopy.Iface(commands)
+			array := deepcopy.Copy(commands)
 			if !reflect.ValueOf(array).IsNil() {
 				settings["boot_command"] = array
 			}
@@ -2496,7 +2496,7 @@ func (r *RawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 	for name, val := range r.Builders[ID].Arrays {
 		switch name {
 		case "boot_command":
-			array := deepcopy.Iface(val)
+			array := deepcopy.Copy(val)
 			if !reflect.ValueOf(array).IsNil() {
 				settings[name] = array
 				hasBootCmd = true
@@ -2508,7 +2508,7 @@ func (r *RawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 			if hasISOURL {
 				continue
 			}
-			array := deepcopy.Iface(val)
+			array := deepcopy.Copy(val)
 			if !reflect.ValueOf(array).IsNil() {
 				settings[name] = array
 				hasISOURL = true
@@ -2522,7 +2522,7 @@ func (r *RawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 		default:
 			continue
 		}
-		array := deepcopy.Iface(val)
+		array := deepcopy.Copy(val)
 		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
 		}
@@ -2544,7 +2544,7 @@ func (r *RawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 			if len(commands) == 0 {
 				return nil, BuilderErr{id: ID, Builder: VirtualBoxISO, Err: SettingErr{"boot_command", bootCmdFile, ErrNoCommands}}
 			}
-			array := deepcopy.Iface(commands)
+			array := deepcopy.Copy(commands)
 			if !reflect.ValueOf(array).IsNil() {
 				settings["boot_command"] = array
 			}
@@ -2802,7 +2802,7 @@ func (r *RawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 	for name, val := range r.Builders[ID].Arrays {
 		switch name {
 		case "boot_command":
-			array := deepcopy.Iface(val)
+			array := deepcopy.Copy(val)
 			if !reflect.ValueOf(array).IsNil() {
 				settings[name] = array
 				hasBootCmd = true
@@ -2820,7 +2820,7 @@ func (r *RawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 		default:
 			continue
 		}
-		array := deepcopy.Iface(val)
+		array := deepcopy.Copy(val)
 		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
 			hasBootCmd = true
@@ -2836,7 +2836,7 @@ func (r *RawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 			if len(commands) == 0 {
 				return nil, BuilderErr{id: ID, Builder: VirtualBoxOVF, Err: SettingErr{"boot_command", bootCmdFile, ErrNoCommands}}
 			}
-			array := deepcopy.Iface(commands)
+			array := deepcopy.Copy(commands)
 			if !reflect.ValueOf(array).IsNil() {
 				settings["boot_command"] = array
 			}
@@ -3095,7 +3095,7 @@ func (r *RawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 	for name, val := range r.Builders[ID].Arrays {
 		switch name {
 		case "boot_command":
-			array := deepcopy.Iface(val)
+			array := deepcopy.Copy(val)
 			if !reflect.ValueOf(array).IsNil() {
 				settings[name] = array
 				hasBootCmd = true
@@ -3106,7 +3106,7 @@ func (r *RawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 
 			switch val.(type) {
 			case []int:
-				array := deepcopy.Iface(val)
+				array := deepcopy.Copy(val)
 				if !reflect.ValueOf(array).IsNil() {
 					settings[name] = array
 				}
@@ -3144,7 +3144,7 @@ func (r *RawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 		default:
 			continue
 		}
-		array := deepcopy.Iface(val)
+		array := deepcopy.Copy(val)
 		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
 		}
@@ -3159,7 +3159,7 @@ func (r *RawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 			if len(commands) == 0 {
 				return nil, BuilderErr{id: ID, Builder: VMWareISO, Err: SettingErr{"boot_command", bootCmdFile, ErrNoCommands}}
 			}
-			array := deepcopy.Iface(commands)
+			array := deepcopy.Copy(commands)
 			if !reflect.ValueOf(array).IsNil() {
 				settings["boot_command"] = array
 			}
@@ -3382,7 +3382,7 @@ func (r *RawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 	for name, val := range r.Builders[ID].Arrays {
 		switch name {
 		case "boot_command":
-			array := deepcopy.Iface(val)
+			array := deepcopy.Copy(val)
 			if !reflect.ValueOf(array).IsNil() {
 				settings[name] = array
 				hasBootCmd = true
@@ -3397,7 +3397,7 @@ func (r *RawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 		default:
 			continue
 		}
-		array := deepcopy.Iface(val)
+		array := deepcopy.Copy(val)
 		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
 		}
@@ -3412,7 +3412,7 @@ func (r *RawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 			if len(commands) == 0 {
 				return nil, BuilderErr{id: ID, Builder: VMWareVMX, Err: SettingErr{"boot_command", bootCmdFile, ErrNoCommands}}
 			}
-			array := deepcopy.Iface(commands)
+			array := deepcopy.Copy(commands)
 			if !reflect.ValueOf(array).IsNil() {
 				settings["boot_command"] = array
 			}

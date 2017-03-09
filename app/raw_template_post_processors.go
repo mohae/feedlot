@@ -283,7 +283,7 @@ func (r *RawTemplate) createAtlas(ID string) (settings map[string]interface{}, e
 		default:
 			continue
 		}
-		array := deepcopy.Iface(val)
+		array := deepcopy.Copy(val)
 		if array != nil {
 			settings[name] = array
 		}
@@ -339,7 +339,7 @@ func (r *RawTemplate) createCompress(ID string) (settings map[string]interface{}
 		default:
 			continue
 		}
-		array := deepcopy.Iface(val)
+		array := deepcopy.Copy(val)
 		if array != nil {
 			settings[name] = array
 		}
@@ -395,7 +395,7 @@ func (r *RawTemplate) createDockerImport(ID string) (settings map[string]interfa
 		default:
 			continue
 		}
-		array := deepcopy.Iface(val)
+		array := deepcopy.Copy(val)
 		if array != nil {
 			settings[name] = array
 		}
@@ -445,7 +445,7 @@ func (r *RawTemplate) createDockerPush(ID string) (settings map[string]interface
 		default:
 			continue
 		}
-		array := deepcopy.Iface(val)
+		array := deepcopy.Copy(val)
 		if array != nil {
 			settings[name] = array
 		}
@@ -494,7 +494,7 @@ func (r *RawTemplate) createDockerSave(ID string) (settings map[string]interface
 		default:
 			continue
 		}
-		array := deepcopy.Iface(val)
+		array := deepcopy.Copy(val)
 		if array != nil {
 			settings[name] = array
 		}
@@ -550,7 +550,7 @@ func (r *RawTemplate) createDockerTag(ID string) (settings map[string]interface{
 		default:
 			continue
 		}
-		array := deepcopy.Iface(val)
+		array := deepcopy.Copy(val)
 		if array != nil {
 			settings[name] = array
 		}
@@ -624,7 +624,7 @@ func (r *RawTemplate) createVagrant(ID string) (settings map[string]interface{},
 		default:
 			continue
 		}
-		array := deepcopy.Iface(val)
+		array := deepcopy.Copy(val)
 		if array != nil {
 			settings[name] = array
 		}
@@ -688,7 +688,7 @@ func (r *RawTemplate) createVagrantCloud(ID string) (settings map[string]interfa
 		default:
 			continue
 		}
-		array := deepcopy.Iface(val)
+		array := deepcopy.Copy(val)
 		if array != nil {
 			settings[name] = array
 		}
@@ -795,7 +795,7 @@ func (r *RawTemplate) createVSphere(ID string) (settings map[string]interface{},
 		default:
 			continue
 		}
-		array := deepcopy.Iface(val)
+		array := deepcopy.Copy(val)
 		if array != nil {
 			settings[name] = array
 		}

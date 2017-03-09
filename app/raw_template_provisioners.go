@@ -798,7 +798,7 @@ func (r *RawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 				settings[name] = array
 			}
 		case "facter":
-			settings[name] = deepcopy.Iface(val)
+			settings[name] = deepcopy.Copy(val)
 		}
 	}
 	return settings, nil
@@ -842,7 +842,7 @@ func (r *RawTemplate) createPuppetServer(ID string) (settings map[string]interfa
 	}
 	for name, val := range r.Provisioners[ID].Arrays {
 		if name == "facter" {
-			settings[name] = deepcopy.Iface(val)
+			settings[name] = deepcopy.Copy(val)
 			continue
 		}
 		if name == "only" || name == "except" {
