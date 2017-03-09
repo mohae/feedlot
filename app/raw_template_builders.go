@@ -3463,11 +3463,9 @@ func (r *RawTemplate) updateBuilders(newB map[string]BuilderC) error {
 		return nil
 	}
 	// Convert the existing Builders to Componenter.
-	var oldC = make(map[string]Componenter, len(r.Builders))
-	oldC = DeepCopyMapStringBuilderC(r.Builders)
+	oldC := DeepCopyMapStringBuilderC(r.Builders)
 	// Convert the new Builders to Componenter.
-	var newC = make(map[string]Componenter, len(newB))
-	newC = DeepCopyMapStringBuilderC(newB)
+	newC := DeepCopyMapStringBuilderC(newB)
 	// Make the slice as long as the slices in both builders, odds are its shorter, but this is the worst case.
 	var keys []string
 	// Convert the keys to a map

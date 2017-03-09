@@ -113,14 +113,11 @@ func (r *RawTemplate) updatePostProcessors(newP map[string]PostProcessorC) error
 		return nil
 	}
 	// Convert the existing postProcessors to Componenter.
-	var oldC = make(map[string]Componenter, len(r.PostProcessors))
-	oldC = DeepCopyMapStringPostProcessorC(r.PostProcessors)
+	oldC := DeepCopyMapStringPostProcessorC(r.PostProcessors)
 	// Convert the new postProcessors to Componenter
-	var newC = make(map[string]Componenter, len(newP))
-	newC = DeepCopyMapStringPostProcessorC(newP)
+	newC := DeepCopyMapStringPostProcessorC(newP)
 	// Get the all keys from both maps
-	var keys []string
-	keys = mergeKeysFromComponentMaps(oldC, newC)
+	keys := mergeKeysFromComponentMaps(oldC, newC)
 	if r.PostProcessors == nil {
 		r.PostProcessors = map[string]PostProcessorC{}
 	}
