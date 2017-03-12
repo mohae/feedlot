@@ -20,11 +20,14 @@ func BuildDistro() (string, error) {
 			log.Error(err)
 			return "", err
 		}
+		log.Debug("build distro: set distro defaults")
 	}
 	message, err := buildPackerTemplateFromDistro()
 	if err != nil {
-		err = fmt.Errorf("build packer template from distro  failed: %s", err)
+		err = fmt.Errorf("build packer template from distro failed: %s", err)
 		log.Error(err)
+	} else {
+		log.Infof("build distro: %s", message)
 	}
 	return message, err
 }
@@ -33,35 +36,40 @@ func BuildDistro() (string, error) {
 // TODO: refactor to match updated handling
 func buildPackerTemplateFromDistro() (string, error) {
 	var rTpl *RawTemplate
-	log.Info("creating template using distro defaults for " + contour.GetString("distro"))
+	d := contour.GetString("distro")
+	log.Infof("%s: create template using distro defaults", d)
 	// Get the default for this distro, if one isn't found then it isn't
 	// Supported.
-	rTpl, err := DistroDefaults.GetTemplate(contour.GetString("distro"))
+	rTpl, err := DistroDefaults.GetTemplate(d)
 	if err != nil {
 		err = Error{slug: "get template", err: err}
-		log.Error(err)
+		log.Errorf("%s: %s", d, err)
 		return "", err
 	}
+	log.Debugf("%s: got distro defaults", d)
 	// If there were any overrides, set them.
 	if contour.GetString("arch") != "" {
 		rTpl.Arch = contour.GetString("arch")
+		log.Debugf("%s: set template arch to %s", d, rTpl.Arch)
 	}
 	if contour.GetString("image") != "" {
 		rTpl.Image = contour.GetString("image")
+		log.Debugf("%s: set template arch to %s", d, rTpl.Image)
 	}
 	if contour.GetString("release") != "" {
 		rTpl.Release = contour.GetString("release")
+		log.Debugf("%s: set template arch to %s", d, rTpl.Release)
 	}
 
 	// Since distro builds don't actually have a build name, we create one out
 	// of the args used to create it.
 	rTpl.BuildName = fmt.Sprintf("%s-%s-%s-%s", rTpl.Distro, rTpl.Release, rTpl.Arch, rTpl.Image)
-
+	log.Infof("%s: build name: %s", d, rTpl.BuildName)
 	// Now that the raw template has been made, create a Packer template out of it
 	pTpl, err := rTpl.createPackerTemplate()
 	if err != nil {
 		err = Error{slug: "get template", err: err}
-		log.Error(err)
+		log.Errorf("%s: %s", d, err)
 		return "", err
 	}
 	// Create the JSON version of the Packer template. This also handles
@@ -69,10 +77,10 @@ func buildPackerTemplateFromDistro() (string, error) {
 	// template needs to the build directory.
 	err = pTpl.create(rTpl.IODirInf, rTpl.BuildInf, rTpl.Dirs, rTpl.Files)
 	if err != nil {
-		log.Error(err)
+		log.Errorf("%s: %s", d, err)
 		return "", err
 	}
-	msg := fmt.Sprintf("build for %q complete: Packer template name is %q", rTpl.Distro, rTpl.BuildName)
+	msg := fmt.Sprintf("%s: build complete: Packer template name is %q", rTpl.Distro, rTpl.BuildName)
 	log.Info(msg)
 	return msg, nil
 }
@@ -83,10 +91,11 @@ func buildPackerTemplateFromDistro() (string, error) {
 // or an error.
 func BuildBuilds(buildNames ...string) (string, error) {
 	if buildNames[0] == "" {
-		err := fmt.Errorf("builds failed: no build name was received")
+		err := fmt.Errorf("build builds failed: no build names were received")
 		log.Error(err)
 		return "", err
 	}
+	log.Infof("start builds for: %v", buildNames)
 	// Only load supported if it hasn't been loaded.
 	if !DistroDefaults.IsSet {
 		log.Debug("loading distro defaults")
@@ -112,6 +121,7 @@ func BuildBuilds(buildNames ...string) (string, error) {
 	doneCh := make(chan error, nBuilds)
 	// Process each build request
 	for i := 0; i < nBuilds; i++ {
+		log.Debugf("%s: start build", buildNames[i])
 		go buildPackerTemplateFromNamedBuild(buildNames[i], doneCh)
 	}
 	// Wait for channel done responses.
@@ -128,13 +138,13 @@ func BuildBuilds(buildNames ...string) (string, error) {
 	var msg string
 	if nBuilds == 1 {
 		if builtCount > 0 {
-			msg = fmt.Sprintf("%s was successfully processed and its Packer template was created", buildNames[0])
+			msg = fmt.Sprintf("%s was successfully processed and its packer template was created", buildNames[0])
 			goto done
 		}
-		msg = fmt.Sprintf("Processing of the %s build failed with an error.", buildNames[0])
+		msg = fmt.Sprintf("%s: build failed with an error.", buildNames[0])
 		goto done
 	}
-	msg = fmt.Sprintf("BuildBuilds: %v Builds were successfully processed and their Packer templates were created, %v Builds were unsucessfully process and resulted in errors..", builtCount, errorCount)
+	msg = fmt.Sprintf("build builds: %v builds were successfully processed and their packer templates were created, %v builds were unsucessfully process and resulted in errors..", builtCount, errorCount)
 done:
 	log.Info(msg)
 	return msg, nil
@@ -148,40 +158,49 @@ func buildPackerTemplateFromNamedBuild(name string, doneCh chan error) {
 		doneCh <- err
 		return
 	}
-	log.Infof("Start creation of Packer template %s\n", name)
-	defer log.Infof("End creation of Packer template %s\n", name)
+	log.Infof("%s: start creation of packer template", name)
+	defer log.Infof("%s: end creation of packer template", name)
 	var ok bool
 	// Check the type and create the defaults for that type, if it doesn't already exist.
 	bTpl, err := getBuildTemplate(name)
 	if err != nil {
-		doneCh <- fmt.Errorf("processing of build template %q failed: %s", name, err)
+		doneCh <- fmt.Errorf("%s: build failed: %s", name, err)
 		return
 	}
 	// See if the distro default exists.
 	rTpl := RawTemplate{}
 	rTpl, ok = DistroDefaults.Templates[ParseDistro(bTpl.Distro)]
 	if !ok {
-		doneCh <- fmt.Errorf("creation of Packer template for %s failed: %s not supported", name, bTpl.Distro)
+		err := fmt.Errorf("%s: %s: not a supported distro", name, bTpl.Distro)
+		log.Error(err)
+		doneCh <- err
 		return
 	}
 	// TODO: this is probably where the merging of parent build would occur
 	rTpl.Name = name
 	err = rTpl.updateBuildSettings(bTpl)
 	if err != nil {
-		doneCh <- Error{name, err}
+		err = Error{name, err}
+		log.Error(err)
+		doneCh <- err
 	}
 	if contour.GetBool(conf.Example) {
+		log.Debugf("%s: using examples", name)
 		rTpl.IsExample = true
 		rTpl.ExampleDir = contour.GetString(conf.ExampleDir)
 		rTpl.setExampleDirs()
 	}
 	pTpl, err := rTpl.createPackerTemplate()
 	if err != nil {
+		err = Error{name, err}
+		log.Error(err)
 		doneCh <- err
 		return
 	}
 	err = pTpl.create(rTpl.IODirInf, rTpl.BuildInf, rTpl.Dirs, rTpl.Files)
 	if err != nil {
+		err = Error{name, err}
+		log.Error(err)
 		doneCh <- err
 		return
 	}

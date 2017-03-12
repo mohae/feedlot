@@ -110,6 +110,7 @@ func PostProcessorFromString(s string) PostProcessor {
 func (r *RawTemplate) updatePostProcessors(newP map[string]PostProcessorC) error {
 	// If there is nothing new, old equals merged.
 	if len(newP) == 0 || newP == nil {
+		log.Debugf("%s: update post-processors: nothing to update", r.Name)
 		return nil
 	}
 	// Convert the existing postProcessors to Componenter.
@@ -146,25 +147,28 @@ func (r *RawTemplate) updatePostProcessors(newP map[string]PostProcessorC) error
 		}
 		p.mergeArrays(pp.Arrays)
 		r.PostProcessors[v] = p
+		log.Debugf("%s: merge post-processors: %s", r.Name, v)
 	}
+	log.Infof("%s: %d post-processors updated", r.Name, len(r.PostProcessors))
 	return nil
 }
 
 // r.createPostProcessors creates the PostProcessors for a build.
 func (r *RawTemplate) createPostProcessors() (pp []interface{}, err error) {
 	if r.PostProcessorIDs == nil || len(r.PostProcessorIDs) <= 0 {
+		log.Infof("%s: no post-processors to create", r.Name)
 		return nil, nil
 	}
 	var tmpS map[string]interface{}
 	var ndx int
 	pp = make([]interface{}, len(r.PostProcessorIDs))
+	log.Infof("%s: create %d post-processors", r.Name, len(r.PostProcessorIDs))
 	// Generate the postProcessor for each postProcessor type.
 	for _, ID := range r.PostProcessorIDs {
 		tmpPP, ok := r.PostProcessors[ID]
 		if !ok {
 			return nil, PostProcessorErr{id: ID, Err: ErrPostProcessorNotFound}
 		}
-		log.Debugf("processing post-processor id: %s\n", ID)
 		typ := PostProcessorFromString(tmpPP.Type)
 		switch typ {
 		case Atlas:
@@ -218,8 +222,8 @@ func (r *RawTemplate) createPostProcessors() (pp []interface{}, err error) {
 		}
 		pp[ndx] = tmpS
 		ndx++
-		log.Debugf("processed post-processor id: %s\n", ID)
 	}
+	log.Infof("%s: post-processors created", r.Name)
 	return pp, nil
 }
 
@@ -241,6 +245,7 @@ func (r *RawTemplate) createAtlas(ID string) (settings map[string]interface{}, e
 		return nil, PostProcessorErr{id: ID, PostProcessor: Atlas, Err: ErrPostProcessorNotFound}
 
 	}
+	log.Infof("%s: create post-processor: %s: %s", r.Name, ID, Atlas)
 	settings = make(map[string]interface{})
 	settings["type"] = Atlas.String()
 	// For each value, extract its key value pair and then process. Only
@@ -249,8 +254,10 @@ func (r *RawTemplate) createAtlas(ID string) (settings map[string]interface{}, e
 	var k, v string
 	var hasArtifact, hasArtifactType, hasToken bool
 	for _, s := range r.PostProcessors[ID].Settings {
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
+		log.Debugf("%s: %s settings: %s: %s", r.Name, ID, k, v)
 		switch k {
 		case "artifact":
 			settings[k] = v
@@ -283,11 +290,13 @@ func (r *RawTemplate) createAtlas(ID string) (settings map[string]interface{}, e
 		default:
 			continue
 		}
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		array := deepcopy.Copy(val)
 		if array != nil {
 			settings[name] = array
 		}
 	}
+	log.Infof("%s: created post-processor: %s: %s", r.Name, ID, Atlas)
 	return settings, nil
 }
 
@@ -307,6 +316,7 @@ func (r *RawTemplate) createCompress(ID string) (settings map[string]interface{}
 	if !ok {
 		return nil, PostProcessorErr{id: ID, PostProcessor: Compress, Err: ErrPostProcessorNotFound}
 	}
+	log.Infof("%s: create post-processor: %s: %s", r.Name, ID, Compress)
 	settings = make(map[string]interface{})
 	settings["type"] = Compress.String()
 	// For each value, extract its key value pair and then process. Only
@@ -314,6 +324,7 @@ func (r *RawTemplate) createCompress(ID string) (settings map[string]interface{}
 	// that for Packer.
 	var k, v string
 	for _, s := range r.PostProcessors[ID].Settings {
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -339,11 +350,13 @@ func (r *RawTemplate) createCompress(ID string) (settings map[string]interface{}
 		default:
 			continue
 		}
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		array := deepcopy.Copy(val)
 		if array != nil {
 			settings[name] = array
 		}
 	}
+	log.Infof("%s: created post-processor: %s: %s", r.Name, ID, Compress)
 	return settings, nil
 }
 
@@ -362,6 +375,7 @@ func (r *RawTemplate) createDockerImport(ID string) (settings map[string]interfa
 	if !ok {
 		return nil, PostProcessorErr{id: ID, PostProcessor: DockerImport, Err: ErrPostProcessorNotFound}
 	}
+	log.Infof("%s: create post-processor: %s: %s", r.Name, ID, DockerImport)
 	settings = make(map[string]interface{})
 	settings["type"] = DockerImport.String()
 	// For each value, extract its key value pair and then process. Only
@@ -370,6 +384,7 @@ func (r *RawTemplate) createDockerImport(ID string) (settings map[string]interfa
 	var k, v string
 	var hasRepository, hasTag bool
 	for _, s := range r.PostProcessors[ID].Settings {
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -395,11 +410,13 @@ func (r *RawTemplate) createDockerImport(ID string) (settings map[string]interfa
 		default:
 			continue
 		}
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		array := deepcopy.Copy(val)
 		if array != nil {
 			settings[name] = array
 		}
 	}
+	log.Infof("%s: created post-processor id: %s: %s", r.Name, ID, DockerImport)
 	return settings, nil
 }
 
@@ -421,6 +438,7 @@ func (r *RawTemplate) createDockerPush(ID string) (settings map[string]interface
 	if !ok {
 		return nil, PostProcessorErr{id: ID, PostProcessor: DockerPush, Err: ErrPostProcessorNotFound}
 	}
+	log.Infof("%s: create post-processor: %s: %s", r.Name, ID, DockerPush)
 	settings = make(map[string]interface{})
 	settings["type"] = DockerPush.String()
 	// For each value, extract its key value pair and then process. Only
@@ -428,6 +446,7 @@ func (r *RawTemplate) createDockerPush(ID string) (settings map[string]interface
 	// that for Packer.
 	var k, v string
 	for _, s := range r.PostProcessors[ID].Settings {
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -445,11 +464,13 @@ func (r *RawTemplate) createDockerPush(ID string) (settings map[string]interface
 		default:
 			continue
 		}
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		array := deepcopy.Copy(val)
 		if array != nil {
 			settings[name] = array
 		}
 	}
+	log.Infof("%s: created post-processor: %s: %s", r.Name, ID, DockerPush)
 	return settings, nil
 }
 
@@ -467,6 +488,7 @@ func (r *RawTemplate) createDockerSave(ID string) (settings map[string]interface
 	if !ok {
 		return nil, PostProcessorErr{id: ID, PostProcessor: DockerSave, Err: ErrPostProcessorNotFound}
 	}
+	log.Infof("%s: create post-processor: %s: %s", r.Name, ID, DockerSave)
 	settings = make(map[string]interface{})
 	settings["type"] = DockerSave.String()
 	// For each value, extract its key value pair and then process. Only
@@ -475,6 +497,7 @@ func (r *RawTemplate) createDockerSave(ID string) (settings map[string]interface
 	var k, v string
 	var hasPath bool
 	for _, s := range r.PostProcessors[ID].Settings {
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -494,11 +517,13 @@ func (r *RawTemplate) createDockerSave(ID string) (settings map[string]interface
 		default:
 			continue
 		}
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		array := deepcopy.Copy(val)
 		if array != nil {
 			settings[name] = array
 		}
 	}
+	log.Infof("%s: created post-processor: %s: %s", r.Name, ID, DockerSave)
 	return settings, nil
 }
 
@@ -517,6 +542,7 @@ func (r *RawTemplate) createDockerTag(ID string) (settings map[string]interface{
 	if !ok {
 		return nil, PostProcessorErr{id: ID, PostProcessor: DockerTag, Err: ErrPostProcessorNotFound}
 	}
+	log.Infof("%s: create post-processor: %s: %s", r.Name, ID, DockerTag)
 	settings = make(map[string]interface{})
 	settings["type"] = DockerTag.String()
 	// For each value, extract its key value pair and then process. Only
@@ -525,6 +551,7 @@ func (r *RawTemplate) createDockerTag(ID string) (settings map[string]interface{
 	var k, v string
 	var hasRepository bool
 	for _, s := range r.PostProcessors[ID].Settings {
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -550,11 +577,13 @@ func (r *RawTemplate) createDockerTag(ID string) (settings map[string]interface{
 		default:
 			continue
 		}
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		array := deepcopy.Copy(val)
 		if array != nil {
 			settings[name] = array
 		}
 	}
+	log.Infof("%s: created post-processor: %s: %s", r.Name, ID, DockerTag)
 	return settings, nil
 }
 
@@ -578,12 +607,14 @@ func (r *RawTemplate) createVagrant(ID string) (settings map[string]interface{},
 	if !ok {
 		return nil, PostProcessorErr{id: ID, PostProcessor: Vagrant, Err: ErrPostProcessorNotFound}
 	}
+	log.Infof("%s: create post-processor: %s: %s", r.Name, ID, Vagrant)
 	settings = make(map[string]interface{})
 	settings["type"] = Vagrant.String()
 	// For each value, extract its key value pair and then process. Only process the supported keys.
 	// Key validation isn't done here, leaving that for Packer.
 	var k, v string
 	for _, s := range r.PostProcessors[ID].Settings {
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -624,11 +655,13 @@ func (r *RawTemplate) createVagrant(ID string) (settings map[string]interface{},
 		default:
 			continue
 		}
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		array := deepcopy.Copy(val)
 		if array != nil {
 			settings[name] = array
 		}
 	}
+	log.Infof("%s: created post-processor: %s: %s", r.Name, ID, Vagrant)
 	return settings, nil
 }
 
@@ -651,10 +684,12 @@ func (r *RawTemplate) createVagrantCloud(ID string) (settings map[string]interfa
 	if !ok {
 		return nil, PostProcessorErr{id: ID, PostProcessor: VagrantCloud, Err: ErrPostProcessorNotFound}
 	}
+	log.Infof("%s: create post-processor: %s: %s", r.Name, ID, VagrantCloud)
 	settings = make(map[string]interface{})
 	settings["type"] = VagrantCloud.String()
 	var hasAccessToken, hasBoxTag, hasVersion bool
 	for _, s := range r.PostProcessors[ID].Settings {
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -688,11 +723,13 @@ func (r *RawTemplate) createVagrantCloud(ID string) (settings map[string]interfa
 		default:
 			continue
 		}
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		array := deepcopy.Copy(val)
 		if array != nil {
 			settings[name] = array
 		}
 	}
+	log.Infof("%s: created post-processor: %s: %s", r.Name, ID, VagrantCloud)
 	return settings, nil
 }
 
@@ -723,6 +760,7 @@ func (r *RawTemplate) createVSphere(ID string) (settings map[string]interface{},
 	if !ok {
 		return nil, PostProcessorErr{id: ID, PostProcessor: VSphere, Err: ErrPostProcessorNotFound}
 	}
+	log.Infof("%s: create post-processor: %s: %s", r.Name, ID, VSphere)
 	settings = make(map[string]interface{})
 	settings["type"] = VSphere.String()
 	// For each value, extract its key value pair and then process. Only
@@ -731,6 +769,7 @@ func (r *RawTemplate) createVSphere(ID string) (settings map[string]interface{},
 	var k, v string
 	var hasCluster, hasDatacenter, hasDatastore, hasHost, hasPassword, hasResourcePool, hasUsername, hasVMName bool
 	for _, s := range r.PostProcessors[ID].Settings {
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -800,6 +839,7 @@ func (r *RawTemplate) createVSphere(ID string) (settings map[string]interface{},
 			settings[name] = array
 		}
 	}
+	log.Infof("%s: created post-processor: %s: %s", r.Name, ID, VSphere)
 	return settings, nil
 }
 

@@ -133,6 +133,7 @@ func (r *RawTemplate) Copy() *RawTemplate {
 //		Write to output
 //		Copy resources to output
 func (r *RawTemplate) createPackerTemplate() (PackerTemplate, error) {
+	log.Infof("%s: create packer template", r.Name)
 	var err error
 	// Resolve the Feedlot variables to their final values.
 	r.mergeVariables()
@@ -162,12 +163,14 @@ func (r *RawTemplate) createPackerTemplate() (PackerTemplate, error) {
 		return p, err
 	}
 	// Return the generated Packer Template.
+	log.Infof("%s: packer template created", r.Name)
 	return p, nil
 }
 
 // replaceVariables checks incoming string for variables and replaces them with
 // their values.
 func (r *RawTemplate) replaceVariables(s string) string {
+	log.Debugf("replace vars: %s", s)
 	//see if the delim is in the string, if not, nothing to replace
 	if strings.Index(s, r.Delim) < 0 {
 		return s
@@ -176,6 +179,7 @@ func (r *RawTemplate) replaceVariables(s string) string {
 	for vName, vVal := range r.VarVals {
 		s = strings.Replace(s, vName, vVal, -1)
 	}
+	log.Debugf("vars replaced: %s", s)
 	return s
 }
 
@@ -183,6 +187,7 @@ func (r *RawTemplate) replaceVariables(s string) string {
 // existing settings, which are set to feedlot's defaults, to create the
 // default template.
 func (r *RawTemplate) setDefaults(d *SupportedDistro) error {
+	log.Infof("%s: set defaults from distro settings", r.Name)
 	// merges Settings between an old and new template.
 	// Note: Arch, Image, and Release are not updated here as how these fields
 	// are updated depends on whether this is a build from a distribution's
@@ -215,14 +220,17 @@ func (r *RawTemplate) setDefaults(d *SupportedDistro) error {
 	}
 	// If defined, BuilderTypes override any prior BuilderTypes Settings
 	if d.BuilderIDs != nil {
+		log.Debugf("%s: override builder IDs with %v", r.Name, d.BuilderIDs)
 		r.BuilderIDs = d.BuilderIDs
 	}
 	// If defined, PostProcessorTypes override any prior PostProcessorTypes Settings
 	if d.PostProcessorIDs != nil {
+		log.Debugf("%s: override post-processor IDs with %v", r.Name, d.PostProcessorIDs)
 		r.PostProcessorIDs = d.PostProcessorIDs
 	}
 	// If defined, ProvisionerTypes override any prior ProvisionerTypes Settings
 	if d.ProvisionerIDs != nil {
+		log.Debugf("%s: override provisioner IDs with %v", r.Name, d.ProvisionerIDs)
 		r.ProvisionerIDs = d.ProvisionerIDs
 	}
 	// merge the build portions.
@@ -238,6 +246,7 @@ func (r *RawTemplate) setDefaults(d *SupportedDistro) error {
 	if err != nil {
 		return Error{slug: "set builder defaults", err: err}
 	}
+	log.Infof("%s: defaults set from distro settings", r.Name)
 	return nil
 }
 
@@ -255,16 +264,20 @@ func (r *RawTemplate) updateBuildSettings(bld *RawTemplate) error {
 	r.PackerInf.update(bld.PackerInf)
 	r.BuildInf.update(bld.BuildInf)
 	if bld.Arch != "" {
+		log.Debugf("%s: set arch from %s: %s", r.Name, bld.Name, bld.Arch)
 		r.Arch = bld.Arch
 	}
 	if bld.Image != "" {
+		log.Debugf("%s: set image from %s: %s", r.Name, bld.Name, bld.Image)
 		r.Image = bld.Image
 	}
 	if bld.Release != "" {
+		log.Debugf("%s: set release from %s: %s", r.Name, bld.Name, bld.Release)
 		r.Release = bld.Release
 	}
 	// If defined, Builders override any prior builder Settings.
-	if bld.BuilderIDs != nil && len(bld.BuilderIDs) > 0 {
+	if len(bld.BuilderIDs) > 0 {
+		log.Debugf("%s: set builder ids from %s: %s", r.Name, bld.Name, bld.BuilderIDs)
 		r.BuilderIDs = bld.BuilderIDs
 	}
 	//   if nil don't do anything (this means prior settings are used, e.g. default)
@@ -273,9 +286,11 @@ func (r *RawTemplate) updateBuildSettings(bld *RawTemplate) error {
 	//     any build
 	//   if len > 0 replace the existing types with the builder's.
 	if bld.PostProcessorIDs != nil {
+		log.Debugf("%s: set post-processor ids from %s: %s", r.Name, bld.Name, bld.PostProcessorIDs)
 		r.PostProcessorIDs = bld.PostProcessorIDs
 	}
 	if bld.ProvisionerIDs != nil {
+		log.Debugf("%s: set provisioner ids from %s: %s", r.Name, bld.Name, bld.ProvisionerIDs)
 		r.ProvisionerIDs = bld.ProvisionerIDs
 	}
 	// merge the build portions.
@@ -290,11 +305,13 @@ func (r *RawTemplate) updateBuildSettings(bld *RawTemplate) error {
 // variables in the source_dir setting are not resolved.
 func (r *RawTemplate) updateTemplateOutputDirSetting() error {
 	if *r.IODirInf.TemplateOutputDirIsRelative {
+		log.Debugf("%s: template output dir is relative", r.Name)
 		dir, err := os.Getwd()
 		if err != nil {
 			return Error{"template output dir: get working directory", err}
 		}
 		r.IODirInf.TemplateOutputDir = filepath.Join(dir, r.IODirInf.TemplateOutputDir)
+		log.Debugf("%s: template output dir is now %s", r.Name, r.IODirInf.TemplateOutputDir)
 	}
 	return nil
 }
@@ -304,7 +321,9 @@ func (r *RawTemplate) updateTemplateOutputDirSetting() error {
 // resolved.
 func (r *RawTemplate) updateSourceDirSetting() {
 	if *r.IODirInf.SourceDirIsRelative {
+		log.Debugf("%s: template source dir is relative", r.Name)
 		r.IODirInf.SourceDir = filepath.Join(contour.GetString(conf.Dir), r.IODirInf.SourceDir)
+		log.Debugf("%s: template source dir is now %s", r.Name, r.IODirInf.TemplateOutputDir)
 	}
 }
 
@@ -338,6 +357,9 @@ func (r *RawTemplate) mergeVariables() {
 	r.VarVals[r.Delim+"template_output_dir"] = r.TemplateOutputDir
 	r.VarVals[r.Delim+"packer_output_dir"] = r.PackerOutputDir
 	r.VarVals[r.Delim+"source_dir"] = r.SourceDir
+	log.Debugf("%s: merged SourceDir: %s", r.Name, r.SourceDir)
+	log.Debugf("%s: merged TemplateOutputDir: %s", r.Name, r.TemplateOutputDir)
+	log.Debugf("%s: merged PackerOutputDir: %s", r.Name, r.PackerOutputDir)
 }
 
 // setBaseVarVals sets the varVals for the base variables
@@ -490,6 +512,7 @@ func (r *RawTemplate) commandsFromFile(name, component string) (commands []strin
 	if err != nil {
 		return nil, err
 	}
+	log.Debugf("%s: command file: %s", r.Name, src)
 	f, err := os.Open(src)
 	if err != nil {
 		return nil, Error{slug: "get commands", err: err}
@@ -511,6 +534,7 @@ func (r *RawTemplate) commandsFromFile(name, component string) (commands []strin
 		err = Error{slug: "get commands", err: err}
 		return nil, err
 	}
+	log.Debugf("%s: %s: %d commands found", r.Name, src, len(commands))
 	return commands, nil
 }
 
@@ -760,13 +784,14 @@ func (r *RawTemplate) checkSourcePaths(p, component string, paths []string) (str
 	for _, path := range paths {
 		for _, c := range searchC {
 			tmp := filepath.Join(path, c, p)
+			log.Debugf("%s: check for source at %s", r.Name, tmp)
 			inf, err := os.Stat(tmp)
 			if err == nil {
 				// if it's a dir, append the slash
 				if inf.IsDir() {
 					tmp += string(os.PathSeparator)
 				}
-				log.Debugf("findSource:  %s found", tmp)
+				log.Debugf("%s: source found at %s", r.Name, tmp)
 				return filepath.ToSlash(tmp), nil
 			}
 			if !os.IsNotExist(err) {
@@ -779,18 +804,20 @@ func (r *RawTemplate) checkSourcePaths(p, component string, paths []string) (str
 			continue
 		}
 		tmp := filepath.Join(path, p)
+		log.Debugf("%s: check for source at %s", r.Name, tmp)
 		inf, err := os.Stat(tmp)
 		if err == nil {
 			if inf.IsDir() {
 				tmp += string(os.PathSeparator)
 			}
-			log.Debugf("findSource:  %s found", tmp)
+			log.Debugf("%s: source found at %s", r.Name, tmp)
 			return filepath.ToSlash(tmp), nil
 		}
 		if !os.IsNotExist(err) {
 			return "", err
 		}
 	}
+	log.Debugf("%s: source for component %s: %s not found", r.Name, component, p)
 	return "", os.ErrNotExist
 }
 
@@ -854,8 +881,11 @@ func (r *RawTemplate) setExampleDirs() {
 	}
 	r.SourceDir = path.Join(r.ExampleDir, r.SourceDir)
 outDir:
+	log.Debugf("%s: example output dir: %s", r.Name, r.TemplateOutputDir)
+
 	if r.TemplateOutputDir == "" {
 		r.TemplateOutputDir = r.ExampleDir
+		log.Debugf("%s: example output dir: %s", r.Name, r.TemplateOutputDir)
 		return
 	}
 	parts = strings.Split(r.TemplateOutputDir, string(filepath.Separator))
@@ -870,4 +900,5 @@ outDir:
 		}
 	}
 	r.TemplateOutputDir = path.Join(r.ExampleDir, r.TemplateOutputDir)
+	log.Debugf("%s: example output dir: %s", r.Name, r.TemplateOutputDir)
 }

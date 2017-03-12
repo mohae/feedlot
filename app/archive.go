@@ -10,6 +10,7 @@ import (
 
 	"github.com/mohae/contour"
 	"github.com/mohae/feedlot/conf"
+	"github.com/mohae/feedlot/log"
 )
 
 // ArchiveErr is generated during an archive process.
@@ -47,6 +48,7 @@ func NewArchive(s string) *Archive {
 }
 
 func (a *Archive) addFile(tW *tar.Writer, filename string) error {
+	log.Debugf("archive: add %s", filename)
 	// Add the passed file, if it exists, to the archive, otherwise error.
 	// This preserves mode and modification.
 	// TODO check ownership/permissions
@@ -91,6 +93,7 @@ func (a *Archive) priorBuild(p string) error {
 	if !contour.GetBool(conf.ArchivePriorBuild) {
 		return nil
 	}
+	log.Infof("archive prior build: %s", p)
 	// See if src exists, if it doesn't then don't do anything
 	_, err := os.Stat(p)
 	if err != nil {
@@ -139,6 +142,7 @@ func (a *Archive) create(p string) error {
 	if err != nil {
 		return ArchiveErr{slug: fmt.Sprintf("%s: create", tBName), err: err}
 	}
+	log.Infof("create archive tarball: %s", tBName)
 	// Close the file with error handling
 	defer func() {
 		cerr := tBall.Close()
@@ -169,6 +173,7 @@ func (a *Archive) create(p string) error {
 			return err
 		}
 	}
+	log.Infof("created archive of prior build: %s", tBName)
 	return nil
 }
 

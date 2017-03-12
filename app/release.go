@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mohae/feedlot/log"
+
 	"golang.org/x/net/html"
 )
 
@@ -169,6 +171,7 @@ PICK:
 	// get a random mirror url
 	tmpURL := filtered[rand.Intn(len(filtered))][4]
 	r.ReleaseURL = fmt.Sprintf("%s%s/isos/%s/", appendSlash(tmpURL), r.Release, r.Arch)
+	log.Debugf("release url: %s", r.ReleaseURL)
 	return nil
 }
 
@@ -294,6 +297,7 @@ func (r *centos) setISOName6() {
 	buff.WriteString(strings.ToLower(r.Image))
 	buff.WriteString(".iso")
 	r.Name = buff.String()
+	log.Debugf("iso name: %s", r.Name)
 }
 
 func (r *centos) setISOName7() {
@@ -308,6 +312,7 @@ func (r *centos) setISOName7() {
 	buff.WriteString(r.MinorVersion)
 	buff.WriteString(".iso")
 	r.Name = buff.String()
+	log.Debugf("iso name: %s", r.Name)
 }
 
 // setISOChecksum finds the URL for the checksum page for the current mirror,
@@ -317,6 +322,7 @@ func (r *centos) setISOChecksum() error {
 		return DistroErr{Distro: CentOS, err: ErrChecksumTypeNotSet}
 	}
 	url := r.checksumURL()
+	log.Debugf("checksum url: %s", url)
 	page, err := bodyStringFromURL(url)
 	if err != nil {
 		return DistroErr{Distro: CentOS, err: err}
@@ -341,6 +347,7 @@ func (r *centos) findISOChecksum(page string) error {
 	tmpSl := strings.Split(tmpRel, "\n")
 	// The checksum we want is the last element in the array
 	r.Checksum = strings.TrimSpace(tmpSl[len(tmpSl)-1])
+	log.Debugf("centos checksom: %s", r.Checksum)
 	return nil
 }
 
@@ -429,6 +436,7 @@ func (r *debian) setReleaseURL() {
 	buff.WriteString(r.Arch)
 	buff.WriteString("/iso-cd/")
 	r.ReleaseURL = buff.String()
+	log.Debugf("debian release url: %s", r.ReleaseURL)
 }
 
 func (r *debian) checksumURL() string {
@@ -456,6 +464,7 @@ func (r *debian) setISOName() {
 	buff.WriteString(r.Image)
 	buff.WriteString(".iso")
 	r.Name = buff.String()
+	log.Debugf("debian iso name: %s", r.Name)
 	return
 }
 
@@ -493,6 +502,7 @@ func (r *debian) findISOChecksum(page string) error {
 	tmpSl := strings.Split(tmpRel, "\n")
 	// The checksum we want is the last element in the array
 	r.Checksum = strings.TrimSpace(tmpSl[len(tmpSl)-1])
+	log.Debugf("debian iso checksum: %s", r.Checksum)
 	return nil
 }
 
@@ -570,6 +580,7 @@ func (r *debian) setReleaseInfo(s string) error {
 		return DistroErr{Distro: Debian, slug: fmt.Sprintf("expected version string to be 5 chars: got %s", s)}
 	}
 	r.FullVersion = s[:5]
+	log.Debugf("debian: current version: %s", r.FullVersion)
 	return nil
 }
 
@@ -614,6 +625,7 @@ func (r *ubuntu) setVersionInfo() error {
 	}
 	// For lts, the version is part 2 of the title
 	r.FullVersion = parts[1]
+	log.Debugf("ubuntu: full version: %s", r.FullVersion)
 	return nil
 }
 
@@ -641,6 +653,7 @@ func (r *ubuntu) setISOName() {
 	buff.WriteString(r.Arch)
 	buff.WriteString(".iso")
 	r.Name = buff.String()
+	log.Debugf("ubuntu: iso name: %s", r.Name)
 	return
 }
 
@@ -650,6 +663,7 @@ func (r *ubuntu) setReleaseURL() {
 	buff.WriteString(r.Release)
 	buff.WriteByte('/')
 	r.ReleaseURL = buff.String()
+	log.Debugf("ubuntu: release url: %s", r.ReleaseURL)
 }
 
 // setISOChecksum: Set the checksum value for the iso. Most of the actual work
@@ -697,6 +711,7 @@ func (r *ubuntu) findISOChecksum(page string) error {
 	} else {
 		r.Checksum = page[pos-66 : pos-2]
 	}
+	log.Debugf("ubuntu: iso checksum: %s", r.Checksum)
 	return nil
 }
 

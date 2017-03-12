@@ -134,12 +134,14 @@ func BuilderFromString(s string) Builder {
 // r.createBuilders takes a raw builder and create the appropriate Packer
 // Builder
 func (r *RawTemplate) createBuilders() (bldrs []interface{}, err error) {
+	// a builder is required
 	if r.BuilderIDs == nil || len(r.BuilderIDs) <= 0 {
 		return nil, BuilderErr{Err: errors.New("no builders specified")}
 	}
 	var tmpS map[string]interface{}
 	var ndx int
 	bldrs = make([]interface{}, len(r.BuilderIDs))
+	log.Infof("%s: create %d builders", r.Name, len(r.BuilderIDs))
 	// Set the CommonBuilder settings. Only the builder.Settings field is used
 	// for CommonBuilder as everything else is usually builder specific, even
 	// if they have common names, e.g. difference between specifying memory
@@ -152,7 +154,6 @@ func (r *RawTemplate) createBuilders() (bldrs []interface{}, err error) {
 		if !ok {
 			return nil, BuilderErr{id: ID, Err: ErrBuilderNotFound}
 		}
-		log.Debugf("processing builder id: %s\n", ID)
 		typ := BuilderFromString(bldr.Type)
 		switch typ {
 		case AmazonChroot:
@@ -235,8 +236,8 @@ func (r *RawTemplate) createBuilders() (bldrs []interface{}, err error) {
 		}
 		bldrs[ndx] = tmpS
 		ndx++
-		log.Debugf("processed builder id %s\n", ID)
 	}
+	log.Infof("%s: builders created", r.Name)
 	return bldrs, nil
 }
 
@@ -290,6 +291,7 @@ func (r *RawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: AmazonChroot, Err: ErrBuilderNotFound}
 	}
+	log.Infof("%s: create builder: %s: %s", r.Name, ID, AmazonChroot)
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
 	settings["type"] = AmazonChroot.String()
@@ -314,9 +316,10 @@ func (r *RawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 	}
 	// Go through each element in the slice, only take the ones that matter to this builder.
 	for _, s := range workSlice {
-		// var tmp interface{}
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
+		log.Debugf("%s: %s settings: %s: %s", r.Name, ID, k, v)
 		switch k {
 		case "access_key":
 			settings[k] = v
@@ -377,11 +380,13 @@ func (r *RawTemplate) createAmazonChroot(ID string) (settings map[string]interfa
 			// not supported; skip
 			continue
 		}
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		array := deepcopy.Copy(val)
 		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
 		}
 	}
+	log.Infof("%s: created builder: %s: %s", r.Name, ID, AmazonChroot)
 	return settings, nil
 }
 
@@ -447,6 +452,7 @@ func (r *RawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: AmazonEBS, Err: ErrBuilderNotFound}
 	}
+	log.Infof("%s: create builder: %s: %s", r.Name, ID, AmazonEBS)
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
 	settings["type"] = AmazonEBS.String()
@@ -478,7 +484,7 @@ func (r *RawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 	}
 	// Go through each element in the slice, only take the ones that matter to this builder.
 	for _, s := range workSlice {
-		// var tmp interface{}
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -616,11 +622,13 @@ func (r *RawTemplate) createAmazonEBS(ID string) (settings map[string]interface{
 		default:
 			continue
 		}
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		array := deepcopy.Copy(val)
 		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
 		}
 	}
+	log.Infof("%s: created builder: %s: %s", r.Name, ID, AmazonEBS)
 	return settings, nil
 }
 
@@ -694,6 +702,7 @@ func (r *RawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: AmazonInstance, Err: ErrBuilderNotFound}
 	}
+	log.Infof("%s: create builder: %s: %s", r.Name, ID, AmazonInstance)
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
 	settings["type"] = AmazonInstance.String()
@@ -726,6 +735,7 @@ func (r *RawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 	}
 	// Go through each element in the slice, only take the ones that matter/ to this builder.
 	for _, s := range workSlice {
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -934,11 +944,13 @@ func (r *RawTemplate) createAmazonInstance(ID string) (settings map[string]inter
 		default:
 			continue
 		}
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		array := deepcopy.Copy(val)
 		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
 		}
 	}
+	log.Infof("%s: created builder: %s: %s", r.Name, ID, AmazonInstance)
 	return settings, nil
 }
 
@@ -1001,6 +1013,8 @@ func (r *RawTemplate) processAMIBlockDeviceMappings(v interface{}) (interface{},
 			}
 		}
 		ret[i] = vals
+		log.Debugf("%s: AMI Block Device Mappings: %v", r.Name, vals)
+
 	}
 	return ret, nil
 }
@@ -1030,6 +1044,7 @@ func (r *RawTemplate) createDigitalOcean(ID string) (settings map[string]interfa
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: DigitalOcean, Err: ErrBuilderNotFound}
 	}
+	log.Infof("%s: create builder: %s: %s", r.Name, ID, DigitalOcean)
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
 	settings["type"] = DigitalOcean.String()
@@ -1051,7 +1066,7 @@ func (r *RawTemplate) createDigitalOcean(ID string) (settings map[string]interfa
 	// Go through each element in the slice, only take the ones that matter to this builder.
 	var hasAPIToken, hasImage, hasRegion, hasSize bool
 	for _, s := range workSlice {
-		// var tmp interface{}
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -1091,6 +1106,7 @@ func (r *RawTemplate) createDigitalOcean(ID string) (settings map[string]interfa
 	if !hasSize {
 		return nil, BuilderErr{id: ID, Builder: DigitalOcean, Err: RequiredSettingErr{"size"}}
 	}
+	log.Infof("%s: created builder: %s: %s", r.Name, ID, DigitalOcean)
 	return settings, nil
 }
 
@@ -1122,6 +1138,7 @@ func (r *RawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: Docker, Err: ErrBuilderNotFound}
 	}
+	log.Infof("%s: create builder: %s: %s", r.Name, ID, Docker)
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
 	settings["type"] = Docker.String()
@@ -1145,6 +1162,7 @@ func (r *RawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 	var hasCommit, hasDiscard, hasExportPath, hasImage, hasRunCommandArray bool
 	var runCommandFile string
 	for _, s := range workSlice {
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -1196,6 +1214,7 @@ func (r *RawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 	for name, val := range r.Builders[ID].Arrays {
 		switch name {
 		case "run_command":
+			log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 			array := deepcopy.Copy(val)
 			if array != nil {
 				settings[name] = array
@@ -1206,6 +1225,7 @@ func (r *RawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 		default:
 			continue
 		}
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		settings[name] = deepcopy.Copy(val)
 	}
 	// if there wasn't an array of run commands, check to see if they should be loaded from a file
@@ -1221,6 +1241,7 @@ func (r *RawTemplate) createDocker(ID string) (settings map[string]interface{}, 
 			settings["run_command"] = commands
 		}
 	}
+	log.Infof("%s: created builder: %s: %s", r.Name, ID, Docker)
 	return settings, nil
 }
 
@@ -1256,6 +1277,7 @@ func (r *RawTemplate) createGoogleCompute(ID string) (settings map[string]interf
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: GoogleCompute, Err: ErrBuilderNotFound}
 	}
+	log.Infof("%s: create builder: %s: %s", r.Name, ID, GoogleCompute)
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
 	settings["type"] = GoogleCompute.String()
@@ -1278,6 +1300,7 @@ func (r *RawTemplate) createGoogleCompute(ID string) (settings map[string]interf
 	}
 	// Go through each element in the slice, only take the ones that matter to this builder.
 	for _, s := range workSlice {
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -1336,11 +1359,13 @@ func (r *RawTemplate) createGoogleCompute(ID string) (settings map[string]interf
 		default:
 			continue
 		}
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		array := deepcopy.Copy(val)
 		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
 		}
 	}
+	log.Infof("%s: created builder: %s: %s", r.Name, ID, GoogleCompute)
 	return settings, nil
 }
 
@@ -1360,6 +1385,7 @@ func (r *RawTemplate) createNull(ID string) (settings map[string]interface{}, er
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: Null, Err: ErrBuilderNotFound}
 	}
+	log.Infof("%s: create builder: %s: %s", r.Name, ID, Null)
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
 	settings["type"] = Null.String()
@@ -1382,6 +1408,7 @@ func (r *RawTemplate) createNull(ID string) (settings map[string]interface{}, er
 		// communicator == none; there must be a communicator
 		return nil, BuilderErr{id: ID, Builder: Null, Err: RequiredSettingErr{"communicator"}}
 	}
+	log.Infof("%s: created builder: %s: %s", r.Name, ID, Null)
 	return settings, nil
 }
 
@@ -1421,6 +1448,7 @@ func (r *RawTemplate) createOpenStack(ID string) (settings map[string]interface{
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: OpenStack, Err: ErrBuilderNotFound}
 	}
+	log.Infof("%s: create builder: %s: %s", r.Name, ID, OpenStack)
 	settings = map[string]interface{}{}
 	// Each create function is responsible for setting its own type.
 	settings["type"] = OpenStack.String()
@@ -1455,6 +1483,7 @@ func (r *RawTemplate) createOpenStack(ID string) (settings map[string]interface{
 	}
 	// Go through each element in the slice, only take the ones that matter to this builder.
 	for _, s := range workSlice {
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -1549,11 +1578,13 @@ func (r *RawTemplate) createOpenStack(ID string) (settings map[string]interface{
 		default:
 			continue
 		}
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		array := deepcopy.Copy(val)
 		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
 		}
 	}
+	log.Infof("%s: created builder: %s: %s", r.Name, ID, OpenStack)
 	return settings, nil
 }
 
@@ -1600,6 +1631,7 @@ func (r *RawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: ParallelsISO, Err: ErrBuilderNotFound}
 	}
+	log.Infof("%s: create builder: %s: %s", r.Name, ID, ParallelsISO)
 	settings = map[string]interface{}{}
 	// Each create function is responsible for setting its own type.
 	settings["type"] = ParallelsISO.String()
@@ -1632,6 +1664,7 @@ func (r *RawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 	}
 	// Go through each element in the slice, only take the ones that matter to this builder.
 	for _, s := range workSlice {
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -1759,6 +1792,7 @@ func (r *RawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 	for name, val := range r.Builders[ID].Arrays {
 		switch name {
 		case "boot_command":
+			log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 			// This is processed here because we need to know if it exists or not
 			array := deepcopy.Copy(val)
 			if !reflect.ValueOf(val).IsNil() {
@@ -1769,6 +1803,7 @@ func (r *RawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 		case "floppy_files":
 		case "host_interfaces":
 		case "iso_urls":
+			log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 			// this takes precedence over iso_url
 			// This is processed here because we need to know if it exists or not
 			array := deepcopy.Copy(val)
@@ -1782,6 +1817,7 @@ func (r *RawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 		default:
 			continue
 		}
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		array := deepcopy.Copy(val)
 		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
@@ -1812,6 +1848,7 @@ func (r *RawTemplate) createParallelsISO(ID string) (settings map[string]interfa
 	if !hasISOURLs {
 		settings["iso_url"] = isoURL
 	}
+	log.Infof("%s: created builder: %s: %s", r.Name, ID, ParallelsISO)
 	return settings, nil
 }
 
@@ -1849,6 +1886,7 @@ func (r *RawTemplate) createParallelsPVM(ID string) (settings map[string]interfa
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: ParallelsPVM, Err: ErrBuilderNotFound}
 	}
+	log.Infof("%s: create builder: %s: %s", r.Name, ID, ParallelsPVM)
 	settings = map[string]interface{}{}
 	// Each create function is responsible for setting its own type.
 	settings["type"] = ParallelsPVM.String()
@@ -1880,6 +1918,7 @@ func (r *RawTemplate) createParallelsPVM(ID string) (settings map[string]interfa
 	}
 	// Go through each element in the slice, only take the ones that matter to this builder.
 	for _, s := range workSlice {
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -1978,6 +2017,7 @@ func (r *RawTemplate) createParallelsPVM(ID string) (settings map[string]interfa
 	for name, val := range r.Builders[ID].Arrays {
 		switch name {
 		case "boot_command":
+			log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 			// This is processed here because we need to know if it exists or not
 			array := deepcopy.Copy(val)
 			if !reflect.ValueOf(val).IsNil() {
@@ -1992,6 +2032,7 @@ func (r *RawTemplate) createParallelsPVM(ID string) (settings map[string]interfa
 		default:
 			continue
 		}
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		array := deepcopy.Copy(val)
 		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
@@ -2015,6 +2056,7 @@ func (r *RawTemplate) createParallelsPVM(ID string) (settings map[string]interfa
 			settings["boot_command"] = array
 		}
 	}
+	log.Infof("%s: created builder: %s: %s", r.Name, ID, ParallelsPVM)
 	return settings, nil
 }
 
@@ -2060,6 +2102,7 @@ func (r *RawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: QEMU, Err: ErrBuilderNotFound}
 	}
+	log.Infof("%s: create builder: %s: %s", r.Name, ID, QEMU)
 	settings = map[string]interface{}{}
 	// Each create function is responsible for setting its own type.
 	settings["type"] = QEMU.String()
@@ -2091,6 +2134,7 @@ func (r *RawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 	}
 	// Go through each element in the slice, only take the ones that matter to this builder.
 	for _, s := range workSlice {
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -2182,6 +2226,7 @@ func (r *RawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 	for name, val := range r.Builders[ID].Arrays {
 		switch name {
 		case "boot_command":
+			log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 			// This is processed here because we need to know if it exists or not
 			array := deepcopy.Copy(val)
 			if !reflect.ValueOf(val).IsNil() {
@@ -2195,6 +2240,7 @@ func (r *RawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 			if hasISOURL {
 				continue
 			}
+			log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 			// This is processed here because we need to know if it exists or not
 			array := deepcopy.Copy(val)
 			if !reflect.ValueOf(val).IsNil() {
@@ -2206,6 +2252,7 @@ func (r *RawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 		default:
 			continue
 		}
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		// copy the array and set it
 		array := deepcopy.Copy(val)
 		if !reflect.ValueOf(array).IsNil() {
@@ -2262,6 +2309,7 @@ func (r *RawTemplate) createQEMU(ID string) (settings map[string]interface{}, er
 	if !hasChecksumType {
 		return nil, BuilderErr{id: ID, Builder: QEMU, Err: RequiredSettingErr{"iso_checksum_type"}}
 	}
+	log.Infof("%s: created builder: %s: %s", r.Name, ID, QEMU)
 	return settings, nil
 }
 
@@ -2315,6 +2363,7 @@ func (r *RawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: VirtualBoxISO, Err: ErrBuilderNotFound}
 	}
+	log.Infof("%s: create builder: %s: %s", r.Name, ID, VirtualBoxISO)
 	settings = map[string]interface{}{}
 	// Each create function is responsible for setting its own type.
 	settings["type"] = VirtualBoxISO.String()
@@ -2350,7 +2399,7 @@ func (r *RawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 	}
 	// Go through each element in the slice, only take the ones that matter to this builder.
 	for _, s := range workSlice {
-		// var tmp interface{}
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -2496,6 +2545,7 @@ func (r *RawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 	for name, val := range r.Builders[ID].Arrays {
 		switch name {
 		case "boot_command":
+			log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 			array := deepcopy.Copy(val)
 			if !reflect.ValueOf(array).IsNil() {
 				settings[name] = array
@@ -2508,6 +2558,7 @@ func (r *RawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 			if hasISOURL {
 				continue
 			}
+			log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 			array := deepcopy.Copy(val)
 			if !reflect.ValueOf(array).IsNil() {
 				settings[name] = array
@@ -2522,6 +2573,7 @@ func (r *RawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 		default:
 			continue
 		}
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		array := deepcopy.Copy(val)
 		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
@@ -2583,6 +2635,7 @@ func (r *RawTemplate) createVirtualBoxISO(ID string) (settings map[string]interf
 	if !hasChecksumType {
 		return nil, BuilderErr{id: ID, Builder: VirtualBoxISO, Err: RequiredSettingErr{Key: "iso_checksum_type"}}
 	}
+	log.Infof("%s: created builder: %s: %s", r.Name, ID, VirtualBoxISO)
 	return settings, nil
 }
 
@@ -2629,6 +2682,7 @@ func (r *RawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: VirtualBoxOVF, Err: ErrBuilderNotFound}
 	}
+	log.Infof("%s: create builder: %s: %s", r.Name, ID, VirtualBoxOVF)
 	settings = map[string]interface{}{}
 	// Each create function is responsible for setting its own type.
 	settings["type"] = VirtualBoxOVF.String()
@@ -2670,7 +2724,7 @@ func (r *RawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 		}
 	}
 	for _, s := range workSlice {
-		// var tmp interface{}
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -2802,6 +2856,7 @@ func (r *RawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 	for name, val := range r.Builders[ID].Arrays {
 		switch name {
 		case "boot_command":
+			log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 			array := deepcopy.Copy(val)
 			if !reflect.ValueOf(array).IsNil() {
 				settings[name] = array
@@ -2820,6 +2875,7 @@ func (r *RawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 		default:
 			continue
 		}
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		array := deepcopy.Copy(val)
 		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
@@ -2843,6 +2899,7 @@ func (r *RawTemplate) createVirtualBoxOVF(ID string) (settings map[string]interf
 			settings["boot_command"] = array
 		}
 	}
+	log.Infof("%s: created builder: %s: %s", r.Name, ID, VirtualBoxOVF)
 	return settings, nil
 }
 
@@ -2864,6 +2921,7 @@ func (r *RawTemplate) createVBoxManage(v interface{}) [][]string {
 		tmp[i][2] = k
 		tmp[i][3] = vv
 	}
+	log.Debugf("%s: create vbox manage: %v", r.Name, tmp)
 	return tmp
 }
 
@@ -2923,6 +2981,7 @@ func (r *RawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: VMWareISO, Err: ErrBuilderNotFound}
 	}
+	log.Infof("%s: create builder: %s: %s", r.Name, ID, VMWareISO)
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
 	settings["type"] = VMWareISO.String()
@@ -2952,10 +3011,9 @@ func (r *RawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 		}
 		hasCommunicator = true
 	}
-	// Go through each element in the slice, only take the ones that matter
+	// Go through each element in the slice, only take the ones that matter to this builder.
 	for _, s := range workSlice {
-		// to this builder.
-		// var tmp interface{}
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -3095,6 +3153,7 @@ func (r *RawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 	for name, val := range r.Builders[ID].Arrays {
 		switch name {
 		case "boot_command":
+			log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 			array := deepcopy.Copy(val)
 			if !reflect.ValueOf(array).IsNil() {
 				settings[name] = array
@@ -3103,7 +3162,7 @@ func (r *RawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 			continue
 		case "disk_additional_size":
 			// TODO it is assumed that it is a slice of strings.  Is this a good assumption?
-
+			log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 			switch val.(type) {
 			case []int:
 				array := deepcopy.Copy(val)
@@ -3132,6 +3191,7 @@ func (r *RawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 			if hasISOURL {
 				continue
 			}
+			log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 			settings[name] = val
 			hasISOURL = true
 			continue
@@ -3144,6 +3204,7 @@ func (r *RawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 		default:
 			continue
 		}
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		array := deepcopy.Copy(val)
 		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
@@ -3205,6 +3266,7 @@ func (r *RawTemplate) createVMWareISO(ID string) (settings map[string]interface{
 	if !hasChecksumType {
 		return nil, BuilderErr{id: ID, Builder: VMWareISO, Err: RequiredSettingErr{"iso_checksum_type"}}
 	}
+	log.Infof("%s: created builder: %s: %s", r.Name, ID, VMWareISO)
 	return settings, nil
 }
 
@@ -3243,6 +3305,7 @@ func (r *RawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 	if !ok {
 		return nil, BuilderErr{id: ID, Builder: VMWareVMX, Err: ErrBuilderNotFound}
 	}
+	log.Infof("%s: create builder: %s: %s", r.Name, ID, VMWareVMX)
 	settings = make(map[string]interface{})
 	// Each create function is responsible for setting its own type.
 	settings["type"] = VMWareVMX.String()
@@ -3274,7 +3337,7 @@ func (r *RawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 	}
 	// Go through each element in the slice, only take the ones that matter to this builder.
 	for _, s := range workSlice {
-		// var tmp interface{}
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -3382,6 +3445,7 @@ func (r *RawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 	for name, val := range r.Builders[ID].Arrays {
 		switch name {
 		case "boot_command":
+			log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 			array := deepcopy.Copy(val)
 			if !reflect.ValueOf(array).IsNil() {
 				settings[name] = array
@@ -3397,6 +3461,7 @@ func (r *RawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 		default:
 			continue
 		}
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		array := deepcopy.Copy(val)
 		if !reflect.ValueOf(array).IsNil() {
 			settings[name] = array
@@ -3419,6 +3484,7 @@ func (r *RawTemplate) createVMWareVMX(ID string) (settings map[string]interface{
 			settings["boot_command"] = array
 		}
 	}
+	log.Infof("%s: created builder: %s: %s", r.Name, ID, VMWareVMX)
 	return settings, nil
 }
 
@@ -3430,6 +3496,7 @@ func (r *RawTemplate) createVMXData(v interface{}) map[string]string {
 		val = r.replaceVariables(val)
 		tmp[k] = val
 	}
+	log.Debugf("%s: create vmxdata: %v", r.Name, tmp)
 	return tmp
 }
 
@@ -3460,6 +3527,7 @@ func (r *RawTemplate) createVMXData(v interface{}) map[string]string {
 func (r *RawTemplate) updateBuilders(newB map[string]BuilderC) error {
 	// If there is nothing new, old equals merged.
 	if len(newB) == 0 || newB == nil {
+		log.Debugf("%s: update builders: nothing to update", r.Name)
 		return nil
 	}
 	// Convert the existing Builders to Componenter.
@@ -3499,6 +3567,7 @@ func (r *RawTemplate) updateBuilders(newB map[string]BuilderC) error {
 		b.mergeArrays(bb.Arrays)
 		r.Builders[v] = b
 	}
+	log.Infof("%s: %d builders updated", r.Name, len(r.Builders))
 	return nil
 }
 
@@ -3527,6 +3596,7 @@ func (r *RawTemplate) updateCommon(newB BuilderC) error {
 		return err
 	}
 	r.Builders[Common.String()] = b
+	log.Debugf("%s: common settings merged", r.Name)
 	return nil
 }
 
@@ -3555,6 +3625,7 @@ func (r *RawTemplate) setHTTP(component string, m map[string]interface{}) error 
 		r.Dirs[r.buildOutPath("", val)] = src
 	}
 	m["http_directory"] = r.buildTemplateResourcePath("", val, false)
+	log.Debugf("%s: http set to %s", r.Name, m["http_directory"])
 	return nil
 }
 

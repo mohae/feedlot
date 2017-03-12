@@ -692,8 +692,8 @@ func TestDefaults(t *testing.T) {
 		format      string
 		expectedErr string
 	}{
-		{"", ": unsupported conf format"},
-		{"yaml", "yaml: unsupported conf format"},
+		{"", "load defaults: : unsupported conf format"},
+		{"yaml", "load defaults: yaml: unsupported conf format"},
 		{"toml", ""},
 		{"json", ""},
 	}

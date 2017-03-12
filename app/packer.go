@@ -42,6 +42,7 @@ func (p *PackerTemplate) create(i IODirInf, b BuildInf, dirs, files map[string]s
 	}
 	// copy any directories associated with the template
 	for dst, src := range dirs {
+		log.Debugf("create packer template: copy %s to %s", src, dst)
 		err = copyDir(src, dst)
 		if err != nil {
 			err = Error{b.BuildName, err}
@@ -51,6 +52,7 @@ func (p *PackerTemplate) create(i IODirInf, b BuildInf, dirs, files map[string]s
 	}
 	// copy the files associated with the template
 	for dst, src := range files {
+		log.Debugf("create packer template: copy %s to %s", src, dst)
 		_, err = copyFile(src, dst)
 		if err != nil {
 			err = Error{b.BuildName, err}
@@ -86,5 +88,6 @@ func (p *PackerTemplate) create(i IODirInf, b BuildInf, dirs, files map[string]s
 		log.Error(err)
 		return err
 	}
+	log.Infof("%s: packer template written to %s", b.BuildName, fname)
 	return nil
 }

@@ -109,8 +109,10 @@ func ParseProvisioner(s string) Provisioner {
 // createProvisioner creates the provisioners for a build.
 func (r *RawTemplate) createProvisioners() (p []interface{}, err error) {
 	if r.ProvisionerIDs == nil || len(r.ProvisionerIDs) <= 0 {
+		log.Infof("%s: no provisioners to create", r.Name)
 		return nil, nil
 	}
+	log.Infof("%s: create %d provisioners", r.Name, len(r.ProvisionerIDs))
 	var tmpS map[string]interface{}
 	var ndx int
 	p = make([]interface{}, len(r.ProvisionerIDs))
@@ -120,7 +122,6 @@ func (r *RawTemplate) createProvisioners() (p []interface{}, err error) {
 		if !ok {
 			return nil, ProvisionerErr{id: ID, Err: ErrProvisionerNotFound}
 		}
-		log.Debugf("processing provisioner id: %s\n", ID)
 		typ := ParseProvisioner(tmpP.Type)
 		switch typ {
 		case Ansible:
@@ -178,8 +179,8 @@ func (r *RawTemplate) createProvisioners() (p []interface{}, err error) {
 		}
 		p[ndx] = tmpS
 		ndx++
-		log.Debugf("processed provisioner id: %s\n", ID)
 	}
+	log.Infof("%s: provisioners created", r.Name)
 	return p, nil
 }
 
@@ -206,6 +207,7 @@ func (r *RawTemplate) createAnsible(ID string) (settings map[string]interface{},
 	if !ok {
 		return nil, ProvisionerErr{id: ID, Provisioner: Ansible, Err: ErrProvisionerNotFound}
 	}
+	log.Infof("%s: create provisioner: %s: %s", r.Name, ID, Ansible)
 	settings = make(map[string]interface{})
 	settings["type"] = Ansible.String()
 	// For each value, extract its key value pair and then process. Only
@@ -214,6 +216,7 @@ func (r *RawTemplate) createAnsible(ID string) (settings map[string]interface{},
 	var k, v string
 	var hasPlaybook bool
 	for _, s := range r.Provisioners[ID].Settings {
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -258,6 +261,7 @@ func (r *RawTemplate) createAnsible(ID string) (settings map[string]interface{},
 	}
 	// Process the Arrays.
 	for name, v := range r.Provisioners[ID].Arrays {
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, v)
 		if name == "ansible_env_vars" || name == "empty_groups" || name == "extra_arguments" || name == "groups" {
 			array := deepcopy.Copy(v).([]string) // this will panic if it isn't a slice of strings
 			if array != nil {
@@ -272,6 +276,7 @@ func (r *RawTemplate) createAnsible(ID string) (settings map[string]interface{},
 			}
 		}
 	}
+	log.Infof("%s: created provisioner: %s: %s", r.Name, ID, Ansible)
 	return settings, nil
 }
 
@@ -298,6 +303,7 @@ func (r *RawTemplate) createAnsibleLocal(ID string) (settings map[string]interfa
 	if !ok {
 		return nil, ProvisionerErr{id: ID, Provisioner: AnsibleLocal, Err: ErrProvisionerNotFound}
 	}
+	log.Infof("%s: create provisioner: %s: %s", r.Name, ID, AnsibleLocal)
 	settings = make(map[string]interface{})
 	settings["type"] = AnsibleLocal.String()
 	// For each value, extract its key value pair and then process. Only
@@ -306,6 +312,7 @@ func (r *RawTemplate) createAnsibleLocal(ID string) (settings map[string]interfa
 	var k, v string
 	var hasPlaybook bool
 	for _, s := range r.Provisioners[ID].Settings {
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -361,7 +368,7 @@ func (r *RawTemplate) createAnsibleLocal(ID string) (settings map[string]interfa
 	}
 	// Process the Arrays.
 	for name, val := range r.Provisioners[ID].Arrays {
-		// playbook_paths, role_paths
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		if name == "playbook_paths" || name == "role_paths" {
 			array := deepcopy.Copy(val).([]string) // this will panic if it isn't a slice of strings
 			for i, v := range array {
@@ -397,6 +404,7 @@ func (r *RawTemplate) createAnsibleLocal(ID string) (settings map[string]interfa
 			}
 		}
 	}
+	log.Infof("%s: created provisioner: %s: %s", r.Name, ID, AnsibleLocal)
 	return settings, nil
 }
 
@@ -433,11 +441,13 @@ func (r *RawTemplate) createChefClient(ID string) (settings map[string]interface
 	if !ok {
 		return nil, ProvisionerErr{id: ID, Provisioner: ChefClient, Err: ErrProvisionerNotFound}
 	}
+	log.Infof("%s: create provisioner: %s: %s", r.Name, ID, ChefClient)
 	settings = make(map[string]interface{})
 	settings["type"] = ChefClient.String()
 	// For each value, extract its key value pair and then process. Only process the supported
 	// keys. Key validation isn't done here, leaving that for Packer.
 	for _, s := range r.Provisioners[ID].Settings {
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -479,6 +489,7 @@ func (r *RawTemplate) createChefClient(ID string) (settings map[string]interface
 		}
 	}
 	for name, val := range r.Provisioners[ID].Arrays {
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		if name == "run_list" {
 			array := deepcopy.Copy(val).([]string) // this will panic if it isn't a slice of strings
 			settings[name] = array
@@ -491,6 +502,7 @@ func (r *RawTemplate) createChefClient(ID string) (settings map[string]interface
 			}
 		}
 	}
+	log.Infof("%s: created provisioner: %s: %s", r.Name, ID, ChefClient)
 	return settings, nil
 }
 
@@ -524,12 +536,14 @@ func (r *RawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 	if !ok {
 		return nil, ProvisionerErr{id: ID, Provisioner: ChefSolo, Err: ErrProvisionerNotFound}
 	}
+	log.Infof("%s: create provisioner: %s: %s", r.Name, ID, ChefSolo)
 	settings = make(map[string]interface{})
 	settings["type"] = ChefSolo.String()
 	// For each value, extract its key value pair and then process. Only
 	// process the supported keys. Key validation isn't done here, leaving
 	// that for Packer.
 	for _, s := range r.Provisioners[ChefSolo.String()].Settings {
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -583,6 +597,7 @@ func (r *RawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 		}
 	}
 	for name, val := range r.Provisioners[ID].Arrays {
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		if name == "cookbook_paths" {
 			array := deepcopy.Copy(val).([]string) // this will panic if it isn't a slice of strings
 			for i, v := range array {
@@ -616,6 +631,7 @@ func (r *RawTemplate) createChefSolo(ID string) (settings map[string]interface{}
 			}
 		}
 	}
+	log.Infof("%s: created provisioner: %s: %s", r.Name, ID, ChefSolo)
 	return settings, nil
 }
 
@@ -633,6 +649,7 @@ func (r *RawTemplate) createFile(ID string) (settings map[string]interface{}, er
 	if !ok {
 		return nil, ProvisionerErr{id: ID, Provisioner: File, Err: ErrProvisionerNotFound}
 	}
+	log.Infof("%s: create provisioner: %s: %s", r.Name, ID, File)
 	settings = make(map[string]interface{})
 	settings["type"] = File.String()
 	// For each value, extract its key value pair and then process. Only process the supported
@@ -640,6 +657,7 @@ func (r *RawTemplate) createFile(ID string) (settings map[string]interface{}, er
 	var k, v string
 	var hasSource, hasDestination bool
 	for _, s := range r.Provisioners[ID].Settings {
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -682,6 +700,7 @@ func (r *RawTemplate) createFile(ID string) (settings map[string]interface{}, er
 	}
 	// Process the Arrays.
 	for name, val := range r.Provisioners[ID].Arrays {
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		if name == "only" || name == "except" {
 			array := deepcopy.Copy(val).([]string) // this will panic if it isn't a slice of strings
 			if array != nil {
@@ -689,6 +708,7 @@ func (r *RawTemplate) createFile(ID string) (settings map[string]interface{}, er
 			}
 		}
 	}
+	log.Infof("%s: created provisioner: %s: %s", r.Name, ID, File)
 	return settings, nil
 }
 
@@ -715,12 +735,14 @@ func (r *RawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 	if !ok {
 		return nil, ProvisionerErr{id: ID, Provisioner: PuppetMasterless, Err: ErrProvisionerNotFound}
 	}
+	log.Infof("%s: create provisioner: %s: %s", r.Name, ID, PuppetMasterless)
 	settings = make(map[string]interface{})
 	settings["type"] = PuppetMasterless.String()
 	var hasManifestFile bool
 	// For each value, extract its key value pair and then process. Only process the supported
 	// keys. Key validation isn't done here, leaving that for Packer.
 	for _, s := range r.Provisioners[ID].Settings {
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -791,6 +813,7 @@ func (r *RawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 		return nil, ProvisionerErr{id: ID, Provisioner: PuppetMasterless, Err: RequiredSettingErr{"manifest_file"}}
 	}
 	for name, val := range r.Provisioners[ID].Arrays {
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		switch name {
 		case "extra_arguments", "module_paths", "only", "except":
 			array := deepcopy.Copy(val).([]string) // this will panic if it isn't a slice of strings
@@ -801,6 +824,7 @@ func (r *RawTemplate) createPuppetMasterless(ID string) (settings map[string]int
 			settings[name] = deepcopy.Copy(val)
 		}
 	}
+	log.Infof("%s: created provisioner: %s: %s", r.Name, ID, PuppetMasterless)
 	return settings, nil
 }
 
@@ -826,11 +850,13 @@ func (r *RawTemplate) createPuppetServer(ID string) (settings map[string]interfa
 	if !ok {
 		return nil, ProvisionerErr{id: ID, Provisioner: PuppetServer, Err: ErrProvisionerNotFound}
 	}
+	log.Infof("%s: create provisioner: %s: %s", r.Name, ID, PuppetServer)
 	settings = make(map[string]interface{})
 	settings["type"] = PuppetServer.String()
 	// For each value, extract its key value pair and then process. Only process the supported
 	// keys. Key validation isn't done here, leaving that for Packer.
 	for _, s := range r.Provisioners[PuppetServer.String()].Settings {
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -841,6 +867,7 @@ func (r *RawTemplate) createPuppetServer(ID string) (settings map[string]interfa
 		}
 	}
 	for name, val := range r.Provisioners[ID].Arrays {
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		if name == "facter" {
 			settings[name] = deepcopy.Copy(val)
 			continue
@@ -852,6 +879,7 @@ func (r *RawTemplate) createPuppetServer(ID string) (settings map[string]interfa
 			}
 		}
 	}
+	log.Infof("%s: created provisioner: %s: %s", r.Name, ID, PuppetServer)
 	return settings, nil
 }
 
@@ -879,6 +907,7 @@ func (r *RawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 	if !ok {
 		return nil, ProvisionerErr{id: ID, Provisioner: Salt, Err: ErrProvisionerNotFound}
 	}
+	log.Infof("%s: create provisioner: %s: %s", r.Name, ID, Salt)
 	settings = make(map[string]interface{})
 	settings["type"] = Salt.String()
 	// For each value, extract its key value pair and then process. Only process the supported
@@ -888,6 +917,7 @@ func (r *RawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 		hasLocalStateTree, hasMinion             bool
 	)
 	for _, s := range r.Provisioners[ID].Settings {
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -961,6 +991,7 @@ func (r *RawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 	}
 	// Process the Arrays.
 	for name, val := range r.Provisioners[ID].Arrays {
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		if name == "only" || name == "except" {
 			array := deepcopy.Copy(val).([]string) // this will panic if it isn't a slice of strings
 			if array != nil {
@@ -968,6 +999,7 @@ func (r *RawTemplate) createSalt(ID string) (settings map[string]interface{}, er
 			}
 		}
 	}
+	log.Infof("%s: created provisioner: %s: %s", r.Name, ID, Salt)
 	return settings, nil
 }
 
@@ -999,14 +1031,15 @@ func (r *RawTemplate) createShell(ID string) (settings map[string]interface{}, e
 	if !ok {
 		return nil, ProvisionerErr{id: ID, Provisioner: Shell, Err: ErrProvisionerNotFound}
 	}
+	log.Infof("%s: create provisioner: %s: %s", r.Name, ID, Shell)
 	settings = make(map[string]interface{})
 	settings["type"] = Shell.String()
-
 	var script string
 	// For each value, extract its key value pair and then process. Only process the supported
 	// keys. Key validation isn't done here, leaving that for Packer.
 	var k, v string
 	for _, s := range r.Provisioners[ID].Settings {
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v = parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -1101,6 +1134,7 @@ func (r *RawTemplate) createShell(ID string) (settings map[string]interface{}, e
 arrays:
 	// Process the Arrays.
 	for name, val := range r.Provisioners[ID].Arrays {
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		if name == "environment_vars" || name == "only" || name == "except" {
 			array := deepcopy.Copy(val).([]string) // this will panic if it isn't a slice of strings
 			if array != nil {
@@ -1108,6 +1142,7 @@ arrays:
 			}
 		}
 	}
+	log.Infof("%s: created provisioner: %s: %s", r.Name, ID, Shell)
 	return settings, nil
 }
 
@@ -1130,6 +1165,7 @@ func (r *RawTemplate) createShellLocal(ID string) (settings map[string]interface
 	if !ok {
 		return nil, ProvisionerErr{id: ID, Provisioner: ShellLocal, Err: ErrProvisionerNotFound}
 	}
+	log.Infof("%s: create provisioner: %s: %s", r.Name, ID, ShellLocal)
 	settings = make(map[string]interface{})
 	settings["type"] = ShellLocal.String()
 
@@ -1137,6 +1173,7 @@ func (r *RawTemplate) createShellLocal(ID string) (settings map[string]interface
 	// keys. Key validation isn't done here, leaving that for Packer.
 	var hasCommand bool
 	for _, s := range r.Provisioners[ID].Settings {
+		log.Debugf("%s: %s: %s", r.Name, ID, s)
 		k, v := parseVar(s)
 		v = r.replaceVariables(v)
 		switch k {
@@ -1166,6 +1203,7 @@ func (r *RawTemplate) createShellLocal(ID string) (settings map[string]interface
 	}
 
 	for name, val := range r.Provisioners[ID].Arrays {
+		log.Debugf("%s: %s: %s: %v", r.Name, ID, name, val)
 		if name == "environment_vars" || name == "only" || name == "except" {
 			array := deepcopy.Copy(val).([]string) // this will panic if it isn't a slice of strings
 			if array != nil {
@@ -1173,6 +1211,7 @@ func (r *RawTemplate) createShellLocal(ID string) (settings map[string]interface
 			}
 		}
 	}
+	log.Infof("%s: created provisioner: %s: %s", r.Name, ID, ShellLocal)
 	return settings, nil
 }
 
@@ -1188,6 +1227,7 @@ func (r *RawTemplate) createShellLocal(ID string) (settings map[string]interface
 func (r *RawTemplate) updateProvisioners(newP map[string]ProvisionerC) error {
 	// If there is nothing new, old equals merged.
 	if len(newP) <= 0 || newP == nil {
+		log.Debugf("%s: update provisioners: nothing to update", r.Name)
 		return nil
 	}
 	// Convert the existing provisioners to Componenter.
@@ -1224,7 +1264,9 @@ func (r *RawTemplate) updateProvisioners(newP map[string]ProvisionerC) error {
 		}
 		p.mergeArrays(pp.Arrays)
 		r.Provisioners[v] = p
+		log.Debugf("%s: merge provisioners: %s", r.Name, v)
 	}
+	log.Infof("%s: %d provisioners updated", r.Name, len(r.Provisioners))
 	return nil
 }
 

@@ -264,21 +264,27 @@ type BuildInf struct {
 
 func (b *BuildInf) update(v BuildInf) {
 	if v.Name != "" {
+		log.Debugf("update buildinf: set name: %s", v.Name)
 		b.Name = v.Name
 	}
 	if v.BuildName != "" {
+		log.Debugf("update buildinf: set build name: %s", v.BuildName)
 		b.BuildName = v.BuildName
 	}
 	if v.BaseURL != "" {
+		log.Debugf("update buildinf: set base url: %s", v.BaseURL)
 		b.BaseURL = v.BaseURL
 	}
 	if v.Region != nil && *v.Region != "" {
+		log.Debugf("update buildinf: set region: %s", v.Region)
 		b.Region = v.Region
 	}
 	if v.Country != nil && *v.Country != "" {
+		log.Debugf("update buildinf: set country: %s", v.Country)
 		b.Country = v.Country
 	}
 	if v.Sponsor != nil && *v.Sponsor != "" {
+		log.Debugf("update buildinf: set sponsor: %s", v.Sponsor)
 		b.Sponsor = v.Sponsor
 	}
 }
@@ -319,6 +325,7 @@ type IODirInf struct {
 // Only update when a value exists; empty strings don't count as being set.
 func (i *IODirInf) update(v IODirInf) {
 	if v.TemplateOutputDir != "" {
+		log.Debugf("update iodirinf: set template output dir: %v", v.TemplateOutputDir)
 		i.TemplateOutputDir = v.TemplateOutputDir
 	}
 	// the path should end with "/"
@@ -326,30 +333,37 @@ func (i *IODirInf) update(v IODirInf) {
 	var b bool
 	// treat nils as false
 	if v.TemplateOutputDirIsRelative != nil {
+		log.Debugf("update iodirinf: set template output dir is relative: %v", v.TemplateOutputDirIsRelative)
 		i.TemplateOutputDirIsRelative = v.TemplateOutputDirIsRelative
 	}
 	if i.TemplateOutputDirIsRelative == nil {
+		log.Debug("update iodirinf: template output dir is relative is still nil, make it not nil")
 		i.TemplateOutputDirIsRelative = &b
 	}
 	if v.PackerOutputDir != "" {
+		log.Debugf("update iodirinf: set packer output dir: %s", v.PackerOutputDir)
 		i.PackerOutputDir = v.PackerOutputDir
 	}
 	// the path should end with "/"
 	i.PackerOutputDir = appendSlash(i.PackerOutputDir)
 
 	if v.SourceDir != "" {
+		log.Debugf("update iodirinf: set source die: %s", v.SourceDir)
 		i.SourceDir = appendSlash(v.SourceDir)
 	}
 	// the path should end with "/"
 	i.SourceDir = appendSlash(i.SourceDir)
 	// treat nils as false
 	if v.SourceDirIsRelative != nil {
+		log.Debugf("update iodirinf: set source dir is relative: %v", v.SourceDirIsRelative)
 		i.SourceDirIsRelative = v.SourceDirIsRelative
 	}
 	if i.SourceDirIsRelative == nil {
+		log.Debug("update iodirinf: source dir is relative is still nil; make it not nil")
 		i.SourceDirIsRelative = &b
 	}
 	if v.IncludeComponentString != nil {
+		log.Debugf("update iodirinf: set include component string: %v", v.IncludeComponentString)
 		i.IncludeComponentString = v.IncludeComponentString
 	}
 }
@@ -358,12 +372,15 @@ func (i *IODirInf) update(v IODirInf) {
 func (i *IODirInf) check() {
 	if i.TemplateOutputDir == "" {
 		i.TemplateOutputDir = fmt.Sprintf("%sbuildname", contour.GetString(conf.ParamDelimStart))
+		log.Debugf("check iodirinf: set output dir to default: %s", i.TemplateOutputDir)
 	}
 	if i.PackerOutputDir == "" {
 		i.PackerOutputDir = fmt.Sprintf("%sbuildname", contour.GetString(conf.ParamDelimStart))
+		log.Debugf("check iodirinf: set packer output dir to default: %s", i.PackerOutputDir)
 	}
 	if i.SourceDir == "" {
 		i.SourceDir = "src"
+		log.Debug("check iodirinf: set so8urcer dir to default: src")
 	}
 }
 
@@ -397,17 +414,20 @@ type Defaults struct {
 // Load loads the default settings. If the defaults have already been loaded
 // nothing is done.
 func (d *Defaults) Load(p string) error {
+	log.Info("load defaults")
 	if d.loaded {
+		log.Info("do nothing: defaults already loaded")
 		return nil
 	}
 	name, format, err := conf.ConfFilename(conf.FindConfFile(p, fmt.Sprintf("%s.%s", "default", contour.GetString(conf.Format))))
 	if err != nil {
-		fmt.Errorf("load defaults: %s", err)
+		err = fmt.Errorf("load defaults: %s", err)
 		log.Error(err)
 		return err
 	}
 	switch format {
 	case conf.TOML:
+		log.Debug("load defaults: using toml")
 		_, err := toml.DecodeFile(name, &d)
 		if err != nil {
 			err = fmt.Errorf("load defaults: %s: %s", name, err)
@@ -415,6 +435,7 @@ func (d *Defaults) Load(p string) error {
 			return err
 		}
 	case conf.JSON:
+		log.Debug("load defaults: using json")
 		var buff []byte
 		buff, err = ioutil.ReadFile(name)
 		if err != nil {
@@ -435,6 +456,7 @@ func (d *Defaults) Load(p string) error {
 	}
 	d.Build.setTypes()
 	d.loaded = true
+	log.Info("defaults successfully loaded")
 	return nil
 }
 
@@ -475,6 +497,7 @@ type SupportedDistros struct {
 
 // Load the supported distro info.
 func (s *SupportedDistros) Load(p string) error {
+	log.Infof("load supported distros from %s", p)
 	name, format, err := conf.ConfFilename(conf.FindConfFile(p, "supported"))
 	if err != nil {
 		err = fmt.Errorf("load supported: %s", err)
@@ -483,6 +506,7 @@ func (s *SupportedDistros) Load(p string) error {
 	}
 	switch format {
 	case conf.TOML:
+		log.Debug("load supported distros: toml")
 		_, err := toml.DecodeFile(name, &s.Distros)
 		if err != nil {
 			err = fmt.Errorf("load supported: %s: %s", name, err)
@@ -490,6 +514,7 @@ func (s *SupportedDistros) Load(p string) error {
 			return err
 		}
 	case conf.JSON:
+		log.Debug("load supported distros: json")
 		var buff []byte
 		buff, err = ioutil.ReadFile(name)
 		if err != nil {
@@ -509,6 +534,7 @@ func (s *SupportedDistros) Load(p string) error {
 		return err
 	}
 	s.loaded = true
+	log.Info("supported distros loaded")
 	return nil
 }
 
@@ -520,6 +546,7 @@ type Builds struct {
 
 // Load the build information from the provided name.
 func (b *Builds) Load(name string) error {
+	log.Infof("load build: %s", name)
 	if name == "" {
 		err := errors.New("load build: no build name specified")
 		log.Error(err)
@@ -527,6 +554,7 @@ func (b *Builds) Load(name string) error {
 	}
 	switch conf.ParseConfFormat(contour.GetString(conf.Format)) {
 	case conf.TOML:
+		log.Debugf("load build %s: toml", name)
 		_, err := toml.DecodeFile(name, &b.Templates)
 		if err != nil {
 			err = fmt.Errorf("load build %s: %s", name, err)
@@ -534,6 +562,7 @@ func (b *Builds) Load(name string) error {
 			return err
 		}
 	case conf.JSON:
+		log.Debugf("load build %s: json", name)
 		buff, err := ioutil.ReadFile(name)
 		if err != nil {
 			err = fmt.Errorf("load build %s: %s", name, err)
@@ -554,8 +583,8 @@ func (b *Builds) Load(name string) error {
 	for _, v := range b.Templates {
 		v.Build.setTypes()
 	}
-
 	b.loaded = true
+	log.Infof("laod builds done: %s", name)
 	return nil
 }
 
@@ -574,6 +603,7 @@ func getBuildTemplate(name string) (*RawTemplate, error) {
 		}
 	}
 	err = fmt.Errorf("build not found: %s", name)
+	log.Error(err)
 	return nil, err
 found:
 	log.Debugf("build %s found\n", name)
@@ -593,6 +623,7 @@ type List struct {
 // Load loads the build lists. It accepts a path prefix; which is mainly used
 // for testing ATM.
 func (b *BuildLists) Load(p string) error {
+	log.Infof("load build lists from %s", p)
 	// Load the build lists.
 	name, format, err := conf.ConfFilename(conf.FindConfFile(p, "build_list"))
 	if err != nil {
@@ -602,6 +633,7 @@ func (b *BuildLists) Load(p string) error {
 	}
 	switch format {
 	case conf.TOML:
+		log.Debugf("load build lists from %s: toml", p)
 		_, err := toml.DecodeFile(name, &b.Lists)
 		if err != nil {
 			err = fmt.Errorf("load build list: %s: %s", name, err)
@@ -609,6 +641,7 @@ func (b *BuildLists) Load(p string) error {
 			return err
 		}
 	case conf.JSON:
+		log.Debugf("load build lists from %s: json", p)
 		var buff []byte
 		buff, err = ioutil.ReadFile(name)
 		if err != nil {
@@ -627,6 +660,7 @@ func (b *BuildLists) Load(p string) error {
 		log.Error(err)
 		return err
 	}
+	log.Infof("load build lists from %s: done", p)
 	return nil
 }
 
@@ -636,6 +670,7 @@ func (b *BuildLists) Get(s string) (List, error) {
 	if !ok {
 		return List{}, fmt.Errorf("%s: unknown build list", s)
 	}
+	log.Debugf("build list %s: found", s)
 	return l, nil
 }
 
