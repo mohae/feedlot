@@ -88,9 +88,10 @@ var builders = [...]string{
 
 func (b Builder) String() string { return builders[b] }
 
-// BuilderFromString returns the builder constant for the passed string or
-// unsupported. All incoming strings are normalized to lowercase.
-func BuilderFromString(s string) Builder {
+// ParseBuilder returns the Builder constant for s. If no match is found,
+// UnsupportedBuilder is returned. All incoming strings are normalized to
+// lowercase.
+func ParseBuilder(s string) Builder {
 	s = strings.ToLower(s)
 	switch s {
 	case "common":
@@ -154,7 +155,7 @@ func (r *RawTemplate) createBuilders() (bldrs []interface{}, err error) {
 		if !ok {
 			return nil, BuilderErr{id: ID, Err: ErrBuilderNotFound}
 		}
-		typ := BuilderFromString(bldr.Type)
+		typ := ParseBuilder(bldr.Type)
 		switch typ {
 		case AmazonChroot:
 			tmpS, err = r.createAmazonChroot(ID)
