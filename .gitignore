@@ -34,3 +34,4 @@ out/*.tar
 feedlot.json
 **/packer_templates/**
 feedlot.toml
+.vscode
