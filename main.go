@@ -6,11 +6,11 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/mohae/cli"
-	"github.com/mohae/feedlot/app"
-	jww "github.com/spf13/jwalterweatherman"
+	"github.com/mohae/feedlot/conf"
 )
 
 func main() {
@@ -18,22 +18,22 @@ func main() {
 }
 
 func realMain() int {
-	err := app.SetCfgFile()
+	err := conf.SetAppConfFile()
 	if err != nil {
-		jww.ERROR.Printf("%s", err.Error())
+		fmt.Println(err)
+		return 1
 	}
 	args := os.Args[1:]
 	cli := &cli.CLI{
-		Name:     app.Name,
+		Name:     conf.Name,
 		Version:  Version,
 		Args:     args,
 		Commands: Commands,
-		HelpFunc: cli.BasicHelpFunc(app.Name),
+		HelpFunc: cli.BasicHelpFunc(conf.Name),
 	}
 	exitCode, err := cli.Run()
 	if err != nil {
-		jww.ERROR.Printf("%s encountered an error: %s", app.Name, err.Error())
-
+		fmt.Println(err)
 	}
 	return exitCode
 }
