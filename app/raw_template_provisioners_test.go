@@ -848,6 +848,8 @@ func TestAnsibleProvisioner(t *testing.T) {
 		"type":                    "ansible",
 		"user":                    "user",
 	}
+	eg := testRawTemplateProvisionersAll.IsExample
+	testRawTemplateProvisionersAll.IsExample = true
 	settings, err := testRawTemplateProvisionersAll.createAnsible("ansible")
 	if err != nil {
 		t.Errorf("Expected error to be nil, got %q", err)
@@ -856,6 +858,7 @@ func TestAnsibleProvisioner(t *testing.T) {
 			t.Errorf("Expected %#v, got %#v", expected, settings)
 		}
 	}
+	testRawTemplateProvisionersAll.IsExample = eg
 }
 
 func TestAnsibleLocalProvisioner(t *testing.T) {

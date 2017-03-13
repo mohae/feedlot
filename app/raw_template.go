@@ -62,6 +62,14 @@ func (e RequiredSettingErr) Error() string {
 	return e.Key + ": required setting not found"
 }
 
+type EmptyPathErr struct {
+	s string
+}
+
+func (e EmptyPathErr) Error() string {
+	return e.s + ": empty path"
+}
+
 // ErrNoCommands occurs when a referenced command file doesn't have any
 // contents.
 var ErrNoCommands = errors.New("no commands found")
@@ -633,9 +641,9 @@ func (r *RawTemplate) findCommandFile(name, component string) (string, error) {
 //
 // TODO: is isDir necessary?  For now, it is a legacy setting from the
 // original code.
-func (r *RawTemplate) findSource(p, component string, isDir bool) (string, error) {
+func (r *RawTemplate) findSource(p, component string, isDir bool) (src string, err error) {
 	if p == "" {
-		return "", errors.New("find source: empty path")
+		return "", EmptyPathErr{"find source"}
 	}
 	// build a slice of release values to append to search paths.  An empty
 	// string is the first element because the first path to search is
