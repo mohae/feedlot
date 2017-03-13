@@ -51,6 +51,10 @@ const (
 	LogFile = "log_file"
 	// Level is the flag name for the minimum log level used for logging.
 	LogLevel = "log_level"
+	// LogFlags: is the flags to use when logging: https://golang.org/pkg/log/#pkg-constants
+	// In addition to the ones defined in the docs, none is also a valid value. None means
+	// don't use any flags. By default, log.LstdFlags is used.
+	LogFlags = "log_flags"
 )
 
 var (
@@ -111,6 +115,7 @@ type app struct {
 	Format          string
 	LogFile         string `toml:"log_file",json:"log_file"`
 	LogLevel        string `toml:"log_level",json:"log_level"`
+	LogFlags        string `toml:"log_flags", json:"log_flags"`
 	ParamDelimStart string `toml:"param_delim_start",json:"param_delim_start"`
 }
 
@@ -135,6 +140,7 @@ func init() {
 	contour.RegisterStringFlag(Format, "f", JSON.String(), JSON.String(), "the format of the feedlot conf files: toml or json")
 	contour.RegisterStringFlag(LogFile, "g", "stderr", "stderr", "log filename")
 	contour.RegisterStringFlag(LogLevel, "l", "error", "error", "log level")
+	contour.RegisterStringFlag(LogFlags, "g", "", "", "'none' for no prefixes; comma separated list of log flags; default: log.LstdFlags")
 	contour.RegisterStringFlag(ParamDelimStart, "p", ":", ":", "the start delimiter for template variabes")
 	contour.RegisterStringFlag("envs", "e", "", "", "additional environments from within which config additional config information should be loaded")
 	contour.RegisterStringFlag("distro", "d", "", "", "specifies the distro for which a Packer template using defaults should be created")

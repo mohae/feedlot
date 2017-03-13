@@ -59,6 +59,37 @@ func parseLevel(s string) (Level, error) {
 	}
 }
 
+type UnknownLogFlagErr struct {
+	v string
+}
+
+func (e UnknownLogFlagErr) Error() string {
+	return "unknown log flag: " + e.v
+}
+
+func ParseLogFlag(s string) (l int, err error) {
+	v := strings.ToLower(s)
+	switch v {
+	case "ldate":
+		return log.Ldate, nil
+	case "ltime":
+		return log.Ltime, nil
+	case "lmicroseconds":
+		return log.Lmicroseconds, nil
+	case "llongfile":
+		return log.Llongfile, nil
+	case "lshortfile":
+		return log.Lshortfile, nil
+	case "lutc":
+		return log.LUTC, nil
+	case "lstdflags":
+		return log.LstdFlags, nil
+	case "none":
+		return 0, nil
+	}
+	return 0, UnknownLogFlagErr{s}
+}
+
 // SetLogging sets application logging settings and verbose output.
 func Set() error {
 	var err error
@@ -77,7 +108,26 @@ func Set() error {
 		}
 		log.SetOutput(f)
 	}
-	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile | log.LUTC)
+	// set the log flags
+	val := contour.GetString(conf.LogFlags)
+	if val == "" { // if no flags were specified use log's default.
+		return nil
+	}
+	if strings.ToLower(val) == "none" { // if no flags, unset
+		log.SetFlags(0)
+		return nil
+	}
+	// otherwise process the flags
+	vals := strings.Split(val, ",")
+	var flg int
+	for _, v := range vals {
+		i, err := ParseLogFlag(strings.TrimSpace(v))
+		if err != nil {
+			return err
+		}
+		flg |= i
+	}
+	log.SetFlags(flg)
 	return nil
 }
 
