@@ -96,7 +96,7 @@ func Errorf(format string, v ...interface{}) {
 	if level == LogNone {
 		return
 	}
-	log.Printf("error: "+format, v...)
+	log.Printf(fmt.Sprintf("error: %s", format), v...)
 }
 
 // Info writes an info entry to the log. If the Level < LogInfo, nothing will
@@ -114,7 +114,7 @@ func Infof(format string, v ...interface{}) {
 	if level < LogInfo {
 		return
 	}
-	log.Printf(format, v...)
+	log.Printf(fmt.Sprintf("info: %s", format), v...)
 }
 
 // Debug writes a debug entry to the log. If the Level < LogDebug, nothing
@@ -132,5 +132,5 @@ func Debugf(format string, v ...interface{}) {
 	if level < LogInfo {
 		return
 	}
-	log.Printf(format, v...)
+	log.Printf(fmt.Sprintf("debug: %s", format), v...)
 }
