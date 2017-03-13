@@ -639,9 +639,28 @@ func (r *RawTemplate) findCommandFile(name, component string) (string, error) {
 // p is the path slug to find, this is the value from a setting.
 // component is the name of the component from which p was a setting.
 //
+// If this is an example, most errors are ignored, and, instead, a join of the
+// component and path is returned when the source is not found. Only an
+// EmptyPathErr is preserved.
+//
 // TODO: is isDir necessary?  For now, it is a legacy setting from the
 // original code.
 func (r *RawTemplate) findSource(p, component string, isDir bool) (src string, err error) {
+	defer func() {
+		// for examples; most errors should not be returned, but, instead, the
+		// results of a path.Join(component, p) should be used. Examples do
+		// not need to find the actual file.
+		if r.IsExample && err != nil && !IsEmptyPathErr(err) {
+			err = nil
+			// src should be empty on an error state but if it isn't don't overwrite what's there
+			if src == "" {
+				src = path.Join(component, p)
+			}
+			if isDir {
+				src = appendSlash(src)
+			}
+		}
+	}()
 	if p == "" {
 		return "", EmptyPathErr{"find source"}
 	}

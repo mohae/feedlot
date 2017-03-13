@@ -629,6 +629,52 @@ func TestFindSource(t *testing.T) {
 	}
 }
 
+func TestFindSourceExample(t *testing.T) {
+	tests := []struct {
+		p           string
+		component   string
+		isDir       bool
+		src         string
+		expectedErr string
+	}{
+		{"", "", false, "", "find source: empty path"},
+		{"something", "", false, "something", ""},
+		{"http/preseed.cfg", "", false, "http/preseed.cfg", ""},
+		{"cookbook1", "chef-solo", true, "chef-solo/cookbook1/", ""},
+		{"14_text.txt", "", false, "14_text.txt", ""},
+		{"minion", "salt", false, "salt/minion", ""},
+		{"master", "salt-masterless", false, "salt-masterless/master", ""},
+		{"chef.cfg", "chef-solo", false, "chef-solo/chef.cfg", ""},
+		{"chef.cfg", "chef-client", false, "chef-client/chef.cfg", ""},
+		{"chef.cfg", "chef", false, "chef/chef.cfg", ""},
+		{"commands", "shell", true, "shell/commands/", ""},
+		{"ubuntu_build.txt", "", false, "ubuntu_build.txt", ""}}
+	r := newRawTemplate()
+	r.Distro = "ubuntu"
+	r.Arch = "amd64"
+	r.Release = "14.04"
+	r.Image = "server"
+	r.SourceDir = "../test_files/example/src" // doesn't actually exist
+	r.BuildName = "ubuntu_build"
+	r.IsExample = true
+	for i, test := range tests {
+		src, err := r.findSource(test.p, test.component, test.isDir)
+		if err != nil {
+			if err.Error() != test.expectedErr {
+				t.Errorf("TestFindSource %d: expected %q got %q", i, test.expectedErr, err)
+			}
+			continue
+		}
+		if test.expectedErr != "" {
+			t.Errorf("TestFindSource %d: expected %q, got no error", i, test.expectedErr)
+			continue
+		}
+		if test.src != src {
+			t.Errorf("TestFindSource %d: expected %q, got %q", i, test.src, src)
+		}
+	}
+}
+
 func TestFindCommandFile(t *testing.T) {
 	tests := []struct {
 		component   string
