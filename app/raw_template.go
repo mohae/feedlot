@@ -910,3 +910,12 @@ outDir:
 	r.TemplateOutputDir = path.Join(r.ExampleDir, r.TemplateOutputDir)
 	log.Debugf("%s: example output dir: %s", r.Name, r.TemplateOutputDir)
 }
+
+// IsEmptyPathERror returns if the error is an empty path
+func IsEmptyPathErr(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := err.(EmptyPathErr)
+	return ok
+}

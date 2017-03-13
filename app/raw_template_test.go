@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"reflect"
 	"strings"
 	"testing"
@@ -780,4 +781,22 @@ func TestBuildTemplateResourcePath(t *testing.T) {
 		}
 	}
 
+}
+
+func TestIsEmptyPathErr(t *testing.T) {
+	tests := []struct {
+		err error
+		is  bool
+	}{
+		{nil, false},
+		{errors.New("error"), false},
+		{EmptyPathErr{""}, true},
+	}
+
+	for i, test := range tests {
+		b := IsEmptyPathErr(test.err)
+		if b != test.is {
+			t.Errorf("%d: got %v want %v", i, b, test.is)
+		}
+	}
 }
