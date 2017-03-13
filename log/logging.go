@@ -22,8 +22,7 @@ import (
 // are being performed to os.Stdout.
 
 var (
-	level   Level
-	verbose bool
+	level Level
 )
 
 //go:generate stringer -type=Level
@@ -62,10 +61,6 @@ func parseLevel(s string) (Level, error) {
 
 // SetLogging sets application logging settings and verbose output.
 func Set() error {
-	if contour.GetBool(conf.Verbose) {
-		verbose = true
-	}
-
 	var err error
 	level, err = parseLevel(contour.GetString(conf.LogLevel))
 	if err != nil {
@@ -138,21 +133,4 @@ func Debugf(format string, v ...interface{}) {
 		return
 	}
 	log.Printf(format, v...)
-}
-
-// Verbose writes the value to stdout as a line if verbose output is enabled.
-func Verbose(v interface{}) {
-	if !verbose {
-		return
-	}
-	fmt.Printf("%v\n", v)
-}
-
-// Verbose writes the value to stdout using the provided format and data, if
-// verbose output is enabled.
-func Verbosef(format string, v ...interface{}) {
-	if !verbose {
-		return
-	}
-	fmt.Printf(format, v...)
 }

@@ -46,8 +46,6 @@ const (
 	// so that Feedlot parameters in templates do not conflict with Packer
 	// parameters, which use '{{ }}'.
 	ParamDelimStart = "param_delim_start"
-	// Verbose prints non-log information to stdout.
-	Verbose = "verbose"
 	// File is the flag name for the file to be used if logging is enabled;
 	// this defaults to stderr.
 	LogFile = "log_file"
@@ -113,7 +111,6 @@ type app struct {
 	Format          string
 	LogFile         string `toml:"log_file",json:"log_file"`
 	LogLevel        string `toml:"log_level",json:"log_level"`
-	Verbose         string `toml:"verbose",json:"verbose"`
 	ParamDelimStart string `toml:"param_delim_start",json:"param_delim_start"`
 }
 
@@ -138,7 +135,6 @@ func init() {
 	contour.RegisterStringFlag(Format, "f", JSON.String(), JSON.String(), "the format of the feedlot conf files: toml or json")
 	contour.RegisterStringFlag(LogFile, "g", "stderr", "stderr", "log filename")
 	contour.RegisterStringFlag(LogLevel, "l", "error", "error", "log level")
-	contour.RegisterBoolFlag(Verbose, "v", false, "false", "verbose output")
 	contour.RegisterStringFlag(ParamDelimStart, "p", ":", ":", "the start delimiter for template variabes")
 	contour.RegisterStringFlag("envs", "e", "", "", "additional environments from within which config additional config information should be loaded")
 	contour.RegisterStringFlag("distro", "d", "", "", "specifies the distro for which a Packer template using defaults should be created")
