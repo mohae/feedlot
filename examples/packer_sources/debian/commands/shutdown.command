@@ -1,1 +1,0 @@
-echo 'vagrant'|sudo -S /sbin/shutdown -hP now
