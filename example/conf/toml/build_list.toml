@@ -1,0 +1,17 @@
+# This is the build list file for Feedlot.
+# A list consists of one or more Feedlot build template names.
+[all]
+builds = [
+	"1604-64",
+	"centos6-64",
+	"centos7-64",
+	"jessie-64"
+]
+
+[required]
+builds = [
+	"1604-64-required",
+	"centos6-64-required",
+	"centos7-64-required",
+	"jessie-64-required"
+]
