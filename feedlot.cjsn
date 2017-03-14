@@ -1,0 +1,24 @@
+# Application configuration settings
+#
+# The current setting reflect the application defaults; except for format.
+# Format's setting value reflects the type of this configuration file, i.e. it
+# is assumed that if you are using feedlot.toml your template configurations
+# will also be in the same format. If the configurations are in a different
+# format, set appropriately.
+#
+# This file is only needed if any of Feedlot's default settings will be
+# overridden or if the format for is not "json"; Feedlot's default format.
+#
+# Feedlot recognizes both ".cjsn" and ".json" as valid extenstions for JSON.
+{
+  "archive_prior_build": false,
+  "conf_dir": "conf/json",
+  "example": false,
+  "example_dir": "examples",
+  "format": "json",
+  "log_file": "stderr",
+  "log_level": "error",
+  # This is a comma separated list of log flags. For no log prefix use "none".
+  "log_flags": "lstdflags"
+  "param_delim_start": ":"
+}

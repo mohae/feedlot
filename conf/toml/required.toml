@@ -1,13 +1,53 @@
-# These templates generate examples for all supported Packer components with only
-# the required settings, with a few exceptions.  The result of each named template
-# is a Packer template with all Packer components that Rancher supports and only the
-# settings that are required by Packer.
-[1504-64-required]
+# These templates generate examples for all supported Packer components with
+# only the required settings, with a few exceptions. The result of each named
+# template is a Packer template with all Packer components that Feedlot
+# supports and only the settings that are required by Packer.
+[1604-64-required]
 distro = "ubuntu",
-description = "example ubuntu LTS 1504 amd64 build with all supported components; required settings only",
+description = "Ubuntu 1604 LTS amd64 build with all supported components; required settings only",
 arch = "amd64",
 image = "server",
-release = "15.04",
+release = "16.04",
+builder_types = [
+	"amazon-chroot",
+	"amazon-ebs",
+	"amazon-instance",
+	"digitalocean",
+	"googlecompute",
+	"null",
+	"virtualbox-iso",
+	"virtualbox-ovf",
+	"vmware-iso",
+	"vmware-vmx"
+],
+post_processor_types = [
+	"compress",
+	"docker-import",
+	"docker-tag",
+	"docker-push",
+	"docker-save",
+	"docker-tag",
+	"vagrant",
+	"vagrant-cloud",
+	"vsphere"
+],
+provisioner_types = [
+	"ansible-local",
+	"chef-client",
+	"chef-solo",
+	"file",
+	"puppet-masterless",
+	"puppet-server",
+	"salt-masterless",
+	"shell"
+]
+
+[centos6-64-required]
+distro = "centos",
+description = "CentOS 6 x86_64 build with all supported components; required settings only",
+arch = "x86_64",
+image = "minimal",
+release = "6",
 builder_types = [
 	"amazon-chroot",
 	"amazon-ebs",
@@ -44,7 +84,7 @@ provisioner_types = [
 
 [centos7-64-required]
 distro = "centos",
-description = "example centos 7 x86_64 build with all supported components; required settings only",
+description = "CentOS 7 x86_64 build with all supported components; required settings only",
 arch = "x86_64",
 image = "minimal",
 release = "7",
@@ -84,7 +124,7 @@ provisioner_types = [
 
 [jessie-64-required]
 distro = "debian",
-description = "example debian jessie build with all supported components; required settings only",
+description = "Debian Jessie build with all supported components; required settings only",
 arch = "amd64",
 image = "netinst",
 release = "8",

@@ -1,21 +1,21 @@
-# Default settings for Rancher templates.  Merging the contents of this file
+# Default settings for Feedlot templates.  Merging the contents of this file
 # with the supported config file settings results in the default template for
 #
 # Only the required settings are included for example purposes. The values used
 # are consistent with the documented Packer defaults, where possible, with the
 # exception of username/ssh_username, which defaults to 'vagrant' and
-# ssh_wait_timeout which is set to 60m.  
+# ssh_wait_timeout which is set to 60m.
 #
 # Add any additional settings that make sense for your environment.
 # Remove any settings or Packer components that do not make sense for your
 # environment
 {
-  "description": "Example Rancher template",
+  "description": "Example Feedlot template",
   "name": ":build_name",
   "output_dir": "../packer_templates/:build_name",
   "source_dir": "packer_sources",
   "include_component_string": "true",
-  "min_packer_version": "0.7.0",
+  "min_packer_version": "0.8.0",
   "builder_types": [
     "virtualbox-iso",
     "vmware-iso"
@@ -88,6 +88,7 @@
         "ssh_password=vagrant"
       ]
     },
+    # virtualbox-iso: no required settings
     "virtualbox-iso": {
     },
     "virtualbox-ovf": {
@@ -95,6 +96,7 @@
         "source_path=source.ovf"
       ]
     },
+    # vmware-iso: no required settings
     "vmware-iso": {
     },
     "vmware-vmx": {
@@ -105,30 +107,48 @@
   },
   "post_processors": {
     "compress": {
-      "output=archive.tar.lz4"
+      "settings": [
+        "output=archive.tar.lz4"
+      ]
     },
     "docker-import": {
-      "repository=mitchellh/packer"
+      "settings": [
+        "repository=mitchellh/packer"
+      ]
     },
+    # docker-push: no required settings
     "docker-push": {
     },
     "docker-save": {
+      "settings": [
+  		  "path=foo.tar"
+  	  ]
     },
     "docker-tag": {
-      "repository=mitchellh/packer"
+      "settings": [
+        "repository=mitchellh/packer"
+      ]
     },
+    # vagrant: no required settings
     "vagrant": {
     },
     "vagrant-cloud": {
+      "settings": [
+        "access_token={{user `cloud_token`}}",
+        "box_tag=hashicorp/precise64",
+        "version={{user `version`}}"
+      ]
     },
     "vsphere": {
-      "cluster=vSphereCluster",
-      "datacenter=dc-east-1",
-      "datastore=ds-001",
-      "host=vsphere-host",
-      "password=vagrant",
-      "username=vagrant",
-      "vm_name=packer-vsphere-vm"
+      "settings": [
+        "cluster=vSphereCluster",
+        "datacenter=dc-east-1",
+        "datastore=ds-001",
+        "host=vsphere-host",
+        "password=vagrant",
+        "username=vagrant",
+        "vm_name=packer-vsphere-vm"
+      ]
     }
   },
   "provisioners": {
@@ -137,8 +157,10 @@
         "playbook_file=local.yml"
       ]
     },
+    # chef-client: no required settings
     "chef-client": {
     },
+    # chef-solo: no required settings
     "chef-solo": {
     },
     "file": {
@@ -158,6 +180,7 @@
         "manifest_file=site.pp"
       ]
     },
+    # puppet-server: no required settings
     "puppet-server": {
     },
     "salt-masterless": {
@@ -180,6 +203,7 @@
          "command=echo foo"
       ]
     },
+    # windows-restart: no required settings
     "windows-restart": {
     },
     "windows-shell": {

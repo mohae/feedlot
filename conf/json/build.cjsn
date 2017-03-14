@@ -1,14 +1,14 @@
-# Builds are named configurations that specify the distro to use, at minimum, and 
-# define the final overrides and settings for generating a Packer Template. The 
-# generated Packer template will be the result of merging the settings within the
-# build configuration with the Rancher and distro defaults.
+# Builds are named configurations that specify the distro to use, at minimum,
+# and define the final overrides and settings for generating a Packer Template.
+# The generated Packer template will be the result of merging the settings
+# within the build configuration with the Feedlot and distro defaults.
 {
-  "1504-64": {
+  "1604-64": {
     "distro": "ubuntu",
-    "description": "example Ubuntu LTS 1504 amd64 virtualbox vagrant build",
+    "description": "Ubuntu 1604 LTS amd64 virtualbox vagrant build",
     "arch": "amd64",
     "image": "server",
-    "release": "15.04",
+    "release": "16.04",
     "builder_types": [
       "virtualbox-iso"
     ],
@@ -26,7 +26,7 @@
   },
   "centos6-64": {
     "distro": "centos",
-    "description": "example Centos 6 x86_64 virtualbox vagrant build",
+    "description": "CentOS 6 x86_64 virtualbox vagrant build",
     "arch": "x86_64",
     "image": "Minimal",
     "release": "6",
@@ -48,7 +48,7 @@
 
   "centos7-64": {
     "distro": "centos",
-    "description": "example Centos 7 x86_64 virtualbox vagrant build",
+    "description": "CentOS 7 x86_64 virtualbox vagrant build",
     "arch": "x86_64",
     "image": "Minimal",
     "release": "7",
@@ -69,7 +69,7 @@
   },
   "jessie-64": {
     "distro": "debian",
-    "description": "example Debian Jessie amd64 virtualbox vagrant build",
+    "description": "Debian Jessie amd64 virtualbox vagrant build",
     "arch": "amd64",
     "image": "netinst",
     "release": "8",
